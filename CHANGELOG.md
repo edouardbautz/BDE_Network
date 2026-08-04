@@ -1,0 +1,23 @@
+# Changelog
+
+Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/),
+versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
+
+## [Unreleased]
+
+### Added
+
+- Initialisation du projet : Next.js 15, TypeScript strict, Tailwind CSS v4, shadcn/ui, Prisma 7.
+- Authentification OAuth 42 (NextAuth v5), sans mot de passe.
+- Modèle de données : `User`, `Role`, `ModulePermission`, `AuditLog`.
+- Rôles OWNER / ADMIN / MEMBER / PENDING, permissions par module, journal d'audit en lecture
+  seule (OWNER uniquement).
+- Configuration versionnée (`bde.config.yml`, validée avec Zod) et secrets (`.env`) séparés.
+- Internationalisation (next-intl), français par défaut, anglais disponible.
+- Tableau de bord, page de connexion, page d'attente, gestion des membres, journal d'audit,
+  politique de confidentialité, export de ses propres données (RGPD).
+- Abstraction de notifications (email, Discord, Slack) — pas encore branchée à un cas d'usage.
+- Abstraction de stockage de fichiers (adaptateur local, interface prête pour S3).
+- Scripts de sauvegarde/restauration PostgreSQL, seed de démonstration.
+- Docker Compose (production et développement avec rechargement à chaud), Dockerfile.
+- CI GitHub Actions (lint, format, typecheck, build, test) sur ubuntu-latest et windows-latest.

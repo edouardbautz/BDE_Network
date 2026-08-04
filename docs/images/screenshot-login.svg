@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+  <rect width="960" height="540" fill="#f1f5f9" />
+  <rect x="1" y="1" width="958" height="538" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="8 6" />
+  <text x="480" y="260" text-anchor="middle" font-family="system-ui, sans-serif" font-size="28" fill="#64748b">
+    Capture d'écran à venir
+  </text>
+  <text x="480" y="300" text-anchor="middle" font-family="system-ui, sans-serif" font-size="18" fill="#94a3b8">
+    Page de connexion
+  </text>
+</svg>
