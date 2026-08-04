@@ -1,0 +1,47 @@
+# Contributor dev environment: runs `next dev` inside a container with the
+# source bind-mounted for hot reload, so you don't need Node installed on
+# your machine. Usage: docker compose -f docker-compose.dev.yml up
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    ports:
+      - '127.0.0.1:5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm install && npx prisma generate && npm run dev"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      # Docker Desktop on Windows doesn't always propagate native filesystem
+      # change events through bind mounts — polling makes hot reload reliable
+      # there at the cost of a bit of CPU. Harmless on Linux/macOS.
+      WATCHPACK_POLLING: 'true'
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/app
+      - node_modules_dev:/app/node_modules
+      - next_cache_dev:/app/.next
+
+volumes:
+  postgres_data_dev:
+  node_modules_dev:
+  next_cache_dev:
