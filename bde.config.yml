@@ -1,0 +1,25 @@
+# Configuration de ce BDE. Voir bde.config.example.yml pour la documentation
+# complète de chaque champ.
+
+bde:
+  name: 'BDE Exemple'
+  campus: 'Paris'
+  timezone: 'Europe/Paris'
+  defaultLocale: 'fr'
+  accentColor: '#0f766e'
+  logoPath: '/logo.svg'
+
+auth:
+  # Remplacez par votre login 42 avant le premier lancement.
+  owners:
+    - 'votre-login-42'
+  allowedCampuses:
+    - 'Paris'
+
+modules:
+  enabled: []
+
+notifications:
+  memberPending: 'email'
+  memberApproved: 'none'
+  memberRemoved: 'none'

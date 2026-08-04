@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,4 +5,77 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+/// Application role. PENDING users have no access besides the waiting page.
+/// OWNER is granted only via the "owners" list in bde.config.yml, never from the UI.
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+  PENDING
+}
+
+/// A person authenticated through 42 OAuth. Profile fields are resynced from
+/// the 42 API on every login. Removing a member from the BDE deletes this row;
+/// business/audit records keep the author's login as plain text so history
+/// survives the deletion (see AuditLog.actorLogin).
+model User {
+  id          String    @id @default(cuid())
+  /// 42 intra login, e.g. "ebautz"
+  login       String    @unique
+  fullName    String
+  email       String    @unique
+  photoUrl    String?
+  /// 42 campus name as returned by the intra API, e.g. "Paris"
+  campus      String
+  role        Role      @default(PENDING)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastLoginAt DateTime?
+
+  modulePermissions        ModulePermission[] @relation("ModulePermissionUser")
+  grantedModulePermissions ModulePermission[] @relation("ModulePermissionGrantedBy")
+  auditLogEntries          AuditLog[]         @relation("AuditLogActor")
+
+  @@index([role])
+}
+
+/// Grants a MEMBER/ADMIN access to one module (e.g. "finance"), on top of
+/// their role. Module keys are free-form strings validated at the app layer
+/// against the `modules.enabled` list in bde.config.yml.
+model ModulePermission {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation("ModulePermissionUser", fields: [userId], references: [id], onDelete: Cascade)
+  module String
+
+  grantedByLogin String
+  grantedById    String?
+  grantedBy      User?   @relation("ModulePermissionGrantedBy", fields: [grantedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, module])
+  @@index([module])
+}
+
+/// Immutable, append-only record of sensitive actions. Readable by OWNER only,
+/// never editable or deletable from the app. actorLogin is kept in plain text
+/// so the trail remains meaningful even after the acting user is removed.
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorLogin  String
+  actorId     String?
+  actor       User?    @relation("AuditLogActor", fields: [actorId], references: [id], onDelete: SetNull)
+  /// Machine-readable action key, e.g. "member.approve", "member.remove", "permission.grant"
+  action      String
+  targetType  String
+  targetId    String?
+  targetLabel String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([actorId])
 }

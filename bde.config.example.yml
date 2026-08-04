@@ -1,0 +1,53 @@
+# Configuration du BDE — ce fichier est versionné avec le code (contrairement
+# à .env, qui contient les secrets). Copiez-le vers bde.config.yml puis
+# adaptez chaque valeur à votre bureau.
+#
+# Le fichier est validé au démarrage de l'application : si une valeur est
+# manquante ou mal formée, l'application refuse de démarrer et affiche un
+# message expliquant quoi corriger.
+
+bde:
+  # Nom affiché dans l'interface (titre, page de connexion, emails).
+  name: 'BDE Exemple'
+
+  # Campus principal du bureau (affichage uniquement).
+  campus: 'Paris'
+
+  # Fuseau horaire IANA utilisé pour l'affichage des dates.
+  timezone: 'Europe/Paris'
+
+  # Langue par défaut : "fr" ou "en". L'utilisateur peut changer de langue
+  # depuis l'interface ; ceci ne fixe que la langue initiale.
+  defaultLocale: 'fr'
+
+  # Couleur d'accent de l'interface, au format hexadécimal.
+  accentColor: '#0f766e'
+
+  # Chemin du logo, servi depuis le dossier /public (donc en commençant par "/").
+  logoPath: '/logo.svg'
+
+auth:
+  # Logins 42 des propriétaires (OWNER). Un login listé ici obtient
+  # automatiquement le rôle OWNER à sa première connexion, sans validation.
+  # Ce rôle ne peut être changé QUE depuis ce fichier, jamais depuis l'interface.
+  owners:
+    - 'votre-login-42'
+
+  # Campus 42 autorisés à se connecter à la plateforme. Toute personne dont
+  # le campus 42 n'est pas dans cette liste est refusée à la connexion.
+  allowedCampuses:
+    - 'Paris'
+
+modules:
+  # Clés des modules métier activés pour ce BDE. Vide pour l'instant : aucun
+  # module métier n'existe encore dans le projet.
+  # Exemple futur : ["finance", "events", "meetings"]
+  enabled: []
+
+notifications:
+  # Canal utilisé pour chaque type de notification : "email", "discord",
+  # "slack" ou "none". Le canal choisi doit être configuré dans .env
+  # (SMTP_*, DISCORD_WEBHOOK_URL ou SLACK_WEBHOOK_URL) pour fonctionner.
+  memberPending: 'email' # un nouveau membre attend une validation
+  memberApproved: 'none' # un membre a été approuvé
+  memberRemoved: 'none' # un membre a été retiré du BDE
