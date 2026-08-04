@@ -8,10 +8,17 @@ export class ConfigError extends Error {}
 
 const CONFIG_FILENAME = 'bde.config.yml';
 
+function describeIssue(issue: z.core.$ZodIssue): string {
+  if (issue.code === 'invalid_type' && issue.input === undefined) {
+    return 'ce champ est requis';
+  }
+  return issue.message;
+}
+
 function formatZodError(error: z.ZodError): string {
   const lines = error.issues.map((issue) => {
     const path = issue.path.length > 0 ? issue.path.join('.') : '(racine)';
-    return `  • ${path} : ${issue.message}`;
+    return `  • ${path} : ${describeIssue(issue)}`;
   });
 
   return [

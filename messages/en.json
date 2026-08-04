@@ -1,0 +1,71 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "loading": "Loading…",
+    "back": "Back"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "roles": {
+    "OWNER": "Owner",
+    "ADMIN": "Admin",
+    "MEMBER": "Member",
+    "PENDING": "Pending"
+  },
+  "auth": {
+    "loginTitle": "Sign in",
+    "loginSubtitle": "Sign in with your 42 account to access the platform.",
+    "loginButton": "Sign in with 42",
+    "logout": "Sign out",
+    "errors": {
+      "AccessDenied": "Your 42 campus isn't allowed to access this platform. Contact an administrator if you think this is a mistake.",
+      "Default": "Sign in failed. Please try again."
+    }
+  },
+  "pending": {
+    "title": "Your account is awaiting approval",
+    "description": "An administrator needs to approve your access before you can use the platform. Check back soon.",
+    "signedInAs": "Signed in as {name} ({login})"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "members": "Members",
+    "auditLog": "Audit log",
+    "privacy": "Privacy"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome, {name}."
+  },
+  "members": {
+    "title": "Member management",
+    "pendingSection": "Awaiting approval",
+    "activeSection": "Active members",
+    "approve": "Approve",
+    "reject": "Reject",
+    "remove": "Remove from BDE",
+    "columns": {
+      "name": "Name",
+      "login": "42 login",
+      "campus": "Campus",
+      "role": "Role",
+      "since": "Member since"
+    },
+    "empty": "No members yet."
+  },
+  "auditLog": {
+    "title": "Audit log",
+    "subtitle": "Read-only — visible to owners only.",
+    "columns": {
+      "date": "Date",
+      "actor": "Actor",
+      "action": "Action",
+      "target": "Target"
+    },
+    "empty": "No events recorded yet."
+  }
+}

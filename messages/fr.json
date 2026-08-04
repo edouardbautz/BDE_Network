@@ -1,0 +1,71 @@
+{
+  "common": {
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "loading": "Chargement…",
+    "back": "Retour"
+  },
+  "theme": {
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système"
+  },
+  "roles": {
+    "OWNER": "Propriétaire",
+    "ADMIN": "Administrateur",
+    "MEMBER": "Membre",
+    "PENDING": "En attente"
+  },
+  "auth": {
+    "loginTitle": "Connexion",
+    "loginSubtitle": "Connectez-vous avec votre compte 42 pour accéder à la plateforme.",
+    "loginButton": "Se connecter avec 42",
+    "logout": "Se déconnecter",
+    "errors": {
+      "AccessDenied": "Votre campus 42 n'est pas autorisé à accéder à cette plateforme. Contactez un administrateur si vous pensez qu'il s'agit d'une erreur.",
+      "Default": "La connexion a échoué. Merci de réessayer."
+    }
+  },
+  "pending": {
+    "title": "Votre compte est en attente de validation",
+    "description": "Un administrateur doit approuver votre accès avant que vous puissiez utiliser la plateforme. Revenez un peu plus tard.",
+    "signedInAs": "Connecté en tant que {name} ({login})"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "members": "Membres",
+    "auditLog": "Journal d'audit",
+    "privacy": "Confidentialité"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bienvenue, {name}."
+  },
+  "members": {
+    "title": "Gestion des membres",
+    "pendingSection": "En attente de validation",
+    "activeSection": "Membres actifs",
+    "approve": "Approuver",
+    "reject": "Refuser",
+    "remove": "Retirer du BDE",
+    "columns": {
+      "name": "Nom",
+      "login": "Login 42",
+      "campus": "Campus",
+      "role": "Rôle",
+      "since": "Membre depuis"
+    },
+    "empty": "Aucun membre pour l'instant."
+  },
+  "auditLog": {
+    "title": "Journal d'audit",
+    "subtitle": "Lecture seule — visible uniquement par les propriétaires.",
+    "columns": {
+      "date": "Date",
+      "actor": "Auteur",
+      "action": "Action",
+      "target": "Cible"
+    },
+    "empty": "Aucun événement enregistré."
+  }
+}
