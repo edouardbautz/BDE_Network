@@ -4,6 +4,7 @@ import { getConfig } from '@/config';
 import { canManageMembers, canViewAuditLog } from '@/lib/permissions';
 import { redirect } from '@/i18n/navigation';
 import { Navbar } from '@/components/layout/navbar';
+import { Footer } from '@/components/layout/footer';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,6 +53,7 @@ export default async function AppLayout({
         }}
       />
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:px-6">{children}</main>
+      <Footer />
     </div>
   );
 }

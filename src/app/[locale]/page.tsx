@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { auth, signIn } from '@/lib/auth';
 import { getConfig } from '@/config';
-import { redirect } from '@/i18n/navigation';
+import { Link, redirect } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -21,16 +21,18 @@ export default async function LoginPage({
 
   if (session?.user) {
     redirect({ href: session.user.role === 'PENDING' ? '/pending' : '/dashboard', locale });
+    return null;
   }
 
   const config = getConfig();
   const t = await getTranslations('auth');
+  const tNav = await getTranslations('nav');
   const errorMessage = error
     ? t(error === 'AccessDenied' ? 'errors.AccessDenied' : 'errors.Default')
     : null;
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-6">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
       <Card className="w-full max-w-sm">
         <CardHeader className="items-center text-center">
           {/* eslint-disable-next-line @next/next/no-img-element -- local SVG logo, next/image blocks SVG optimization by default */}
@@ -56,6 +58,12 @@ export default async function LoginPage({
           </form>
         </CardContent>
       </Card>
+      <Link
+        href="/privacy"
+        className="text-muted-foreground hover:text-foreground text-sm underline underline-offset-4"
+      >
+        {tNav('privacy')}
+      </Link>
     </main>
   );
 }

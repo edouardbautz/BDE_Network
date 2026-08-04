@@ -67,5 +67,46 @@
       "target": "Target"
     },
     "empty": "No events recorded yet."
+  },
+  "privacy": {
+    "title": "Privacy policy",
+    "intro": "This page explains what data {bdeName} collects about its members, why, and how to exercise your rights. This text is generic and should be adapted by your organization if needed.",
+    "dataCollected": {
+      "title": "Data collected",
+      "description": "When you sign in via 42, we receive and store:",
+      "items": [
+        "your 42 login",
+        "your full name",
+        "your email address",
+        "your profile picture",
+        "your 42 campus"
+      ],
+      "note": "This information is resynced from the 42 API on every sign-in."
+    },
+    "purpose": {
+      "title": "Why we collect it",
+      "description": "It's used solely to manage access and activity within the organization: identifying members, managing roles and permissions, and keeping an audit trail of sensitive actions."
+    },
+    "retention": {
+      "title": "Retention period",
+      "description": "Your data is kept for as long as you're a member. When an administrator removes you, your account is deleted; some historical records (like the audit log) keep your login as plain text, with no link to an account, for accountability."
+    },
+    "rights": {
+      "title": "Your rights",
+      "description": "You can request access to, correction of, or deletion of your data from an administrator or owner at any time. You can also export a copy of your own data yourself below."
+    },
+    "cookies": {
+      "title": "Cookies",
+      "description": "Only a session cookie, required for sign-in, is used. No tracking or analytics cookies are set."
+    },
+    "contact": {
+      "title": "Contact",
+      "description": "For any question, contact an administrator or owner of {bdeName}."
+    },
+    "export": {
+      "title": "Export my data",
+      "description": "Download a copy of everything we hold about you, as JSON.",
+      "button": "Download my data"
+    }
   }
 }

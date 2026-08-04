@@ -1,11 +1,70 @@
 import { getTranslations } from 'next-intl/server';
+import { auth } from '@/lib/auth';
+import { getConfig } from '@/config';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+export const dynamic = 'force-dynamic';
 
 export default async function PrivacyPage() {
-  const t = await getTranslations('nav');
+  const [session, t] = await Promise.all([auth(), getTranslations('privacy')]);
+  const bdeName = getConfig().bde.name;
+  const dataItems = t.raw('dataCollected.items') as string[];
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
-      <h1 className="text-2xl font-semibold">{t('privacy')}</h1>
+    <main className="mx-auto flex max-w-2xl flex-col gap-8 px-4 py-12 sm:px-6">
+      <div>
+        <h1 className="text-2xl font-semibold">{t('title')}</h1>
+        <p className="text-muted-foreground mt-2">{t('intro', { bdeName })}</p>
+      </div>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="font-medium">{t('dataCollected.title')}</h2>
+        <p className="text-muted-foreground text-sm">{t('dataCollected.description')}</p>
+        <ul className="text-muted-foreground list-inside list-disc text-sm">
+          {dataItems.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+        <p className="text-muted-foreground text-sm">{t('dataCollected.note')}</p>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="font-medium">{t('purpose.title')}</h2>
+        <p className="text-muted-foreground text-sm">{t('purpose.description')}</p>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="font-medium">{t('retention.title')}</h2>
+        <p className="text-muted-foreground text-sm">{t('retention.description')}</p>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="font-medium">{t('rights.title')}</h2>
+        <p className="text-muted-foreground text-sm">{t('rights.description')}</p>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="font-medium">{t('cookies.title')}</h2>
+        <p className="text-muted-foreground text-sm">{t('cookies.description')}</p>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="font-medium">{t('contact.title')}</h2>
+        <p className="text-muted-foreground text-sm">{t('contact.description', { bdeName })}</p>
+      </section>
+
+      {session?.user && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{t('export.title')}</CardTitle>
+            <CardDescription>{t('export.description')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button render={<a href="/api/me/export" download />}>{t('export.button')}</Button>
+          </CardContent>
+        </Card>
+      )}
     </main>
   );
 }

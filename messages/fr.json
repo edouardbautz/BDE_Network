@@ -67,5 +67,46 @@
       "target": "Cible"
     },
     "empty": "Aucun événement enregistré."
+  },
+  "privacy": {
+    "title": "Politique de confidentialité",
+    "intro": "Cette page explique quelles données {bdeName} collecte à propos de ses membres, pourquoi, et comment les faire valoir vos droits. Ce texte est générique et doit être adapté par votre bureau si nécessaire.",
+    "dataCollected": {
+      "title": "Données collectées",
+      "description": "À la connexion via 42, nous recevons et enregistrons :",
+      "items": [
+        "votre login 42",
+        "votre nom complet",
+        "votre adresse email",
+        "votre photo de profil",
+        "votre campus 42"
+      ],
+      "note": "Ces informations sont resynchronisées depuis l'API 42 à chaque connexion."
+    },
+    "purpose": {
+      "title": "Pourquoi ces données",
+      "description": "Elles servent uniquement à gérer les accès et les activités du bureau : identifier les membres, gérer les rôles et permissions, et assurer un suivi (journal d'audit) des actions sensibles."
+    },
+    "retention": {
+      "title": "Durée de conservation",
+      "description": "Vos données sont conservées tant que vous êtes membre du BDE. Lorsqu'un administrateur vous retire du bureau, votre compte est supprimé ; certains enregistrements historiques (comme le journal d'audit) conservent votre login en texte, sans lien vers un compte, à des fins de traçabilité."
+    },
+    "rights": {
+      "title": "Vos droits",
+      "description": "Vous pouvez à tout moment demander l'accès, la rectification ou la suppression de vos données auprès d'un administrateur ou propriétaire du bureau. Vous pouvez aussi exporter vous-même une copie de vos données ci-dessous."
+    },
+    "cookies": {
+      "title": "Cookies",
+      "description": "Seul un cookie de session, nécessaire à la connexion, est utilisé. Aucun cookie de suivi ou de mesure d'audience n'est déposé."
+    },
+    "contact": {
+      "title": "Contact",
+      "description": "Pour toute question, contactez un administrateur ou propriétaire de {bdeName}."
+    },
+    "export": {
+      "title": "Exporter mes données",
+      "description": "Téléchargez une copie de toutes les données vous concernant, au format JSON.",
+      "button": "Télécharger mes données"
+    }
   }
 }
