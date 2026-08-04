@@ -48,7 +48,8 @@ next-env.d.ts
 !/storage/uploads/.gitkeep
 
 # database backups
-/backups
+/backups/*
+!/backups/.gitkeep
 
 # editors
 .vscode/*
