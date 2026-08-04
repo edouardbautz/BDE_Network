@@ -1,0 +1,6 @@
+node_modules
+.next
+coverage
+src/components/ui
+prisma/migrations
+package-lock.json
