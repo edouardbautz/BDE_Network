@@ -2,7 +2,7 @@ import { getConfig } from '@/config';
 import { EVENTS_MODULE_KEY } from '@/config/schema';
 import type { Role } from '@/generated/prisma/client';
 import { getEffectiveSession, type EffectiveSession } from '@/lib/auth/session';
-import { getUserModuleKeys, hasModuleAccess, isApproved } from '@/lib/permissions';
+import { getUserModuleKeys, hasMinRole, hasModuleAccess, isApproved } from '@/lib/permissions';
 
 export { EVENTS_MODULE_KEY };
 
@@ -21,6 +21,12 @@ export function canViewEvents(role: Role): boolean {
  * module permission (granted by an admin); OWNER always has it. */
 export function canManageEvents(role: Role, grantedModuleKeys: string[]): boolean {
   return isApproved(role) && hasModuleAccess(role, grantedModuleKeys, EVENTS_MODULE_KEY);
+}
+
+/** The BDE-wide calendar link is an administrative matter: OWNER and ADMIN
+ * only, independently of the "events" module permission. */
+export function canManageSharedCalendar(role: Role): boolean {
+  return hasMinRole(role, 'ADMIN');
 }
 
 export interface EventsAccess {
@@ -52,6 +58,16 @@ export async function getEventsAccess(): Promise<EventsAccess | null> {
 export async function requireEventsManager(): Promise<EventsAccess> {
   const access = await getEventsAccess();
   if (!access?.canManage) {
+    throw new Error('Forbidden');
+  }
+  return access;
+}
+
+/** Same as getEventsAccess but throws unless the user is OWNER or ADMIN. Every
+ * action that touches the BDE-wide calendar link starts with this. */
+export async function requireSharedCalendarManager(): Promise<EventsAccess> {
+  const access = await getEventsAccess();
+  if (!access || !canManageSharedCalendar(access.session.user.role)) {
     throw new Error('Forbidden');
   }
   return access;

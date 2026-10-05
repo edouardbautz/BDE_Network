@@ -86,6 +86,12 @@
       "names": {
         "events": "Événements"
       }
+    },
+    "feedRemoval": {
+      "title": "{member} a été retiré du BDE",
+      "description": "Un lien d'agenda du BDE est actif. Comme il suffit de le posséder pour lire l'agenda, un ancien membre qui l'aurait copié pourrait continuer à voir les événements confirmés. Nous vous conseillons de générer un nouveau lien : vous devrez alors le coller de nouveau dans l'agenda partagé.",
+      "regenerate": "Générer un nouveau lien",
+      "later": "Plus tard"
     }
   },
   "auditLog": {
@@ -280,6 +286,40 @@
       "viewAll": "Tout voir",
       "emptyTitle": "Aucun événement à venir",
       "emptyDescription": "Les prochains événements du bureau s'afficheront ici."
+    },
+    "sharedCalendar": {
+      "open": "Agenda partagé",
+      "back": "Tous les événements",
+      "title": "Agenda partagé du BDE",
+      "subtitle": "Un seul lien pour tout le BDE, à coller une fois dans l'agenda partagé du bureau (Google Agenda, Outlook, Apple Calendar). Il se met ensuite à jour tout seul. Les liens personnels de chaque membre ne changent pas.",
+      "status": {
+        "enabled": "Le lien du BDE est activé. Copiez-le puis collez-le dans l'agenda partagé.",
+        "regenerated": "Nouveau lien généré. L'ancien lien ne fonctionne plus : collez le nouveau dans l'agenda partagé.",
+        "disabled": "Le lien du BDE est désactivé. L'ancien lien ne fonctionne plus."
+      },
+      "inactive": {
+        "title": "Le lien du BDE est désactivé",
+        "description": "Activez-le pour obtenir un lien unique, à coller une seule fois dans l'agenda partagé du bureau.",
+        "enable": "Activer le lien du BDE"
+      },
+      "active": {
+        "title": "Lien d'abonnement du BDE",
+        "description": "Collez ce lien dans l'agenda partagé du BDE : les événements s'y mettent à jour automatiquement.",
+        "linkLabel": "Lien d'abonnement du BDE",
+        "confirmedOnly": "Ce lien contient uniquement les événements confirmés et non annulés. Jamais de brouillon.",
+        "guide": "Google peut mettre plusieurs heures à rafraîchir un agenda abonné : c'est normal.",
+        "limit": "Ce lien alimente un agenda, mais il ne décide pas de qui peut consulter cet agenda. Si vous le collez dans un agenda partagé (par exemple un Google Agenda du BDE), les personnes qui y ont accès, y compris d'anciens membres, se gèrent dans Google (ou Outlook, Apple), pas dans cette plateforme. Générer un nouveau lien empêche seulement l'ancien lien de continuer à fonctionner."
+      },
+      "regenerate": {
+        "summary": "Générer un nouveau lien",
+        "warning": "L'ancien lien cesse de fonctionner immédiatement. Vous devrez coller le nouveau lien dans l'agenda partagé (et retirer l'ancien abonnement), sinon l'agenda ne se mettra plus à jour.",
+        "confirm": "Générer un nouveau lien"
+      },
+      "disable": {
+        "summary": "Désactiver le lien",
+        "warning": "Le lien cesse de fonctionner immédiatement et l'agenda abonné ne se mettra plus à jour. Vous pourrez activer un nouveau lien plus tard.",
+        "confirm": "Désactiver le lien"
+      }
     }
   },
   "profile": {

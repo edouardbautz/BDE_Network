@@ -23,6 +23,8 @@ vi.mock('@/i18n/navigation', () => ({
     throw new RedirectSignal(opts.href);
   }),
 }));
+vi.mock('@/lib/events/export', () => ({ getBdeFeedToken: vi.fn(async () => null) }));
+vi.mock('../events/shared-calendar/actions', () => ({ regenerateSharedCalendar: vi.fn() }));
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     user: { findMany: vi.fn().mockResolvedValue([]) },
@@ -62,7 +64,10 @@ function sessionFor(role: Role): Session {
 }
 
 function callPage() {
-  return MembersPage({ params: Promise.resolve({ locale: 'fr' }) });
+  return MembersPage({
+    params: Promise.resolve({ locale: 'fr' }),
+    searchParams: Promise.resolve({}),
+  });
 }
 
 beforeEach(() => {

@@ -86,6 +86,12 @@
       "names": {
         "events": "Events"
       }
+    },
+    "feedRemoval": {
+      "title": "{member} was removed from the BDE",
+      "description": "A BDE calendar link is active. Since owning it is enough to read the calendar, a former member who copied it could keep seeing confirmed events. We recommend generating a new link: you will then need to paste it into the shared calendar again.",
+      "regenerate": "Generate a new link",
+      "later": "Later"
     }
   },
   "auditLog": {
@@ -280,6 +286,40 @@
       "viewAll": "View all",
       "emptyTitle": "No upcoming events",
       "emptyDescription": "The board's upcoming events will show up here."
+    },
+    "sharedCalendar": {
+      "open": "Shared calendar",
+      "back": "All events",
+      "title": "BDE shared calendar",
+      "subtitle": "A single link for the whole BDE, to paste once into the board's shared calendar (Google Calendar, Outlook, Apple Calendar). It then updates by itself. Each member's personal link is unchanged.",
+      "status": {
+        "enabled": "The BDE link is on. Copy it and paste it into the shared calendar.",
+        "regenerated": "New link generated. The old link no longer works: paste the new one into the shared calendar.",
+        "disabled": "The BDE link is off. The old link no longer works."
+      },
+      "inactive": {
+        "title": "The BDE link is off",
+        "description": "Turn it on to get a single link, to paste just once into the board's shared calendar.",
+        "enable": "Turn on the BDE link"
+      },
+      "active": {
+        "title": "BDE subscription link",
+        "description": "Paste this link into the BDE's shared calendar: events then update there automatically.",
+        "linkLabel": "BDE subscription link",
+        "confirmedOnly": "This link only contains confirmed, non-cancelled events. Never drafts.",
+        "guide": "Google can take several hours to refresh a subscribed calendar: that is normal.",
+        "limit": "This link feeds a calendar, but it does not decide who can view that calendar. If you paste it into a shared calendar (for example a BDE Google Calendar), the people who have access to it, including former members, are managed in Google (or Outlook, Apple), not in this platform. Generating a new link only stops the old link from working."
+      },
+      "regenerate": {
+        "summary": "Generate a new link",
+        "warning": "The old link stops working immediately. You will need to paste the new link into the shared calendar (and remove the old subscription), otherwise the calendar will stop updating.",
+        "confirm": "Generate a new link"
+      },
+      "disable": {
+        "summary": "Turn off the link",
+        "warning": "The link stops working immediately and the subscribed calendar will stop updating. You can turn on a new link later.",
+        "confirm": "Turn off the link"
+      }
     }
   },
   "profile": {

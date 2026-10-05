@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react';
+import { CalendarSync, Plus } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { getConfig } from '@/config';
@@ -8,7 +8,7 @@ import { EmptyState, EventList } from '@/components/events/event-list';
 import { EventsToolbar } from '@/components/events/events-toolbar';
 import { MonthCalendar } from '@/components/events/month-calendar';
 import { Link } from '@/i18n/navigation';
-import { getEventsAccess } from '@/lib/events/access';
+import { canManageSharedCalendar, getEventsAccess } from '@/lib/events/access';
 import {
   buildMonthGrid,
   dayKey,
@@ -89,6 +89,14 @@ export default async function EventsPage({
       })
     : [];
 
+  // The BDE-wide calendar link is for OWNER and ADMIN, whatever their events permission.
+  const sharedCalendarButton = canManageSharedCalendar(access.session.user.role) ? (
+    <Button variant="outline" size="sm" render={<Link href="/events/shared-calendar" />}>
+      <CalendarSync data-icon="inline-start" />
+      {t('sharedCalendar.open')}
+    </Button>
+  ) : null;
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -96,7 +104,10 @@ export default async function EventsPage({
           <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground mt-1 text-sm">{t('subtitle')}</p>
         </div>
-        {createButton}
+        <div className="flex flex-wrap items-center gap-2">
+          {sharedCalendarButton}
+          {createButton}
+        </div>
       </div>
 
       <EventsToolbar

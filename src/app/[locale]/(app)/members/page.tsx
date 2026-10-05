@@ -1,10 +1,13 @@
-import { Check, UserCheck, Users } from 'lucide-react';
+import { Check, CalendarSync, UserCheck, Users } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { getConfig } from '@/config';
 import { getEffectiveSession } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
 import { canManageMembers } from '@/lib/permissions';
-import { redirect } from '@/i18n/navigation';
+import { Link, redirect } from '@/i18n/navigation';
+import { getBdeFeedToken } from '@/lib/events/export';
+import { regenerateSharedCalendar } from '../events/shared-calendar/actions';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -42,7 +45,19 @@ function MemberIdentity({ name, photoUrl }: { name: string; photoUrl: string | n
   );
 }
 
-export default async function MembersPage({ params }: { params: Promise<{ locale: string }> }) {
+/** Logins are `[a-z0-9-]`: anything else in the URL is ignored, never echoed. */
+function readRemovedLogin(value: string | string[] | undefined): string | null {
+  const login = Array.isArray(value) ? value[0] : value;
+  return login && /^[a-z0-9-]{1,64}$/i.test(login) ? login : null;
+}
+
+export default async function MembersPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ removed?: string | string[] }>;
+}) {
   const { locale } = await params;
   const session = await getEffectiveSession();
 
@@ -51,6 +66,14 @@ export default async function MembersPage({ params }: { params: Promise<{ locale
   }
 
   const enabledModules = getConfig().modules.enabled;
+
+  // After a removal: if a BDE-wide calendar link is active, the departed member may
+  // still have it (it is a shared secret), so offer to replace it.
+  const removedLogin = readRemovedLogin((await searchParams).removed);
+  const offerFeedRegeneration =
+    removedLogin !== null &&
+    enabledModules.includes('events') &&
+    (await getBdeFeedToken()) !== null;
 
   const [t, tRoles, users, grants] = await Promise.all([
     getTranslations('members'),
@@ -74,6 +97,31 @@ export default async function MembersPage({ params }: { params: Promise<{ locale
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
+
+      {offerFeedRegeneration && (
+        <Alert>
+          <CalendarSync />
+          <AlertTitle>{t('feedRemoval.title', { member: removedLogin })}</AlertTitle>
+          <AlertDescription className="flex flex-col gap-3">
+            <p>{t('feedRemoval.description')}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <form
+                action={async () => {
+                  'use server';
+                  await regenerateSharedCalendar(removedLogin);
+                }}
+              >
+                <Button size="sm" type="submit">
+                  {t('feedRemoval.regenerate')}
+                </Button>
+              </form>
+              <Button variant="ghost" size="sm" render={<Link href="/members" />}>
+                {t('feedRemoval.later')}
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0">
@@ -209,6 +257,10 @@ export default async function MembersPage({ params }: { params: Promise<{ locale
                           action={async () => {
                             'use server';
                             await removeMember(user.id);
+                            redirect({
+                              href: { pathname: '/members', query: { removed: user.login } },
+                              locale,
+                            });
                           }}
                         >
                           <Button size="sm" variant="destructive" type="submit">

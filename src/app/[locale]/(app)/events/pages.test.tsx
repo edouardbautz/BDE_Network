@@ -57,7 +57,11 @@ vi.mock('@/config', () => ({
     },
   })),
 }));
-vi.mock('@/lib/events/access', () => ({ getEventsAccess: vi.fn() }));
+vi.mock('@/lib/events/access', () => ({
+  getEventsAccess: vi.fn(),
+  // The real rule is covered in access.test.ts; page tests only need its outcome.
+  canManageSharedCalendar: (role: string) => role === 'ADMIN' || role === 'OWNER',
+}));
 vi.mock('@/lib/events/queries', () => ({
   getFilterOptions: vi.fn(async () => ({ schoolYears: [], assignees: [] })),
   listOccurrences: vi.fn(async () => []),
@@ -83,8 +87,18 @@ const { default: NewEventPage } = await import('./new/page');
 const { default: EditEventPage } = await import('./[id]/edit/page');
 
 type Access = Awaited<ReturnType<typeof getEventsAccess>>;
-const asMember = { canManage: false } as unknown as Access;
-const asManager = { canManage: true } as unknown as Access;
+const asMember = {
+  canManage: false,
+  session: { user: { role: 'MEMBER' } },
+} as unknown as Access;
+const asManager = {
+  canManage: true,
+  session: { user: { role: 'MEMBER' } },
+} as unknown as Access;
+const asAdmin = {
+  canManage: false,
+  session: { user: { role: 'ADMIN' } },
+} as unknown as Access;
 
 const storedEvent = {
   id: 'evt1',
@@ -149,6 +163,17 @@ describe('/events', () => {
 
     expect(listOccurrences).toHaveBeenCalledWith(expect.objectContaining({ includeDrafts: true }));
     expect(html).toContain('href="/events/new"');
+  });
+
+  it('offers the shared-calendar entry to admins only, whatever their events permission', async () => {
+    vi.mocked(getEventsAccess).mockResolvedValue(asAdmin);
+    expect(await eventsPage()).toContain('href="/events/shared-calendar"');
+
+    vi.mocked(getEventsAccess).mockResolvedValue(asManager);
+    expect(await eventsPage()).not.toContain('/events/shared-calendar');
+
+    vi.mocked(getEventsAccess).mockResolvedValue(asMember);
+    expect(await eventsPage()).not.toContain('/events/shared-calendar');
   });
 
   it('shows a designed empty state instead of a blank list', async () => {
