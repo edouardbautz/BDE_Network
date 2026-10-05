@@ -18,7 +18,14 @@ vi.mock('@/lib/prisma', () => ({
       delete: vi.fn(),
       findUniqueOrThrow: vi.fn(),
     },
+    modulePermission: {
+      upsert: vi.fn(),
+      deleteMany: vi.fn(),
+    },
   },
+}));
+vi.mock('@/config', () => ({
+  getConfig: vi.fn(() => ({ modules: { enabled: ['events'] } })),
 }));
 vi.mock('@/lib/audit-log', () => ({ logAuditEvent: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
@@ -26,7 +33,8 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 const { auth } = await import('@/lib/auth');
 const { prisma } = await import('@/lib/prisma');
 const { logAuditEvent } = await import('@/lib/audit-log');
-const { approveMember, rejectMember, removeMember } = await import('./actions');
+const { approveMember, rejectMember, removeMember, setModulePermission } =
+  await import('./actions');
 
 // NextAuth's `auth` export is overloaded (plain call / middleware / route
 // wrapper) — pin it to the plain-call signature so `vi.mocked` doesn't
@@ -159,6 +167,78 @@ describe('removeMember', () => {
     expect(prisma.user.delete).toHaveBeenCalledWith({ where: { id: 'target-1' } });
     expect(logAuditEvent).toHaveBeenCalledWith(
       expect.objectContaining({ actorLogin: 'real-admin', action: 'member.remove' }),
+    );
+  });
+});
+
+describe('setModulePermission', () => {
+  it.each<Role>(['PENDING', 'MEMBER'])(
+    'rejects a %s actor without touching the database',
+    async (role) => {
+      mockAuth.mockResolvedValue(sessionFor(role));
+
+      await expect(setModulePermission('target-1', 'events', true)).rejects.toThrow('Forbidden');
+
+      expect(prisma.modulePermission.upsert).not.toHaveBeenCalled();
+      expect(prisma.modulePermission.deleteMany).not.toHaveBeenCalled();
+      expect(logAuditEvent).not.toHaveBeenCalled();
+    },
+  );
+
+  it('rejects a module that is not enabled in the config', async () => {
+    mockAuth.mockResolvedValue(sessionFor('ADMIN'));
+
+    await expect(setModulePermission('target-1', 'finance', true)).rejects.toThrow('not enabled');
+
+    expect(prisma.modulePermission.upsert).not.toHaveBeenCalled();
+  });
+
+  it.each<Role>(['PENDING', 'OWNER'])('rejects a %s target', async (targetRole) => {
+    mockAuth.mockResolvedValue(sessionFor('ADMIN'));
+    vi.mocked(prisma.user.findUniqueOrThrow).mockResolvedValue(fakeUser({ role: targetRole }));
+
+    await expect(setModulePermission('target-1', 'events', true)).rejects.toThrow(
+      'approved, non-OWNER',
+    );
+
+    expect(prisma.modulePermission.upsert).not.toHaveBeenCalled();
+  });
+
+  it('grants the permission and audits it under the real actor', async () => {
+    mockAuth.mockResolvedValue(sessionFor('ADMIN', 'real-admin'));
+    vi.mocked(prisma.user.findUniqueOrThrow).mockResolvedValue(
+      fakeUser({ role: 'MEMBER', login: 'helper' }),
+    );
+
+    await setModulePermission('target-1', 'events', true);
+
+    expect(prisma.modulePermission.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId_module: { userId: 'target-1', module: 'events' } },
+        create: expect.objectContaining({ grantedByLogin: 'real-admin', module: 'events' }),
+      }),
+    );
+    expect(logAuditEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorLogin: 'real-admin',
+        action: 'permission.grant',
+        targetLabel: 'helper',
+        metadata: expect.objectContaining({ module: 'events' }),
+      }),
+    );
+  });
+
+  it('revokes the permission and audits it', async () => {
+    mockAuth.mockResolvedValue(sessionFor('OWNER', 'real-owner'));
+    vi.mocked(prisma.user.findUniqueOrThrow).mockResolvedValue(fakeUser({ role: 'MEMBER' }));
+
+    await setModulePermission('target-1', 'events', false);
+
+    expect(prisma.modulePermission.deleteMany).toHaveBeenCalledWith({
+      where: { userId: 'target-1', module: 'events' },
+    });
+    expect(logAuditEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'permission.revoke' }),
     );
   });
 });

@@ -1,5 +1,6 @@
-import { UserCheck, Users } from 'lucide-react';
+import { Check, UserCheck, Users } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
+import { getConfig } from '@/config';
 import { getEffectiveSession } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
 import { canManageMembers } from '@/lib/permissions';
@@ -16,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { approveMember, rejectMember, removeMember } from './actions';
+import { approveMember, rejectMember, removeMember, setModulePermission } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,11 +50,23 @@ export default async function MembersPage({ params }: { params: Promise<{ locale
     redirect({ href: '/dashboard', locale });
   }
 
-  const [t, tRoles, users] = await Promise.all([
+  const enabledModules = getConfig().modules.enabled;
+
+  const [t, tRoles, users, grants] = await Promise.all([
     getTranslations('members'),
     getTranslations('roles'),
     prisma.user.findMany({ orderBy: [{ role: 'asc' }, { createdAt: 'asc' }] }),
+    enabledModules.length > 0
+      ? prisma.modulePermission.findMany({
+          where: { module: { in: enabledModules } },
+          select: { userId: true, module: true },
+        })
+      : Promise.resolve([]),
   ]);
+
+  const grantedKeys = new Set(grants.map((grant) => `${grant.userId}:${grant.module}`));
+  const moduleLabel = (key: string) =>
+    t.has(`modules.names.${key}`) ? t(`modules.names.${key}`) : key;
 
   const pending = users.filter((user) => user.role === 'PENDING');
   const active = users.filter((user) => user.role !== 'PENDING');
@@ -142,6 +155,7 @@ export default async function MembersPage({ params }: { params: Promise<{ locale
                   <TableHead>{t('columns.login')}</TableHead>
                   <TableHead>{t('columns.campus')}</TableHead>
                   <TableHead>{t('columns.role')}</TableHead>
+                  {enabledModules.length > 0 && <TableHead>{t('columns.modules')}</TableHead>}
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -156,6 +170,39 @@ export default async function MembersPage({ params }: { params: Promise<{ locale
                     <TableCell>
                       <Badge variant="secondary">{tRoles(user.role)}</Badge>
                     </TableCell>
+                    {enabledModules.length > 0 && (
+                      <TableCell>
+                        {user.role === 'OWNER' ? (
+                          <span className="text-muted-foreground text-sm">{t('modules.all')}</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-1.5">
+                            {enabledModules.map((moduleKey) => {
+                              const granted = grantedKeys.has(`${user.id}:${moduleKey}`);
+                              return (
+                                <form
+                                  key={moduleKey}
+                                  action={async () => {
+                                    'use server';
+                                    await setModulePermission(user.id, moduleKey, !granted);
+                                  }}
+                                >
+                                  <Button
+                                    size="xs"
+                                    type="submit"
+                                    variant={granted ? 'default' : 'outline'}
+                                    aria-pressed={granted}
+                                    title={granted ? t('modules.revoke') : t('modules.grant')}
+                                  >
+                                    {granted && <Check data-icon="inline-start" />}
+                                    {moduleLabel(moduleKey)}
+                                  </Button>
+                                </form>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </TableCell>
+                    )}
                     <TableCell className="text-right">
                       {user.role !== 'OWNER' && (
                         <form

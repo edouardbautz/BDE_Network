@@ -24,10 +24,16 @@ vi.mock('@/i18n/navigation', () => ({
   }),
 }));
 vi.mock('@/lib/prisma', () => ({
-  prisma: { user: { findMany: vi.fn().mockResolvedValue([]) } },
+  prisma: {
+    user: { findMany: vi.fn().mockResolvedValue([]) },
+    modulePermission: { findMany: vi.fn().mockResolvedValue([]) },
+  },
+}));
+vi.mock('@/config', () => ({
+  getConfig: vi.fn(() => ({ modules: { enabled: ['events'] } })),
 }));
 vi.mock('next-intl/server', () => ({
-  getTranslations: vi.fn(async () => (key: string) => key),
+  getTranslations: vi.fn(async () => Object.assign((key: string) => key, { has: () => true })),
 }));
 
 const { auth } = await import('@/lib/auth');

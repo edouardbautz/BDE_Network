@@ -71,11 +71,20 @@
       "login": "Login 42",
       "campus": "Campus",
       "role": "Rôle",
-      "since": "Membre depuis"
+      "since": "Membre depuis",
+      "modules": "Modules"
     },
     "empty": "Aucun membre pour l'instant.",
     "pendingEmpty": "Aucune demande en attente.",
-    "pendingCount": "{count, plural, one {# demande} other {# demandes}}"
+    "pendingCount": "{count, plural, one {# demande} other {# demandes}}",
+    "modules": {
+      "all": "Tous (propriétaire)",
+      "grant": "Accorder l'accès à ce module",
+      "revoke": "Retirer l'accès à ce module",
+      "names": {
+        "events": "Événements"
+      }
+    }
   },
   "auditLog": {
     "title": "Journal d'audit",
