@@ -43,13 +43,15 @@ src/
         members/page.tsx + actions.ts + loading.tsx   member approval/removal (server actions)
         audit-log/page.tsx + loading.tsx               OWNER-only
         events/                events module (404 unless enabled): page, new/, [id]/, [id]/edit/,
-                               actions.ts (server actions), loading.tsx for each route
+                               shared-calendar/ (OWNER/ADMIN: BDE link), actions.ts (server actions),
+                               loading.tsx for each route
         profile/                page + actions.ts: account info, personal calendar feed link
     api/
       auth/[...nextauth]/route.ts
       files/[...key]/route.ts            serves local-storage uploads
       me/export/route.ts                 self-service RGPD data export
       calendar/[token]/route.ts          personal .ics subscription feed (token-authenticated)
+      calendar/bde/[token]/route.ts      BDE-wide .ics feed (token-authenticated, confirmed events only)
       events/[id]/ics/route.ts           "add to my calendar" download (session-authenticated)
   instrumentation.ts       starts the events reminder scheduler (Node runtime only)
   components/
@@ -80,7 +82,7 @@ docs/                        installation, configuration, user guide, events, co
 ## Data model (Prisma)
 
 `User`, `Role` (enum), `ModulePermission`, `AuditLog`, plus the events module's `Event`,
-`EventAssignee`, `EventCancellation`, `EventReminder` (see "Events module"). Finances and
+`EventAssignee`, `EventCancellation`, `EventReminder`, `BdeCalendarFeed` (see "Events module"). Finances and
 meetings do not exist yet.
 
 - **`Role`**: `OWNER | ADMIN | MEMBER | PENDING`, ordered in that rank (see `src/lib/permissions.ts`).
@@ -199,6 +201,18 @@ User guide: `docs/events.md`. The shape worth knowing before touching it:
   stored in clear (so the profile can show the link), recomputed per request from the token owner's
   _current_ role/permission, same bare 404 for every failure. Removing a member deletes their row,
   so their token stops resolving immediately. Never log the token.
+- **BDE-wide feed** (`/api/calendar/bde/[token]`, `BdeCalendarFeed` singleton row `id = "bde"`,
+  `token` null = disabled): a second, independent secret from the per-member tokens. It has no owner,
+  so it can never widen: `buildBdeSubscriptionFeed` asks for `includeDrafts: false` _and_ re-filters
+  to `CONFIRMED`. Managed only by OWNER/ADMIN (`canManageSharedCalendar` /
+  `requireSharedCalendarManager` — role-based, _not_ the events permission) from
+  `events/shared-calendar`. Enable is idempotent; regenerate/disable overwrite the single column, so the
+  old link 404s at once. Audit actions `calendar_feed.enable|regenerate|disable` with targetType
+  `CalendarFeed` and **never the token** (nor in logs). Removing a member does not touch it: the members
+  page, reached with `?removed=<login>` (login pattern-checked), _offers_ regeneration when a link is
+  active — never automatic, because it forces pasting the link again. Its honest limit is documented:
+  access to a shared Google/Outlook calendar is managed there, not here. Both feed routes share
+  `calendarFeedResponse` (`feed-response.ts`).
 - **Notifications are best-effort and after the response.** `after(() => notifyEventConfirmed(id))`
   in the actions; the once-only guarantee is the atomic `confirmationNotifiedAt` claim.
 - **Reminders** (`reminders.ts` + `scheduler.ts`): an in-process loop (every 5 min) started from
@@ -207,7 +221,7 @@ User guide: `docs/events.md`. The shape worth knowing before touching it:
   occurrence starts. Tested in `reminders.test.ts` including restart and concurrent callers.
 - **Tests that must keep passing** when you change access rules: `access.test.ts`,
   `events/actions.test.ts` (every action refused for PENDING / member without permission / admin
-  without permission / module disabled), `events/pages.test.tsx`, `export.test.ts`.
+  without permission / module disabled), `events/pages.test.tsx`, `export.test.ts`, `export-bde.test.ts`, `shared-calendar/*.test.ts(x)`.
 - **Adding another module** follows the same recipe: a key in `modules.enabled` + a config section
   validated in `src/config/schema.ts` (required only when enabled), one `getXAccess()` gate
   returning null when disabled, `notFound()` on pages, a nav entry in `(app)/layout.tsx` + `NavItem`

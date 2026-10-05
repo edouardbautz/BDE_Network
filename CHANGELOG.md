@@ -26,6 +26,10 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
   date, brouillons, vues calendrier/liste, filtres, export `.ics` et flux d'abonnement personnel,
   notification de confirmation et rappel de la veille (planificateur interne, jamais envoyé deux
   fois), journal d'audit, données de démonstration. Voir `docs/events.md`.
+- Lien d'abonnement agenda au niveau du BDE (`/api/calendar/bde/<jeton>.ics`) : un seul lien pour
+  l'agenda partagé du bureau, événements confirmés uniquement, géré par OWNER/ADMIN (afficher,
+  copier, régénérer, désactiver, tout journalisé), avec une proposition de régénération quand un
+  membre est retiré. Voir `docs/events.md`.
 - Attribution de la permission d'un module à un membre depuis le panel _Membres_.
 - Page _Mon profil_.
 - Configuration personnelle non versionnée : `bde.config.local.yml` (ignoré par Git) remplace

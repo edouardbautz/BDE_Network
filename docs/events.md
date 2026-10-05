@@ -36,12 +36,13 @@ configuration reste affiché, mais sans couleur.
 
 ## Qui peut faire quoi
 
-| Action                                                     | Membre approuvé | Membre avec la permission « Événements » | Propriétaire |
-| ---------------------------------------------------------- | :-------------: | :--------------------------------------: | :----------: |
-| Voir les événements **confirmés**                          |       oui       |                   oui                    |     oui      |
-| Voir les **brouillons**                                    |       non       |                   oui                    |     oui      |
-| Créer, modifier, supprimer, confirmer, annuler une date    |       non       |                   oui                    |     oui      |
-| Ajouter un événement à son agenda / s'abonner au flux .ics |       oui       |                   oui                    |     oui      |
+| Action                                                                        | Membre approuvé | Membre avec la permission « Événements » | Propriétaire |
+| ----------------------------------------------------------------------------- | :-------------: | :--------------------------------------: | :----------: |
+| Voir les événements **confirmés**                                             |       oui       |                   oui                    |     oui      |
+| Voir les **brouillons**                                                       |       non       |                   oui                    |     oui      |
+| Créer, modifier, supprimer, confirmer, annuler une date                       |       non       |                   oui                    |     oui      |
+| Ajouter un événement à son agenda / s'abonner au flux .ics                    |       oui       |                   oui                    |     oui      |
+| Gérer le lien d'agenda du **BDE** (administrateur ou propriétaire uniquement) |       non       |    non (sauf s'il est administrateur)    |     oui      |
 
 La permission est attribuée par un **administrateur** dans _Membres_ → colonne _Modules_ (bouton
 « Événements » de chaque membre actif). Chaque attribution ou retrait est inscrit au journal
@@ -99,10 +100,10 @@ obligatoire** (ce jour est inclus). Une série compte au plus 200 occurrences.
 - **Un événement** : bouton _Ajouter à mon agenda_ sur sa page (fichier `.ics`, lisible par tous
   les calendriers). Pour une série, l'occurrence affichée ou toute la série.
 - **Synchronisation automatique** : _menu utilisateur_ → _Mon profil_ → _Synchroniser avec mon
-  agenda_. Copiez le lien personnel et ajoutez-le à Google Agenda, Outlook ou Apple Calendar
-  (« S'abonner à un calendrier par URL »). Les changements apparaissent ensuite
-  automatiquement (selon la fréquence de rafraîchissement de votre application d'agenda, de
-  quelques minutes à quelques heures).
+  agenda_. Copiez le lien personnel et ajoutez-le à Google Agenda, Outlook ou Apple Calendar (voir
+  le [pas à pas](#ajouter-un-lien-à-son-agenda-pas-à-pas)). Les changements apparaissent ensuite
+  automatiquement, au rythme de rafraîchissement de votre application d'agenda.
+- **Un lien pour tout le BDE** : voir [le lien du BDE](#le-lien-du-bde-agenda-partagé).
 
 Le lien contient un **jeton secret propre à chaque membre** :
 
@@ -111,6 +112,86 @@ Le lien contient un **jeton secret propre à chaque membre** :
 - il cesse de fonctionner **immédiatement** si vous êtes retiré du BDE ;
 - vous pouvez le **régénérer** depuis votre profil (l'ancien lien est alors invalide) ;
 - ne le partagez pas : quiconque le possède lit votre agenda.
+
+## Le lien du BDE (agenda partagé)
+
+Les liens personnels demandent à chaque membre du bureau de s'abonner lui-même. Pour alléger
+cela, un **administrateur ou propriétaire** peut créer **un seul lien pour tout le BDE**, à
+coller **une seule fois** dans l'agenda partagé du bureau. Il se met ensuite à jour tout seul.
+Les liens personnels existent toujours et ne changent pas.
+
+- **Où :** _Événements_ → bouton **Agenda partagé** (visible des seuls administrateurs et
+  propriétaires, même sans la permission « Événements »).
+- **Ce qu'il contient :** uniquement les événements **confirmés** et **non annulés**. Jamais de
+  brouillon, quoi qu'il arrive.
+- **Ce que vous pouvez faire :** afficher le lien, le copier, le **régénérer** (l'ancien lien
+  cesse de fonctionner immédiatement), le **désactiver** (idem). Chaque action est inscrite au
+  journal d'audit (`calendar_feed.enable`, `calendar_feed.regenerate`, `calendar_feed.disable`).
+  Le lien lui-même n'est jamais écrit dans le journal d'audit ni dans les logs.
+- **Si le lien est régénéré ou désactivé**, l'agenda abonné ne se met plus à jour : il faut coller
+  le nouveau lien (et supprimer l'ancien abonnement).
+
+### Quand un membre quitte le BDE
+
+Le lien est un secret partagé : quiconque l'a copié peut lire l'agenda. Quand vous retirez un
+membre alors qu'un lien du BDE est actif, la page _Membres_ vous propose aussitôt de **générer un
+nouveau lien**, avec une phrase qui explique pourquoi. Ce n'est **pas automatique**, car régénérer
+oblige à recoller le lien dans l'agenda partagé : c'est à vous de choisir le bon moment.
+
+> **Limite à connaître.** Le lien sert à _alimenter_ un agenda ; il ne décide pas de **qui peut
+> consulter cet agenda**. Si vous le collez dans un agenda partagé (par exemple un Google Agenda
+> du BDE), l'accès des anciens membres à **cet agenda** se gère **dans Google** (ou Outlook,
+> Apple), pas dans la plateforme : retirez-les du partage, ou changez le mot de passe du compte
+> commun. Régénérer le lien empêche seulement l'ancien lien de continuer à fonctionner. Ce qui a
+> déjà été copié dans l'agenda abonné n'est pas effacé par la plateforme.
+
+## Ajouter un lien à son agenda, pas à pas
+
+Valable pour **le lien du BDE** comme pour **votre lien personnel** (_Mon profil_). Copiez le
+lien d'abord. Il se termine par `.ics`.
+
+> **Patience.** Un agenda abonné n'est pas instantané. **Google peut mettre plusieurs heures** à
+> rafraîchir un agenda abonné (parfois jusqu'à une journée) ; Outlook aussi peut prendre plusieurs
+> heures. C'est normal : un événement créé ou modifié n'apparaît pas tout de suite.
+
+### Google Agenda
+
+Faites-le **sur ordinateur** : l'application mobile ne propose pas cette option.
+
+1. Ouvrez Google Agenda sur ordinateur, avec le compte Google concerné.
+2. À gauche, à côté de « Autres agendas », cliquez sur le **+**.
+3. Cliquez sur **À partir de l'URL**.
+4. Collez le lien.
+5. Cliquez sur **Ajouter l'agenda**.
+
+L'agenda apparaît dans « Autres agendas ». Il est visible dans le compte qui l'a ajouté : pour
+un agenda commun du bureau, utilisez un compte Google partagé du BDE, ou faites ajouter le lien
+par chaque personne concernée. Selon votre compte, Google peut ne pas permettre de partager un
+agenda ajouté par URL : vérifiez dans les paramètres de l'agenda.
+
+### Outlook
+
+Sur Outlook.com ou le nouvel Outlook :
+
+1. Ouvrez **Calendrier**.
+2. Cliquez sur **Ajouter un calendrier**.
+3. Choisissez **S'abonner à partir du web**.
+4. Collez le lien, donnez un nom (par exemple « BDE »), puis cliquez sur **Importer**.
+
+Sur Outlook classique pour Windows : **Fichier** → **Paramètres du compte** → **Paramètres du
+compte…** → onglet **Calendriers Internet** → **Nouveau…**, puis collez le lien.
+
+### Apple Calendar
+
+Sur Mac :
+
+1. Ouvrez **Calendrier**.
+2. Menu **Fichier** → **Nouvel abonnement à un calendrier…**
+3. Collez le lien, puis cliquez sur **S'abonner**.
+4. Choisissez la fréquence de mise à jour automatique, puis **OK**.
+
+Sur iPhone ou iPad : **Réglages** → **Calendrier** → **Comptes** → **Ajouter un compte** →
+**Autre** → **Ajouter un calendrier avec abonnement**, puis collez le lien.
 
 ## Notifications
 
@@ -158,8 +239,9 @@ Les événements récurrents sont rappelés occurrence par occurrence.
 
 Visible des propriétaires : `event.create`, `event.update` (avec la liste des champs modifiés),
 `event.delete`, `event.status_change` (de → vers), `event.occurrence_cancel`,
-`event.occurrence_restore`, et `permission.grant` / `permission.revoke` pour la permission du
-module. L'auteur est toujours le compte réel, en texte (il survit au retrait du membre).
+`event.occurrence_restore`, `permission.grant` / `permission.revoke` pour la permission du
+module, et `calendar_feed.enable` / `calendar_feed.regenerate` / `calendar_feed.disable` pour le
+lien du BDE (sans jamais le lien lui-même). L'auteur est toujours le compte réel, en texte (il survit au retrait du membre).
 
 ## Données de démonstration
 
@@ -177,3 +259,5 @@ si le module est activé dans votre configuration. Relancer le seed les réécri
   dans les logs.
 - **Le lien d'agenda ne se met pas à jour** : c'est le rythme de rafraîchissement de votre
   application d'agenda (Google peut prendre plusieurs heures).
+- **Le lien du BDE répond « Not found »** : il a été régénéré ou désactivé, ou le module est
+  désactivé. Récupérez le lien actuel dans _Événements_ → _Agenda partagé_.
