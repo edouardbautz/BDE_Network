@@ -167,3 +167,19 @@ export function parseEventInput(
     },
   };
 }
+
+/** The columns of the Event row for validated input (assignees live in their own table). */
+export function toEventRow(data: EventData): Omit<EventData, 'assigneeLogins'> {
+  return {
+    title: data.title,
+    description: data.description,
+    location: data.location,
+    categoryKey: data.categoryKey,
+    status: data.status,
+    startsAt: data.startsAt,
+    endsAt: data.endsAt,
+    recurrence: data.recurrence,
+    recurrenceUntil: data.recurrenceUntil,
+    schoolYear: data.schoolYear,
+  };
+}

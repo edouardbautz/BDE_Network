@@ -41,3 +41,10 @@ export async function getEffectiveSession(): Promise<EffectiveSession | null> {
 
   return { user: session.user, isImpersonating: false, realRole };
 }
+
+/** Extra audit metadata for an action performed under a simulated role.
+ * `actorLogin`/`actorId` always come from the real account; this only flags
+ * that the role was simulated. Empty outside dev impersonation. */
+export function impersonationAuditFields(actor: EffectiveSession): { simulatedAsRole?: Role } {
+  return actor.isImpersonating ? { simulatedAsRole: actor.user.role } : {};
+}
