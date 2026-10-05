@@ -193,6 +193,12 @@ User guide: `docs/events.md`. The shape worth knowing before touching it:
   `EventCancellation` (cancelled date) and `EventReminder` (reminder already claimed). All
   instants are UTC in the database; anything typed or shown goes through `src/lib/events/time.ts`
   (Intl only, no date library) and `format.ts`.
+- **Event input is validated by one pure Zod module** (`src/lib/events/input.ts`): required =
+  title, description, location, category, start, end (+ series end date); only the assignees are
+  optional. The form imports the very same `parseEventInput` to show errors before sending, and
+  the server actions run it again — never trust the browser. `Event.description`/`location` stay
+  nullable in Prisma on purpose: rows created before the rule must keep rendering, and are only
+  blocked at their next edit through the form (status toggle / cancel-a-date don't go through it).
 - **Visibility is decided in one place.** `expandEvents` (`occurrences.ts`) drops drafts unless
   `includeDrafts`; the queries also exclude them in SQL. Every consumer (calendar, list,
   dashboard, `.ics` download, subscription feed) passes `includeDrafts = canManage`. A draft the

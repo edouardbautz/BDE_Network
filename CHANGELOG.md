@@ -26,6 +26,9 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
   date, brouillons, vues calendrier/liste, filtres, export `.ics` et flux d'abonnement personnel,
   notification de confirmation et rappel de la veille (planificateur interne, jamais envoyé deux
   fois), journal d'audit, données de démonstration. Voir `docs/events.md`.
+- Événements : titre, début, fin, lieu, description et catégorie sont obligatoires (validation
+  Zod côté serveur et dans le formulaire) ; les événements existants incomplets restent
+  affichables et ne sont bloqués qu'à leur prochaine modification.
 - Lien d'abonnement agenda au niveau du BDE (`/api/calendar/bde/<jeton>.ics`) : un seul lien pour
   l'agenda partagé du bureau, événements confirmés uniquement, géré par OWNER/ADMIN (afficher,
   copier, régénérer, désactiver, tout journalisé), avec une proposition de régénération quand un

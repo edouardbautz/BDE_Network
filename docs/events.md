@@ -60,8 +60,26 @@ _Événements_ → **Nouvel événement**.
   du BDE (`bde.timezone`), quel que soit le fuseau de votre navigateur. Elles sont enregistrées
   en UTC.
 - **Catégorie** : choisie parmi celles de votre configuration.
-- **Membres en charge** : un ou plusieurs membres. Ce sont eux qui reçoivent le rappel de la
-  veille par email.
+- **Membres en charge** : un ou plusieurs membres, **facultatif**. Ce sont eux qui reçoivent le
+  rappel de la veille par email.
+
+### Champs obligatoires
+
+Six champs sont obligatoires, repérés par un astérisque discret (`*`) : **titre, début, fin,
+lieu, description et catégorie**. Pour une série, la **date de fin de la série** l'est aussi. Seuls
+les membres en charge (et le statut, qui vaut « brouillon » par défaut) sont facultatifs. Un
+texte fait uniquement d'espaces compte comme vide.
+
+La vérification se fait deux fois, avec les mêmes règles : dans le formulaire (le message
+s'affiche sous chaque champ concerné, le curseur se place sur le premier à corriger, et le
+message disparaît dès que le champ est corrigé), puis **côté serveur** avant tout
+enregistrement (le formulaire n'est jamais cru sur parole).
+
+Les événements créés **avant** cette règle, avec un lieu ou une description vide, s'affichent
+normalement : ils ne sont bloqués qu'à leur **prochaine modification** dans le formulaire, qui
+demandera de compléter ces champs. Les actions rapides (confirmer, repasser en brouillon,
+annuler une date) ne passent pas par le formulaire et restent possibles.
+
 - **Statut** : un **brouillon** n'est visible que de ceux qui ont la permission. **Confirmer**
   l'événement le rend visible de tous les membres et déclenche la notification de confirmation.
 
@@ -248,7 +266,8 @@ lien du BDE (sans jamais le lien lui-même). L'auteur est toujours le compte ré
 `docker compose -f docker-compose.dev.yml up` (ou `npm run seed:demo`) crée une dizaine
 d'événements relatifs à la date du jour (passé, semaine en cours, séries hebdomadaire / toutes
 les 2 semaines / mensuelle avec une date annulée, week-end sur plusieurs jours, deux brouillons)
-si le module est activé dans votre configuration. Relancer le seed les réécrit, sans doublon.
+si le module est activé dans votre configuration. Chacun a un lieu et une description, comme
+l'exige le formulaire. Relancer le seed les réécrit, sans doublon.
 
 ## Dépannage
 
