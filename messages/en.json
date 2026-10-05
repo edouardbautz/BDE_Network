@@ -120,7 +120,7 @@
     },
     "retention": {
       "title": "Retention period",
-      "description": "Your data is kept for as long as you're a member. When an administrator removes you, your account is deleted; some historical records (like the audit log) keep your login as plain text, with no link to an account, for accountability."
+      "description": "Your data is kept for as long as you're a member. When an administrator removes you, your account is deleted; some historical records (like the audit log) keep your login as plain text, with no link to an account, for accountability. Events you created or were in charge of keep your login as plain text (when the Events module is enabled)."
     },
     "rights": {
       "title": "Your rights",
