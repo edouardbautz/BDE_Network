@@ -104,7 +104,7 @@ function form(values: Record<string, string | string[]>): FormData {
   const data = new FormData();
   const defaults: Record<string, string | string[]> = {
     title: 'Soirée de rentrée',
-    description: '',
+    description: 'Venez nombreux',
     location: 'Salle B',
     categoryKey: 'soiree',
     startsAt: '2026-10-10T20:00',
@@ -123,7 +123,7 @@ function form(values: Record<string, string | string[]>): FormData {
 const storedEvent = {
   id: 'evt1',
   title: 'Soirée de rentrée',
-  description: null,
+  description: 'Venez nombreux',
   location: 'Salle B',
   categoryKey: 'soiree',
   status: 'DRAFT' as const,
@@ -266,6 +266,27 @@ describe('createEvent', () => {
     expect(prisma.event.create).not.toHaveBeenCalled();
   });
 
+  it.each(['title', 'description', 'location', 'startsAt', 'endsAt'])(
+    'refuses to save without %s, server side',
+    async (name) => {
+      const state = await createEvent({}, form({ [name]: '' }));
+      expect(state.errors?.[name as keyof typeof state.errors]).toBe('required');
+      expect(prisma.event.create).not.toHaveBeenCalled();
+      expect(logAuditEvent).not.toHaveBeenCalled();
+    },
+  );
+
+  it('refuses a whitespace-only description or location', async () => {
+    const state = await createEvent({}, form({ description: '   ', location: '  ' }));
+    expect(state.errors).toEqual({ description: 'required', location: 'required' });
+    expect(prisma.event.create).not.toHaveBeenCalled();
+  });
+
+  it('keeps the members in charge optional', async () => {
+    await expect(createEvent({}, form({ assignees: [] }))).rejects.toThrow(RedirectSignal);
+    expect(prisma.event.create).toHaveBeenCalledTimes(1);
+  });
+
   it('rejects a member in charge that is unknown or still pending', async () => {
     vi.mocked(prisma.user.findMany).mockResolvedValue([]);
     const state = await createEvent({}, form({ assignees: ['ghost'] }));
@@ -374,6 +395,39 @@ describe('updateEvent', () => {
       RedirectSignal,
     );
     expect(after).not.toHaveBeenCalled();
+  });
+
+  describe('events saved before location and description became mandatory', () => {
+    const legacy = { ...storedEvent, description: null, location: null };
+
+    beforeEach(() => {
+      vi.mocked(prisma.event.findUnique).mockResolvedValue(legacy as never);
+    });
+
+    it('are not blocked until they are edited: the next edit must fill both in', async () => {
+      const state = await updateEvent('evt1', {}, form({ description: '', location: '' }));
+      expect(state.errors).toEqual({ description: 'required', location: 'required' });
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('can be saved once the missing fields are filled in', async () => {
+      await expect(
+        updateEvent('evt1', {}, form({ description: 'Enfin décrit', location: 'Salle C' })),
+      ).rejects.toThrow(RedirectSignal);
+      expect(prisma.event.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ description: 'Enfin décrit', location: 'Salle C' }),
+        }),
+      );
+    });
+
+    it('can still be confirmed without being edited', async () => {
+      vi.mocked(prisma.event.update).mockResolvedValue({
+        ...legacy,
+        status: 'CONFIRMED',
+      } as never);
+      await expect(setEventStatus('evt1', 'CONFIRMED')).resolves.toBeUndefined();
+    });
   });
 
   it('drops cancellations of occurrences that no longer exist after the series changed', async () => {

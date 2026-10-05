@@ -279,7 +279,9 @@
       "formErrors": {
         "invalidAssignee": "One of the members in charge does not exist or is not approved yet.",
         "notFound": "This event no longer exists."
-      }
+      },
+      "requiredLegend": "* Required field",
+      "optional": "optional"
     },
     "dashboard": {
       "title": "Upcoming events",

@@ -1,6 +1,11 @@
+import { z } from 'zod';
 import type { EventRecurrence, EventStatus } from '@/generated/prisma/client';
 import { MAX_OCCURRENCES, allOccurrences } from './recurrence';
 import { fromLocalDateTime, parseLocalDateInput, parseLocalInput, schoolYearOf } from './time';
+
+// This module is pure (no server-only imports): the event form runs it in the
+// browser to show errors before submitting, and the server actions run the very
+// same code again — the browser is never trusted.
 
 export const EVENT_RECURRENCES: readonly EventRecurrence[] = [
   'NONE',
@@ -53,8 +58,8 @@ export interface RawEventInput {
 
 export interface EventData {
   title: string;
-  description: string | null;
-  location: string | null;
+  description: string;
+  location: string;
   categoryKey: string;
   status: EventStatus;
   startsAt: Date;
@@ -72,10 +77,42 @@ function isOneOf<T extends string>(allowed: readonly T[], value: string): value 
   return (allowed as readonly string[]).includes(value);
 }
 
+/** A required text: surrounding spaces ignored, so "   " counts as empty. The
+ * messages are error codes, translated by the form (`events.form.errors.*`). */
+const requiredText = (maxLength: number) =>
+  z.string().trim().min(1, 'required').max(maxLength, 'tooLong');
+
+const requiredLocalDateTime = z
+  .string()
+  .min(1, 'required')
+  .refine((value) => parseLocalInput(value) !== null, 'invalid');
+
+/**
+ * Field-level rules. Required: title, description, location, category, start,
+ * end (and the series end date, checked below once the recurrence is known).
+ * Only the members in charge are optional.
+ */
+function fieldSchema(categoryKeys: readonly string[]) {
+  return z.object({
+    title: requiredText(TITLE_MAX_LENGTH),
+    description: requiredText(DESCRIPTION_MAX_LENGTH),
+    location: requiredText(LOCATION_MAX_LENGTH),
+    categoryKey: z
+      .string()
+      .min(1, 'required')
+      .refine((value) => categoryKeys.includes(value), 'invalid'),
+    startsAt: requiredLocalDateTime,
+    endsAt: requiredLocalDateTime,
+    recurrence: z.string().refine((value) => isOneOf(EVENT_RECURRENCES, value), 'invalid'),
+    status: z.string().refine((value) => isOneOf(EVENT_STATUSES, value), 'invalid'),
+  });
+}
+
 /**
  * Validates and normalises the event form. Dates are wall-clock values in
  * `timeZone` (the BDE timezone) and are converted to UTC here — the only
- * place a form date becomes an instant.
+ * place a form date becomes an instant. All problems are reported together,
+ * one code per field, so the form can show every error at once.
  */
 export function parseEventInput(
   raw: RawEventInput,
@@ -83,36 +120,24 @@ export function parseEventInput(
 ): ParsedEventInput {
   const errors: EventFormErrors = {};
 
-  const title = raw.title.trim();
-  if (!title) errors.title = 'required';
-  else if (title.length > TITLE_MAX_LENGTH) errors.title = 'tooLong';
+  const fields = fieldSchema(options.categoryKeys).safeParse(raw);
+  if (!fields.success) {
+    for (const issue of fields.error.issues) {
+      const field = issue.path[0] as EventFormField;
+      // Keep the first (most basic) problem of each field: "required" before "invalid".
+      errors[field] ??= issue.message as EventFormErrorCode;
+    }
+  }
 
-  const location = raw.location.trim();
-  if (location.length > LOCATION_MAX_LENGTH) errors.location = 'tooLong';
-
-  const description = raw.description.trim();
-  if (description.length > DESCRIPTION_MAX_LENGTH) errors.description = 'tooLong';
-
-  if (!isOneOf(options.categoryKeys, raw.categoryKey)) errors.categoryKey = 'invalid';
-  if (!isOneOf(EVENT_STATUSES, raw.status)) errors.status = 'invalid';
-
-  const recurrenceIsValid = isOneOf(EVENT_RECURRENCES, raw.recurrence);
-  if (!recurrenceIsValid) errors.recurrence = 'invalid';
-
-  const startLocal = raw.startsAt ? parseLocalInput(raw.startsAt) : null;
-  const endLocal = raw.endsAt ? parseLocalInput(raw.endsAt) : null;
-  if (!raw.startsAt) errors.startsAt = 'required';
-  else if (!startLocal) errors.startsAt = 'invalid';
-  if (!raw.endsAt) errors.endsAt = 'required';
-  else if (!endLocal) errors.endsAt = 'invalid';
-
+  const startLocal = parseLocalInput(raw.startsAt);
+  const endLocal = parseLocalInput(raw.endsAt);
   const startsAt = startLocal ? fromLocalDateTime(startLocal, options.timeZone) : null;
   const endsAt = endLocal ? fromLocalDateTime(endLocal, options.timeZone) : null;
   if (startsAt && endsAt && endsAt.getTime() <= startsAt.getTime()) {
     errors.endsAt = 'endBeforeStart';
   }
 
-  const recurrence = recurrenceIsValid ? (raw.recurrence as EventRecurrence) : 'NONE';
+  const recurrence = isOneOf(EVENT_RECURRENCES, raw.recurrence) ? raw.recurrence : 'NONE';
   let recurrenceUntil: Date | null = null;
 
   if (recurrence !== 'NONE') {
@@ -134,11 +159,10 @@ export function parseEventInput(
   }
 
   if (Object.keys(errors).length > 0 || !startsAt || !endsAt) {
-    // Surface "too many occurrences" only when everything else is fine, so it
-    // is never reported next to an unrelated error.
     return { ok: false, errors };
   }
 
+  // Reported only when everything else is fine, so it never sits next to an unrelated error.
   if (recurrence !== 'NONE' && recurrenceUntil) {
     const occurrences = allOccurrences(
       { startsAt, endsAt, recurrence, recurrenceUntil },
@@ -153,9 +177,9 @@ export function parseEventInput(
   return {
     ok: true,
     data: {
-      title,
-      description: description || null,
-      location: location || null,
+      title: raw.title.trim(),
+      description: raw.description.trim(),
+      location: raw.location.trim(),
       categoryKey: raw.categoryKey,
       status: raw.status as EventStatus,
       startsAt,

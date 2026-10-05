@@ -9,8 +9,9 @@ type Recurrence = 'NONE' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY';
 interface DemoEvent {
   id: string;
   title: string;
-  description?: string;
-  location?: string;
+  // Both are required by the event form, so the demo data respects the same rule.
+  description: string;
+  location: string;
   /** Index into the BDE's configured categories (wraps around). */
   category: number;
   status: 'DRAFT' | 'CONFIRMED';
@@ -109,6 +110,8 @@ export async function seedDemoEvents(
     {
       id: 'demo-event-foot',
       title: 'Tournoi de foot inter-promos',
+      description:
+        'Huit équipes, élimination directe. Inscriptions des équipes sur place dès 13h30.',
       location: 'Stade municipal',
       category: 1,
       status: 'CONFIRMED',
@@ -136,6 +139,7 @@ export async function seedDemoEvents(
     {
       id: 'demo-event-permanence',
       title: 'Permanence du bureau',
+      description: 'Le bureau reçoit les questions des étudiants et distribue les goodies.',
       location: 'Local du BDE',
       category: 3,
       status: 'CONFIRMED',
@@ -161,6 +165,7 @@ export async function seedDemoEvents(
     {
       id: 'demo-event-assemblee',
       title: 'Assemblée mensuelle du bureau',
+      description: 'Point sur le budget, les prochains événements et la répartition des tâches.',
       location: 'Local du BDE',
       category: 3,
       status: 'CONFIRMED',
@@ -175,6 +180,7 @@ export async function seedDemoEvents(
       id: 'demo-event-gala',
       title: 'Gala de fin d’année',
       description: 'Brouillon : lieu et traiteur à confirmer avant de prévenir les membres.',
+      location: 'À définir (salle des fêtes ou péniche)',
       category: 0,
       status: 'DRAFT',
       start: [75, 20, 0],
@@ -186,6 +192,7 @@ export async function seedDemoEvents(
       id: 'demo-event-ski',
       title: 'Sortie ski — à confirmer',
       description: 'Brouillon : en attente du devis du car.',
+      location: 'Station à définir, départ du parking du campus',
       category: 1,
       status: 'DRAFT',
       start: [40, 6, 30],
@@ -219,8 +226,8 @@ export async function seedDemoEvents(
 
     const data = {
       title: demo.title,
-      description: demo.description ?? null,
-      location: demo.location ?? null,
+      description: demo.description,
+      location: demo.location,
       categoryKey: category.key,
       status: demo.status,
       startsAt,

@@ -279,7 +279,9 @@
       "formErrors": {
         "invalidAssignee": "Un des membres en charge n'existe pas ou n'est pas encore validé.",
         "notFound": "Cet événement n'existe plus."
-      }
+      },
+      "requiredLegend": "* Champ obligatoire",
+      "optional": "facultatif"
     },
     "dashboard": {
       "title": "Prochains événements",
