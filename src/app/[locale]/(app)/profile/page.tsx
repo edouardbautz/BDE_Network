@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { redirect } from '@/i18n/navigation';
+import { accountLabel } from '@/lib/account-label';
 import { getEffectiveSession } from '@/lib/auth/session';
 import { isEventsModuleEnabled } from '@/lib/events/access';
 import { ensureCalendarToken } from '@/lib/events/export';
@@ -56,7 +57,7 @@ export default async function ProfilePage() {
             </CardDescription>
           </div>
           <Badge variant="secondary" className="ml-auto">
-            {tRoles(user.role)}
+            {accountLabel(user, tRoles)}
           </Badge>
         </CardHeader>
       </Card>

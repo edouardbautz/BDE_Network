@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { effectiveFor } from '@/test/session-fixtures';
 
 vi.mock('@/lib/auth/session', () => ({ getEffectiveSession: vi.fn() }));
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     user: { findUniqueOrThrow: vi.fn() },
-    modulePermission: { findMany: vi.fn() },
     auditLog: { findMany: vi.fn() },
     event: { findMany: vi.fn() },
     eventAssignee: { findMany: vi.fn() },
@@ -20,17 +20,14 @@ const SECRET = 'S'.repeat(43);
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockSession.mockResolvedValue({
-    user: { id: 'u1', login: 'alice', role: 'MEMBER' },
-    isImpersonating: false,
-    realRole: 'MEMBER',
-  } as Awaited<ReturnType<typeof getEffectiveSession>>);
+  mockSession.mockResolvedValue(effectiveFor('MEMBER', 'alice', 'u1'));
   vi.mocked(prisma.user.findUniqueOrThrow).mockResolvedValue({
     login: 'alice',
     fullName: 'Alice A',
+    status: 'MEMBER',
+    role: { name: 'Membre' },
     calendarToken: SECRET,
   } as never);
-  vi.mocked(prisma.modulePermission.findMany).mockResolvedValue([]);
   vi.mocked(prisma.auditLog.findMany).mockResolvedValue([]);
   vi.mocked(prisma.event.findMany).mockResolvedValue([{ title: 'Tournoi' }] as never);
   vi.mocked(prisma.eventAssignee.findMany).mockResolvedValue([
@@ -57,5 +54,6 @@ describe('GET /api/me/export', () => {
     expect(body.calendarFeedActive).toBe(true);
     expect(text).not.toContain(SECRET);
     expect(body.user).not.toHaveProperty('calendarToken');
+    expect(body.user).toMatchObject({ status: 'MEMBER', role: 'Membre' });
   });
 });

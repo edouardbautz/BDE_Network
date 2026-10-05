@@ -2,11 +2,12 @@ import { LayoutGrid } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { getConfig } from '@/config';
 import { UpcomingEventsCard } from '@/components/events/upcoming-events-card';
+import { accountLabel } from '@/lib/account-label';
 import { getEffectiveSession } from '@/lib/auth/session';
 import { getEventsAccess } from '@/lib/events/access';
 import { getCategories } from '@/lib/events/categories';
 import { listUpcomingOccurrences } from '@/lib/events/queries';
-import { canManageMembers } from '@/lib/permissions';
+import { can, MEMBERS_MANAGE } from '@/lib/permissions';
 import { Link } from '@/i18n/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -63,7 +64,7 @@ export default async function DashboardPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Badge variant="secondary">{tRoles(session.user.role)}</Badge>
+          <Badge variant="secondary">{accountLabel(session.user, tRoles)}</Badge>
         </CardContent>
       </Card>
 
@@ -86,7 +87,7 @@ export default async function DashboardPage() {
               <p className="text-sm font-medium">{t('empty.title')}</p>
               <p className="text-muted-foreground max-w-sm text-sm">{t('empty.description')}</p>
             </div>
-            {canManageMembers(session.user.role) && (
+            {can(session.user, MEMBERS_MANAGE) && (
               <Button size="sm" className="mt-1" render={<Link href="/members" />}>
                 {t('empty.cta')}
               </Button>

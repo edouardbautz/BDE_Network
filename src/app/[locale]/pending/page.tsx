@@ -17,7 +17,7 @@ export default async function PendingPage({ params }: { params: Promise<{ locale
     return null;
   }
 
-  if (session.user.role !== 'PENDING') {
+  if (session.user.status !== 'PENDING') {
     redirect({ href: '/dashboard', locale });
     return null;
   }

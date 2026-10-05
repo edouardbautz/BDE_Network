@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Role } from '@/generated/prisma/client';
+import { effective, effectiveFor, memberWith, type AccountKind } from '@/test/session-fixtures';
 
 /**
  * Every mutating action is its own HTTP entry point, so each must re-check
@@ -39,7 +39,6 @@ vi.mock('@/i18n/navigation', () => ({
 vi.mock('@/lib/events/notifications', () => ({ notifyEventConfirmed: vi.fn() }));
 vi.mock('@/lib/prisma', () => ({
   prisma: {
-    modulePermission: { findMany: vi.fn() },
     user: { findMany: vi.fn() },
     event: {
       create: vi.fn(),
@@ -67,13 +66,17 @@ const {
   updateEvent,
 } = await import('./actions');
 
+type Who = AccountKind | { permissions: string[] } | null;
+
+/** A member whose role manages events. */
+const EVENT_MANAGER: Who = { permissions: ['events.view', 'events.manage'] };
+
 interface Scenario {
   enabled?: boolean;
-  role: Role | null;
-  granted?: string[];
+  who: Who;
 }
 
-function setup({ enabled = true, role, granted = [] }: Scenario) {
+function setup({ enabled = true, who }: Scenario) {
   vi.mocked(getConfig).mockReturnValue({
     bde: { timezone: 'Europe/Paris' },
     modules: { enabled: enabled ? ['events'] : [] },
@@ -87,16 +90,11 @@ function setup({ enabled = true, role, granted = [] }: Scenario) {
   } as unknown as ReturnType<typeof getConfig>);
 
   vi.mocked(getEffectiveSession).mockResolvedValue(
-    role
-      ? ({
-          user: { id: 'actor-1', login: 'real-actor', role },
-          isImpersonating: false,
-          realRole: role,
-        } as Awaited<ReturnType<typeof getEffectiveSession>>)
-      : null,
-  );
-  vi.mocked(prisma.modulePermission.findMany).mockResolvedValue(
-    granted.map((module) => ({ module })) as never,
+    who === null
+      ? null
+      : typeof who === 'string'
+        ? effectiveFor(who, 'real-actor')
+        : effective(memberWith(who.permissions, 'real-actor')),
   );
 }
 
@@ -145,12 +143,19 @@ const series = {
 };
 
 const FORBIDDEN: [string, Scenario][] = [
-  ['no session', { role: null }],
-  ['a PENDING account holding the permission', { role: 'PENDING', granted: ['events'] }],
-  ['a MEMBER without the permission', { role: 'MEMBER' }],
-  ['an ADMIN without the permission', { role: 'ADMIN' }],
-  ['a MEMBER holding only another module', { role: 'MEMBER', granted: ['finance'] }],
-  ['the OWNER when the module is disabled', { role: 'OWNER', enabled: false }],
+  ['no session', { who: null }],
+  ['a PENDING account', { who: 'PENDING' }],
+  ['the default member (can only view)', { who: 'MEMBER' }],
+  ['a role that only views events', { who: { permissions: ['events.view'] } }],
+  [
+    'a role that holds only another module',
+    { who: { permissions: ['events.view', 'finance.manage'] } },
+  ],
+  [
+    'a role that only manages the shared calendar',
+    { who: { permissions: ['events.shared_calendar'] } },
+  ],
+  ['the OWNER when the module is disabled', { who: 'OWNER', enabled: false }],
 ];
 
 function expectNothingHappened() {
@@ -215,7 +220,7 @@ describe('access control on every action', () => {
 
 describe('createEvent', () => {
   beforeEach(() => {
-    setup({ role: 'MEMBER', granted: ['events'] });
+    setup({ who: EVENT_MANAGER });
     vi.mocked(prisma.event.create).mockResolvedValue({ ...storedEvent } as never);
   });
 
@@ -244,7 +249,7 @@ describe('createEvent', () => {
   });
 
   it('works for the OWNER without an explicit permission row', async () => {
-    setup({ role: 'OWNER' });
+    setup({ who: 'OWNER' });
     await expect(createEvent({}, form({}))).rejects.toThrow(RedirectSignal);
     expect(prisma.event.create).toHaveBeenCalledTimes(1);
   });
@@ -338,7 +343,7 @@ describe('createEvent', () => {
 
 describe('updateEvent', () => {
   beforeEach(() => {
-    setup({ role: 'MEMBER', granted: ['events'] });
+    setup({ who: EVENT_MANAGER });
     vi.mocked(prisma.$transaction).mockImplementation((async (operations: unknown[]) =>
       Promise.all(operations)) as never);
     vi.mocked(prisma.event.update).mockResolvedValue({ ...storedEvent } as never);
@@ -457,7 +462,7 @@ describe('updateEvent', () => {
 });
 
 describe('deleteEvent and setEventStatus', () => {
-  beforeEach(() => setup({ role: 'MEMBER', granted: ['events'] }));
+  beforeEach(() => setup({ who: EVENT_MANAGER }));
 
   it('deletes the event, audits it with its title, and returns to the list', async () => {
     await expect(deleteEvent('evt1')).rejects.toThrow(new RedirectSignal('/events'));
@@ -511,7 +516,7 @@ describe('cancelOccurrence / restoreOccurrence', () => {
   const second = new Date('2026-10-17T18:00:00Z').getTime();
 
   beforeEach(() => {
-    setup({ role: 'MEMBER', granted: ['events'] });
+    setup({ who: EVENT_MANAGER });
     vi.mocked(prisma.event.findUnique).mockResolvedValue(series as never);
   });
 

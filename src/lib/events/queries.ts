@@ -1,6 +1,6 @@
 import { getConfig } from '@/config';
 import type { Prisma } from '@/generated/prisma/client';
-import { APPROVED_ROLES } from '@/lib/permissions';
+import { APPROVED_STATUSES } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
 import {
   expandEvents,
@@ -119,7 +119,7 @@ export async function getFilterOptions(includeDrafts: boolean): Promise<FilterOp
 /** Approved members who can be put in charge of an event. */
 export async function listAssignableMembers(): Promise<{ login: string; name: string }[]> {
   const users = await prisma.user.findMany({
-    where: { role: { in: [...APPROVED_ROLES] } },
+    where: { status: { in: [...APPROVED_STATUSES] } },
     select: { login: true, fullName: true },
     orderBy: { fullName: 'asc' },
   });

@@ -17,10 +17,11 @@ interface UserMenuProps {
   name: string;
   login: string;
   image: string | null;
-  role: string;
+  /** The owner/pending label, or the name of the member's role. */
+  roleLabel: string;
 }
 
-export async function UserMenu({ name, login, image, role }: UserMenuProps) {
+export async function UserMenu({ name, login, image, roleLabel }: UserMenuProps) {
   const t = await getTranslations();
   const initials = name
     .split(' ')
@@ -38,7 +39,7 @@ export async function UserMenu({ name, login, image, role }: UserMenuProps) {
         </Avatar>
         <span className="flex min-w-0 flex-col">
           <span className="truncate text-sm font-medium">{name}</span>
-          <span className="text-muted-foreground truncate text-xs">{t(`roles.${role}`)}</span>
+          <span className="text-muted-foreground truncate text-xs">{roleLabel}</span>
         </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
@@ -46,7 +47,7 @@ export async function UserMenu({ name, login, image, role }: UserMenuProps) {
           <span className="text-sm font-medium">{name}</span>
           <span className="text-muted-foreground text-xs">{login}</span>
           <Badge variant="secondary" className="w-fit">
-            {t(`roles.${role}`)}
+            {roleLabel}
           </Badge>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

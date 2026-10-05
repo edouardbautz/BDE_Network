@@ -20,7 +20,7 @@ export default async function AuditLogPage({ params }: { params: Promise<{ local
   const { locale } = await params;
   const session = await getEffectiveSession();
 
-  if (!session?.user || !canViewAuditLog(session.user.role)) {
+  if (!session?.user || !canViewAuditLog(session.user)) {
     redirect({ href: '/dashboard', locale });
   }
 

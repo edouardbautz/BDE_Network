@@ -1,9 +1,10 @@
 import { getTranslations } from 'next-intl/server';
 import { getEffectiveSession } from '@/lib/auth/session';
 import { getConfig } from '@/config';
-import { isEventsModuleEnabled } from '@/lib/events/access';
+import { canViewEvents } from '@/lib/events/access';
 import { isDatabaseReachable } from '@/lib/health';
-import { canManageMembers, canViewAuditLog } from '@/lib/permissions';
+import { can, canViewAuditLog, MEMBERS_MANAGE } from '@/lib/permissions';
+import { accountLabel } from '@/lib/account-label';
 import { redirect } from '@/i18n/navigation';
 import { AppShell, type NavItem } from '@/components/layout/app-shell';
 import { UserMenu } from '@/components/layout/user-menu';
@@ -32,22 +33,22 @@ export default async function AppLayout({
     return null;
   }
 
-  if (session.user.role === 'PENDING') {
+  if (session.user.status === 'PENDING') {
     redirect({ href: '/pending', locale });
     return null;
   }
 
   const config = getConfig();
-  const t = await getTranslations('nav');
+  const [t, tRoles] = await Promise.all([getTranslations('nav'), getTranslations('roles')]);
 
   const navItems: NavItem[] = [{ id: 'dashboard', href: '/dashboard', label: t('dashboard') }];
-  if (isEventsModuleEnabled()) {
+  if (canViewEvents(session.user)) {
     navItems.push({ id: 'events', href: '/events', label: t('events') });
   }
-  if (canManageMembers(session.user.role)) {
+  if (can(session.user, MEMBERS_MANAGE)) {
     navItems.push({ id: 'members', href: '/members', label: t('members') });
   }
-  if (canViewAuditLog(session.user.role)) {
+  if (canViewAuditLog(session.user)) {
     navItems.push({ id: 'auditLog', href: '/audit-log', label: t('auditLog') });
   }
 
@@ -64,7 +65,7 @@ export default async function AppLayout({
           name={session.user.name ?? session.user.login}
           login={session.user.login}
           image={session.user.image ?? null}
-          role={session.user.role}
+          roleLabel={accountLabel(session.user, tRoles)}
         />
       }
       footer={<Footer />}

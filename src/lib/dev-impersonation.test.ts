@@ -12,8 +12,9 @@ const { cookies } = await import('next/headers');
 const {
   DEV_IMPERSONATION_COOKIE,
   isDevImpersonationEnabled,
-  isImpersonatableRole,
-  getImpersonationCookieRole,
+  getImpersonation,
+  parseImpersonation,
+  serializeImpersonation,
 } = await import('./dev-impersonation');
 
 function fakeCookieStore(value?: string) {
@@ -57,40 +58,60 @@ describe('isDevImpersonationEnabled', () => {
   });
 });
 
-describe('isImpersonatableRole', () => {
-  it('accepts PENDING, MEMBER, ADMIN', () => {
-    expect(isImpersonatableRole('PENDING')).toBe(true);
-    expect(isImpersonatableRole('MEMBER')).toBe(true);
-    expect(isImpersonatableRole('ADMIN')).toBe(true);
+describe('parseImpersonation / serializeImpersonation', () => {
+  it('accepts PENDING and a role id', () => {
+    expect(parseImpersonation('PENDING')).toEqual({ kind: 'pending' });
+    expect(parseImpersonation('role:role-admin')).toEqual({ kind: 'role', roleId: 'role-admin' });
+    expect(parseImpersonation('role:ckx9a8b7c0000')).toEqual({
+      kind: 'role',
+      roleId: 'ckx9a8b7c0000',
+    });
   });
 
-  it('rejects OWNER — you can only simulate a role below your real one', () => {
-    expect(isImpersonatableRole('OWNER')).toBe(false);
+  it('rejects OWNER — you can only simulate something below your real status', () => {
+    expect(parseImpersonation('OWNER')).toBeNull();
   });
 
-  it('rejects garbage and empty values', () => {
-    expect(isImpersonatableRole('SUPERADMIN')).toBe(false);
-    expect(isImpersonatableRole(undefined)).toBe(false);
-    expect(isImpersonatableRole(null)).toBe(false);
+  it('rejects garbage, empty values and malformed role ids', () => {
+    for (const value of [
+      'SUPERADMIN',
+      'MEMBER',
+      'role:',
+      'role:a b',
+      'role:../x',
+      'role:' + 'a'.repeat(65),
+      '',
+      undefined,
+      null,
+    ]) {
+      expect(parseImpersonation(value as string)).toBeNull();
+    }
+  });
+
+  it('round-trips', () => {
+    for (const value of ['PENDING', 'role:role-member']) {
+      const parsed = parseImpersonation(value);
+      expect(parsed && serializeImpersonation(parsed)).toBe(value);
+    }
   });
 });
 
-describe('getImpersonationCookieRole', () => {
+describe('getImpersonation', () => {
   it('ignores the cookie entirely in production, regardless of its content', async () => {
     vi.stubEnv('NODE_ENV', 'production');
     vi.stubEnv('ENABLE_DEV_IMPERSONATION', 'true');
-    vi.mocked(cookies).mockResolvedValue(fakeCookieStore('MEMBER'));
+    vi.mocked(cookies).mockResolvedValue(fakeCookieStore('role:role-member'));
 
-    await expect(getImpersonationCookieRole()).resolves.toBeNull();
+    await expect(getImpersonation()).resolves.toBeNull();
     expect(cookies).not.toHaveBeenCalled();
   });
 
-  it('returns the simulated role when enabled and the cookie holds a valid role', async () => {
+  it('returns the simulation when enabled and the cookie holds a valid choice', async () => {
     vi.stubEnv('NODE_ENV', 'development');
     vi.stubEnv('ENABLE_DEV_IMPERSONATION', 'true');
-    vi.mocked(cookies).mockResolvedValue(fakeCookieStore('MEMBER'));
+    vi.mocked(cookies).mockResolvedValue(fakeCookieStore('role:role-member'));
 
-    await expect(getImpersonationCookieRole()).resolves.toBe('MEMBER');
+    await expect(getImpersonation()).resolves.toEqual({ kind: 'role', roleId: 'role-member' });
   });
 
   it('returns null for a tampered/garbage cookie value', async () => {
@@ -98,7 +119,7 @@ describe('getImpersonationCookieRole', () => {
     vi.stubEnv('ENABLE_DEV_IMPERSONATION', 'true');
     vi.mocked(cookies).mockResolvedValue(fakeCookieStore('SUPERADMIN'));
 
-    await expect(getImpersonationCookieRole()).resolves.toBeNull();
+    await expect(getImpersonation()).resolves.toBeNull();
   });
 
   it('returns null when no cookie is set', async () => {
@@ -106,6 +127,6 @@ describe('getImpersonationCookieRole', () => {
     vi.stubEnv('ENABLE_DEV_IMPERSONATION', 'true');
     vi.mocked(cookies).mockResolvedValue(fakeCookieStore(undefined));
 
-    await expect(getImpersonationCookieRole()).resolves.toBeNull();
+    await expect(getImpersonation()).resolves.toBeNull();
   });
 });

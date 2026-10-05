@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Role } from '@/generated/prisma/client';
 import type { Session } from 'next-auth';
+import { sessionFor } from '@/test/session-fixtures';
 
 /**
  * The banner is the "no UI element in production" half of the guarantee —
@@ -12,8 +12,9 @@ import type { Session } from 'next-auth';
 vi.mock('@/lib/auth', () => ({ auth: vi.fn() }));
 vi.mock('@/lib/dev-impersonation', () => ({
   isDevImpersonationEnabled: vi.fn(),
-  getImpersonationCookieRole: vi.fn(),
+  getImpersonation: vi.fn(),
 }));
+vi.mock('@/lib/prisma', () => ({ prisma: { role: { findMany: vi.fn() } } }));
 vi.mock('@/lib/dev-impersonation-actions', () => ({
   startImpersonation: vi.fn(),
   stopImpersonation: vi.fn(),
@@ -23,8 +24,8 @@ vi.mock('next-intl/server', () => ({
 }));
 
 const { auth } = await import('@/lib/auth');
-const { isDevImpersonationEnabled, getImpersonationCookieRole } =
-  await import('@/lib/dev-impersonation');
+const { prisma } = await import('@/lib/prisma');
+const { isDevImpersonationEnabled, getImpersonation } = await import('@/lib/dev-impersonation');
 const { ImpersonationBanner } = await import('./impersonation-banner');
 
 // NextAuth's `auth` export is overloaded (plain call / middleware / route
@@ -32,23 +33,12 @@ const { ImpersonationBanner } = await import('./impersonation-banner');
 // resolve to an unrelated overload.
 const mockAuth = vi.mocked(auth as () => Promise<Session | null>);
 
-function sessionFor(role: Role): Session {
-  return {
-    user: {
-      id: 'owner-1',
-      login: 'real-owner',
-      role,
-      campus: 'Paris',
-      name: 'Real Owner',
-      email: 'owner@example.com',
-      image: null,
-    },
-    expires: '2099-01-01T00:00:00.000Z',
-  };
-}
-
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(prisma.role.findMany).mockResolvedValue([
+    { id: 'role-admin', name: 'Admin', isDefault: false },
+    { id: 'role-member', name: 'Membre', isDefault: true },
+  ] as never);
 });
 
 describe('ImpersonationBanner', () => {
@@ -66,17 +56,18 @@ describe('ImpersonationBanner', () => {
     await expect(ImpersonationBanner()).resolves.toBeNull();
   });
 
-  it('renders nothing for a real non-OWNER, even when enabled', async () => {
+  it('renders nothing for a real non-OWNER (a member, even with all permissions), even when enabled', async () => {
     vi.mocked(isDevImpersonationEnabled).mockReturnValue(true);
-    mockAuth.mockResolvedValue(sessionFor('MEMBER'));
+    mockAuth.mockResolvedValue(sessionFor('ADMIN'));
 
     await expect(ImpersonationBanner()).resolves.toBeNull();
+    expect(prisma.role.findMany).not.toHaveBeenCalled();
   });
 
   it('renders the role switcher for a real OWNER with no active impersonation', async () => {
     vi.mocked(isDevImpersonationEnabled).mockReturnValue(true);
     mockAuth.mockResolvedValue(sessionFor('OWNER'));
-    vi.mocked(getImpersonationCookieRole).mockResolvedValue(null);
+    vi.mocked(getImpersonation).mockResolvedValue(null);
 
     await expect(ImpersonationBanner()).resolves.toBeTruthy();
   });
@@ -84,7 +75,7 @@ describe('ImpersonationBanner', () => {
   it('renders the active-mode banner for a real OWNER currently impersonating', async () => {
     vi.mocked(isDevImpersonationEnabled).mockReturnValue(true);
     mockAuth.mockResolvedValue(sessionFor('OWNER'));
-    vi.mocked(getImpersonationCookieRole).mockResolvedValue('MEMBER');
+    vi.mocked(getImpersonation).mockResolvedValue({ kind: 'role', roleId: 'role-member' });
 
     await expect(ImpersonationBanner()).resolves.toBeTruthy();
   });

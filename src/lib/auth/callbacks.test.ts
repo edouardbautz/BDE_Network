@@ -10,6 +10,7 @@ import type { Session, User } from 'next-auth';
  */
 
 vi.mock('@/lib/prisma', () => ({ prisma: { user: { findUnique: vi.fn() } } }));
+vi.mock('@/config', () => ({ getConfig: vi.fn(() => ({ modules: { enabled: ['events'] } })) }));
 
 const { prisma } = await import('@/lib/prisma');
 const { jwtCallback, sessionCallback } = await import('./callbacks');
@@ -23,7 +24,9 @@ const dbUser = {
   email: 'alice@example.org',
   photoUrl: null,
   campus: 'Paris',
-  role: 'MEMBER',
+  status: 'MEMBER',
+  roleId: 'role-member',
+  role: { name: 'Membre', permissions: ['events.view'], allPermissions: false },
 };
 
 function session(): Session {
@@ -66,18 +69,74 @@ describe('jwtCallback', () => {
 });
 
 describe('sessionCallback', () => {
-  it('fills the session from the database row', async () => {
+  it('fills the session from the database row, with the rights of the role', async () => {
     findUnique.mockResolvedValue(dbUser as never);
 
     const result = await sessionCallback({ session: session(), token: { login: 'alice' } });
 
+    expect(findUnique).toHaveBeenCalledWith({ where: { login: 'alice' }, include: { role: true } });
     expect(result.user).toMatchObject({
       id: 'u1',
       login: 'alice',
-      role: 'MEMBER',
+      status: 'MEMBER',
+      roleId: 'role-member',
+      roleName: 'Membre',
+      permissions: ['events.view'],
+      holdsAll: false,
       campus: 'Paris',
       name: 'Alice A',
     });
+  });
+
+  it('gives an owner every permission and no role', async () => {
+    findUnique.mockResolvedValue({ ...dbUser, status: 'OWNER', roleId: null, role: null } as never);
+
+    const result = await sessionCallback({ session: session(), token: { login: 'alice' } });
+
+    expect(result.user).toMatchObject({
+      status: 'OWNER',
+      roleId: null,
+      roleName: null,
+      holdsAll: true,
+    });
+    expect(result.user.permissions).toContain('members.manage');
+    expect(result.user.permissions).toContain('events.manage');
+  });
+
+  it('gives a pending account nothing', async () => {
+    findUnique.mockResolvedValue({
+      ...dbUser,
+      status: 'PENDING',
+      roleId: null,
+      role: null,
+    } as never);
+
+    const result = await sessionCallback({ session: session(), token: { login: 'alice' } });
+
+    expect(result.user).toMatchObject({ status: 'PENDING', permissions: [], holdsAll: false });
+  });
+
+  it('ignores the permissions of a module that is not enabled', async () => {
+    findUnique.mockResolvedValue({
+      ...dbUser,
+      role: {
+        name: 'Finance',
+        permissions: ['events.view', 'finance.manage'],
+        allPermissions: false,
+      },
+    } as never);
+
+    const result = await sessionCallback({ session: session(), token: { login: 'alice' } });
+
+    expect(result.user.permissions).toEqual(['events.view']);
+  });
+
+  it('refuses a member without a role (the database cannot store one) instead of a half-filled session', async () => {
+    findUnique.mockResolvedValue({ ...dbUser, roleId: null, role: null } as never);
+
+    await expect(
+      sessionCallback({ session: session(), token: { login: 'alice' } }),
+    ).rejects.toThrow('No account');
   });
 
   it('refuses instead of returning a half-filled session when the account is gone', async () => {

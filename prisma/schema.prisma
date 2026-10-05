@@ -7,13 +7,35 @@ datasource db {
   provider = "postgresql"
 }
 
-/// Application role. PENDING users have no access besides the waiting page.
-/// OWNER is granted only via the "owners" list in bde.config.yml, never from the UI.
-enum Role {
+/// Account status. OWNER is granted only via the "owners" list in bde.config.yml, never
+/// from the UI, and holds every permission. PENDING users have no access besides the
+/// waiting page. MEMBER is an approved account: its rights come from its (single) custom
+/// Role. A database check keeps "status = MEMBER" and "roleId is set" in step.
+enum UserStatus {
   OWNER
-  ADMIN
   MEMBER
   PENDING
+}
+
+/// A role created by the BDE ("Président", "Trésorier"...): a named set of permissions,
+/// given to approved members one at a time. Permission keys are free-form strings checked
+/// against the registry in src/lib/permissions (app layer, like module keys), so a future
+/// module adds its own without a migration. A key of a module that is not enabled is kept
+/// but ignored. `allPermissions` means "everything, including the permissions of modules
+/// added later" (the default "Admin" role); the audit log is OWNER-only and never a permission.
+model Role {
+  id             String   @id @default(cuid())
+  name           String   @unique
+  description    String?
+  permissions    String[] @default([])
+  allPermissions Boolean  @default(false)
+  /// The role new members are offered at approval and that a former owner falls back to.
+  /// Exactly one, and it cannot be deleted.
+  isDefault      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  users User[]
 }
 
 /// A person authenticated through 42 OAuth. Profile fields are resynced from
@@ -21,51 +43,34 @@ enum Role {
 /// business/audit records keep the author's login as plain text so history
 /// survives the deletion (see AuditLog.actorLogin).
 model User {
-  id          String    @id @default(cuid())
+  id          String     @id @default(cuid())
   /// 42 intra login, e.g. "jdoe"
-  login       String    @unique
+  login       String     @unique
   fullName    String
-  email       String    @unique
+  email       String     @unique
   photoUrl    String?
   /// 42 campus name as returned by the intra API, e.g. "Paris"
   campus      String
-  role        Role      @default(PENDING)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  status      UserStatus @default(PENDING)
+  /// Set exactly when status is MEMBER. RESTRICT: a role still held cannot be deleted.
+  roleId      String?
+  role        Role?      @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   lastLoginAt DateTime?
 
-  modulePermissions        ModulePermission[]  @relation("ModulePermissionUser")
-  grantedModulePermissions ModulePermission[]  @relation("ModulePermissionGrantedBy")
-  auditLogEntries          AuditLog[]          @relation("AuditLogActor")
-  authoredEvents           Event[]             @relation("EventAuthor")
-  assignedEvents           EventAssignee[]
-  cancelledOccurrences     EventCancellation[]
+  auditLogEntries      AuditLog[]          @relation("AuditLogActor")
+  authoredEvents       Event[]             @relation("EventAuthor")
+  assignedEvents       EventAssignee[]
+  cancelledOccurrences EventCancellation[]
 
   /// Secret token of this member's personal .ics subscription feed (events
   /// module). Regenerable from the profile page; null until first generated.
   /// Deleted with the row, so a removed member loses feed access immediately.
   calendarToken String? @unique
 
-  @@index([role])
-}
-
-/// Grants a MEMBER/ADMIN access to one module (e.g. "finance"), on top of
-/// their role. Module keys are free-form strings validated at the app layer
-/// against the `modules.enabled` list in bde.config.yml.
-model ModulePermission {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation("ModulePermissionUser", fields: [userId], references: [id], onDelete: Cascade)
-  module String
-
-  grantedByLogin String
-  grantedById    String?
-  grantedBy      User?   @relation("ModulePermissionGrantedBy", fields: [grantedById], references: [id], onDelete: SetNull)
-
-  createdAt DateTime @default(now())
-
-  @@unique([userId, module])
-  @@index([module])
+  @@index([status])
+  @@index([roleId])
 }
 
 /// Immutable, append-only record of sensitive actions. Readable by OWNER only,

@@ -280,22 +280,5 @@ export async function seedDemoEvents(
     }
   }
 
-  // The "events" module permission for one demo member, so the members panel
-  // shows both states (granted / not granted).
-  const helper = users.get('demo-member1');
-  const granter = users.get('demo-admin');
-  if (helper && granter) {
-    await prisma.modulePermission.upsert({
-      where: { userId_module: { userId: helper.id, module: 'events' } },
-      update: {},
-      create: {
-        userId: helper.id,
-        module: 'events',
-        grantedByLogin: 'demo-admin',
-        grantedById: granter.id,
-      },
-    });
-  }
-
   console.log(`Seeded ${demoEvents.length} demo events.`);
 }

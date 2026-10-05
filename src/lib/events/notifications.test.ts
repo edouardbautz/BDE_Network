@@ -135,7 +135,7 @@ describe('notifyEventConfirmed', () => {
   it('notifies every approved member by email', async () => {
     await notifyEventConfirmed('evt1');
     expect(prisma.user.findMany).toHaveBeenCalledWith({
-      where: { role: { in: ['MEMBER', 'ADMIN', 'OWNER'] } },
+      where: { status: { in: ['MEMBER', 'OWNER'] } },
       select: { email: true },
     });
     expect(notify).toHaveBeenCalledTimes(2);

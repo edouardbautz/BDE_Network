@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Role } from '@/generated/prisma/client';
 import type { OccurrenceView } from './occurrences';
 
 vi.mock('@/config', () => ({ getConfig: vi.fn() }));
@@ -13,7 +12,6 @@ vi.mock('@/lib/prisma', () => ({
       updateMany: vi.fn(),
       update: vi.fn(),
     },
-    modulePermission: { findMany: vi.fn() },
   },
 }));
 
@@ -39,11 +37,31 @@ function setConfig(enabled = true) {
   } as unknown as ReturnType<typeof getConfig>);
 }
 
-function owner(role: Role, granted: string[] = []) {
-  vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: 'u1', role } as never);
-  vi.mocked(prisma.modulePermission.findMany).mockResolvedValue(
-    granted.map((module) => ({ module })) as never,
-  );
+type TokenOwner = 'OWNER' | 'ADMIN' | 'MEMBER' | 'PENDING' | { permissions: string[] };
+
+/** The account the token belongs to, as the database returns it. */
+function owner(who: TokenOwner) {
+  const row =
+    who === 'OWNER'
+      ? { status: 'OWNER', roleId: null, role: null }
+      : who === 'PENDING'
+        ? { status: 'PENDING', roleId: null, role: null }
+        : who === 'ADMIN'
+          ? {
+              status: 'MEMBER',
+              roleId: 'role-admin',
+              role: { name: 'Admin', permissions: [], allPermissions: true },
+            }
+          : {
+              status: 'MEMBER',
+              roleId: 'role-x',
+              role: {
+                name: 'Role',
+                permissions: who === 'MEMBER' ? ['events.view'] : who.permissions,
+                allPermissions: false,
+              },
+            };
+  vi.mocked(prisma.user.findUnique).mockResolvedValue(row as never);
 }
 
 function occurrence(title: string, status: 'DRAFT' | 'CONFIRMED'): OccurrenceView {
@@ -110,7 +128,13 @@ describe('buildSubscriptionFeed — who may read the feed', () => {
   });
 
   it('returns nothing for an account that is not approved', async () => {
-    owner('PENDING', ['events']);
+    owner('PENDING');
+    await expect(buildSubscriptionFeed(TOKEN, NOW)).resolves.toBeNull();
+    expect(listOccurrences).not.toHaveBeenCalled();
+  });
+
+  it('returns nothing for a member whose role does not allow viewing events', async () => {
+    owner({ permissions: ['members.manage'] });
     await expect(buildSubscriptionFeed(TOKEN, NOW)).resolves.toBeNull();
     expect(listOccurrences).not.toHaveBeenCalled();
   });
@@ -120,7 +144,7 @@ describe('buildSubscriptionFeed — who may read the feed', () => {
     await buildSubscriptionFeed(TOKEN, NOW);
     expect(prisma.user.findUnique).toHaveBeenCalledWith({
       where: { calendarToken: TOKEN },
-      select: { id: true, role: true },
+      select: { status: true, roleId: true, role: true },
     });
   });
 });
@@ -132,14 +156,14 @@ describe('buildSubscriptionFeed — which events it exposes', () => {
     expect(listOccurrences).toHaveBeenCalledWith(expect.objectContaining({ includeDrafts: false }));
   });
 
-  it('excludes drafts for an admin who only holds another module', async () => {
-    owner('ADMIN', ['finance']);
+  it('excludes drafts for a role that only views events and manages another module', async () => {
+    owner({ permissions: ['events.view', 'finance.manage'] });
     await buildSubscriptionFeed(TOKEN, NOW);
     expect(listOccurrences).toHaveBeenCalledWith(expect.objectContaining({ includeDrafts: false }));
   });
 
-  it('includes drafts for a member with the events permission', async () => {
-    owner('MEMBER', ['events']);
+  it('includes drafts for a member whose role manages events', async () => {
+    owner({ permissions: ['events.view', 'events.manage'] });
     await buildSubscriptionFeed(TOKEN, NOW);
     expect(listOccurrences).toHaveBeenCalledWith(expect.objectContaining({ includeDrafts: true }));
   });
@@ -150,10 +174,16 @@ describe('buildSubscriptionFeed — which events it exposes', () => {
     expect(listOccurrences).toHaveBeenCalledWith(expect.objectContaining({ includeDrafts: true }));
   });
 
-  it('re-evaluates the permission on every request (revocation is immediate)', async () => {
-    owner('MEMBER', ['events']);
+  it('includes drafts for an admin (all permissions)', async () => {
+    owner('ADMIN');
     await buildSubscriptionFeed(TOKEN, NOW);
-    owner('MEMBER', []);
+    expect(listOccurrences).toHaveBeenCalledWith(expect.objectContaining({ includeDrafts: true }));
+  });
+
+  it('re-evaluates the permission on every request (revocation is immediate)', async () => {
+    owner({ permissions: ['events.view', 'events.manage'] });
+    await buildSubscriptionFeed(TOKEN, NOW);
+    owner('MEMBER');
     await buildSubscriptionFeed(TOKEN, NOW);
 
     const calls = vi.mocked(listOccurrences).mock.calls;

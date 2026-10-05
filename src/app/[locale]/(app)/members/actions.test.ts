@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Role, User } from '@/generated/prisma/client';
+import type { User } from '@/generated/prisma/client';
 import type { Session } from 'next-auth';
+import { sessionFor, type AccountKind } from '@/test/session-fixtures';
 
 /**
  * The pages already redirect PENDING/MEMBER away from /members, but a
@@ -18,10 +19,7 @@ vi.mock('@/lib/prisma', () => ({
       delete: vi.fn(),
       findUniqueOrThrow: vi.fn(),
     },
-    modulePermission: {
-      upsert: vi.fn(),
-      deleteMany: vi.fn(),
-    },
+    role: { findFirst: vi.fn() },
   },
 }));
 vi.mock('@/config', () => ({
@@ -33,28 +31,12 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 const { auth } = await import('@/lib/auth');
 const { prisma } = await import('@/lib/prisma');
 const { logAuditEvent } = await import('@/lib/audit-log');
-const { approveMember, rejectMember, removeMember, setModulePermission } =
-  await import('./actions');
+const { approveMember, rejectMember, removeMember } = await import('./actions');
 
 // NextAuth's `auth` export is overloaded (plain call / middleware / route
 // wrapper) — pin it to the plain-call signature so `vi.mocked` doesn't
 // resolve to an unrelated overload.
 const mockAuth = vi.mocked(auth as () => Promise<Session | null>);
-
-function sessionFor(role: Role, login = 'test-login'): Session {
-  return {
-    user: {
-      id: 'actor-1',
-      login,
-      role,
-      campus: 'Paris',
-      name: 'Test User',
-      email: 'test@example.com',
-      image: null,
-    },
-    expires: '2099-01-01T00:00:00.000Z',
-  };
-}
 
 function fakeUser(overrides: Partial<User>): User {
   return {
@@ -64,7 +46,8 @@ function fakeUser(overrides: Partial<User>): User {
     email: 'newbie@example.com',
     photoUrl: null,
     campus: 'Paris',
-    role: 'PENDING',
+    status: 'PENDING',
+    roleId: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     lastLoginAt: null,
@@ -78,10 +61,10 @@ beforeEach(() => {
 });
 
 describe('approveMember', () => {
-  it.each<Role>(['PENDING', 'MEMBER'])(
-    'rejects a %s actor without touching the database',
-    async (role) => {
-      mockAuth.mockResolvedValue(sessionFor(role));
+  it.each<AccountKind>(['PENDING', 'MEMBER'])(
+    'rejects a %s actor (no members.manage) without touching the database',
+    async (kind) => {
+      mockAuth.mockResolvedValue(sessionFor(kind));
 
       await expect(approveMember('target-1')).rejects.toThrow('Forbidden');
 
@@ -97,27 +80,45 @@ describe('approveMember', () => {
     expect(prisma.user.update).not.toHaveBeenCalled();
   });
 
-  it('succeeds for an ADMIN and logs the action under their real login', async () => {
+  it('gives the default role to the approved member and logs it under the real login', async () => {
     mockAuth.mockResolvedValue(sessionFor('ADMIN', 'real-admin'));
-    vi.mocked(prisma.user.update).mockResolvedValue(fakeUser({ role: 'MEMBER' }));
+    vi.mocked(prisma.role.findFirst).mockResolvedValue({
+      id: 'role-member',
+      name: 'Membre',
+    } as never);
+    vi.mocked(prisma.user.update).mockResolvedValue(fakeUser({ status: 'MEMBER' }));
 
     await approveMember('target-1');
 
     expect(prisma.user.update).toHaveBeenCalledWith({
-      where: { id: 'target-1', role: 'PENDING' },
-      data: { role: 'MEMBER' },
+      where: { id: 'target-1', status: 'PENDING' },
+      data: { status: 'MEMBER', roleId: 'role-member' },
     });
     expect(logAuditEvent).toHaveBeenCalledWith(
-      expect.objectContaining({ actorLogin: 'real-admin', action: 'member.approve' }),
+      expect.objectContaining({
+        actorLogin: 'real-admin',
+        action: 'member.approve',
+        metadata: expect.objectContaining({ role: 'Membre' }),
+      }),
     );
+  });
+
+  it('refuses to approve when there is no default role to give', async () => {
+    mockAuth.mockResolvedValue(sessionFor('ADMIN'));
+    vi.mocked(prisma.role.findFirst).mockResolvedValue(null);
+
+    await expect(approveMember('target-1')).rejects.toThrow('default role');
+
+    expect(prisma.user.update).not.toHaveBeenCalled();
+    expect(logAuditEvent).not.toHaveBeenCalled();
   });
 });
 
 describe('rejectMember', () => {
-  it.each<Role>(['PENDING', 'MEMBER'])(
-    'rejects a %s actor without touching the database',
-    async (role) => {
-      mockAuth.mockResolvedValue(sessionFor(role));
+  it.each<AccountKind>(['PENDING', 'MEMBER'])(
+    'rejects a %s actor (no members.manage) without touching the database',
+    async (kind) => {
+      mockAuth.mockResolvedValue(sessionFor(kind));
 
       await expect(rejectMember('target-1')).rejects.toThrow('Forbidden');
 
@@ -132,7 +133,9 @@ describe('rejectMember', () => {
 
     await rejectMember('target-1');
 
-    expect(prisma.user.delete).toHaveBeenCalledWith({ where: { id: 'target-1', role: 'PENDING' } });
+    expect(prisma.user.delete).toHaveBeenCalledWith({
+      where: { id: 'target-1', status: 'PENDING' },
+    });
     expect(logAuditEvent).toHaveBeenCalledWith(
       expect.objectContaining({ actorLogin: 'real-owner', action: 'member.reject' }),
     );
@@ -140,10 +143,10 @@ describe('rejectMember', () => {
 });
 
 describe('removeMember', () => {
-  it.each<Role>(['PENDING', 'MEMBER'])(
-    'rejects a %s actor without touching the database',
-    async (role) => {
-      mockAuth.mockResolvedValue(sessionFor(role));
+  it.each<AccountKind>(['PENDING', 'MEMBER'])(
+    'rejects a %s actor (no members.manage) without touching the database',
+    async (kind) => {
+      mockAuth.mockResolvedValue(sessionFor(kind));
 
       await expect(removeMember('target-1')).rejects.toThrow('Forbidden');
 
@@ -156,10 +159,10 @@ describe('removeMember', () => {
   it('succeeds for an ADMIN removing a MEMBER and logs it under their real login', async () => {
     mockAuth.mockResolvedValue(sessionFor('ADMIN', 'real-admin'));
     vi.mocked(prisma.user.findUniqueOrThrow).mockResolvedValue(
-      fakeUser({ role: 'MEMBER', login: 'departing' }),
+      fakeUser({ status: 'MEMBER', roleId: 'role-member', login: 'departing' }),
     );
     vi.mocked(prisma.user.delete).mockResolvedValue(
-      fakeUser({ role: 'MEMBER', login: 'departing' }),
+      fakeUser({ status: 'MEMBER', roleId: 'role-member', login: 'departing' }),
     );
 
     await removeMember('target-1');
@@ -167,78 +170,6 @@ describe('removeMember', () => {
     expect(prisma.user.delete).toHaveBeenCalledWith({ where: { id: 'target-1' } });
     expect(logAuditEvent).toHaveBeenCalledWith(
       expect.objectContaining({ actorLogin: 'real-admin', action: 'member.remove' }),
-    );
-  });
-});
-
-describe('setModulePermission', () => {
-  it.each<Role>(['PENDING', 'MEMBER'])(
-    'rejects a %s actor without touching the database',
-    async (role) => {
-      mockAuth.mockResolvedValue(sessionFor(role));
-
-      await expect(setModulePermission('target-1', 'events', true)).rejects.toThrow('Forbidden');
-
-      expect(prisma.modulePermission.upsert).not.toHaveBeenCalled();
-      expect(prisma.modulePermission.deleteMany).not.toHaveBeenCalled();
-      expect(logAuditEvent).not.toHaveBeenCalled();
-    },
-  );
-
-  it('rejects a module that is not enabled in the config', async () => {
-    mockAuth.mockResolvedValue(sessionFor('ADMIN'));
-
-    await expect(setModulePermission('target-1', 'finance', true)).rejects.toThrow('not enabled');
-
-    expect(prisma.modulePermission.upsert).not.toHaveBeenCalled();
-  });
-
-  it.each<Role>(['PENDING', 'OWNER'])('rejects a %s target', async (targetRole) => {
-    mockAuth.mockResolvedValue(sessionFor('ADMIN'));
-    vi.mocked(prisma.user.findUniqueOrThrow).mockResolvedValue(fakeUser({ role: targetRole }));
-
-    await expect(setModulePermission('target-1', 'events', true)).rejects.toThrow(
-      'approved, non-OWNER',
-    );
-
-    expect(prisma.modulePermission.upsert).not.toHaveBeenCalled();
-  });
-
-  it('grants the permission and audits it under the real actor', async () => {
-    mockAuth.mockResolvedValue(sessionFor('ADMIN', 'real-admin'));
-    vi.mocked(prisma.user.findUniqueOrThrow).mockResolvedValue(
-      fakeUser({ role: 'MEMBER', login: 'helper' }),
-    );
-
-    await setModulePermission('target-1', 'events', true);
-
-    expect(prisma.modulePermission.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { userId_module: { userId: 'target-1', module: 'events' } },
-        create: expect.objectContaining({ grantedByLogin: 'real-admin', module: 'events' }),
-      }),
-    );
-    expect(logAuditEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        actorLogin: 'real-admin',
-        action: 'permission.grant',
-        targetLabel: 'helper',
-        metadata: expect.objectContaining({ module: 'events' }),
-      }),
-    );
-  });
-
-  it('revokes the permission and audits it', async () => {
-    mockAuth.mockResolvedValue(sessionFor('OWNER', 'real-owner'));
-    vi.mocked(prisma.user.findUniqueOrThrow).mockResolvedValue(fakeUser({ role: 'MEMBER' }));
-
-    await setModulePermission('target-1', 'events', false);
-
-    expect(prisma.modulePermission.deleteMany).toHaveBeenCalledWith({
-      where: { userId: 'target-1', module: 'events' },
-    });
-    expect(logAuditEvent).toHaveBeenCalledWith(
-      expect.objectContaining({ action: 'permission.revoke' }),
     );
   });
 });

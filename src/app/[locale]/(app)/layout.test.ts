@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Role } from '@/generated/prisma/client';
 import type { Session } from 'next-auth';
+import { sessionFor, type AccountKind } from '@/test/session-fixtures';
 
 /**
  * The (app) layout is the first gate every /dashboard, /members and
@@ -38,21 +38,6 @@ const { default: AppLayout } = await import('./layout');
 // resolve to an unrelated overload.
 const mockAuth = vi.mocked(auth as () => Promise<Session | null>);
 
-function sessionFor(role: Role): Session {
-  return {
-    user: {
-      id: 'user-1',
-      login: 'test-login',
-      role,
-      campus: 'Paris',
-      name: 'Test User',
-      email: 'test@example.com',
-      image: null,
-    },
-    expires: '2099-01-01T00:00:00.000Z',
-  };
-}
-
 function callLayout() {
   return AppLayout({ children: null, params: Promise.resolve({ locale: 'fr' }) });
 }
@@ -88,10 +73,10 @@ describe('(app) layout — the shared gate for /dashboard, /members, /audit-log'
     expect(redirect).toHaveBeenCalledWith(expect.objectContaining({ href: '/pending' }));
   });
 
-  it.each<Role>(['MEMBER', 'ADMIN', 'OWNER'])(
+  it.each<AccountKind>(['MEMBER', 'ADMIN', 'OWNER'])(
     'lets a %s user through to the app shell',
-    async (role) => {
-      mockAuth.mockResolvedValue(sessionFor(role));
+    async (kind) => {
+      mockAuth.mockResolvedValue(sessionFor(kind));
 
       await expect(callLayout()).resolves.toBeTruthy();
 

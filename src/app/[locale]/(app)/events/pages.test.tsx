@@ -60,7 +60,8 @@ vi.mock('@/config', () => ({
 vi.mock('@/lib/events/access', () => ({
   getEventsAccess: vi.fn(),
   // The real rule is covered in access.test.ts; page tests only need its outcome.
-  canManageSharedCalendar: (role: string) => role === 'ADMIN' || role === 'OWNER',
+  canManageSharedCalendar: (user: { permissions: string[] }) =>
+    user.permissions.includes('events.shared_calendar'),
 }));
 vi.mock('@/lib/events/queries', () => ({
   getFilterOptions: vi.fn(async () => ({ schoolYears: [], assignees: [] })),
@@ -89,15 +90,16 @@ const { default: EditEventPage } = await import('./[id]/edit/page');
 type Access = Awaited<ReturnType<typeof getEventsAccess>>;
 const asMember = {
   canManage: false,
-  session: { user: { role: 'MEMBER' } },
+  session: { user: { permissions: ['events.view'] } },
 } as unknown as Access;
 const asManager = {
   canManage: true,
-  session: { user: { role: 'MEMBER' } },
+  session: { user: { permissions: ['events.view', 'events.manage'] } },
 } as unknown as Access;
-const asAdmin = {
+// Holds the shared-calendar permission without being able to manage events.
+const asCalendarManager = {
   canManage: false,
-  session: { user: { role: 'ADMIN' } },
+  session: { user: { permissions: ['events.view', 'events.shared_calendar'] } },
 } as unknown as Access;
 
 const storedEvent = {
@@ -165,8 +167,8 @@ describe('/events', () => {
     expect(html).toContain('href="/events/new"');
   });
 
-  it('offers the shared-calendar entry to admins only, whatever their events permission', async () => {
-    vi.mocked(getEventsAccess).mockResolvedValue(asAdmin);
+  it('offers the shared-calendar entry only with its own permission, whatever the events permission', async () => {
+    vi.mocked(getEventsAccess).mockResolvedValue(asCalendarManager);
     expect(await eventsPage()).toContain('href="/events/shared-calendar"');
 
     vi.mocked(getEventsAccess).mockResolvedValue(asManager);

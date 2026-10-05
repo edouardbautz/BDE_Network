@@ -1,8 +1,9 @@
 import { randomBytes } from 'node:crypto';
 import { getConfig } from '@/config';
 import { prisma } from '@/lib/prisma';
-import { getUserModuleKeys, isApproved } from '@/lib/permissions';
-import { canManageEvents, isEventsModuleEnabled } from './access';
+import { accessFor } from '@/lib/auth/access';
+import { isApproved } from '@/lib/permissions';
+import { canManageEvents, canViewEvents, isEventsModuleEnabled } from './access';
 import { buildIcs, occurrenceUid, type IcsEvent } from './ics';
 import type { OccurrenceView } from './occurrences';
 import { listOccurrences } from './queries';
@@ -102,13 +103,18 @@ export async function buildSubscriptionFeed(
 
   const user = await prisma.user.findUnique({
     where: { calendarToken: token },
-    select: { id: true, role: true },
+    select: { status: true, roleId: true, role: true },
   });
-  if (!user || !isApproved(user.role)) {
+  if (!user || !isApproved(user.status)) {
     return null;
   }
 
-  const includeDrafts = canManageEvents(user.role, await getUserModuleKeys(user.id));
+  // The owner's *current* rights, as for a signed-in request.
+  const access = accessFor(user, getConfig().modules.enabled);
+  if (!canViewEvents(access)) {
+    return null;
+  }
+  const includeDrafts = canManageEvents(access);
   const occurrences = await listOccurrences({
     range: {
       from: new Date(now.getTime() - FEED_PAST_DAYS * DAY_MS),

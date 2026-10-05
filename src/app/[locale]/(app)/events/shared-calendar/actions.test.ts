@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Role } from '@/generated/prisma/client';
+import { effective, effectiveFor, memberWith, type AccountKind } from '@/test/session-fixtures';
 
 /**
- * The BDE-wide calendar link is managed by OWNER and ADMIN only. Each action
+ * The BDE-wide calendar link is managed with the events.shared_calendar permission only. Each action
  * is its own entry point, so each re-checks. Runs the real access rules
  * against mocked session/config/database.
  */
@@ -34,49 +34,46 @@ vi.mock('@/lib/events/export', () => ({
   regenerateBdeFeed: vi.fn(),
   disableBdeFeed: vi.fn(),
 }));
-vi.mock('@/lib/prisma', () => ({ prisma: { modulePermission: { findMany: vi.fn() } } }));
 
 const { getConfig } = await import('@/config');
 const { getEffectiveSession } = await import('@/lib/auth/session');
 const { logAuditEvent } = await import('@/lib/audit-log');
-const { prisma } = await import('@/lib/prisma');
 const feed = await import('@/lib/events/export');
 const { disableSharedCalendar, enableSharedCalendar, regenerateSharedCalendar } =
   await import('./actions');
 
 const SECRET = 'S'.repeat(43);
 
+type Who = AccountKind | { permissions: string[] } | null;
+
 interface Scenario {
   enabled?: boolean;
-  role: Role | null;
-  granted?: string[];
+  who: Who;
 }
 
-function setup({ enabled = true, role, granted = [] }: Scenario) {
+function setup({ enabled = true, who }: Scenario) {
   vi.mocked(getConfig).mockReturnValue({
     modules: { enabled: enabled ? ['events'] : [] },
   } as unknown as ReturnType<typeof getConfig>);
   vi.mocked(getEffectiveSession).mockResolvedValue(
-    role
-      ? ({
-          user: { id: 'actor-1', login: 'real-actor', role },
-          isImpersonating: false,
-          realRole: role,
-        } as Awaited<ReturnType<typeof getEffectiveSession>>)
-      : null,
-  );
-  vi.mocked(prisma.modulePermission.findMany).mockResolvedValue(
-    granted.map((module) => ({ module })) as never,
+    who === null
+      ? null
+      : typeof who === 'string'
+        ? effectiveFor(who, 'real-actor')
+        : effective(memberWith(who.permissions, 'real-actor')),
   );
 }
 
 const FORBIDDEN: [string, Scenario][] = [
-  ['no session', { role: null }],
-  ['a PENDING account', { role: 'PENDING', granted: ['events'] }],
-  ['a MEMBER', { role: 'MEMBER' }],
-  ['a MEMBER who holds the events permission', { role: 'MEMBER', granted: ['events'] }],
-  ['an ADMIN when the module is disabled', { role: 'ADMIN', enabled: false }],
-  ['the OWNER when the module is disabled', { role: 'OWNER', enabled: false }],
+  ['no session', { who: null }],
+  ['a PENDING account', { who: 'PENDING' }],
+  ['the default member', { who: 'MEMBER' }],
+  [
+    'a member whose role manages events but not the shared calendar',
+    { who: { permissions: ['events.view', 'events.manage'] } },
+  ],
+  ['an admin when the module is disabled', { who: 'ADMIN', enabled: false }],
+  ['the OWNER when the module is disabled', { who: 'OWNER', enabled: false }],
 ];
 
 function expectNothingHappened() {
@@ -113,8 +110,15 @@ describe('access control', () => {
   });
 });
 
-describe.each<Role>(['ADMIN', 'OWNER'])('as %s', (role) => {
-  beforeEach(() => setup({ role }));
+describe.each<[string, Who]>([
+  ['an ADMIN (all permissions)', 'ADMIN'],
+  ['the OWNER', 'OWNER'],
+  [
+    'a member whose role has only the shared-calendar permission',
+    { permissions: ['events.shared_calendar'] },
+  ],
+])('as %s', (_label, who) => {
+  beforeEach(() => setup({ who }));
 
   it('enables the link and audits it', async () => {
     vi.mocked(feed.getBdeFeedToken).mockResolvedValue(null);

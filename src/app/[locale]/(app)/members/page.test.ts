@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Role } from '@/generated/prisma/client';
 import type { Session } from 'next-auth';
+import { sessionFor, type AccountKind } from '@/test/session-fixtures';
 
 /**
  * Proves that hitting /members directly (no menu, no click) is blocked for
- * any role below ADMIN, and that no member data is ever fetched for a
+ * any account without the members.manage permission, and that no member data is ever fetched for a
  * rejected request — a redirect alone isn't enough if the query already ran.
  */
 
@@ -28,7 +28,6 @@ vi.mock('../events/shared-calendar/actions', () => ({ regenerateSharedCalendar: 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     user: { findMany: vi.fn().mockResolvedValue([]) },
-    modulePermission: { findMany: vi.fn().mockResolvedValue([]) },
   },
 }));
 vi.mock('@/config', () => ({
@@ -48,21 +47,6 @@ const { default: MembersPage } = await import('./page');
 // resolve to an unrelated overload.
 const mockAuth = vi.mocked(auth as () => Promise<Session | null>);
 
-function sessionFor(role: Role): Session {
-  return {
-    user: {
-      id: 'user-1',
-      login: 'test-login',
-      role,
-      campus: 'Paris',
-      name: 'Test User',
-      email: 'test@example.com',
-      image: null,
-    },
-    expires: '2099-01-01T00:00:00.000Z',
-  };
-}
-
 function callPage() {
   return MembersPage({
     params: Promise.resolve({ locale: 'fr' }),
@@ -76,10 +60,10 @@ beforeEach(() => {
 });
 
 describe('MembersPage — direct URL access control', () => {
-  it.each<Role>(['PENDING', 'MEMBER'])(
+  it.each<AccountKind>(['PENDING', 'MEMBER'])(
     'redirects a %s user to /dashboard without querying the member list',
-    async (role) => {
-      mockAuth.mockResolvedValue(sessionFor(role));
+    async (kind) => {
+      mockAuth.mockResolvedValue(sessionFor(kind));
 
       await expect(callPage()).rejects.toThrow(RedirectSignal);
 
@@ -97,10 +81,10 @@ describe('MembersPage — direct URL access control', () => {
     expect(prisma.user.findMany).not.toHaveBeenCalled();
   });
 
-  it.each<Role>(['ADMIN', 'OWNER'])(
+  it.each<AccountKind>(['ADMIN', 'OWNER'])(
     'lets a %s user through and loads the member list',
-    async (role) => {
-      mockAuth.mockResolvedValue(sessionFor(role));
+    async (kind) => {
+      mockAuth.mockResolvedValue(sessionFor(kind));
 
       await expect(callPage()).resolves.toBeTruthy();
 

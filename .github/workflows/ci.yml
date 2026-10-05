@@ -108,3 +108,47 @@ jobs:
       - name: Show the logs
         if: always()
         run: docker logs app
+
+  # Applies the real migration files to a real PostgreSQL: the custom-roles data migration is
+  # tested with legacy accounts (src/test/migrations), and the migrations must leave exactly the
+  # schema prisma/schema.prisma describes (no drift).
+  migrations:
+    name: migrations
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: bde
+          POSTGRES_PASSWORD: ci-password
+          POSTGRES_DB: bde_network
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U bde -d bde_network"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://bde:ci-password@127.0.0.1:5432/bde_network?schema=public
+      MIGRATION_TEST_DATABASE_URL: postgresql://bde:ci-password@127.0.0.1:5432/postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test the data migrations on legacy accounts
+        run: npx vitest run src/test/migrations
+
+      - name: Apply every migration to an empty database
+        run: npx prisma migrate deploy
+
+      - name: Check the migrations leave no drift from schema.prisma
+        run: npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code

@@ -25,7 +25,7 @@ export default async function AuthErrorPage({
   const session = await getEffectiveSession();
 
   if (session?.user) {
-    redirect({ href: session.user.role === 'PENDING' ? '/pending' : '/dashboard', locale });
+    redirect({ href: session.user.status === 'PENDING' ? '/pending' : '/dashboard', locale });
     return null;
   }
 

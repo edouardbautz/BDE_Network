@@ -1,10 +1,14 @@
 import { getConfig } from '@/config';
 import { EVENTS_MODULE_KEY } from '@/config/schema';
-import type { Role } from '@/generated/prisma/client';
 import { getEffectiveSession, type EffectiveSession } from '@/lib/auth/session';
-import { getUserModuleKeys, hasMinRole, hasModuleAccess, isApproved } from '@/lib/permissions';
+import { can, managePermission, viewPermission, type PermissionHolder } from '@/lib/permissions';
 
 export { EVENTS_MODULE_KEY };
+
+/** The permissions of the events module (see MODULE_EXTRA_PERMISSIONS in lib/permissions). */
+export const EVENTS_VIEW = viewPermission(EVENTS_MODULE_KEY);
+export const EVENTS_MANAGE = managePermission(EVENTS_MODULE_KEY);
+export const EVENTS_SHARED_CALENDAR = `${EVENTS_MODULE_KEY}.shared_calendar`;
 
 /** Whether `modules.enabled` in bde.config.yml contains "events". When it
  * does not, no route, link, API or scheduler of the module is reachable. */
@@ -12,21 +16,19 @@ export function isEventsModuleEnabled(): boolean {
   return getConfig().modules.enabled.includes(EVENTS_MODULE_KEY);
 }
 
-/** Every approved member can read confirmed events. */
-export function canViewEvents(role: Role): boolean {
-  return isApproved(role);
+/** Seeing the confirmed events takes the "view" permission of the module. */
+export function canViewEvents(holder: PermissionHolder): boolean {
+  return can(holder, EVENTS_VIEW);
 }
 
-/** Creating, editing, deleting and seeing drafts requires the "events"
- * module permission (granted by an admin); OWNER always has it. */
-export function canManageEvents(role: Role, grantedModuleKeys: string[]): boolean {
-  return isApproved(role) && hasModuleAccess(role, grantedModuleKeys, EVENTS_MODULE_KEY);
+/** Creating, editing, deleting and seeing drafts takes the "manage" permission. */
+export function canManageEvents(holder: PermissionHolder): boolean {
+  return can(holder, EVENTS_MANAGE);
 }
 
-/** The BDE-wide calendar link is an administrative matter: OWNER and ADMIN
- * only, independently of the "events" module permission. */
-export function canManageSharedCalendar(role: Role): boolean {
-  return hasMinRole(role, 'ADMIN');
+/** The BDE-wide calendar link has its own permission, independent of managing events. */
+export function canManageSharedCalendar(holder: PermissionHolder): boolean {
+  return can(holder, EVENTS_SHARED_CALENDAR);
 }
 
 export interface EventsAccess {
@@ -37,19 +39,18 @@ export interface EventsAccess {
 
 /** The single entry point for pages and actions of the events module.
  * Returns null when the module is disabled, nobody is signed in, or the
- * account is not approved — callers treat that as "not found"/"forbidden". */
+ * account may not view events — callers treat that as "not found"/"forbidden". */
 export async function getEventsAccess(): Promise<EventsAccess | null> {
   if (!isEventsModuleEnabled()) {
     return null;
   }
 
   const session = await getEffectiveSession();
-  if (!session?.user || !canViewEvents(session.user.role)) {
+  if (!session || !canViewEvents(session.user)) {
     return null;
   }
 
-  const moduleKeys = await getUserModuleKeys(session.user.id);
-  return { session, canManage: canManageEvents(session.user.role, moduleKeys) };
+  return { session, canManage: canManageEvents(session.user) };
 }
 
 /** Same as getEventsAccess but throws unless the user may manage events.
@@ -63,11 +64,11 @@ export async function requireEventsManager(): Promise<EventsAccess> {
   return access;
 }
 
-/** Same as getEventsAccess but throws unless the user is OWNER or ADMIN. Every
- * action that touches the BDE-wide calendar link starts with this. */
+/** Same as getEventsAccess but throws unless the user may manage the BDE calendar
+ * link. Every action that touches it starts with this. */
 export async function requireSharedCalendarManager(): Promise<EventsAccess> {
   const access = await getEventsAccess();
-  if (!access || !canManageSharedCalendar(access.session.user.role)) {
+  if (!access || !canManageSharedCalendar(access.session.user)) {
     throw new Error('Forbidden');
   }
   return access;

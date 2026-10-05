@@ -3,10 +3,11 @@
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 import {
   DEV_IMPERSONATION_COOKIE,
   isDevImpersonationEnabled,
-  isImpersonatableRole,
+  parseImpersonation,
 } from './dev-impersonation';
 
 /** Only the real (never simulated) OWNER may switch roles — checked against
@@ -18,20 +19,31 @@ async function requireRealOwner(): Promise<void> {
   }
 
   const session = await auth();
-  if (!session?.user || session.user.role !== 'OWNER') {
+  if (!session?.user || session.user.status !== 'OWNER') {
     throw new Error('Forbidden');
   }
 }
 
-export async function startImpersonation(role: string): Promise<void> {
+/** `choice` is "PENDING" or "role:<id>" of an existing role. */
+export async function startImpersonation(choice: string): Promise<void> {
   await requireRealOwner();
 
-  if (!isImpersonatableRole(role)) {
+  const impersonation = parseImpersonation(choice);
+  if (!impersonation) {
     throw new Error('Invalid role');
+  }
+  if (impersonation.kind === 'role') {
+    const role = await prisma.role.findUnique({
+      where: { id: impersonation.roleId },
+      select: { id: true },
+    });
+    if (!role) {
+      throw new Error('Invalid role');
+    }
   }
 
   const store = await cookies();
-  store.set(DEV_IMPERSONATION_COOKIE, role, { httpOnly: true, sameSite: 'lax', path: '/' });
+  store.set(DEV_IMPERSONATION_COOKIE, choice, { httpOnly: true, sameSite: 'lax', path: '/' });
   revalidatePath('/', 'layout');
 }
 

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { FortyTwoProvider } from './fortytwo-provider';
 import { isCampusAllowed, isOwnerLogin } from './authorize';
 import { jwtCallback, sessionCallback } from './callbacks';
+import { accountAfterLogin } from './account';
 
 const AUTH_ERROR_PATH = '/auth-error';
 
@@ -52,7 +53,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             email,
             photoUrl: user.image ?? null,
             campus,
-            role: isOwner ? 'OWNER' : existing.role === 'OWNER' ? 'MEMBER' : existing.role,
+            ...(await accountAfterLogin(existing, isOwner)),
             lastLoginAt: new Date(),
           },
         });
@@ -64,7 +65,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             email,
             photoUrl: user.image ?? null,
             campus,
-            role: isOwner ? 'OWNER' : 'PENDING',
+            status: isOwner ? 'OWNER' : 'PENDING',
             lastLoginAt: new Date(),
           },
         });

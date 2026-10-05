@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Role } from '@/generated/prisma/client';
 import { renderToHtml } from '@/test/render-server';
+import { effective, effectiveFor, memberWith, type AccountKind } from '@/test/session-fixtures';
 
 const { NotFoundSignal, RedirectSignal } = vi.hoisted(() => ({
   NotFoundSignal: class NotFoundSignal extends Error {},
@@ -32,9 +32,6 @@ vi.mock('@/i18n/navigation', () => ({
 }));
 vi.mock('@/config', () => ({ getConfig: vi.fn() }));
 vi.mock('@/lib/auth/session', () => ({ getEffectiveSession: vi.fn() }));
-vi.mock('@/lib/prisma', () => ({
-  prisma: { modulePermission: { findMany: vi.fn(async () => []) } },
-}));
 vi.mock('@/lib/events/export', () => ({ getBdeFeedToken: vi.fn() }));
 vi.mock('@/lib/events/origin', () => ({ getOrigin: vi.fn(async () => 'https://bde.example') }));
 vi.mock('./actions', () => ({
@@ -50,18 +47,18 @@ const { default: SharedCalendarPage } = await import('./page');
 
 const TOKEN = 'T'.repeat(43);
 
-function access(role: Role | null, moduleEnabled = true) {
+type Who = AccountKind | { permissions: string[] } | null;
+
+function access(who: Who, moduleEnabled = true) {
   vi.mocked(getConfig).mockReturnValue({
     modules: { enabled: moduleEnabled ? ['events'] : [] },
   } as unknown as ReturnType<typeof getConfig>);
   vi.mocked(getEffectiveSession).mockResolvedValue(
-    role
-      ? ({
-          user: { id: 'u1', login: 'someone', role },
-          isImpersonating: false,
-          realRole: role,
-        } as Awaited<ReturnType<typeof getEffectiveSession>>)
-      : null,
+    who === null
+      ? null
+      : typeof who === 'string'
+        ? effectiveFor(who)
+        : effective(memberWith(who.permissions)),
   );
 }
 
@@ -84,40 +81,47 @@ describe('/events/shared-calendar', () => {
     await expect(page()).rejects.toThrow(NotFoundSignal);
   });
 
-  it.each<Role>(['MEMBER'])(
-    'sends a %s back to the events without ever reading the token',
-    async (role) => {
-      access(role);
-      await expect(page()).rejects.toThrow(new RedirectSignal('/events'));
-      expect(getBdeFeedToken).not.toHaveBeenCalled();
-    },
-  );
+  it.each<[string, Who]>([
+    ['the default member', 'MEMBER'],
+    [
+      'a role that manages events but not the shared calendar',
+      { permissions: ['events.view', 'events.manage'] },
+    ],
+  ])('sends %s back to the events without ever reading the token', async (_label, who) => {
+    access(who);
+    await expect(page()).rejects.toThrow(new RedirectSignal('/events'));
+    expect(getBdeFeedToken).not.toHaveBeenCalled();
+  });
 
-  it.each<Role>(['ADMIN', 'OWNER'])(
-    'shows %s the activation prompt when the link is off',
-    async (role) => {
-      access(role);
-      vi.mocked(getBdeFeedToken).mockResolvedValue(null);
-      const html = await page();
-      expect(html).toContain('inactive.enable');
-      expect(html).not.toContain('/api/calendar/bde/');
-    },
-  );
+  it.each<[string, Who]>([
+    ['an admin', 'ADMIN'],
+    ['the owner', 'OWNER'],
+    [
+      'a role with only the shared-calendar permission',
+      { permissions: ['events.shared_calendar'] },
+    ],
+  ])('shows %s the activation prompt when the link is off', async (_label, who) => {
+    access(who);
+    vi.mocked(getBdeFeedToken).mockResolvedValue(null);
+    const html = await page();
+    expect(html).toContain('inactive.enable');
+    expect(html).not.toContain('/api/calendar/bde/');
+  });
 
-  it.each<Role>(['ADMIN', 'OWNER'])(
-    'shows %s the link and management controls when it is on',
-    async (role) => {
-      access(role);
-      vi.mocked(getBdeFeedToken).mockResolvedValue(TOKEN);
-      const html = await page();
+  it.each<[string, Who]>([
+    ['an admin', 'ADMIN'],
+    ['the owner', 'OWNER'],
+  ])('shows %s the link and management controls when it is on', async (_label, who) => {
+    access(who);
+    vi.mocked(getBdeFeedToken).mockResolvedValue(TOKEN);
+    const html = await page();
 
-      expect(html).toContain(`https://bde.example/api/calendar/bde/${TOKEN}.ics`);
-      expect(html).toContain('regenerate.confirm');
-      expect(html).toContain('disable.confirm');
-      expect(html).toContain('active.confirmedOnly');
-      expect(html).toContain('active.limit');
-    },
-  );
+    expect(html).toContain(`https://bde.example/api/calendar/bde/${TOKEN}.ics`);
+    expect(html).toContain('regenerate.confirm');
+    expect(html).toContain('disable.confirm');
+    expect(html).toContain('active.confirmedOnly');
+    expect(html).toContain('active.limit');
+  });
 
   it('shows the outcome banner for a known status only', async () => {
     access('ADMIN');

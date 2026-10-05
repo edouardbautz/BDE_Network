@@ -90,7 +90,7 @@ export default async function EventsPage({
     : [];
 
   // The BDE-wide calendar link is for OWNER and ADMIN, whatever their events permission.
-  const sharedCalendarButton = canManageSharedCalendar(access.session.user.role) ? (
+  const sharedCalendarButton = canManageSharedCalendar(access.session.user) ? (
     <Button variant="outline" size="sm" render={<Link href="/events/shared-calendar" />}>
       <CalendarSync data-icon="inline-start" />
       {t('sharedCalendar.open')}

@@ -1,33 +1,34 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Role } from '@/generated/prisma/client';
+import { effective, effectiveFor, memberWith, type AccountKind } from '@/test/session-fixtures';
 
 vi.mock('@/config', () => ({ getConfig: vi.fn() }));
 vi.mock('@/lib/auth/session', () => ({ getEffectiveSession: vi.fn() }));
-vi.mock('@/lib/prisma', () => ({ prisma: { modulePermission: { findMany: vi.fn() } } }));
 
 const { getConfig } = await import('@/config');
 const { getEffectiveSession } = await import('@/lib/auth/session');
-const { prisma } = await import('@/lib/prisma');
-const { canManageEvents, canViewEvents, getEventsAccess, requireEventsManager } =
-  await import('./access');
+const {
+  canManageEvents,
+  canManageSharedCalendar,
+  canViewEvents,
+  getEventsAccess,
+  requireEventsManager,
+  requireSharedCalendarManager,
+} = await import('./access');
 
-function setup(options: { enabled: boolean; role?: Role | null; granted?: string[] }) {
+type Who = AccountKind | { permissions: string[] } | null;
+
+function setup(options: { enabled: boolean; who: Who }) {
   vi.mocked(getConfig).mockReturnValue({
     modules: { enabled: options.enabled ? ['events'] : [] },
   } as ReturnType<typeof getConfig>);
 
+  const { who } = options;
   vi.mocked(getEffectiveSession).mockResolvedValue(
-    options.role
-      ? ({
-          user: { id: 'u1', login: 'someone', role: options.role },
-          isImpersonating: false,
-          realRole: options.role,
-        } as Awaited<ReturnType<typeof getEffectiveSession>>)
-      : null,
-  );
-
-  vi.mocked(prisma.modulePermission.findMany).mockResolvedValue(
-    (options.granted ?? []).map((module) => ({ module })) as never,
+    who === null
+      ? null
+      : typeof who === 'string'
+        ? effectiveFor(who)
+        : effective(memberWith(who.permissions)),
   );
 }
 
@@ -36,87 +37,122 @@ beforeEach(() => {
 });
 
 describe('pure permission helpers', () => {
-  it('lets every approved role view events but not PENDING', () => {
-    expect(canViewEvents('MEMBER')).toBe(true);
-    expect(canViewEvents('ADMIN')).toBe(true);
-    expect(canViewEvents('OWNER')).toBe(true);
-    expect(canViewEvents('PENDING')).toBe(false);
+  const holder = (permissions: string[], status: 'MEMBER' | 'PENDING' = 'MEMBER') => ({
+    status,
+    permissions,
   });
 
-  it('requires the events permission to manage, except for the OWNER', () => {
-    expect(canManageEvents('MEMBER', [])).toBe(false);
-    expect(canManageEvents('ADMIN', ['finance'])).toBe(false);
-    expect(canManageEvents('MEMBER', ['events'])).toBe(true);
-    expect(canManageEvents('ADMIN', ['events'])).toBe(true);
-    expect(canManageEvents('OWNER', [])).toBe(true);
+  it('views events with events.view, not without', () => {
+    expect(canViewEvents(holder(['events.view']))).toBe(true);
+    expect(canViewEvents(holder([]))).toBe(false);
+    expect(canViewEvents(holder(['events.manage']))).toBe(false);
   });
 
-  it('never lets a PENDING account manage, even with a stale permission row', () => {
-    expect(canManageEvents('PENDING', ['events'])).toBe(false);
+  it('manages events with events.manage only', () => {
+    expect(canManageEvents(holder(['events.manage']))).toBe(true);
+    expect(canManageEvents(holder(['events.view']))).toBe(false);
+    expect(canManageEvents(holder(['finance.manage']))).toBe(false);
+  });
+
+  it('manages the shared calendar with its own permission, not with events.manage', () => {
+    expect(canManageSharedCalendar(holder(['events.shared_calendar']))).toBe(true);
+    expect(canManageSharedCalendar(holder(['events.manage', 'events.view']))).toBe(false);
+  });
+
+  it('never lets a PENDING account do any of it, even with permissions attached by mistake', () => {
+    const pending = holder(['events.view', 'events.manage', 'events.shared_calendar'], 'PENDING');
+    expect(canViewEvents(pending)).toBe(false);
+    expect(canManageEvents(pending)).toBe(false);
+    expect(canManageSharedCalendar(pending)).toBe(false);
   });
 });
 
 describe('getEventsAccess', () => {
   it('returns null when the module is disabled, whoever asks', async () => {
-    setup({ enabled: false, role: 'OWNER' });
+    setup({ enabled: false, who: 'OWNER' });
     await expect(getEventsAccess()).resolves.toBeNull();
     expect(getEffectiveSession).not.toHaveBeenCalled();
   });
 
   it('returns null without a session', async () => {
-    setup({ enabled: true, role: null });
+    setup({ enabled: true, who: null });
     await expect(getEventsAccess()).resolves.toBeNull();
   });
-
-  // A session without a real role (e.g. a removed account) must stop at the
-  // role check: the permission lookup would otherwise run without an id.
-  it.each([undefined, 'GUEST'])(
-    'returns null for the unknown role %j, before any lookup',
-    async (role) => {
-      setup({ enabled: true, role: role as Role, granted: ['events'] });
-
-      await expect(getEventsAccess()).resolves.toBeNull();
-      expect(prisma.modulePermission.findMany).not.toHaveBeenCalled();
-    },
-  );
 
   it('returns null for a PENDING account', async () => {
-    setup({ enabled: true, role: 'PENDING', granted: ['events'] });
+    setup({ enabled: true, who: 'PENDING' });
     await expect(getEventsAccess()).resolves.toBeNull();
   });
 
-  it('gives a plain member read-only access', async () => {
-    setup({ enabled: true, role: 'MEMBER' });
+  it('returns null for a member whose role does not include viewing events', async () => {
+    setup({ enabled: true, who: { permissions: ['members.manage'] } });
+    await expect(getEventsAccess()).resolves.toBeNull();
+  });
+
+  it('gives the default member read-only access', async () => {
+    setup({ enabled: true, who: 'MEMBER' });
     await expect(getEventsAccess()).resolves.toMatchObject({ canManage: false });
   });
 
-  it('gives a member with the events permission management access', async () => {
-    setup({ enabled: true, role: 'MEMBER', granted: ['events'] });
+  it('gives a member whose role manages events management access', async () => {
+    setup({ enabled: true, who: { permissions: ['events.view', 'events.manage'] } });
     await expect(getEventsAccess()).resolves.toMatchObject({ canManage: true });
   });
 
   it('does not treat another module permission as events access', async () => {
-    setup({ enabled: true, role: 'ADMIN', granted: ['finance'] });
+    setup({ enabled: true, who: { permissions: ['events.view', 'finance.manage'] } });
     await expect(getEventsAccess()).resolves.toMatchObject({ canManage: false });
+  });
+
+  it('gives owners and admins (all permissions) management access', async () => {
+    setup({ enabled: true, who: 'OWNER' });
+    await expect(getEventsAccess()).resolves.toMatchObject({ canManage: true });
+    setup({ enabled: true, who: 'ADMIN' });
+    await expect(getEventsAccess()).resolves.toMatchObject({ canManage: true });
   });
 });
 
 describe('requireEventsManager', () => {
   it.each<[string, Parameters<typeof setup>[0]]>([
-    ['module disabled', { enabled: false, role: 'OWNER' }],
-    ['no session', { enabled: true, role: null }],
-    ['PENDING', { enabled: true, role: 'PENDING', granted: ['events'] }],
-    ['member without permission', { enabled: true, role: 'MEMBER' }],
-    ['admin without permission', { enabled: true, role: 'ADMIN' }],
+    ['module disabled', { enabled: false, who: 'OWNER' }],
+    ['no session', { enabled: true, who: null }],
+    ['PENDING', { enabled: true, who: 'PENDING' }],
+    ['default member', { enabled: true, who: 'MEMBER' }],
+    ['role that only views', { enabled: true, who: { permissions: ['events.view'] } }],
+    [
+      'role that only manages the shared calendar',
+      { enabled: true, who: { permissions: ['events.shared_calendar'] } },
+    ],
   ])('throws Forbidden: %s', async (_label, options) => {
     setup(options);
     await expect(requireEventsManager()).rejects.toThrow('Forbidden');
   });
 
-  it('allows a member with the permission and the owner', async () => {
-    setup({ enabled: true, role: 'MEMBER', granted: ['events'] });
+  it('allows a role that manages events, and the owner', async () => {
+    setup({ enabled: true, who: { permissions: ['events.view', 'events.manage'] } });
     await expect(requireEventsManager()).resolves.toMatchObject({ canManage: true });
-    setup({ enabled: true, role: 'OWNER' });
+    setup({ enabled: true, who: 'OWNER' });
     await expect(requireEventsManager()).resolves.toMatchObject({ canManage: true });
+  });
+});
+
+describe('requireSharedCalendarManager', () => {
+  it.each<[string, Parameters<typeof setup>[0]]>([
+    ['module disabled', { enabled: false, who: 'OWNER' }],
+    ['no session', { enabled: true, who: null }],
+    ['PENDING', { enabled: true, who: 'PENDING' }],
+    ['default member', { enabled: true, who: 'MEMBER' }],
+    [
+      'a role that manages events but not the shared calendar',
+      { enabled: true, who: { permissions: ['events.view', 'events.manage'] } },
+    ],
+  ])('throws Forbidden: %s', async (_label, options) => {
+    setup(options);
+    await expect(requireSharedCalendarManager()).rejects.toThrow('Forbidden');
+  });
+
+  it('allows a role with the shared-calendar permission, even without events.manage', async () => {
+    setup({ enabled: true, who: { permissions: ['events.view', 'events.shared_calendar'] } });
+    await expect(requireSharedCalendarManager()).resolves.toMatchObject({ canManage: false });
   });
 });

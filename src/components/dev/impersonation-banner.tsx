@@ -1,9 +1,8 @@
 import { getTranslations } from 'next-intl/server';
 import { auth } from '@/lib/auth';
-import { getImpersonationCookieRole, isDevImpersonationEnabled } from '@/lib/dev-impersonation';
+import { getImpersonation, isDevImpersonationEnabled } from '@/lib/dev-impersonation';
 import { startImpersonation, stopImpersonation } from '@/lib/dev-impersonation-actions';
-
-const IMPERSONATABLE_ROLES = ['PENDING', 'MEMBER', 'ADMIN'] as const;
+import { prisma } from '@/lib/prisma';
 
 /** Dev-only banner + role switcher, rendered at the very top of every page
  * (see [locale]/layout.tsx) so it stays "always accessible" regardless of
@@ -16,23 +15,31 @@ export async function ImpersonationBanner() {
   }
 
   const session = await auth();
-  if (!session?.user || session.user.role !== 'OWNER') {
+  if (!session?.user || session.user.status !== 'OWNER') {
     return null;
   }
 
-  const [impersonatedRole, t, tRoles] = await Promise.all([
-    getImpersonationCookieRole(),
+  const [impersonation, roles, t, tRoles] = await Promise.all([
+    getImpersonation(),
+    prisma.role.findMany({
+      select: { id: true, name: true, isDefault: true },
+      orderBy: { name: 'asc' },
+    }),
     getTranslations('devImpersonation'),
     getTranslations('roles'),
   ]);
 
-  if (impersonatedRole) {
+  if (impersonation) {
+    const label =
+      impersonation.kind === 'pending'
+        ? tRoles('PENDING')
+        : (roles.find((role) => role.id === impersonation.roleId)?.name ?? impersonation.roleId);
     return (
       <div
         role="status"
         className="flex flex-wrap items-center justify-center gap-3 bg-amber-400 px-4 py-2 text-sm font-medium text-amber-950 dark:bg-amber-500"
       >
-        <span>🧪 {t('active', { role: tRoles(impersonatedRole) })}</span>
+        <span>🧪 {t('active', { role: label })}</span>
         <form action={stopImpersonation}>
           <button
             type="submit"
@@ -44,6 +51,9 @@ export async function ImpersonationBanner() {
       </div>
     );
   }
+
+  const defaultRole = roles.find((role) => role.isDefault) ?? roles[0];
+  const defaultChoice = defaultRole ? `role:${defaultRole.id}` : 'PENDING';
 
   return (
     <div className="bg-muted text-muted-foreground flex flex-wrap items-center justify-center gap-2 px-4 py-1.5 text-xs">
@@ -57,12 +67,13 @@ export async function ImpersonationBanner() {
       >
         <select
           name="role"
-          defaultValue="MEMBER"
+          defaultValue={defaultChoice}
           className="border-input bg-background rounded-md border px-2 py-0.5 text-xs"
         >
-          {IMPERSONATABLE_ROLES.map((role) => (
-            <option key={role} value={role}>
-              {tRoles(role)}
+          <option value="PENDING">{tRoles('PENDING')}</option>
+          {roles.map((role) => (
+            <option key={role.id} value={`role:${role.id}`}>
+              {role.name}
             </option>
           ))}
         </select>

@@ -12,7 +12,6 @@
   },
   "roles": {
     "OWNER": "Owner",
-    "ADMIN": "Admin",
     "MEMBER": "Member",
     "PENDING": "Pending"
   },

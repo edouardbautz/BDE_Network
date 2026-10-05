@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Role } from '@/generated/prisma/client';
 import type { Session } from 'next-auth';
+import { sessionFor, type AccountKind } from '@/test/session-fixtures';
 
 /**
  * Proves that hitting /audit-log directly is blocked for everyone except
@@ -39,21 +39,6 @@ const { default: AuditLogPage } = await import('./page');
 // resolve to an unrelated overload.
 const mockAuth = vi.mocked(auth as () => Promise<Session | null>);
 
-function sessionFor(role: Role): Session {
-  return {
-    user: {
-      id: 'user-1',
-      login: 'test-login',
-      role,
-      campus: 'Paris',
-      name: 'Test User',
-      email: 'test@example.com',
-      image: null,
-    },
-    expires: '2099-01-01T00:00:00.000Z',
-  };
-}
-
 function callPage() {
   return AuditLogPage({ params: Promise.resolve({ locale: 'fr' }) });
 }
@@ -64,10 +49,10 @@ beforeEach(() => {
 });
 
 describe('AuditLogPage — direct URL access control', () => {
-  it.each<Role>(['PENDING', 'MEMBER', 'ADMIN'])(
+  it.each<AccountKind>(['PENDING', 'MEMBER', 'ADMIN'])(
     'redirects a %s user to /dashboard without querying the audit log',
-    async (role) => {
-      mockAuth.mockResolvedValue(sessionFor(role));
+    async (kind) => {
+      mockAuth.mockResolvedValue(sessionFor(kind));
 
       await expect(callPage()).rejects.toThrow(RedirectSignal);
 

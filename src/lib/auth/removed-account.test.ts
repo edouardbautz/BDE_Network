@@ -29,7 +29,7 @@ const { RedirectSignal, db, SECRET } = vi.hoisted(() => {
     /** The Cookie header the next request carries. */
     cookie: '',
     users: [] as Row[],
-    permissions: [] as Row[],
+    roles: [] as Row[],
     events: [] as Row[],
     audit: [] as Row[],
   };
@@ -82,6 +82,12 @@ vi.mock('@/lib/prisma', () => {
       throw new Error('PrismaClientValidationError: needs at least one unique field');
     }
   };
+  /** Prisma returns the role with the user when the query asks for it. */
+  const withRole = (row: Row | undefined, args: { include?: Row; select?: Row } = {}) => {
+    if (!row) return null;
+    const wanted = args.include?.role ?? args.select?.role;
+    return wanted ? { ...row, role: db.roles.find((role) => role.id === row.roleId) ?? null } : row;
+  };
   const many =
     (rows: Row[]) =>
     async ({ where }: { where?: Row }) =>
@@ -90,19 +96,24 @@ vi.mock('@/lib/prisma', () => {
   return {
     prisma: {
       user: {
-        findUnique: vi.fn(async ({ where }: { where: Row }) => {
-          requireFilter(where);
-          return db.users.find((row) => matches(row, where)) ?? null;
+        findUnique: vi.fn(async (args: { where: Row; include?: Row; select?: Row }) => {
+          requireFilter(args.where);
+          return withRole(
+            db.users.find((row) => matches(row, args.where)),
+            args,
+          );
         }),
-        findUniqueOrThrow: vi.fn(async ({ where }: { where: Row }) => {
-          requireFilter(where);
-          const row = db.users.find((candidate) => matches(candidate, where));
+        findUniqueOrThrow: vi.fn(async (args: { where: Row; include?: Row; select?: Row }) => {
+          requireFilter(args.where);
+          const row = withRole(
+            db.users.find((candidate) => matches(candidate, args.where)),
+            args,
+          );
           if (!row) throw new Error('PrismaClientKnownRequestError: not found');
           return row;
         }),
         findMany: vi.fn(many(db.users)),
       },
-      modulePermission: { findMany: vi.fn(many(db.permissions)) },
       auditLog: {
         findMany: vi.fn(many(db.audit)),
         create: vi.fn(async ({ data }: { data: Row }) => {
@@ -162,7 +173,8 @@ function user(login: string, overrides: Record<string, unknown> = {}) {
     email: `${login}@example.org`,
     photoUrl: null,
     campus: 'Paris',
-    role: 'MEMBER',
+    status: 'MEMBER',
+    roleId: 'role-member',
     calendarToken: null,
     createdAt: AT,
     updatedAt: AT,
@@ -226,14 +238,24 @@ function eventForm() {
 beforeEach(() => {
   vi.clearAllMocks();
   db.cookie = '';
-  db.users.splice(0, db.users.length, user('alice', { calendarToken: FEED_TOKEN }), user('bob'));
-  db.permissions.splice(0, db.permissions.length, {
-    id: 'p1',
-    userId: 'u_bob',
-    module: 'events',
-    grantedByLogin: 'owner',
-    createdAt: AT,
-  });
+  // alice has the default "Membre" role (can view events); bob's role also manages them.
+  db.roles.splice(
+    0,
+    db.roles.length,
+    { id: 'role-member', name: 'Membre', permissions: ['events.view'], allPermissions: false },
+    {
+      id: 'role-events',
+      name: 'Resp. événements',
+      permissions: ['events.view', 'events.manage'],
+      allPermissions: false,
+    },
+  );
+  db.users.splice(
+    0,
+    db.users.length,
+    user('alice', { calendarToken: FEED_TOKEN }),
+    user('bob', { roleId: 'role-events' }),
+  );
   db.events.splice(
     0,
     db.events.length,
@@ -293,7 +315,6 @@ describe('a member removed from the BDE, with a cookie that is still valid', () 
     expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
     expect(prisma.auditLog.findMany).not.toHaveBeenCalled();
     expect(prisma.event.findMany).not.toHaveBeenCalled();
-    expect(prisma.modulePermission.findMany).not.toHaveBeenCalled();
   });
 
   it("cannot use the removed member's subscription link either (the row, and its token, are gone)", async () => {
@@ -314,7 +335,7 @@ describe('accounts that still exist', () => {
     await signInAs('alice');
 
     await expect(getEffectiveSession()).resolves.toMatchObject({
-      user: { id: 'u_alice', login: 'alice', role: 'MEMBER' },
+      user: { id: 'u_alice', login: 'alice', status: 'MEMBER', roleName: 'Membre' },
     });
     expect((await icsOf('evt_public')).status).toBe(200);
     expect((await icsOf('evt_draft')).status).toBe(404);
@@ -333,7 +354,7 @@ describe('accounts that still exist', () => {
     expect(body.user.login).toBe('alice');
     expect(body.auditLogActions).toEqual([]);
     expect(body.events.authored).toEqual([]);
-    expect(body.modulePermissions).toEqual([]);
+    expect(body.user.role).toBe('Membre');
   });
 
   it('a member with the events permission reads drafts, creates and confirms, with an audit trail', async () => {
