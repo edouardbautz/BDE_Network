@@ -45,7 +45,8 @@ Remplissez au minimum :
 
 - `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` — identifiants de la base de données
   (des valeurs par défaut fonctionnent pour un premier essai local).
-- `AUTH_SECRET` — générez-en un avec `npx auth secret`, ou toute chaîne aléatoire longue.
+- `AUTH_SECRET` — une clé secrète d'au moins 32 caractères. Générez-la avec `openssl rand -base64 32`
+  (ou `npx auth secret` si Node.js est installé).
 - `FORTYTWO_CLIENT_ID` / `FORTYTWO_CLIENT_SECRET` — créez une application OAuth sur
   <https://profile.intra.42.fr/oauth/applications>. URL de redirection à renseigner :
   `http://localhost:3000/api/auth/callback/42-school` (adaptez le domaine en production).
@@ -89,10 +90,15 @@ docker compose down -v       # arrête et supprime aussi les données (base + fi
 
 - **Le build échoue avec une erreur de configuration** : `bde.config.yml` est invalide — le
   message d'erreur affiché dans les logs (`docker compose logs app`) indique quel champ corriger.
+- **Le conteneur `app` redémarre en boucle** : `.env` ou `bde.config.yml` est incomplet. L'application
+  refuse de démarrer et explique, en français, quoi corriger : `docker compose logs app`.
 - **Port 3000 ou 5432 déjà utilisé** : un autre service tourne dessus. Changez le port publié
-  dans `docker-compose.yml` (partie gauche de `"3000:3000"`), ou arrêtez l'autre service.
+  dans `docker-compose.yml` (partie gauche de `"${APP_BIND:-127.0.0.1}:3000:3000"`), ou arrêtez l'autre service.
+- **Le site n'est pas joignable depuis un autre ordinateur** : c'est voulu, l'application n'écoute que
+  sur la machine elle-même (`127.0.0.1`) ; en production, c'est le reverse proxy HTTPS qui l'expose
+  (voir [le guide de déploiement](deployment.md)).
 - **Windows : lenteur au démarrage** : la première synchronisation de fichiers via Docker
-  Desktop peut être plus lente qu'sous Linux/macOS natif ; c'est normal, les lancements suivants
+  Desktop peut être plus lente que sous Linux/macOS natif ; c'est normal, les lancements suivants
   sont rapides.
 
 Pour un environnement de contribution avec rechargement à chaud, voir

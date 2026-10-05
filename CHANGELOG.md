@@ -5,6 +5,38 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Added
+
+- **Vérification du `.env` au démarrage**, avec des messages en français compréhensibles par un
+  non-développeur : `AUTH_SECRET` (32 caractères minimum), identifiants 42, `DATABASE_URL`, et les
+  variables SMTP/webhook des notifications du module Événements réellement utilisées. Un avertissement
+  clair signale le login « votre-login-42 » encore présent dans `auth.owners`, ou une `APP_URL` en
+  `http://` sur une adresse publique.
+- **Page « Service momentanément indisponible »** (FR/EN) quand la base de données ne répond pas :
+  elle rassure, et ramène toute seule à la plateforme dès que le service revient. Nouvelle route
+  `/api/health` et `HEALTHCHECK` Docker.
+- **En-têtes de sécurité HTTP** : Content-Security-Policy, X-Frame-Options, nosniff, Referrer-Policy,
+  Permissions-Policy, HSTS (seulement derrière un proxy HTTPS). `X-Powered-By` n'est plus envoyé.
+- **Sauvegarde et restauration sans Node.js** (`scripts/backup.sh`, `scripts/restore.sh`) : une seule
+  archive avec la base **et les fichiers envoyés**, rotation (`--keep`), restauration avec confirmation
+  explicite, copie de sécurité automatique et retour arrière si la restauration de la base échoue.
+- CI : job « docker image » (construit l'image, la démarre sur PostgreSQL, vérifie la santé et les
+  en-têtes).
+
+### Changed
+
+- **Image Docker de production réduite de 2,15 Go à 465 Mo** : build Next.js `standalone`, Prisma CLI
+  installé à part et allégé, sharp et TypeScript retirés, ni npm ni yarn dans l'image finale.
+- Le port 3000 n'est plus publié que sur `127.0.0.1` par défaut (`APP_BIND` pour l'ouvrir) : seul le
+  reverse proxy HTTPS expose l'application. Le cas sans proxy est documenté.
+- Délai de connexion à la base limité à 3 secondes (au lieu d'attendre indéfiniment).
+- `bde.config.local.yml`, `.audit/` et `.env*` ne sont plus copiés dans l'image Docker.
+
+### Removed
+
+- `npm run db:backup` et `npm run db:restore` (remplacés par `scripts/backup.sh` et
+  `scripts/restore.sh`, qui n'exigent que Docker).
+
 ### Fixed
 
 - Un membre retiré du BDE perd immédiatement l'accès : son cookie de session encore valide ne

@@ -64,7 +64,8 @@ src/
       calendar/[token]/route.ts          personal .ics subscription feed (token-authenticated)
       calendar/bde/[token]/route.ts      BDE-wide .ics feed (token-authenticated, confirmed events only)
       events/[id]/ics/route.ts           "add to my calendar" download (session-authenticated)
-  instrumentation.ts       starts the events reminder scheduler (Node runtime only)
+      health/route.ts                    liveness + database check (Docker HEALTHCHECK, unavailable page)
+  instrumentation.ts       startup checks (bde.config.yml + .env), then the events reminder scheduler (Node runtime only)
   components/
     ui/                    shadcn/ui primitives — do not hand-edit, regenerate via shadcn CLI
     layout/                app-shell (sidebar + mobile drawer), footer, user-menu
@@ -84,7 +85,10 @@ src/
 prisma/
   schema.prisma, seed.ts (+ seed-events.ts), migrations/
 scripts/
-  db-backup.mjs, db-restore.mjs   Node scripts (cross-platform, no shell), wrap `docker compose exec`
+  backup.sh, restore.sh     POSIX sh, need only Docker on the server (no Node): one tar.gz with DB + uploads
+  audit-prod.mjs            CI gate on production dependency advisories (+ audit-allowlist.json)
+docker/
+  prisma.config.mjs         Prisma config used by the production image to run `migrate deploy`
 messages/
   fr.json, en.json          next-intl message catalogs
 docs/                        installation, configuration, user guide, events, contributing, deployment, design
@@ -172,17 +176,22 @@ point at a user (see `EventAssignee`).
   personal values stay out of commits — see `docs/configuration.md`.
 - **`.env`** holds only secrets/machine-specific values (DB credentials, `AUTH_SECRET`, 42 OAuth
   client id/secret, SMTP, webhook URLs) — never committed.
-- **Validation happens in `next.config.ts`**, not `src/instrumentation.ts`. That was tried first
-  and breaks: Next.js compiles `instrumentation.ts` for the Edge runtime too regardless of a
-  `NEXT_RUNTIME` guard or a `export const runtime = 'nodejs'` in that file, and the config
-  loader's `node:fs`/`node:path` imports fail that Edge bundle (`UnhandledSchemeError`).
-  `next.config.ts` is only ever executed directly by the Next.js CLI in plain Node — never
-  bundled — so it has none of that risk, and it fails faster (before any compilation starts).
-- `src/instrumentation.ts` exists for one purpose: starting the events reminder scheduler. It
-  only does `await import('./lib/events/scheduler')` behind `process.env.NEXT_RUNTIME ===
-'nodejs'`, which keeps Prisma/`node:fs` out of the Edge bundle (verified: `next build` emits only
-  `instrumentation.js`, no Edge variant). Do **not** put config validation back there — that is
-  still `next.config.ts` (see above) — and keep every import in it dynamic and guarded.
+- **Startup validation, in two places.** `bde.config.yml` is validated in `next.config.ts` (it fails
+  `next build`/`next dev` fast, before any compilation) **and** again when the server starts, from
+  `src/instrumentation.ts` → `src/lib/startup-checks.ts`. The second one is not redundant: a
+  standalone production build (the Docker image) **never evaluates `next.config.ts` at start-up**,
+  its config is inlined in `server.js`. `.env` is checked only there (`src/config/env.ts`, pure and
+  unit-tested): required variables (`AUTH_SECRET` ≥ 32 characters, 42 OAuth id/secret, `DATABASE_URL`),
+  plus the SMTP/webhook variables of the channels the _events_ notifications actually use (the
+  `member*` notifications are not wired, so they don't count). Errors refuse to start with a French
+  message a non-developer can act on (the container then restarts in a loop; `docker compose logs
+app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `APP_URL`) don't block.
+  **Never check `.env` at build time**: the image is built without it — `instrumentation.ts` skips
+  `NEXT_PHASE === 'phase-production-build'`.
+- `src/instrumentation.ts` is compiled for the Edge runtime too, so it does nothing but
+  `await import(...)` its Node-only modules behind `process.env.NEXT_RUNTIME === 'nodejs'`
+  (static imports of `node:fs`/Prisma there fail the Edge bundle with `UnhandledSchemeError`;
+  verified: `next build` emits only `instrumentation.js`). Keep every import in it dynamic and guarded.
 - `bde.config.local.yml` (git-ignored) replaces `bde.config.yml` when present, whole-file, no merge.
 - `src/middleware.ts` runs on the **Node.js runtime** (`export const config = { runtime:
 'nodejs' }`), stable since Next.js 15.5. It doesn't currently read `bde.config.yml` (locale
@@ -256,6 +265,29 @@ User guide: `docs/events.md`. The shape worth knowing before touching it:
   - `NAV_ICONS`, a toggle in the members panel (automatic for any enabled key), audit entries for
     every mutation, FR/EN messages, `loading.tsx` per route, seed data, a `docs/<module>.md`.
 
+## Production image & hardening
+
+- **Dockerfile** (multi-stage): `next build` with `output: 'standalone'` (server.js + only the
+  node_modules it uses; `outputFileTracingExcludes` drops sharp/typescript, `images.unoptimized`
+  removes the `/_next/image` endpoint), run with `node server.js` — no npm in the final image.
+  The Prisma CLI (a dev dependency, so not in the bundle) is installed separately at the lockfile's
+  exact version into `/opt/migrate` and **pruned of what only Studio / `prisma dev` use** (~120 MB);
+  `CMD` runs `prisma migrate deploy --config /opt/migrate/prisma.config.mjs` then `node server.js`.
+  If a Prisma bump ever makes `migrate deploy` need a pruned file, the CI `docker` job (build + start
+  against Postgres + `/api/health`) fails. `.dockerignore` must keep `.audit`, `.env*` and
+  `bde.config.local.yml` out of the image. `HEALTHCHECK` calls `/api/health` (503 when the DB is down).
+- **docker-compose.yml** publishes the app on `${APP_BIND:-127.0.0.1}:3000`: only the reverse proxy
+  reaches it unless the operator opts out (`APP_BIND=0.0.0.0`, documented in `docs/deployment.md`).
+- **Security headers** (`src/lib/security-headers.ts`, wired in `next.config.ts`): CSP (production
+  only; `'unsafe-inline'` is needed by Next hydration and next-themes; no `upgrade-insecure-requests`
+  so an instance without an HTTPS proxy still works; profile pictures from `cdn.intra.42.fr`),
+  nosniff, X-Frame-Options, Referrer-Policy, Permissions-Policy, and HSTS only when the request came
+  with `X-Forwarded-Proto: https`. A new external image/script host must be added to the CSP.
+- **Database down**: Auth.js turns a failing session lookup into "no session", which looks like a
+  logged-out visitor. `(app)/layout.tsx` and the login page therefore call `isDatabaseReachable()`
+  (`src/lib/health.ts`) before redirecting to `/` and send to `/unavailable` instead (translated,
+  reassuring, polls `/api/health` and brings the visitor back). The pool connect timeout is 3 s.
+
 ## Design system
 
 Full spec (typography scale, color tokens + contrast rationale, spacing/radius scale, component
@@ -290,8 +322,10 @@ touching layout or adding UI. The short version:
 - **Conventional Commits**, atomic commits per logical change.
 - **No `any`** (`@typescript-eslint/no-explicit-any` is an error, not a warning).
 - Cross-platform: no `&&`/`||`/`$VAR`/`rm -rf`/`cp` in npm scripts — use `cross-env`, `rimraf`,
-  or plain Node (see `scripts/db-backup.mjs`, `db-restore.mjs`). LF line endings are enforced by
-  `.gitattributes`.
+  or plain Node. LF line endings are enforced by `.gitattributes`. The exception is the server-side
+  operations scripts (`scripts/backup.sh`, `restore.sh`): the server only has Docker, so they are
+  POSIX `sh` (kept `shellcheck -s sh` clean, run from Git Bash/WSL on Windows, `MSYS_NO_PATHCONV=1`
+  inside because Git Bash rewrites `/app/...` arguments).
 - All user-facing strings go through next-intl (`messages/fr.json` + `en.json`) — no hardcoded
   UI text in components.
 - shadcn/ui components in `src/components/ui/` are excluded from ESLint/Prettier (generated
