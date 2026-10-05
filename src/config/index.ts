@@ -114,4 +114,10 @@ export function getConfig(): BdeConfig {
   return cachedConfig;
 }
 
-export type { BdeConfig, NotificationChannel, NotificationEvent, SupportedLocale } from './schema';
+export type {
+  BdeConfig,
+  EventCategory,
+  NotificationChannel,
+  NotificationEvent,
+  SupportedLocale,
+} from './schema';

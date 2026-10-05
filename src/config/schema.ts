@@ -8,7 +8,18 @@ export const NOTIFICATION_CHANNELS = ['email', 'discord', 'slack', 'none'] as co
  * Notification events wired at this stage of the project. Business modules
  * (events, finances, meetings...) will add their own keys here as they land.
  */
-export const NOTIFICATION_EVENTS = ['memberPending', 'memberApproved', 'memberRemoved'] as const;
+export const NOTIFICATION_EVENTS = [
+  'memberPending',
+  'memberApproved',
+  'memberRemoved',
+  'eventConfirmed',
+  'eventReminder',
+] as const;
+
+/** Module keys that ship with the platform. `modules.enabled` is free-form on
+ * purpose (forks may add their own), but the built-in ones are referenced by
+ * key from the config validation below. */
+export const EVENTS_MODULE_KEY = 'events';
 
 const hexColor = z
   .string({ error: "la couleur d'accent doit être une chaîne de caractères" })
@@ -70,20 +81,69 @@ const notificationChannel = (event: (typeof NOTIFICATION_EVENTS)[number]) =>
       `le canal choisi pour "${event}" doit être l'un de : ${NOTIFICATION_CHANNELS.join(', ')}`,
   });
 
+// Notification keys added after the first release default to "none" so that
+// an older bde.config.yml keeps validating without edits.
+const optionalNotificationChannel = (event: (typeof NOTIFICATION_EVENTS)[number]) =>
+  notificationChannel(event).default('none');
+
 const notificationsSection = z.object({
   memberPending: notificationChannel('memberPending'),
   memberApproved: notificationChannel('memberApproved'),
   memberRemoved: notificationChannel('memberRemoved'),
+  eventConfirmed: optionalNotificationChannel('eventConfirmed'),
+  eventReminder: optionalNotificationChannel('eventReminder'),
 });
 
-export const bdeConfigSchema = z.object({
-  bde: bdeSection,
-  auth: authSection,
-  modules: modulesSection,
-  notifications: notificationsSection,
+const categoryKey = z
+  .string()
+  .trim()
+  .min(1, { message: 'ne peut pas être vide' })
+  .regex(/^[a-z0-9-]+$/, {
+    message: 'doit contenir uniquement des minuscules, chiffres et tirets (ex. "soiree")',
+  });
+
+const eventCategory = z.object({
+  key: categoryKey,
+  label: z.string().trim().min(1, { message: 'le libellé de la catégorie ne peut pas être vide' }),
+  color: hexColor,
 });
+
+const eventsSection = z.object({
+  categories: z
+    .array(eventCategory)
+    .min(1, { message: "définissez au moins une catégorie d'événement" })
+    .refine((categories) => new Set(categories.map((c) => c.key)).size === categories.length, {
+      message: 'chaque catégorie doit avoir une clé (key) unique',
+    }),
+  // Heure locale (fuseau de bde.timezone) à laquelle part le rappel de la veille.
+  reminderHour: z
+    .number({ error: "l'heure du rappel doit être un nombre entier entre 0 et 23" })
+    .int()
+    .min(0)
+    .max(23)
+    .default(18),
+});
+
+export const bdeConfigSchema = z
+  .object({
+    bde: bdeSection,
+    auth: authSection,
+    modules: modulesSection,
+    events: eventsSection.optional(),
+    notifications: notificationsSection,
+  })
+  .superRefine((config, ctx) => {
+    if (config.modules.enabled.includes(EVENTS_MODULE_KEY) && !config.events) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['events'],
+        message: 'ce champ est requis quand le module "events" est activé (voir categories)',
+      });
+    }
+  });
 
 export type BdeConfig = z.infer<typeof bdeConfigSchema>;
+export type EventCategory = z.infer<typeof eventCategory>;
 export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
 export type NotificationEvent = (typeof NOTIFICATION_EVENTS)[number];
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];

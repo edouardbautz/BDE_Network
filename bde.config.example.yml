@@ -41,10 +41,25 @@ auth:
     - 'Paris'
 
 modules:
-  # Clés des modules métier activés pour ce BDE. Vide pour l'instant : aucun
-  # module métier n'existe encore dans le projet.
-  # Exemple futur : ["finance", "events", "meetings"]
+  # Clés des modules métier activés pour ce BDE.
+  # Modules disponibles : "events" (calendrier des événements du bureau).
+  # Exemple : ["events"]
   enabled: []
+
+# Requis uniquement si le module "events" est activé ci-dessus.
+# events:
+#   # Catégories proposées lors de la création d'un événement. `key` est un
+#   # identifiant stable (minuscules, chiffres, tirets) : ne le changez pas une
+#   # fois des événements créés. `label` est affiché tel quel, `color` colore
+#   # l'événement dans le calendrier (hexadécimal).
+#   categories:
+#     - { key: 'soiree', label: 'Soirée', color: '#db2777' }
+#     - { key: 'sport', label: 'Sport', color: '#16a34a' }
+#     - { key: 'wei', label: 'WEI', color: '#ea580c' }
+#     - { key: 'partenariat', label: 'Partenariat', color: '#2563eb' }
+#   # Heure locale (fuseau `bde.timezone`) du rappel envoyé la veille d'un
+#   # événement, entre 0 et 23. Défaut : 18.
+#   reminderHour: 18
 
 notifications:
   # Canal utilisé pour chaque type de notification : "email", "discord",
@@ -53,3 +68,6 @@ notifications:
   memberPending: 'email' # un nouveau membre attend une validation
   memberApproved: 'none' # un membre a été approuvé
   memberRemoved: 'none' # un membre a été retiré du BDE
+  # Module "events" (ignorés si le module n'est pas activé). Optionnels : "none" par défaut.
+  eventConfirmed: 'none' # un événement passe de brouillon à confirmé
+  eventReminder: 'none' # rappel envoyé la veille d'un événement
