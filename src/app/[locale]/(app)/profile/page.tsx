@@ -1,5 +1,4 @@
 import { CalendarSync } from 'lucide-react';
-import { headers } from 'next/headers';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { CopyField } from '@/components/events/copy-field';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -10,20 +9,10 @@ import { redirect } from '@/i18n/navigation';
 import { getEffectiveSession } from '@/lib/auth/session';
 import { isEventsModuleEnabled } from '@/lib/events/access';
 import { ensureCalendarToken } from '@/lib/events/export';
+import { getOrigin } from '@/lib/events/origin';
 import { regenerateMyCalendarToken } from './actions';
 
 export const dynamic = 'force-dynamic';
-
-/** Absolute URL of this instance: APP_URL when set, otherwise what the browser used. */
-async function getOrigin(): Promise<string> {
-  const configured = process.env.APP_URL?.trim().replace(/\/+$/, '');
-  if (configured) return configured;
-
-  const requestHeaders = await headers();
-  const host = requestHeaders.get('x-forwarded-host') ?? requestHeaders.get('host') ?? 'localhost';
-  const protocol = requestHeaders.get('x-forwarded-proto') ?? 'http';
-  return `${protocol}://${host}`;
-}
 
 export default async function ProfilePage() {
   const session = await getEffectiveSession();

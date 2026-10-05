@@ -109,3 +109,88 @@ export async function buildSubscriptionFeed(
 
   return buildCalendarIcs(occurrences, now);
 }
+
+const BDE_FEED_ID = 'bde';
+
+/** The BDE-wide feed token, or null when the feed is disabled (or never enabled). */
+export async function getBdeFeedToken(): Promise<string | null> {
+  const feed = await prisma.bdeCalendarFeed.findUnique({
+    where: { id: BDE_FEED_ID },
+    select: { token: true },
+  });
+  return feed?.token ?? null;
+}
+
+/** Turns the BDE feed on and returns its token. Idempotent: an already active
+ * feed keeps its token, so two admins clicking at once agree on one link. */
+export async function enableBdeFeed(): Promise<string> {
+  await prisma.bdeCalendarFeed.upsert({
+    where: { id: BDE_FEED_ID },
+    create: { id: BDE_FEED_ID },
+    update: {},
+  });
+  // Only fill an empty slot; a concurrent enable that won keeps its token.
+  await prisma.bdeCalendarFeed.updateMany({
+    where: { id: BDE_FEED_ID, token: null },
+    data: { token: generateCalendarToken() },
+  });
+  const token = await getBdeFeedToken();
+  if (!token) {
+    throw new Error('BDE calendar feed could not be enabled');
+  }
+  return token;
+}
+
+/** Replaces the BDE token (enabling the feed if needed). The previous link
+ * stops resolving immediately. */
+export async function regenerateBdeFeed(): Promise<string> {
+  const token = generateCalendarToken();
+  await prisma.bdeCalendarFeed.upsert({
+    where: { id: BDE_FEED_ID },
+    create: { id: BDE_FEED_ID, token },
+    update: { token },
+  });
+  return token;
+}
+
+/** Turns the BDE feed off: the current link stops resolving immediately. */
+export async function disableBdeFeed(): Promise<void> {
+  await prisma.bdeCalendarFeed.updateMany({ where: { id: BDE_FEED_ID }, data: { token: null } });
+}
+
+/**
+ * The BDE-wide feed for `token`, or null when the link must not work:
+ * malformed or unknown token, feed disabled/regenerated, module disabled.
+ * It never contains drafts — only confirmed, non-cancelled events — whoever
+ * pasted the link where, because this feed has no owner whose permissions
+ * could widen it. Drafts are excluded by the query and filtered again here.
+ */
+export async function buildBdeSubscriptionFeed(
+  token: string,
+  now: Date = new Date(),
+): Promise<string | null> {
+  if (!CALENDAR_TOKEN_PATTERN.test(token) || !isEventsModuleEnabled()) {
+    return null;
+  }
+
+  const feed = await prisma.bdeCalendarFeed.findUnique({
+    where: { token },
+    select: { id: true },
+  });
+  if (!feed) {
+    return null;
+  }
+
+  const occurrences = await listOccurrences({
+    range: {
+      from: new Date(now.getTime() - FEED_PAST_DAYS * DAY_MS),
+      to: new Date(now.getTime() + FEED_FUTURE_DAYS * DAY_MS),
+    },
+    includeDrafts: false,
+  });
+
+  return buildCalendarIcs(
+    occurrences.filter((occurrence) => occurrence.status === 'CONFIRMED'),
+    now,
+  );
+}

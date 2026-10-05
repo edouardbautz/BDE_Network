@@ -181,3 +181,13 @@ model EventReminder {
 
   @@unique([eventId, occurrenceStart])
 }
+
+/// Singleton (id "bde"): the secret token of the BDE-wide .ics subscription
+/// feed, meant to be pasted once into the board's shared calendar. null =
+/// feed disabled. Unlike User.calendarToken it exposes confirmed events only,
+/// never drafts. Regenerating or clearing the token kills the old link at once.
+model BdeCalendarFeed {
+  id        String   @id @default("bde")
+  token     String?  @unique
+  updatedAt DateTime @updatedAt
+}
