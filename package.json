@@ -22,9 +22,7 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
-    "seed:demo": "tsx prisma/seed.ts",
-    "db:backup": "node scripts/db-backup.mjs",
-    "db:restore": "node scripts/db-restore.mjs"
+    "seed:demo": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@auth/core": "0.41.3",
