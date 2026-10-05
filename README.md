@@ -39,6 +39,13 @@ pose les fondations : authentification, rôles, permissions, configuration, i18n
 
 Prérequis et détails : [docs/installation.md](docs/installation.md).
 
+## Tester les rôles en local
+
+`docker compose -f docker-compose.dev.yml up` lance l'app avec des comptes de démo déjà créés.
+Connectez-vous avec votre compte 42 (propriétaire), puis utilisez le bandeau en haut de page
+pour simuler PENDING / MEMBER / ADMIN et vérifier les restrictions d'accès — actif uniquement si
+`ENABLE_DEV_IMPERSONATION=true` dans `.env` (hors production, toujours).
+
 ## Documentation
 
 - [Installation](docs/installation.md) — prérequis Windows/Linux/macOS, démarrage détaillé

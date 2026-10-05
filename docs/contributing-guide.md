@@ -17,7 +17,9 @@ Ceci lance PostgreSQL et l'application en mode développement (`next dev`) dans 
 avec le code source monté en volume : vos modifications sont reprises à chaud (hot reload), sans
 reconstruction. `node_modules` et `.next` restent dans des volumes Docker nommés (jamais montés
 depuis l'hôte) pour éviter tout problème de binaires natifs incompatibles entre votre OS et le
-conteneur Linux.
+conteneur Linux. Le schéma Prisma et les comptes de démo (`npm run seed:demo`) sont appliqués
+automatiquement à chaque démarrage — une seule commande suffit, y compris pour tester les rôles
+(voir [README](../README.md#tester-les-rôles-en-local)).
 
 Sous Windows, si le rechargement à chaud semble ne pas réagir à vos modifications, vérifiez que
 `WATCHPACK_POLLING=true` est bien actif (c'est la valeur par défaut dans

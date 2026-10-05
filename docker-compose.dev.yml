@@ -1,6 +1,11 @@
 # Contributor dev environment: runs `next dev` inside a container with the
 # source bind-mounted for hot reload, so you don't need Node installed on
 # your machine. Usage: docker compose -f docker-compose.dev.yml up
+#
+# The app service pushes the Prisma schema and seeds demo accounts
+# (demo-owner/demo-admin/demo-member1/demo-member2/demo-pending) on every
+# startup — both steps are idempotent (upsert / count-gated), so this stays
+# a single command whether the volume is fresh or already has data.
 services:
   postgres:
     image: postgres:17-alpine
@@ -22,7 +27,7 @@ services:
   app:
     image: node:22-alpine
     working_dir: /app
-    command: sh -c "npm install && npx prisma generate && npm run dev"
+    command: sh -c "npm install && npx prisma generate && npx prisma db push && npm run seed:demo && npm run dev"
     depends_on:
       postgres:
         condition: service_healthy
