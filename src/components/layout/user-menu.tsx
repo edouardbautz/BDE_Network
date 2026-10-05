@@ -30,13 +30,17 @@ export async function UserMenu({ name, login, image, role }: UserMenuProps) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="rounded-full">
-        <Avatar>
+      <DropdownMenuTrigger className="flex min-w-0 flex-1 items-center gap-2 rounded-md p-1.5 text-left outline-none transition-colors hover:bg-sidebar-accent focus-visible:ring-3 focus-visible:ring-ring/50">
+        <Avatar size="sm">
           {image ? <AvatarImage src={image} alt={name} /> : null}
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
+        <span className="flex min-w-0 flex-col">
+          <span className="truncate text-sm font-medium">{name}</span>
+          <span className="text-muted-foreground truncate text-xs">{t(`roles.${role}`)}</span>
+        </span>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="start" className="w-56">
         <DropdownMenuLabel className="flex flex-col gap-1 font-normal">
           <span className="text-sm font-medium">{name}</span>
           <span className="text-muted-foreground text-xs">{login}</span>

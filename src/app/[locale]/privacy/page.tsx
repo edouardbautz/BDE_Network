@@ -14,12 +14,12 @@ export default async function PrivacyPage() {
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-8 px-4 py-12 sm:px-6">
       <div>
-        <h1 className="text-2xl font-semibold">{t('title')}</h1>
-        <p className="text-muted-foreground mt-2">{t('intro', { bdeName })}</p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
+        <p className="text-muted-foreground mt-2 text-sm">{t('intro', { bdeName })}</p>
       </div>
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-medium">{t('dataCollected.title')}</h2>
+        <h2 className="text-sm font-semibold">{t('dataCollected.title')}</h2>
         <p className="text-muted-foreground text-sm">{t('dataCollected.description')}</p>
         <ul className="text-muted-foreground list-inside list-disc text-sm">
           {dataItems.map((item) => (
@@ -30,27 +30,27 @@ export default async function PrivacyPage() {
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-medium">{t('purpose.title')}</h2>
+        <h2 className="text-sm font-semibold">{t('purpose.title')}</h2>
         <p className="text-muted-foreground text-sm">{t('purpose.description')}</p>
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-medium">{t('retention.title')}</h2>
+        <h2 className="text-sm font-semibold">{t('retention.title')}</h2>
         <p className="text-muted-foreground text-sm">{t('retention.description')}</p>
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-medium">{t('rights.title')}</h2>
+        <h2 className="text-sm font-semibold">{t('rights.title')}</h2>
         <p className="text-muted-foreground text-sm">{t('rights.description')}</p>
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-medium">{t('cookies.title')}</h2>
+        <h2 className="text-sm font-semibold">{t('cookies.title')}</h2>
         <p className="text-muted-foreground text-sm">{t('cookies.description')}</p>
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-medium">{t('contact.title')}</h2>
+        <h2 className="text-sm font-semibold">{t('contact.title')}</h2>
         <p className="text-muted-foreground text-sm">{t('contact.description', { bdeName })}</p>
       </section>
 

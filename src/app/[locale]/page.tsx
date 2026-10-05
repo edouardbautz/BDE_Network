@@ -1,23 +1,16 @@
 import { getTranslations } from 'next-intl/server';
-import { auth, signIn } from '@/lib/auth';
+import { signIn } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth/session';
 import { getConfig } from '@/config';
 import { Link, redirect } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export const dynamic = 'force-dynamic';
 
-export default async function LoginPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ locale: string }>;
-  searchParams: Promise<{ error?: string }>;
-}) {
+export default async function LoginPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const { error } = await searchParams;
-  const session = await auth();
+  const session = await getEffectiveSession();
 
   if (session?.user) {
     redirect({ href: session.user.role === 'PENDING' ? '/pending' : '/dashboard', locale });
@@ -27,25 +20,17 @@ export default async function LoginPage({
   const config = getConfig();
   const t = await getTranslations('auth');
   const tNav = await getTranslations('nav');
-  const errorMessage = error
-    ? t(error === 'AccessDenied' ? 'errors.AccessDenied' : 'errors.Default')
-    : null;
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-5 p-6">
       <Card className="w-full max-w-sm">
-        <CardHeader className="items-center text-center">
+        <CardHeader className="items-center gap-1 text-center">
           {/* eslint-disable-next-line @next/next/no-img-element -- local SVG logo, next/image blocks SVG optimization by default */}
-          <img src={config.bde.logoPath} alt="" width={48} height={48} />
-          <CardTitle className="text-xl">{config.bde.name}</CardTitle>
+          <img src={config.bde.logoPath} alt="" width={40} height={40} className="mb-2" />
+          <CardTitle className="text-xl font-semibold tracking-tight">{config.bde.name}</CardTitle>
           <CardDescription>{t('loginSubtitle')}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          {errorMessage && (
-            <Alert variant="destructive">
-              <AlertDescription>{errorMessage}</AlertDescription>
-            </Alert>
-          )}
           <form
             action={async () => {
               'use server';
@@ -60,7 +45,7 @@ export default async function LoginPage({
       </Card>
       <Link
         href="/privacy"
-        className="text-muted-foreground hover:text-foreground text-sm underline underline-offset-4"
+        className="text-muted-foreground hover:text-foreground rounded-sm text-sm underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
       >
         {tNav('privacy')}
       </Link>

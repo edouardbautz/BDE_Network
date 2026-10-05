@@ -8,6 +8,7 @@ import { getConfig } from '@/config';
 import { routing } from '@/i18n/routing';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
+import { ImpersonationBanner } from '@/components/dev/impersonation-banner';
 import { buildAccentStyle } from '@/lib/color';
 import '../globals.css';
 
@@ -58,6 +59,7 @@ export default async function LocaleLayout({
       >
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <ImpersonationBanner />
             {children}
             <Toaster />
           </ThemeProvider>

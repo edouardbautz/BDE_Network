@@ -16,14 +16,24 @@
     "MEMBER": "Member",
     "PENDING": "Pending"
   },
+  "devImpersonation": {
+    "pickRole": "Dev tools — test as",
+    "start": "Simulate",
+    "active": "Test mode — you're viewing the platform as {role}.",
+    "exit": "Back to my real account"
+  },
   "auth": {
     "loginTitle": "Sign in",
     "loginSubtitle": "Sign in with your 42 account to access the platform.",
     "loginButton": "Sign in with 42",
     "logout": "Sign out",
     "errors": {
+      "title": "Sign-in denied",
+      "missingProfile": "Your 42 profile is incomplete (missing login, campus, or email). Contact an administrator.",
+      "campusNotAllowed": "Your 42 campus ({campus}) isn't allowed to access this platform. Contact an administrator if you think this is a mistake.",
       "AccessDenied": "Your 42 campus isn't allowed to access this platform. Contact an administrator if you think this is a mistake.",
-      "Default": "Sign in failed. Please try again."
+      "Default": "Sign in failed. Please try again.",
+      "backToLogin": "Back to sign in"
     }
   },
   "pending": {
@@ -35,11 +45,19 @@
     "dashboard": "Dashboard",
     "members": "Members",
     "auditLog": "Audit log",
-    "privacy": "Privacy"
+    "privacy": "Privacy",
+    "openMenu": "Open navigation menu",
+    "menuTitle": "Navigation",
+    "menuDescription": "Main navigation links for this organization's platform."
   },
   "dashboard": {
     "title": "Dashboard",
-    "welcome": "Welcome, {name}."
+    "welcome": "Welcome, {name}.",
+    "empty": {
+      "title": "No modules enabled yet",
+      "description": "This platform currently covers accounts and member management. Once business modules (events, finances, meetings…) ship, they'll show up here.",
+      "cta": "Manage members"
+    }
   },
   "members": {
     "title": "Member management",
@@ -55,7 +73,9 @@
       "role": "Role",
       "since": "Member since"
     },
-    "empty": "No members yet."
+    "empty": "No members yet.",
+    "pendingEmpty": "No pending requests.",
+    "pendingCount": "{count, plural, one {# request} other {# requests}}"
   },
   "auditLog": {
     "title": "Audit log",

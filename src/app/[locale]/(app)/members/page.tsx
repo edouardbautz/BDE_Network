@@ -1,8 +1,10 @@
+import { UserCheck, Users } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
 import { canManageMembers } from '@/lib/permissions';
 import { redirect } from '@/i18n/navigation';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,9 +20,30 @@ import { approveMember, rejectMember, removeMember } from './actions';
 
 export const dynamic = 'force-dynamic';
 
+function initialsOf(name: string) {
+  return name
+    .split(' ')
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+}
+
+function MemberIdentity({ name, photoUrl }: { name: string; photoUrl: string | null }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <Avatar size="sm">
+        {photoUrl ? <AvatarImage src={photoUrl} alt="" /> : null}
+        <AvatarFallback>{initialsOf(name)}</AvatarFallback>
+      </Avatar>
+      <span className="font-medium">{name}</span>
+    </div>
+  );
+}
+
 export default async function MembersPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const session = await auth();
+  const session = await getEffectiveSession();
 
   if (!session?.user || !canManageMembers(session.user.role)) {
     redirect({ href: '/dashboard', locale });
@@ -37,14 +60,22 @@ export default async function MembersPage({ params }: { params: Promise<{ locale
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">{t('title')}</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
 
-      {pending.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{t('pendingSection')}</CardTitle>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <UserCheck className="text-muted-foreground size-4" />
+            {t('pendingSection')}
+          </CardTitle>
+          {pending.length > 0 && (
+            <Badge variant="secondary">{t('pendingCount', { count: pending.length })}</Badge>
+          )}
+        </CardHeader>
+        <CardContent>
+          {pending.length === 0 ? (
+            <p className="text-muted-foreground text-sm">{t('pendingEmpty')}</p>
+          ) : (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -57,9 +88,11 @@ export default async function MembersPage({ params }: { params: Promise<{ locale
               <TableBody>
                 {pending.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell>{user.fullName}</TableCell>
-                    <TableCell>{user.login}</TableCell>
-                    <TableCell>{user.campus}</TableCell>
+                    <TableCell>
+                      <MemberIdentity name={user.fullName} photoUrl={user.photoUrl} />
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{user.login}</TableCell>
+                    <TableCell className="text-muted-foreground">{user.campus}</TableCell>
                     <TableCell className="flex justify-end gap-2">
                       <form
                         action={async () => {
@@ -86,13 +119,17 @@ export default async function MembersPage({ params }: { params: Promise<{ locale
                 ))}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{t('activeSection')}</CardTitle>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Users className="text-muted-foreground size-4" />
+            {t('activeSection')}
+          </CardTitle>
+          {active.length > 0 && <Badge variant="secondary">{active.length}</Badge>}
         </CardHeader>
         <CardContent>
           {active.length === 0 ? (
@@ -111,9 +148,11 @@ export default async function MembersPage({ params }: { params: Promise<{ locale
               <TableBody>
                 {active.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell>{user.fullName}</TableCell>
-                    <TableCell>{user.login}</TableCell>
-                    <TableCell>{user.campus}</TableCell>
+                    <TableCell>
+                      <MemberIdentity name={user.fullName} photoUrl={user.photoUrl} />
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{user.login}</TableCell>
+                    <TableCell className="text-muted-foreground">{user.campus}</TableCell>
                     <TableCell>
                       <Badge variant="secondary">{tRoles(user.role)}</Badge>
                     </TableCell>

@@ -16,14 +16,24 @@
     "MEMBER": "Membre",
     "PENDING": "En attente"
   },
+  "devImpersonation": {
+    "pickRole": "Outils dev — tester en tant que",
+    "start": "Simuler",
+    "active": "Mode test — vous voyez la plateforme en tant que {role}.",
+    "exit": "Revenir à mon compte réel"
+  },
   "auth": {
     "loginTitle": "Connexion",
     "loginSubtitle": "Connectez-vous avec votre compte 42 pour accéder à la plateforme.",
     "loginButton": "Se connecter avec 42",
     "logout": "Se déconnecter",
     "errors": {
+      "title": "Connexion refusée",
+      "missingProfile": "Votre profil 42 est incomplet (identifiant, campus ou email manquant). Contactez un administrateur.",
+      "campusNotAllowed": "Votre campus 42 ({campus}) n'est pas autorisé à accéder à cette plateforme. Contactez un administrateur si vous pensez qu'il s'agit d'une erreur.",
       "AccessDenied": "Votre campus 42 n'est pas autorisé à accéder à cette plateforme. Contactez un administrateur si vous pensez qu'il s'agit d'une erreur.",
-      "Default": "La connexion a échoué. Merci de réessayer."
+      "Default": "La connexion a échoué. Merci de réessayer.",
+      "backToLogin": "Retour à la connexion"
     }
   },
   "pending": {
@@ -35,11 +45,19 @@
     "dashboard": "Tableau de bord",
     "members": "Membres",
     "auditLog": "Journal d'audit",
-    "privacy": "Confidentialité"
+    "privacy": "Confidentialité",
+    "openMenu": "Ouvrir le menu de navigation",
+    "menuTitle": "Navigation",
+    "menuDescription": "Liens de navigation principaux de la plateforme du bureau."
   },
   "dashboard": {
     "title": "Tableau de bord",
-    "welcome": "Bienvenue, {name}."
+    "welcome": "Bienvenue, {name}.",
+    "empty": {
+      "title": "Aucun module activé pour l'instant",
+      "description": "Cette plateforme couvre pour l'instant les comptes et la gestion des membres. Les futurs modules métier (événements, finances, réunions…) apparaîtront ici.",
+      "cta": "Gérer les membres"
+    }
   },
   "members": {
     "title": "Gestion des membres",
@@ -55,7 +73,9 @@
       "role": "Rôle",
       "since": "Membre depuis"
     },
-    "empty": "Aucun membre pour l'instant."
+    "empty": "Aucun membre pour l'instant.",
+    "pendingEmpty": "Aucune demande en attente.",
+    "pendingCount": "{count, plural, one {# demande} other {# demandes}}"
   },
   "auditLog": {
     "title": "Journal d'audit",

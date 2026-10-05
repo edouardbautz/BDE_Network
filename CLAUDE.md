@@ -35,19 +35,20 @@ src/
       layout.tsx          root layout: html/body, ThemeProvider, accent color, i18n provider
       page.tsx             login page (public)
       pending/page.tsx      waiting page for PENDING users
+      auth-error/page.tsx    sign-in denied page (public)
       privacy/page.tsx       RGPD privacy policy (public)
-      (app)/                route group: authenticated shell (navbar/footer), guards auth+PENDING
-        layout.tsx
-        dashboard/page.tsx
-        members/page.tsx + actions.ts   member approval/removal (server actions)
-        audit-log/page.tsx               OWNER-only
+      (app)/                route group: authenticated shell (sidebar/footer), guards auth+PENDING
+        layout.tsx           builds navItems, delegates chrome to AppShell
+        dashboard/page.tsx + loading.tsx
+        members/page.tsx + actions.ts + loading.tsx   member approval/removal (server actions)
+        audit-log/page.tsx + loading.tsx               OWNER-only
     api/
       auth/[...nextauth]/route.ts
       files/[...key]/route.ts            serves local-storage uploads
       me/export/route.ts                 self-service RGPD data export
   components/
     ui/                    shadcn/ui primitives — do not hand-edit, regenerate via shadcn CLI
-    layout/                navbar, footer, nav-links, user-menu
+    layout/                app-shell (sidebar + mobile drawer), footer, user-menu
     theme-provider.tsx, theme-toggle.tsx
   config/                  bde.config.yml loader + Zod schema (src/config/index.ts, schema.ts)
   i18n/                    next-intl routing/navigation/request config
@@ -125,6 +126,8 @@ member-authored record.
 - **`bde.config.yml`** is _versioned_ (committed) — each BDE's fork edits it directly, no
   secrets in it. Validated with Zod (`src/config/schema.ts`) on every load, cached after first
   read (`src/config/index.ts`). `bde.config.example.yml` is the annotated reference copy.
+  An optional git-ignored `bde.config.local.yml` replaces it when present (full file, no merge) so
+  personal values stay out of commits — see `docs/configuration.md`.
 - **`.env`** holds only secrets/machine-specific values (DB credentials, `AUTH_SECRET`, 42 OAuth
   client id/secret, SMTP, webhook URLs) — never committed.
 - **Validation happens in `next.config.ts`**, not `src/instrumentation.ts`. That was tried first
@@ -149,6 +152,32 @@ member-authored record.
   (`storage/uploads/`, served through `/api/files/[...key]` rather than `/public` so a future
   access-control check can sit in front of it). `getStorageAdapter()` is the single factory
   function to change when an S3 adapter is added.
+
+## Design system
+
+Full spec (typography scale, color tokens + contrast rationale, spacing/radius scale, component
+and empty/loading-state conventions, accessibility rules): **`docs/design.md`**. Read it before
+touching layout or adding UI. The short version:
+
+- One typeface (Geist, sans-serif only, wired through `--font-sans` in `src/app/globals.css`) —
+  never let that variable self-reference (`--font-sans: var(--font-sans)`), it silently falls
+  back to the browser's serif default with no error.
+- Neutral color scale is OKLCH hue `258` (a faint blue) at low chroma, three light/dark tokens
+  never touch pure black/white (`--background` < `--card`/`--sidebar` < `--popover` in dark
+  mode). Never hardcode a color — consume the semantic tokens (`bg-background`, `border-border`,
+  etc.); change the palette in one place, `globals.css`.
+- `bde.accentColor` (arbitrary per-fork hex, via `buildAccentStyle()` in `src/lib/color.ts`) is
+  reserved for primary actions and active states — never for large surfaces, and never as a
+  standalone text color on a neutral background (its contrast is only guaranteed against a solid
+  fill with `getContrastingTextColor`'s black/white pick, not against arbitrary backgrounds — the
+  default teal fails AA as text on the dark sidebar, 3.4:1). Active nav state = translucent
+  background + `foreground`-colored text + accent-colored icon/left bar, not accent-colored text.
+- Every list/table that can be empty renders an empty state (icon-in-muted-circle + title +
+  description [+ CTA]) — never a blank card. Every `(app)/` route ships a `loading.tsx` with
+  `Skeleton`s shaped like its real content, not a generic spinner.
+- Sidebar nav items are keyed by `NavItem['id']` mapped to a Lucide icon in `NAV_ICONS`
+  (`src/components/layout/app-shell.tsx`) — a new top-level module extends that type and table,
+  it doesn't inline an icon in JSX.
 
 ## Conventions
 
