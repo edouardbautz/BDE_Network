@@ -5,6 +5,64 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-05
+
+Premier module métier : **Événements**.
+
+### Added
+
+- Module **Événements** (`modules.enabled: [events]`, désactivé par défaut) : calendrier interne
+  du bureau pour planifier et organiser les événements du BDE. Voir `docs/events.md`.
+  - Titre, début, fin, lieu, description, catégorie et membres en charge ; **titre, dates, lieu,
+    description et catégorie sont obligatoires** (validation Zod côté serveur et dans le
+    formulaire, messages FR/EN sous chaque champ). Les événements incomplets créés avant cette
+    règle restent affichables et ne sont bloqués qu'à leur prochaine modification.
+  - Catégories et couleurs définies par chaque BDE dans `bde.config.yml` (section `events`).
+  - Statut brouillon (visible uniquement des membres ayant la permission) ou confirmé (visible de
+    tous les membres) ; stockage en UTC, affichage dans le fuseau du BDE ; année scolaire
+    (septembre–août) calculée automatiquement.
+  - Séries récurrentes (chaque semaine, toutes les 2 semaines, chaque mois) avec date de fin
+    obligatoire, modification de toute la série, annulation d'une seule date.
+  - Vue calendrier mensuel (pastilles colorées sur mobile avec détail du jour), vue liste (par
+    défaut sur mobile), page de détail, filtres (catégorie, membre en charge, année scolaire),
+    états vides et squelettes de chargement.
+  - Bloc « Prochains événements » sur le tableau de bord.
+  - Export `.ics` d'un événement et **lien d'abonnement personnel** (jeton secret par membre,
+    régénérable depuis _Mon profil_, visibilité recalculée à chaque requête).
+  - **Lien d'abonnement au niveau du BDE** (`/api/calendar/bde/<jeton>.ics`) : un seul lien à coller
+    dans l'agenda partagé du bureau, événements confirmés uniquement (jamais de brouillon), géré
+    par OWNER/ADMIN (afficher, copier, régénérer, désactiver, tout journalisé sans jamais écrire
+    le jeton), avec une proposition de régénération quand un membre est retiré.
+  - Notification de confirmation (une seule fois par événement) et **rappel la veille** via un
+    planificateur interne (aucun cron, aucun service externe ; Windows, Linux, macOS ; jamais
+    envoyé deux fois, même après redémarrage). Un échec d'envoi ne bloque jamais l'enregistrement
+    ni les autres destinataires.
+  - Journal d'audit (`event.*`, `calendar_feed.*`), données de démonstration, tests (récurrence,
+    fuseaux, `.ics`, droits, rappels, rendu).
+- Attribution de la permission d'un module à un membre depuis le panel _Membres_ (audit
+  `permission.grant` / `permission.revoke`).
+- Page _Mon profil_.
+- Clés de notification `eventConfirmed` et `eventReminder` (optionnelles, `"none"` par défaut) et
+  variable optionnelle `APP_URL` pour les liens dans les notifications.
+- Configuration personnelle non versionnée : `bde.config.local.yml` (ignoré par Git) remplace
+  `bde.config.yml` s'il existe.
+- Barre latérale de navigation (tiroir sur mobile), page de refus de connexion `/auth-error`,
+  et simulation de rôles pour les tests en local (`ENABLE_DEV_IMPERSONATION`, développement
+  uniquement). Spécification du design system dans `docs/design.md`.
+
+### Changed
+
+- `auth.allowedCampuses` peut être vide (aucun filtre sur le campus).
+- L'export des données personnelles (RGPD) inclut les événements créés ou dont le membre a la
+  charge (jamais le jeton d'agenda) ; la politique de confidentialité les mentionne.
+- Environnement de développement Docker : le schéma est appliqué avec
+  `prisma db push --accept-data-loss` et les comptes et événements de démo sont créés au démarrage.
+- `Button` déduit `nativeButton` de sa prop `render` (plus d'avertissement Base UI pour un lien).
+
+## [0.1.0] - 2026-08-05
+
+Version initiale (jamais étiquetée) : socle de la plateforme.
+
 ### Added
 
 - Initialisation du projet : Next.js 15, TypeScript strict, Tailwind CSS v4, shadcn/ui, Prisma 7.
@@ -21,19 +79,6 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 - Scripts de sauvegarde/restauration PostgreSQL, seed de démonstration.
 - Docker Compose (production et développement avec rechargement à chaud), Dockerfile.
 - CI GitHub Actions (lint, format, typecheck, build, test) sur ubuntu-latest et windows-latest.
-- Module **Événements** (`modules.enabled: [events]`) : calendrier interne du bureau, catégories
-  configurables, séries récurrentes (hebdomadaire, bimensuelle, mensuelle) avec annulation d'une
-  date, brouillons, vues calendrier/liste, filtres, export `.ics` et flux d'abonnement personnel,
-  notification de confirmation et rappel de la veille (planificateur interne, jamais envoyé deux
-  fois), journal d'audit, données de démonstration. Voir `docs/events.md`.
-- Événements : titre, début, fin, lieu, description et catégorie sont obligatoires (validation
-  Zod côté serveur et dans le formulaire) ; les événements existants incomplets restent
-  affichables et ne sont bloqués qu'à leur prochaine modification.
-- Lien d'abonnement agenda au niveau du BDE (`/api/calendar/bde/<jeton>.ics`) : un seul lien pour
-  l'agenda partagé du bureau, événements confirmés uniquement, géré par OWNER/ADMIN (afficher,
-  copier, régénérer, désactiver, tout journalisé), avec une proposition de régénération quand un
-  membre est retiré. Voir `docs/events.md`.
-- Attribution de la permission d'un module à un membre depuis le panel _Membres_.
-- Page _Mon profil_.
-- Configuration personnelle non versionnée : `bde.config.local.yml` (ignoré par Git) remplace
-  `bde.config.yml` s'il existe.
+
+[Unreleased]: https://github.com/edouardbautz/BDE_Network/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/edouardbautz/BDE_Network/releases/tag/v0.2.0
