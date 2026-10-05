@@ -27,7 +27,9 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
     ports:
-      - '3000:3000'
+      # Reachable from this machine only (a reverse proxy in front handles HTTPS).
+      # Without a proxy, set APP_BIND=0.0.0.0 in .env: read the warning in docs/deployment.md first.
+      - '${APP_BIND:-127.0.0.1}:3000:3000'
     volumes:
       - ./bde.config.yml:/app/bde.config.yml:ro
       - storage_uploads:/app/storage/uploads

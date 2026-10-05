@@ -45,3 +45,66 @@ jobs:
 
       - name: Test
         run: npm run test
+
+  # The production image is what operators actually run: build it, start it against a real
+  # PostgreSQL and check it comes up (migrations applied, environment accepted, database
+  # reachable). Catches a broken Dockerfile or a Prisma update the pruned CLI can no longer run.
+  docker:
+    name: docker image
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: bde
+          POSTGRES_PASSWORD: ci-password
+          POSTGRES_DB: bde_network
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U bde -d bde_network"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the image
+        run: |
+          docker build -t bde-network .
+          docker images bde-network --format 'Image size: {{.Size}}'
+
+      - name: Start it against PostgreSQL
+        run: |
+          docker run -d --name app --network host \
+            -e DATABASE_URL='postgresql://bde:ci-password@127.0.0.1:5432/bde_network?schema=public' \
+            -e AUTH_SECRET='ci-only-secret-not-used-anywhere-else-0123456789' \
+            -e FORTYTWO_CLIENT_ID=ci \
+            -e FORTYTWO_CLIENT_SECRET=ci \
+            bde-network
+
+      - name: Wait for the health check (migrations run before the server starts)
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000/api/health; then
+              echo
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs app
+          exit 1
+
+      - name: Check the security headers
+        run: |
+          headers="$(curl -sI http://127.0.0.1:3000/fr)"
+          echo "$headers"
+          for header in content-security-policy x-frame-options x-content-type-options; do
+            echo "$headers" | grep -qi "^$header:" || { echo "Missing header: $header"; exit 1; }
+          done
+          if echo "$headers" | grep -qi '^x-powered-by:'; then echo "X-Powered-By must not be sent"; exit 1; fi
+
+      - name: Show the logs
+        if: always()
+        run: docker logs app
