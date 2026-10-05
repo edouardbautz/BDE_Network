@@ -137,5 +137,27 @@
       "description": "Téléchargez une copie de toutes les données vous concernant, au format JSON.",
       "button": "Télécharger mes données"
     }
+  },
+  "events": {
+    "notifications": {
+      "confirmed": {
+        "subject": "Nouvel événement confirmé : {title}",
+        "intro": "Un événement vient d'être confirmé par le bureau."
+      },
+      "reminder": {
+        "subject": "Rappel : {title} a lieu demain",
+        "intro": "Rappel : cet événement a lieu demain."
+      },
+      "frequency": {
+        "WEEKLY": "chaque semaine",
+        "BIWEEKLY": "toutes les 2 semaines",
+        "MONTHLY": "chaque mois"
+      },
+      "recurring": "Se répète {frequency} jusqu'au {until}.",
+      "location": "Lieu",
+      "category": "Catégorie",
+      "inCharge": "En charge",
+      "link": "Détails"
+    }
   }
 }

@@ -137,5 +137,27 @@
       "description": "Download a copy of everything we hold about you, as JSON.",
       "button": "Download my data"
     }
+  },
+  "events": {
+    "notifications": {
+      "confirmed": {
+        "subject": "New event confirmed: {title}",
+        "intro": "The board just confirmed an event."
+      },
+      "reminder": {
+        "subject": "Reminder: {title} is tomorrow",
+        "intro": "Reminder: this event takes place tomorrow."
+      },
+      "frequency": {
+        "WEEKLY": "every week",
+        "BIWEEKLY": "every 2 weeks",
+        "MONTHLY": "every month"
+      },
+      "recurring": "Repeats {frequency} until {until}.",
+      "location": "Location",
+      "category": "Category",
+      "inCharge": "In charge",
+      "link": "Details"
+    }
   }
 }

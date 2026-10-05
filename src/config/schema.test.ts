@@ -97,8 +97,10 @@ describe('bdeConfigSchema', () => {
     });
 
     it('requires an events section when the module is enabled', () => {
-      const { events: _events, ...withoutSection } = withEvents;
-      const result = bdeConfigSchema.safeParse(withoutSection);
+      const result = bdeConfigSchema.safeParse({
+        ...validConfig,
+        modules: { enabled: ['events'] },
+      });
       expect(result.success).toBe(false);
     });
 
