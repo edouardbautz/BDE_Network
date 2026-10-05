@@ -61,3 +61,6 @@ next-env.d.ts
 
 # vitest
 /coverage
+
+# internal pre-release audit notes (never committed)
+/.audit/
