@@ -1,0 +1,22 @@
+[
+  {
+    "id": "GHSA-6g55-p6wh-862q",
+    "package": "postcss",
+    "reason": "Copy of postcss 8.4.31 pinned inside next. It only processes this project's own CSS at build time, never untrusted input. npm only offers a fix by moving to Next 16 (a major upgrade)."
+  },
+  {
+    "id": "GHSA-r28c-9q8g-f849",
+    "package": "postcss",
+    "reason": "Same copy of postcss as above: build-time only, own CSS only. Goes away with the next Next.js release that updates its postcss pin."
+  },
+  {
+    "id": "GHSA-ggr8-5vv4-36mx",
+    "package": "deepmerge-ts",
+    "reason": "Used by the Prisma CLI to merge prisma.config.ts, a trusted file written by the operator. Fixing it needs deepmerge-ts 8 (a major) inside Prisma itself; npm's suggested fix is to downgrade Prisma to 6, which is not acceptable."
+  },
+  {
+    "id": "GHSA-3f6p-5ww8-9rcr",
+    "package": "mysql2",
+    "reason": "Only reachable through `prisma dev` (Prisma's local development database). This project uses PostgreSQL and never starts it; no MySQL connection is ever made."
+  }
+]

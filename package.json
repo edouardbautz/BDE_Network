@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "audit:prod": "node scripts/audit-prod.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "clean": "rimraf .next",

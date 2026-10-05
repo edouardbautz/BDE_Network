@@ -25,6 +25,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Once is enough (the tree is identical on both systems). Fails on a new
+      # high/critical advisory; accepted ones are in scripts/audit-allowlist.json.
+      - name: Audit production dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: npm run audit:prod
+
       - name: Lint
         run: npm run lint
 

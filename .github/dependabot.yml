@@ -1,0 +1,47 @@
+# One weekly batch of updates instead of one pull request per package.
+# Security updates are raised by GitHub as soon as an advisory is published,
+# independently of this schedule.
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      # These pairs must move together (see "Dependencies" in docs/contributing-guide.md).
+      next:
+        patterns: ['next', 'eslint-config-next']
+      next-auth:
+        patterns: ['next-auth', '@auth/core']
+      minor-and-patch:
+        update-types: ['minor', 'patch']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      github-actions:
+        patterns: ['*']
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      docker:
+        patterns: ['*']
+
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      docker-compose:
+        patterns: ['*']

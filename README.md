@@ -58,7 +58,7 @@ pour simuler PENDING / MEMBER / ADMIN et vérifier les restrictions d'accès —
 ## Stack technique
 
 Next.js 15 (App Router) · TypeScript strict · PostgreSQL · Prisma 7 · Tailwind CSS v4 ·
-shadcn/ui · NextAuth v5 · next-intl · Docker Compose
+shadcn/ui · NextAuth v5 (beta, version épinglée) · next-intl · Docker Compose
 
 ## Contribuer
 

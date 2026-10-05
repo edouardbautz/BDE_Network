@@ -86,6 +86,27 @@ En résumé :
 - Les composants `src/components/ui/` sont générés par shadcn/ui — ne pas les modifier à la
   main, régénérer via `npx shadcn add <composant>`.
 
+## Dépendances
+
+- **NextAuth v5 est en beta, et c'est assumé.** La v5 n'existe que sous le tag `beta` de npm
+  (le tag `latest` est la v4) ; elle apporte l'helper universel `auth()` sur lequel repose toute
+  l'authentification du projet. La version est **épinglée à l'exacte** (`5.0.0-beta.32`) : aucune
+  mise à jour ne passe sans qu'on l'ait choisie. Pour la changer, lisez les notes de version, lancez
+  `npm test` (en particulier `src/lib/auth/removed-account.test.ts`, qui vérifie qu'un membre
+  retiré est bien déconnecté), puis changez **ensemble** `next-auth` et `@auth/core` (ce dernier
+  est épinglé à la version qu'utilise `next-auth`).
+- **`next` et `eslint-config-next`** sont épinglés à la même version exacte et se mettent à jour
+  ensemble.
+- **`nodemailer`** : NextAuth déclare une dépendance optionnelle sur nodemailer 7 ou 8 (pour son
+  fournisseur d'e-mails, que ce projet n'utilise pas). Le champ `overrides` de `package.json` l'aligne
+  sur notre version.
+- **Audit de sécurité** : `npm run audit:prod` (lancé par la CI) échoue si une alerte de
+  gravité haute ou critique apparaît dans les dépendances de production. Les rares alertes sans
+  correctif applicable sont listées avec leur raison dans `scripts/audit-allowlist.json` ; retirez
+  une entrée dès que sa dépendance est corrigée.
+- **Dependabot** propose chaque lundi un seul lot de mises à jour mineures et correctifs ; les
+  versions majeures arrivent séparément, à examiner une par une.
+
 ## Base de données : migrations
 
 ```

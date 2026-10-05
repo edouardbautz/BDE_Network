@@ -21,7 +21,18 @@ _using_ the deployed app (BDE members) are not necessarily technical — the UI 
 - **Tailwind CSS v4** + **shadcn/ui** (`base-nova` style, **Base UI** primitives — not Radix.
   Components use a `render` prop for custom elements, not `asChild`).
 - **NextAuth v5** (`next-auth@beta`), JWT session strategy, **no adapter** (the schema has no
-  Account/Session/VerificationToken tables — see Auth section).
+  Account/Session/VerificationToken tables — see Auth section). **A beta, on purpose**: 5.x is only
+  published under the `beta` dist-tag, and the whole auth layer relies on its universal `auth()`.
+  It is pinned to an **exact** version, together with `@auth/core` (which we import directly for
+  the JWT types and must match what `next-auth` uses). Never bump either on its own: change both,
+  run the tests (`removed-account.test.ts` is the one that matters), read the release notes.
+- **Dependency hygiene**: `next` and `eslint-config-next` share one exact version.
+  `package.json` `overrides` aligns NextAuth's optional `nodemailer` peer (7/8) with ours (10) —
+  we never use its email provider. `npm run audit:prod` runs in CI and fails on a new
+  high/critical advisory in production dependencies; the few that cannot be fixed without a major
+  upgrade of Next.js or Prisma are in `scripts/audit-allowlist.json` with a reason (drop an entry
+  when its dependency is fixed). Never run `npm audit fix --force`: it proposes downgrading
+  Prisma and next-auth. Dependabot batches updates weekly (`.github/dependabot.yml`).
 - **next-intl** for i18n: French default, English available, routes live under `src/app/[locale]/`.
 - **Zod v4** for `bde.config.yml` validation.
 - **Vitest** for unit tests, **GitHub Actions** (ubuntu + windows matrix) for CI.
