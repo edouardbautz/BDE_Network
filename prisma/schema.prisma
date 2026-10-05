@@ -22,7 +22,7 @@ enum Role {
 /// survives the deletion (see AuditLog.actorLogin).
 model User {
   id          String    @id @default(cuid())
-  /// 42 intra login, e.g. "ebautz"
+  /// 42 intra login, e.g. "jdoe"
   login       String    @unique
   fullName    String
   email       String    @unique
