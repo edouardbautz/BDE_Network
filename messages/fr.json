@@ -48,7 +48,9 @@
     "privacy": "Confidentialité",
     "openMenu": "Ouvrir le menu de navigation",
     "menuTitle": "Navigation",
-    "menuDescription": "Liens de navigation principaux de la plateforme du bureau."
+    "menuDescription": "Liens de navigation principaux de la plateforme du bureau.",
+    "events": "Événements",
+    "profile": "Mon profil"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -158,6 +160,146 @@
       "category": "Catégorie",
       "inCharge": "En charge",
       "link": "Détails"
+    },
+    "title": "Événements",
+    "subtitle": "Le calendrier interne du bureau : planifiez et organisez les événements du BDE.",
+    "new": "Nouvel événement",
+    "recurring": "Événement récurrent",
+    "status": {
+      "DRAFT": "Brouillon",
+      "CONFIRMED": "Confirmé"
+    },
+    "recurrence": {
+      "NONE": "Ne se répète pas",
+      "WEEKLY": "Chaque semaine",
+      "BIWEEKLY": "Toutes les 2 semaines",
+      "MONTHLY": "Chaque mois"
+    },
+    "views": {
+      "label": "Affichage",
+      "calendar": "Calendrier",
+      "list": "Liste"
+    },
+    "calendar": {
+      "caption": "Calendrier mensuel des événements",
+      "dayLabel": "{date} : {count, plural, =0 {aucun événement} one {# événement} other {# événements}}",
+      "more": "+{count} autres",
+      "dayEmpty": "Aucun événement ce jour-là.",
+      "previous": "Mois précédent",
+      "next": "Mois suivant",
+      "today": "Aujourd'hui"
+    },
+    "filters": {
+      "category": "Catégorie",
+      "assignee": "En charge",
+      "schoolYear": "Année scolaire",
+      "allCategories": "Toutes les catégories",
+      "allAssignees": "Tous les membres",
+      "allSchoolYears": "Toutes les années",
+      "apply": "Filtrer",
+      "reset": "Réinitialiser"
+    },
+    "empty": {
+      "title": "Aucun événement à venir",
+      "description": "Les prochains événements du bureau apparaîtront ici dès qu'ils seront confirmés.",
+      "descriptionManager": "Créez le premier événement du bureau : gardez-le en brouillon le temps de l'organiser, puis confirmez-le pour prévenir les membres.",
+      "filteredTitle": "Aucun événement ne correspond",
+      "filteredDescription": "Essayez d'élargir ou de réinitialiser les filtres.",
+      "monthTitle": "Rien de prévu ce mois-ci",
+      "monthDescription": "Aucun événement sur cette période. Passez au mois suivant ou à la vue liste."
+    },
+    "detail": {
+      "back": "Tous les événements",
+      "occurrenceCancelled": "Annulé",
+      "addToCalendar": "Ajouter à mon agenda",
+      "addSeriesToCalendar": "Ajouter toute la série à mon agenda",
+      "edit": "Modifier",
+      "confirm": "Confirmer",
+      "backToDraft": "Repasser en brouillon",
+      "when": "Quand",
+      "repeats": "Répétition",
+      "repeatsValue": "{frequency}, jusqu'au {until}",
+      "where": "Lieu",
+      "inCharge": "En charge",
+      "noneInCharge": "Personne n'est assigné pour l'instant",
+      "description": "Description",
+      "meta": "Créé par {author} · année scolaire {schoolYear}",
+      "occurrences": {
+        "title": "Occurrences à venir",
+        "allPast": "Toutes les occurrences de cette série sont passées.",
+        "cancel": "Annuler cette date",
+        "restore": "Rétablir",
+        "truncated": "{count, plural, one {# autre occurrence non affichée} other {# autres occurrences non affichées}}.",
+        "past": "{count, plural, one {# occurrence passée} other {# occurrences passées}}."
+      },
+      "delete": {
+        "button": "Supprimer l'événement",
+        "warning": "Cette suppression est définitive.",
+        "warningSeries": "Cette suppression est définitive et concerne toute la série. Pour ne retirer qu'une date, utilisez « Annuler cette date ».",
+        "confirm": "Oui, supprimer définitivement"
+      }
+    },
+    "form": {
+      "createTitle": "Nouvel événement",
+      "editTitle": "Modifier l'événement",
+      "create": "Créer l'événement",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "cancel": "Annuler",
+      "title": "Titre",
+      "category": "Catégorie",
+      "status": "Statut",
+      "statusHelp": "Un brouillon n'est visible que du bureau. Confirmer prévient tous les membres.",
+      "startsAt": "Début",
+      "endsAt": "Fin",
+      "timeZoneHelp": "Heures dans le fuseau du BDE ({timeZone}).",
+      "recurrence": "Répétition",
+      "recurrenceUntil": "Répéter jusqu'au",
+      "recurrenceUntilHelp": "Ce jour est inclus. Obligatoire pour une série.",
+      "seriesHelp": "Vos modifications s'appliquent à toute la série. Pour sauter une seule date, utilisez « Annuler cette date » sur la page de l'événement.",
+      "location": "Lieu",
+      "inCharge": "Membres en charge",
+      "inChargeHelp": "Les personnes cochées reçoivent le rappel de la veille.",
+      "description": "Description",
+      "errors": {
+        "required": "Ce champ est obligatoire.",
+        "tooLong": "Ce texte est trop long.",
+        "invalid": "Valeur invalide.",
+        "endBeforeStart": "La fin doit être après le début.",
+        "untilRequired": "Indiquez la date de fin de la série.",
+        "untilBeforeStart": "La fin de la série doit être après la première date.",
+        "tooManyOccurrences": "Cette série contient trop d'occurrences (200 maximum). Raccourcissez-la."
+      },
+      "formErrors": {
+        "invalidAssignee": "Un des membres en charge n'existe pas ou n'est pas encore validé.",
+        "notFound": "Cet événement n'existe plus."
+      }
+    },
+    "dashboard": {
+      "title": "Prochains événements",
+      "viewAll": "Tout voir",
+      "emptyTitle": "Aucun événement à venir",
+      "emptyDescription": "Les prochains événements du bureau s'afficheront ici."
+    }
+  },
+  "profile": {
+    "title": "Mon profil",
+    "subtitle": "Vos informations de compte et vos réglages personnels.",
+    "calendar": {
+      "title": "Synchroniser avec mon agenda",
+      "description": "Ajoutez ce lien à Google Agenda, Outlook ou Apple Calendar : les événements du BDE s'y mettent à jour automatiquement.",
+      "linkLabel": "Lien d'abonnement personnel à l'agenda",
+      "copy": "Copier",
+      "copied": "Copié",
+      "google": "Google Agenda : « Autres agendas » → « À partir de l'URL », puis collez le lien.",
+      "outlook": "Outlook : « Ajouter un calendrier » → « S'abonner à partir du web », puis collez le lien.",
+      "apple": "Apple Calendar : Fichier → « Nouvel abonnement à un calendrier », puis collez le lien.",
+      "regenerate": {
+        "summary": "Générer un nouveau lien",
+        "warning": "L'ancien lien cessera de fonctionner immédiatement. Vous devrez ajouter le nouveau lien dans votre application d'agenda.",
+        "confirm": "Générer un nouveau lien"
+      },
+      "privacy": "Ce lien est personnel : toute personne qui le possède peut lire les événements que vous avez le droit de voir. Ne le partagez pas. Il cesse de fonctionner si vous quittez le BDE."
     }
   }
 }

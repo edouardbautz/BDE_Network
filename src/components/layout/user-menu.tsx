@@ -10,7 +10,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut } from 'lucide-react';
+import { LogOut, UserRound } from 'lucide-react';
+import { Link } from '@/i18n/navigation';
 
 interface UserMenuProps {
   name: string;
@@ -49,6 +50,10 @@ export async function UserMenu({ name, login, image, role }: UserMenuProps) {
           </Badge>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem render={<Link href="/profile" />}>
+          <UserRound className="size-4" />
+          {t('nav.profile')}
+        </DropdownMenuItem>
         <form
           action={async () => {
             'use server';

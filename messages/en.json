@@ -48,7 +48,9 @@
     "privacy": "Privacy",
     "openMenu": "Open navigation menu",
     "menuTitle": "Navigation",
-    "menuDescription": "Main navigation links for this organization's platform."
+    "menuDescription": "Main navigation links for this organization's platform.",
+    "events": "Events",
+    "profile": "My profile"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -158,6 +160,146 @@
       "category": "Category",
       "inCharge": "In charge",
       "link": "Details"
+    },
+    "title": "Events",
+    "subtitle": "The board's internal calendar: plan and organise the BDE's events.",
+    "new": "New event",
+    "recurring": "Recurring event",
+    "status": {
+      "DRAFT": "Draft",
+      "CONFIRMED": "Confirmed"
+    },
+    "recurrence": {
+      "NONE": "Does not repeat",
+      "WEEKLY": "Every week",
+      "BIWEEKLY": "Every 2 weeks",
+      "MONTHLY": "Every month"
+    },
+    "views": {
+      "label": "View",
+      "calendar": "Calendar",
+      "list": "List"
+    },
+    "calendar": {
+      "caption": "Monthly events calendar",
+      "dayLabel": "{date}: {count, plural, =0 {no events} one {# event} other {# events}}",
+      "more": "+{count} more",
+      "dayEmpty": "No events on this day.",
+      "previous": "Previous month",
+      "next": "Next month",
+      "today": "Today"
+    },
+    "filters": {
+      "category": "Category",
+      "assignee": "In charge",
+      "schoolYear": "School year",
+      "allCategories": "All categories",
+      "allAssignees": "All members",
+      "allSchoolYears": "All years",
+      "apply": "Filter",
+      "reset": "Reset"
+    },
+    "empty": {
+      "title": "No upcoming events",
+      "description": "The board's upcoming events will appear here once they are confirmed.",
+      "descriptionManager": "Create the board's first event: keep it as a draft while you organise it, then confirm it to let members know.",
+      "filteredTitle": "No events match",
+      "filteredDescription": "Try widening or resetting the filters.",
+      "monthTitle": "Nothing planned this month",
+      "monthDescription": "No events in this period. Go to the next month or switch to the list view."
+    },
+    "detail": {
+      "back": "All events",
+      "occurrenceCancelled": "Cancelled",
+      "addToCalendar": "Add to my calendar",
+      "addSeriesToCalendar": "Add the whole series to my calendar",
+      "edit": "Edit",
+      "confirm": "Confirm",
+      "backToDraft": "Back to draft",
+      "when": "When",
+      "repeats": "Repeats",
+      "repeatsValue": "{frequency}, until {until}",
+      "where": "Location",
+      "inCharge": "In charge",
+      "noneInCharge": "Nobody is assigned yet",
+      "description": "Description",
+      "meta": "Created by {author} · school year {schoolYear}",
+      "occurrences": {
+        "title": "Upcoming occurrences",
+        "allPast": "All occurrences of this series are in the past.",
+        "cancel": "Cancel this date",
+        "restore": "Restore",
+        "truncated": "{count, plural, one {# more occurrence not shown} other {# more occurrences not shown}}.",
+        "past": "{count, plural, one {# past occurrence} other {# past occurrences}}."
+      },
+      "delete": {
+        "button": "Delete event",
+        "warning": "This deletion is permanent.",
+        "warningSeries": "This deletion is permanent and affects the whole series. To remove a single date, use “Cancel this date”.",
+        "confirm": "Yes, delete permanently"
+      }
+    },
+    "form": {
+      "createTitle": "New event",
+      "editTitle": "Edit event",
+      "create": "Create event",
+      "save": "Save",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "title": "Title",
+      "category": "Category",
+      "status": "Status",
+      "statusHelp": "A draft is only visible to the board. Confirming notifies all members.",
+      "startsAt": "Start",
+      "endsAt": "End",
+      "timeZoneHelp": "Times are in the BDE's time zone ({timeZone}).",
+      "recurrence": "Repeat",
+      "recurrenceUntil": "Repeat until",
+      "recurrenceUntilHelp": "This day is included. Required for a series.",
+      "seriesHelp": "Your changes apply to the whole series. To skip a single date, use “Cancel this date” on the event page.",
+      "location": "Location",
+      "inCharge": "Members in charge",
+      "inChargeHelp": "People ticked here receive the day-before reminder.",
+      "description": "Description",
+      "errors": {
+        "required": "This field is required.",
+        "tooLong": "This text is too long.",
+        "invalid": "Invalid value.",
+        "endBeforeStart": "The end must be after the start.",
+        "untilRequired": "Enter the end date of the series.",
+        "untilBeforeStart": "The series must end after its first date.",
+        "tooManyOccurrences": "This series has too many occurrences (200 maximum). Shorten it."
+      },
+      "formErrors": {
+        "invalidAssignee": "One of the members in charge does not exist or is not approved yet.",
+        "notFound": "This event no longer exists."
+      }
+    },
+    "dashboard": {
+      "title": "Upcoming events",
+      "viewAll": "View all",
+      "emptyTitle": "No upcoming events",
+      "emptyDescription": "The board's upcoming events will show up here."
+    }
+  },
+  "profile": {
+    "title": "My profile",
+    "subtitle": "Your account details and personal settings.",
+    "calendar": {
+      "title": "Sync with my calendar",
+      "description": "Add this link to Google Calendar, Outlook or Apple Calendar: BDE events then update there automatically.",
+      "linkLabel": "Personal calendar subscription link",
+      "copy": "Copy",
+      "copied": "Copied",
+      "google": "Google Calendar: “Other calendars” → “From URL”, then paste the link.",
+      "outlook": "Outlook: “Add calendar” → “Subscribe from web”, then paste the link.",
+      "apple": "Apple Calendar: File → “New Calendar Subscription”, then paste the link.",
+      "regenerate": {
+        "summary": "Generate a new link",
+        "warning": "The old link stops working immediately. You will need to add the new link to your calendar app.",
+        "confirm": "Generate a new link"
+      },
+      "privacy": "This link is personal: anyone who has it can read the events you are allowed to see. Do not share it. It stops working if you leave the BDE."
     }
   }
 }

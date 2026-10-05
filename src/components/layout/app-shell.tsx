@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { useState } from 'react';
-import { LayoutDashboard, Menu, ScrollText, Users } from 'lucide-react';
+import { CalendarDays, LayoutDashboard, Menu, ScrollText, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link, usePathname } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
@@ -17,13 +17,14 @@ import {
 import { ThemeToggle } from '@/components/theme-toggle';
 
 export interface NavItem {
-  id: 'dashboard' | 'members' | 'auditLog';
+  id: 'dashboard' | 'events' | 'members' | 'auditLog';
   href: string;
   label: string;
 }
 
 const NAV_ICONS: Record<NavItem['id'], typeof LayoutDashboard> = {
   dashboard: LayoutDashboard,
+  events: CalendarDays,
   members: Users,
   auditLog: ScrollText,
 };
@@ -68,7 +69,8 @@ function NavList({
     <nav className="flex flex-col gap-0.5" aria-label={label}>
       {items.map((item) => {
         const Icon = NAV_ICONS[item.id];
-        const isActive = pathname === item.href;
+        // A section stays active on its sub-pages (/events/abc, /events/new).
+        const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
         return (
           <Link
             key={item.href}

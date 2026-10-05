@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { getEffectiveSession } from '@/lib/auth/session';
 import { getConfig } from '@/config';
+import { isEventsModuleEnabled } from '@/lib/events/access';
 import { canManageMembers, canViewAuditLog } from '@/lib/permissions';
 import { redirect } from '@/i18n/navigation';
 import { AppShell, type NavItem } from '@/components/layout/app-shell';
@@ -33,6 +34,9 @@ export default async function AppLayout({
   const t = await getTranslations('nav');
 
   const navItems: NavItem[] = [{ id: 'dashboard', href: '/dashboard', label: t('dashboard') }];
+  if (isEventsModuleEnabled()) {
+    navItems.push({ id: 'events', href: '/events', label: t('events') });
+  }
   if (canManageMembers(session.user.role)) {
     navItems.push({ id: 'members', href: '/members', label: t('members') });
   }

@@ -1,6 +1,11 @@
 import { LayoutGrid } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
+import { getConfig } from '@/config';
+import { UpcomingEventsCard } from '@/components/events/upcoming-events-card';
 import { getEffectiveSession } from '@/lib/auth/session';
+import { getEventsAccess } from '@/lib/events/access';
+import { getCategories } from '@/lib/events/categories';
+import { listUpcomingOccurrences } from '@/lib/events/queries';
 import { canManageMembers } from '@/lib/permissions';
 import { Link } from '@/i18n/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -17,6 +22,17 @@ export default async function DashboardPage() {
   if (!session?.user) {
     return null;
   }
+
+  const config = getConfig();
+  // null when the events module is disabled — then nothing about it is queried or shown.
+  const eventsAccess = await getEventsAccess();
+  const upcomingEvents = eventsAccess
+    ? await listUpcomingOccurrences({
+        now: new Date(),
+        limit: 5,
+        includeDrafts: eventsAccess.canManage,
+      })
+    : [];
 
   const displayName = session.user.name ?? session.user.login;
   const initials = displayName
@@ -51,22 +67,33 @@ export default async function DashboardPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-dashed">
-        <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-          <div className="bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-full">
-            <LayoutGrid className="size-5" />
-          </div>
-          <div className="flex flex-col gap-1">
-            <p className="text-sm font-medium">{t('empty.title')}</p>
-            <p className="text-muted-foreground max-w-sm text-sm">{t('empty.description')}</p>
-          </div>
-          {canManageMembers(session.user.role) && (
-            <Button size="sm" className="mt-1" render={<Link href="/members" />}>
-              {t('empty.cta')}
-            </Button>
-          )}
-        </CardContent>
-      </Card>
+      {eventsAccess && (
+        <UpcomingEventsCard
+          occurrences={upcomingEvents}
+          categories={getCategories()}
+          timeZone={config.bde.timezone}
+          canManage={eventsAccess.canManage}
+        />
+      )}
+
+      {config.modules.enabled.length === 0 && (
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+            <div className="bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-full">
+              <LayoutGrid className="size-5" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-medium">{t('empty.title')}</p>
+              <p className="text-muted-foreground max-w-sm text-sm">{t('empty.description')}</p>
+            </div>
+            {canManageMembers(session.user.role) && (
+              <Button size="sm" className="mt-1" render={<Link href="/members" />}>
+                {t('empty.cta')}
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
