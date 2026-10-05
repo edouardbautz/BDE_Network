@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { signIn } from '@/lib/auth';
 import { getEffectiveSession } from '@/lib/auth/session';
 import { getConfig } from '@/config';
+import { isDatabaseReachable } from '@/lib/health';
 import { Link, redirect } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +15,12 @@ export default async function LoginPage({ params }: { params: Promise<{ locale: 
 
   if (session?.user) {
     redirect({ href: session.user.role === 'PENDING' ? '/pending' : '/dashboard', locale });
+    return null;
+  }
+
+  // Signing in needs the database: say so now instead of failing after the 42 round trip.
+  if (!(await isDatabaseReachable())) {
+    redirect({ href: '/unavailable', locale });
     return null;
   }
 

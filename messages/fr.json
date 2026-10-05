@@ -41,6 +41,13 @@
     "description": "Un administrateur doit approuver votre accès avant que vous puissiez utiliser la plateforme. Revenez un peu plus tard.",
     "signedInAs": "Connecté en tant que {name} ({login})"
   },
+  "unavailable": {
+    "title": "Service momentanément indisponible",
+    "description": "La plateforme n'arrive pas à joindre sa base de données. Rassurez-vous : vos informations ne sont pas perdues, c'est un incident temporaire qui se règle en général en quelques minutes.",
+    "autoRetry": "Cette page vérifie toute seule et vous ramènera à la plateforme dès que ce sera rétabli.",
+    "retry": "Réessayer maintenant",
+    "help": "Si cela dure, prévenez la personne qui gère le serveur de votre BDE."
+  },
   "nav": {
     "dashboard": "Tableau de bord",
     "members": "Membres",

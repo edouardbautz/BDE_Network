@@ -41,6 +41,13 @@
     "description": "An administrator needs to approve your access before you can use the platform. Check back soon.",
     "signedInAs": "Signed in as {name} ({login})"
   },
+  "unavailable": {
+    "title": "Service temporarily unavailable",
+    "description": "The platform cannot reach its database right now. Don't worry: your information is not lost, this is a temporary incident that is usually fixed within a few minutes.",
+    "autoRetry": "This page checks by itself and will take you back to the platform as soon as it is restored.",
+    "retry": "Try again now",
+    "help": "If it lasts, let the person who runs your BDE's server know."
+  },
   "nav": {
     "dashboard": "Dashboard",
     "members": "Members",

@@ -6,7 +6,11 @@ declare global {
 }
 
 function createPrismaClient(): PrismaClient {
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+  // A database that does not answer must fail in seconds, not hang the page forever.
+  const adapter = new PrismaPg({
+    connectionString: process.env.DATABASE_URL,
+    connectionTimeoutMillis: 3_000,
+  });
   return new PrismaClient({ adapter });
 }
 

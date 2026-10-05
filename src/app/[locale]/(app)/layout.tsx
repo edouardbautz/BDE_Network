@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { getEffectiveSession } from '@/lib/auth/session';
 import { getConfig } from '@/config';
 import { isEventsModuleEnabled } from '@/lib/events/access';
+import { isDatabaseReachable } from '@/lib/health';
 import { canManageMembers, canViewAuditLog } from '@/lib/permissions';
 import { redirect } from '@/i18n/navigation';
 import { AppShell, type NavItem } from '@/components/layout/app-shell';
@@ -21,6 +22,12 @@ export default async function AppLayout({
   const session = await getEffectiveSession();
 
   if (!session?.user) {
+    // With the database down Auth.js reports no session: don't send a signed-in
+    // member to the login page as if they had been logged out.
+    if (!(await isDatabaseReachable())) {
+      redirect({ href: '/unavailable', locale });
+      return null;
+    }
     redirect({ href: '/', locale });
     return null;
   }

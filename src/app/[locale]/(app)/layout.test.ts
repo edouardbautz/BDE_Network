@@ -18,6 +18,7 @@ const { RedirectSignal } = vi.hoisted(() => {
 });
 
 vi.mock('@/lib/auth', () => ({ auth: vi.fn() }));
+vi.mock('@/lib/health', () => ({ isDatabaseReachable: vi.fn(async () => true) }));
 vi.mock('@/i18n/navigation', () => ({
   redirect: vi.fn((opts: { href: string }) => {
     throw new RedirectSignal(opts.href);
@@ -29,6 +30,7 @@ vi.mock('next-intl/server', () => ({
 
 const { auth } = await import('@/lib/auth');
 const { redirect } = await import('@/i18n/navigation');
+const { isDatabaseReachable } = await import('@/lib/health');
 const { default: AppLayout } = await import('./layout');
 
 // NextAuth's `auth` export is overloaded (plain call / middleware / route
@@ -66,6 +68,16 @@ describe('(app) layout — the shared gate for /dashboard, /members, /audit-log'
     await expect(callLayout()).rejects.toThrow(RedirectSignal);
 
     expect(redirect).toHaveBeenCalledWith(expect.objectContaining({ href: '/' }));
+  });
+
+  // With the database down Auth.js reports no session for everyone, signed in or not.
+  it('shows the "service unavailable" page, not the login page, when the database is down', async () => {
+    mockAuth.mockResolvedValue(null);
+    vi.mocked(isDatabaseReachable).mockResolvedValueOnce(false);
+
+    await expect(callLayout()).rejects.toThrow(RedirectSignal);
+
+    expect(redirect).toHaveBeenCalledWith(expect.objectContaining({ href: '/unavailable' }));
   });
 
   it('redirects a PENDING user to the waiting page', async () => {
