@@ -75,6 +75,14 @@ sudo ln -s /etc/nginx/sites-available/bde-network /etc/nginx/sites-enabled/
 sudo certbot --nginx -d votre-domaine.example
 ```
 
+## Rappels du module Événements
+
+Si le module Événements est activé, le conteneur `app` doit **tourner en continu** : c'est lui
+qui envoie les rappels de la veille (une boucle interne, aucun cron à configurer). S'il est
+arrêté à l'heure du rappel, celui-ci part au redémarrage tant que l'événement n'a pas commencé.
+Renseignez `APP_URL` dans `.env` pour que les notifications contiennent un lien. Détails :
+[Module Événements](events.md#comment-fonctionne-le-rappel-de-la-veille).
+
 ## Mettre à jour l'application
 
 ```

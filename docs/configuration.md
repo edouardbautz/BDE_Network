@@ -45,9 +45,32 @@ champs :
 
 ### `modules`
 
-| Champ     | Type             | Description                                                                         |
-| --------- | ---------------- | ----------------------------------------------------------------------------------- |
-| `enabled` | liste de chaînes | Clés des modules métier activés. Vide pour l'instant, aucun module n'existe encore. |
+| Champ     | Type             | Description                                                                    |
+| --------- | ---------------- | ------------------------------------------------------------------------------ |
+| `enabled` | liste de chaînes | Clés des modules métier activés. Module disponible : `events` (voir ci-après). |
+
+Un module désactivé n'a ni route, ni lien, ni donnée visible. Un module activé s'attribue
+ensuite membre par membre depuis _Membres_ (voir le [guide du module](events.md)).
+
+### `events`
+
+Obligatoire **uniquement** si `events` figure dans `modules.enabled` (sinon l'application refuse
+de démarrer avec un message explicite). Détails d'usage : [Module Événements](events.md).
+
+| Champ          | Type               | Description                                                                                                                                                                |
+| -------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `categories`   | liste (au moins 1) | Catégories proposées à la création. Chaque entrée : `key` (identifiant stable, minuscules/chiffres/tirets, unique), `label` (nom affiché tel quel), `color` (hexadécimal). |
+| `reminderHour` | entier 0–23        | Heure locale (fuseau `bde.timezone`) du rappel de la veille. Défaut : `18`.                                                                                                |
+
+```yaml
+events:
+  categories:
+    - { key: 'soiree', label: 'Soirée', color: '#db2777' }
+    - { key: 'sport', label: 'Sport', color: '#16a34a' }
+  reminderHour: 18
+```
+
+Ne changez pas la `key` d'une catégorie existante : les événements déjà créés la référencent.
 
 ### `notifications`
 
@@ -60,23 +83,30 @@ webhook pour Discord/Slack).
 | `memberPending`  | un nouveau membre demande l'accès |
 | `memberApproved` | un membre est approuvé            |
 | `memberRemoved`  | un membre est retiré du BDE       |
+| `eventConfirmed` | un événement est confirmé         |
+| `eventReminder`  | rappel la veille d'un événement   |
 
-Cette couche de notification est prête (adaptateurs email/Discord/Slack fonctionnels) mais
-n'est pas encore branchée à ces événements — ce sera fait avec les premiers modules métier.
+`eventConfirmed` et `eventReminder` (module Événements) sont optionnels et valent `"none"` par
+défaut, ce qui garde valide une configuration écrite avant ce module. Ils sont décrits dans le
+[guide du module](events.md#notifications).
+
+Les trois notifications de membres (`memberPending`, `memberApproved`, `memberRemoved`) ne sont
+pas encore branchées à un cas d'usage.
 
 ## `.env`
 
 Copié depuis `.env.example`. Ne jamais committer ce fichier.
 
-| Variable                                                            | Obligatoire                     | Description                                                                                                                                           |
-| ------------------------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`                 | oui                             | Identifiants PostgreSQL.                                                                                                                              |
-| `DATABASE_URL`                                                      | oui                             | Chaîne de connexion Prisma. Utilisée par `npm run dev` en local ; ignorée (remplacée) par `docker-compose.yml` qui pointe vers le service `postgres`. |
-| `AUTH_SECRET`                                                       | oui                             | Secret NextAuth. Générez-en un avec `npx auth secret`.                                                                                                |
-| `FORTYTWO_CLIENT_ID`, `FORTYTWO_CLIENT_SECRET`                      | oui                             | Identifiants de votre application OAuth 42 (<https://profile.intra.42.fr/oauth/applications>).                                                        |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | si `notifications.*: "email"`   | Serveur SMTP pour l'envoi d'emails.                                                                                                                   |
-| `DISCORD_WEBHOOK_URL`                                               | si `notifications.*: "discord"` | URL de webhook d'un salon Discord.                                                                                                                    |
-| `SLACK_WEBHOOK_URL`                                                 | si `notifications.*: "slack"`   | URL de webhook Slack entrant.                                                                                                                         |
+| Variable                                                            | Obligatoire                     | Description                                                                                                                                                                                                                           |
+| ------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`                 | oui                             | Identifiants PostgreSQL.                                                                                                                                                                                                              |
+| `DATABASE_URL`                                                      | oui                             | Chaîne de connexion Prisma. Utilisée par `npm run dev` en local ; ignorée (remplacée) par `docker-compose.yml` qui pointe vers le service `postgres`.                                                                                 |
+| `AUTH_SECRET`                                                       | oui                             | Secret NextAuth. Générez-en un avec `npx auth secret`.                                                                                                                                                                                |
+| `FORTYTWO_CLIENT_ID`, `FORTYTWO_CLIENT_SECRET`                      | oui                             | Identifiants de votre application OAuth 42 (<https://profile.intra.42.fr/oauth/applications>).                                                                                                                                        |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | si `notifications.*: "email"`   | Serveur SMTP pour l'envoi d'emails.                                                                                                                                                                                                   |
+| `APP_URL`                                                           | non                             | URL publique de l'instance (ex. `https://bde.exemple.fr`), utilisée pour mettre un lien vers l'événement dans les notifications ; et pour le lien d'abonnement agenda si le serveur est derrière un proxy qui ne transmet pas l'hôte. |
+| `DISCORD_WEBHOOK_URL`                                               | si `notifications.*: "discord"` | URL de webhook d'un salon Discord.                                                                                                                                                                                                    |
+| `SLACK_WEBHOOK_URL`                                                 | si `notifications.*: "slack"`   | URL de webhook Slack entrant.                                                                                                                                                                                                         |
 
 ## Modifier la configuration sans reconstruire l'image
 

@@ -21,3 +21,12 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 - Scripts de sauvegarde/restauration PostgreSQL, seed de démonstration.
 - Docker Compose (production et développement avec rechargement à chaud), Dockerfile.
 - CI GitHub Actions (lint, format, typecheck, build, test) sur ubuntu-latest et windows-latest.
+- Module **Événements** (`modules.enabled: [events]`) : calendrier interne du bureau, catégories
+  configurables, séries récurrentes (hebdomadaire, bimensuelle, mensuelle) avec annulation d'une
+  date, brouillons, vues calendrier/liste, filtres, export `.ics` et flux d'abonnement personnel,
+  notification de confirmation et rappel de la veille (planificateur interne, jamais envoyé deux
+  fois), journal d'audit, données de démonstration. Voir `docs/events.md`.
+- Attribution de la permission d'un module à un membre depuis le panel _Membres_.
+- Page _Mon profil_.
+- Configuration personnelle non versionnée : `bde.config.local.yml` (ignoré par Git) remplace
+  `bde.config.yml` s'il existe.

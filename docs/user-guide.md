@@ -57,6 +57,14 @@ serveur, jamais depuis l'interface).
 plateforme (qui a approuvé qui, qui a été retiré...), avec la date et l'auteur de chaque action.
 Ce journal ne peut pas être modifié ni supprimé depuis l'interface.
 
+## Événements (si le module est activé)
+
+Le menu _Événements_ donne le calendrier interne du bureau (vue calendrier ou liste, filtres par
+catégorie, membre en charge et année scolaire) et permet d'ajouter un événement à votre agenda
+ou de vous abonner à un flux qui se met à jour tout seul. Si un administrateur vous a accordé la
+permission, vous pouvez aussi créer et modifier les événements. Tout est expliqué dans le
+[guide du module Événements](events.md).
+
 ## Vos données personnelles
 
 La page **Confidentialité** (lien en bas de la page de connexion et du tableau de bord) explique

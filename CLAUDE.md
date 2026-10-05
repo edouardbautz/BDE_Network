@@ -42,36 +42,46 @@ src/
         dashboard/page.tsx + loading.tsx
         members/page.tsx + actions.ts + loading.tsx   member approval/removal (server actions)
         audit-log/page.tsx + loading.tsx               OWNER-only
+        events/                events module (404 unless enabled): page, new/, [id]/, [id]/edit/,
+                               actions.ts (server actions), loading.tsx for each route
+        profile/                page + actions.ts: account info, personal calendar feed link
     api/
       auth/[...nextauth]/route.ts
       files/[...key]/route.ts            serves local-storage uploads
       me/export/route.ts                 self-service RGPD data export
+      calendar/[token]/route.ts          personal .ics subscription feed (token-authenticated)
+      events/[id]/ics/route.ts           "add to my calendar" download (session-authenticated)
+  instrumentation.ts       starts the events reminder scheduler (Node runtime only)
   components/
     ui/                    shadcn/ui primitives — do not hand-edit, regenerate via shadcn CLI
     layout/                app-shell (sidebar + mobile drawer), footer, user-menu
+    events/                calendar, list, form, toolbar, category badge (module UI)
     theme-provider.tsx, theme-toggle.tsx
   config/                  bde.config.yml loader + Zod schema (src/config/index.ts, schema.ts)
   i18n/                    next-intl routing/navigation/request config
   lib/
     auth/                  NextAuth config + 42 OAuth provider
     notifications/         NotificationAdapter + email/discord/slack/none adapters
+    events/                events module domain: time, recurrence, ics, access, queries, actions
+                           helpers, notifications, reminders, scheduler (see "Events module")
     storage/                StorageAdapter + local adapter
     permissions.ts, audit-log.ts, prisma.ts, color.ts, utils.ts
   types/next-auth.d.ts     Session/User/JWT module augmentation
   middleware.ts             next-intl locale routing, Node.js runtime (not Edge — see below)
 prisma/
-  schema.prisma, seed.ts, migrations/
+  schema.prisma, seed.ts (+ seed-events.ts), migrations/
 scripts/
   db-backup.mjs, db-restore.mjs   Node scripts (cross-platform, no shell), wrap `docker compose exec`
 messages/
   fr.json, en.json          next-intl message catalogs
-docs/                        installation, configuration, user guide, contributing, deployment
+docs/                        installation, configuration, user guide, events, contributing, deployment, design
 ```
 
 ## Data model (Prisma)
 
-Four things exist right now: `User`, `Role` (enum), `ModulePermission`, `AuditLog`. No business
-entities (events, finances, meetings) yet.
+`User`, `Role` (enum), `ModulePermission`, `AuditLog`, plus the events module's `Event`,
+`EventAssignee`, `EventCancellation`, `EventReminder` (see "Events module"). Finances and
+meetings do not exist yet.
 
 - **`Role`**: `OWNER | ADMIN | MEMBER | PENDING`, ordered in that rank (see `src/lib/permissions.ts`).
 - **`User`**: synced from the 42 API on every login (`login`, `fullName`, `email`, `photoUrl`,
@@ -88,10 +98,12 @@ entities (events, finances, meetings) yet.
   author's login so history survives the author being removed, alongside the normal relation for
   when the account still exists.
 
-**Convention for future business entities** (events, finances, meetings — not built yet): give
-each one a `schoolYear: String` field (format `"2025-2026"`) so the UI can filter by academic
-year. Follow the same `authorLogin` + optional `authorId` pattern as `AuditLog` for any
-member-authored record.
+**Convention for business entities** (`Event` is the reference implementation; finances and
+meetings will follow): give each one a `schoolYear: String` field (format `"2025-2026"`, September
+to August, computed by `schoolYearOf` in `src/lib/events/time.ts`) so the UI can filter by
+academic year. Follow the same `authorLogin` + optional `authorId` (`onDelete: SetNull`) pattern
+as `AuditLog` for any member-authored record, and keep a plain-text `login` on join rows that
+point at a user (see `EventAssignee`).
 
 ## Authentication & permissions
 
@@ -120,6 +132,12 @@ member-authored record.
 - Permission helpers: `src/lib/permissions.ts` (`hasMinRole`, `canManageMembers`,
   `canViewAuditLog`, `hasModuleAccess`). Server actions (e.g. `members/actions.ts`) re-check
   permissions themselves — never rely solely on a hidden button.
+- **Module permissions** are granted by an ADMIN/OWNER from the members panel
+  (`setModulePermission` in `members/actions.ts`, audited as `permission.grant`/`revoke`), only for
+  modules listed in `modules.enabled`. A module's pages/actions get their access through one
+  function (for events: `getEventsAccess` / `requireEventsManager` in `src/lib/events/access.ts`)
+  that returns null when the module is disabled — pages treat null as `notFound()`, actions throw
+  `Forbidden`. Always build on `getEffectiveSession`, never `auth()` directly.
 
 ## Configuration: bde.config.yml vs .env
 
@@ -136,22 +154,65 @@ member-authored record.
   loader's `node:fs`/`node:path` imports fail that Edge bundle (`UnhandledSchemeError`).
   `next.config.ts` is only ever executed directly by the Next.js CLI in plain Node — never
   bundled — so it has none of that risk, and it fails faster (before any compilation starts).
+- `src/instrumentation.ts` exists for one purpose: starting the events reminder scheduler. It
+  only does `await import('./lib/events/scheduler')` behind `process.env.NEXT_RUNTIME ===
+'nodejs'`, which keeps Prisma/`node:fs` out of the Edge bundle (verified: `next build` emits only
+  `instrumentation.js`, no Edge variant). Do **not** put config validation back there — that is
+  still `next.config.ts` (see above) — and keep every import in it dynamic and guarded.
+- `bde.config.local.yml` (git-ignored) replaces `bde.config.yml` when present, whole-file, no merge.
 - `src/middleware.ts` runs on the **Node.js runtime** (`export const config = { runtime:
 'nodejs' }`), stable since Next.js 15.5. It doesn't currently read `bde.config.yml` (locale
   routing default is hardcoded to `"fr"` for simplicity — `bde.defaultLocale` is validated but
   not yet wired into routing), but the Node runtime is there if that changes.
 
-## Notifications & storage (infrastructure only, not wired up yet)
+## Notifications & storage
 
 - `src/lib/notifications/`: `NotificationAdapter` interface, adapters for email (nodemailer/SMTP),
   Discord webhook, Slack webhook, and a no-op `none`. `notify(event, message)` picks the adapter
-  from the channel configured per event in `bde.config.yml`'s `notifications` section. **No
-  caller exists yet** — wire it up when a real workflow (member approval, an event, etc.) needs
-  to notify someone.
+  from the channel configured per event in `bde.config.yml`'s `notifications` section. The events
+  module is the first caller (`eventConfirmed`, `eventReminder`). `memberPending/Approved/Removed`
+  are still unwired. Notification keys added after the first release must default to `"none"` in
+  the Zod schema so old configs keep validating. Callers must treat notification as best-effort:
+  never let it throw into the action that triggered it (see `deliver()` in
+  `src/lib/events/notifications.ts`, which also isolates failures per email recipient).
 - `src/lib/storage/`: `StorageAdapter` interface, only a local-disk implementation
   (`storage/uploads/`, served through `/api/files/[...key]` rather than `/public` so a future
   access-control check can sit in front of it). `getStorageAdapter()` is the single factory
   function to change when an S3 adapter is added.
+
+## Events module (`modules.enabled: [events]`)
+
+User guide: `docs/events.md`. The shape worth knowing before touching it:
+
+- **An event is one row.** A recurring event is a single "series master" (`startsAt`,
+  `endsAt`, `recurrence`, `recurrenceUntil`); occurrences are **computed**, never stored
+  (`allOccurrences` in `src/lib/events/recurrence.ts`), on the wall clock of `bde.timezone` so DST
+  doesn't shift local times. Editing edits the series; the only per-occurrence state is
+  `EventCancellation` (cancelled date) and `EventReminder` (reminder already claimed). All
+  instants are UTC in the database; anything typed or shown goes through `src/lib/events/time.ts`
+  (Intl only, no date library) and `format.ts`.
+- **Visibility is decided in one place.** `expandEvents` (`occurrences.ts`) drops drafts unless
+  `includeDrafts`; the queries also exclude them in SQL. Every consumer (calendar, list,
+  dashboard, `.ics` download, subscription feed) passes `includeDrafts = canManage`. A draft the
+  user can't see is a 404, not a 403.
+- **Subscription feed** (`/api/calendar/[token]`): token = 32 random bytes in `User.calendarToken`,
+  stored in clear (so the profile can show the link), recomputed per request from the token owner's
+  _current_ role/permission, same bare 404 for every failure. Removing a member deletes their row,
+  so their token stops resolving immediately. Never log the token.
+- **Notifications are best-effort and after the response.** `after(() => notifyEventConfirmed(id))`
+  in the actions; the once-only guarantee is the atomic `confirmationNotifiedAt` claim.
+- **Reminders** (`reminders.ts` + `scheduler.ts`): an in-process loop (every 5 min) started from
+  `instrumentation.ts`. Exactly-once-or-lost: insert `EventReminder(eventId, occurrenceStart)` (unique)
+  _before_ sending, ignore `P2002`. Due from `reminderHour` the day before; catch-up until the
+  occurrence starts. Tested in `reminders.test.ts` including restart and concurrent callers.
+- **Tests that must keep passing** when you change access rules: `access.test.ts`,
+  `events/actions.test.ts` (every action refused for PENDING / member without permission / admin
+  without permission / module disabled), `events/pages.test.tsx`, `export.test.ts`.
+- **Adding another module** follows the same recipe: a key in `modules.enabled` + a config section
+  validated in `src/config/schema.ts` (required only when enabled), one `getXAccess()` gate
+  returning null when disabled, `notFound()` on pages, a nav entry in `(app)/layout.tsx` + `NavItem`
+  - `NAV_ICONS`, a toggle in the members panel (automatic for any enabled key), audit entries for
+    every mutation, FR/EN messages, `loading.tsx` per route, seed data, a `docs/<module>.md`.
 
 ## Design system
 
@@ -172,6 +233,9 @@ touching layout or adding UI. The short version:
   fill with `getContrastingTextColor`'s black/white pick, not against arbitrary backgrounds — the
   default teal fails AA as text on the dark sidebar, 3.4:1). Active nav state = translucent
   background + `foreground`-colored text + accent-colored icon/left bar, not accent-colored text.
+- Per-fork colors that are not the accent (events: `events.categories[].color`) are applied
+  inline as a dot, a left border or a translucent tint (`color-mix`), never as text color or a
+  large surface, so contrast always rests on the neutral `foreground` token.
 - Every list/table that can be empty renders an empty state (icon-in-muted-circle + title +
   description [+ CTA]) — never a blank card. Every `(app)/` route ships a `loading.tsx` with
   `Skeleton`s shaped like its real content, not a generic spinner.
@@ -190,6 +254,11 @@ touching layout or adding UI. The short version:
   UI text in components.
 - shadcn/ui components in `src/components/ui/` are excluded from ESLint/Prettier (generated
   code) — don't hand-edit; re-run `npx shadcn add <component>` instead.
+- `docker-compose.dev.yml` runs `prisma db push --accept-data-loss` on start (Prisma refuses to
+  add a unique index to an existing table non-interactively); production applies the committed
+  migrations with `prisma migrate deploy`. A new model therefore needs **both** the schema change and
+  a migration (generate the SQL without touching a database via `prisma migrate diff
+--from-schema <old> --to-schema prisma/schema.prisma --script`).
 - Run `npm run lint`, `npm run typecheck`, `npm run format`, and `npm run test` before
   considering a change done; `npm run build` is the closest thing to a full integration check
   since most pages are `force-dynamic` and won't otherwise get exercised by `next dev` alone.

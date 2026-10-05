@@ -51,6 +51,7 @@ pour simuler PENDING / MEMBER / ADMIN et vérifier les restrictions d'accès —
 - [Installation](docs/installation.md) — prérequis Windows/Linux/macOS, démarrage détaillé
 - [Configuration](docs/configuration.md) — référence complète de `bde.config.yml` et `.env`
 - [Guide utilisateur](docs/user-guide.md) — pour les membres du bureau
+- [Module Événements](docs/events.md) — calendrier interne du bureau, export agenda, rappels
 - [Guide contributeur](docs/contributing-guide.md) — mise en place d'un environnement de dev
 - [Déploiement](docs/deployment.md) — VPS, Docker Compose, reverse proxy HTTPS
 
