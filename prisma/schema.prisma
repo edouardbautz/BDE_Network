@@ -34,9 +34,17 @@ model User {
   updatedAt   DateTime  @updatedAt
   lastLoginAt DateTime?
 
-  modulePermissions        ModulePermission[] @relation("ModulePermissionUser")
-  grantedModulePermissions ModulePermission[] @relation("ModulePermissionGrantedBy")
-  auditLogEntries          AuditLog[]         @relation("AuditLogActor")
+  modulePermissions        ModulePermission[]  @relation("ModulePermissionUser")
+  grantedModulePermissions ModulePermission[]  @relation("ModulePermissionGrantedBy")
+  auditLogEntries          AuditLog[]          @relation("AuditLogActor")
+  authoredEvents           Event[]             @relation("EventAuthor")
+  assignedEvents           EventAssignee[]
+  cancelledOccurrences     EventCancellation[]
+
+  /// Secret token of this member's personal .ics subscription feed (events
+  /// module). Regenerable from the profile page; null until first generated.
+  /// Deleted with the row, so a removed member loses feed access immediately.
+  calendarToken String? @unique
 
   @@index([role])
 }
@@ -78,4 +86,98 @@ model AuditLog {
 
   @@index([createdAt])
   @@index([actorId])
+}
+
+enum EventStatus {
+  DRAFT
+  CONFIRMED
+}
+
+enum EventRecurrence {
+  NONE
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
+/// An event planned by the BDE board (events module). A recurring event is a
+/// single row — the "series master": occurrences are computed from
+/// startsAt/recurrence/recurrenceUntil in the BDE timezone, never stored.
+/// Authorship follows the AuditLog pattern: authorLogin is plain text so the
+/// history survives the author's account being removed.
+model Event {
+  id                     String          @id @default(cuid())
+  title                  String
+  description            String?
+  location               String?
+  /// Key of a category defined in bde.config.yml (events.categories)
+  categoryKey            String
+  status                 EventStatus     @default(DRAFT)
+  /// UTC. For a series, the first occurrence.
+  startsAt               DateTime
+  /// UTC. endsAt - startsAt is the duration of every occurrence.
+  endsAt                 DateTime
+  recurrence             EventRecurrence @default(NONE)
+  /// UTC instant after which no occurrence starts. Required when recurrence is not NONE.
+  recurrenceUntil        DateTime?
+  /// Academic year of startsAt in the BDE timezone, e.g. "2025-2026"
+  schoolYear             String
+  /// Set once when the "event confirmed" notification went out, so toggling
+  /// the status back and forth never notifies twice.
+  confirmationNotifiedAt DateTime?
+  authorLogin            String
+  authorId               String?
+  author                 User?           @relation("EventAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+
+  assignees     EventAssignee[]
+  cancellations EventCancellation[]
+  reminders     EventReminder[]
+
+  @@index([startsAt])
+  @@index([schoolYear])
+  @@index([status])
+}
+
+/// A board member in charge of an event. login is kept in plain text so the
+/// assignment still displays after the member's account is removed.
+model EventAssignee {
+  id      String  @id @default(cuid())
+  eventId String
+  event   Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId  String?
+  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  login   String
+
+  @@unique([eventId, login])
+  @@index([userId])
+}
+
+/// One occurrence of a recurring event that was cancelled. occurrenceStart is
+/// the occurrence's original start (UTC) as computed from the series.
+model EventCancellation {
+  id               String   @id @default(cuid())
+  eventId          String
+  event            Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  occurrenceStart  DateTime
+  cancelledByLogin String
+  cancelledById    String?
+  cancelledBy      User?    @relation(fields: [cancelledById], references: [id], onDelete: SetNull)
+  createdAt        DateTime @default(now())
+
+  @@unique([eventId, occurrenceStart])
+}
+
+/// Claim marker for the day-before reminder. The unique index is the lock:
+/// only the process whose insert succeeds sends the reminder, which makes
+/// delivery at-most-once across restarts and concurrent instances.
+model EventReminder {
+  id              String   @id @default(cuid())
+  eventId         String
+  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  occurrenceStart DateTime
+  sentAt          DateTime @default(now())
+
+  @@unique([eventId, occurrenceStart])
 }

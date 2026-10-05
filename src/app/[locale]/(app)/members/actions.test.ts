@@ -60,6 +60,7 @@ function fakeUser(overrides: Partial<User>): User {
     createdAt: new Date(),
     updatedAt: new Date(),
     lastLoginAt: null,
+    calendarToken: null,
     ...overrides,
   };
 }
