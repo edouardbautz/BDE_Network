@@ -19,8 +19,17 @@ export function generateCalendarToken(): string {
   return randomBytes(32).toString('base64url');
 }
 
+/** Prisma drops a filter whose value is `undefined`, so an update keyed by a
+ * missing id would hit every row. Refuse before any query. */
+function requireUserId(userId: string): void {
+  if (typeof userId !== 'string' || userId.length === 0) {
+    throw new Error('A user id is required');
+  }
+}
+
 /** The member's current token, creating one on first use. */
 export async function ensureCalendarToken(userId: string): Promise<string> {
+  requireUserId(userId);
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
     select: { calendarToken: true },
@@ -47,6 +56,7 @@ export async function ensureCalendarToken(userId: string): Promise<string> {
 
 /** Replaces the member's token; the previous link stops working immediately. */
 export async function regenerateCalendarToken(userId: string): Promise<string> {
+  requireUserId(userId);
   const calendarToken = generateCalendarToken();
   await prisma.user.update({ where: { id: userId }, data: { calendarToken } });
   return calendarToken;

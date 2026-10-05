@@ -8,13 +8,24 @@ const ROLE_RANK: Record<Role, number> = {
   OWNER: 3,
 };
 
+/** Roles that can use the app. An allow-list on purpose: a role that is
+ * missing or unknown (e.g. the session of an account that no longer exists)
+ * must never count as approved, which `role !== 'PENDING'` would allow. */
+export const APPROVED_ROLES: readonly Role[] = ['MEMBER', 'ADMIN', 'OWNER'];
+
+/** Narrows an arbitrary value to a real `Role`. Anything else — undefined, a
+ * string that is not a role — is not one. */
+export function isKnownRole(value: unknown): value is Role {
+  return typeof value === 'string' && Object.keys(ROLE_RANK).includes(value);
+}
+
 export function hasMinRole(role: Role, minimum: Role): boolean {
-  return ROLE_RANK[role] >= ROLE_RANK[minimum];
+  return isKnownRole(role) && ROLE_RANK[role] >= ROLE_RANK[minimum];
 }
 
 /** Members with an approved account (not PENDING) can use the app. */
 export function isApproved(role: Role): boolean {
-  return role !== 'PENDING';
+  return APPROVED_ROLES.includes(role);
 }
 
 /** Only OWNER and ADMIN see the member management panel. */
@@ -33,16 +44,24 @@ export function canManageModulePermissions(role: Role): boolean {
 }
 
 /** OWNER always has access to every module; everyone else needs an explicit
- * ModulePermission row for that module key. */
+ * ModulePermission row for that module key. Never for an account that is not
+ * approved, whatever rows it may have. */
 export function hasModuleAccess(
   role: Role,
   grantedModuleKeys: string[],
   moduleKey: string,
 ): boolean {
-  return role === 'OWNER' || grantedModuleKeys.includes(moduleKey);
+  return isApproved(role) && (role === 'OWNER' || grantedModuleKeys.includes(moduleKey));
 }
 
+/** The module keys granted to one user. Without a real id there is nobody to
+ * look up, so nothing is granted: Prisma drops a filter whose value is
+ * `undefined`, which would otherwise return *everyone's* permissions. */
 export async function getUserModuleKeys(userId: string): Promise<string[]> {
+  if (typeof userId !== 'string' || userId.length === 0) {
+    return [];
+  }
+
   const permissions = await prisma.modulePermission.findMany({
     where: { userId },
     select: { module: true },

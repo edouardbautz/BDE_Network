@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth/session';
 import { getConfig } from '@/config';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export const dynamic = 'force-dynamic';
 
 export default async function PrivacyPage() {
-  const [session, t] = await Promise.all([auth(), getTranslations('privacy')]);
+  const [session, t] = await Promise.all([getEffectiveSession(), getTranslations('privacy')]);
   const bdeName = getConfig().bde.name;
   const dataItems = t.raw('dataCollected.items') as string[];
 
@@ -54,7 +54,7 @@ export default async function PrivacyPage() {
         <p className="text-muted-foreground text-sm">{t('contact.description', { bdeName })}</p>
       </section>
 
-      {session?.user && (
+      {session && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">{t('export.title')}</CardTitle>

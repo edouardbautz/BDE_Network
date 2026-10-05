@@ -5,6 +5,13 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Un membre retiré du BDE perd immédiatement l'accès : son cookie de session encore valide ne
+  donne plus aucun droit (lecture des brouillons, création ou modification d'événements, export
+  de données). Les contrôles de rôle et de permission refusent désormais tout identifiant ou rôle
+  manquant ou inconnu.
+
 ## [0.2.0] - 2026-10-05
 
 Premier module métier : **Événements**.

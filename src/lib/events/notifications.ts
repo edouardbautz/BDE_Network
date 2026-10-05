@@ -2,6 +2,7 @@ import { createTranslator } from 'next-intl';
 import { getConfig } from '@/config';
 import type { NotificationEvent } from '@/config/schema';
 import { notify } from '@/lib/notifications';
+import { APPROVED_ROLES } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
 import { allOccurrences } from './recurrence';
 import {
@@ -161,7 +162,7 @@ export async function notifyEventConfirmed(eventId: string): Promise<void> {
     );
 
     const members = await prisma.user.findMany({
-      where: { role: { not: 'PENDING' } },
+      where: { role: { in: [...APPROVED_ROLES] } },
       select: { email: true },
     });
 

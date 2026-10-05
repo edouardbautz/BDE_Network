@@ -120,9 +120,20 @@ point at a user (see `EventAssignee`).
   `OWNER` if the login is in `auth.owners`, `PENDING` on first login otherwise. An existing user
   who is no longer listed as an owner is demoted to `MEMBER` (not `PENDING`) on next login —
   config is the source of truth for `OWNER`, checked every login, never settable from the UI.
-- **`session` callback** re-reads the `User` row from the DB on every call (not just at login).
-  This means role/permission changes made by an admin take effect on the affected user's very
-  next request, without them needing to log out — worth the extra query for a small BDE app.
+- **`jwt` and `session` callbacks** (`src/lib/auth/callbacks.ts`) re-read the `User` row from the
+  DB on every call (not just at login). This means role/permission changes made by an admin take
+  effect on the affected user's very next request, without them needing to log out — worth the
+  extra query for a small BDE app. The same lookup is what signs out a **removed member**: their
+  row is gone but the JWT stays valid for 30 days, so `jwt` returns `null` (Auth.js then clears
+  the cookie and `auth()` resolves to null) and `session` throws rather than return a user
+  without id/role.
+- **Fail closed on identity.** `getEffectiveSession` returns null unless the session carries an
+  id, a login and a known role; `isApproved` is an allow-list (`APPROVED_ROLES`), never
+  `!== 'PENDING'`; and any query keyed on a user id must never see `undefined` — **Prisma drops a
+  filter whose value is `undefined`**, so `where: { userId }` returns every row. Guard the id
+  before the query (`getUserModuleKeys`, `requireUserId` in `events/export.ts`). The regression
+  test is `src/lib/auth/removed-account.test.ts` (real NextAuth config + forged cookie; its fake
+  database reproduces Prisma's `undefined` behaviour).
 - **Route guards live in Server Components**, not middleware (`(app)/layout.tsx` redirects
   unauthenticated users to `/`, `PENDING` users to `/pending`; `members/page.tsx` and
   `audit-log/page.tsx` additionally check `canManageMembers`/`canViewAuditLog`). Every

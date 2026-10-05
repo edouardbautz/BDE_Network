@@ -2,6 +2,7 @@ import type { Session } from 'next-auth';
 import type { Role } from '@/generated/prisma/client';
 import { auth } from '@/lib/auth';
 import { getImpersonationCookieRole, isDevImpersonationEnabled } from '@/lib/dev-impersonation';
+import { isKnownRole } from '@/lib/permissions';
 
 export interface EffectiveSession {
   /** Same shape as a real NextAuth session user. Every field reflects the
@@ -19,27 +20,33 @@ export interface EffectiveSession {
  * active dev role simulation on top of the real session — see
  * src/lib/dev-impersonation.ts for when that's possible at all (dev-only,
  * opt-in, real OWNER only, downgrade-only). Identical to `auth()` in every
- * other case, including in production where it's a pure passthrough. */
+ * other case, including in production where it's a pure passthrough.
+ *
+ * Fails closed: a session that does not carry a real account (id, login and a
+ * known role) is no session at all. That is what a still-valid cookie looks
+ * like once its account has been removed, and every permission check below
+ * this point assumes those three fields are there. */
 export async function getEffectiveSession(): Promise<EffectiveSession | null> {
   const session = await auth();
-  if (!session?.user) {
+  const user = session?.user;
+  if (!user || !user.id || !user.login || !isKnownRole(user.role)) {
     return null;
   }
 
-  const realRole = session.user.role;
+  const realRole = user.role;
 
   if (isDevImpersonationEnabled() && realRole === 'OWNER') {
     const impersonatedRole = await getImpersonationCookieRole();
     if (impersonatedRole && impersonatedRole !== realRole) {
       return {
-        user: { ...session.user, role: impersonatedRole },
+        user: { ...user, role: impersonatedRole },
         isImpersonating: true,
         realRole,
       };
     }
   }
 
-  return { user: session.user, isImpersonating: false, realRole };
+  return { user, isImpersonating: false, realRole };
 }
 
 /** Extra audit metadata for an action performed under a simulated role.

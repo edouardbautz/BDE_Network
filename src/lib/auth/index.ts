@@ -3,6 +3,7 @@ import { getConfig } from '@/config';
 import { prisma } from '@/lib/prisma';
 import { FortyTwoProvider } from './fortytwo-provider';
 import { isCampusAllowed, isOwnerLogin } from './authorize';
+import { jwtCallback, sessionCallback } from './callbacks';
 
 const AUTH_ERROR_PATH = '/auth-error';
 
@@ -71,31 +72,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       return true;
     },
-    async jwt({ token, user }) {
-      if (user?.login) {
-        token.login = user.login;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      const login = token.login;
-      if (!login) {
-        return session;
-      }
-
-      const dbUser = await prisma.user.findUnique({ where: { login } });
-      if (!dbUser) {
-        return session;
-      }
-
-      session.user.id = dbUser.id;
-      session.user.login = dbUser.login;
-      session.user.role = dbUser.role;
-      session.user.campus = dbUser.campus;
-      session.user.name = dbUser.fullName;
-      session.user.email = dbUser.email;
-      session.user.image = dbUser.photoUrl;
-      return session;
-    },
+    jwt: jwtCallback,
+    session: sessionCallback,
   },
 });

@@ -228,4 +228,16 @@ describe('ensureCalendarToken / regenerateCalendarToken', () => {
     vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
     await expect(buildSubscriptionFeed(TOKEN, NOW)).resolves.toBeNull();
   });
+
+  // `updateMany({ where: { id: undefined, calendarToken: null } })` would give
+  // every member without a token the same secret link.
+  it.each([undefined, null, ''])('refuses the id %j before any query', async (id) => {
+    const userId = id as unknown as string;
+
+    await expect(ensureCalendarToken(userId)).rejects.toThrow('user id is required');
+    await expect(regenerateCalendarToken(userId)).rejects.toThrow('user id is required');
+    expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
+    expect(prisma.user.updateMany).not.toHaveBeenCalled();
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
 });

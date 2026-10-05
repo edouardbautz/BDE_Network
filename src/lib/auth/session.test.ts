@@ -50,6 +50,34 @@ describe('getEffectiveSession', () => {
     await expect(getEffectiveSession()).resolves.toBeNull();
   });
 
+  // The session of an account that no longer exists has no id/login/role. It
+  // must read as "not signed in", never as a user with an unknown role.
+  it.each([
+    ['an id', { id: undefined }],
+    ['an empty id', { id: '' }],
+    ['a login', { login: undefined }],
+    ['a role', { role: undefined }],
+    ['a known role', { role: 'GUEST' }],
+  ])('returns null when the session user has no %s', async (_label, override) => {
+    mockAuth.mockResolvedValue({
+      ...sessionFor('MEMBER'),
+      user: { ...sessionFor('MEMBER').user, ...override },
+    } as Session);
+
+    await expect(getEffectiveSession()).resolves.toBeNull();
+  });
+
+  it('returns null for the bare session left by a removed account (name/email only)', async () => {
+    mockAuth.mockResolvedValue({
+      user: { name: 'ghost', email: 'ghost@example.org' },
+      expires: '2099-01-01T00:00:00.000Z',
+    } as Session);
+    vi.mocked(isDevImpersonationEnabled).mockReturnValue(true);
+
+    await expect(getEffectiveSession()).resolves.toBeNull();
+    expect(getImpersonationCookieRole).not.toHaveBeenCalled();
+  });
+
   it('passes the real session through unchanged when impersonation is disabled', async () => {
     mockAuth.mockResolvedValue(sessionFor('OWNER'));
     vi.mocked(isDevImpersonationEnabled).mockReturnValue(false);

@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getEffectiveSession } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user) {
+  // Every query below filters on this id; Prisma drops a filter set to
+  // `undefined`, which would export other members' rows. getEffectiveSession
+  // only returns an account that really exists, so there is always an id here.
+  const session = await getEffectiveSession();
+  if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

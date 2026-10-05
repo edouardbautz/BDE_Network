@@ -68,6 +68,18 @@ describe('getEventsAccess', () => {
     await expect(getEventsAccess()).resolves.toBeNull();
   });
 
+  // A session without a real role (e.g. a removed account) must stop at the
+  // role check: the permission lookup would otherwise run without an id.
+  it.each([undefined, 'GUEST'])(
+    'returns null for the unknown role %j, before any lookup',
+    async (role) => {
+      setup({ enabled: true, role: role as Role, granted: ['events'] });
+
+      await expect(getEventsAccess()).resolves.toBeNull();
+      expect(prisma.modulePermission.findMany).not.toHaveBeenCalled();
+    },
+  );
+
   it('returns null for a PENDING account', async () => {
     setup({ enabled: true, role: 'PENDING', granted: ['events'] });
     await expect(getEventsAccess()).resolves.toBeNull();

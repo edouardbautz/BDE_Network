@@ -8,6 +8,7 @@ import type { EventStatus } from '@/generated/prisma/client';
 import { redirect } from '@/i18n/navigation';
 import { prisma } from '@/lib/prisma';
 import { requireEventsManager } from '@/lib/events/access';
+import { APPROVED_ROLES } from '@/lib/permissions';
 import { auditEventAction } from '@/lib/events/audit';
 import {
   EVENT_STATUSES,
@@ -68,7 +69,7 @@ function announceConfirmation(eventId: string): void {
 async function resolveAssignees(logins: string[]) {
   if (logins.length === 0) return [];
   const users = await prisma.user.findMany({
-    where: { login: { in: logins }, role: { not: 'PENDING' } },
+    where: { login: { in: logins }, role: { in: [...APPROVED_ROLES] } },
     select: { id: true, login: true },
   });
   return users.length === logins.length ? users : null;
