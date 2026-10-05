@@ -46,6 +46,14 @@ describe('bdeConfigSchema', () => {
     expect(result.success).toBe(false);
   });
 
+  it('accepts an empty allowedCampuses list (means "no filter")', () => {
+    const result = bdeConfigSchema.safeParse({
+      ...validConfig,
+      auth: { ...validConfig.auth, allowedCampuses: [] },
+    });
+    expect(result.success).toBe(true);
+  });
+
   it('rejects an empty owners list', () => {
     const result = bdeConfigSchema.safeParse({
       ...validConfig,

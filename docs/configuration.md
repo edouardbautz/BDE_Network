@@ -6,6 +6,22 @@ formée empêche l'application de démarrer, avec un message expliquant quoi cor
 
 ## `bde.config.yml`
 
+### Garder sa configuration personnelle hors de Git
+
+`bde.config.yml` est versionné : il contient des valeurs d'exemple, pas vos vraies données. Pour
+travailler avec votre vraie configuration (votre login, le nom de votre BDE) sans jamais la
+commiter, copiez-le vers `bde.config.local.yml` et éditez cette copie :
+
+```
+cp bde.config.yml bde.config.local.yml
+```
+
+`bde.config.local.yml` est ignoré par Git. S'il existe, l'application le charge **à la place** de
+`bde.config.yml` (les deux ne sont pas fusionnés : le fichier local doit être complet). Le nom du
+fichier chargé apparaît dans les logs au démarrage. Il est lu depuis le dossier du projet, y
+compris avec `docker-compose.dev.yml` ; le `docker-compose.yml` de production ne monte que
+`bde.config.yml` — pour un déploiement, éditez ce dernier dans votre fork.
+
 Voir `bde.config.example.yml` à la racine pour un exemple entièrement commenté. Référence des
 champs :
 
@@ -22,10 +38,10 @@ champs :
 
 ### `auth`
 
-| Champ             | Type               | Description                                                                                                                            |
-| ----------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `owners`          | liste de logins 42 | Obtiennent automatiquement le rôle OWNER à la connexion. Le rôle OWNER **ne se change que via ce fichier**, jamais depuis l'interface. |
-| `allowedCampuses` | liste de campus    | Seuls les logins dont le campus 42 figure dans cette liste peuvent se connecter.                                                       |
+| Champ             | Type               | Description                                                                                                                                                                                                     |
+| ----------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `owners`          | liste de logins 42 | Obtiennent automatiquement le rôle OWNER à la connexion. Le rôle OWNER **ne se change que via ce fichier**, jamais depuis l'interface. La comparaison ignore la casse et les espaces superflus.                 |
+| `allowedCampuses` | liste de campus    | Seuls les logins dont le campus 42 figure dans cette liste peuvent se connecter. La comparaison ignore la casse et les espaces superflus. **Liste vide (`[]`) = aucun filtre, tous les campus sont autorisés.** |
 
 ### `modules`
 

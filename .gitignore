@@ -36,6 +36,9 @@ yarn-error.log*
 .env.*.local
 !.env.example
 
+# personal BDE config override (see docs/configuration.md)
+bde.config.local.yml
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

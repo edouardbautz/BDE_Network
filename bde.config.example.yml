@@ -35,6 +35,8 @@ auth:
 
   # Campus 42 autorisés à se connecter à la plateforme. Toute personne dont
   # le campus 42 n'est pas dans cette liste est refusée à la connexion.
+  # La comparaison ignore la casse et les espaces superflus.
+  # Liste vide ([]) = aucun filtre : tous les campus sont autorisés.
   allowedCampuses:
     - 'Paris'
 

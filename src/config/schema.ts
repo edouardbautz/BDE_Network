@@ -55,9 +55,9 @@ const authSection = z.object({
   owners: z
     .array(loginSlug)
     .min(1, { message: 'la liste "owners" doit contenir au moins un login 42' }),
-  allowedCampuses: z
-    .array(z.string().trim().min(1))
-    .min(1, { message: 'la liste "allowedCampuses" doit contenir au moins un campus' }),
+  // Une liste vide signifie "aucun filtre" : tous les campus sont autorisés.
+  // Voir bde.config.example.yml et docs/configuration.md.
+  allowedCampuses: z.array(z.string().trim().min(1)),
 });
 
 const modulesSection = z.object({
