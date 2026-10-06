@@ -25,7 +25,7 @@ export interface BuiltMessage {
   body: string;
 }
 
-function formatDateTime(date: Date, locale: string, timeZone: string): string {
+export function formatDateTime(date: Date, locale: string, timeZone: string): string {
   return new Intl.DateTimeFormat(locale, {
     dateStyle: 'full',
     timeStyle: 'short',

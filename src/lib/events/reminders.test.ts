@@ -17,6 +17,15 @@ vi.mock('@/lib/notifications/email-card', () => ({
     }),
   ),
 }));
+vi.mock('@/lib/notifications/slack-card', () => ({
+  withSlackBlocks: vi.fn(
+    async (_event: string, message: object, build: (brand: { name: string }) => unknown) => ({
+      ...message,
+      slack: build({ name: 'BDE' }),
+    }),
+  ),
+}));
+vi.mock('./slack-blocks', () => ({ buildEventSlack: vi.fn(() => ({ fallback: 'f' })) }));
 vi.mock('./email', () => ({ buildEventEmail: vi.fn(() => ({ html: '<p>', text: 'p' })) }));
 vi.mock('./messages', () => ({
   buildReminderMessage: vi.fn(() => ({ subject: 'Rappel', body: 'Demain' })),
@@ -32,8 +41,9 @@ const { prisma } = await import('@/lib/prisma');
 const { deliver } = await import('./notifications');
 const { buildReminderMessage } = await import('./messages');
 const { buildEventEmail } = await import('./email');
+const { buildEventSlack } = await import('./slack-blocks');
 const { emailsOfHolders } = await import('@/lib/notifications/recipients');
-const { isSameLocalDay, reminderDueAt, runReminderTick } = await import('./reminders');
+const { reminderDueAt, runReminderTick } = await import('./reminders');
 
 const PARIS = 'Europe/Paris';
 
@@ -121,27 +131,6 @@ describe('reminderDueAt', () => {
   });
 });
 
-describe('isSameLocalDay', () => {
-  it('compares days on the wall clock of the BDE, not in UTC', () => {
-    // 23:30 and 00:30 Paris are one UTC day… and two local days; 00:10 and 23:50 Paris are one local day.
-    expect(
-      isSameLocalDay(new Date('2026-10-10T21:30:00Z'), new Date('2026-10-10T22:30:00Z'), PARIS),
-    ).toBe(false);
-    expect(
-      isSameLocalDay(new Date('2026-10-09T22:10:00Z'), new Date('2026-10-10T21:50:00Z'), PARIS),
-    ).toBe(true);
-  });
-
-  it('tells the same day of two different months or years apart', () => {
-    expect(
-      isSameLocalDay(new Date('2026-10-10T12:00:00Z'), new Date('2026-11-10T12:00:00Z'), PARIS),
-    ).toBe(false);
-    expect(
-      isSameLocalDay(new Date('2026-10-10T12:00:00Z'), new Date('2027-10-10T12:00:00Z'), PARIS),
-    ).toBe(false);
-  });
-});
-
 describe('runReminderTick', () => {
   it('does nothing when the events module is disabled', async () => {
     setConfig({ enabled: false });
@@ -206,6 +195,24 @@ describe('runReminderTick', () => {
     vi.mocked(prisma.event.findMany).mockResolvedValue([event()] as never);
     await runReminderTick(new Date('2026-10-10T08:00:00Z')); // the day itself, after a downtime
     expect(vi.mocked(buildEventEmail).mock.calls[0]?.[0]).toBe('today');
+  });
+
+  it('sends the Slack message with the same day as the plain text', async () => {
+    vi.mocked(prisma.event.findMany).mockResolvedValue([event()] as never);
+    await runReminderTick(new Date('2026-10-09T16:00:00Z'));
+
+    expect(vi.mocked(buildEventSlack).mock.calls[0]?.[0]).toBe('tomorrow');
+    expect(deliver).toHaveBeenCalledWith(
+      'eventReminder',
+      expect.objectContaining({ slack: { fallback: 'f' } }),
+      ['alice@x.fr'],
+    );
+
+    vi.clearAllMocks();
+    fakeClaimTable();
+    vi.mocked(prisma.event.findMany).mockResolvedValue([event()] as never);
+    await runReminderTick(new Date('2026-10-10T08:00:00Z')); // the day itself, after a downtime
+    expect(vi.mocked(buildEventSlack).mock.calls[0]?.[0]).toBe('today');
   });
 
   it('builds the e-mail of the reminder channel, not of another notification', async () => {

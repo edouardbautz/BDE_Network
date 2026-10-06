@@ -1,8 +1,7 @@
 import { getConfig } from '@/config';
 import type { NotificationEvent } from '@/config/schema';
 import { deliver as deliverNotification, type DeliveryResult } from '@/lib/notifications/deliver';
-import { withDiscordCard } from '@/lib/notifications/discord-card';
-import { withEmailContent } from '@/lib/notifications/email-card';
+import { withRichMessage } from '@/lib/notifications/rich';
 import type { NotificationMessage } from '@/lib/notifications/types';
 import { getNotificationTranslate } from '@/lib/notifications/translate';
 import { APPROVED_STATUSES } from '@/lib/permissions';
@@ -10,6 +9,7 @@ import { prisma } from '@/lib/prisma';
 import { buildEventEmbed } from './discord-embed';
 import { buildEventEmail, buildEventIcs } from './email';
 import { allOccurrences } from './recurrence';
+import { buildEventSlack } from './slack-blocks';
 import { buildConfirmationMessage, type NotificationEventData, type Translate } from './messages';
 
 const LOG_PREFIX = '[events]';
@@ -123,28 +123,28 @@ export async function notifyEventConfirmed(eventId: string): Promise<void> {
       (o) => o.end.getTime() > now && !cancelled.has(o.start.getTime()),
     );
 
-    const message = await withEmailContent(
+    const message = await withRichMessage(
       'eventConfirmed',
-      await withDiscordCard(
-        'eventConfirmed',
-        buildConfirmationMessage(data, translate, locale, timeZone),
-        () => buildEventEmbed('confirmed', data, translate, timeZone),
-      ),
-      (brand) =>
-        buildEventEmail(
-          'confirmed',
-          data,
-          translate,
-          locale,
-          timeZone,
-          brand,
-          buildEventIcs(
-            event,
-            upcoming.length > 0 ? upcoming : [next],
-            data.categoryLabel,
-            config.bde.name,
+      buildConfirmationMessage(data, translate, locale, timeZone),
+      {
+        discord: () => buildEventEmbed('confirmed', data, translate, timeZone),
+        email: (brand) =>
+          buildEventEmail(
+            'confirmed',
+            data,
+            translate,
+            locale,
+            timeZone,
+            brand,
+            buildEventIcs(
+              event,
+              upcoming.length > 0 ? upcoming : [next],
+              data.categoryLabel,
+              config.bde.name,
+            ),
           ),
-        ),
+        slack: (brand) => buildEventSlack('confirmed', data, translate, locale, timeZone, brand),
+      },
     );
 
     const members = await prisma.user.findMany({

@@ -3,15 +3,8 @@ import type { EmailModel } from '@/lib/notifications/email-layout';
 import type { EmailContent } from '@/lib/notifications/types';
 import { truncate } from '@/lib/notifications/text';
 import { formatDate, whenLine, type NotificationEventData, type Translate } from './messages';
-import type { EventCardKind } from './discord-embed';
+import { KIND_LABEL_KEY, type EventCardKind } from './card-kind';
 import { buildIcs, icsFilename, occurrenceUid } from './ics';
-
-/** The kind of message, as the small line above the heading. Shared with the Discord card. */
-const KIND_LABEL_KEY: Record<EventCardKind, string> = {
-  confirmed: 'embed.kind.confirmed',
-  tomorrow: 'embed.kind.reminderTomorrow',
-  today: 'embed.kind.reminderToday',
-};
 
 /** How much of the description an e-mail shows: a notice, the page has the rest. */
 const DESCRIPTION_PREVIEW = 600;

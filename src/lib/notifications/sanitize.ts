@@ -7,18 +7,18 @@
 
 import type { DiscordEmbed } from './discord-embed';
 
-const ZERO_WIDTH_SPACE = String.fromCharCode(0x200b);
+export const ZERO_WIDTH_SPACE = String.fromCharCode(0x200b);
 
 /** `@everyone`, `@here`, `@channel`: a zero-width space after the `@` keeps the text readable
  * but is no longer a mention. */
-function defuseBroadcast(text: string): string {
+export function defuseMentions(text: string): string {
   return text.replace(/@(everyone|here|channel)\b/gi, `@${ZERO_WIDTH_SPACE}$1`);
 }
 
 /** Discord: also breaks the `<@id>`, `<@&role>`, `<#channel>` and `<!...>` forms. The webhook
  * additionally sends `allowed_mentions: { parse: [] }`, which stops any ping on Discord's side. */
 export function neutralizeForDiscord(text: string): string {
-  return defuseBroadcast(text).replace(/<(?=[@#!])/g, `<${ZERO_WIDTH_SPACE}`);
+  return defuseMentions(text).replace(/<(?=[@#!])/g, `<${ZERO_WIDTH_SPACE}`);
 }
 
 /** A Discord card with every text a member could have written made harmless. Links, pictures,
@@ -44,5 +44,5 @@ export function neutralizeEmbedForDiscord(embed: DiscordEmbed): DiscordEmbed {
 /** Slack: its own escaping rule (`&`, `<`, `>`) turns `<!channel>`, `<@U123>` and `<url|label>`
  * into plain text. */
 export function neutralizeForSlack(text: string): string {
-  return defuseBroadcast(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return defuseMentions(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { escapeHtml, normalizeHex, renderEmail, type EmailModel } from './email-layout';
+import { escapeHtml, renderEmail, type EmailModel } from './email-layout';
 
 const model: EmailModel = {
   lang: 'fr',
@@ -35,29 +35,6 @@ describe('escapeHtml', () => {
   it('escapes an ampersand once, not twice', () => {
     expect(escapeHtml('a & b')).toBe('a &amp; b');
     expect(escapeHtml('&amp;')).toBe('&amp;amp;');
-  });
-});
-
-describe('normalizeHex', () => {
-  it('writes a hex colour as six lower-case digits', () => {
-    expect(normalizeHex('#0F766E')).toBe('#0f766e');
-    expect(normalizeHex('#abc')).toBe('#aabbcc');
-    expect(normalizeHex('  #123456 ')).toBe('#123456');
-  });
-
-  it.each([
-    '',
-    null,
-    undefined,
-    'red',
-    '#12',
-    '#12345',
-    '#1234567',
-    '0f766e',
-    'red;background:url(x)',
-    '#fff"onload="x',
-  ])('falls back to the neutral grey for %j, so a colour never carries markup', (value) => {
-    expect(normalizeHex(value)).toBe('#6b7280');
   });
 });
 

@@ -1,13 +1,13 @@
 import { getConfig } from '@/config';
 import { deliver } from '@/lib/notifications/deliver';
-import { withDiscordCard } from '@/lib/notifications/discord-card';
-import { withEmailContent } from '@/lib/notifications/email-card';
+import { withRichMessage } from '@/lib/notifications/rich';
 import { getNotificationTranslate } from '@/lib/notifications/translate';
 import { emailsOfHolders } from '@/lib/notifications/recipients';
 import { MEMBERS_MANAGE } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
 import { buildMemberEmbed } from './discord-embed';
 import { buildApprovedEmail, buildPendingEmail } from './email';
+import { buildMemberSlack } from './slack-blocks';
 import {
   buildApprovedMessage,
   buildPendingMessage,
@@ -41,6 +41,11 @@ function appLink(locale: string, path = ''): string | null {
   return base ? `${base}/${locale}${path}` : null;
 }
 
+/** Who did it, for the channels whose messages say so (the cards of Discord and Slack). */
+function actorNameFor(channel: string, actorLogin: string | undefined): Promise<string | null> {
+  return channel === 'discord' || channel === 'slack' ? nameOf(actorLogin) : Promise.resolve(null);
+}
+
 /** A new account is waiting for approval: tells whoever can approve it. */
 export async function notifyMemberPending(userId: string): Promise<void> {
   try {
@@ -56,12 +61,14 @@ export async function notifyMemberPending(userId: string): Promise<void> {
     const locale = config.bde.defaultLocale;
     const t = await translate(locale);
     const membersUrl = appLink(locale, '/members');
-    const message = await withEmailContent(
+    const message = await withRichMessage(
       'memberPending',
-      await withDiscordCard('memberPending', buildPendingMessage(member, t, membersUrl), () =>
-        buildMemberEmbed('pending', member, t, membersUrl),
-      ),
-      (brand) => buildPendingEmail(member, t, membersUrl, brand, locale),
+      buildPendingMessage(member, t, membersUrl),
+      {
+        discord: () => buildMemberEmbed('pending', member, t, membersUrl),
+        email: (brand) => buildPendingEmail(member, t, membersUrl, brand, locale),
+        slack: (brand) => buildMemberSlack('pending', member, t, membersUrl, brand),
+      },
     );
     await deliver('memberPending', message, await emailsOfHolders(MEMBERS_MANAGE), LOG_PREFIX);
   } catch (error) {
@@ -92,29 +99,25 @@ export async function notifyMemberApproved(userId: string, actorLogin?: string):
 
     const locale = config.bde.defaultLocale;
     const t = await translate(locale);
-    const actorName = channel === 'discord' ? await nameOf(actorLogin) : null;
+    const actorName = await actorNameFor(channel, actorLogin);
     const roleName = member.role.name;
-    const message = await withEmailContent(
+    const facts = { ...member, roleName, actorName };
+    const message = await withRichMessage(
       'memberApproved',
-      await withDiscordCard(
-        'memberApproved',
-        buildApprovedMessage(
-          member,
-          roleName,
-          channel === 'email' ? 'member' : 'team',
-          t,
-          appLink(locale),
-          config.bde.name,
-        ),
-        () =>
-          buildMemberEmbed(
-            'approved',
-            { ...member, roleName, actorName },
-            t,
-            appLink(locale, '/members'),
-          ),
+      buildApprovedMessage(
+        member,
+        roleName,
+        channel === 'email' ? 'member' : 'team',
+        t,
+        appLink(locale),
+        config.bde.name,
       ),
-      (brand) => buildApprovedEmail(member, roleName, t, appLink(locale), brand, locale),
+      {
+        discord: () => buildMemberEmbed('approved', facts, t, appLink(locale, '/members')),
+        email: (brand) => buildApprovedEmail(member, roleName, t, appLink(locale), brand, locale),
+        slack: (brand) =>
+          buildMemberSlack('approved', facts, t, appLink(locale, '/members'), brand),
+      },
     );
     await deliver('memberApproved', message, [member.email], LOG_PREFIX);
   } catch (error) {
@@ -131,10 +134,11 @@ export async function notifyMemberRemoved(member: MemberFacts, actorLogin?: stri
     if (channel === 'none' || channel === 'email') return;
 
     const t = await translate(config.bde.defaultLocale);
-    const actorName = channel === 'discord' ? await nameOf(actorLogin) : null;
-    const message = await withDiscordCard('memberRemoved', buildRemovedMessage(member, t), () =>
-      buildMemberEmbed('removed', { ...member, actorName }, t, null),
-    );
+    const facts = { ...member, actorName: await actorNameFor(channel, actorLogin) };
+    const message = await withRichMessage('memberRemoved', buildRemovedMessage(member, t), {
+      discord: () => buildMemberEmbed('removed', facts, t, null),
+      slack: (brand) => buildMemberSlack('removed', facts, t, null, brand),
+    });
     await deliver('memberRemoved', message, [], LOG_PREFIX);
   } catch (error) {
     console.error(`${LOG_PREFIX} memberRemoved: notification failed`, error);

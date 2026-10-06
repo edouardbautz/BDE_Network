@@ -1,12 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  colorToInt,
-  discordTime,
-  fitEmbed,
-  MEMBER_COLORS,
-  NEUTRAL_COLOR,
-  type DiscordEmbed,
-} from './discord-embed';
+import { discordTime, fitEmbed, type DiscordEmbed } from './discord-embed';
 
 const total = (embed: DiscordEmbed) =>
   Array.from(
@@ -17,31 +10,6 @@ const total = (embed: DiscordEmbed) =>
       ...(embed.fields ?? []).flatMap((field) => [field.name, field.value]),
     ].join(''),
   ).length;
-
-describe('colorToInt', () => {
-  it('turns a six-digit hex colour into the number Discord wants', () => {
-    expect(colorToInt('#0f766e')).toBe(0x0f766e);
-    expect(colorToInt('#FFFFFF')).toBe(0xffffff);
-    expect(colorToInt('#000000')).toBe(0);
-  });
-
-  it('expands the three-digit form', () => {
-    expect(colorToInt('#abc')).toBe(0xaabbcc);
-  });
-
-  it.each([null, undefined, '', 'red', '#12', '#12345', '#1234567', '0f766e', '#ggg'])(
-    'falls back to the neutral grey for %j',
-    (value) => {
-      expect(colorToInt(value)).toBe(NEUTRAL_COLOR);
-    },
-  );
-
-  it('gives each kind of member notification its own colour', () => {
-    const colors = Object.values(MEMBER_COLORS);
-    expect(new Set(colors).size).toBe(colors.length);
-    expect(colors).not.toContain(NEUTRAL_COLOR);
-  });
-});
 
 describe('discordTime', () => {
   const date = new Date('2026-10-07T18:00:00Z');

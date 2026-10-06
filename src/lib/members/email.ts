@@ -1,4 +1,4 @@
-import { MEMBER_COLORS } from '@/lib/notifications/discord-embed';
+import { MEMBER_COLORS } from '@/lib/notifications/colors';
 import { renderEmail, type EmailModel } from '@/lib/notifications/email-layout';
 import type { Translate } from '@/lib/notifications/translate';
 import type { EmailContent } from '@/lib/notifications/types';

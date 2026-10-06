@@ -315,6 +315,80 @@ describe('notifyEventConfirmed', () => {
     });
   });
 
+  describe('by Slack', () => {
+    const posted = () => vi.mocked(notify).mock.calls[0]?.[1];
+
+    it('posts a Slack message in the colour of the category, with the plain text kept next to it', async () => {
+      useChannel('slack');
+      await notifyEventConfirmed('evt1');
+
+      expect(posted()?.subject).toBeTruthy();
+      expect(posted()?.slack?.color).toBe('#16a34a');
+      expect(posted()?.slack?.blocks[1]).toEqual({
+        type: 'header',
+        text: { type: 'plain_text', text: 'Tournoi' },
+      });
+      expect(posted()?.slack?.fallback).toContain('embed.kind.confirmed : Tournoi');
+    });
+
+    it('shows the facts of the event, and a button to it', async () => {
+      useChannel('slack');
+      await notifyEventConfirmed('evt1');
+
+      const json = JSON.stringify(posted()?.slack?.blocks);
+      expect(json).toContain('Venez nombreux.');
+      expect(json).toContain('*embed.fields.where*\\nGymnase');
+      expect(json).toContain('*embed.fields.inCharge*\\nAlice A');
+      expect(json).toContain('<!date^4082119200^');
+    });
+
+    it('builds no Discord card and no e-mail', async () => {
+      useChannel('slack');
+      await notifyEventConfirmed('evt1');
+
+      expect(posted()).not.toHaveProperty('discord');
+      expect(posted()).not.toHaveProperty('email');
+    });
+
+    it('shows the logo of the BDE in the footer when Slack can fetch it', async () => {
+      useChannel('slack');
+      const { resolveLogoUrl } = await import('@/lib/notifications/sender');
+      vi.mocked(resolveLogoUrl).mockResolvedValueOnce('https://bde.example.fr/logo.png');
+      await notifyEventConfirmed('evt1');
+
+      expect(JSON.stringify(posted()?.slack?.blocks.at(-1))).toContain(
+        'https://bde.example.fr/logo.png',
+      );
+    });
+
+    it('decides on the channel of eventConfirmed, not of the reminder', async () => {
+      vi.mocked(getConfig).mockReturnValue({
+        bde: {
+          name: 'BDE Test',
+          logoPath: '/logo.svg',
+          timezone: 'Europe/Paris',
+          defaultLocale: 'fr',
+        },
+        notifications: { eventConfirmed: 'slack', eventReminder: 'discord' },
+        events: {
+          categories: [{ key: 'sport', label: 'Sport', color: '#16a34a' }],
+          reminderHour: 18,
+        },
+      } as unknown as ReturnType<typeof getConfig>);
+      await notifyEventConfirmed('evt1');
+
+      expect(posted()?.slack).toBeDefined();
+    });
+  });
+
+  it.each<Channel>(['discord', 'email'])('on %s, builds no Slack message', async (channel) => {
+    useChannel(channel);
+    await notifyEventConfirmed('evt1');
+    const first =
+      vi.mocked(notify).mock.calls[0]?.[1] ?? vi.mocked(notifyMany).mock.calls[0]?.[1][0];
+    expect(first).not.toHaveProperty('slack');
+  });
+
   it.each<Channel>(['discord', 'slack'])('on %s, builds no e-mail at all', async (channel) => {
     useChannel(channel);
     await notifyEventConfirmed('evt1');

@@ -237,6 +237,9 @@
       "email": {
         "footerApprovers": "Vous recevez ce message parce que vous pouvez gérer les membres de {bde}.",
         "footerRequester": "Vous recevez ce message parce que vous avez demandé l'accès à {bde}."
+      },
+      "slack": {
+        "pendingAction": "Valider ou refuser"
       }
     },
     "rejectWarning": "La demande est supprimée. La personne pourra la refaire en se reconnectant.",
@@ -355,6 +358,9 @@
         "action": "Voir l'événement",
         "calendarNote": "Le fichier joint ajoute l'événement à votre agenda.",
         "footer": "Vous recevez ce message parce que vous êtes membre de {bde}."
+      },
+      "slack": {
+        "action": "Voir l'événement"
       }
     },
     "title": "Événements",

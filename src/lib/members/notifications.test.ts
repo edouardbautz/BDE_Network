@@ -159,6 +159,27 @@ describe('notifyMemberPending', () => {
     expect(firstCall(vi.mocked(deliver))[1]).not.toHaveProperty('email');
   });
 
+  it('by Slack, posts an amber message with the photo and a button to the members page', async () => {
+    useChannels({ memberPending: 'slack' });
+    vi.stubEnv('APP_URL', 'https://bde.exemple.fr/');
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      ...pendingUser,
+      photoUrl: 'https://cdn.intra.42.fr/u.jpg',
+    } as never);
+    vi.mocked(prisma.user.findMany).mockResolvedValue([]);
+
+    await notifyMemberPending('u1');
+
+    const slack = firstCall(vi.mocked(deliver))[1].slack;
+    expect(slack?.color).toBe('#f59e0b');
+    expect(slack?.fallback).toBe("Nouvelle demande d'accès : Jean Dupont");
+    const json = JSON.stringify(slack?.blocks);
+    expect(json).toContain('https://cdn.intra.42.fr/u.jpg');
+    expect(json).toContain('"url":"https://bde.exemple.fr/fr/members"');
+    expect(firstCall(vi.mocked(deliver))[1]).not.toHaveProperty('discord');
+    expect(firstCall(vi.mocked(deliver))[1]).not.toHaveProperty('email');
+  });
+
   it('has no link at all without APP_URL (never a broken one)', async () => {
     useChannels({ memberPending: 'discord' });
     vi.mocked(prisma.user.findUnique).mockResolvedValue(pendingUser as never);
@@ -283,6 +304,31 @@ describe('notifyMemberApproved', () => {
     expect(message).not.toHaveProperty('discord');
   });
 
+  it('by Slack, posts a green message with the role and who approved', async () => {
+    useChannels({ memberApproved: 'slack' });
+    vi.mocked(prisma.user.findUnique)
+      .mockResolvedValueOnce({ ...approved, campus: 'Nice', photoUrl: null } as never)
+      .mockResolvedValueOnce({ fullName: 'Paula Martin' } as never); // the approver
+
+    await notifyMemberApproved('u1', 'pmartin');
+
+    const slack = firstCall(vi.mocked(deliver))[1].slack;
+    expect(slack?.color).toBe('#10b981');
+    const json = JSON.stringify(slack?.blocks);
+    expect(json).toContain('*Rôle*\\nTrésorier');
+    expect(json).toContain('*Approuvé par*\\nPaula Martin');
+    expect(firstCall(vi.mocked(deliver))[1]).not.toHaveProperty('email');
+  });
+
+  it('does not look up who approved when the channel does not say it (e-mail)', async () => {
+    useChannels({ memberApproved: 'email' });
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(approved as never);
+
+    await notifyMemberApproved('u1', 'pmartin');
+
+    expect(prisma.user.findUnique).toHaveBeenCalledTimes(1);
+  });
+
   it('sends no card to Slack or email: only the plain text', async () => {
     useChannels({ memberApproved: 'slack' });
     vi.mocked(prisma.user.findUnique).mockResolvedValue(approved as never);
@@ -351,6 +397,18 @@ describe('notifyMemberRemoved', () => {
     expect(embed?.fields).toEqual(
       expect.arrayContaining([{ name: 'Retiré par', value: 'Paula Martin', inline: true }]),
     );
+  });
+
+  it('by Slack, posts a red message that says who removed them', async () => {
+    useChannels({ memberRemoved: 'slack' });
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({ fullName: 'Paula Martin' } as never);
+
+    await notifyMemberRemoved({ ...removed, roleName: 'Membre' }, 'pmartin');
+
+    const slack = firstCall(vi.mocked(deliver))[1].slack;
+    expect(slack?.color).toBe('#ef4444');
+    expect(JSON.stringify(slack?.blocks)).toContain('*Retiré par*\\nPaula Martin');
+    expect(JSON.stringify(slack?.blocks)).not.toContain('"type":"actions"');
   });
 
   it('never emails the removed member: the email channel sends nothing', async () => {

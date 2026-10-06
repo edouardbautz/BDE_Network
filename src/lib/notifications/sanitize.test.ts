@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { neutralizeEmbedForDiscord, neutralizeForDiscord, neutralizeForSlack } from './sanitize';
+import {
+  defuseMentions,
+  neutralizeEmbedForDiscord,
+  neutralizeForDiscord,
+  neutralizeForSlack,
+} from './sanitize';
 
 const ZWSP = String.fromCharCode(0x200b);
 
@@ -109,5 +114,19 @@ describe('neutralizeEmbedForDiscord', () => {
 
   it('adds no text to a card that had none', () => {
     expect(neutralizeEmbedForDiscord({ color: 1 })).toEqual({ color: 1 });
+  });
+});
+
+describe('defuseMentions', () => {
+  it.each(['@everyone', '@here', '@channel', '@EVERYONE', '@Here'])('defuses %s', (mention) => {
+    const out = defuseMentions(`Bonjour ${mention} !`);
+    expect(out).not.toContain(mention);
+    expect(out.replace(ZWSP, '')).toBe(`Bonjour ${mention} !`);
+  });
+
+  it('leaves the other forms alone, and ordinary text, e-mail addresses and handles', () => {
+    expect(defuseMentions('<!channel> <@U1> a@b.fr @paula @herein')).toBe(
+      '<!channel> <@U1> a@b.fr @paula @herein',
+    );
   });
 });

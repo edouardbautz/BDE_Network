@@ -1,17 +1,10 @@
-import { colorToInt, discordTime, type DiscordEmbed } from '@/lib/notifications/discord-embed';
+import { colorToInt } from '@/lib/notifications/colors';
+import { discordTime, type DiscordEmbed } from '@/lib/notifications/discord-embed';
 import { PLATFORM_NAME } from '@/lib/notifications/platform';
 import { httpUrl, truncate } from '@/lib/notifications/text';
-import type { NotificationEventData, ReminderDay, Translate } from './messages';
+import { KIND_LABEL_KEY, type EventCardKind } from './card-kind';
+import type { NotificationEventData, Translate } from './messages';
 import { toLocalDateTime } from './time';
-
-/** What the card announces: a new confirmed event, or a reminder for today or for tomorrow. */
-export type EventCardKind = 'confirmed' | ReminderDay;
-
-const KIND_LABEL_KEY: Record<EventCardKind, string> = {
-  confirmed: 'embed.kind.confirmed',
-  tomorrow: 'embed.kind.reminderTomorrow',
-  today: 'embed.kind.reminderToday',
-};
 
 /** How much of the event's description a card shows: it is a notice, the page has the rest. */
 const DESCRIPTION_PREVIEW = 350;

@@ -133,3 +133,9 @@ export function addDays(date: LocalDate, days: number): LocalDate {
     day: shifted.getUTCDate(),
   };
 }
+
+/** Whether two instants fall on the same calendar day on the BDE's wall clock. */
+export function isSameLocalDay(a: Date, b: Date, timeZone: string): boolean {
+  const [x, y] = [toLocalDateTime(a, timeZone), toLocalDateTime(b, timeZone)];
+  return x.year === y.year && x.month === y.month && x.day === y.day;
+}

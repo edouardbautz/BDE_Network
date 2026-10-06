@@ -51,31 +51,6 @@ export const EMBED_LIMITS = {
   username: 80,
 } as const;
 
-/** One colour per kind of member notification, mid-saturation so the bar reads on both of
- * Discord's themes (a pastel vanishes on the light one, a near-black one on the dark one). */
-export const MEMBER_COLORS = {
-  pending: 0xf59e0b, // amber: something waits for a decision
-  approved: 0x10b981, // green
-  removed: 0xef4444, // red
-} as const;
-
-/** Used for an event whose category has no colour (a category removed from the config). */
-export const NEUTRAL_COLOR = 0x6b7280;
-
-/** `#0f766e` or `#fff` → the number Discord wants; the neutral grey when it is not a hex colour. */
-export function colorToInt(hex: string | null | undefined): number {
-  const match = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex?.trim() ?? '');
-  if (!match?.[1]) return NEUTRAL_COLOR;
-  const digits =
-    match[1].length === 3
-      ? match[1]
-          .split('')
-          .map((digit) => digit + digit)
-          .join('')
-      : match[1];
-  return parseInt(digits, 16);
-}
-
 export type DiscordTimeStyle =
   | 't' // 20:00
   | 'T' // 20:00:30

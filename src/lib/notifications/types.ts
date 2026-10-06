@@ -1,4 +1,5 @@
 import type { DiscordPayload } from './discord-embed';
+import type { SlackPayload } from './slack-blocks';
 
 /** An e-mail: the HTML, the same content as text for the clients that do not show HTML, and the
  * calendar file some e-mails carry. */
@@ -21,6 +22,8 @@ export interface NotificationMessage {
   /** The same notification as a designed e-mail. Only the e-mail adapter reads it; without it, it
    * sends `body` as plain text. */
   email?: EmailContent;
+  /** The same notification as a Slack message (blocks and a colour bar). Only the Slack adapter reads it. */
+  slack?: SlackPayload;
 }
 
 /** What happened to one message of a batch. */

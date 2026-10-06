@@ -1,5 +1,5 @@
 import { getContrastingTextColor } from '@/lib/color';
-import { NEUTRAL_COLOR } from './discord-embed';
+import { normalizeHex } from './colors';
 import { PLATFORM_NAME } from './platform';
 import { httpUrl } from './text';
 
@@ -58,22 +58,6 @@ const LIGHT = {
   muted: '#6b7280',
   rule: '#e5e7eb',
 };
-
-/** `#0f766e` or `#abc` as `#0f766e`; the neutral grey for anything that is not a hex colour, so a
- * colour from the configuration can never inject anything into a style. */
-export function normalizeHex(value: string | null | undefined): string {
-  const match = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(value?.trim() ?? '');
-  const neutral = `#${NEUTRAL_COLOR.toString(16).padStart(6, '0')}`;
-  if (!match?.[1]) return neutral;
-  const digits =
-    match[1].length === 3
-      ? match[1]
-          .split('')
-          .map((digit) => digit + digit)
-          .join('')
-      : match[1];
-  return `#${digits.toLowerCase()}`;
-}
 
 const HTML_ESCAPES: Record<string, string> = {
   '&': '&amp;',

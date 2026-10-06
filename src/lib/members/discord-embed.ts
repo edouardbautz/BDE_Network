@@ -1,8 +1,5 @@
-import {
-  MEMBER_COLORS,
-  type DiscordEmbed,
-  type DiscordEmbedField,
-} from '@/lib/notifications/discord-embed';
+import { MEMBER_COLORS } from '@/lib/notifications/colors';
+import type { DiscordEmbed, DiscordEmbedField } from '@/lib/notifications/discord-embed';
 import { PLATFORM_NAME } from '@/lib/notifications/platform';
 import { httpUrl } from '@/lib/notifications/text';
 import type { Translate } from '@/lib/notifications/translate';
