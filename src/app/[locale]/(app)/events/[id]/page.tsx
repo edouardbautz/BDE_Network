@@ -13,10 +13,11 @@ import {
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { getConfig } from '@/config';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { CategoryBadge } from '@/components/events/category-badge';
 import { EventNoticeAlert } from '@/components/events/event-notice';
 import { Badge } from '@/components/ui/badge';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from '@/i18n/navigation';
 import { getEventsAccess } from '@/lib/events/access';
@@ -250,24 +251,35 @@ export default async function EventDetailPage({
                           <Badge variant="destructive">{t('detail.occurrenceCancelled')}</Badge>
                         )}
                       </div>
-                      {access.canManage && (
-                        <form
-                          action={async () => {
-                            'use server';
-                            if (occurrence.cancelled) {
+                      {access.canManage &&
+                        (occurrence.cancelled ? (
+                          <form
+                            action={async () => {
+                              'use server';
                               await restoreOccurrence(event.id, startMs);
-                            } else {
+                            }}
+                          >
+                            <Button size="xs" variant="outline" type="submit">
+                              {t('detail.occurrences.restore')}
+                            </Button>
+                          </form>
+                        ) : (
+                          <ConfirmDialog
+                            triggerSize="xs"
+                            triggerVariant="outline"
+                            title={t('detail.occurrences.cancelTitle')}
+                            description={t('detail.occurrences.cancelWarning', {
+                              date: formatLongDate(occurrence.start, locale, timeZone),
+                            })}
+                            confirmLabel={t('detail.occurrences.cancelConfirm')}
+                            onConfirm={async () => {
+                              'use server';
                               await cancelOccurrence(event.id, startMs);
-                            }
-                          }}
-                        >
-                          <Button size="xs" variant="outline" type="submit">
-                            {occurrence.cancelled
-                              ? t('detail.occurrences.restore')
-                              : t('detail.occurrences.cancel')}
-                          </Button>
-                        </form>
-                      )}
+                            }}
+                          >
+                            {t('detail.occurrences.cancel')}
+                          </ConfirmDialog>
+                        ))}
                     </li>
                   );
                 })}
@@ -300,31 +312,20 @@ export default async function EventDetailPage({
       )}
 
       {access.canManage && (
-        <details className="group rounded-lg border border-destructive/30 p-4 open:bg-destructive/5">
-          <summary
-            className={cn(
-              buttonVariants({ variant: 'destructive', size: 'sm' }),
-              'cursor-pointer list-none [&::-webkit-details-marker]:hidden',
-            )}
-          >
-            <Trash2 data-icon="inline-start" />
-            {t('detail.delete.button')}
-          </summary>
-          <form
-            className="mt-4 flex flex-col items-start gap-3"
-            action={async () => {
+        <div>
+          <ConfirmDialog
+            title={isSeries ? t('detail.delete.titleSeries') : t('detail.delete.title')}
+            description={isSeries ? t('detail.delete.warningSeries') : t('detail.delete.warning')}
+            confirmLabel={t('detail.delete.confirm')}
+            onConfirm={async () => {
               'use server';
               await deleteEvent(event.id);
             }}
           >
-            <p className="text-sm">
-              {isSeries ? t('detail.delete.warningSeries') : t('detail.delete.warning')}
-            </p>
-            <Button variant="destructive" size="sm" type="submit">
-              {t('detail.delete.confirm')}
-            </Button>
-          </form>
-        </details>
+            <Trash2 data-icon="inline-start" />
+            {t('detail.delete.button')}
+          </ConfirmDialog>
+        </div>
       )}
     </div>
   );

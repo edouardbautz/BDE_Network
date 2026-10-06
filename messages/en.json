@@ -42,12 +42,13 @@
       "setDefaultLabel": "Make {name} the default role",
       "defaultSet": "\"{name}\" is now the default role.",
       "delete": "Delete",
-      "deleteWarning": "Delete the role \"{name}\"? This cannot be undone.",
+      "deleteWarning": "This role is gone for good. This cannot be undone.",
       "deleteInUse": "This role is still given to {count, plural, one {# member} other {# members}}. Give them another role from the Members page first.",
       "deleteConfirm": "Delete permanently",
       "deleted": "The role \"{name}\" was deleted.",
       "lockedOwn": "This is your role: someone else has to change it.",
-      "lockedAbove": "This role gives rights you do not have."
+      "lockedAbove": "This role gives rights you do not have.",
+      "deleteTitle": "Delete the role \"{name}\"?"
     },
     "new": {
       "title": "Create a role",
@@ -189,7 +190,7 @@
     "approved": "{name}'s request was approved.",
     "rejected": "{name}'s request was rejected.",
     "removed": "{name} was removed from the BDE.",
-    "removeWarning": "Remove {name} from the BDE? Their account is deleted permanently. They can ask for access again by signing in.",
+    "removeWarning": "Their account is deleted permanently. They can ask for access again by signing in.",
     "removeConfirm": "Remove permanently",
     "ownerNote": "Set in bde.config.yml",
     "locked": {
@@ -221,8 +222,13 @@
         "body": "{name} ({login}) was removed from the BDE."
       }
     },
-    "rejectWarning": "Refuse {name}'s request? It will be deleted. They can ask again by signing in.",
-    "rejectConfirm": "Refuse permanently"
+    "rejectWarning": "The request is deleted. They can ask again by signing in.",
+    "rejectConfirm": "Refuse permanently",
+    "rejectTitle": "Refuse {name}'s request?",
+    "removeTitle": "Remove {name} from the BDE?",
+    "roleChangeTitle": "Change {name}'s role?",
+    "roleChangeBody": "{name} will go from \"{from}\" to \"{to}\". Their rights change immediately.",
+    "roleChangeConfirm": "Change the role"
   },
   "auditLog": {
     "title": "Audit log",
@@ -366,13 +372,18 @@
         "cancel": "Cancel this date",
         "restore": "Restore",
         "truncated": "{count, plural, one {# more occurrence not shown} other {# more occurrences not shown}}.",
-        "past": "{count, plural, one {# past occurrence} other {# past occurrences}}."
+        "past": "{count, plural, one {# past occurrence} other {# past occurrences}}.",
+        "cancelTitle": "Cancel this date?",
+        "cancelWarning": "Only the date of {date} is cancelled. The other dates of the series do not change, and you can restore it.",
+        "cancelConfirm": "Cancel this date"
       },
       "delete": {
         "button": "Delete event",
         "warning": "This deletion is permanent.",
         "warningSeries": "This deletion is permanent and affects the whole series. To remove a single date, use “Cancel this date”.",
-        "confirm": "Yes, delete permanently"
+        "confirm": "Yes, delete permanently",
+        "title": "Delete this event?",
+        "titleSeries": "Delete the whole series?"
       }
     },
     "form": {
@@ -445,12 +456,14 @@
       "regenerate": {
         "summary": "Generate a new link",
         "warning": "The old link stops working immediately. You will need to paste the new link into the shared calendar (and remove the old subscription), otherwise the calendar will stop updating.",
-        "confirm": "Generate a new link"
+        "confirm": "Generate a new link",
+        "title": "Generate a new link?"
       },
       "disable": {
         "summary": "Turn off the link",
         "warning": "The link stops working immediately and the subscribed calendar will stop updating. You can turn on a new link later.",
-        "confirm": "Turn off the link"
+        "confirm": "Turn off the link",
+        "title": "Turn the link off?"
       }
     },
     "notices": {
@@ -473,7 +486,8 @@
       "regenerate": {
         "summary": "Generate a new link",
         "warning": "The old link stops working immediately. You will need to add the new link to your calendar app.",
-        "confirm": "Generate a new link"
+        "confirm": "Generate a new link",
+        "title": "Generate a new link?"
       },
       "privacy": "This link is personal: anyone who has it can read the events you are allowed to see. Do not share it. It stops working if you leave the BDE."
     }
@@ -538,5 +552,9 @@
       "retry": "Try again"
     },
     "backToDashboard": "Back to the dashboard"
+  },
+  "confirmDialog": {
+    "cancel": "Cancel",
+    "working": "Working…"
   }
 }

@@ -5,8 +5,12 @@ const push = vi.fn();
 const refresh = vi.fn();
 
 vi.mock('next-intl', () => ({
-  useTranslations: () => (key: string, values?: Record<string, unknown>) =>
-    values ? `${key}${JSON.stringify(values)}` : key,
+  useTranslations: (namespace: string) => (key: string, values?: Record<string, unknown>) =>
+    namespace === 'confirmDialog'
+      ? `confirmDialog.${key}`
+      : values
+        ? `${key}${JSON.stringify(values)}`
+        : key,
 }));
 vi.mock('@/i18n/navigation', () => ({ useRouter: () => ({ push, refresh }) }));
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
@@ -31,6 +35,11 @@ const roles = [
 beforeEach(() => vi.clearAllMocks());
 afterEach(cleanup);
 
+/** Every destructive or irreversible action asks in a dialog; these helpers drive it. */
+const dialog = () => screen.findByRole('dialog');
+const confirmButton = (label: string) => screen.getByRole('button', { name: label });
+const cancelButton = () => screen.getByRole('button', { name: 'confirmDialog.cancel' });
+
 describe('MemberRoleSelect', () => {
   const renderSelect = (lock: 'self' | 'above' | null = null) =>
     render(
@@ -42,24 +51,55 @@ describe('MemberRoleSelect', () => {
         lock={lock}
       />,
     );
-  const select = () => screen.getByRole('combobox') as HTMLSelectElement;
+  // The page behind an open dialog is hidden from assistive technology, hence { hidden: true }.
+  const select = () => screen.getByRole('combobox', { hidden: true }) as HTMLSelectElement;
 
-  it('gives the new role and confirms', async () => {
+  it('asks before changing a role, and says from which role to which', async () => {
+    renderSelect();
+
+    fireEvent.change(select(), { target: { value: 'role-secretary' } });
+
+    await dialog();
+    expect(screen.getByText('roleChangeTitle{"name":"Alice"}')).toBeTruthy();
+    expect(
+      screen.getByText('roleChangeBody{"name":"Alice","from":"Membre","to":"Secrétaire"}'),
+    ).toBeTruthy();
+    expect(actions.changeMemberRole).not.toHaveBeenCalled();
+    expect(select().value).toBe('role-member'); // nothing changed yet
+  });
+
+  it('gives the new role once confirmed', async () => {
     vi.mocked(actions.changeMemberRole).mockResolvedValue({ ok: true });
     renderSelect();
 
     fireEvent.change(select(), { target: { value: 'role-secretary' } });
+    await dialog();
+    fireEvent.click(confirmButton('roleChangeConfirm'));
 
     await waitFor(() => expect(toast.success).toHaveBeenCalled());
-    expect(actions.changeMemberRole).toHaveBeenCalledWith('u1', 'role-secretary');
+    expect(actions.changeMemberRole).toHaveBeenCalledExactlyOnceWith('u1', 'role-secretary');
     expect(select().value).toBe('role-secretary');
   });
 
-  it('puts the previous role back and explains when the server refuses', async () => {
+  it('changes nothing when the dialog is cancelled, and the menu keeps the current role', async () => {
+    renderSelect();
+
+    fireEvent.change(select(), { target: { value: 'role-secretary' } });
+    await dialog();
+    fireEvent.click(cancelButton());
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(actions.changeMemberRole).not.toHaveBeenCalled();
+    expect(select().value).toBe('role-member');
+  });
+
+  it('keeps the previous role and explains when the server refuses', async () => {
     vi.mocked(actions.changeMemberRole).mockResolvedValue({ ok: false, error: 'cannotGrant' });
     renderSelect();
 
     fireEvent.change(select(), { target: { value: 'role-secretary' } });
+    await dialog();
+    fireEvent.click(confirmButton('roleChangeConfirm'));
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('errors.cannotGrant'));
     expect(refresh).toHaveBeenCalled(); // the list is redrawn: the page may have been out of date
@@ -126,10 +166,14 @@ describe('PendingMemberActions', () => {
     expect(refresh).toHaveBeenCalled();
   });
 
-  it('asks before refusing: opening the question refuses nothing', () => {
+  it('asks in a dialog before refusing: opening it refuses nothing', async () => {
     renderPending();
 
-    expect(screen.getByText(/rejectWarning/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /^reject/ }));
+
+    await dialog();
+    expect(screen.getByText('rejectTitle{"name":"Bob"}')).toBeTruthy();
+    expect(screen.getByText('rejectWarning{"name":"Bob"}')).toBeTruthy();
     expect(actions.rejectMember).not.toHaveBeenCalled();
   });
 
@@ -137,50 +181,85 @@ describe('PendingMemberActions', () => {
     vi.mocked(actions.rejectMember).mockResolvedValue({ ok: true });
     renderPending();
 
-    fireEvent.click(screen.getByRole('button', { name: 'rejectConfirm' }));
+    fireEvent.click(screen.getByRole('button', { name: /^reject/ }));
+    await dialog();
+    fireEvent.click(confirmButton('rejectConfirm'));
 
-    await waitFor(() => expect(actions.rejectMember).toHaveBeenCalledWith('u2'));
+    await waitFor(() => expect(actions.rejectMember).toHaveBeenCalledExactlyOnceWith('u2'));
     expect(toast.success).toHaveBeenCalled();
+  });
+
+  it('does not refuse when the dialog is cancelled', async () => {
+    renderPending();
+
+    fireEvent.click(screen.getByRole('button', { name: /^reject/ }));
+    await dialog();
+    fireEvent.click(cancelButton());
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(actions.rejectMember).not.toHaveBeenCalled();
   });
 
   it('says why when the request was already handled by someone else', async () => {
     vi.mocked(actions.rejectMember).mockResolvedValue({ ok: false, error: 'targetNotPending' });
     renderPending();
 
-    fireEvent.click(screen.getByRole('button', { name: 'rejectConfirm' }));
+    fireEvent.click(screen.getByRole('button', { name: /^reject/ }));
+    await dialog();
+    fireEvent.click(confirmButton('rejectConfirm'));
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('errors.targetNotPending'));
+    expect(refresh).toHaveBeenCalled();
   });
 });
 
 describe('RemoveMemberButton', () => {
   const renderRemove = () =>
     render(<RemoveMemberButton userId="u3" login="carol" memberName="Carol" />);
+  const open = async () => {
+    fireEvent.click(screen.getByRole('button', { name: /^remove/ }));
+    await dialog();
+  };
 
-  it('asks first: nothing is removed by opening the control', () => {
+  it('asks first: nothing is removed by pressing the button', async () => {
     renderRemove();
 
+    await open();
+
+    expect(screen.getByText('removeTitle{"name":"Carol"}')).toBeTruthy();
+    expect(screen.getByText('removeWarning{"name":"Carol"}')).toBeTruthy();
     expect(actions.removeMember).not.toHaveBeenCalled();
-    expect(screen.getByText(/removeWarning/)).toBeTruthy();
   });
 
   it('removes after confirmation and goes back to the list with the login', async () => {
-    vi.mocked(actions.removeMember).mockResolvedValue({ ok: true });
+    vi.mocked(actions.removeMember).mockResolvedValue({ ok: true, login: 'carol' });
     renderRemove();
 
-    fireEvent.click(screen.getByRole('button', { name: 'removeConfirm' }));
+    await open();
+    fireEvent.click(confirmButton('removeConfirm'));
 
     await waitFor(() =>
       expect(push).toHaveBeenCalledWith({ pathname: '/members', query: { removed: 'carol' } }),
     );
-    expect(actions.removeMember).toHaveBeenCalledWith('u3');
+    expect(actions.removeMember).toHaveBeenCalledExactlyOnceWith('u3');
+  });
+
+  it('removes nobody when the dialog is cancelled', async () => {
+    renderRemove();
+
+    await open();
+    fireEvent.click(cancelButton());
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(actions.removeMember).not.toHaveBeenCalled();
   });
 
   it('stays on the page and explains when the server refuses', async () => {
     vi.mocked(actions.removeMember).mockResolvedValue({ ok: false, error: 'cannotManageMember' });
     renderRemove();
 
-    fireEvent.click(screen.getByRole('button', { name: 'removeConfirm' }));
+    await open();
+    fireEvent.click(confirmButton('removeConfirm'));
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('errors.cannotManageMember'));
     expect(push).not.toHaveBeenCalled();

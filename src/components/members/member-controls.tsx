@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
@@ -9,6 +9,7 @@ import {
   rejectMember,
   removeMember,
 } from '@/app/[locale]/(app)/members/actions';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { NativeSelect } from '@/components/events/field-styles';
 import { Button } from '@/components/ui/button';
 import { useRouter } from '@/i18n/navigation';
@@ -44,35 +45,6 @@ function useRefusal() {
   };
 }
 
-interface ConfirmProps {
-  /** Text of the button that opens the confirmation. */
-  label: string;
-  /** Who it is about, read out after the label for screen readers. */
-  name: string;
-  warning: string;
-  confirmLabel: string;
-  disabled: boolean;
-  onConfirm: () => void;
-}
-
-/** A destructive action asks first: the button only opens the question, the second button does it. */
-function Confirm({ label, name, warning, confirmLabel, disabled, onConfirm }: ConfirmProps) {
-  return (
-    <details className="relative">
-      <summary className="inline-flex h-7 cursor-pointer list-none items-center rounded-lg bg-destructive/10 px-2.5 text-[0.8rem] font-medium text-destructive outline-none hover:bg-destructive/20 focus-visible:ring-3 focus-visible:ring-ring/50">
-        {label}
-        <span className="sr-only">{name}</span>
-      </summary>
-      <div className="bg-popover absolute right-0 z-10 mt-1 flex w-64 flex-col items-start gap-2 rounded-lg border p-3 text-left shadow-md">
-        <p className="text-sm">{warning}</p>
-        <Button variant="destructive" size="sm" disabled={disabled} onClick={onConfirm}>
-          {confirmLabel}
-        </Button>
-      </div>
-    </details>
-  );
-}
-
 interface MemberRoleSelectProps {
   userId: string;
   memberName: string;
@@ -81,7 +53,8 @@ interface MemberRoleSelectProps {
   lock: MemberLock;
 }
 
-/** The drop-down that gives an approved member another role. */
+/** The drop-down that gives an approved member another role, after a confirmation: the new
+ * role is only applied once confirmed, and the menu keeps showing the current one until then. */
 export function MemberRoleSelect({
   userId,
   memberName,
@@ -91,35 +64,53 @@ export function MemberRoleSelect({
 }: MemberRoleSelectProps) {
   const t = useTranslations('members');
   const refused = useRefusal();
+  const selectRef = useRef<HTMLSelectElement>(null);
   const [value, setValue] = useState(currentRoleId);
-  const [isPending, startTransition] = useTransition();
+  const [candidate, setCandidate] = useState<string | null>(null);
 
-  const change = (roleId: string) => {
-    const previous = value;
-    setValue(roleId);
-    startTransition(async () => {
-      const result = await changeMemberRole(userId, roleId);
-      if (result.ok) {
-        toast.success(t('roleChanged', { name: memberName }));
-      } else {
-        setValue(previous);
-        refused(result);
-      }
-    });
+  const nameOf = (id: string) => roles.find((role) => role.id === id)?.name ?? '';
+
+  const change = async () => {
+    if (candidate === null) return;
+    const result = await changeMemberRole(userId, candidate);
+    if (result.ok) {
+      setValue(candidate);
+      toast.success(t('roleChanged', { name: memberName }));
+    } else {
+      refused(result);
+    }
   };
 
   return (
     <div className="flex flex-col gap-1">
       <NativeSelect
+        ref={selectRef}
         aria-label={t('roleOf', { name: memberName })}
         value={value}
-        disabled={lock !== null || isPending}
-        onChange={(event) => change(event.target.value)}
+        disabled={lock !== null}
+        onChange={(event) => setCandidate(event.target.value)}
         className="min-w-40"
       >
         <RoleOptions roles={roles} currentId={currentRoleId} />
       </NativeSelect>
       {lock && <span className="text-muted-foreground text-xs">{t(`locked.${lock}`)}</span>}
+
+      <ConfirmDialog
+        open={candidate !== null}
+        onOpenChange={(open) => {
+          if (!open) setCandidate(null);
+        }}
+        returnFocusRef={selectRef}
+        tone="default"
+        title={t('roleChangeTitle', { name: memberName })}
+        description={t('roleChangeBody', {
+          name: memberName,
+          from: nameOf(value),
+          to: nameOf(candidate ?? value),
+        })}
+        confirmLabel={t('roleChangeConfirm')}
+        onConfirm={change}
+      />
     </div>
   );
 }
@@ -132,7 +123,7 @@ interface PendingMemberActionsProps {
   initialRoleId: string;
 }
 
-/** Approve a request with the role chosen next to the button, or refuse it. */
+/** Approve a request with the role chosen next to the button, or refuse it (after a confirmation). */
 export function PendingMemberActions({
   userId,
   memberName,
@@ -145,12 +136,18 @@ export function PendingMemberActions({
   const [isPending, startTransition] = useTransition();
   const canApprove = roles.some((role) => role.id === roleId && role.grantable);
 
-  const run = (work: () => Promise<ActionResult>, success: string) =>
+  const approve = () =>
     startTransition(async () => {
-      const result = await work();
-      if (result.ok) toast.success(success);
+      const result = await approveMember(userId, roleId);
+      if (result.ok) toast.success(t('approved', { name: memberName }));
       else refused(result);
     });
+
+  const reject = async () => {
+    const result = await rejectMember(userId);
+    if (result.ok) toast.success(t('rejected', { name: memberName }));
+    else refused(result);
+  };
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
@@ -163,23 +160,18 @@ export function PendingMemberActions({
       >
         <RoleOptions roles={roles} />
       </NativeSelect>
-      <Button
-        size="sm"
-        disabled={isPending || !canApprove}
-        onClick={() =>
-          run(() => approveMember(userId, roleId), t('approved', { name: memberName }))
-        }
-      >
+      <Button size="sm" disabled={isPending || !canApprove} onClick={approve}>
         {t('approve')}
       </Button>
-      <Confirm
-        label={t('reject')}
-        name={memberName}
-        warning={t('rejectWarning', { name: memberName })}
+      <ConfirmDialog
+        title={t('rejectTitle', { name: memberName })}
+        description={t('rejectWarning', { name: memberName })}
         confirmLabel={t('rejectConfirm')}
-        disabled={isPending}
-        onConfirm={() => run(() => rejectMember(userId), t('rejected', { name: memberName }))}
-      />
+        onConfirm={reject}
+      >
+        {t('reject')}
+        <span className="sr-only">{memberName}</span>
+      </ConfirmDialog>
     </div>
   );
 }
@@ -195,28 +187,27 @@ export function RemoveMemberButton({ userId, login, memberName }: RemoveMemberPr
   const t = useTranslations('members');
   const refused = useRefusal();
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
 
-  const remove = () =>
-    startTransition(async () => {
-      const result = await removeMember(userId);
-      if (!result.ok) {
-        refused(result);
-        return;
-      }
-      toast.success(t('removed', { name: memberName }));
-      // Back to the list with the login: the page offers to replace the shared calendar link.
-      router.push({ pathname: '/members', query: { removed: login } });
-    });
+  const remove = async () => {
+    const result = await removeMember(userId);
+    if (!result.ok) {
+      refused(result);
+      return;
+    }
+    toast.success(t('removed', { name: memberName }));
+    // Back to the list with the login: the page offers to replace the shared calendar link.
+    router.push({ pathname: '/members', query: { removed: login } });
+  };
 
   return (
-    <Confirm
-      label={t('remove')}
-      name={memberName}
-      warning={t('removeWarning', { name: memberName })}
+    <ConfirmDialog
+      title={t('removeTitle', { name: memberName })}
+      description={t('removeWarning', { name: memberName })}
       confirmLabel={t('removeConfirm')}
-      disabled={isPending}
       onConfirm={remove}
-    />
+    >
+      {t('remove')}
+      <span className="sr-only">{memberName}</span>
+    </ConfirmDialog>
   );
 }

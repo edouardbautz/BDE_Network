@@ -117,8 +117,10 @@ describe('/events/shared-calendar', () => {
     const html = await page();
 
     expect(html).toContain(`https://bde.example/api/calendar/bde/${TOKEN}.ics`);
-    expect(html).toContain('regenerate.confirm');
-    expect(html).toContain('disable.confirm');
+    // Both ask in a dialog (closed here): the page only carries the buttons that open them.
+    expect(html).toContain('regenerate.summary');
+    expect(html).toContain('disable.summary');
+    expect(html).not.toContain('<details');
     expect(html).toContain('active.confirmedOnly');
     expect(html).toContain('active.limit');
   });

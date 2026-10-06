@@ -5,6 +5,7 @@ import { Pencil, Star, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { deleteRole, setDefaultRole } from '@/app/[locale]/(app)/roles/actions';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { Link, useRouter } from '@/i18n/navigation';
 import type { ActionResult } from '@/lib/roles/errors';
@@ -79,34 +80,42 @@ export function RoleActions({
         </Button>
       )}
 
-      {!isDefault && (
-        <details className="relative">
-          <summary className="inline-flex h-7 cursor-pointer list-none items-center gap-1.5 rounded-lg px-2.5 text-[0.8rem] font-medium text-destructive outline-none hover:bg-destructive/10 focus-visible:ring-3 focus-visible:ring-ring/50">
-            <Trash2 className="size-3.5" aria-hidden />
+      {!isDefault &&
+        (memberCount > 0 ? (
+          // Not a confirmation: there is nothing to confirm, the role cannot go while it is held.
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-destructive"
+            aria-disabled
+            onClick={() => toast(t('list.deleteInUse', { count: memberCount }))}
+          >
+            <Trash2 data-icon="inline-start" />
             {t('list.delete')}
             <span className="sr-only">{roleName}</span>
-          </summary>
-          <div className="bg-popover absolute right-0 z-10 mt-1 flex w-64 flex-col items-start gap-2 rounded-lg border p-3 text-left shadow-md">
-            {memberCount > 0 ? (
-              <p className="text-sm">{t('list.deleteInUse', { count: memberCount })}</p>
-            ) : (
-              <>
-                <p className="text-sm">{t('list.deleteWarning', { name: roleName })}</p>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  disabled={isPending}
-                  onClick={() =>
-                    run(() => deleteRole(roleId), t('list.deleted', { name: roleName }))
-                  }
-                >
-                  {t('list.deleteConfirm')}
-                </Button>
-              </>
-            )}
-          </div>
-        </details>
-      )}
+          </Button>
+        ) : (
+          <ConfirmDialog
+            triggerVariant="ghost"
+            triggerClassName="text-destructive"
+            title={t('list.deleteTitle', { name: roleName })}
+            description={t('list.deleteWarning', { name: roleName })}
+            confirmLabel={t('list.deleteConfirm')}
+            onConfirm={async () => {
+              const result = await deleteRole(roleId);
+              if (result.ok) {
+                toast.success(t('list.deleted', { name: roleName }));
+              } else {
+                toast.error(t(`errors.${result.error}`));
+                router.refresh();
+              }
+            }}
+          >
+            <Trash2 data-icon="inline-start" />
+            {t('list.delete')}
+            <span className="sr-only">{roleName}</span>
+          </ConfirmDialog>
+        ))}
     </div>
   );
 }

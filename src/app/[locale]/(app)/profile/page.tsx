@@ -1,9 +1,9 @@
 import { CalendarSync } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { CopyField } from '@/components/events/copy-field';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { redirect } from '@/i18n/navigation';
 import { accountLabel } from '@/lib/account-label';
@@ -80,23 +80,19 @@ export default async function ProfilePage() {
               <li>{t('calendar.apple')}</li>
             </ul>
 
-            <details className="rounded-lg border p-4">
-              <summary className="cursor-pointer text-sm font-medium">
-                {t('calendar.regenerate.summary')}
-              </summary>
-              <form
-                className="mt-4 flex flex-col items-start gap-3"
-                action={async () => {
+            <div>
+              <ConfirmDialog
+                title={t('calendar.regenerate.title')}
+                description={t('calendar.regenerate.warning')}
+                confirmLabel={t('calendar.regenerate.confirm')}
+                onConfirm={async () => {
                   'use server';
                   await regenerateMyCalendarToken();
                 }}
               >
-                <p className="text-muted-foreground text-sm">{t('calendar.regenerate.warning')}</p>
-                <Button type="submit" variant="destructive" size="sm">
-                  {t('calendar.regenerate.confirm')}
-                </Button>
-              </form>
-            </details>
+                {t('calendar.regenerate.summary')}
+              </ConfirmDialog>
+            </div>
 
             <p className="text-muted-foreground text-xs">{t('calendar.privacy')}</p>
           </CardContent>

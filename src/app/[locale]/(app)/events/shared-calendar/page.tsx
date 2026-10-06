@@ -1,6 +1,7 @@
 import { ArrowLeft, CalendarSync, CircleCheck } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { CopyField } from '@/components/events/copy-field';
 import { EmptyState } from '@/components/events/event-list';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -110,41 +111,31 @@ export default async function SharedCalendarPage({
               <AlertDescription>{t('active.limit')}</AlertDescription>
             </Alert>
 
-            <details className="rounded-lg border p-4">
-              <summary className="cursor-pointer text-sm font-medium">
-                {t('regenerate.summary')}
-              </summary>
-              <form
-                className="mt-4 flex flex-col items-start gap-3"
-                action={async () => {
+            <div className="flex flex-wrap gap-3">
+              <ConfirmDialog
+                title={t('regenerate.title')}
+                description={t('regenerate.warning')}
+                confirmLabel={t('regenerate.confirm')}
+                onConfirm={async () => {
                   'use server';
                   await regenerateSharedCalendar();
                 }}
               >
-                <p className="text-muted-foreground text-sm">{t('regenerate.warning')}</p>
-                <Button type="submit" variant="destructive" size="sm">
-                  {t('regenerate.confirm')}
-                </Button>
-              </form>
-            </details>
+                {t('regenerate.summary')}
+              </ConfirmDialog>
 
-            <details className="rounded-lg border p-4">
-              <summary className="cursor-pointer text-sm font-medium">
-                {t('disable.summary')}
-              </summary>
-              <form
-                className="mt-4 flex flex-col items-start gap-3"
-                action={async () => {
+              <ConfirmDialog
+                title={t('disable.title')}
+                description={t('disable.warning')}
+                confirmLabel={t('disable.confirm')}
+                onConfirm={async () => {
                   'use server';
                   await disableSharedCalendar();
                 }}
               >
-                <p className="text-muted-foreground text-sm">{t('disable.warning')}</p>
-                <Button type="submit" variant="destructive" size="sm">
-                  {t('disable.confirm')}
-                </Button>
-              </form>
-            </details>
+                {t('disable.summary')}
+              </ConfirmDialog>
+            </div>
           </CardContent>
         </Card>
       )}

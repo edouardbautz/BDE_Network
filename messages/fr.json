@@ -42,12 +42,13 @@
       "setDefaultLabel": "Définir {name} comme rôle par défaut",
       "defaultSet": "« {name} » est maintenant le rôle par défaut.",
       "delete": "Supprimer",
-      "deleteWarning": "Supprimer le rôle « {name} » ? Cette action est définitive.",
+      "deleteWarning": "Ce rôle disparaît définitivement. Cette action ne peut pas être annulée.",
       "deleteInUse": "Ce rôle est encore attribué à {count, plural, one {# membre} other {# membres}}. Donnez-leur d'abord un autre rôle depuis la page Membres.",
       "deleteConfirm": "Supprimer définitivement",
       "deleted": "Le rôle « {name} » a été supprimé.",
       "lockedOwn": "C'est votre rôle : quelqu'un d'autre doit le modifier.",
-      "lockedAbove": "Ce rôle donne des droits que vous n'avez pas."
+      "lockedAbove": "Ce rôle donne des droits que vous n'avez pas.",
+      "deleteTitle": "Supprimer le rôle « {name} » ?"
     },
     "new": {
       "title": "Créer un rôle",
@@ -189,7 +190,7 @@
     "approved": "La demande de {name} a été approuvée.",
     "rejected": "La demande de {name} a été refusée.",
     "removed": "{name} a été retiré du BDE.",
-    "removeWarning": "Retirer {name} du BDE ? Son compte est supprimé définitivement. La personne pourra redemander l'accès en se reconnectant.",
+    "removeWarning": "Son compte est supprimé définitivement. La personne pourra redemander l'accès en se reconnectant.",
     "removeConfirm": "Retirer définitivement",
     "ownerNote": "Défini dans bde.config.yml",
     "locked": {
@@ -221,8 +222,13 @@
         "body": "{name} ({login}) a été retiré du BDE."
       }
     },
-    "rejectWarning": "Refuser la demande de {name} ? Elle sera supprimée. La personne pourra la refaire en se reconnectant.",
-    "rejectConfirm": "Refuser définitivement"
+    "rejectWarning": "La demande est supprimée. La personne pourra la refaire en se reconnectant.",
+    "rejectConfirm": "Refuser définitivement",
+    "rejectTitle": "Refuser la demande de {name} ?",
+    "removeTitle": "Retirer {name} du BDE ?",
+    "roleChangeTitle": "Changer le rôle de {name} ?",
+    "roleChangeBody": "{name} passera de « {from} » à « {to} ». Ses droits changent tout de suite.",
+    "roleChangeConfirm": "Changer le rôle"
   },
   "auditLog": {
     "title": "Journal d'audit",
@@ -366,13 +372,18 @@
         "cancel": "Annuler cette date",
         "restore": "Rétablir",
         "truncated": "{count, plural, one {# autre occurrence non affichée} other {# autres occurrences non affichées}}.",
-        "past": "{count, plural, one {# occurrence passée} other {# occurrences passées}}."
+        "past": "{count, plural, one {# occurrence passée} other {# occurrences passées}}.",
+        "cancelTitle": "Annuler cette date ?",
+        "cancelWarning": "Seule la date du {date} est annulée. Les autres dates de la série ne changent pas, et vous pourrez la rétablir.",
+        "cancelConfirm": "Annuler cette date"
       },
       "delete": {
         "button": "Supprimer l'événement",
         "warning": "Cette suppression est définitive.",
         "warningSeries": "Cette suppression est définitive et concerne toute la série. Pour ne retirer qu'une date, utilisez « Annuler cette date ».",
-        "confirm": "Oui, supprimer définitivement"
+        "confirm": "Oui, supprimer définitivement",
+        "title": "Supprimer cet événement ?",
+        "titleSeries": "Supprimer toute la série ?"
       }
     },
     "form": {
@@ -445,12 +456,14 @@
       "regenerate": {
         "summary": "Générer un nouveau lien",
         "warning": "L'ancien lien cesse de fonctionner immédiatement. Vous devrez coller le nouveau lien dans l'agenda partagé (et retirer l'ancien abonnement), sinon l'agenda ne se mettra plus à jour.",
-        "confirm": "Générer un nouveau lien"
+        "confirm": "Générer un nouveau lien",
+        "title": "Générer un nouveau lien ?"
       },
       "disable": {
         "summary": "Désactiver le lien",
         "warning": "Le lien cesse de fonctionner immédiatement et l'agenda abonné ne se mettra plus à jour. Vous pourrez activer un nouveau lien plus tard.",
-        "confirm": "Désactiver le lien"
+        "confirm": "Désactiver le lien",
+        "title": "Désactiver le lien ?"
       }
     },
     "notices": {
@@ -473,7 +486,8 @@
       "regenerate": {
         "summary": "Générer un nouveau lien",
         "warning": "L'ancien lien cessera de fonctionner immédiatement. Vous devrez ajouter le nouveau lien dans votre application d'agenda.",
-        "confirm": "Générer un nouveau lien"
+        "confirm": "Générer un nouveau lien",
+        "title": "Générer un nouveau lien ?"
       },
       "privacy": "Ce lien est personnel : toute personne qui le possède peut lire les événements que vous avez le droit de voir. Ne le partagez pas. Il cesse de fonctionner si vous quittez le BDE."
     }
@@ -538,5 +552,9 @@
       "retry": "Réessayer"
     },
     "backToDashboard": "Retour au tableau de bord"
+  },
+  "confirmDialog": {
+    "cancel": "Annuler",
+    "working": "En cours…"
   }
 }
