@@ -82,7 +82,7 @@ Ce sont exactement les étapes vérifiées par la CI (`.github/workflows/ci.yml`
 
 ## Conventions de code
 
-Voir [CLAUDE.md](../CLAUDE.md) à la racine — c'est la référence technique complète du projet
+Voir [architecture.md](architecture.md) — c'est la référence technique complète du projet
 (arborescence, modèle de données, conventions, permissions, pièges connus). Lisez-le avant toute
 modification structurelle.
 

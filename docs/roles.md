@@ -142,4 +142,4 @@ simples clés (`events.manage`). Tout module activé reçoit automatiquement `<m
 Pour en ajouter d'autres (ex. `finance.export`), ajoutez une ligne à `MODULE_EXTRA_PERMISSIONS`. Pour les
 vérifier, utilisez `can(session.user, 'finance.export')` côté serveur (jamais `auth()` directement), et ajoutez
 leurs libellés dans `messages/fr.json` et `en.json` (`permissions.items.<module>.<nom>`). Aucun changement du
-cœur ni de migration n'est nécessaire. Détails dans [CLAUDE.md](../CLAUDE.md).
+cœur ni de migration n'est nécessaire. Détails dans [architecture.md](architecture.md).

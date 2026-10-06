@@ -44,7 +44,7 @@ configuration, its own 42 OAuth application. Nothing is shared between instances
 
 Planned business modules, not available yet: **Finances** (budget and expenses) and
 **Meetings** (agendas and minutes). The platform is built so that a module brings its own
-permissions without touching the core ([how](CLAUDE.md)).
+permissions without touching the core ([how](docs/architecture.md)).
 
 ## Quick start
 
