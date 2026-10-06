@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { EmptyState, EventList } from '@/components/events/event-list';
 import { EventsToolbar } from '@/components/events/events-toolbar';
+import { EventNoticeAlert } from '@/components/events/event-notice';
 import { MonthCalendar } from '@/components/events/month-calendar';
 import { Link } from '@/i18n/navigation';
 import { canManageSharedCalendar, getEventsAccess } from '@/lib/events/access';
@@ -17,6 +18,7 @@ import {
   today as todayOf,
 } from '@/lib/events/calendar';
 import { getCategories } from '@/lib/events/categories';
+import { readEventNotice } from '@/lib/events/notice';
 import { getFilterOptions, listOccurrences, listUpcomingOccurrences } from '@/lib/events/queries';
 import { parseEventsQuery, type RawSearchParams } from '@/lib/events/search-params';
 import { fromLocalDateTime } from '@/lib/events/time';
@@ -89,7 +91,7 @@ export default async function EventsPage({
       })
     : [];
 
-  // The BDE-wide calendar link is for OWNER and ADMIN, whatever their events permission.
+  // The BDE-wide calendar link needs its own permission (events.shared_calendar), not events.manage.
   const sharedCalendarButton = canManageSharedCalendar(access.session.user) ? (
     <Button variant="outline" size="sm" render={<Link href="/events/shared-calendar" />}>
       <CalendarSync data-icon="inline-start" />
@@ -109,6 +111,8 @@ export default async function EventsPage({
           {createButton}
         </div>
       </div>
+
+      <EventNoticeAlert notice={readEventNotice(raw.notice)} />
 
       <EventsToolbar
         query={query}

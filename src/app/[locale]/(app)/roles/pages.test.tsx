@@ -28,6 +28,7 @@ vi.mock('@/i18n/navigation', () => ({
   redirect: vi.fn((options: { href: string }) => {
     throw new RedirectSignal(options.href);
   }),
+  useRouter: () => ({ refresh: vi.fn() }),
   Link: ({ href, children }: { href: string; children?: ReactNode }) => (
     <a href={href}>{children}</a>
   ),

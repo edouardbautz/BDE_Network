@@ -26,7 +26,7 @@ export default async function SharedCalendarPage({
     notFound();
   }
   if (!canManageSharedCalendar(access.session.user)) {
-    // The BDE link is for OWNER and ADMIN; anyone else goes back to the events.
+    // The BDE link needs events.shared_calendar; anyone else goes back to the events.
     redirect({ href: '/events', locale: await getLocale() });
   }
 

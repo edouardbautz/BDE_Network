@@ -220,7 +220,9 @@
         "subject": "Membre retiré : {name}",
         "body": "{name} ({login}) a été retiré du BDE."
       }
-    }
+    },
+    "rejectWarning": "Refuser la demande de {name} ? Elle sera supprimée. La personne pourra la refaire en se reconnectant.",
+    "rejectConfirm": "Refuser définitivement"
   },
   "auditLog": {
     "title": "Journal d'audit",
@@ -450,6 +452,10 @@
         "warning": "Le lien cesse de fonctionner immédiatement et l'agenda abonné ne se mettra plus à jour. Vous pourrez activer un nouveau lien plus tard.",
         "confirm": "Désactiver le lien"
       }
+    },
+    "notices": {
+      "eventGone": "Cet événement n'existe plus : il a sans doute été supprimé par quelqu'un d'autre.",
+      "occurrenceGone": "Cette date n'existe plus : la série a été modifiée entre-temps. Voici l'état à jour."
     }
   },
   "profile": {
@@ -519,5 +525,18 @@
         "description": "Droit supplémentaire du module {module}."
       }
     }
+  },
+  "errorPages": {
+    "notFound": {
+      "title": "Page introuvable",
+      "description": "Cette page n'existe pas, ou elle a été déplacée ou supprimée."
+    },
+    "error": {
+      "title": "Quelque chose s'est mal passé",
+      "description": "Une erreur est survenue de notre côté. Vos données n'ont pas été perdues. Vous pouvez réessayer, ou revenir au tableau de bord.",
+      "reference": "Référence de l'erreur : {digest}",
+      "retry": "Réessayer"
+    },
+    "backToDashboard": "Retour au tableau de bord"
   }
 }

@@ -2,12 +2,13 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const push = vi.fn();
+const refresh = vi.fn();
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string, values?: Record<string, unknown>) =>
     values ? `${key}${JSON.stringify(values)}` : key,
 }));
-vi.mock('@/i18n/navigation', () => ({ useRouter: () => ({ push }) }));
+vi.mock('@/i18n/navigation', () => ({ useRouter: () => ({ push, refresh }) }));
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('@/app/[locale]/(app)/members/actions', () => ({
   approveMember: vi.fn(),
@@ -61,6 +62,7 @@ describe('MemberRoleSelect', () => {
     fireEvent.change(select(), { target: { value: 'role-secretary' } });
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('errors.cannotGrant'));
+    expect(refresh).toHaveBeenCalled(); // the list is redrawn: the page may have been out of date
     expect(select().value).toBe('role-member');
     expect(toast.success).not.toHaveBeenCalled();
   });
@@ -121,15 +123,33 @@ describe('PendingMemberActions', () => {
     fireEvent.click(screen.getByRole('button', { name: 'approve' }));
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('errors.targetNotPending'));
+    expect(refresh).toHaveBeenCalled();
   });
 
-  it('refuses the request', async () => {
+  it('asks before refusing: opening the question refuses nothing', () => {
+    renderPending();
+
+    expect(screen.getByText(/rejectWarning/)).toBeTruthy();
+    expect(actions.rejectMember).not.toHaveBeenCalled();
+  });
+
+  it('refuses the request once confirmed', async () => {
     vi.mocked(actions.rejectMember).mockResolvedValue({ ok: true });
     renderPending();
 
-    fireEvent.click(screen.getByRole('button', { name: 'reject' }));
+    fireEvent.click(screen.getByRole('button', { name: 'rejectConfirm' }));
 
     await waitFor(() => expect(actions.rejectMember).toHaveBeenCalledWith('u2'));
+    expect(toast.success).toHaveBeenCalled();
+  });
+
+  it('says why when the request was already handled by someone else', async () => {
+    vi.mocked(actions.rejectMember).mockResolvedValue({ ok: false, error: 'targetNotPending' });
+    renderPending();
+
+    fireEvent.click(screen.getByRole('button', { name: 'rejectConfirm' }));
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('errors.targetNotPending'));
   });
 });
 

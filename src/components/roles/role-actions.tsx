@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { deleteRole, setDefaultRole } from '@/app/[locale]/(app)/roles/actions';
 import { Button } from '@/components/ui/button';
-import { Link } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import type { ActionResult } from '@/lib/roles/errors';
 
 interface RoleActionsProps {
@@ -30,13 +30,18 @@ export function RoleActions({
   lockedReason,
 }: RoleActionsProps) {
   const t = useTranslations('roles');
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const run = (work: () => Promise<ActionResult>, success: string) =>
     startTransition(async () => {
       const result = await work();
       if (result.ok) toast.success(success);
-      else toast.error(t(`errors.${result.error}`));
+      else {
+        toast.error(t(`errors.${result.error}`));
+        // Often the list was out of date (role already deleted, members moved): redraw it.
+        router.refresh();
+      }
     });
 
   if (!manageable) {

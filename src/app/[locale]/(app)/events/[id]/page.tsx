@@ -14,6 +14,7 @@ import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { getConfig } from '@/config';
 import { CategoryBadge } from '@/components/events/category-badge';
+import { EventNoticeAlert } from '@/components/events/event-notice';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +22,7 @@ import { Link } from '@/i18n/navigation';
 import { getEventsAccess } from '@/lib/events/access';
 import { resolveCategory } from '@/lib/events/categories';
 import { formatDateTimeRange, formatLongDate, formatTimeRange } from '@/lib/events/format';
+import { readEventNotice } from '@/lib/events/notice';
 import { getVisibleEvent } from '@/lib/events/queries';
 import { allOccurrences } from '@/lib/events/recurrence';
 import { cn } from '@/lib/utils';
@@ -55,7 +57,7 @@ export default async function EventDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ occ?: string | string[] }>;
+  searchParams: Promise<{ occ?: string | string[]; notice?: string | string[] }>;
 }) {
   const access = await getEventsAccess();
   if (!access) {
@@ -111,6 +113,8 @@ export default async function EventDetailPage({
         <ArrowLeft data-icon="inline-start" />
         {t('detail.back')}
       </Button>
+
+      <EventNoticeAlert notice={readEventNotice(rawSearch.notice)} />
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-2">

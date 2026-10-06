@@ -211,12 +211,21 @@ export async function updateEvent(
   return {};
 }
 
+/** The event was deleted by someone else while this page was open: not a failure, so go back to
+ * the list and say so (see lib/events/notice.ts). */
+async function eventGone(): Promise<never> {
+  return redirect({
+    href: { pathname: '/events', query: { notice: 'eventGone' } },
+    locale: await getLocale(),
+  });
+}
+
 export async function deleteEvent(eventId: string): Promise<void> {
   const access = await requireEventsManager();
 
   const event = await prisma.event.findUnique({ where: { id: eventId } });
   if (!event) {
-    throw new Error('Event not found');
+    return eventGone();
   }
 
   await prisma.event.delete({ where: { id: eventId } });
@@ -234,7 +243,7 @@ export async function setEventStatus(eventId: string, status: EventStatus): Prom
 
   const existing = await prisma.event.findUnique({ where: { id: eventId } });
   if (!existing) {
-    throw new Error('Event not found');
+    return eventGone();
   }
   if (existing.status === status) {
     return;
@@ -258,11 +267,15 @@ export async function setEventStatus(eventId: string, status: EventStatus): Prom
 async function findSeriesOccurrence(eventId: string, occurrenceStart: number) {
   const event = await prisma.event.findUnique({ where: { id: eventId } });
   if (!event) {
-    throw new Error('Event not found');
+    return eventGone();
   }
   const start = new Date(occurrenceStart);
   if (event.recurrence === 'NONE' || !isOccurrenceStart(event, getConfig().bde.timezone, start)) {
-    throw new Error('Not an occurrence of this recurring event');
+    // The series was edited since the page was drawn: that date is no longer one of its dates.
+    return redirect({
+      href: { pathname: `/events/${eventId}`, query: { notice: 'occurrenceGone' } },
+      locale: await getLocale(),
+    });
   }
   return { event, start };
 }

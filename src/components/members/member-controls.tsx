@@ -33,10 +33,44 @@ function RoleOptions({ roles, currentId }: { roles: RoleChoice[]; currentId?: st
   ));
 }
 
-/** Shows what the server answered when it refused, in plain words. */
+/** Shows what the server answered when it refused, in plain words, and redraws the list: a
+ * refusal often means the page was out of date (already approved, already removed...). */
 function useRefusal() {
   const t = useTranslations('roles');
-  return (result: Exclude<ActionResult, { ok: true }>) => toast.error(t(`errors.${result.error}`));
+  const router = useRouter();
+  return (result: Exclude<ActionResult, { ok: true }>) => {
+    toast.error(t(`errors.${result.error}`));
+    router.refresh();
+  };
+}
+
+interface ConfirmProps {
+  /** Text of the button that opens the confirmation. */
+  label: string;
+  /** Who it is about, read out after the label for screen readers. */
+  name: string;
+  warning: string;
+  confirmLabel: string;
+  disabled: boolean;
+  onConfirm: () => void;
+}
+
+/** A destructive action asks first: the button only opens the question, the second button does it. */
+function Confirm({ label, name, warning, confirmLabel, disabled, onConfirm }: ConfirmProps) {
+  return (
+    <details className="relative">
+      <summary className="inline-flex h-7 cursor-pointer list-none items-center rounded-lg bg-destructive/10 px-2.5 text-[0.8rem] font-medium text-destructive outline-none hover:bg-destructive/20 focus-visible:ring-3 focus-visible:ring-ring/50">
+        {label}
+        <span className="sr-only">{name}</span>
+      </summary>
+      <div className="bg-popover absolute right-0 z-10 mt-1 flex w-64 flex-col items-start gap-2 rounded-lg border p-3 text-left shadow-md">
+        <p className="text-sm">{warning}</p>
+        <Button variant="destructive" size="sm" disabled={disabled} onClick={onConfirm}>
+          {confirmLabel}
+        </Button>
+      </div>
+    </details>
+  );
 }
 
 interface MemberRoleSelectProps {
@@ -138,14 +172,14 @@ export function PendingMemberActions({
       >
         {t('approve')}
       </Button>
-      <Button
-        size="sm"
-        variant="outline"
+      <Confirm
+        label={t('reject')}
+        name={memberName}
+        warning={t('rejectWarning', { name: memberName })}
+        confirmLabel={t('rejectConfirm')}
         disabled={isPending}
-        onClick={() => run(() => rejectMember(userId), t('rejected', { name: memberName }))}
-      >
-        {t('reject')}
-      </Button>
+        onConfirm={() => run(() => rejectMember(userId), t('rejected', { name: memberName }))}
+      />
     </div>
   );
 }
@@ -176,17 +210,13 @@ export function RemoveMemberButton({ userId, login, memberName }: RemoveMemberPr
     });
 
   return (
-    <details className="relative">
-      <summary className="inline-flex h-7 cursor-pointer list-none items-center rounded-lg bg-destructive/10 px-2.5 text-[0.8rem] font-medium text-destructive outline-none hover:bg-destructive/20 focus-visible:ring-3 focus-visible:ring-ring/50">
-        {t('remove')}
-        <span className="sr-only">{memberName}</span>
-      </summary>
-      <div className="bg-popover absolute right-0 z-10 mt-1 flex w-64 flex-col items-start gap-2 rounded-lg border p-3 text-left shadow-md">
-        <p className="text-sm">{t('removeWarning', { name: memberName })}</p>
-        <Button variant="destructive" size="sm" disabled={isPending} onClick={remove}>
-          {t('removeConfirm')}
-        </Button>
-      </div>
-    </details>
+    <Confirm
+      label={t('remove')}
+      name={memberName}
+      warning={t('removeWarning', { name: memberName })}
+      confirmLabel={t('removeConfirm')}
+      disabled={isPending}
+      onConfirm={remove}
+    />
   );
 }
