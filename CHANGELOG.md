@@ -5,6 +5,16 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-06
+
+Première version stable de BDE_Network : une plateforme libre et auto-hébergée pour les Bureaux Des
+Étudiants des écoles du réseau 42. Chaque BDE déploie sa propre instance, avec sa base de données, son
+`bde.config.yml` et son application OAuth 42. Cette version apporte le module **Événements** (calendrier,
+récurrence, agenda synchronisé, rappels), des **rôles personnalisés** à l'abri de toute escalade de
+privilèges, des **notifications** soignées sur Discord, Slack et par e-mail, l'installation par Docker avec
+sauvegarde et restauration, et une documentation en français et en anglais. Les modules Finances et Réunions
+viennent ensuite.
+
 ### Added
 
 - **README en anglais (`README.md`) et en français (`README.fr.md`)**, qui décrivent la plateforme
@@ -286,5 +296,6 @@ Version initiale (jamais étiquetée) : socle de la plateforme.
 - Docker Compose (production et développement avec rechargement à chaud), Dockerfile.
 - CI GitHub Actions (lint, format, typecheck, build, test) sur ubuntu-latest et windows-latest.
 
-[Unreleased]: https://github.com/edouardbautz/BDE_Network/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/edouardbautz/BDE_Network/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/edouardbautz/BDE_Network/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/edouardbautz/BDE_Network/releases/tag/v0.2.0
