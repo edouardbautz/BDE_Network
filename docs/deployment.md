@@ -25,7 +25,7 @@ cp .env.example .env
 Remplissez `.env` avec des valeurs de production :
 
 - un mot de passe de base de données robuste (`POSTGRES_PASSWORD`) ;
-- `AUTH_SECRET`, généré avec `openssl rand -base64 32` ;
+- `AUTH_SECRET`, généré avec `docker run --rm alpine sh -c "head -c 32 /dev/urandom | base64"` ;
 - les identifiants de votre application OAuth 42 ;
 - `APP_URL` : l'adresse publique du site, par exemple `https://votre-domaine.example`.
 
@@ -50,9 +50,12 @@ docker compose logs app
 
 Corrigez le fichier concerné, puis `docker compose up -d`.
 
-Par défaut, l'application et la base de données ne sont accessibles **que depuis le serveur
-lui-même** (`127.0.0.1`) : c'est le reverse proxy ci-dessous qui les expose au public, en HTTPS.
-Personne ne peut donc se connecter à l'application en HTTP clair en passant devant le proxy.
+Par défaut, l'application n'est accessible **que depuis le serveur lui-même** (`127.0.0.1`,
+port 3000, modifiable avec `APP_PORT`) : c'est le reverse proxy ci-dessous qui l'expose au public,
+en HTTPS. Personne ne peut donc se connecter à l'application en HTTP clair en passant devant le
+proxy. **La base de données n'a aucun port publié** : seule l'application, dans le même réseau
+Docker, peut lui parler. Pour y jeter un œil depuis le serveur :
+`docker compose exec postgres psql -U <POSTGRES_USER> <POSTGRES_DB>`.
 
 ## 3. Reverse proxy HTTPS
 

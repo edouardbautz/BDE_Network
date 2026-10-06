@@ -1,73 +1,104 @@
 # BDE_Network
 
-Plateforme de gestion open source pour les Bureaux Des Étudiants (BDE) du réseau d'écoles 42.
+🇬🇧 English · [🇫🇷 Français](README.fr.md)
 
-Chaque BDE fork ce dépôt et déploie sa propre instance, auto-hébergée, avec sa propre base de
-données et sa propre configuration. Connexion exclusivement via OAuth 42, aucune donnée
-partagée entre instances.
+**An open-source, self-hosted platform to run a student association (_Bureau Des Étudiants_, BDE)
+at a 42 school.** Members sign in with their 42 account, the board gives out custom roles, and the
+club's events live in one shared calendar that everyone can subscribe to from Google Calendar,
+Outlook or Apple Calendar.
 
-![Page de connexion](docs/images/screenshot-login.svg)
-![Tableau de bord](docs/images/screenshot-dashboard.svg)
-![Gestion des membres](docs/images/screenshot-members.svg)
+Each BDE forks this repository and runs **its own instance**: its own database, its own
+configuration, its own 42 OAuth application. Nothing is shared between instances.
 
-## Fonctionnalités (base actuelle)
+![The calendar of events](docs/images/en/calendar.webp)
 
-- Connexion OAuth 42 uniquement, aucun mot de passe
-- **Rôles personnalisés** : chaque BDE crée les siens (Président, Trésorier, Secrétaire…) et coche
-  les droits de chacun ; un membre a un seul rôle. Nul ne peut donner un droit qu'il n'a pas
-  lui-même ni modifier son propre rôle ([docs/roles.md](docs/roles.md)). Le propriétaire (OWNER)
-  est défini dans `bde.config.yml`
-- Liste d'attente pour les nouveaux membres : un membre autorisé les approuve et leur donne un rôle
-- Journal d'audit en lecture seule (OWNER)
-- Interface bilingue (français / anglais), thème clair et sombre
-- Couleur d'accent et identité visuelle configurables sans toucher au code
-- Export RGPD de ses propres données, politique de confidentialité
-- Notifications par email, Discord ou Slack (selon configuration)
+## What it does today
 
-Les modules métier (événements, finances, réunions...) ne sont pas encore implémentés — ce dépôt
-pose les fondations : authentification, rôles, permissions, configuration, i18n.
+- **Sign in with 42 only**, no password to manage. New members wait for approval; the board
+  approves them and picks a role. Restrict sign-in to some campuses.
+- **Custom roles and permissions.** Each BDE creates its own roles (President, Treasurer, Events
+  lead…) and ticks exactly what each one may do. Nobody can hand out a right they do not hold, or
+  change their own role: escalation is blocked on the server and tested ([details](docs/roles.md)).
+  The owner is set in the configuration file and holds every right.
+- **Events module**: a calendar (month and list views), categories with colours, recurring events
+  (weekly, every two weeks, monthly), drafts that stay private until confirmed, people in charge,
+  and cancelling a single date of a series ([guide](docs/events.md)).
+- **Calendar sync.** Every member gets a personal subscription link, and the board can publish
+  **one link for the whole BDE** to paste once into a shared Google or Outlook calendar. Both stay up
+  to date by themselves.
+- **Notifications** by email, Discord or Slack, configured per event type: a confirmed event, a
+  reminder the day before, a new access request, an approval, a removal.
+- **Audit log** of sensitive actions (owners only), **GDPR** export of one's own data and a privacy
+  policy.
+- **French and English** interface, light and dark themes, your accent colour and logo, usable on a
+  phone.
+- **Easy to run**: one `docker compose up`, database migrations applied on start, backup and
+  restore scripts that need only Docker, security headers, a health endpoint.
 
-## Démarrage rapide
+|                                               |                                                                     |
+| --------------------------------------------- | ------------------------------------------------------------------- |
+| ![Dashboard](docs/images/en/dashboard.webp)   | ![An event with a recurring series](docs/images/en/event.webp)      |
+| ![Role management](docs/images/en/roles.webp) | <img src="docs/images/en/mobile.webp" alt="On a phone" width="260"> |
 
-1. **Clonez** le dépôt et placez-vous dedans.
-2. **Copiez** `.env.example` vers `.env` et remplissez les valeurs (voir
-   [docs/configuration.md](docs/configuration.md)) : identifiants de base de données, secret
-   NextAuth, identifiants de votre application OAuth 42.
-3. **Copiez ou éditez** `bde.config.yml` (déjà présent avec des valeurs d'exemple) : nom du BDE,
-   campus autorisés, votre login 42 comme propriétaire, couleur d'accent...
-4. **Lancez** `docker compose up --build`.
-5. Ouvrez `http://localhost:3000`, connectez-vous avec 42 — votre login (celui mis dans
-   `owners`) obtient automatiquement le rôle propriétaire.
+## Roadmap
 
-Prérequis et détails : [docs/installation.md](docs/installation.md).
+Planned business modules, not available yet: **Finances** (budget and expenses) and
+**Meetings** (agendas and minutes). The platform is built so that a module brings its own
+permissions without touching the core ([how](CLAUDE.md)).
 
-## Tester les rôles en local
+## Quick start
 
-`docker compose -f docker-compose.dev.yml up` lance l'app avec des comptes de démo déjà créés.
-Connectez-vous avec votre compte 42 (propriétaire), puis utilisez le bandeau en haut de page
-pour simuler « en attente » ou n'importe quel rôle (Admin, Membre, Président…) et vérifier les
-restrictions d'accès — actif uniquement si
-`ENABLE_DEV_IMPERSONATION=true` dans `.env` (hors production, toujours).
+You need [Docker](https://www.docker.com/products/docker-desktop/) and Git, on Windows, Linux or
+macOS. No Node.js.
+
+1. **Clone** the repository: `git clone https://github.com/<your-fork>/BDE_Network.git`, then `cd BDE_Network`.
+2. **Create a 42 OAuth application** at <https://profile.intra.42.fr/oauth/applications/new>
+   (scope `public`) with the redirect URL
+   `http://localhost:3000/api/auth/callback/42-school` for a local try-out. Keep its UID and secret.
+3. **Copy `.env.example` to `.env`** and fill it in: a database password, the UID and secret, and
+   an `AUTH_SECRET` (32+ characters) from
+   `docker run --rm alpine sh -c "head -c 32 /dev/urandom | base64"`.
+4. **Edit `bde.config.yml`**: the BDE name, the allowed campuses, and **your 42 login** in
+   `auth.owners`.
+5. **Run** `docker compose up --build -d`, open <http://localhost:3000> and sign in with 42: your
+   login is the owner.
+
+The full, step-by-step installation guide (for the board and for the person who sets up the
+server), the production deployment with HTTPS and the backups are in [docs/](docs/) — **currently
+written in French**.
 
 ## Documentation
 
-- [Installation](docs/installation.md) — prérequis Windows/Linux/macOS, démarrage détaillé
-- [Configuration](docs/configuration.md) — référence complète de `bde.config.yml` et `.env`
-- [Guide utilisateur](docs/user-guide.md) — pour les membres du bureau
-- [Module Événements](docs/events.md) — calendrier interne du bureau, export agenda, rappels
-- [Guide contributeur](docs/contributing-guide.md) — mise en place d'un environnement de dev
-- [Déploiement](docs/deployment.md) — VPS, Docker Compose, reverse proxy HTTPS
+All in French for now; the interface and this page are bilingual.
 
-## Stack technique
+|                                                                                   |                                                                                |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [Installation](docs/installation.md)                                              | two paths: for the board (no technical knowledge) and for the technical person |
+| [Configuration](docs/configuration.md)                                            | every setting of `bde.config.yml` and `.env`                                   |
+| [User guide](docs/user-guide.md)                                                  | for the members                                                                |
+| [Roles and permissions](docs/roles.md)                                            | the model, the security rules, an example organisation                         |
+| [Events module](docs/events.md)                                                   | calendar, sync, reminders, notifications                                       |
+| [Deployment](docs/deployment.md)                                                  | VPS, Docker Compose, HTTPS reverse proxy, backups                              |
+| [Contributor guide](docs/contributing-guide.md) · [Design system](docs/design.md) | for developers                                                                 |
 
-Next.js 15 (App Router) · TypeScript strict · PostgreSQL · Prisma 7 · Tailwind CSS v4 ·
-shadcn/ui · NextAuth v5 (beta, version épinglée) · next-intl · Docker Compose
+## Try the roles on your machine
 
-## Contribuer
+`docker compose -f docker-compose.dev.yml up` starts the app with demo accounts and demo events.
+Set `ENABLE_DEV_IMPERSONATION=true` in `.env`, sign in as the owner and use the banner at the top
+to see the platform as "waiting for approval" or as any role (development only, never in
+production).
 
-Voir [CONTRIBUTING.md](CONTRIBUTING.md) et le [Code de conduite](CODE_OF_CONDUCT.md).
-Historique des changements : [CHANGELOG.md](CHANGELOG.md).
+## Tech stack
 
-## Licence
+Next.js 15 (App Router) · TypeScript (strict) · PostgreSQL · Prisma 7 · Tailwind CSS v4 ·
+shadcn/ui · NextAuth v5 (beta, pinned version) · next-intl · Docker Compose
+
+## Contributing and security
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md). To report a
+vulnerability, read [SECURITY.md](SECURITY.md) — please do not open a public issue. Changes are
+listed in the [CHANGELOG](CHANGELOG.md).
+
+## License
 
 [MIT](LICENSE)

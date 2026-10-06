@@ -99,7 +99,10 @@ docker/
   prisma.config.mjs         Prisma config used by the production image to run `migrate deploy`
 messages/
   fr.json, en.json          next-intl message catalogs
-docs/                        installation, configuration, user guide, events, contributing, deployment, design
+docs/                        installation (two paths: the board / the technical person), configuration, user guide,
+                             roles, events, contributing, deployment, design; images/{en,fr}/ = README screenshots (WebP)
+README.md / README.fr.md     the storefront, in English and French: keep them in step, promise nothing that does not exist
+SECURITY.md                  private vulnerability reporting; .github/ has issue forms and the PR template
 ```
 
 ## Data model (Prisma)
@@ -327,8 +330,10 @@ User guide: `docs/events.md`. The shape worth knowing before touching it:
   If a Prisma bump ever makes `migrate deploy` need a pruned file, the CI `docker` job (build + start
   against Postgres + `/api/health`) fails. `.dockerignore` must keep `.audit`, `.env*` and
   `bde.config.local.yml` out of the image. `HEALTHCHECK` calls `/api/health` (503 when the DB is down).
-- **docker-compose.yml** publishes the app on `${APP_BIND:-127.0.0.1}:3000`: only the reverse proxy
-  reaches it unless the operator opts out (`APP_BIND=0.0.0.0`, documented in `docs/deployment.md`).
+- **docker-compose.yml** publishes the app on `${APP_BIND:-127.0.0.1}:${APP_PORT:-3000}`: only the reverse proxy
+  reaches it unless the operator opts out (`APP_BIND=0.0.0.0`, documented in `docs/deployment.md`). **PostgreSQL
+  publishes no port** (only the app, on the compose network, reaches it); `docker-compose.dev.yml` still
+  publishes 5432 on 127.0.0.1 for `npm run dev` outside Docker.
 - **Security headers** (`src/lib/security-headers.ts`, wired in `next.config.ts`): CSP (production
   only; `'unsafe-inline'` is needed by Next hydration and next-themes; no `upgrade-insecure-requests`
   so an instance without an HTTPS proxy still works; profile pictures from `cdn.intra.42.fr`),

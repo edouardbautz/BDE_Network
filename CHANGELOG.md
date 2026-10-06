@@ -7,6 +7,20 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Added
 
+- **README en anglais (`README.md`) et en français (`README.fr.md`)**, qui décrivent la plateforme
+  telle qu'elle est : module Événements, rôles personnalisés, agenda synchronisé, notifications ;
+  Finances et Réunions seulement dans une courte feuille de route. De **vraies captures d'écran**
+  (tableau de bord, calendrier, événement, rôles, mobile ; thème clair, interface dans la langue du
+  README) prises sur les données de démonstration, en WebP dans `docs/images/{en,fr}/`.
+- **Installation en deux parcours** (`docs/installation.md`) : « Pour le bureau » (ce que le BDE décide
+  et écrit dans `bde.config.yml`, sans notion technique, puis les rôles dans l'interface) et « Pour la
+  personne technique » (serveur, Docker, domaine, HTTPS). Pas à pas de la création de l'application
+  OAuth sur l'intra 42 (URL de redirection exacte, scope `public`, où trouver UID et secret, erreur
+  `redirect_uri_mismatch`, **expiration du secret**) et section « Problèmes fréquents ».
+- **`SECURITY.md`** (signalement privé par GitHub), modèles d'issues (bug, fonctionnalité) et de
+  pull request, contact du Code de conduite (Discord).
+- `APP_PORT` pour publier l'application sur un autre port que 3000.
+
 - **Confirmer un événement** demande confirmation (fenêtre au style normal, non destructif) et dit
   si les membres seront prévenus : par e-mail, dans le salon Discord/Slack, ou pas du tout si aucune
   notification n'est configurée — ou qu'ils l'ont déjà été (la notification n'est envoyée qu'une fois).
@@ -78,6 +92,16 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
   en-têtes).
 
 ### Changed
+
+- **PostgreSQL ne publie plus de port** dans `docker-compose.yml` de production : seule l'application,
+  sur le réseau Docker, peut lui parler (`docker-compose.dev.yml` garde le port pour `npm run dev`).
+- `AUTH_SECRET` se génère avec Docker (`docker run --rm alpine sh -c "head -c 32 /dev/urandom | base64"`),
+  une commande qui marche sous Windows, Linux et macOS sans Node.js : la doc, `.env.example` et le
+  message du démarrage la donnent.
+- Guide utilisateur à jour (barre latérale, rôles, fenêtres de confirmation, déconnexion) et message
+  vide du tableau de bord : le module Événements n'est plus présenté comme « futur ».
+- En-tête des cartes (tableau de bord, membres, profil) : le titre et l'action sont enfin sur une
+  même ligne (la classe `flex` manquait).
 
 - **Moins de requêtes SQL** : la session est résolue **une seule fois par requête** (`React.cache`), au
   lieu d'une fois par composant qui la demande. Mesuré sur la base : tableau de bord 13 → 7 requêtes,

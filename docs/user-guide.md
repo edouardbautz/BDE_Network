@@ -14,30 +14,46 @@ Il n'y a pas de mot de passe à retenir : la connexion se fait uniquement via vo
 ## Première connexion : la page d'attente
 
 Si c'est votre première connexion, vous arrivez sur une page indiquant que votre compte est
-**en attente de validation**. Un membre du bureau (administrateur ou propriétaire) doit
-approuver votre accès. Revenez un peu plus tard, ou contactez directement un responsable de
-votre BDE.
+**en attente de validation**. Un membre du bureau qui a le droit de gérer les membres (un
+propriétaire, ou un rôle comme Président ou Secrétaire) doit approuver votre accès et vous donner
+un rôle. Revenez un peu plus tard, ou contactez directement un responsable de votre BDE.
 
 Vous ne pouvez rien faire d'autre tant que votre compte n'est pas approuvé — c'est normal.
 
 ## Une fois votre compte approuvé
 
-Vous arrivez sur le **tableau de bord**. La barre de navigation en haut n'affiche que les
-sections auxquelles vous avez droit : tout membre voit le tableau de bord ; les administrateurs
-et propriétaires voient en plus **Membres** ; seuls les propriétaires voient le **Journal
-d'audit**.
+Vous arrivez sur le **tableau de bord** : votre rôle et les prochains événements.
+
+### Se repérer
+
+Le menu est une **barre latérale à gauche** (sur téléphone, il s'ouvre avec le bouton « ☰ » en haut).
+Il n'affiche que ce que **votre rôle** vous permet : tout membre voit le tableau de bord ;
+**Événements** s'affiche si votre rôle permet de les consulter ; **Membres** et **Rôles** pour ceux
+qui ont le droit de les gérer ; **Journal d'audit** pour les seuls propriétaires.
+
+En bas de la barre latérale : votre nom et votre rôle (un clic ouvre « Mon profil » et la
+déconnexion) et le bouton de thème.
 
 ### Changer de thème (clair / sombre)
 
-Cliquez sur l'icône soleil/lune en haut à droite pour choisir entre thème clair, sombre, ou
-suivre le réglage de votre appareil.
+Le bouton soleil/lune en bas de la barre latérale choisit entre thème clair, sombre, ou le réglage de
+votre appareil.
 
 ### Changer de langue
 
-L'interface est disponible en français et en anglais. Changez de langue via l'URL
-(`/fr/...` ou `/en/...`) — un sélecteur dans l'interface arrivera avec une prochaine version.
+L'interface est disponible en français et en anglais. La langue est dans l'adresse : remplacez
+`/fr/` par `/en/` (ou l'inverse) dans la barre d'adresse du navigateur. Votre navigateur la
+choisit tout seul la première fois.
 
-## Pour les administrateurs et propriétaires
+### Quand vous supprimez ou modifiez quelque chose : la fenêtre de confirmation
+
+Tout ce qui ne se rattrape pas (retirer un membre, refuser une demande, supprimer un rôle ou un
+événement, annuler une date, remplacer un lien d'agenda) ouvre d'abord **une fenêtre au milieu de
+l'écran** qui explique ce qui va se passer. Le bouton **Annuler** est sélectionné d'office : **Échap**,
+un clic à côté ou **Annuler** ferment la fenêtre sans rien faire. Changer le rôle d'un membre et
+confirmer un événement demandent aussi confirmation (le bouton n'est pas rouge, car c'est réversible).
+
+## Pour celles et ceux qui gèrent le bureau
 
 ### Gérer les membres
 
@@ -106,4 +122,4 @@ copie de toutes vos données au format JSON.
 
 ## Se déconnecter
 
-Cliquez sur votre photo de profil en haut à droite, puis **Se déconnecter**.
+En bas de la barre latérale, cliquez sur votre nom, puis **Se déconnecter**.
