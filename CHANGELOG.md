@@ -93,6 +93,10 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Changed
 
+- **La section `notifications` de `bde.config.yml` est facultative** : sans elle, toutes les notifications
+  sont désactivées (les trois notifications de membres étaient obligatoires, ce qui faisait échouer la
+  construction de l'image pour un BDE qui n'avait rien à y mettre). Trouvé en suivant le guide
+  d'installation depuis un clone neuf.
 - **PostgreSQL ne publie plus de port** dans `docker-compose.yml` de production : seule l'application,
   sur le réseau Docker, peut lui parler (`docker-compose.dev.yml` garde le port pour `npm run dev`).
 - `AUTH_SECRET` se génère avec Docker (`docker run --rm alpine sh -c "head -c 32 /dev/urandom | base64"`),

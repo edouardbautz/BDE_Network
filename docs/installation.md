@@ -187,7 +187,8 @@ cp .env.example .env
 Ouvrez `.env` et remplissez :
 
 - `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` : les identifiants de la base. Mettez **un mot
-  de passe à vous** (les valeurs d'exemple ne conviennent qu'à un essai local).
+  de passe à vous** (les valeurs d'exemple ne conviennent qu'à un essai local). Ne touchez pas à
+  `DATABASE_URL` : Docker la remplace tout seul (elle ne sert qu'aux développeurs, hors Docker).
 - `AUTH_SECRET` : une clé secrète d'au moins 32 caractères. Cette commande en génère une, **sans
   Node.js, sous Windows, Linux et macOS** (Docker suffit) :
 
@@ -223,7 +224,10 @@ l'affichage des logs, pas l'application). Si `.env` ou `bde.config.yml` est inco
 **le dit en français** dans ces logs, avec quoi corriger. Les lancements suivants sont quasi
 instantanés (`docker compose up -d`).
 
-Un autre programme utilise déjà le port 3000 ? Ajoutez `APP_PORT=3001` (ou un autre port libre) dans
+(Les logs écrivent `http://localhost:3000` : c'est le port _à l'intérieur_ du conteneur. Le site
+est sur le port publié, 3000 par défaut.)
+
+Un autre programme utilise déjà le port 3000 (`port is already allocated`) ? Ajoutez `APP_PORT=3001` (ou un autre port libre) dans
 `.env` — et utilisez ce port dans l'adresse et dans l'URL de redirection de l'étape 2.
 
 ### Étape 6 : se connecter
