@@ -15,7 +15,7 @@
 # DEV_SMTP_HOST (and DEV_SMTP_PORT, DEV_SMTP_FROM, DEV_SMTP_USER, DEV_SMTP_PASSWORD) in .env.
 services:
   postgres:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -41,7 +41,7 @@ services:
       - '127.0.0.1:1025:1025'
 
   app:
-    image: node:22-alpine
+    image: node:26-alpine
     working_dir: /app
     # `--no-save`: install what package-lock.json says and never write it back. A plain `npm install`
     # rewrites the lock with the container's npm (it reorders fields), which dirtied the working tree on
