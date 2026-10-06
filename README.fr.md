@@ -78,6 +78,7 @@ serveur), la mise en production avec HTTPS et les sauvegardes sont dans [docs/](
 | [Guide utilisateur](docs/user-guide.md)                                            | pour les membres                                                                       |
 | [Rôles et droits](docs/roles.md)                                                   | le modèle, les règles de sécurité, un exemple d'organisation                           |
 | [Module Événements](docs/events.md)                                                | calendrier, synchronisation, rappels, notifications                                    |
+| [Notifications](docs/notifications.md)                                             | e-mail, Discord (cartes), Slack ; le logo de l'expéditeur                              |
 | [Déploiement](docs/deployment.md)                                                  | VPS, Docker Compose, proxy HTTPS, sauvegardes                                          |
 | [Guide contributeur](docs/contributing-guide.md) · [Design system](docs/design.md) | pour les développeurs                                                                  |
 

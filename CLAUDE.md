@@ -99,7 +99,7 @@ docker/
   prisma.config.mjs         Prisma config used by the production image to run `migrate deploy`
 messages/
   fr.json, en.json          next-intl message catalogs
-docs/                        installation (two paths: the board / the technical person), configuration, user guide,
+docs/                        installation (two paths: the board / the technical person), configuration, user guide, notifications,
                              roles, events, contributing, deployment, design; images/{en,fr}/ = README screenshots (WebP)
 README.md / README.fr.md     the storefront, in English and French: keep them in step, promise nothing that does not exist
 SECURITY.md                  private vulnerability reporting; .github/ has issue forms and the PR template
@@ -261,6 +261,18 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
   also sends `allowed_mentions: { parse: [] }`) — every caller gets it, a new adapter must do the same.
   A member-notification channel that is not set up in `.env` is a **startup warning, not an error**
   (`env.ts`): those keys sat in every config before they sent anything.
+- **Discord cards** (`docs/notifications.md`). On the `discord` channel a notification is an _embed_, built
+  next to what it says (`events/discord-embed.ts`, `members/discord-embed.ts`) on the Discord-specific parts
+  in `notifications/discord-embed.ts` (colours, `<t:…>` date markup, `fitEmbed` = every limit of Discord:
+  256/4096/1024/25 fields/6000 in total, cut with “…”). `withDiscordCard` (`discord-card.ts`) adds the card to
+  a message **only when the event's channel is Discord** — email and Slack never build one and keep their
+  plain `subject`/`body`, which Discord also falls back to. The adapter neutralizes **every text of the card**
+  (`neutralizeEmbedForDiscord`) and always sends `allowed_mentions: { parse: [] }`. The sender (`sender.ts`)
+  is `bde.name` + an avatar Discord must be able to fetch: `bde.logoPath` if it is a PNG/JPEG/GIF/WebP, else
+  `public/logo.png`, only when `APP_URL` is a public address (not localhost / a private range) **and** a HEAD
+  request shows an image (cached 10 min); otherwise name only, never a broken picture. A new notification
+  that should be a card gets a builder + a `withDiscordCard` call; who did an action is passed by the action
+  (`ctx.actor.login`), the row being deleted before the message goes out.
 - **There is no file storage.** A local-disk adapter and a public `/api/files/[...key]` route existed
   with nothing writing to them (it would have been a stored XSS the day an upload existed: no
   authentication, SVG served without `nosniff`); both were removed, with the `uploads` volume, rather

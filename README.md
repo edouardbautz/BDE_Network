@@ -78,6 +78,7 @@ All in French for now; the interface and this page are bilingual.
 | [User guide](docs/user-guide.md)                                                  | for the members                                                                |
 | [Roles and permissions](docs/roles.md)                                            | the model, the security rules, an example organisation                         |
 | [Events module](docs/events.md)                                                   | calendar, sync, reminders, notifications                                       |
+| [Notifications](docs/notifications.md)                                            | email, Discord (cards), Slack; the sender's logo                               |
 | [Deployment](docs/deployment.md)                                                  | VPS, Docker Compose, HTTPS reverse proxy, backups                              |
 | [Contributor guide](docs/contributing-guide.md) · [Design system](docs/design.md) | for developers                                                                 |
 

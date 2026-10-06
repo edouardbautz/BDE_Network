@@ -30,15 +30,15 @@ champs :
 
 ### `bde`
 
-| Champ           | Type                 | Description                                                                                                                                 |
-| --------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`          | texte                | Nom du BDE, affiché dans l'interface, le titre de l'onglet, etc.                                                                            |
-| `campus`        | texte                | Campus principal du bureau (affichage uniquement).                                                                                          |
-| `timezone`      | texte                | Fuseau horaire IANA, ex. `"Europe/Paris"`.                                                                                                  |
-| `defaultLocale` | `"fr"` \| `"en"`     | Langue des **messages envoyés** (e-mails, Discord, Slack). La langue de l'interface se choisit par l'adresse (`/fr/…`, `/en/…`).            |
-| `contactEmail`  | e-mail, optionnel    | Adresse affichée sur la page de confidentialité pour exercer ses droits. Sans elle, la page renvoie vers un administrateur ou propriétaire. |
-| `accentColor`   | couleur hexadécimale | Couleur d'accent de l'interface (ex. `"#0f766e"`).                                                                                          |
-| `logoPath`      | chemin               | Chemin du logo depuis `/public`, ex. `"/logo.svg"`.                                                                                         |
+| Champ           | Type                 | Description                                                                                                                                                                                  |
+| --------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`          | texte                | Nom du BDE, affiché dans l'interface, le titre de l'onglet, etc.                                                                                                                             |
+| `campus`        | texte                | Campus principal du bureau (affichage uniquement).                                                                                                                                           |
+| `timezone`      | texte                | Fuseau horaire IANA, ex. `"Europe/Paris"`.                                                                                                                                                   |
+| `defaultLocale` | `"fr"` \| `"en"`     | Langue des **messages envoyés** (e-mails, Discord, Slack). La langue de l'interface se choisit par l'adresse (`/fr/…`, `/en/…`).                                                             |
+| `contactEmail`  | e-mail, optionnel    | Adresse affichée sur la page de confidentialité pour exercer ses droits. Sans elle, la page renvoie vers un administrateur ou propriétaire.                                                  |
+| `accentColor`   | couleur hexadécimale | Couleur d'accent de l'interface (ex. `"#0f766e"`).                                                                                                                                           |
+| `logoPath`      | chemin               | Chemin du logo depuis `/public`, ex. `"/logo.svg"`. Pour l'avatar des messages Discord, un PNG/JPEG/GIF/WebP est nécessaire : voir [Notifications](notifications.md#le-logo-de-lexpéditeur). |
 
 ### `auth`
 
@@ -98,7 +98,7 @@ défaut, ce qui garde valide une configuration écrite avant ce module. Ils sont
 Les trois notifications de membres (`memberPending`, `memberApproved`, `memberRemoved`) sont
 envoyées **après** l'action : un envoi qui échoue (webhook indisponible, serveur SMTP en panne)
 est seulement écrit dans les journaux du serveur, il ne bloque jamais l'approbation ni le retrait.
-Un lien vers la page _Membres_ ou la plateforme est ajouté si `APP_URL` est renseigné.
+Un lien vers la page _Membres_ ou la plateforme est ajouté si `APP_URL` est renseigné. Le rendu sur Discord (cartes en couleur, dates, logo de l'expéditeur) est décrit dans [Notifications](notifications.md).
 
 Si le canal choisi n'est pas configuré dans `.env` (par exemple `email` sans `SMTP_HOST`), la
 plateforme **démarre quand même** et affiche un avertissement au démarrage : l'alerte ne partira

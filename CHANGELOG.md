@@ -93,6 +93,18 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Changed
 
+- **Notifications Discord en cartes (embeds)** (`docs/notifications.md`) : barre de couleur (celle de la
+  catégorie pour un événement ; ambre / vert / rouge pour une demande / une approbation / un retrait),
+  titre cliquable sans carte d'aperçu en double, champs en colonnes (Quand, Lieu, Catégorie, Membres en
+  charge), dates au format Discord (`<t:…:F>` et `<t:…:R>` : fuseau de chaque lecteur et compte à rebours),
+  expéditeur au nom du BDE avec son logo, photo 42, rôle et **auteur de l'action** (« Approuvé par », « Retiré
+  par ») pour les membres, pied de carte discret. Le rappel dit « aujourd'hui » quand il part le jour même
+  (rattrapage après une panne), « demain » sinon (aussi en Slack et e-mail). Mentions neutralisées dans tous
+  les textes de la carte, limites de taille de Discord respectées (texte coupé avec « … » ; description
+  d'événement limitée à 350 caractères). Slack et e-mail inchangés.
+- **`public/logo.png`** : logo neutre fourni, utilisé comme avatar Discord quand `bde.logoPath` n'est pas une
+  image PNG/JPEG/GIF/WebP (Discord n'accepte pas le SVG) ; sans adresse publique (`APP_URL`), le message part
+  sans avatar.
 - **La section `notifications` de `bde.config.yml` est facultative** : sans elle, toutes les notifications
   sont désactivées (les trois notifications de membres étaient obligatoires, ce qui faisait échouer la
   construction de l'image pour un BDE qui n'avait rien à y mettre). Trouvé en suivant le guide

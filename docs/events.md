@@ -230,6 +230,9 @@ variables correspondantes (`SMTP_*`, `DISCORD_WEBHOOK_URL`, `SLACK_WEBHOOK_URL`)
 | `eventConfirmed` (confirmation) | un événement passe de brouillon à **confirmé** (une seule fois par événement)                    | tous les membres approuvés (email : un message par personne) ; ou le salon (Discord/Slack)            |
 | `eventReminder` (rappel)        | la veille de chaque occurrence confirmée, à `events.reminderHour` (18h par défaut, heure du BDE) | les **membres en charge** (email), sinon ceux qui gèrent les événements ; ou le salon (Discord/Slack) |
 
+Le rendu sur Discord (carte colorée selon la catégorie, dates dans le fuseau de chaque lecteur, logo
+de l'expéditeur) est décrit dans [Notifications](notifications.md).
+
 Un échec d'envoi n'empêche jamais d'enregistrer un événement : l'envoi se fait après la réponse.
 Par email, l'échec pour un destinataire (adresse refusée, erreur SMTP) n'empêche pas l'envoi
 aux autres ; il est écrit dans les logs du serveur (`[events] …`).
@@ -242,7 +245,8 @@ démarrage, le serveur de l'application lance une petite boucle interne
 si un rappel est dû. Cela fonctionne de la même façon sous Windows, Linux, macOS et Docker.
 
 Un rappel est **dû** à partir de `reminderHour` (heure du BDE) la veille de l'occurrence, et
-reste envoyable tant que l'événement n'a pas commencé.
+reste envoyable tant que l'événement n'a pas commencé. Le message dit « demain » ; quand il part
+le jour même (rattrapage après une panne), il dit « aujourd'hui ».
 
 **Il n'est jamais envoyé deux fois**, même après un redémarrage ou avec deux instances : avant
 d'envoyer, le serveur inscrit en base une ligne « rappel réclamé » pour cette occurrence précise
