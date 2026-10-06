@@ -47,7 +47,9 @@ model User {
   /// 42 intra login, e.g. "jdoe"
   login       String     @unique
   fullName    String
-  email       String     @unique
+  /// Not unique: the login is the identity. 42 can give an address another account already has
+  /// (a shared or reassigned mailbox), and that must never stop someone from signing in.
+  email       String
   photoUrl    String?
   /// 42 campus name as returned by the intra API, e.g. "Paris"
   campus      String

@@ -8,6 +8,10 @@ import { accessFor } from './access';
 import { accountAfterLogin } from './account';
 import { isCampusAllowed, isOwnerLogin } from './authorize';
 
+function isUniqueViolation(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002';
+}
+
 /** Where Auth.js sends a visitor whose sign-in was refused (the page explains why). */
 export const AUTH_ERROR_PATH = '/auth-error';
 
@@ -44,37 +48,47 @@ export async function signInCallback({ user }: { user: User }): Promise<boolean 
   }
 
   const isOwner = isOwnerLogin(login, config.auth.owners);
-  const existing = await prisma.user.findUnique({ where: { login } });
+  let existing = await prisma.user.findUnique({ where: { login } });
 
-  if (existing) {
-    await prisma.user.update({
-      where: { login },
-      data: {
-        fullName: user.name ?? existing.fullName,
-        email,
-        photoUrl: user.image ?? null,
-        campus,
-        ...(await accountAfterLogin(existing, isOwner)),
-        lastLoginAt: new Date(),
-      },
-    });
-  } else {
-    const created = await prisma.user.create({
-      data: {
-        login,
-        fullName: user.name ?? login,
-        email,
-        photoUrl: user.image ?? null,
-        campus,
-        status: isOwner ? 'OWNER' : 'PENDING',
-        lastLoginAt: new Date(),
-      },
-    });
-    // A new request: tell whoever can approve it, once, after the sign-in went through.
-    if (created.status === 'PENDING') {
-      after(() => notifyMemberPending(created.id));
+  if (!existing) {
+    try {
+      const created = await prisma.user.create({
+        data: {
+          login,
+          fullName: user.name ?? login,
+          email,
+          photoUrl: user.image ?? null,
+          campus,
+          status: isOwner ? 'OWNER' : 'PENDING',
+          lastLoginAt: new Date(),
+        },
+      });
+      // A new request: tell whoever can approve it, once, after the sign-in went through.
+      if (created.status === 'PENDING') {
+        after(() => notifyMemberPending(created.id));
+      }
+      return true;
+    } catch (error) {
+      // Two first sign-ins at the same moment (a double click, two tabs): the other one created
+      // the account between our look and our insert. It is the one that notifies; this one
+      // carries on as a return visit instead of failing with a database error.
+      if (!isUniqueViolation(error)) throw error;
+      existing = await prisma.user.findUnique({ where: { login } });
+      if (!existing) throw error;
     }
   }
+
+  await prisma.user.update({
+    where: { login },
+    data: {
+      fullName: user.name ?? existing.fullName,
+      email,
+      photoUrl: user.image ?? null,
+      campus,
+      ...(await accountAfterLogin(existing, isOwner)),
+      lastLoginAt: new Date(),
+    },
+  });
 
   return true;
 }

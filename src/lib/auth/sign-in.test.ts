@@ -123,3 +123,88 @@ describe('signInCallback — someone who comes back', () => {
     expect(notifyMemberPending).not.toHaveBeenCalled();
   });
 });
+
+describe('signInCallback — two first sign-ins at the same moment', () => {
+  const duplicate = Object.assign(new Error('Unique constraint failed on login'), {
+    code: 'P2002',
+  });
+
+  it('lets the second one through as a return visit, without notifying twice', async () => {
+    // Our look finds nothing, then the other request creates the account before our insert.
+    vi.mocked(prisma.user.findUnique)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        id: 'id_alice',
+        login: 'alice',
+        fullName: 'Name of alice',
+        status: 'PENDING',
+        roleId: null,
+      } as never);
+    vi.mocked(prisma.user.create).mockRejectedValue(duplicate);
+
+    await expect(signInCallback({ user: profile('alice') })).resolves.toBe(true);
+
+    expect(prisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { login: 'alice' } }),
+    );
+    await runAfter();
+    expect(notifyMemberPending).not.toHaveBeenCalled(); // the request that created it notifies
+  });
+
+  it('still fails on any other database error', async () => {
+    vi.mocked(prisma.user.create).mockRejectedValue(new Error('connection lost'));
+    // Even if an account with this login exists by now, a failure that is not a duplicate is not a race.
+    vi.mocked(prisma.user.findUnique)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValue({
+        id: 'u1',
+        login: 'alice',
+        fullName: 'A',
+        status: 'PENDING',
+        roleId: null,
+      } as never);
+
+    await expect(signInCallback({ user: profile('alice') })).rejects.toThrow('connection lost');
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('fails if the account that "already exists" cannot be found (not a login race)', async () => {
+    vi.mocked(prisma.user.create).mockRejectedValue(duplicate);
+
+    await expect(signInCallback({ user: profile('alice') })).rejects.toThrow('Unique constraint');
+  });
+});
+
+describe('signInCallback — an e-mail address another account already has', () => {
+  it('lets a new account in: the address is not what identifies anyone', async () => {
+    // The unique index on the address is gone (migration user_email_not_unique): the insert succeeds.
+    await expect(
+      signInCallback({ user: profile('newcomer', { email: 'shared@example.org' }) }),
+    ).resolves.toBe(true);
+
+    expect(prisma.user.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ login: 'newcomer', email: 'shared@example.org' }),
+    });
+  });
+
+  it('keeps the account that signs in with an address another one holds', async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      id: 'u1',
+      login: 'alice',
+      fullName: 'Alice',
+      status: 'MEMBER',
+      roleId: 'role-member',
+    } as never);
+
+    await expect(
+      signInCallback({ user: profile('alice', { email: 'taken-by-bob@example.org' }) }),
+    ).resolves.toBe(true);
+
+    expect(prisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { login: 'alice' },
+        data: expect.objectContaining({ email: 'taken-by-bob@example.org' }),
+      }),
+    );
+  });
+});
