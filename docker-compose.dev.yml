@@ -9,6 +9,10 @@
 # `--accept-data-loss` is needed because Prisma refuses, non-interactively, to
 # add a unique index to an existing table; this is a throwaway dev database.
 # Production uses `prisma migrate deploy` instead (see the Dockerfile).
+#
+# E-mails never leave your machine: the app sends them to Mailpit, a catch-all test mailbox, and you
+# read them on http://localhost:8025 (docs/notifications.md). To send through a real server instead, set
+# DEV_SMTP_HOST (and DEV_SMTP_PORT, DEV_SMTP_FROM, DEV_SMTP_USER, DEV_SMTP_PASSWORD) in .env.
 services:
   postgres:
     image: postgres:17-alpine
@@ -27,13 +31,27 @@ services:
       timeout: 5s
       retries: 10
 
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    ports:
+      # The mailbox, in the browser (8025), and SMTP (1025) for `npm run dev` outside Docker.
+      # Inside Docker the app reaches it as `mailpit:1025` on the compose network.
+      - '127.0.0.1:8025:8025'
+      - '127.0.0.1:1025:1025'
+
   app:
     image: node:22-alpine
     working_dir: /app
-    command: sh -c "npm install && npx prisma generate && npx prisma db push --accept-data-loss && npm run seed:demo && npm run dev"
+    # `--no-save`: install what package-lock.json says and never write it back. A plain `npm install`
+    # rewrites the lock with the container's npm (it reorders fields), which dirtied the working tree on
+    # every start. (`npm ci` is the CI's job: it deletes node_modules, which is a mount point here.)
+    command: sh -c "npm install --no-save && npx prisma generate && npx prisma db push --accept-data-loss && npm run seed:demo && npm run dev"
     depends_on:
       postgres:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     env_file:
       - .env
     environment:
@@ -42,6 +60,12 @@ services:
       # change events through bind mounts — polling makes hot reload reliable
       # there at the cost of a bit of CPU. Harmless on Linux/macOS.
       WATCHPACK_POLLING: 'true'
+      # E-mail: Mailpit unless .env says otherwise (these take precedence over the SMTP_* of .env).
+      SMTP_HOST: ${DEV_SMTP_HOST:-mailpit}
+      SMTP_PORT: ${DEV_SMTP_PORT:-1025}
+      SMTP_FROM: ${DEV_SMTP_FROM:-BDE Dev <bde@localhost>}
+      SMTP_USER: ${DEV_SMTP_USER:-}
+      SMTP_PASSWORD: ${DEV_SMTP_PASSWORD:-}
     ports:
       - '3000:3000'
     volumes:
