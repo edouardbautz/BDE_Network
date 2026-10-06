@@ -428,6 +428,17 @@ touching layout or adding UI. The short version:
 ## Conventions
 
 - **Conventional Commits**, atomic commits per logical change.
+- **Every change goes through a branch and a pull request — never a push to `main`.** `main` is protected
+  (the four checks `ci (ubuntu-latest)`, `ci (windows-latest)`, `docker image` and `migrations` are required,
+  no force push, no deletion, and it applies to administrators too). The routine: `git switch -c <type>/<topic>`,
+  commit, `git push -u origin <branch>`, `gh pr create`, wait for the checks (`gh pr checks --watch`),
+  then merge it yourself (`gh pr merge --squash --delete-branch`) and bring the local `main` up to date
+  (`git switch main && git pull`). Never `--force`, never `--admin`, never bypass a red check: fix it on the
+  branch. Dependabot proposes minor and patch updates only (`ignore` in `.github/dependabot.yml`); a major
+  version is a pull request of its own.
+- **Everything published is written as the maintainer, Edouard Bautz (`edouardbautz`).** Commits, tags,
+  pull requests, releases and release notes carry no attribution line of any tool (`Co-Authored-By`,
+  "Generated with…") and no mention of an assistant.
 - **No `any`** (`@typescript-eslint/no-explicit-any` is an error, not a warning).
 - Cross-platform: no `&&`/`||`/`$VAR`/`rm -rf`/`cp` in npm scripts — use `cross-env`, `rimraf`,
   or plain Node. LF line endings are enforced by `.gitattributes`. The exception is the server-side
