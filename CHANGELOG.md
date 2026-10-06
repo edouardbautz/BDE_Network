@@ -102,6 +102,19 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
   (rattrapage après une panne), « demain » sinon (aussi en Slack et e-mail). Mentions neutralisées dans tous
   les textes de la carte, limites de taille de Discord respectées (texte coupé avec « … » ; description
   d'événement limitée à 350 caractères). Slack et e-mail inchangés.
+- **Notifications Slack en cartes (Block Kit)** (`docs/notifications.md`) : barre de couleur (celle de la
+  catégorie ; ambre / vert / rouge pour les membres, comme sur Discord), titre en en-tête, champs en colonnes
+  (Quand, Lieu, Catégorie, Membres en charge, Répétition), bouton « Voir l'événement » / « Valider ou
+  refuser », dates au format Slack (`<!date^…>`, dans le fuseau de chaque lecteur, avec texte de repli), pied
+  avec le logo du BDE (nom seul s'il n'est pas public) et `BDE_Network`, photo 42, rôle et « Approuvé par » /
+  « Retiré par » pour les membres, « aujourd'hui » / « demain » pour les rappels. Le résumé pour les
+  notifications du téléphone est le champ `fallback` de la pièce jointe : le message n'a **pas** de `text` de
+  premier niveau, que Slack afficherait dans le salon au-dessus de la carte (tout serait dit deux fois). Mentions
+  neutralisées partout (`@here`, `@channel`, `@everyone`, `<!channel>`, `<@U…>`, liens), textes coupés
+  proprement aux limites de Slack.
+- **Manifeste d'application Slack et lien pré-rempli** (`docs/slack-app-manifest.yml`) : nom `BDE_Network`,
+  webhooks entrants, aucune autre permission ; un test vérifie que le lien de la documentation est exactement ce
+  manifeste. La documentation indique que Discord reste l'option la plus simple.
 - **E-mails HTML mis en page** (`docs/notifications.md`), avec version texte de secours : logo et nom du BDE,
   barre et bouton de la couleur de la catégorie, lignes Quand / Répétition / Lieu / Catégorie / Membres en
   charge, bouton vers la page concernée, texte d'aperçu (preheader), pied discret. Tableaux et styles en ligne

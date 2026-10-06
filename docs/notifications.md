@@ -13,7 +13,7 @@ pas du tout. Le canal se choisit **par type de notification** dans la section `n
 | `eventConfirmed` | un événement est confirmé                         | celle de **la catégorie** de l'événement (`bde.config.yml`) |
 | `eventReminder`  | rappel la veille (ou le jour même, voir plus bas) | celle de la catégorie                                       |
 
-Slack garde un message en texte. Discord a ses cartes, l'e-mail sa propre mise en page : voir [Le rendu sur Discord](#le-rendu-sur-discord) et [Les e-mails](#les-e-mails).
+Discord et Slack ont leurs cartes, l'e-mail sa propre mise en page : voir [Le rendu sur Discord](#le-rendu-sur-discord), [Slack](#slack) et [Les e-mails](#les-e-mails). **Discord est le plus simple à mettre en place.**
 
 ## Le rendu sur Discord
 
@@ -90,6 +90,60 @@ réseau privé verra son logo dans les e-mails, pas dans Discord).
 
 > **Nom du BDE** : Discord refuse un nom d'expéditeur qui contient « discord » ou « clyde ». Dans ce
 > cas le message part sous le nom du webhook (celui défini dans les paramètres du salon).
+
+## Slack
+
+> **Discord est l'option la plus simple** : un webhook se crée en deux clics dans les paramètres du
+> salon, sans application à créer. Slack demande de créer une petite application (le pas à pas
+> ci-dessous la pré-remplit) ; choisissez-le si votre BDE vit déjà sur Slack.
+
+### Configurer Slack, pas à pas
+
+1. Ouvrez ce lien, connecté à votre espace de travail Slack :
+   **[Créer l'application BDE_Network](<https://api.slack.com/apps?new_app=1&manifest_yaml=display_information%3A%0A%20%20name%3A%20BDE_Network%0A%20%20description%3A%20Notifications%20du%20BDE%20(%C3%A9v%C3%A9nements%2C%20rappels%2C%20nouveaux%20membres)%0A%20%20background_color%3A%20'%231e293b'%0Afeatures%3A%0A%20%20bot_user%3A%0A%20%20%20%20display_name%3A%20BDE_Network%0A%20%20%20%20always_online%3A%20false%0Aoauth_config%3A%0A%20%20scopes%3A%0A%20%20%20%20bot%3A%0A%20%20%20%20%20%20-%20incoming-webhook%0Asettings%3A%0A%20%20org_deploy_enabled%3A%20false%0A%20%20socket_mode_enabled%3A%20false%0A%20%20token_rotation_enabled%3A%20false%0A>)**
+   Il pré-remplit tout (nom `BDE_Network`, webhooks entrants activés, **aucune autre permission**) à partir
+   de [`slack-app-manifest.yml`](slack-app-manifest.yml). Choisissez votre espace de travail, vérifiez le
+   résumé, cliquez sur **Create**.
+2. Dans le menu de gauche, ouvrez **Incoming Webhooks**, puis **Add New Webhook to Workspace**, choisissez
+   le salon où les messages doivent arriver, et **Allow**.
+3. Copiez l'**URL du webhook** (elle commence par `https://hooks.slack.com/services/`) dans `.env` :
+   `SLACK_WEBHOOK_URL=…`. Cette adresse est un secret : ne la publiez jamais et ne la mettez jamais dans
+   un fichier suivi par git.
+4. Dans `bde.config.yml`, mettez `slack` pour les notifications voulues (`eventConfirmed: 'slack'`…),
+   puis redémarrez l'application.
+
+Facultatif : dans **Basic Information** de l'application, vous pouvez déposer `public/logo.png` (512 px)
+ou le logo de votre BDE comme icône de l'application.
+
+Le lien est le même pour tous les BDE : le manifeste ne contient rien de personnel. Si le lien ne
+s'ouvre pas, allez sur <https://api.slack.com/apps>, **Create New App**, **From a manifest**, et collez
+le contenu de [`slack-app-manifest.yml`](slack-app-manifest.yml).
+
+### Le rendu sur Slack
+
+Comme sur Discord, chaque notification est une **carte** (Block Kit) :
+
+- **Barre de couleur** sur le côté : celle de la catégorie pour un événement ; ambre, vert ou rouge pour une
+  demande, une approbation, un retrait (les mêmes couleurs que sur Discord).
+- **Titre en en-tête**, puis la description (350 caractères au plus), _Quand_ sur toute la largeur, et
+  _Lieu_, _Catégorie_, _Membres en charge_, _Répétition_ en colonnes.
+- **Dates au format Slack** : chaque lecteur les voit **dans son propre fuseau horaire**, avec « aujourd'hui »
+  ou « demain » quand c'est le cas. Slack n'a pas de compte à rebours (« dans 3 jours ») comme Discord.
+- **Bouton** « Voir l'événement » (ou « Valider ou refuser » pour une demande d'accès).
+- **Pied** : le logo du BDE (s'il est public, comme pour Discord : voir
+  [le logo de l'expéditeur](#le-logo-de-lexpéditeur)), le nom du BDE et `BDE_Network`.
+- **Membres** : la photo 42 à côté du message, le rôle, et **qui** a approuvé ou retiré.
+- **Rappel** : « Rappel · demain » ou « Rappel · aujourd'hui ».
+- **Notification sur téléphone** : un résumé lisible (« Nouvel événement confirmé : Soirée de rentrée —
+  samedi 10 octobre 2026 à 20:00 · Foyer du campus »). Il est écrit dans le champ `fallback` de la pièce
+  jointe colorée et **n'apparaît jamais dans le salon**, au-dessus de la carte : le message n'a pas de
+  `text` de son propre, car Slack l'afficherait en clair et la carte répéterait la même chose.
+
+Les mentions sont neutralisées dans tous les textes (`@here`, `@channel`, `@everyone`, `<!channel>`,
+`<@U123>`, liens) et chaque message respecte les limites de taille de Slack (texte coupé avec « … »).
+
+Le nom et l'icône de l'expéditeur sont ceux de **l'application Slack** (`BDE_Network`) : un webhook
+d'application ne peut pas les changer message par message.
 
 ## Les e-mails
 

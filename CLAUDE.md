@@ -273,6 +273,17 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
   request shows an image (cached 10 min); otherwise name only, never a broken picture. A new notification
   that should be a card gets a builder + a `withDiscordCard` call; who did an action is passed by the action
   (`ctx.actor.login`), the row being deleted before the message goes out.
+- **Slack cards** (`docs/notifications.md`, Block Kit). Built like the Discord ones (`events/slack-blocks.ts`,
+  `members/slack-blocks.ts`, the shared parts in `notifications/slack-blocks.ts`) and chosen with the others by
+  `withRichMessage` (`notifications/rich.ts`: only the builder of the event's channel is ever called). **The
+  message is `{ attachments: [{ color, fallback, blocks }] }` and has no top-level `text`**: Slack shows a message's
+  `text` in the channel above the card, which would say everything twice; the summary for push notifications is
+  the attachment's `fallback` (a test forbids a top-level `text`). A member's text in a `mrkdwn` field goes through
+  `neutralizeForSlack` (cut first, then escaped, never mid-entity); the platform's own `<!date^…>` markup is added
+  after, and `fitSlackPayload` — applied by the adapter to whatever a caller built — lets nothing through but that
+  strict markup (every other `<…>` becomes text), cuts to Slack's limits, drops blocks Slack refuses. The app
+  that posts is the BDE_Network Slack app created from `docs/slack-app-manifest.yml` (a test ties the docs link to it):
+  name and icon are the app's, a webhook cannot change them per message.
 - **Designed e-mails** (`docs/notifications.md`). On the `email` channel a notification carries an
   `EmailContent` (`html` + `text` + optional `.ics`) next to its plain `subject`/`body`: built by
   `events/email.ts` / `members/email.ts` from the one layout `notifications/email-layout.ts` (`renderEmail`, a
