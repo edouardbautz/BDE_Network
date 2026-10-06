@@ -51,21 +51,23 @@ permissions without touching the core ([how](docs/architecture.md)).
 You need [Docker](https://www.docker.com/products/docker-desktop/) and Git, on Windows, Linux or
 macOS. No Node.js.
 
-1. **Clone** the repository: `git clone https://github.com/<your-fork>/BDE_Network.git`, then `cd BDE_Network`.
-2. **Create a 42 OAuth application** at <https://profile.intra.42.fr/oauth/applications/new>
-   (scope `public`) with the redirect URL
-   `http://localhost:3000/api/auth/callback/42-school` for a local try-out. Keep its UID and secret.
-3. **Copy `.env.example` to `.env`** and fill it in: a database password, the UID and secret, and
-   an `AUTH_SECRET` (32+ characters) from
-   `docker run --rm alpine sh -c "head -c 32 /dev/urandom | base64"`.
-4. **Edit `bde.config.yml`**: the BDE name, the allowed campuses, and **your 42 login** in
-   `auth.owners`.
-5. **Run** `docker compose up --build -d`, open <http://localhost:3000> and sign in with 42: your
-   login is the owner.
+1. **Install Docker** (and start Docker Desktop on Windows and macOS) and **Git**.
+2. **Clone** the repository: `git clone https://github.com/<your-fork>/BDE_Network.git`, then `cd BDE_Network`.
+3. **Run the setup assistant**, the same command everywhere:
 
-The full, step-by-step installation guide (for the board and for the person who sets up the
-server), the production deployment with HTTPS and the backups are in [docs/](docs/) — **currently
-written in French**.
+   ```
+   docker compose -f docker-compose.setup.yml run --rm --build setup
+   ```
+
+It asks a few questions (name, address, your 42 OAuth application, campuses, owners, notifications), checks
+your answers against the 42 API (your credentials, the campuses, the owners' logins), writes `.env` and
+`bde.config.yml` for you, and offers to start the platform and gives you the address to open. You never
+open a configuration file; Ctrl+C at any moment changes nothing. Run the same command again later to change
+the configuration: it proposes the current values and backs up the files it replaces.
+
+Prefer to do it by hand? The manual method is kept in the
+[installation guide](docs/installation.md#annexe--installation-manuelle). The full guide, the production
+deployment with HTTPS and the backups are in [docs/](docs/) — **currently written in French**.
 
 ## Documentation
 

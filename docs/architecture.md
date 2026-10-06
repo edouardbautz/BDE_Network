@@ -97,6 +97,8 @@ prisma/
 scripts/
   backup.sh, restore.sh     POSIX sh, need only Docker on the server (no Node): one tar.gz with the database dump
   audit-prod.mjs            CI gate on production dependency advisories (+ audit-allowlist.json)
+setup/                      the interactive setup assistant (see "Setup assistant"): its own Dockerfile, image and tests
+docker-compose.setup.yml    the one command that runs it
 docker/
   prisma.config.mjs         Prisma config used by the production image to run `migrate deploy`
 messages/
@@ -354,6 +356,46 @@ User guide: `docs/events.md`. The shape worth knowing before touching it:
   returning null when disabled, `notFound()` on pages, a nav entry in `(app)/layout.tsx` + `NavItem`
   - `NAV_ICONS`, its permissions (`<module>.view`/`.manage` are automatic; extras go in `MODULE_EXTRA_PERMISSIONS` with
     their `permissions.items.<module>.<name>` messages), audit entries for every mutation, FR/EN messages, `loading.tsx` per route, seed data, a `docs/<module>.md`.
+
+## Setup assistant (`setup/`)
+
+An interactive questionnaire that lets a non-technical BDE install the platform **with Docker as the only
+prerequisite**: `docker compose -f docker-compose.setup.yml run --rm --build setup`, identical on Windows,
+Linux and macOS. It writes `.env` and `bde.config.yml`, and offers to start the platform. Guide for users:
+`docs/installation.md`.
+
+- **Its own image** (`setup/Dockerfile`, `node:22-alpine` + the Docker CLI and compose plugin), run by tsx.
+  It installs only zod, js-yaml, nodemailer and tsx, **at the versions of the platform's `package-lock.json`**
+  (`setup/image.test.ts` keeps them equal), and copies the platform's own `src/config/schema.ts`: what it writes
+  is validated with the schema the platform uses at start-up (`renderConfig`), so it can never write a
+  configuration the platform refuses. `setup/Dockerfile.dockerignore` lets only what it copies into the build.
+- **Everything is collected in memory and written once, at the end**, after the summary is confirmed
+  (`writeFiles`: previous files copied to `.setup-backups/<date>/`, new ones written to temporary names then
+  renamed, owner of the project folder restored on Linux). A Ctrl+C or a closed input therefore never leaves a
+  half-written file. `.setup-backups/` holds secrets and is ignored by git and by the platform image.
+- **Re-runnable**: `readExisting` + `defaultsFrom` turn the current `.env` and `bde.config.yml` into the defaults of
+  every question; the shipped template (owner `votre-login-42`) counts as "nothing decided". `renderEnv` changes
+  the lines of the keys it manages in place and leaves every other line; `renderConfig` carries over what it
+  does not ask (logo, contact address, other modules, event categories). The session secret and the database
+  password are **kept** (changing the password would lock the existing database out).
+- **Testable by construction**: the questions go through a `LineReader` (a terminal in production, a script in the
+  tests), the network through an injected `fetch`, mail through an injected transport, Docker through an injected
+  `Runner`. `setup/test-helpers.ts` has the scripted reader and a pretend 42 API. Messages are in `messages.ts`,
+  French and English with the same keys (a test checks it, and that none is unused).
+- **No secret on screen or in a log**: secrets are typed with echo muted (the default is never shown), the summary
+  shows none, errors describe a failure by its code and strip URLs and the secrets they might hold (`describe` in
+  `notify-test.ts`), the 42 secret only travels in the body of the token request.
+- **The 42 API** (`fortytwo.ts`): client-credentials token to verify the application, `/v2/campus` for the list
+  (and the time zone of the campus), `/v2/users/<login>` to check an owner; 2 requests a second are respected,
+  a 429 is waited out. Without access, the assistant says so and goes on by hand.
+- **Starting the platform from inside the assistant** (`docker.ts`): the container uses the host's Docker through
+  the socket and starts `docker compose up --build -d` from a **sibling container of the same image that mounts
+  the project at its host path** (the compose file mounts `./bde.config.yml`, and the daemon reads host paths;
+  `C:\...` becomes `/c/...`). The platform's compose project is the folder's name (or `COMPOSE_PROJECT_NAME` of
+  `.env`); the assistant has a project of its own (`name:` in `docker-compose.setup.yml`) so that compose does not
+  call the platform's containers orphans. It is optional: if anything is missing, the assistant prints the command.
+- Tested for real from a fresh clone on Windows (PowerShell) and in Linux (WSL), with the real 42 API; a PTY run
+  checks the masking of secrets and Ctrl+C. The CI builds the image and starts it with no answer.
 
 ## Production image & hardening
 

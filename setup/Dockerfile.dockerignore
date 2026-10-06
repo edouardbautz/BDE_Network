@@ -1,0 +1,10 @@
+# Only what the setup assistant image uses (see Dockerfile in this folder).
+*
+!setup
+!src/config/schema.ts
+!docs/slack-app-manifest.yml
+# Not needed to run it
+setup/*.test.ts
+setup/test-helpers.ts
+setup/Dockerfile
+setup/Dockerfile.dockerignore

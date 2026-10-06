@@ -5,6 +5,23 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Added
+
+- **Assistant d'installation interactif** (`setup/`, `docker-compose.setup.yml`) : un BDE non technique installe
+  la plateforme en répondant à quelques questions, sans ouvrir de fichier. **Le seul prérequis est Docker** ; une
+  seule commande, identique sous Windows, Linux et macOS (`docker compose -f docker-compose.setup.yml run --rm --build setup`).
+  Il demande le nom, la couleur, la langue, l'adresse (il en déduit `APP_URL` et l'URL de redirection exacte à
+  déclarer sur l'intra 42), guide la création de l'application OAuth 42 et **vérifie l'UID et le secret auprès de
+  l'API 42**, propose la **liste des campus** (recherche par nom, fuseau horaire déduit), **vérifie que les
+  propriétaires existent**, génère `AUTH_SECRET` et le mot de passe PostgreSQL, propose Discord, Slack ou
+  e-mail avec un **message de test** à confirmer, écrit `.env` et `bde.config.yml` (validés avec le schéma de la
+  plateforme), puis démarre la plateforme et donne l'adresse. En français ou en anglais.
+  Relançable : il reprend les valeurs existantes, conserve les secrets et les réglages qu'il ne demande pas, et
+  **sauvegarde chaque fichier avant de l'écraser** (`.setup-backups/`). Chaque réponse est validée sur le moment ;
+  Ctrl+C n'écrit rien de partiel ; aucun secret n'est affiché (saisies masquées, récapitulatif sans secrets).
+- Le démarrage rapide des README (FR et EN) et `docs/installation.md` deviennent : installer Docker, cloner,
+  lancer l'assistant. L'ancienne méthode manuelle reste en annexe.
+
 ### Changed
 
 - La référence d'architecture et de conventions est maintenant **`docs/architecture.md`** (elle était dans un

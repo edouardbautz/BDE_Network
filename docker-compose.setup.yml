@@ -1,0 +1,24 @@
+# The setup assistant. From the project folder, on Windows, Linux or macOS:
+#
+#   docker compose -f docker-compose.setup.yml run --rm --build setup
+#
+# It asks a few questions, writes .env and bde.config.yml, and offers to start the platform.
+# Run it again at any time to change the configuration: it proposes the current values.
+# The assistant has a project of its own: the platform's containers are then not taken for leftovers
+# of the assistant's (docker compose warns about those).
+name: bde-network-setup
+
+services:
+  setup:
+    build:
+      context: .
+      dockerfile: setup/Dockerfile
+    image: bde-network-setup
+    stdin_open: true
+    tty: true
+    volumes:
+      # The project folder: where .env and bde.config.yml are read and written.
+      - .:/project
+      # The host's Docker, only so that the assistant can start the platform once it is configured.
+      # It is optional: without it, the assistant says which command to run.
+      - /var/run/docker.sock:/var/run/docker.sock
