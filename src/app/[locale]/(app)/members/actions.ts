@@ -1,89 +1,68 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import {
-  getEffectiveSession,
-  impersonationAuditFields,
-  type EffectiveSession,
-} from '@/lib/auth/session';
-import { prisma } from '@/lib/prisma';
-import { can, MEMBERS_MANAGE } from '@/lib/permissions';
-import { logAuditEvent } from '@/lib/audit-log';
+import { MEMBERS_MANAGE } from '@/lib/permissions';
+import type { ActionResult } from '@/lib/roles/errors';
+import { execute, executeToResult } from '@/lib/roles/execute';
+import * as roles from '@/lib/roles/service';
 
-async function requireManager(): Promise<EffectiveSession> {
-  const session = await getEffectiveSession();
-  if (!session || !can(session.user, MEMBERS_MANAGE)) {
-    throw new Error('Forbidden');
+/**
+ * Server actions of the members panel. Each is its own HTTP entry point, so each goes through
+ * `execute`: the permission is checked, the actor's rights are read again from the database,
+ * every rule against privilege escalation is applied and the audit entry is written, all in
+ * one transaction. See lib/roles/execute.ts and lib/roles/guards.ts.
+ *
+ * Arguments come from the browser (a crafted request can send anything): an id that is not
+ * a plain string is refused before it can reach a query.
+ */
+
+const isId = (value: unknown): value is string =>
+  typeof value === 'string' && value.length > 0 && value.length <= 64;
+
+function done(result: ActionResult): ActionResult {
+  if (result.ok) {
+    revalidatePath('/members');
+    revalidatePath('/roles');
   }
-  return session;
+  return result;
 }
 
-export async function approveMember(userId: string): Promise<void> {
-  const actor = await requireManager();
+/** Approves a pending account and gives it `roleId`. */
+export async function approveMember(userId: string, roleId: string): Promise<ActionResult> {
+  if (!isId(userId)) return { ok: false, error: 'targetNotFound' };
+  if (!isId(roleId)) return { ok: false, error: 'roleNotFound' };
 
-  const defaultRole = await prisma.role.findFirst({
-    where: { isDefault: true },
-    select: { id: true, name: true },
-  });
-  if (!defaultRole) {
-    throw new Error('There is no default role to give the new member');
-  }
-
-  const target = await prisma.user.update({
-    where: { id: userId, status: 'PENDING' },
-    data: { status: 'MEMBER', roleId: defaultRole.id },
-  });
-
-  await logAuditEvent({
-    actorLogin: actor.user.login,
-    actorId: actor.user.id,
-    action: 'member.approve',
-    targetType: 'User',
-    targetId: target.id,
-    targetLabel: target.login,
-    metadata: { role: defaultRole.name, ...impersonationAuditFields(actor) },
-  });
-
-  revalidatePath('/members');
+  return done(
+    await executeToResult(MEMBERS_MANAGE, (ctx) => roles.approveMember(ctx, userId, roleId)),
+  );
 }
 
-export async function rejectMember(userId: string): Promise<void> {
-  const actor = await requireManager();
+/** Gives an approved member another role. */
+export async function changeMemberRole(userId: string, roleId: string): Promise<ActionResult> {
+  if (!isId(userId)) return { ok: false, error: 'targetNotFound' };
+  if (!isId(roleId)) return { ok: false, error: 'roleNotFound' };
 
-  const target = await prisma.user.delete({
-    where: { id: userId, status: 'PENDING' },
-  });
-
-  await logAuditEvent({
-    actorLogin: actor.user.login,
-    actorId: actor.user.id,
-    action: 'member.reject',
-    targetType: 'User',
-    targetLabel: target.login,
-    metadata: impersonationAuditFields(actor),
-  });
-
-  revalidatePath('/members');
+  return done(
+    await executeToResult(MEMBERS_MANAGE, (ctx) => roles.assignRole(ctx, userId, roleId)),
+  );
 }
 
-export async function removeMember(userId: string): Promise<void> {
-  const actor = await requireManager();
+/** Refuses a pending request (the row is deleted). */
+export async function rejectMember(userId: string): Promise<ActionResult> {
+  if (!isId(userId)) return { ok: false, error: 'targetNotFound' };
 
-  const target = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
-  if (target.status === 'OWNER') {
-    throw new Error('OWNER accounts can only be changed via bde.config.yml');
-  }
+  return done(await executeToResult(MEMBERS_MANAGE, (ctx) => roles.rejectMember(ctx, userId)));
+}
 
-  await prisma.user.delete({ where: { id: userId } });
+/** Removes an approved member from the BDE (the row is deleted). `login` is the one removed. */
+export async function removeMember(
+  userId: string,
+): Promise<ActionResult | { ok: true; login: string }> {
+  if (!isId(userId)) return { ok: false, error: 'targetNotFound' };
 
-  await logAuditEvent({
-    actorLogin: actor.user.login,
-    actorId: actor.user.id,
-    action: 'member.remove',
-    targetType: 'User',
-    targetLabel: target.login,
-    metadata: impersonationAuditFields(actor),
-  });
+  const result = await execute(MEMBERS_MANAGE, (ctx) => roles.removeMember(ctx, userId));
+  if (!result.ok) return result;
 
-  revalidatePath('/members');
+  done({ ok: true });
+  return { ok: true, login: result.value.login };
 }

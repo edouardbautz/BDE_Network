@@ -7,13 +7,10 @@ import { renderToHtml } from '@/test/render-server';
  * offered (not forced) to replace it, because a former member may have kept it.
  */
 
-vi.mock('@/lib/auth/session', () => ({
-  getEffectiveSession: vi.fn(async () => ({
-    user: { id: 'admin-1', login: 'admin', role: 'ADMIN' },
-    isImpersonating: false,
-    realRole: 'ADMIN',
-  })),
-}));
+vi.mock('@/lib/auth/session', async () => {
+  const { effectiveFor } = await import('@/test/session-fixtures');
+  return { getEffectiveSession: vi.fn(async () => effectiveFor('ADMIN', 'admin', 'admin-1')) };
+});
 vi.mock('@/i18n/navigation', () => ({
   redirect: vi.fn(),
   Link: ({ href, children }: { href: string; children?: ReactNode }) => (
@@ -32,7 +29,10 @@ vi.mock('./actions', () => ({
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     user: { findMany: vi.fn(async () => []) },
-    modulePermission: { findMany: vi.fn(async () => []) },
+    role: {
+      findFirst: vi.fn(async () => ({ id: 'role-member' })),
+      findMany: vi.fn(async () => []),
+    },
   },
 }));
 vi.mock('next-intl/server', () => ({

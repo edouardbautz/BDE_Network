@@ -76,13 +76,14 @@ export default async function MembersPage({
     enabledModules.includes('events') &&
     (await getBdeFeedToken()) !== null;
 
-  const [t, tRoles, users] = await Promise.all([
+  const [t, tRoles, users, defaultRole] = await Promise.all([
     getTranslations('members'),
     getTranslations('roles'),
     prisma.user.findMany({
       include: { role: { select: { name: true } } },
       orderBy: [{ status: 'asc' }, { createdAt: 'asc' }],
     }),
+    prisma.role.findFirst({ where: { isDefault: true }, select: { id: true } }),
   ]);
 
   const pending = users.filter((user) => user.status === 'PENDING');
@@ -152,7 +153,7 @@ export default async function MembersPage({
                       <form
                         action={async () => {
                           'use server';
-                          await approveMember(user.id);
+                          if (defaultRole) await approveMember(user.id, defaultRole.id);
                         }}
                       >
                         <Button size="sm" type="submit">

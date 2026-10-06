@@ -1,6 +1,10 @@
 import type { Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 
+/** The database or a transaction: an entry written inside the transaction of the action it
+ * records is committed with it, or not at all. */
+type AuditClient = Pick<Prisma.TransactionClient, 'auditLog'>;
+
 interface LogAuditEventInput {
   actorLogin: string;
   actorId?: string | null;
@@ -14,8 +18,11 @@ interface LogAuditEventInput {
 
 /** Records a sensitive action. Entries are never updated or deleted from the
  * app — the audit log is append-only by design. */
-export async function logAuditEvent(input: LogAuditEventInput): Promise<void> {
-  await prisma.auditLog.create({
+export async function logAuditEvent(
+  input: LogAuditEventInput,
+  client: AuditClient = prisma,
+): Promise<void> {
+  await client.auditLog.create({
     data: {
       actorLogin: input.actorLogin,
       actorId: input.actorId ?? null,

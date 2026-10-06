@@ -28,6 +28,10 @@ vi.mock('../events/shared-calendar/actions', () => ({ regenerateSharedCalendar: 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     user: { findMany: vi.fn().mockResolvedValue([]) },
+    role: {
+      findFirst: vi.fn().mockResolvedValue({ id: 'role-member' }),
+      findMany: vi.fn().mockResolvedValue([]),
+    },
   },
 }));
 vi.mock('@/config', () => ({
