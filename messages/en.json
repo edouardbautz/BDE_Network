@@ -13,7 +13,104 @@
   "roles": {
     "OWNER": "Owner",
     "MEMBER": "Member",
-    "PENDING": "Pending"
+    "PENDING": "Pending",
+    "page": {
+      "title": "Roles",
+      "description": "A role groups rights together. Each member has a single role, which you give them from the Members page.",
+      "create": "Create a role",
+      "membersLink": "Go to members"
+    },
+    "saved": {
+      "created": "The role was created.",
+      "updated": "The role was saved."
+    },
+    "list": {
+      "columns": {
+        "name": "Role",
+        "members": "Members",
+        "rights": "Rights",
+        "actions": "Actions"
+      },
+      "membersCount": "{count, plural, one {# member} other {# members}}",
+      "default": "Default",
+      "defaultNote": "The default role is offered first when you approve a new member.",
+      "allPermissions": "All rights",
+      "noRights": "No rights",
+      "edit": "Edit",
+      "editLabel": "Edit the role {name}",
+      "setDefault": "Make default",
+      "setDefaultLabel": "Make {name} the default role",
+      "defaultSet": "\"{name}\" is now the default role.",
+      "delete": "Delete",
+      "deleteWarning": "Delete the role \"{name}\"? This cannot be undone.",
+      "deleteInUse": "This role is still given to {count, plural, one {# member} other {# members}}. Give them another role from the Members page first.",
+      "deleteConfirm": "Delete permanently",
+      "deleted": "The role \"{name}\" was deleted.",
+      "lockedOwn": "This is your role: someone else has to change it.",
+      "lockedAbove": "This role gives rights you do not have."
+    },
+    "new": {
+      "title": "Create a role",
+      "description": "Name the role and tick what its members will be able to do.",
+      "submit": "Create the role"
+    },
+    "edit": {
+      "title": "Edit the role",
+      "description": "Changes apply immediately to every member who has this role.",
+      "submit": "Save",
+      "back": "Back to roles",
+      "readOnlyOwn": "This is your own role: nobody edits the role they hold, someone else has to. Here are its rights.",
+      "readOnlyAbove": "This role gives rights you do not have, so you cannot edit it. Here are its rights.",
+      "members": "{count, plural, =0 {No member has this role.} one {# member has this role.} other {# members have this role.}}",
+      "has": "(granted)",
+      "hasNot": "(not granted)"
+    },
+    "form": {
+      "name": "Role name",
+      "nameHelp": "For example: President, Treasurer, Events lead.",
+      "description": "Description",
+      "optional": "optional",
+      "permissions": "Rights",
+      "permissionsHelp": "Tick what members of this role will be able to do. \"Manage\" always includes \"view\". You can only give rights you hold yourself.",
+      "allPermissions": "All rights",
+      "allPermissionsHelp": "This role automatically receives every right, including those of future BDE modules. To reserve a module for some roles, untick this option and pick the rights one by one.",
+      "allPermissionsLocked": "Only someone who holds every right can choose this option.",
+      "permissionLocked": "You do not hold this right: you cannot give it.",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "errors": {
+        "name": {
+          "required": "Give the role a name.",
+          "tooLong": "The name is too long (40 characters at most).",
+          "invalid": "The name must fit on one line, with no special characters."
+        },
+        "description": {
+          "tooLong": "The description is too long (200 characters at most).",
+          "invalid": "The description must fit on one line, with no special characters."
+        },
+        "permissions": {
+          "unknown": "One of the submitted rights does not exist. Reload the page and try again."
+        }
+      }
+    },
+    "errors": {
+      "roleNotFound": "This role no longer exists.",
+      "targetNotFound": "This member no longer exists.",
+      "nameTaken": "A role already has this name.",
+      "unknownPermission": "One of the requested rights does not exist.",
+      "cannotGrant": "You cannot give a right you do not hold yourself.",
+      "cannotManageRole": "This role gives rights you do not have: you can neither edit nor delete it.",
+      "cannotManageMember": "This member's role gives rights you do not have: you cannot change it.",
+      "ownRole": "You cannot change the role you hold.",
+      "isDefault": "The default role cannot be deleted. Choose another default role first.",
+      "roleInUse": "This role is still given to members.",
+      "targetIsSelf": "You cannot do this to your own account.",
+      "targetIsOwner": "Owners are defined in bde.config.yml, not here.",
+      "targetNotMember": "This account is not an approved member.",
+      "targetNotPending": "This request has already been handled.",
+      "noDefaultRole": "No default role is set.",
+      "conflict": "Someone changed the same thing at the same time. Reload the page and try again."
+    }
   },
   "devImpersonation": {
     "pickRole": "Dev tools — test as",
@@ -50,6 +147,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "members": "Members",
+    "roles": "Roles",
     "auditLog": "Audit log",
     "privacy": "Privacy",
     "openMenu": "Open navigation menu",
@@ -79,19 +177,24 @@
       "login": "42 login",
       "campus": "Campus",
       "role": "Role",
-      "since": "Member since",
-      "modules": "Modules"
+      "actions": "Actions"
     },
     "empty": "No members yet.",
     "pendingEmpty": "No pending requests.",
     "pendingCount": "{count, plural, one {# request} other {# requests}}",
-    "modules": {
-      "all": "All (owner)",
-      "grant": "Grant access to this module",
-      "revoke": "Revoke access to this module",
-      "names": {
-        "events": "Events"
-      }
+    "manageRoles": "Manage roles",
+    "roleOf": "Role of {name}",
+    "roleToGive": "Role to give to {name}",
+    "roleChanged": "{name}'s role was changed.",
+    "approved": "{name}'s request was approved.",
+    "rejected": "{name}'s request was rejected.",
+    "removed": "{name} was removed from the BDE.",
+    "removeWarning": "Remove {name} from the BDE? Their account is deleted permanently. They can ask for access again by signing in.",
+    "removeConfirm": "Remove permanently",
+    "ownerNote": "Set in bde.config.yml",
+    "locked": {
+      "self": "This is your account.",
+      "above": "Their role gives rights you do not have."
     },
     "feedRemoval": {
       "title": "{member} was removed from the BDE",
@@ -348,6 +451,54 @@
         "confirm": "Generate a new link"
       },
       "privacy": "This link is personal: anyone who has it can read the events you are allowed to see. Do not share it. It stops working if you leave the BDE."
+    }
+  },
+  "permissions": {
+    "sections": {
+      "core": "BDE administration",
+      "events": "Events"
+    },
+    "items": {
+      "members": {
+        "manage": {
+          "label": "Manage members",
+          "description": "Approve or refuse access requests, remove members and give them a role."
+        }
+      },
+      "roles": {
+        "manage": {
+          "label": "Manage roles",
+          "description": "Create, edit and delete roles, and choose the rights of each."
+        }
+      },
+      "events": {
+        "view": {
+          "label": "View events",
+          "description": "See the calendar of confirmed events and subscribe to it."
+        },
+        "manage": {
+          "label": "Manage events",
+          "description": "Create, edit, confirm and delete events, and see drafts."
+        },
+        "shared_calendar": {
+          "label": "Manage the shared calendar",
+          "description": "Create, renew or turn off the BDE's common calendar link."
+        }
+      }
+    },
+    "generic": {
+      "view": {
+        "label": "View: {module}",
+        "description": "See the content of the {module} module."
+      },
+      "manage": {
+        "label": "Manage: {module}",
+        "description": "Create, edit and delete in the {module} module."
+      },
+      "extra": {
+        "label": "{module}: {name}",
+        "description": "Additional right of the {module} module."
+      }
     }
   }
 }

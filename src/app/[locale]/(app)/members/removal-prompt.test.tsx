@@ -23,8 +23,8 @@ vi.mock('../events/shared-calendar/actions', () => ({ regenerateSharedCalendar: 
 vi.mock('./actions', () => ({
   approveMember: vi.fn(),
   rejectMember: vi.fn(),
+  changeMemberRole: vi.fn(),
   removeMember: vi.fn(),
-  setModulePermission: vi.fn(),
 }));
 vi.mock('@/lib/prisma', () => ({
   prisma: {

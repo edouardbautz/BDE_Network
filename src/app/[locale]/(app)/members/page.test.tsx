@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session } from 'next-auth';
 import { sessionFor, type AccountKind } from '@/test/session-fixtures';
@@ -22,6 +23,9 @@ vi.mock('@/i18n/navigation', () => ({
   redirect: vi.fn((opts: { href: string }) => {
     throw new RedirectSignal(opts.href);
   }),
+  Link: ({ href, children }: { href: string; children?: ReactNode }) => (
+    <a href={href}>{children}</a>
+  ),
 }));
 vi.mock('@/lib/events/export', () => ({ getBdeFeedToken: vi.fn(async () => null) }));
 vi.mock('../events/shared-calendar/actions', () => ({ regenerateSharedCalendar: vi.fn() }));

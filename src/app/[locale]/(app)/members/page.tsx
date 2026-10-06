@@ -3,11 +3,19 @@ import { getTranslations } from 'next-intl/server';
 import { getConfig } from '@/config';
 import { getEffectiveSession } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
-import { can, MEMBERS_MANAGE } from '@/lib/permissions';
+import { can, holdsAllOf, MEMBERS_MANAGE, ROLES_MANAGE } from '@/lib/permissions';
 import { accountLabel } from '@/lib/account-label';
 import { Link, redirect } from '@/i18n/navigation';
 import { getBdeFeedToken } from '@/lib/events/export';
+import { actorOf, roleFacts } from '@/lib/roles/view';
 import { regenerateSharedCalendar } from '../events/shared-calendar/actions';
+import {
+  MemberRoleSelect,
+  PendingMemberActions,
+  RemoveMemberButton,
+  type MemberLock,
+  type RoleChoice,
+} from '@/components/members/member-controls';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +29,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { approveMember, rejectMember, removeMember } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,6 +71,7 @@ export default async function MembersPage({
 
   if (!session?.user || !can(session.user, MEMBERS_MANAGE)) {
     redirect({ href: '/dashboard', locale });
+    return null;
   }
 
   const enabledModules = getConfig().modules.enabled;
@@ -76,22 +84,54 @@ export default async function MembersPage({
     enabledModules.includes('events') &&
     (await getBdeFeedToken()) !== null;
 
-  const [t, tRoles, users, defaultRole] = await Promise.all([
+  const [t, tRoles, users, roles] = await Promise.all([
     getTranslations('members'),
     getTranslations('roles'),
     prisma.user.findMany({
-      include: { role: { select: { name: true } } },
+      include: { role: { select: { id: true, name: true } } },
       orderBy: [{ status: 'asc' }, { createdAt: 'asc' }],
     }),
-    prisma.role.findFirst({ where: { isDefault: true }, select: { id: true } }),
+    prisma.role.findMany({ orderBy: [{ isDefault: 'desc' }, { name: 'asc' }] }),
   ]);
+
+  const actor = actorOf(session.user);
+
+  // What the person looking can hand out: only roles whose every right they hold. The server
+  // checks again (src/lib/roles/guards.ts); this only keeps the menus honest.
+  const grantableIds = new Set(
+    roles
+      .filter((role) => holdsAllOf(actor.set, roleFacts(role, enabledModules).set))
+      .map((role) => role.id),
+  );
+  const choices: RoleChoice[] = roles.map((role) => ({
+    id: role.id,
+    name: role.name,
+    grantable: grantableIds.has(role.id),
+  }));
+  const offeredFirst =
+    roles.find((role) => role.isDefault && grantableIds.has(role.id)) ??
+    roles.find((role) => grantableIds.has(role.id)) ??
+    roles[0];
+
+  const lockOf = (user: (typeof users)[number]): MemberLock => {
+    if (user.id === actor.id) return 'self';
+    if (user.status === 'MEMBER' && (!user.role || !grantableIds.has(user.role.id))) return 'above';
+    return null;
+  };
 
   const pending = users.filter((user) => user.status === 'PENDING');
   const active = users.filter((user) => user.status !== 'PENDING');
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
+        {can(session.user, ROLES_MANAGE) && (
+          <Button variant="outline" size="sm" render={<Link href="/roles" />}>
+            {t('manageRoles')}
+          </Button>
+        )}
+      </div>
 
       {offerFeedRegeneration && (
         <Alert>
@@ -138,7 +178,7 @@ export default async function MembersPage({
                   <TableHead>{t('columns.name')}</TableHead>
                   <TableHead>{t('columns.login')}</TableHead>
                   <TableHead>{t('columns.campus')}</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right">{t('columns.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -149,27 +189,15 @@ export default async function MembersPage({
                     </TableCell>
                     <TableCell className="text-muted-foreground">{user.login}</TableCell>
                     <TableCell className="text-muted-foreground">{user.campus}</TableCell>
-                    <TableCell className="flex justify-end gap-2">
-                      <form
-                        action={async () => {
-                          'use server';
-                          if (defaultRole) await approveMember(user.id, defaultRole.id);
-                        }}
-                      >
-                        <Button size="sm" type="submit">
-                          {t('approve')}
-                        </Button>
-                      </form>
-                      <form
-                        action={async () => {
-                          'use server';
-                          await rejectMember(user.id);
-                        }}
-                      >
-                        <Button size="sm" variant="outline" type="submit">
-                          {t('reject')}
-                        </Button>
-                      </form>
+                    <TableCell className="whitespace-normal">
+                      {offeredFirst && (
+                        <PendingMemberActions
+                          userId={user.id}
+                          memberName={user.fullName}
+                          roles={choices}
+                          initialRoleId={offeredFirst.id}
+                        />
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -198,45 +226,49 @@ export default async function MembersPage({
                   <TableHead>{t('columns.login')}</TableHead>
                   <TableHead>{t('columns.campus')}</TableHead>
                   <TableHead>{t('columns.role')}</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right">{t('columns.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {active.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <MemberIdentity name={user.fullName} photoUrl={user.photoUrl} />
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{user.login}</TableCell>
-                    <TableCell className="text-muted-foreground">{user.campus}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">
-                        {accountLabel(
-                          { status: user.status, roleName: user.role?.name ?? null },
-                          tRoles,
+                {active.map((user) => {
+                  const lock = lockOf(user);
+                  return (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <MemberIdentity name={user.fullName} photoUrl={user.photoUrl} />
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{user.login}</TableCell>
+                      <TableCell className="text-muted-foreground">{user.campus}</TableCell>
+                      <TableCell className="whitespace-normal">
+                        {user.status === 'MEMBER' && user.role ? (
+                          <MemberRoleSelect
+                            userId={user.id}
+                            memberName={user.fullName}
+                            currentRoleId={user.role.id}
+                            roles={choices}
+                            lock={lock}
+                          />
+                        ) : (
+                          <div className="flex flex-col gap-1">
+                            <Badge variant="secondary" className="self-start">
+                              {accountLabel({ status: user.status, roleName: null }, tRoles)}
+                            </Badge>
+                            <span className="text-muted-foreground text-xs">{t('ownerNote')}</span>
+                          </div>
                         )}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {user.status !== 'OWNER' && (
-                        <form
-                          action={async () => {
-                            'use server';
-                            await removeMember(user.id);
-                            redirect({
-                              href: { pathname: '/members', query: { removed: user.login } },
-                              locale,
-                            });
-                          }}
-                        >
-                          <Button size="sm" variant="destructive" type="submit">
-                            {t('remove')}
-                          </Button>
-                        </form>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {user.status === 'MEMBER' && lock === null && (
+                          <RemoveMemberButton
+                            userId={user.id}
+                            login={user.login}
+                            memberName={user.fullName}
+                          />
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}

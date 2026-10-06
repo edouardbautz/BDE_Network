@@ -13,7 +13,104 @@
   "roles": {
     "OWNER": "Propriétaire",
     "MEMBER": "Membre",
-    "PENDING": "En attente"
+    "PENDING": "En attente",
+    "page": {
+      "title": "Rôles",
+      "description": "Un rôle regroupe des droits. Chaque membre a un seul rôle, que vous lui donnez depuis la page Membres.",
+      "create": "Créer un rôle",
+      "membersLink": "Aller aux membres"
+    },
+    "saved": {
+      "created": "Le rôle a été créé.",
+      "updated": "Le rôle a été enregistré."
+    },
+    "list": {
+      "columns": {
+        "name": "Rôle",
+        "members": "Membres",
+        "rights": "Droits",
+        "actions": "Actions"
+      },
+      "membersCount": "{count, plural, one {# membre} other {# membres}}",
+      "default": "Par défaut",
+      "defaultNote": "Le rôle par défaut est proposé en premier quand vous approuvez un nouveau membre.",
+      "allPermissions": "Tous les droits",
+      "noRights": "Aucun droit",
+      "edit": "Modifier",
+      "editLabel": "Modifier le rôle {name}",
+      "setDefault": "Définir par défaut",
+      "setDefaultLabel": "Définir {name} comme rôle par défaut",
+      "defaultSet": "« {name} » est maintenant le rôle par défaut.",
+      "delete": "Supprimer",
+      "deleteWarning": "Supprimer le rôle « {name} » ? Cette action est définitive.",
+      "deleteInUse": "Ce rôle est encore attribué à {count, plural, one {# membre} other {# membres}}. Donnez-leur d'abord un autre rôle depuis la page Membres.",
+      "deleteConfirm": "Supprimer définitivement",
+      "deleted": "Le rôle « {name} » a été supprimé.",
+      "lockedOwn": "C'est votre rôle : quelqu'un d'autre doit le modifier.",
+      "lockedAbove": "Ce rôle donne des droits que vous n'avez pas."
+    },
+    "new": {
+      "title": "Créer un rôle",
+      "description": "Donnez un nom au rôle et cochez ce que ses membres pourront faire.",
+      "submit": "Créer le rôle"
+    },
+    "edit": {
+      "title": "Modifier le rôle",
+      "description": "Les changements s'appliquent tout de suite à tous les membres qui ont ce rôle.",
+      "submit": "Enregistrer",
+      "back": "Retour aux rôles",
+      "readOnlyOwn": "C'est votre propre rôle : personne ne modifie le rôle qu'il a, quelqu'un d'autre doit le faire. Voici ses droits.",
+      "readOnlyAbove": "Ce rôle donne des droits que vous n'avez pas, vous ne pouvez donc pas le modifier. Voici ses droits.",
+      "members": "{count, plural, =0 {Aucun membre n'a ce rôle.} one {# membre a ce rôle.} other {# membres ont ce rôle.}}",
+      "has": "(accordé)",
+      "hasNot": "(non accordé)"
+    },
+    "form": {
+      "name": "Nom du rôle",
+      "nameHelp": "Par exemple : Président, Trésorier, Responsable événements.",
+      "description": "Description",
+      "optional": "facultatif",
+      "permissions": "Droits",
+      "permissionsHelp": "Cochez ce que les membres de ce rôle pourront faire. « Gérer » inclut toujours « consulter ». Vous ne pouvez donner que des droits que vous avez vous-même.",
+      "allPermissions": "Tous les droits",
+      "allPermissionsHelp": "Ce rôle reçoit automatiquement tous les droits, y compris ceux des futurs modules du BDE. Pour réserver un module à certains rôles, décochez cette option et choisissez les droits un par un.",
+      "allPermissionsLocked": "Seule une personne qui a elle-même tous les droits peut choisir cette option.",
+      "permissionLocked": "Vous n'avez pas ce droit : vous ne pouvez pas le donner.",
+      "saving": "Enregistrement…",
+      "cancel": "Annuler",
+      "errors": {
+        "name": {
+          "required": "Donnez un nom au rôle.",
+          "tooLong": "Le nom est trop long (40 caractères au maximum).",
+          "invalid": "Le nom doit tenir sur une seule ligne, sans caractère spécial."
+        },
+        "description": {
+          "tooLong": "La description est trop longue (200 caractères au maximum).",
+          "invalid": "La description doit tenir sur une seule ligne, sans caractère spécial."
+        },
+        "permissions": {
+          "unknown": "Un des droits envoyés n'existe pas. Rechargez la page et recommencez."
+        }
+      }
+    },
+    "errors": {
+      "roleNotFound": "Ce rôle n'existe plus.",
+      "targetNotFound": "Ce membre n'existe plus.",
+      "nameTaken": "Un rôle porte déjà ce nom.",
+      "unknownPermission": "Un des droits demandés n'existe pas.",
+      "cannotGrant": "Vous ne pouvez pas donner un droit que vous n'avez pas vous-même.",
+      "cannotManageRole": "Ce rôle donne des droits que vous n'avez pas : vous ne pouvez ni le modifier ni le supprimer.",
+      "cannotManageMember": "Le rôle de ce membre donne des droits que vous n'avez pas : vous ne pouvez pas le modifier.",
+      "ownRole": "Vous ne pouvez pas modifier le rôle que vous avez.",
+      "isDefault": "Le rôle par défaut ne peut pas être supprimé. Choisissez d'abord un autre rôle par défaut.",
+      "roleInUse": "Ce rôle est encore attribué à des membres.",
+      "targetIsSelf": "Vous ne pouvez pas faire cela sur votre propre compte.",
+      "targetIsOwner": "Les propriétaires sont définis dans bde.config.yml, pas ici.",
+      "targetNotMember": "Ce compte n'est pas un membre approuvé.",
+      "targetNotPending": "Cette demande a déjà été traitée.",
+      "noDefaultRole": "Aucun rôle par défaut n'est défini.",
+      "conflict": "Quelqu'un a modifié la même chose en même temps. Rechargez la page et recommencez."
+    }
   },
   "devImpersonation": {
     "pickRole": "Outils dev — tester en tant que",
@@ -50,6 +147,7 @@
   "nav": {
     "dashboard": "Tableau de bord",
     "members": "Membres",
+    "roles": "Rôles",
     "auditLog": "Journal d'audit",
     "privacy": "Confidentialité",
     "openMenu": "Ouvrir le menu de navigation",
@@ -79,19 +177,24 @@
       "login": "Login 42",
       "campus": "Campus",
       "role": "Rôle",
-      "since": "Membre depuis",
-      "modules": "Modules"
+      "actions": "Actions"
     },
     "empty": "Aucun membre pour l'instant.",
     "pendingEmpty": "Aucune demande en attente.",
     "pendingCount": "{count, plural, one {# demande} other {# demandes}}",
-    "modules": {
-      "all": "Tous (propriétaire)",
-      "grant": "Accorder l'accès à ce module",
-      "revoke": "Retirer l'accès à ce module",
-      "names": {
-        "events": "Événements"
-      }
+    "manageRoles": "Gérer les rôles",
+    "roleOf": "Rôle de {name}",
+    "roleToGive": "Rôle à donner à {name}",
+    "roleChanged": "Le rôle de {name} a été modifié.",
+    "approved": "La demande de {name} a été approuvée.",
+    "rejected": "La demande de {name} a été refusée.",
+    "removed": "{name} a été retiré du BDE.",
+    "removeWarning": "Retirer {name} du BDE ? Son compte est supprimé définitivement. La personne pourra redemander l'accès en se reconnectant.",
+    "removeConfirm": "Retirer définitivement",
+    "ownerNote": "Défini dans bde.config.yml",
+    "locked": {
+      "self": "C'est votre compte.",
+      "above": "Son rôle donne des droits que vous n'avez pas."
     },
     "feedRemoval": {
       "title": "{member} a été retiré du BDE",
@@ -348,6 +451,54 @@
         "confirm": "Générer un nouveau lien"
       },
       "privacy": "Ce lien est personnel : toute personne qui le possède peut lire les événements que vous avez le droit de voir. Ne le partagez pas. Il cesse de fonctionner si vous quittez le BDE."
+    }
+  },
+  "permissions": {
+    "sections": {
+      "core": "Gestion du BDE",
+      "events": "Événements"
+    },
+    "items": {
+      "members": {
+        "manage": {
+          "label": "Gérer les membres",
+          "description": "Valider ou refuser les demandes d'accès, retirer des membres et leur attribuer un rôle."
+        }
+      },
+      "roles": {
+        "manage": {
+          "label": "Gérer les rôles",
+          "description": "Créer, modifier et supprimer des rôles, et choisir les droits de chacun."
+        }
+      },
+      "events": {
+        "view": {
+          "label": "Consulter les événements",
+          "description": "Voir le calendrier des événements confirmés et s'y abonner."
+        },
+        "manage": {
+          "label": "Gérer les événements",
+          "description": "Créer, modifier, confirmer et supprimer des événements, et voir les brouillons."
+        },
+        "shared_calendar": {
+          "label": "Gérer l'agenda partagé",
+          "description": "Créer, renouveler ou désactiver le lien d'agenda commun du BDE."
+        }
+      }
+    },
+    "generic": {
+      "view": {
+        "label": "Consulter : {module}",
+        "description": "Voir le contenu du module {module}."
+      },
+      "manage": {
+        "label": "Gérer : {module}",
+        "description": "Créer, modifier et supprimer dans le module {module}."
+      },
+      "extra": {
+        "label": "{module} : {name}",
+        "description": "Droit supplémentaire du module {module}."
+      }
     }
   }
 }
