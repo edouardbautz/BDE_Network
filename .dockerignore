@@ -4,7 +4,6 @@ node_modules
 .github
 .audit
 backups
-storage/uploads
 docs
 coverage
 *.tsbuildinfo

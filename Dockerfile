@@ -50,8 +50,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma/schema.prisma ./prisma/sch
 COPY --from=builder --chown=nextjs:nodejs /app/prisma/migrations ./prisma/migrations
 COPY --from=migrate --chown=nextjs:nodejs /opt/migrate /opt/migrate
 COPY --chown=nextjs:nodejs docker/prisma.config.mjs /opt/migrate/prisma.config.mjs
-RUN mkdir -p storage/uploads && chown -R nextjs:nodejs storage
-
 USER nextjs
 EXPOSE 3000
 

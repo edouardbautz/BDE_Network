@@ -83,7 +83,7 @@ Membres.
 
 ```
 docker compose down          # arrête les conteneurs, conserve les données
-docker compose down -v       # arrête et supprime aussi les données (base + fichiers uploadés)
+docker compose down -v       # arrête et supprime aussi les données (la base)
 ```
 
 ## Problèmes fréquents

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Sauvegarde la base de données ET les fichiers envoyés dans UNE seule archive :
+# Sauvegarde la base de données dans UNE archive :
 #   backups/bde-backup-AAAA-MM-JJ_HH-MM-SS.tar.gz
 #
 # Ne demande que Docker (avec « docker compose ») et les outils Unix habituels :
@@ -13,7 +13,7 @@
 # à part, dans un endroit sûr.
 set -eu
 
-# Git Bash (Windows) réécrit les chemins comme /app/storage dans les arguments ; sans effet ailleurs.
+# Git Bash (Windows) réécrit les chemins comme /app/... dans les arguments ; sans effet ailleurs.
 export MSYS_NO_PATHCONV=1
 umask 077
 
@@ -79,15 +79,12 @@ if ! tail -n 5 "$WORK/database.sql" | grep -q "PostgreSQL database dump complete
   exit 1
 fi
 
-echo "Sauvegarde des fichiers envoyés..."
-docker compose run --rm --no-deps -T --entrypoint tar app -cf - -C /app/storage uploads >"$WORK/uploads.tar"
-
 {
   echo "Sauvegarde BDE_Network"
   echo "Date : $(date '+%Y-%m-%d %H:%M:%S')"
 } >"$WORK/info.txt"
 
-tar -czf "$OUTPUT" -C "$WORK" database.sql uploads.tar info.txt
+tar -czf "$OUTPUT" -C "$WORK" database.sql info.txt
 
 if [ -n "$KEEP" ]; then
   # ls -t : du plus récent au plus ancien ; on supprime tout ce qui dépasse N.

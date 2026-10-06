@@ -162,7 +162,7 @@ Les migrations de base de données s'appliquent automatiquement au démarrage du
 
 ## Sauvegardes et restauration
 
-Une sauvegarde contient **la base de données et les fichiers envoyés** dans une seule archive,
+Une sauvegarde contient **la base de données** dans une seule archive,
 `backups/bde-backup-AAAA-MM-JJ_HH-MM-SS.tar.gz`. Elle se fait avec Docker seul, sans Node.js
 (sous Windows, depuis Git Bash ou WSL).
 
@@ -171,7 +171,27 @@ Une sauvegarde contient **la base de données et les fichiers envoyés** dans un
 ./scripts/backup.sh --keep 14       # ... en ne gardant que les 14 plus récentes
 ```
 
-Pour la planifier tous les jours à 3 h du matin :
+**Sous Windows**, ces scripts sont écrits en `sh` : ils se lancent depuis **Git Bash** (installé avec
+[Git pour Windows](https://git-scm.com/download/win)) ou depuis **WSL** (Ubuntu), avec Docker
+Desktop démarré. Ni PowerShell ni l'Invite de commandes ne les exécutent directement.
+
+```
+# Git Bash : clic droit dans le dossier du projet → « Open Git Bash here », puis
+./scripts/backup.sh
+
+# PowerShell, sans ouvrir Git Bash :
+& "C:\Program Files\Git\bin\bash.exe" ./scripts/backup.sh
+
+# WSL (dans le dossier du projet, vu de WSL sous /mnt/c/...) :
+wsl ./scripts/backup.sh
+```
+
+`restore.sh` s'utilise de la même façon. Sous Windows, l'archive hérite des droits du dossier
+(la protection « lisible par vous seul » ne s'applique pas sur un disque NTFS) : gardez le dossier
+`backups/` dans un endroit privé. Testé avec Git Bash et avec WSL (Ubuntu) ; sous macOS et Linux,
+rien de particulier.
+
+Pour la planifier tous les jours à 3 h du matin (sous Linux ou macOS) :
 
 ```
 # crontab -e

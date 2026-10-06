@@ -23,7 +23,6 @@ partagée entre instances.
 - Couleur d'accent et identité visuelle configurables sans toucher au code
 - Export RGPD de ses propres données, politique de confidentialité
 - Notifications par email, Discord ou Slack (selon configuration)
-- Stockage de fichiers local, prêt pour S3
 
 Les modules métier (événements, finances, réunions...) ne sont pas encore implémentés — ce dépôt
 pose les fondations : authentification, rôles, permissions, configuration, i18n.

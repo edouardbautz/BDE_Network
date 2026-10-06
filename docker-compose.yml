@@ -32,8 +32,6 @@ services:
       - '${APP_BIND:-127.0.0.1}:3000:3000'
     volumes:
       - ./bde.config.yml:/app/bde.config.yml:ro
-      - storage_uploads:/app/storage/uploads
 
 volumes:
   postgres_data:
-  storage_uploads:

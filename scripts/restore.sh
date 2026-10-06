@@ -1,5 +1,5 @@
 #!/bin/sh
-# Restaure une sauvegarde faite par scripts/backup.sh : la base de données ET les fichiers envoyés.
+# Restaure une sauvegarde faite par scripts/backup.sh (la base de données).
 #
 # Ne demande que Docker (avec « docker compose ») et les outils Unix habituels :
 # pas besoin de Node.js sur le serveur. Sous Windows, lancez-le depuis Git Bash ou WSL.
@@ -85,7 +85,7 @@ fi
 echo ""
 echo "Vous allez RESTAURER : $FILE"
 echo ""
-echo "  • La base de données et les fichiers envoyés actuels seront REMPLACÉS par ceux de la sauvegarde."
+echo "  • La base de données actuelle sera REMPLACÉE par celle de la sauvegarde."
 echo "  • Tout ce qui a été fait depuis cette sauvegarde sera perdu (sauf dans la copie de sécurité)."
 echo "  • L'application sera arrêtée pendant l'opération, puis relancée."
 echo "  • Une copie de sécurité de l'état actuel est faite juste avant, dans backups/."
@@ -131,10 +131,10 @@ if ! docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGR
   exit 1
 fi
 
+# Les sauvegardes faites avant le retrait du stockage de fichiers contiennent aussi un
+# uploads.tar. Rien dans l'application n'écrit ni ne lit de fichiers envoyés : il est ignoré.
 if [ -f "$WORK/uploads.tar" ]; then
-  echo "    Restauration des fichiers envoyés..."
-  docker compose run --rm --no-deps -T --entrypoint sh app -c \
-    'find /app/storage/uploads -mindepth 1 -delete && tar -xf - -C /app/storage' <"$WORK/uploads.tar"
+  echo "    (Cette sauvegarde contient un dossier de fichiers envoyés, que l'application n'utilise plus : ignoré.)"
 fi
 
 echo "4/4 Relance de l'application..."

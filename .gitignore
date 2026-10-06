@@ -46,10 +46,6 @@ next-env.d.ts
 # prisma generated client
 /src/generated/prisma
 
-# local file storage (uploads adapter)
-/storage/uploads/*
-!/storage/uploads/.gitkeep
-
 # database backups
 /backups/*
 !/backups/.gitkeep
