@@ -69,6 +69,9 @@ src/
   instrumentation.ts       startup checks (bde.config.yml + .env), then the events reminder scheduler (Node runtime only)
   components/
     ui/                    shadcn/ui primitives — do not hand-edit, regenerate via shadcn CLI
+                           (`dialog.tsx` was written by hand in the same style: the CLI would overwrite
+                           button.tsx and add a stray dependency)
+    confirm-dialog.tsx     the one confirmation for destructive actions (see "Design system")
     layout/                app-shell (sidebar + mobile drawer), footer, user-menu
     events/                calendar, list, form, toolbar, category badge (module UI)
     roles/                 role form (permission checkboxes), list actions, permission groups for the form
@@ -358,6 +361,15 @@ touching layout or adding UI. The short version:
 - Per-fork colors that are not the accent (events: `events.categories[].color`) are applied
   inline as a dot, a left border or a translucent tint (`color-mix`), never as text color or a
   large surface, so contrast always rests on the neutral `foreground` token.
+- **Every destructive or irreversible action asks through `ConfirmDialog`** (`src/components/confirm-dialog.tsx`,
+  built on `ui/dialog.tsx`): a dialog centered over the page — never a `<details>`, a popover or a block
+  that unfolds under the button (it ends up off screen). Title naming the action and its target, one
+  sentence (not repeating the title), a destructive action button with a precise verb, and Cancel;
+  `tone="default"` for a reversible change (a role change). The component guarantees focus on Cancel,
+  a focus trap, Escape / click outside to cancel, focus returned to the origin (`returnFocusRef` when
+  there is no trigger button), and a busy, non-repeatable confirm button while the action runs. From a
+  Server Component, `onConfirm` is an inline `'use server'` action. A new module's delete / cancel /
+  regenerate buttons use it; see "Confirmations" in `docs/design.md`.
 - Every list/table that can be empty renders an empty state (icon-in-muted-circle + title +
   description [+ CTA]) — never a blank card. Every `(app)/` route ships a `loading.tsx` with
   `Skeleton`s shaped like its real content, not a generic spinner.

@@ -7,6 +7,17 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Added
 
+- **Fenêtre de confirmation unique** (`ConfirmDialog`) pour toute action destructive ou irréversible :
+  une boîte de dialogue centrée par-dessus la page, avec un titre clair, une phrase d'explication, un
+  bouton d'action en style destructif et **Annuler**. Le focus démarre sur Annuler et reste piégé dans la
+  fenêtre ; Échap et un clic à l'extérieur annulent ; le focus revient sur le bouton d'origine ; pendant
+  l'envoi le bouton est occupé et ne peut pas être pressé deux fois. Elle remplace les blocs dépliés sous
+  l'élément (qu'il fallait faire défiler pour voir) pour : refuser une demande, retirer un membre,
+  supprimer un rôle, supprimer un événement ou toute sa série, annuler une date, régénérer ou désactiver
+  le lien d'agenda du BDE, régénérer son lien personnel. **Changer le rôle d'un membre** demande
+  désormais aussi confirmation (en indiquant l'ancien et le nouveau rôle). Documenté dans
+  `docs/design.md` et `CLAUDE.md` pour les futurs modules.
+
 - **Notifications sur les membres** (`memberPending`, `memberApproved`, `memberRemoved`), qui ne
   faisaient rien jusqu'ici : une nouvelle demande d'accès prévient les propriétaires et les rôles qui
   ont « Gérer les membres » (e-mail) ou le salon (Discord / Slack) ; une approbation prévient le

@@ -132,6 +132,29 @@ contrôles (bouton, input, badge) des rayons plus petits. Ne pas mélanger des r
   `audit-log/loading.tsx`.
 - **Tableaux** : colonnes secondaires (login, campus, date) en `text-muted-foreground` pour
   hiérarchiser visuellement la colonne principale (nom, acteur).
+- **Confirmations** (`src/components/confirm-dialog.tsx`, sur la primitive `ui/dialog.tsx`) :
+  **toute action destructive ou irréversible** (retirer, refuser, supprimer, annuler une
+  occurrence, régénérer ou désactiver un lien, changer le rôle d'un membre…) demande d'abord
+  confirmation dans **une fenêtre de dialogue centrée par-dessus la page**, jamais dans un bloc
+  déplié sous l'élément (il se retrouve hors de l'écran et change la mise en page). Un seul
+  composant, `ConfirmDialog` : ne pas réécrire de `<details>` ni de popover maison.
+  - Contenu : un **titre** qui nomme l'action et la cible (« Retirer Jean du BDE ? »), **une
+    phrase** qui dit ce qui se passe et ce qui ne peut pas être annulé (sans répéter le titre),
+    un bouton d'action en style **destructif** dont le libellé est un verbe précis (« Retirer
+    définitivement », jamais « OK » ni « Oui »), et **Annuler**. `tone="default"` pour un
+    changement réversible (changer un rôle).
+  - Comportement garanti par le composant : le focus démarre sur **Annuler** (jamais sur le
+    bouton destructif), il est **piégé** dans la fenêtre, **Échap** et le clic à l'extérieur
+    annulent, et le focus **retourne** sur le bouton d'origine (ou sur le menu, avec
+    `returnFocusRef`). Pendant l'envoi, le bouton d'action est occupé (icône qui tourne,
+    `aria-busy`), ne peut pas être pressé deux fois, et la fenêtre ne peut plus être fermée.
+  - Usage : `<ConfirmDialog title description confirmLabel onConfirm>Libellé du bouton</ConfirmDialog>`.
+    Depuis un Server Component, `onConfirm` est une action serveur (`async () => { 'use server'; … }`) ;
+    elle peut rediriger, la fenêtre reste occupée jusqu'à la navigation. Sans bouton (menu
+    déroulant, raccourci), passer `open`, `onOpenChange` et `returnFocusRef`.
+  - Ne demandent **pas** de confirmation : les actions réversibles en un clic (rétablir une
+    date, définir le rôle par défaut, copier un lien). Un refus qui n'a rien à confirmer
+    (supprimer un rôle encore attribué) s'explique par un message, pas par une fenêtre.
 
 ## Navigation
 
@@ -167,7 +190,7 @@ utilisateur, bascule de thème) est identique dans les deux — seul le conteneu
 - Un seul `h1` par page, hiérarchie de titres sans saut de niveau.
 - Navigation clavier complète : tous les contrôles interactifs sont des éléments natifs
   (`button`, `a`) ou des primitives Base UI qui gèrent focus trap / `Escape` (menus, tiroir
-  mobile) sans code additionnel.
+  mobile, fenêtres de confirmation) sans code additionnel.
 - `lang` posé sur `<html>` selon la locale active (`[locale]/layout.tsx`).
 - Toute image décorative (logo) a un `alt=""` explicite ; tout bouton icône seul a un
   `aria-label` traduit (voir `ThemeToggle`, le déclencheur du tiroir mobile).
@@ -187,3 +210,4 @@ utilisateur, bascule de thème) est identique dans les deux — seul le conteneu
    `app-shell.tsx`.
 6. La couleur d'accent (`bde.accentColor`) reste réservée aux actions principales et aux états
    actifs — jamais aux grandes surfaces, jamais comme seule couleur de texte sur un fond neutre.
+7. Toute action destructive ou irréversible passe par `ConfirmDialog` (voir « Confirmations »).

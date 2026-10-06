@@ -47,10 +47,10 @@ listes :
 - **En attente de validation** : nouveaux comptes à approuver ou refuser. À côté de chaque
   demande, un menu propose le **rôle à donner** (le rôle par défaut est choisi d'avance).
 - **Membres actifs** : tous les membres actuels. Le menu de la colonne **Rôle** change le rôle
-  d'un membre, tout de suite.
+  d'un membre, après une confirmation qui rappelle l'ancien et le nouveau rôle.
 
 **Approuver** donne accès à la plateforme avec le rôle choisi. **Refuser** supprime la demande, et
-**Retirer du BDE** supprime le compte d'un membre : ces deux boutons **demandent une confirmation**
+**Retirer du BDE** supprime le compte d'un membre : ces deux boutons **ouvrent une fenêtre de confirmation**
 avant d'agir. Si quelqu'un d'autre a déjà traité la demande ou retiré le membre, un message vous
 l'explique et la liste se met à jour toute seule. Le propriétaire n'a pas de
 menu : il se définit uniquement dans le fichier de configuration du serveur.
