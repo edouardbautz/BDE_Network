@@ -1,6 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
+import { notifyMemberApproved, notifyMemberRemoved } from '@/lib/members/notifications';
 import { MEMBERS_MANAGE } from '@/lib/permissions';
 import type { ActionResult } from '@/lib/roles/errors';
 import { execute, executeToResult } from '@/lib/roles/execute';
@@ -11,6 +13,9 @@ import * as roles from '@/lib/roles/service';
  * `execute`: the permission is checked, the actor's rights are read again from the database,
  * every rule against privilege escalation is applied and the audit entry is written, all in
  * one transaction. See lib/roles/execute.ts and lib/roles/guards.ts.
+ *
+ * Notifications (`notifyMember*`) run after the response and never throw: approving or removing
+ * someone cannot fail because a webhook or the SMTP server is down.
  *
  * Arguments come from the browser (a crafted request can send anything): an id that is not
  * a plain string is refused before it can reach a query.
@@ -32,9 +37,11 @@ export async function approveMember(userId: string, roleId: string): Promise<Act
   if (!isId(userId)) return { ok: false, error: 'targetNotFound' };
   if (!isId(roleId)) return { ok: false, error: 'roleNotFound' };
 
-  return done(
+  const result = done(
     await executeToResult(MEMBERS_MANAGE, (ctx) => roles.approveMember(ctx, userId, roleId)),
   );
+  if (result.ok) after(() => notifyMemberApproved(userId));
+  return result;
 }
 
 /** Gives an approved member another role. */
@@ -64,5 +71,6 @@ export async function removeMember(
   if (!result.ok) return result;
 
   done({ ok: true });
+  after(() => notifyMemberRemoved(result.value));
   return { ok: true, login: result.value.login };
 }

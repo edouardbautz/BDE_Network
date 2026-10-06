@@ -1,7 +1,7 @@
-import { createTranslator } from 'next-intl';
 import { getConfig } from '@/config';
 import type { NotificationEvent } from '@/config/schema';
-import { notify } from '@/lib/notifications';
+import { deliver as deliverNotification, type DeliveryResult } from '@/lib/notifications/deliver';
+import { getNotificationTranslate } from '@/lib/notifications/translate';
 import { APPROVED_STATUSES } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
 import { allOccurrences } from './recurrence';
@@ -14,63 +14,17 @@ import {
 
 const LOG_PREFIX = '[events]';
 
-interface DeliveryResult {
-  sent: number;
-  failed: number;
-}
-
-/**
- * Sends one message through the channel configured for `event`. Webhook
- * channels (Discord/Slack) get a single post; email gets one message per
- * recipient, each in its own try/catch so one bad address or a transient SMTP
- * error never prevents the others from being notified. Never throws: a
- * notification problem must not break the action that triggered it.
- */
-export async function deliver(
+/** Sends an events notification (see lib/notifications/deliver.ts). Never throws. */
+export function deliver(
   event: Extract<NotificationEvent, 'eventConfirmed' | 'eventReminder'>,
   message: BuiltMessage,
   emailRecipients: readonly string[],
 ): Promise<DeliveryResult> {
-  const result: DeliveryResult = { sent: 0, failed: 0 };
-
-  try {
-    const channel = getConfig().notifications[event];
-    if (channel === 'none') {
-      return result;
-    }
-
-    if (channel !== 'email') {
-      try {
-        await notify(event, message);
-        result.sent += 1;
-      } catch (error) {
-        result.failed += 1;
-        console.error(`${LOG_PREFIX} ${event}: ${channel} notification failed`, error);
-      }
-      return result;
-    }
-
-    for (const to of emailRecipients) {
-      try {
-        await notify(event, { ...message, to });
-        result.sent += 1;
-      } catch (error) {
-        result.failed += 1;
-        console.error(`${LOG_PREFIX} ${event}: email to a recipient failed`, error);
-      }
-    }
-  } catch (error) {
-    // Config or adapter selection problem — still must not propagate.
-    console.error(`${LOG_PREFIX} ${event}: notification aborted`, error);
-  }
-
-  return result;
+  return deliverNotification(event, message, emailRecipients, LOG_PREFIX);
 }
 
-export async function getTranslate(locale: string): Promise<Translate> {
-  const messages = (await import(`../../../messages/${locale}.json`)).default;
-  const translator = createTranslator({ locale, messages, namespace: 'events.notifications' });
-  return (key, values) => (translator as unknown as Translate)(key, values);
+export function getTranslate(locale: string): Promise<Translate> {
+  return getNotificationTranslate(locale, 'events.notifications');
 }
 
 /** Absolute link to an event page, or null when APP_URL is not set. */

@@ -22,8 +22,10 @@ import { seedClub, type FakeRolesDb } from '@/test/fake-roles-db';
  *   pend       a pending request
  */
 
-const { RedirectSignal } = vi.hoisted(() => ({
+const { RedirectSignal, afterCallbacks } = vi.hoisted(() => ({
   RedirectSignal: class RedirectSignal extends Error {},
+  /** What the actions scheduled to run after their response. */
+  afterCallbacks: [] as Array<() => unknown>,
 }));
 
 vi.mock('@/lib/prisma', async () => {
@@ -37,6 +39,15 @@ vi.mock('@/lib/auth/session', async (importOriginal) => ({
 }));
 vi.mock('@/config', () => ({ getConfig: vi.fn(() => ({ modules: { enabled: ['events'] } })) }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+vi.mock('next/server', () => ({
+  after: vi.fn((callback: () => unknown) => {
+    afterCallbacks.push(callback);
+  }),
+}));
+vi.mock('@/lib/members/notifications', () => ({
+  notifyMemberApproved: vi.fn(),
+  notifyMemberRemoved: vi.fn(),
+}));
 vi.mock('next-intl/server', () => ({ getLocale: vi.fn(async () => 'fr') }));
 vi.mock('@/i18n/navigation', () => ({
   redirect: vi.fn(() => {
@@ -49,7 +60,14 @@ const { getEffectiveSession } = await import('@/lib/auth/session');
 const members = await import('@/app/[locale]/(app)/members/actions');
 const rolePages = await import('@/app/[locale]/(app)/roles/actions');
 
+const { notifyMemberApproved, notifyMemberRemoved } = await import('@/lib/members/notifications');
+
 const MODULES = ['events'];
+
+/** Runs what the last actions scheduled for after their response, as Next would. */
+async function runAfter(): Promise<void> {
+  for (const callback of afterCallbacks.splice(0)) await callback();
+}
 
 /** The next request comes from this account, with the rights it holds right now. */
 function actAs(login: string): EffectiveSession {
@@ -83,6 +101,7 @@ async function expectUntouched(attempt: () => Promise<unknown>): Promise<void> {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  afterCallbacks.length = 0;
   db.state.roles.length = 0;
   db.state.users.length = 0;
   db.state.audit.length = 0;
@@ -954,5 +973,55 @@ describe('no way to become an owner or to reach the audit log through roles', ()
       error: 'roleNotFound',
     });
     expect(db.user('mem')?.status).toBe('MEMBER');
+  });
+});
+
+describe('member notifications', () => {
+  it('announces an approval once it went through, for the member that was approved', async () => {
+    actAs('sec');
+    await members.approveMember('u_pend', 'role-member');
+    expect(notifyMemberApproved).not.toHaveBeenCalled(); // after the response, not before
+
+    await runAfter();
+    expect(notifyMemberApproved).toHaveBeenCalledExactlyOnceWith('u_pend');
+  });
+
+  it('announces nothing when the approval is refused', async () => {
+    actAs('sec');
+    await members.approveMember('u_pend', 'role-admin'); // above the approver
+    await members.approveMember('u_mem', 'role-member'); // not pending
+
+    await runAfter();
+    expect(notifyMemberApproved).not.toHaveBeenCalled();
+  });
+
+  it('announces a removal with who was removed, once the row is gone', async () => {
+    actAs('adm');
+    await members.removeMember('u_mem');
+
+    await runAfter();
+    expect(notifyMemberRemoved).toHaveBeenCalledExactlyOnceWith({
+      login: 'mem',
+      fullName: 'mem',
+    });
+  });
+
+  it('announces nothing for a removal that is refused', async () => {
+    actAs('sec');
+    await members.removeMember('u_adm'); // above the actor
+    await members.removeMember('u_owner');
+    await members.removeMember('u_sec'); // oneself
+
+    await runAfter();
+    expect(notifyMemberRemoved).not.toHaveBeenCalled();
+  });
+
+  it('does not announce a refusal of a request (nobody asked for that message)', async () => {
+    actAs('sec');
+    await members.rejectMember('u_pend');
+
+    await runAfter();
+    expect(notifyMemberApproved).not.toHaveBeenCalled();
+    expect(notifyMemberRemoved).not.toHaveBeenCalled();
   });
 });

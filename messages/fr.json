@@ -201,6 +201,25 @@
       "description": "Un lien d'agenda du BDE est actif. Comme il suffit de le posséder pour lire l'agenda, un ancien membre qui l'aurait copié pourrait continuer à voir les événements confirmés. Nous vous conseillons de générer un nouveau lien : vous devrez alors le coller de nouveau dans l'agenda partagé.",
       "regenerate": "Générer un nouveau lien",
       "later": "Plus tard"
+    },
+    "notifications": {
+      "pending": {
+        "subject": "Nouvelle demande d'accès : {name}",
+        "intro": "{name} ({login}, campus {campus}) demande l'accès à la plateforme du BDE.",
+        "link": "Valider ou refuser la demande"
+      },
+      "approved": {
+        "memberSubject": "Votre accès à {bde} est validé",
+        "memberIntro": "Bonjour {name}, votre demande d'accès a été approuvée.",
+        "memberRole": "Votre rôle : {role}.",
+        "memberLink": "Se connecter",
+        "teamSubject": "Demande approuvée : {name}",
+        "teamBody": "{name} ({login}) a rejoint le BDE avec le rôle {role}."
+      },
+      "removed": {
+        "subject": "Membre retiré : {name}",
+        "body": "{name} ({login}) a été retiré du BDE."
+      }
     }
   },
   "auditLog": {

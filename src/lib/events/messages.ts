@@ -1,7 +1,7 @@
+import type { Translate } from '@/lib/notifications/translate';
 import { toLocalDateTime } from './time';
 
-/** `t` of the `events.notifications` namespace, decoupled from next-intl's types. */
-export type Translate = (key: string, values?: Record<string, string | number>) => string;
+export type { Translate };
 
 export interface NotificationEventData {
   eventId: string;

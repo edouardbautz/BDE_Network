@@ -1,8 +1,83 @@
 import type { JWT } from '@auth/core/jwt';
+import { after } from 'next/server';
 import type { Session, User } from 'next-auth';
 import { getConfig } from '@/config';
+import { notifyMemberPending } from '@/lib/members/notifications';
 import { prisma } from '@/lib/prisma';
 import { accessFor } from './access';
+import { accountAfterLogin } from './account';
+import { isCampusAllowed, isOwnerLogin } from './authorize';
+
+/** Where Auth.js sends a visitor whose sign-in was refused (the page explains why). */
+export const AUTH_ERROR_PATH = '/auth-error';
+
+/**
+ * Runs when someone comes back from 42, before the cookie exists: refuses profiles that are
+ * incomplete or from a campus the BDE does not take, then creates or refreshes the account.
+ * A new account starts as PENDING (OWNER when the config lists the login), and whoever can
+ * approve it is told once, after the sign-in went through.
+ */
+export async function signInCallback({ user }: { user: User }): Promise<boolean | string> {
+  const login = user.login;
+  const campus = user.campus;
+  const email = user.email;
+
+  if (!login || !campus || !email) {
+    console.error(
+      `[auth] Connexion refusée : profil 42 incomplet — login reçu : "${login ?? ''}", ` +
+        `campus reçu : "${campus ?? ''}", email reçu : "${email ?? ''}".`,
+    );
+    return `${AUTH_ERROR_PATH}?reason=missing-profile`;
+  }
+
+  const config = getConfig();
+  if (!isCampusAllowed(campus, config.auth.allowedCampuses)) {
+    const allowedLabel =
+      config.auth.allowedCampuses.length > 0
+        ? config.auth.allowedCampuses.join(', ')
+        : '(aucun filtre configuré — ce refus ne devrait pas se produire)';
+    console.error(
+      `[auth] Connexion refusée pour le login "${login}" : campus reçu "${campus}", ` +
+        `campus autorisés : [${allowedLabel}].`,
+    );
+    return `${AUTH_ERROR_PATH}?reason=campus-not-allowed&campus=${encodeURIComponent(campus)}`;
+  }
+
+  const isOwner = isOwnerLogin(login, config.auth.owners);
+  const existing = await prisma.user.findUnique({ where: { login } });
+
+  if (existing) {
+    await prisma.user.update({
+      where: { login },
+      data: {
+        fullName: user.name ?? existing.fullName,
+        email,
+        photoUrl: user.image ?? null,
+        campus,
+        ...(await accountAfterLogin(existing, isOwner)),
+        lastLoginAt: new Date(),
+      },
+    });
+  } else {
+    const created = await prisma.user.create({
+      data: {
+        login,
+        fullName: user.name ?? login,
+        email,
+        photoUrl: user.image ?? null,
+        campus,
+        status: isOwner ? 'OWNER' : 'PENDING',
+        lastLoginAt: new Date(),
+      },
+    });
+    // A new request: tell whoever can approve it, once, after the sign-in went through.
+    if (created.status === 'PENDING') {
+      after(() => notifyMemberPending(created.id));
+    }
+  }
+
+  return true;
+}
 
 /**
  * Runs when the cookie is created (sign-in, `user` set) and on every later

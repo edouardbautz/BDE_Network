@@ -314,8 +314,11 @@ export async function rejectMember(ctx: Context, userId: string): Promise<void> 
   });
 }
 
-/** Removes an approved member from the BDE: the row is deleted. Returns their login. */
-export async function removeMember(ctx: Context, userId: string): Promise<{ login: string }> {
+/** Removes an approved member from the BDE: the row is deleted. Returns who was removed. */
+export async function removeMember(
+  ctx: Context,
+  userId: string,
+): Promise<{ login: string; fullName: string }> {
   const target = await findMember(ctx, userId);
   if (target.status === 'PENDING') refuse('targetNotMember');
 
@@ -335,5 +338,5 @@ export async function removeMember(ctx: Context, userId: string): Promise<{ logi
     targetLabel: target.login,
     metadata: { role: target.role?.name ?? null },
   });
-  return { login: target.login };
+  return { login: target.login, fullName: target.fullName };
 }

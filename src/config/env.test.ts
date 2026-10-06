@@ -135,11 +135,42 @@ describe('notification channels', () => {
     expect(check(VALID_ENV, eventsConfig({ eventConfirmed: 'none' })).errors).toEqual([]);
   });
 
-  // memberPending is "email" in the example config but no use case sends it yet:
-  // a fresh install must not be refused for it.
-  it('ignores channels of notifications that nothing sends', () => {
+  // memberPending was "email" in every config before it sent anything: an install without SMTP
+  // must keep starting, with a warning, not be refused after an update.
+  it('only warns about a member notification whose channel is not set up', () => {
     const config = configWith({ notifications: { memberPending: 'email' } });
-    expect(check(VALID_ENV, config).errors).toEqual([]);
+    const report = check(VALID_ENV, config);
+
+    expect(report.errors).toEqual([]);
+    expect(report.warnings).toHaveLength(1);
+    expect(report.warnings[0]).toContain('memberPending');
+    expect(report.warnings[0]).toContain('SMTP_HOST, SMTP_PORT, SMTP_FROM');
+    expect(report.warnings[0]).toContain('« none »');
+  });
+
+  it.each([
+    ['discord', 'DISCORD_WEBHOOK_URL'],
+    ['slack', 'SLACK_WEBHOOK_URL'],
+  ])('warns when a member notification on %s has no webhook', (channel, variable) => {
+    const config = configWith({ notifications: { memberApproved: channel } });
+    const { errors, warnings } = check(VALID_ENV, config);
+
+    expect(errors).toEqual([]);
+    expect(warnings.join('\n')).toContain(variable);
+  });
+
+  it('is quiet when the channel of a member notification is set up', () => {
+    const env = { ...VALID_ENV, SMTP_HOST: 'smtp.x.fr', SMTP_PORT: '587', SMTP_FROM: 'a@x.fr' };
+    const config = configWith({ notifications: { memberPending: 'email' } });
+    expect(check(env, config).warnings).toEqual([]);
+  });
+
+  it('warns that memberRemoved never sends an e-mail', () => {
+    const env = { ...VALID_ENV, SMTP_HOST: 'smtp.x.fr', SMTP_PORT: '587', SMTP_FROM: 'a@x.fr' };
+    const { warnings } = check(env, configWith({ notifications: { memberRemoved: 'email' } }));
+
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain("n'envoie jamais d'e-mail");
   });
 
   it('ignores events notifications while the events module is off', () => {

@@ -22,8 +22,15 @@ export const PLACEHOLDER_OWNER = 'votre-login-42';
 const MIN_SECRET_LENGTH = 32;
 const OAUTH_APPS_URL = 'https://profile.intra.42.fr/oauth/applications';
 
-/** Notification events a module really sends, so only those need their channel configured. */
+/** Notification events of the events module: a channel left unconfigured is an error. */
 const EVENTS_NOTIFICATIONS = ['eventConfirmed', 'eventReminder'] as const;
+
+/**
+ * Notifications about members. Their channels were already in every config before they sent
+ * anything (the example even had `memberPending: email`), so a channel that is not set up is
+ * a warning here, not a reason to refuse to start: the platform works, the alerts do not go out.
+ */
+const MEMBER_NOTIFICATIONS = ['memberPending', 'memberApproved', 'memberRemoved'] as const;
 
 const isBlank = (value: string | undefined): boolean => !value || value.trim() === '';
 
@@ -169,7 +176,41 @@ export function validateEnvironment(env: Env, config: BdeConfig): EnvironmentRep
     );
   }
 
+  warnMemberNotifications(env, config, warnings);
+
   return { errors, warnings };
+}
+
+/** What each channel needs in `.env`, for a warning about a member notification. */
+const CHANNEL_VARIABLES: Record<string, readonly string[]> = {
+  email: ['SMTP_HOST', 'SMTP_PORT', 'SMTP_FROM'],
+  discord: ['DISCORD_WEBHOOK_URL'],
+  slack: ['SLACK_WEBHOOK_URL'],
+};
+
+function warnMemberNotifications(env: Env, config: BdeConfig, warnings: string[]): void {
+  for (const event of MEMBER_NOTIFICATIONS) {
+    const channel = config.notifications[event];
+
+    if (event === 'memberRemoved' && channel === 'email') {
+      warnings.push(
+        "La notification memberRemoved est réglée sur « email », mais elle n'envoie jamais d'e-mail\n" +
+          '    (la personne retirée ne reçoit rien). Elle ne fonctionne que sur « discord » ou « slack ».\n' +
+          '    → Changez-la dans la section notifications de bde.config.yml, ou mettez « none ».',
+      );
+      continue;
+    }
+
+    const missing = (CHANNEL_VARIABLES[channel] ?? []).filter((name) => isBlank(env[name]));
+    if (missing.length > 0) {
+      warnings.push(
+        `La notification ${event} est réglée sur « ${channel} », mais ${missing.join(', ')} ${
+          missing.length > 1 ? 'ne sont pas renseignés' : "n'est pas renseigné"
+        } dans .env : l'alerte ne partira pas.\n` +
+          `    → Renseignez-le dans .env, ou mettez « none » pour ${event} dans bde.config.yml.`,
+      );
+    }
+  }
 }
 
 /** The message printed when the application refuses to start. */

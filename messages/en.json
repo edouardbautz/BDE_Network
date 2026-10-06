@@ -201,6 +201,25 @@
       "description": "A BDE calendar link is active. Since owning it is enough to read the calendar, a former member who copied it could keep seeing confirmed events. We recommend generating a new link: you will then need to paste it into the shared calendar again.",
       "regenerate": "Generate a new link",
       "later": "Later"
+    },
+    "notifications": {
+      "pending": {
+        "subject": "New access request: {name}",
+        "intro": "{name} ({login}, campus {campus}) is asking for access to the BDE platform.",
+        "link": "Approve or refuse the request"
+      },
+      "approved": {
+        "memberSubject": "Your access to {bde} is approved",
+        "memberIntro": "Hello {name}, your access request has been approved.",
+        "memberRole": "Your role: {role}.",
+        "memberLink": "Sign in",
+        "teamSubject": "Request approved: {name}",
+        "teamBody": "{name} ({login}) joined the BDE with the role {role}."
+      },
+      "removed": {
+        "subject": "Member removed: {name}",
+        "body": "{name} ({login}) was removed from the BDE."
+      }
     }
   },
   "auditLog": {

@@ -20,6 +20,6 @@ modules:
   enabled: []
 
 notifications:
-  memberPending: 'email'
+  memberPending: 'none'
   memberApproved: 'none'
   memberRemoved: 'none'

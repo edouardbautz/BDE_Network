@@ -65,9 +65,10 @@ notifications:
   # Canal utilisé pour chaque type de notification : "email", "discord",
   # "slack" ou "none". Le canal choisi doit être configuré dans .env
   # (SMTP_*, DISCORD_WEBHOOK_URL ou SLACK_WEBHOOK_URL) pour fonctionner.
-  memberPending: 'email' # un nouveau membre attend une validation
-  memberApproved: 'none' # un membre a été approuvé
-  memberRemoved: 'none' # un membre a été retiré du BDE
+  # Notifications sur les membres (voir docs/configuration.md) :
+  memberPending: 'none' # une demande d'accès attend : prévient les propriétaires et ceux qui peuvent la valider
+  memberApproved: 'none' # une demande est approuvée : e-mail au membre, ou message dans le salon
+  memberRemoved: 'none' # un membre est retiré : message dans le salon (discord ou slack), jamais d'e-mail
   # Module "events" (ignorés si le module n'est pas activé). Optionnels : "none" par défaut.
   eventConfirmed: 'none' # un événement passe de brouillon à confirmé
   eventReminder: 'none' # rappel envoyé la veille d'un événement
