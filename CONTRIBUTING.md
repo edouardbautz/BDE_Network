@@ -3,7 +3,7 @@
 Merci de votre intérêt pour ce projet ! Ce document résume les règles générales. Pour la mise en
 place détaillée d'un environnement de développement, voir
 [docs/contributing-guide.md](docs/contributing-guide.md). Pour l'architecture et les
-conventions techniques, voir [CLAUDE.md](CLAUDE.md).
+conventions techniques, voir [docs/architecture.md](docs/architecture.md).
 
 ## Code de conduite
 
@@ -47,7 +47,7 @@ vérifications de l'intégration continue sont vertes : `ci (ubuntu-latest)`, `c
 - TypeScript strict, aucun `any`.
 - Aucun texte en dur visible par l'utilisateur — tout passe par next-intl
   (`messages/fr.json` / `en.json`).
-- Pas de script npm dépendant d'un shell Unix ou Windows spécifique (voir CLAUDE.md).
+- Pas de script npm dépendant d'un shell Unix ou Windows spécifique (voir docs/architecture.md).
 - Les composants `src/components/ui/` sont générés par shadcn/ui, ne pas les éditer à la main.
 
 ## Questions

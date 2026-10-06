@@ -47,7 +47,7 @@ configuration, sa propre application OAuth 42. Rien n'est partagé entre les ins
 
 Modules métier prévus, **pas encore disponibles** : **Finances** (budget et dépenses)
 et **Réunions** (ordres du jour et comptes rendus). La plateforme est construite pour qu'un module
-apporte ses propres droits sans toucher au cœur ([comment](CLAUDE.md)).
+apporte ses propres droits sans toucher au cœur ([comment](docs/architecture.md)).
 
 ## Démarrage rapide
 

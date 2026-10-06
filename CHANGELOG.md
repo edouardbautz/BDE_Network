@@ -5,6 +5,11 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Changed
+
+- La référence d'architecture et de conventions est maintenant **`docs/architecture.md`** (elle était dans un
+  fichier à la racine du dépôt) ; tous les liens y mènent.
+
 ## [1.0.0] - 2026-10-06
 
 Première version stable de BDE_Network : une plateforme libre et auto-hébergée pour les Bureaux Des
@@ -52,7 +57,7 @@ viennent ensuite.
   supprimer un rôle, supprimer un événement ou toute sa série, annuler une date, régénérer ou désactiver
   le lien d'agenda du BDE, régénérer son lien personnel. **Changer le rôle d'un membre** demande
   désormais aussi confirmation (en indiquant l'ancien et le nouveau rôle). Documenté dans
-  `docs/design.md` et `CLAUDE.md` pour les futurs modules.
+  `docs/design.md` et `docs/architecture.md` pour les futurs modules.
 
 - **Notifications sur les membres** (`memberPending`, `memberApproved`, `memberRemoved`), qui ne
   faisaient rien jusqu'ici : une nouvelle demande d'accès prévient les propriétaires et les rôles qui
