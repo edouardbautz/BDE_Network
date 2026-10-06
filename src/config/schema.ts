@@ -88,15 +88,15 @@ const notificationChannel = (event: (typeof NOTIFICATION_EVENTS)[number]) =>
       `le canal choisi pour "${event}" doit être l'un de : ${NOTIFICATION_CHANNELS.join(', ')}`,
   });
 
-// Notification keys added after the first release default to "none" so that
-// an older bde.config.yml keeps validating without edits.
+// Every notification defaults to "none": a BDE that has not set up e-mail, Discord or Slack
+// (most, at first) writes nothing, and an older bde.config.yml keeps validating without edits.
 const optionalNotificationChannel = (event: (typeof NOTIFICATION_EVENTS)[number]) =>
   notificationChannel(event).default('none');
 
 const notificationsSection = z.object({
-  memberPending: notificationChannel('memberPending'),
-  memberApproved: notificationChannel('memberApproved'),
-  memberRemoved: notificationChannel('memberRemoved'),
+  memberPending: optionalNotificationChannel('memberPending'),
+  memberApproved: optionalNotificationChannel('memberApproved'),
+  memberRemoved: optionalNotificationChannel('memberRemoved'),
   eventConfirmed: optionalNotificationChannel('eventConfirmed'),
   eventReminder: optionalNotificationChannel('eventReminder'),
 });
@@ -137,7 +137,8 @@ export const bdeConfigSchema = z
     auth: authSection,
     modules: modulesSection,
     events: eventsSection.optional(),
-    notifications: notificationsSection,
+    // The whole section is optional too: absent means every notification is off.
+    notifications: notificationsSection.prefault({}),
   })
   .superRefine((config, ctx) => {
     if (config.modules.enabled.includes(EVENTS_MODULE_KEY) && !config.events) {

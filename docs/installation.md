@@ -84,7 +84,9 @@ Quelques règles pour ne pas casser le fichier :
 - Si une valeur est fausse, l'application **refuse de démarrer et dit laquelle corriger** : rien
   n'est cassé, corrigez et relancez.
 
-La liste complète des réglages est dans [la référence](configuration.md).
+Les notifications (e-mail, Discord, Slack) sont **désactivées tant que vous ne les réglez pas** : le
+fichier ci-dessus n'a pas besoin d'en parler. La liste complète des réglages, notifications comprises,
+est dans [la référence](configuration.md).
 
 ### Après la mise en route : les rôles
 

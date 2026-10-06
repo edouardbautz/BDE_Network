@@ -78,6 +78,7 @@ Ne changez pas la `key` d'une catégorie existante : les événements déjà cr�
 
 ### `notifications`
 
+**Section facultative** : sans elle (ou pour une clé absente), la notification est désactivée (`"none"`).
 Canal utilisé pour chaque type de notification : `"email"`, `"discord"`, `"slack"` ou `"none"`.
 Le canal choisi doit être configuré dans `.env` pour fonctionner (SMTP pour email, URL de
 webhook pour Discord/Slack).

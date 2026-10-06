@@ -50,6 +50,31 @@ describe('bdeConfigSchema', () => {
     },
   );
 
+  it('does not need a notifications section: every notification is then off', () => {
+    const withoutNotifications: Partial<typeof validConfig> = { ...validConfig };
+    delete withoutNotifications.notifications;
+    const result = bdeConfigSchema.safeParse(withoutNotifications);
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.notifications).toEqual({
+        memberPending: 'none',
+        memberApproved: 'none',
+        memberRemoved: 'none',
+        eventConfirmed: 'none',
+        eventReminder: 'none',
+      });
+    }
+  });
+
+  it('still refuses a channel that does not exist in a notifications section that is there', () => {
+    const result = bdeConfigSchema.safeParse({
+      ...validConfig,
+      notifications: { memberPending: 'carrier-pigeon' },
+    });
+    expect(result.success).toBe(false);
+  });
+
   it('rejects an invalid accent color', () => {
     const result = bdeConfigSchema.safeParse({
       ...validConfig,
