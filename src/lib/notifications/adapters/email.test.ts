@@ -19,13 +19,17 @@ interface Delivery {
 interface TestSmtpServer {
   port: number;
   deliveries: Delivery[];
+  /** How many TCP connections the server has accepted. */
+  connections: () => number;
   close: () => Promise<void>;
 }
 
 function startSmtpServer(): Promise<TestSmtpServer> {
   const deliveries: Delivery[] = [];
+  let connections = 0;
 
   const server: Server = createServer((socket: Socket) => {
+    connections += 1;
     let draft: Delivery = { mailFrom: '', rcptTo: [], data: '' };
     let credentials: Delivery['credentials'];
     let inData = false;
@@ -48,8 +52,13 @@ function startSmtpServer(): Promise<TestSmtpServer> {
         draft.mailFrom = /<([^>]*)>/.exec(line)?.[1] ?? '';
         reply('250 OK');
       } else if (command.startsWith('RCPT TO:')) {
-        draft.rcptTo.push(/<([^>]*)>/.exec(line)?.[1] ?? '');
-        reply('250 OK');
+        const recipient = /<([^>]*)>/.exec(line)?.[1] ?? '';
+        if (recipient.startsWith('bad@')) {
+          reply('550 mailbox unavailable');
+        } else {
+          draft.rcptTo.push(recipient);
+          reply('250 OK');
+        }
       } else if (command === 'DATA') {
         inData = true;
         reply('354 End data with <CR><LF>.<CR><LF>');
@@ -91,6 +100,7 @@ function startSmtpServer(): Promise<TestSmtpServer> {
       resolve({
         port: typeof address === 'object' && address ? address.port : 0,
         deliveries,
+        connections: () => connections,
         close: () => new Promise((done) => server.close(() => done())),
       });
     });
@@ -192,6 +202,68 @@ describe('EmailAdapter', () => {
       ['alice@example.org'],
       ['bob@example.org'],
     ]);
+  });
+
+  describe('sendMany', () => {
+    const batch = (...recipients: string[]) =>
+      recipients.map((to) => ({ to, subject: 'Hello', body: 'Body' }));
+
+    it('delivers every message over one SMTP connection, not one per recipient', async () => {
+      const outcomes = await new EmailAdapter().sendMany(
+        batch('alice@example.org', 'bob@example.org', 'carol@example.org'),
+      );
+
+      expect(outcomes).toEqual([{ ok: true }, { ok: true }, { ok: true }]);
+      expect(smtp.deliveries.map((delivery) => delivery.rcptTo)).toEqual([
+        ['alice@example.org'],
+        ['bob@example.org'],
+        ['carol@example.org'],
+      ]);
+      expect(smtp.connections()).toBe(1);
+    });
+
+    it('keeps going when one address is refused, and says which one failed', async () => {
+      const outcomes = await new EmailAdapter().sendMany(
+        batch('alice@example.org', 'bad@example.org', 'carol@example.org'),
+      );
+
+      expect(outcomes.map((outcome) => outcome.ok)).toEqual([true, false, true]);
+      expect(smtp.deliveries.map((delivery) => delivery.rcptTo[0])).toEqual([
+        'alice@example.org',
+        'carol@example.org',
+      ]);
+      // A refused address makes nodemailer open a fresh connection once: still not one per recipient.
+      expect(smtp.connections()).toBeLessThanOrEqual(2);
+    });
+
+    it('does not connect at all for an empty batch or a batch of unusable messages', async () => {
+      await expect(new EmailAdapter().sendMany([])).resolves.toEqual([]);
+      const outcomes = await new EmailAdapter().sendMany([{ subject: 'Hello', body: 'Body' }]);
+
+      expect(outcomes[0]).toMatchObject({ ok: false });
+      expect(smtp.connections()).toBe(0);
+    });
+
+    it('reports the missing settings for every message instead of throwing', async () => {
+      delete process.env.SMTP_HOST;
+
+      const outcomes = await new EmailAdapter().sendMany(batch('a@example.org', 'b@example.org'));
+
+      expect(outcomes).toHaveLength(2);
+      for (const outcome of outcomes) {
+        expect(outcome).toMatchObject({ ok: false });
+        expect(String((outcome as { error: unknown }).error)).toContain('SMTP_HOST');
+      }
+    });
+
+    it('lets the process end: the connection is closed after the batch', async () => {
+      await new EmailAdapter().sendMany(batch('alice@example.org', 'bob@example.org'));
+
+      // A pooled transport left open would hold the connection (and the test run) open.
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      await expect(smtp.close()).resolves.toBeUndefined();
+      smtp = await startSmtpServer(); // reopen for afterEach
+    });
   });
 
   it('refuses a message without a recipient, before connecting', async () => {

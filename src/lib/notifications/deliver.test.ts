@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/config', () => ({ getConfig: vi.fn() }));
-vi.mock('./index', () => ({ notify: vi.fn() }));
+vi.mock('./index', () => ({ notify: vi.fn(), notifyMany: vi.fn() }));
 
 const { getConfig } = await import('@/config');
-const { notify } = await import('./index');
+const { notify, notifyMany } = await import('./index');
 const { deliver } = await import('./deliver');
 
 type Channel = 'email' | 'discord' | 'slack' | 'none';
@@ -62,21 +62,37 @@ describe('deliver', () => {
     },
   );
 
-  it('sends one email per recipient and keeps going when one fails', async () => {
+  it('sends all the emails in one batch and keeps going when one fails', async () => {
     useChannel('email');
-    vi.mocked(notify)
-      .mockResolvedValueOnce(undefined)
-      .mockRejectedValueOnce(new Error('550 mailbox unavailable'))
-      .mockResolvedValueOnce(undefined);
+    vi.mocked(notifyMany).mockResolvedValue([
+      { ok: true },
+      { ok: false, error: new Error('550 mailbox unavailable') },
+      { ok: true },
+    ]);
 
     const result = await deliver('memberPending', message, ['a@x.fr', 'bad@x.fr', 'c@x.fr'], '[t]');
 
     expect(result).toEqual({ sent: 2, failed: 1 });
-    expect(vi.mocked(notify).mock.calls.map((call) => call[1].to)).toEqual([
-      'a@x.fr',
-      'bad@x.fr',
-      'c@x.fr',
+    expect(notifyMany).toHaveBeenCalledExactlyOnceWith('memberPending', [
+      { ...message, to: 'a@x.fr' },
+      { ...message, to: 'bad@x.fr' },
+      { ...message, to: 'c@x.fr' },
     ]);
+    expect(notify).not.toHaveBeenCalled();
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('[t] memberPending: email to a recipient failed'),
+      expect.any(Error),
+    );
+  });
+
+  it('reports nothing sent when there is no recipient', async () => {
+    useChannel('email');
+    vi.mocked(notifyMany).mockResolvedValue([]);
+
+    await expect(deliver('memberPending', message, [], '[t]')).resolves.toEqual({
+      sent: 0,
+      failed: 0,
+    });
   });
 
   it('never throws, even when the configuration itself cannot be read', async () => {

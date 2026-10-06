@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/config', () => ({ getConfig: vi.fn() }));
-vi.mock('@/lib/notifications', () => ({ notify: vi.fn() }));
+vi.mock('@/lib/notifications', () => ({ notify: vi.fn(), notifyMany: vi.fn() }));
 vi.mock('next-intl', () => ({ createTranslator: vi.fn(() => (key: string) => key) }));
 vi.mock('@/lib/prisma', () => ({
   prisma: {
@@ -11,7 +11,7 @@ vi.mock('@/lib/prisma', () => ({
 }));
 
 const { getConfig } = await import('@/config');
-const { notify } = await import('@/lib/notifications');
+const { notify, notifyMany } = await import('@/lib/notifications');
 const { prisma } = await import('@/lib/prisma');
 const { deliver, notifyEventConfirmed } = await import('./notifications');
 
@@ -30,6 +30,10 @@ const message = { subject: 'Sujet', body: 'Corps' };
 beforeEach(() => {
   vi.clearAllMocks();
   vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  // By default every email goes through.
+  vi.mocked(notifyMany).mockImplementation(async (_event, messages) =>
+    messages.map(() => ({ ok: true as const })),
+  );
 });
 
 describe('deliver', () => {
@@ -42,31 +46,37 @@ describe('deliver', () => {
     expect(notify).not.toHaveBeenCalled();
   });
 
-  it('sends one email per recipient', async () => {
+  it('sends one email per recipient, all in one batch', async () => {
     useChannel('email');
     await deliver('eventConfirmed', message, ['a@x.fr', 'b@x.fr']);
-    expect(notify).toHaveBeenCalledTimes(2);
-    expect(notify).toHaveBeenCalledWith('eventConfirmed', { ...message, to: 'a@x.fr' });
-    expect(notify).toHaveBeenCalledWith('eventConfirmed', { ...message, to: 'b@x.fr' });
+
+    expect(notifyMany).toHaveBeenCalledExactlyOnceWith('eventConfirmed', [
+      { ...message, to: 'a@x.fr' },
+      { ...message, to: 'b@x.fr' },
+    ]);
+    expect(notify).not.toHaveBeenCalled();
   });
 
-  it('keeps notifying the other recipients when one email fails', async () => {
+  it('counts, and logs, the recipients whose email failed, without stopping the others', async () => {
     useChannel('email');
-    vi.mocked(notify)
-      .mockResolvedValueOnce(undefined)
-      .mockRejectedValueOnce(new Error('550 mailbox unavailable'))
-      .mockResolvedValueOnce(undefined);
+    vi.mocked(notifyMany).mockResolvedValue([
+      { ok: true },
+      { ok: false, error: new Error('550 mailbox unavailable') },
+      { ok: true },
+    ]);
 
     const result = await deliver('eventConfirmed', message, ['a@x.fr', 'bad@x.fr', 'c@x.fr']);
 
     expect(result).toEqual({ sent: 2, failed: 1 });
-    expect(notify).toHaveBeenCalledTimes(3);
-    expect(notify).toHaveBeenLastCalledWith('eventConfirmed', { ...message, to: 'c@x.fr' });
+    expect(console.error).toHaveBeenCalledTimes(1);
   });
 
   it('does not throw when every email fails', async () => {
     useChannel('email');
-    vi.mocked(notify).mockRejectedValue(new Error('SMTP down'));
+    vi.mocked(notifyMany).mockResolvedValue([
+      { ok: false, error: new Error('SMTP down') },
+      { ok: false, error: new Error('SMTP down') },
+    ]);
     await expect(deliver('eventReminder', message, ['a@x.fr', 'b@x.fr'])).resolves.toEqual({
       sent: 0,
       failed: 2,
@@ -87,6 +97,7 @@ describe('deliver', () => {
     useChannel('discord');
     vi.mocked(notify).mockRejectedValue(new Error('webhook responded with 500'));
     await expect(deliver('eventConfirmed', message, [])).resolves.toEqual({ sent: 0, failed: 1 });
+    expect(notifyMany).not.toHaveBeenCalled();
   });
 
   it('does not throw when the configuration cannot be read', async () => {
@@ -138,13 +149,16 @@ describe('notifyEventConfirmed', () => {
       where: { status: { in: ['MEMBER', 'OWNER'] } },
       select: { email: true },
     });
-    expect(notify).toHaveBeenCalledTimes(2);
+    expect(notifyMany).toHaveBeenCalledWith('eventConfirmed', [
+      expect.objectContaining({ to: 'a@x.fr' }),
+      expect.objectContaining({ to: 'b@x.fr' }),
+    ]);
   });
 
   it('sends nothing when the event was already notified (claim lost)', async () => {
     vi.mocked(prisma.event.updateMany).mockResolvedValue({ count: 0 });
     await notifyEventConfirmed('evt1');
-    expect(notify).not.toHaveBeenCalled();
+    expect(notifyMany).not.toHaveBeenCalled();
     expect(prisma.event.findUnique).not.toHaveBeenCalled();
   });
 
@@ -156,8 +170,8 @@ describe('notifyEventConfirmed', () => {
   });
 
   it('never throws when every delivery fails', async () => {
-    vi.mocked(notify).mockRejectedValue(new Error('SMTP down'));
+    vi.mocked(notifyMany).mockRejectedValue(new Error('SMTP down'));
     await expect(notifyEventConfirmed('evt1')).resolves.toBeUndefined();
-    expect(notify).toHaveBeenCalledTimes(2);
+    expect(notifyMany).toHaveBeenCalledTimes(1);
   });
 });

@@ -4,7 +4,7 @@ import { DiscordAdapter } from './adapters/discord';
 import { EmailAdapter } from './adapters/email';
 import { NoneAdapter } from './adapters/none';
 import { SlackAdapter } from './adapters/slack';
-import type { NotificationAdapter, NotificationMessage } from './types';
+import type { NotificationAdapter, NotificationMessage, SendOutcome } from './types';
 
 function getAdapter(channel: string): NotificationAdapter {
   switch (channel) {
@@ -34,4 +34,30 @@ export async function notify(
   await getAdapter(channel).send(message);
 }
 
-export type { NotificationAdapter, NotificationMessage } from './types';
+/**
+ * Sends the same event's notification as several messages (one per email recipient). An adapter
+ * that can share a connection does (see `sendMany`); the others send one after the other. One
+ * outcome per message; never throws for a single failure.
+ */
+export async function notifyMany(
+  event: NotificationEvent,
+  messages: NotificationMessage[],
+): Promise<SendOutcome[]> {
+  const adapter = getAdapter(getConfig().notifications[event]);
+  if (adapter.sendMany) {
+    return adapter.sendMany(messages);
+  }
+
+  const outcomes: SendOutcome[] = [];
+  for (const message of messages) {
+    try {
+      await adapter.send(message);
+      outcomes.push({ ok: true });
+    } catch (error) {
+      outcomes.push({ ok: false, error });
+    }
+  }
+  return outcomes;
+}
+
+export type { NotificationAdapter, NotificationMessage, SendOutcome } from './types';

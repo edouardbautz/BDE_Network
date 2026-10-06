@@ -1,6 +1,6 @@
 import { getConfig } from '@/config';
 import type { NotificationEvent } from '@/config/schema';
-import { notify } from './index';
+import { notify, notifyMany } from './index';
 import type { NotificationMessage } from './types';
 
 export interface DeliveryResult {
@@ -40,13 +40,17 @@ export async function deliver(
       return result;
     }
 
-    for (const to of emailRecipients) {
-      try {
-        await notify(event, { ...message, to });
+    // One connection for all the recipients; a refused address does not stop the others.
+    const outcomes = await notifyMany(
+      event,
+      emailRecipients.map((to) => ({ ...message, to })),
+    );
+    for (const outcome of outcomes) {
+      if (outcome.ok) {
         result.sent += 1;
-      } catch (error) {
+      } else {
         result.failed += 1;
-        console.error(`${logPrefix} ${event}: email to a recipient failed`, error);
+        console.error(`${logPrefix} ${event}: email to a recipient failed`, outcome.error);
       }
     }
   } catch (error) {

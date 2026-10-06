@@ -1,6 +1,7 @@
 import { getConfig } from '@/config';
 import { deliver } from '@/lib/notifications/deliver';
 import { getNotificationTranslate } from '@/lib/notifications/translate';
+import { emailsOfHolders } from '@/lib/notifications/recipients';
 import { MEMBERS_MANAGE } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
 import {
@@ -29,24 +30,6 @@ function appLink(locale: string, path = ''): string | null {
   return base ? `${base}/${locale}${path}` : null;
 }
 
-/** Addresses of the people who can approve a request: owners, and members whose role holds
- * `members.manage` (or every permission). */
-async function approverEmails(): Promise<string[]> {
-  const approvers = await prisma.user.findMany({
-    where: {
-      OR: [
-        { status: 'OWNER' },
-        {
-          status: 'MEMBER',
-          role: { OR: [{ allPermissions: true }, { permissions: { has: MEMBERS_MANAGE } }] },
-        },
-      ],
-    },
-    select: { email: true },
-  });
-  return approvers.map((approver) => approver.email);
-}
-
 /** A new account is waiting for approval: tells whoever can approve it. */
 export async function notifyMemberPending(userId: string): Promise<void> {
   try {
@@ -65,7 +48,7 @@ export async function notifyMemberPending(userId: string): Promise<void> {
       await translate(locale),
       appLink(locale, '/members'),
     );
-    await deliver('memberPending', message, await approverEmails(), LOG_PREFIX);
+    await deliver('memberPending', message, await emailsOfHolders(MEMBERS_MANAGE), LOG_PREFIX);
   } catch (error) {
     console.error(`${LOG_PREFIX} memberPending: notification failed`, error);
   }

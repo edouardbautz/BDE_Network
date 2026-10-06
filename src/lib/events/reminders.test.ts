@@ -4,6 +4,7 @@ vi.mock('@/config', () => ({ getConfig: vi.fn() }));
 vi.mock('@/lib/prisma', () => ({
   prisma: { event: { findMany: vi.fn() }, eventReminder: { create: vi.fn() } },
 }));
+vi.mock('@/lib/notifications/recipients', () => ({ emailsOfHolders: vi.fn() }));
 vi.mock('./messages', () => ({
   buildReminderMessage: vi.fn(() => ({ subject: 'Rappel', body: 'Demain' })),
 }));
@@ -16,16 +17,18 @@ vi.mock('./notifications', () => ({
 const { getConfig } = await import('@/config');
 const { prisma } = await import('@/lib/prisma');
 const { deliver } = await import('./notifications');
+const { emailsOfHolders } = await import('@/lib/notifications/recipients');
 const { reminderDueAt, runReminderTick } = await import('./reminders');
 
 const PARIS = 'Europe/Paris';
 
-function setConfig(options: { enabled?: boolean } = {}) {
+function setConfig(options: { enabled?: boolean; channel?: string } = {}) {
   const enabled = options.enabled ?? true;
   vi.mocked(getConfig).mockReturnValue({
     bde: { timezone: PARIS, defaultLocale: 'fr' },
     modules: { enabled: enabled ? ['events'] : [] },
     events: { categories: [], reminderHour: 18 },
+    notifications: { eventReminder: options.channel ?? 'email' },
   } as unknown as ReturnType<typeof getConfig>);
 }
 
@@ -219,10 +222,49 @@ describe('runReminderTick', () => {
     expect(deliver).not.toHaveBeenCalled();
   });
 
-  it('sends the reminder to nobody by email when no member in charge has an account', async () => {
-    const orphan = event({ assignees: [{ login: 'gone', user: null }] });
-    vi.mocked(prisma.event.findMany).mockResolvedValue([orphan] as never);
-    await runReminderTick(new Date('2026-10-09T17:00:00Z'));
-    expect(deliver).toHaveBeenCalledWith('eventReminder', expect.anything(), []);
+  describe('when nobody is in charge to write to', () => {
+    const now = new Date('2026-10-09T17:00:00Z');
+
+    it('goes to the people who can manage the events, not to no one', async () => {
+      vi.mocked(emailsOfHolders).mockResolvedValue(['owner@x.fr', 'resp@x.fr']);
+      vi.mocked(prisma.event.findMany).mockResolvedValue([event({ assignees: [] })] as never);
+
+      await runReminderTick(now);
+
+      expect(emailsOfHolders).toHaveBeenCalledExactlyOnceWith('events.manage');
+      expect(deliver).toHaveBeenCalledWith('eventReminder', expect.anything(), [
+        'owner@x.fr',
+        'resp@x.fr',
+      ]);
+    });
+
+    it('does the same when the people in charge no longer have an account', async () => {
+      vi.mocked(emailsOfHolders).mockResolvedValue(['owner@x.fr']);
+      const orphan = event({ assignees: [{ login: 'gone', user: null }] });
+      vi.mocked(prisma.event.findMany).mockResolvedValue([orphan] as never);
+
+      await runReminderTick(now);
+
+      expect(deliver).toHaveBeenCalledWith('eventReminder', expect.anything(), ['owner@x.fr']);
+    });
+
+    it('is not used when someone in charge can be written to', async () => {
+      vi.mocked(prisma.event.findMany).mockResolvedValue([event()] as never);
+
+      await runReminderTick(now);
+
+      expect(emailsOfHolders).not.toHaveBeenCalled();
+      expect(deliver).toHaveBeenCalledWith('eventReminder', expect.anything(), ['alice@x.fr']);
+    });
+
+    it('is not even looked up on a chat channel, which needs no recipient', async () => {
+      setConfig({ channel: 'discord' });
+      vi.mocked(prisma.event.findMany).mockResolvedValue([event({ assignees: [] })] as never);
+
+      await runReminderTick(now);
+
+      expect(emailsOfHolders).not.toHaveBeenCalled();
+      expect(deliver).toHaveBeenCalledWith('eventReminder', expect.anything(), []);
+    });
   });
 });
