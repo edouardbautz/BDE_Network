@@ -12,8 +12,10 @@ import { canManageSharedCalendar, getEventsAccess } from '@/lib/events/access';
 import { getBdeFeedToken } from '@/lib/events/export';
 import { getOrigin } from '@/lib/events/origin';
 import { disableSharedCalendar, enableSharedCalendar, regenerateSharedCalendar } from './actions';
+import { pageTitle } from '@/lib/page-title';
 
 export const dynamic = 'force-dynamic';
+export const generateMetadata = pageTitle('events', 'sharedCalendar.title');
 
 const STATUSES = ['enabled', 'regenerated', 'disabled'] as const;
 

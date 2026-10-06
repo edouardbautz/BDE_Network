@@ -49,6 +49,7 @@ vi.mock('@/config', () => ({
   getConfig: vi.fn(() => ({
     bde: { timezone: 'Europe/Paris', name: 'BDE Test' },
     modules: { enabled: ['events'] },
+    notifications: { eventConfirmed: 'email' },
     events: {
       categories: [
         { key: 'soiree', label: 'Soirée', color: '#db2777' },
@@ -115,6 +116,7 @@ const storedEvent = {
   recurrenceUntil: null,
   schoolYear: '2099-2100',
   authorLogin: 'alice',
+  confirmationNotifiedAt: null,
   assignees: [{ login: 'alice', userId: 'u1', user: { fullName: 'Alice A' } }],
   cancellations: [],
 };
@@ -260,6 +262,20 @@ describe('/events/[id]', () => {
     expect(html).toContain('/events/evt1/edit');
     expect(html).toContain('detail.delete.button');
     expect(html).toContain('detail.backToDraft');
+  });
+
+  it('offers a draft to be confirmed (through a dialog), and a confirmed event to go back to draft (directly)', async () => {
+    vi.mocked(getEventsAccess).mockResolvedValue(asManager);
+
+    vi.mocked(getVisibleEvent).mockResolvedValue({ ...storedEvent, status: 'DRAFT' } as never);
+    const draftHtml = await detailPage();
+    expect(draftHtml).toContain('detail.confirm');
+    expect(draftHtml).not.toContain('detail.backToDraft');
+
+    vi.mocked(getVisibleEvent).mockResolvedValue(storedEvent as never);
+    const confirmedHtml = await detailPage();
+    expect(confirmedHtml).toContain('detail.backToDraft');
+    expect(confirmedHtml).not.toContain('detail.confirm');
   });
 
   it('lists the occurrences of a series, with cancel buttons for managers only', async () => {

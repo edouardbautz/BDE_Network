@@ -1,6 +1,6 @@
 import type { Prisma } from '@/generated/prisma/client';
 import { logAuditEvent } from '@/lib/audit-log';
-import { impersonationAuditFields } from '@/lib/auth/session';
+import { simulationAuditFields } from '@/lib/audit-fields';
 import type { EventsAccess } from './access';
 
 export type EventAuditAction =
@@ -26,7 +26,7 @@ export async function auditEventAction(
     targetType: 'Event',
     targetId: event.id,
     targetLabel: event.title,
-    metadata: { ...metadata, ...impersonationAuditFields(access.session) },
+    metadata: { ...metadata, ...simulationAuditFields(access.session.simulatedAs) },
   });
 }
 
@@ -48,6 +48,6 @@ export async function auditCalendarFeedAction(
     action,
     targetType: 'CalendarFeed',
     targetLabel: 'BDE',
-    metadata: { ...metadata, ...impersonationAuditFields(access.session) },
+    metadata: { ...metadata, ...simulationAuditFields(access.session.simulatedAs) },
   });
 }

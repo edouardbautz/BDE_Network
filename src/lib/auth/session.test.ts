@@ -20,7 +20,7 @@ vi.mock('@/lib/dev-impersonation', () => ({
 const { auth } = await import('@/lib/auth');
 const { prisma } = await import('@/lib/prisma');
 const { isDevImpersonationEnabled, getImpersonation } = await import('@/lib/dev-impersonation');
-const { getEffectiveSession, impersonationAuditFields } = await import('./session');
+const { getEffectiveSession } = await import('./session');
 
 // NextAuth's `auth` export is overloaded (plain call / middleware / route
 // wrapper) — pin it to the plain-call signature so `vi.mocked` doesn't
@@ -165,21 +165,5 @@ describe('getEffectiveSession', () => {
 
     expect(result?.user.status).toBe('OWNER');
     expect(result?.isImpersonating).toBe(false);
-  });
-});
-
-describe('impersonationAuditFields', () => {
-  it('flags the simulated role, and nothing otherwise', () => {
-    const base = {
-      user: sessionFor('OWNER').user,
-      isImpersonating: false,
-      realStatus: 'OWNER' as const,
-    };
-    expect(impersonationAuditFields({ ...base, simulatedAs: null })).toEqual({});
-    expect(
-      impersonationAuditFields({ ...base, isImpersonating: true, simulatedAs: 'Trésorier' }),
-    ).toEqual({
-      simulatedAsRole: 'Trésorier',
-    });
   });
 });

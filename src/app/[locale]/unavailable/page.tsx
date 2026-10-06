@@ -1,12 +1,17 @@
 import { CloudOff } from 'lucide-react';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/page-title';
 import { UnavailableRetry } from '@/components/layout/unavailable-retry';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = { robots: { index: false } };
+const title = pageTitle('unavailable', 'title');
+
+export async function generateMetadata(props: Parameters<typeof title>[0]): Promise<Metadata> {
+  return { ...(await title(props)), robots: { index: false } };
+}
 
 /** Where visitors land when the database cannot be reached (see isDatabaseReachable).
  * Public and free of any data access, so it renders even while everything else is down. */

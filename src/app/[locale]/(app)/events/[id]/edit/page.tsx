@@ -8,8 +8,10 @@ import { getCategories } from '@/lib/events/categories';
 import { getVisibleEvent, listAssignableMembers } from '@/lib/events/queries';
 import { formatLocalDateInput, formatLocalInput } from '@/lib/events/time';
 import { updateEvent } from '../../actions';
+import { pageTitle } from '@/lib/page-title';
 
 export const dynamic = 'force-dynamic';
+export const generateMetadata = pageTitle('events', 'form.editTitle');
 
 export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
   const access = await getEventsAccess();

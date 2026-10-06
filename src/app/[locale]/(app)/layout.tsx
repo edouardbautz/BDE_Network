@@ -63,6 +63,7 @@ export default async function AppLayout({
       menuLabel={t('openMenu')}
       navLabel={t('menuTitle')}
       navDescription={t('menuDescription')}
+      skipLabel={t('skipToContent')}
       userMenu={
         <UserMenu
           name={session.user.name ?? session.user.login}

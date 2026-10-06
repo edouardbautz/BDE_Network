@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
-import { getMessages, setRequestLocale } from 'next-intl/server';
+import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { getConfig } from '@/config';
 import { routing } from '@/i18n/routing';
@@ -26,11 +26,19 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-export async function generateMetadata(): Promise<Metadata> {
-  const config = getConfig();
+/** Every page sets its own title (see lib/page-title.ts); this is the frame around it and the
+ * title of a page that sets none: "Members · BDE name". */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const name = getConfig().bde.name;
+  const t = await getTranslations({ locale, namespace: 'metadata' });
   return {
-    title: config.bde.name,
-    description: `Plateforme de gestion du ${config.bde.name}`,
+    title: { default: name, template: `%s · ${name}` },
+    description: t('description', { name }),
   };
 }
 

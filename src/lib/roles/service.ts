@@ -1,4 +1,5 @@
 import type { Prisma, Role } from '@/generated/prisma/client';
+import { simulationAuditFields } from '@/lib/audit-fields';
 import { logAuditEvent } from '@/lib/audit-log';
 import {
   activePermissionKeys,
@@ -76,7 +77,7 @@ async function audit(
       targetLabel: entry.targetLabel,
       metadata: {
         ...entry.metadata,
-        ...(ctx.simulatedAs ? { simulatedAsRole: ctx.simulatedAs } : {}),
+        ...simulationAuditFields(ctx.simulatedAs),
       },
     },
     ctx.tx,

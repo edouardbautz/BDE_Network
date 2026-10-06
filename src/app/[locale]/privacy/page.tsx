@@ -3,12 +3,14 @@ import { getEffectiveSession } from '@/lib/auth/session';
 import { getConfig } from '@/config';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { pageTitle } from '@/lib/page-title';
 
 export const dynamic = 'force-dynamic';
+export const generateMetadata = pageTitle('privacy', 'title');
 
 export default async function PrivacyPage() {
   const [session, t] = await Promise.all([getEffectiveSession(), getTranslations('privacy')]);
-  const bdeName = getConfig().bde.name;
+  const { name: bdeName, contactEmail } = getConfig().bde;
   const dataItems = t.raw('dataCollected.items') as string[];
 
   return (
@@ -35,6 +37,16 @@ export default async function PrivacyPage() {
       </section>
 
       <section className="flex flex-col gap-2">
+        <h2 className="text-sm font-semibold">{t('notifications.title')}</h2>
+        <p className="text-muted-foreground text-sm">{t('notifications.description')}</p>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-sm font-semibold">{t('calendar.title')}</h2>
+        <p className="text-muted-foreground text-sm">{t('calendar.description')}</p>
+      </section>
+
+      <section className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold">{t('retention.title')}</h2>
         <p className="text-muted-foreground text-sm">{t('retention.description')}</p>
       </section>
@@ -51,7 +63,19 @@ export default async function PrivacyPage() {
 
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold">{t('contact.title')}</h2>
-        <p className="text-muted-foreground text-sm">{t('contact.description', { bdeName })}</p>
+        <p className="text-muted-foreground text-sm">
+          {contactEmail ? (
+            <>
+              {t('contact.withAddress')}{' '}
+              <a href={`mailto:${contactEmail}`} className="text-foreground underline">
+                {contactEmail}
+              </a>
+              .
+            </>
+          ) : (
+            t('contact.description', { bdeName })
+          )}
+        </p>
       </section>
 
       {session && (

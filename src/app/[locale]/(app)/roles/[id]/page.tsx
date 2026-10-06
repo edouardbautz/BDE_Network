@@ -16,8 +16,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { updateRole } from '../actions';
+import { pageTitle } from '@/lib/page-title';
 
 export const dynamic = 'force-dynamic';
+export const generateMetadata = pageTitle('roles', 'edit.title');
 
 export default async function EditRolePage({
   params,

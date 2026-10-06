@@ -9,8 +9,10 @@ import { buildPermissionGroups } from '@/components/roles/permission-groups';
 import { RoleForm } from '@/components/roles/role-form';
 import { Button } from '@/components/ui/button';
 import { createRole } from '../actions';
+import { pageTitle } from '@/lib/page-title';
 
 export const dynamic = 'force-dynamic';
+export const generateMetadata = pageTitle('roles', 'new.title');
 
 export default async function NewRolePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

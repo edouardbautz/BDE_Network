@@ -22,8 +22,10 @@ import { readEventNotice } from '@/lib/events/notice';
 import { getFilterOptions, listOccurrences, listUpcomingOccurrences } from '@/lib/events/queries';
 import { parseEventsQuery, type RawSearchParams } from '@/lib/events/search-params';
 import { fromLocalDateTime } from '@/lib/events/time';
+import { pageTitle } from '@/lib/page-title';
 
 export const dynamic = 'force-dynamic';
+export const generateMetadata = pageTitle('events', 'title');
 
 const LIST_LIMIT = 100;
 

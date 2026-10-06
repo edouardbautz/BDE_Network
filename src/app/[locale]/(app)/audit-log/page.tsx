@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { canViewAuditLog } from '@/lib/permissions';
 import { redirect } from '@/i18n/navigation';
 import { Card, CardContent } from '@/components/ui/card';
+import { pageTitle } from '@/lib/page-title';
 import {
   Table,
   TableBody,
@@ -15,6 +16,7 @@ import {
 } from '@/components/ui/table';
 
 export const dynamic = 'force-dynamic';
+export const generateMetadata = pageTitle('auditLog', 'title');
 
 export default async function AuditLogPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

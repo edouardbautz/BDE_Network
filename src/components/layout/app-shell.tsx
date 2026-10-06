@@ -39,6 +39,8 @@ interface AppShellProps {
   menuLabel: string;
   navLabel: string;
   navDescription: string;
+  /** The skip link, first stop of the keyboard: "Skip to the content". */
+  skipLabel: string;
   children: ReactNode;
 }
 
@@ -104,6 +106,7 @@ export function AppShell({
   menuLabel,
   navLabel,
   navDescription,
+  skipLabel,
   children,
 }: AppShellProps) {
   const [open, setOpen] = useState(false);
@@ -114,7 +117,7 @@ export function AppShell({
         href="#main-content"
         className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-3 focus-visible:left-3 focus-visible:z-50 focus-visible:rounded-md focus-visible:bg-primary focus-visible:px-3 focus-visible:py-2 focus-visible:text-sm focus-visible:font-medium focus-visible:text-primary-foreground"
       >
-        {navLabel}
+        {skipLabel}
       </a>
 
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">

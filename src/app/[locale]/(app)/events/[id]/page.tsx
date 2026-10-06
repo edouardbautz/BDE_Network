@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from '@/i18n/navigation';
 import { getEventsAccess } from '@/lib/events/access';
+import { confirmationNotice } from '@/lib/events/confirmation-notice';
 import { resolveCategory } from '@/lib/events/categories';
 import { formatDateTimeRange, formatLongDate, formatTimeRange } from '@/lib/events/format';
 import { readEventNotice } from '@/lib/events/notice';
@@ -28,8 +29,10 @@ import { getVisibleEvent } from '@/lib/events/queries';
 import { allOccurrences } from '@/lib/events/recurrence';
 import { cn } from '@/lib/utils';
 import { cancelOccurrence, deleteEvent, restoreOccurrence, setEventStatus } from '../actions';
+import { pageTitle } from '@/lib/page-title';
 
 export const dynamic = 'force-dynamic';
+export const generateMetadata = pageTitle('events', 'title');
 
 const MAX_LISTED_OCCURRENCES = 40;
 
@@ -101,7 +104,22 @@ export default async function EventDetailPage({
 
   const upcoming = occurrences.filter((o) => o.end.getTime() >= now);
   const pastCount = occurrences.length - upcoming.length;
-  const nextStatus = event.status === 'DRAFT' ? 'CONFIRMED' : 'DRAFT';
+  const notice = confirmationNotice(
+    getConfig().notifications.eventConfirmed,
+    event.confirmationNotifiedAt !== null,
+  );
+  const confirmationText = [
+    t('detail.confirmDialog.body'),
+    notice === 'notifyChat'
+      ? t('detail.confirmDialog.notifyChat', {
+          channel: getConfig().notifications.eventConfirmed === 'slack' ? 'Slack' : 'Discord',
+        })
+      : notice
+        ? t(`detail.confirmDialog.${notice}`)
+        : null,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <div className="flex flex-col gap-6">
@@ -152,25 +170,36 @@ export default async function EventDetailPage({
                 <Pencil data-icon="inline-start" />
                 {t('detail.edit')}
               </Button>
-              <form
-                action={async () => {
-                  'use server';
-                  await setEventStatus(event.id, nextStatus);
-                }}
-              >
-                <Button
-                  size="sm"
-                  variant={event.status === 'DRAFT' ? 'default' : 'secondary'}
-                  type="submit"
+              {event.status === 'DRAFT' ? (
+                // Confirming shows the event to every member and may notify them: it asks first,
+                // in the normal style (it is not destructive: going back to draft undoes it).
+                <ConfirmDialog
+                  tone="default"
+                  triggerVariant="default"
+                  title={t('detail.confirmDialog.title')}
+                  description={confirmationText}
+                  confirmLabel={t('detail.confirmDialog.confirm')}
+                  onConfirm={async () => {
+                    'use server';
+                    await setEventStatus(event.id, 'CONFIRMED');
+                  }}
                 >
-                  {event.status === 'DRAFT' ? (
-                    <CircleCheck data-icon="inline-start" />
-                  ) : (
+                  <CircleCheck data-icon="inline-start" />
+                  {t('detail.confirm')}
+                </ConfirmDialog>
+              ) : (
+                <form
+                  action={async () => {
+                    'use server';
+                    await setEventStatus(event.id, 'DRAFT');
+                  }}
+                >
+                  <Button size="sm" variant="secondary" type="submit">
                     <Undo2 data-icon="inline-start" />
-                  )}
-                  {event.status === 'DRAFT' ? t('detail.confirm') : t('detail.backToDraft')}
-                </Button>
-              </form>
+                    {t('detail.backToDraft')}
+                  </Button>
+                </form>
+              )}
             </>
           )}
         </div>

@@ -5,8 +5,10 @@ import { getEffectiveSession } from '@/lib/auth/session';
 import { redirect } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { pageTitle } from '@/lib/page-title';
 
 export const dynamic = 'force-dynamic';
+export const generateMetadata = pageTitle('pending', 'title');
 
 export default async function PendingPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

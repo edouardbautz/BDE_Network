@@ -3,8 +3,10 @@ import { getTranslations } from 'next-intl/server';
 import { getEffectiveSession } from '@/lib/auth/session';
 import { Link, redirect } from '@/i18n/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { pageTitle } from '@/lib/page-title';
 
 export const dynamic = 'force-dynamic';
+export const generateMetadata = pageTitle('auth', 'errors.title');
 
 const KNOWN_REASONS = ['missing-profile', 'campus-not-allowed'] as const;
 type KnownReason = (typeof KNOWN_REASONS)[number];

@@ -1,10 +1,4 @@
 {
-  "common": {
-    "cancel": "Annuler",
-    "save": "Enregistrer",
-    "loading": "Chargement…",
-    "back": "Retour"
-  },
   "theme": {
     "light": "Clair",
     "dark": "Sombre",
@@ -17,8 +11,7 @@
     "page": {
       "title": "Rôles",
       "description": "Un rôle regroupe des droits. Chaque membre a un seul rôle, que vous lui donnez depuis la page Membres.",
-      "create": "Créer un rôle",
-      "membersLink": "Aller aux membres"
+      "create": "Créer un rôle"
     },
     "saved": {
       "created": "Le rôle a été créé.",
@@ -155,7 +148,8 @@
     "menuTitle": "Navigation",
     "menuDescription": "Liens de navigation principaux de la plateforme du bureau.",
     "events": "Événements",
-    "profile": "Mon profil"
+    "profile": "Mon profil",
+    "skipToContent": "Aller au contenu"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -270,16 +264,25 @@
     },
     "cookies": {
       "title": "Cookies",
-      "description": "Seul un cookie de session, nécessaire à la connexion, est utilisé. Aucun cookie de suivi ou de mesure d'audience n'est déposé."
+      "description": "Seuls des cookies techniques sont utilisés, aucun pour du suivi ou de la mesure d'audience : le cookie de session (jusqu'à 30 jours), qui vous garde connecté ; de courts cookies de sécurité déposés pendant la connexion avec 42 ; et un cookie qui retient votre langue. Votre choix de thème (clair ou sombre) est gardé dans le navigateur, sans cookie."
     },
     "contact": {
       "title": "Contact",
-      "description": "Pour toute question, contactez un administrateur ou propriétaire de {bdeName}."
+      "description": "Pour toute question, contactez un administrateur ou propriétaire de {bdeName}.",
+      "withAddress": "Pour toute question ou pour exercer vos droits, écrivez à"
     },
     "export": {
       "title": "Exporter mes données",
       "description": "Téléchargez une copie de toutes les données vous concernant, au format JSON.",
       "button": "Télécharger mes données"
+    },
+    "notifications": {
+      "title": "E-mails et notifications",
+      "description": "Votre adresse e-mail sert aussi à vous écrire : si votre bureau a activé l'envoi d'e-mails, vous pouvez en recevoir quand votre accès est approuvé, quand un événement est confirmé ou la veille d'un événement dont vous êtes en charge. Les propriétaires et les membres qui peuvent valider les accès reçoivent les nouvelles demandes. Des messages peuvent aussi être publiés dans le salon Discord ou Slack du bureau : ils mentionnent le nom et le login des personnes concernées (nouvelle demande, membre approuvé ou retiré)."
+    },
+    "calendar": {
+      "title": "Lien d'agenda personnel",
+      "description": "Si le module Événements est activé, un lien d'abonnement personnel (un code aléatoire) est créé pour votre agenda. Quiconque possède ce lien peut lire les événements que vous avez le droit de voir : ne le partagez pas. Vous pouvez le remplacer à tout moment depuis « Mon profil » ; il cesse de fonctionner si votre compte est supprimé."
     }
   },
   "events": {
@@ -384,6 +387,14 @@
         "confirm": "Oui, supprimer définitivement",
         "title": "Supprimer cet événement ?",
         "titleSeries": "Supprimer toute la série ?"
+      },
+      "confirmDialog": {
+        "title": "Confirmer cet événement ?",
+        "body": "L'événement devient visible de tous les membres.",
+        "notifyEmail": "Les membres seront prévenus par e-mail.",
+        "notifyChat": "Un message sera publié dans le salon {channel}.",
+        "alreadyNotified": "Les membres ont déjà été prévenus de cet événement : ils ne le seront pas une seconde fois.",
+        "confirm": "Confirmer l'événement"
       }
     },
     "form": {
@@ -556,5 +567,8 @@
   "confirmDialog": {
     "cancel": "Annuler",
     "working": "En cours…"
+  },
+  "metadata": {
+    "description": "Plateforme de gestion du {name}"
   }
 }

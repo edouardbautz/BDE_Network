@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { pageTitle } from '@/lib/page-title';
 import {
   Table,
   TableBody,
@@ -23,6 +24,7 @@ import {
 } from '@/components/ui/table';
 
 export const dynamic = 'force-dynamic';
+export const generateMetadata = pageTitle('roles', 'page.title');
 
 function readSaved(value: string | string[] | undefined): 'created' | 'updated' | null {
   const saved = Array.isArray(value) ? value[0] : value;

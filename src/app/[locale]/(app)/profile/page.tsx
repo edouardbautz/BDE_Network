@@ -1,36 +1,29 @@
 import { CalendarSync } from 'lucide-react';
-import { getLocale, getTranslations } from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { CopyField } from '@/components/events/copy-field';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { redirect } from '@/i18n/navigation';
 import { accountLabel } from '@/lib/account-label';
-import { getEffectiveSession } from '@/lib/auth/session';
+import { requireApprovedSession } from '@/lib/auth/require-session';
 import { isEventsModuleEnabled } from '@/lib/events/access';
 import { ensureCalendarToken } from '@/lib/events/export';
 import { getOrigin } from '@/lib/events/origin';
 import { regenerateMyCalendarToken } from './actions';
+import { pageTitle } from '@/lib/page-title';
+import { initialsOf } from '@/lib/initials';
 
 export const dynamic = 'force-dynamic';
+export const generateMetadata = pageTitle('profile', 'title');
 
 export default async function ProfilePage() {
-  const session = await getEffectiveSession();
-  if (!session?.user) {
-    redirect({ href: '/', locale: await getLocale() });
-    return null;
-  }
+  const session = await requireApprovedSession();
 
   const [t, tRoles] = await Promise.all([getTranslations('profile'), getTranslations('roles')]);
   const user = session.user;
   const displayName = user.name ?? user.login;
-  const initials = displayName
-    .split(' ')
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
+  const initials = initialsOf(displayName);
 
   const showCalendar = isEventsModuleEnabled();
   const feedUrl = showCalendar

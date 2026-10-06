@@ -1,10 +1,4 @@
 {
-  "common": {
-    "cancel": "Cancel",
-    "save": "Save",
-    "loading": "Loading…",
-    "back": "Back"
-  },
   "theme": {
     "light": "Light",
     "dark": "Dark",
@@ -17,8 +11,7 @@
     "page": {
       "title": "Roles",
       "description": "A role groups rights together. Each member has a single role, which you give them from the Members page.",
-      "create": "Create a role",
-      "membersLink": "Go to members"
+      "create": "Create a role"
     },
     "saved": {
       "created": "The role was created.",
@@ -155,7 +148,8 @@
     "menuTitle": "Navigation",
     "menuDescription": "Main navigation links for this organization's platform.",
     "events": "Events",
-    "profile": "My profile"
+    "profile": "My profile",
+    "skipToContent": "Skip to the content"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -270,16 +264,25 @@
     },
     "cookies": {
       "title": "Cookies",
-      "description": "Only a session cookie, required for sign-in, is used. No tracking or analytics cookies are set."
+      "description": "Only technical cookies are used, none for tracking or analytics: the session cookie (up to 30 days), which keeps you signed in; short security cookies set while you sign in with 42; and a cookie that remembers your language. Your theme choice (light or dark) is kept in the browser, without a cookie."
     },
     "contact": {
       "title": "Contact",
-      "description": "For any question, contact an administrator or owner of {bdeName}."
+      "description": "For any question, contact an administrator or owner of {bdeName}.",
+      "withAddress": "For any question or to exercise your rights, write to"
     },
     "export": {
       "title": "Export my data",
       "description": "Download a copy of everything we hold about you, as JSON.",
       "button": "Download my data"
+    },
+    "notifications": {
+      "title": "Emails and notifications",
+      "description": "Your email address is also used to write to you: if your club has turned on email, you may receive one when your access is approved, when an event is confirmed, or the day before an event you are in charge of. Owners and the members who can approve access receive new requests. Messages may also be posted in the club's Discord or Slack channel: they mention the name and login of the people concerned (new request, member approved or removed)."
+    },
+    "calendar": {
+      "title": "Personal calendar link",
+      "description": "If the Events module is turned on, a personal subscription link (a random code) is created for your calendar. Anyone who has this link can read the events you are allowed to see: do not share it. You can replace it at any time from \"My profile\"; it stops working if your account is deleted."
     }
   },
   "events": {
@@ -384,6 +387,14 @@
         "confirm": "Yes, delete permanently",
         "title": "Delete this event?",
         "titleSeries": "Delete the whole series?"
+      },
+      "confirmDialog": {
+        "title": "Confirm this event?",
+        "body": "The event becomes visible to all members.",
+        "notifyEmail": "Members will be notified by email.",
+        "notifyChat": "A message will be posted in the {channel} channel.",
+        "alreadyNotified": "Members were already notified about this event: they will not be notified a second time.",
+        "confirm": "Confirm the event"
       }
     },
     "form": {
@@ -556,5 +567,8 @@
   "confirmDialog": {
     "cancel": "Cancel",
     "working": "Working…"
+  },
+  "metadata": {
+    "description": "Management platform of {name}"
   }
 }

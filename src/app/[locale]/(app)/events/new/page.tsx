@@ -8,8 +8,10 @@ import { getCategories } from '@/lib/events/categories';
 import { listAssignableMembers } from '@/lib/events/queries';
 import { addDays, formatLocalInput, fromLocalDateTime, toLocalDateTime } from '@/lib/events/time';
 import { createEvent } from '../actions';
+import { pageTitle } from '@/lib/page-title';
 
 export const dynamic = 'force-dynamic';
+export const generateMetadata = pageTitle('events', 'form.createTitle');
 
 /** Pre-fills tomorrow 18:00–20:00 (BDE timezone): a plausible starting point
  * that is quick to adjust, instead of an empty date picker. */

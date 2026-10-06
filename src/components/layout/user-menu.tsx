@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { LogOut, UserRound } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
+import { initialsOf } from '@/lib/initials';
 
 interface UserMenuProps {
   name: string;
@@ -23,12 +24,7 @@ interface UserMenuProps {
 
 export async function UserMenu({ name, login, image, roleLabel }: UserMenuProps) {
   const t = await getTranslations();
-  const initials = name
-    .split(' ')
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
+  const initials = initialsOf(name);
 
   return (
     <DropdownMenu>

@@ -5,6 +5,7 @@ import { getEffectiveSession } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
 import { can, holdsAllOf, MEMBERS_MANAGE, ROLES_MANAGE } from '@/lib/permissions';
 import { accountLabel } from '@/lib/account-label';
+import { initialsOf } from '@/lib/initials';
 import { Link, redirect } from '@/i18n/navigation';
 import { getBdeFeedToken } from '@/lib/events/export';
 import { actorOf, roleFacts } from '@/lib/roles/view';
@@ -21,6 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { pageTitle } from '@/lib/page-title';
 import {
   Table,
   TableBody,
@@ -31,15 +33,7 @@ import {
 } from '@/components/ui/table';
 
 export const dynamic = 'force-dynamic';
-
-function initialsOf(name: string) {
-  return name
-    .split(' ')
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-}
+export const generateMetadata = pageTitle('members', 'title');
 
 function MemberIdentity({ name, photoUrl }: { name: string; photoUrl: string | null }) {
   return (

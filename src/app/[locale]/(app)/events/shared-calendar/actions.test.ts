@@ -16,10 +16,7 @@ const { RedirectSignal } = vi.hoisted(() => ({
 }));
 
 vi.mock('@/config', () => ({ getConfig: vi.fn() }));
-vi.mock('@/lib/auth/session', () => ({
-  getEffectiveSession: vi.fn(),
-  impersonationAuditFields: vi.fn(() => ({})),
-}));
+vi.mock('@/lib/auth/session', () => ({ getEffectiveSession: vi.fn() }));
 vi.mock('@/lib/audit-log', () => ({ logAuditEvent: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('next-intl/server', () => ({ getLocale: vi.fn(async () => 'fr') }));

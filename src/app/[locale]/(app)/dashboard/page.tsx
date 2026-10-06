@@ -3,7 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { getConfig } from '@/config';
 import { UpcomingEventsCard } from '@/components/events/upcoming-events-card';
 import { accountLabel } from '@/lib/account-label';
-import { getEffectiveSession } from '@/lib/auth/session';
+import { requireApprovedSession } from '@/lib/auth/require-session';
 import { getEventsAccess } from '@/lib/events/access';
 import { getCategories } from '@/lib/events/categories';
 import { listUpcomingOccurrences } from '@/lib/events/queries';
@@ -13,16 +13,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { pageTitle } from '@/lib/page-title';
+import { initialsOf } from '@/lib/initials';
 
 export const dynamic = 'force-dynamic';
+export const generateMetadata = pageTitle('dashboard', 'title');
 
 export default async function DashboardPage() {
-  const session = await getEffectiveSession();
+  const session = await requireApprovedSession();
   const [t, tRoles] = await Promise.all([getTranslations('dashboard'), getTranslations('roles')]);
-
-  if (!session?.user) {
-    return null;
-  }
 
   const config = getConfig();
   // null when the events module is disabled — then nothing about it is queried or shown.
@@ -36,12 +35,7 @@ export default async function DashboardPage() {
     : [];
 
   const displayName = session.user.name ?? session.user.login;
-  const initials = displayName
-    .split(' ')
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
+  const initials = initialsOf(displayName);
 
   return (
     <div className="flex flex-col gap-8">

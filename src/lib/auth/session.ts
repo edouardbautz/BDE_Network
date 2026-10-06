@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import type { Session } from 'next-auth';
 import { getConfig } from '@/config';
 import type { UserStatus } from '@/generated/prisma/client';
@@ -44,7 +45,7 @@ function isCompleteSession(user: Session['user'] | undefined): user is Session['
  * all. That is what a still-valid cookie looks like once its account has been
  * removed, and every permission check below this point assumes those fields
  * are there. */
-export async function getEffectiveSession(): Promise<EffectiveSession | null> {
+async function resolveEffectiveSession(): Promise<EffectiveSession | null> {
   const session = await auth();
   const user = session?.user;
   if (!isCompleteSession(user)) {
@@ -85,9 +86,13 @@ export async function getEffectiveSession(): Promise<EffectiveSession | null> {
   return { user, isImpersonating: false, simulatedAs: null, realStatus };
 }
 
-/** Extra audit metadata for an action performed under a simulated role.
- * `actorLogin`/`actorId` always come from the real account; this only flags
- * that the role was simulated. Empty outside dev impersonation. */
-export function impersonationAuditFields(actor: EffectiveSession): { simulatedAsRole?: string } {
-  return actor.simulatedAs ? { simulatedAsRole: actor.simulatedAs } : {};
-}
+/**
+ * The session of the current request, resolved once: the layout, the page and every access check
+ * of one render all call this, and each `auth()` replays the `jwt` and `session` callbacks
+ * (three SQL queries: does the account exist, then its row and its role). `React.cache` makes it
+ * once per request, including the check that a removed member is signed out (B1).
+ *
+ * Request-scoped, never shared between requests: nothing a later request does (a role change, a
+ * removal) is hidden by it. Outside a React server render (tests) it is a plain call.
+ */
+export const getEffectiveSession = cache(resolveEffectiveSession);
