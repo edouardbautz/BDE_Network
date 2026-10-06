@@ -214,6 +214,25 @@
       "removed": {
         "subject": "Membre retiré : {name}",
         "body": "{name} ({login}) a été retiré du BDE."
+      },
+      "embed": {
+        "kind": {
+          "pending": "Nouvelle demande d'accès",
+          "approved": "Demande approuvée",
+          "removed": "Membre retiré"
+        },
+        "description": {
+          "pending": "{name} demande l'accès à la plateforme.",
+          "approved": "{name} a rejoint le BDE.",
+          "removed": "{name} a été retiré du BDE."
+        },
+        "fields": {
+          "login": "Login 42",
+          "campus": "Campus",
+          "role": "Rôle",
+          "approvedBy": "Approuvé par",
+          "removedBy": "Retiré par"
+        }
       }
     },
     "rejectWarning": "La demande est supprimée. La personne pourra la refaire en se reconnectant.",
@@ -304,7 +323,25 @@
       "location": "Lieu",
       "category": "Catégorie",
       "inCharge": "En charge",
-      "link": "Détails"
+      "link": "Détails",
+      "reminderToday": {
+        "subject": "Rappel : {title} a lieu aujourd'hui",
+        "intro": "Rappel : cet événement a lieu aujourd'hui."
+      },
+      "embed": {
+        "kind": {
+          "confirmed": "Nouvel événement confirmé",
+          "reminderTomorrow": "Rappel · demain",
+          "reminderToday": "Rappel · aujourd'hui"
+        },
+        "fields": {
+          "when": "Quand",
+          "where": "Lieu",
+          "category": "Catégorie",
+          "inCharge": "Membres en charge",
+          "repeats": "Répétition"
+        }
+      }
     },
     "title": "Événements",
     "subtitle": "Le calendrier interne du bureau : planifiez et organisez les événements du BDE.",

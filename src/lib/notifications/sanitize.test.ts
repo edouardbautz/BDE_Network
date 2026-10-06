@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { neutralizeForDiscord, neutralizeForSlack } from './sanitize';
+import { neutralizeEmbedForDiscord, neutralizeForDiscord, neutralizeForSlack } from './sanitize';
 
 const ZWSP = String.fromCharCode(0x200b);
 
@@ -57,5 +57,57 @@ describe('neutralizeForSlack', () => {
 
   it('leaves a normal sentence alone', () => {
     expect(neutralizeForSlack('Réunion jeudi à 18h')).toBe('Réunion jeudi à 18h');
+  });
+});
+
+describe('neutralizeEmbedForDiscord', () => {
+  const hostile = '@everyone @here <@1> <!channel>';
+
+  it('defuses every text a member could have written in a card', () => {
+    const out = neutralizeEmbedForDiscord({
+      title: hostile,
+      description: hostile,
+      footer: { text: hostile },
+      fields: [{ name: hostile, value: hostile, inline: true }],
+    });
+
+    const texts = [
+      out.title,
+      out.description,
+      out.footer?.text,
+      out.fields?.[0]?.name,
+      out.fields?.[0]?.value,
+    ];
+    for (const text of texts) {
+      expect(text).not.toContain('@everyone');
+      expect(text).not.toContain('@here');
+      expect(text).not.toContain('<@');
+      expect(text).not.toContain('<!');
+    }
+    expect(out.fields?.[0]?.inline).toBe(true);
+  });
+
+  it('keeps the link, the colour, the thumbnail, the timestamp and the column layout', () => {
+    const embed = {
+      title: 'T',
+      url: 'https://bde.example.fr/fr/events/1',
+      color: 0x123456,
+      thumbnail: { url: 'https://cdn.example/a.jpg' },
+      timestamp: '2026-10-06T12:00:00.000Z',
+      fields: [{ name: 'Lieu', value: 'Foyer', inline: true }],
+    };
+
+    expect(neutralizeEmbedForDiscord(embed)).toEqual(embed);
+  });
+
+  it("does not touch Discord's date markup, written by the platform", () => {
+    const out = neutralizeEmbedForDiscord({
+      fields: [{ name: 'Quand', value: '<t:1791396000:F>' }],
+    });
+    expect(out.fields?.[0]?.value).toBe('<t:1791396000:F>');
+  });
+
+  it('adds no text to a card that had none', () => {
+    expect(neutralizeEmbedForDiscord({ color: 1 })).toEqual({ color: 1 });
   });
 });

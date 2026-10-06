@@ -37,10 +37,14 @@ export async function approveMember(userId: string, roleId: string): Promise<Act
   if (!isId(userId)) return { ok: false, error: 'targetNotFound' };
   if (!isId(roleId)) return { ok: false, error: 'roleNotFound' };
 
+  let actorLogin = '';
   const result = done(
-    await executeToResult(MEMBERS_MANAGE, (ctx) => roles.approveMember(ctx, userId, roleId)),
+    await executeToResult(MEMBERS_MANAGE, (ctx) => {
+      actorLogin = ctx.actor.login;
+      return roles.approveMember(ctx, userId, roleId);
+    }),
   );
-  if (result.ok) after(() => notifyMemberApproved(userId));
+  if (result.ok) after(() => notifyMemberApproved(userId, actorLogin));
   return result;
 }
 
@@ -67,10 +71,14 @@ export async function removeMember(
 ): Promise<ActionResult | { ok: true; login: string }> {
   if (!isId(userId)) return { ok: false, error: 'targetNotFound' };
 
-  const result = await execute(MEMBERS_MANAGE, (ctx) => roles.removeMember(ctx, userId));
+  let actorLogin = '';
+  const result = await execute(MEMBERS_MANAGE, (ctx) => {
+    actorLogin = ctx.actor.login;
+    return roles.removeMember(ctx, userId);
+  });
   if (!result.ok) return result;
 
   done({ ok: true });
-  after(() => notifyMemberRemoved(result.value));
+  after(() => notifyMemberRemoved(result.value, actorLogin));
   return { ok: true, login: result.value.login };
 }

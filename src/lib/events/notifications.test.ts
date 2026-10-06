@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/config', () => ({ getConfig: vi.fn() }));
 vi.mock('@/lib/notifications', () => ({ notify: vi.fn(), notifyMany: vi.fn() }));
+vi.mock('@/lib/notifications/sender', () => ({
+  discordSender: vi.fn(async () => ({ username: 'BDE Test' })),
+}));
 vi.mock('next-intl', () => ({ createTranslator: vi.fn(() => (key: string) => key) }));
 vi.mock('@/lib/prisma', () => ({
   prisma: {
@@ -115,6 +118,7 @@ describe('notifyEventConfirmed', () => {
   const storedEvent = {
     id: 'evt1',
     title: 'Tournoi',
+    description: 'Venez nombreux.',
     location: 'Gymnase',
     categoryKey: 'sport',
     status: 'CONFIRMED' as const,
@@ -153,6 +157,48 @@ describe('notifyEventConfirmed', () => {
       expect.objectContaining({ to: 'a@x.fr' }),
       expect.objectContaining({ to: 'b@x.fr' }),
     ]);
+  });
+
+  it('on Discord, posts a card in the colour of the event category, with its facts', async () => {
+    useChannel('discord');
+    await notifyEventConfirmed('evt1');
+
+    const [, posted] = vi.mocked(notify).mock.calls[0] ?? [];
+    const [embed] = posted?.discord?.embeds ?? [];
+    expect(posted?.discord?.username).toBe('BDE Test');
+    expect(embed?.title).toBe('Tournoi');
+    expect(embed?.color).toBe(0x16a34a); // the colour of "sport" in the config
+    expect(embed?.description).toContain('Venez nombreux.');
+    expect(embed?.description).toContain('embed.kind.confirmed'); // not a reminder's heading
+    expect(embed?.fields?.map((field) => field.value)).toEqual(
+      expect.arrayContaining(['Gymnase', 'Sport', 'Alice A']),
+    );
+  });
+
+  it('decides on the channel of eventConfirmed, not of the reminder', async () => {
+    vi.mocked(getConfig).mockReturnValue({
+      bde: { timezone: 'Europe/Paris', defaultLocale: 'fr' },
+      notifications: { eventConfirmed: 'discord', eventReminder: 'email' },
+      events: {
+        categories: [{ key: 'sport', label: 'Sport', color: '#16a34a' }],
+        reminderHour: 18,
+      },
+    } as unknown as ReturnType<typeof getConfig>);
+    await notifyEventConfirmed('evt1');
+
+    expect(vi.mocked(notify).mock.calls[0]?.[1].discord).toBeDefined();
+  });
+
+  it('keeps the plain text next to the card, and sends no card by email', async () => {
+    useChannel('discord');
+    await notifyEventConfirmed('evt1');
+    expect(vi.mocked(notify).mock.calls[0]?.[1].subject).toBeTruthy();
+
+    vi.clearAllMocks();
+    useChannel('email');
+    await notifyEventConfirmed('evt1');
+    const [first] = vi.mocked(notifyMany).mock.calls[0]?.[1] ?? [];
+    expect(first).not.toHaveProperty('discord');
   });
 
   it('sends nothing when the event was already notified (claim lost)', async () => {

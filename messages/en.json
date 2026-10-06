@@ -214,6 +214,25 @@
       "removed": {
         "subject": "Member removed: {name}",
         "body": "{name} ({login}) was removed from the BDE."
+      },
+      "embed": {
+        "kind": {
+          "pending": "New access request",
+          "approved": "Request approved",
+          "removed": "Member removed"
+        },
+        "description": {
+          "pending": "{name} is asking for access to the platform.",
+          "approved": "{name} joined the BDE.",
+          "removed": "{name} was removed from the BDE."
+        },
+        "fields": {
+          "login": "42 login",
+          "campus": "Campus",
+          "role": "Role",
+          "approvedBy": "Approved by",
+          "removedBy": "Removed by"
+        }
       }
     },
     "rejectWarning": "The request is deleted. They can ask again by signing in.",
@@ -304,7 +323,25 @@
       "location": "Location",
       "category": "Category",
       "inCharge": "In charge",
-      "link": "Details"
+      "link": "Details",
+      "reminderToday": {
+        "subject": "Reminder: {title} is today",
+        "intro": "Reminder: this event takes place today."
+      },
+      "embed": {
+        "kind": {
+          "confirmed": "New event confirmed",
+          "reminderTomorrow": "Reminder · tomorrow",
+          "reminderToday": "Reminder · today"
+        },
+        "fields": {
+          "when": "When",
+          "where": "Where",
+          "category": "Category",
+          "inCharge": "Members in charge",
+          "repeats": "Repeats"
+        }
+      }
     },
     "title": "Events",
     "subtitle": "The board's internal calendar: plan and organise the BDE's events.",

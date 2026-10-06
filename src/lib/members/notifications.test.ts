@@ -21,6 +21,9 @@ vi.mock('@/lib/notifications/translate', () => ({
     };
   }),
 }));
+vi.mock('@/lib/notifications/sender', () => ({
+  discordSender: vi.fn(async () => ({ username: 'BDE Test' })),
+}));
 vi.mock('@/lib/prisma', () => ({
   prisma: { user: { findMany: vi.fn(), findUnique: vi.fn() } },
 }));
@@ -109,6 +112,31 @@ describe('notifyMemberPending', () => {
     expect(message.body).toContain('https://bde.exemple.fr/fr/members');
   });
 
+  it('on Discord, an amber card whose title links to the members page', async () => {
+    useChannels({ memberPending: 'discord' });
+    vi.stubEnv('APP_URL', 'https://bde.exemple.fr/');
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(pendingUser as never);
+
+    await notifyMemberPending('u1');
+
+    const embed = firstCall(vi.mocked(deliver))[1].discord?.embeds[0];
+    expect(embed?.color).toBe(0xf59e0b);
+    expect(embed?.url).toBe('https://bde.exemple.fr/fr/members');
+    expect(embed?.fields).toEqual([
+      { name: 'Login 42', value: 'jdupont', inline: true },
+      { name: 'Campus', value: 'Nice', inline: true },
+    ]);
+  });
+
+  it('has no link at all without APP_URL (never a broken one)', async () => {
+    useChannels({ memberPending: 'discord' });
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(pendingUser as never);
+
+    await notifyMemberPending('u1');
+
+    expect(firstCall(vi.mocked(deliver))[1].discord?.embeds[0]?.url).toBeUndefined();
+  });
+
   it('does nothing when the channel is "none"', async () => {
     useChannels({ memberPending: 'none' });
 
@@ -179,6 +207,41 @@ describe('notifyMemberApproved', () => {
     },
   );
 
+  it('on Discord, a green card with the role, their photo and who approved', async () => {
+    useChannels({ memberApproved: 'discord' });
+    vi.mocked(prisma.user.findUnique)
+      .mockResolvedValueOnce({
+        ...approved,
+        campus: 'Nice',
+        photoUrl: 'https://cdn.intra.42.fr/u.jpg',
+      } as never)
+      .mockResolvedValueOnce({ fullName: 'Paula Martin' } as never); // the approver
+
+    await notifyMemberApproved('u1', 'pmartin');
+
+    const card = firstCall(vi.mocked(deliver))[1].discord;
+    expect(card?.username).toBe('BDE Test');
+    const embed = card?.embeds[0];
+    expect(embed?.color).toBe(0x10b981);
+    expect(embed?.title).toBe('Jean Dupont');
+    expect(embed?.thumbnail?.url).toBe('https://cdn.intra.42.fr/u.jpg');
+    expect(embed?.fields).toEqual(
+      expect.arrayContaining([
+        { name: 'Rôle', value: 'Trésorier', inline: true },
+        { name: 'Approuvé par', value: 'Paula Martin', inline: true },
+      ]),
+    );
+  });
+
+  it('sends no card to Slack or email: only the plain text', async () => {
+    useChannels({ memberApproved: 'slack' });
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(approved as never);
+
+    await notifyMemberApproved('u1', 'pmartin');
+
+    expect(firstCall(vi.mocked(deliver))[1].discord).toBeUndefined();
+  });
+
   it('does nothing when the channel is "none", or when the account is not an approved member', async () => {
     useChannels({ memberApproved: 'none' });
     await notifyMemberApproved('u1');
@@ -217,15 +280,28 @@ describe('notifyMemberRemoved', () => {
 
       expect(deliver).toHaveBeenCalledWith(
         'memberRemoved',
-        {
+        expect.objectContaining({
           subject: 'Membre retiré : Jean Dupont',
           body: 'Jean Dupont (jdupont) a été retiré du BDE.',
-        },
+        }),
         [],
         expect.any(String),
       );
     },
   );
+
+  it('on Discord, a red card that says who removed them', async () => {
+    useChannels({ memberRemoved: 'discord' });
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({ fullName: 'Paula Martin' } as never);
+
+    await notifyMemberRemoved({ ...removed, roleName: 'Membre' }, 'pmartin');
+
+    const embed = firstCall(vi.mocked(deliver))[1].discord?.embeds[0];
+    expect(embed?.color).toBe(0xef4444);
+    expect(embed?.fields).toEqual(
+      expect.arrayContaining([{ name: 'Retiré par', value: 'Paula Martin', inline: true }]),
+    );
+  });
 
   it('never emails the removed member: the email channel sends nothing', async () => {
     useChannels({ memberRemoved: 'email' });

@@ -6,8 +6,11 @@ export type { Translate };
 export interface NotificationEventData {
   eventId: string;
   title: string;
+  description: string | null;
   location: string | null;
   categoryLabel: string;
+  /** Hex colour of the category, or null when it has none any more. */
+  categoryColor: string | null;
   assigneeNames: string[];
   start: Date;
   end: Date;
@@ -88,15 +91,21 @@ export function buildConfirmationMessage(
   };
 }
 
-/** Day-before reminder. `data.start` is the occurrence being reminded about. */
+/** Which day a reminder talks about: the day after it is sent, or the same day when the server was
+ * down at the usual time and the reminder goes out late (a catch-up). */
+export type ReminderDay = 'tomorrow' | 'today';
+
+/** Reminder. `data.start` is the occurrence being reminded about. */
 export function buildReminderMessage(
   data: NotificationEventData,
   t: Translate,
   locale: string,
   timeZone: string,
+  day: ReminderDay = 'tomorrow',
 ): BuiltMessage {
+  const key = day === 'today' ? 'reminderToday' : 'reminder';
   return {
-    subject: t('reminder.subject', { title: data.title }),
-    body: [t('reminder.intro'), '', ...detailLines(data, t, locale, timeZone)].join('\n'),
+    subject: t(`${key}.subject`, { title: data.title }),
+    body: [t(`${key}.intro`), '', ...detailLines(data, t, locale, timeZone)].join('\n'),
   };
 }

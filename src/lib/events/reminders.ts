@@ -3,6 +3,8 @@ import { EVENTS_MODULE_KEY } from '@/config/schema';
 import { emailsOfHolders } from '@/lib/notifications/recipients';
 import { managePermission } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
+import { withDiscordCard } from '@/lib/notifications/discord-card';
+import { buildEventEmbed } from './discord-embed';
 import { buildReminderMessage } from './messages';
 import { deliver, getTranslate, toNotificationData } from './notifications';
 import { allOccurrences } from './recurrence';
@@ -19,6 +21,12 @@ export function reminderDueAt(occurrenceStart: Date, timeZone: string, reminderH
   const local = toLocalDateTime(occurrenceStart, timeZone);
   const dayBefore = addDays(local, -1);
   return fromLocalDateTime({ ...dayBefore, hour: reminderHour, minute: 0 }, timeZone);
+}
+
+/** Whether two instants fall on the same calendar day on the BDE's wall clock. */
+export function isSameLocalDay(a: Date, b: Date, timeZone: string): boolean {
+  const [x, y] = [toLocalDateTime(a, timeZone), toLocalDateTime(b, timeZone)];
+  return x.year === y.year && x.month === y.month && x.day === y.day;
 }
 
 function isUniqueViolation(error: unknown): boolean {
@@ -105,11 +113,13 @@ export async function runReminderTick(now: Date = new Date()): Promise<ReminderT
       result.claimed += 1;
 
       if (!translate) continue;
-      const message = buildReminderMessage(
-        toNotificationData(event, occurrence, locale),
-        translate,
-        locale,
-        timeZone,
+      // Normally tomorrow's; today's when the server was down at the usual time and this goes out late.
+      const day = isSameLocalDay(occurrence.start, now, timeZone) ? 'today' : 'tomorrow';
+      const data = toNotificationData(event, occurrence, locale);
+      const message = await withDiscordCard(
+        'eventReminder',
+        buildReminderMessage(data, translate, locale, timeZone, day),
+        () => buildEventEmbed(day, data, translate, timeZone, now),
       );
       const assigneeEmails = event.assignees.flatMap((a) => (a.user ? [a.user.email] : []));
       // Nobody in charge to write to: the people who run the events get it, so a reminder is never

@@ -17,7 +17,7 @@ export interface DeliveryResult {
  */
 export async function deliver(
   event: NotificationEvent,
-  message: Pick<NotificationMessage, 'subject' | 'body'>,
+  message: Omit<NotificationMessage, 'to'>,
   emailRecipients: readonly string[],
   logPrefix: string,
 ): Promise<DeliveryResult> {

@@ -1,23 +1,21 @@
 import { getConfig } from '@/config';
 import type { NotificationEvent } from '@/config/schema';
 import { deliver as deliverNotification, type DeliveryResult } from '@/lib/notifications/deliver';
+import { withDiscordCard } from '@/lib/notifications/discord-card';
+import type { NotificationMessage } from '@/lib/notifications/types';
 import { getNotificationTranslate } from '@/lib/notifications/translate';
 import { APPROVED_STATUSES } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
+import { buildEventEmbed } from './discord-embed';
 import { allOccurrences } from './recurrence';
-import {
-  buildConfirmationMessage,
-  type BuiltMessage,
-  type NotificationEventData,
-  type Translate,
-} from './messages';
+import { buildConfirmationMessage, type NotificationEventData, type Translate } from './messages';
 
 const LOG_PREFIX = '[events]';
 
 /** Sends an events notification (see lib/notifications/deliver.ts). Never throws. */
 export function deliver(
   event: Extract<NotificationEvent, 'eventConfirmed' | 'eventReminder'>,
-  message: BuiltMessage,
+  message: Omit<NotificationMessage, 'to'>,
   emailRecipients: readonly string[],
 ): Promise<DeliveryResult> {
   return deliverNotification(event, message, emailRecipients, LOG_PREFIX);
@@ -35,14 +33,16 @@ export function eventUrl(locale: string, eventId: string, occurrenceStart?: Date
   return `${base}/${locale}/events/${eventId}${occurrence}`;
 }
 
-function categoryLabelOf(categoryKey: string): string {
+/** The category as the config defines it; a key that was removed since keeps its raw key, no colour. */
+function categoryOf(categoryKey: string): { label: string; color: string | null } {
   const category = getConfig().events?.categories.find((c) => c.key === categoryKey);
-  return category?.label ?? categoryKey;
+  return { label: category?.label ?? categoryKey, color: category?.color ?? null };
 }
 
 interface LoadedEvent {
   id: string;
   title: string;
+  description: string | null;
   location: string | null;
   categoryKey: string;
   startsAt: Date;
@@ -60,8 +60,10 @@ export function toNotificationData(
   return {
     eventId: event.id,
     title: event.title,
+    description: event.description,
     location: event.location,
-    categoryLabel: categoryLabelOf(event.categoryKey),
+    categoryLabel: categoryOf(event.categoryKey).label,
+    categoryColor: categoryOf(event.categoryKey).color,
     assigneeNames: event.assignees.map((a) => a.user?.fullName ?? a.login),
     start: occurrence.start,
     end: occurrence.end,
@@ -108,11 +110,12 @@ export async function notifyEventConfirmed(eventId: string): Promise<void> {
       return;
     }
 
-    const message = buildConfirmationMessage(
-      toNotificationData(event, next, locale),
-      await getTranslate(locale),
-      locale,
-      timeZone,
+    const data = toNotificationData(event, next, locale);
+    const translate = await getTranslate(locale);
+    const message = await withDiscordCard(
+      'eventConfirmed',
+      buildConfirmationMessage(data, translate, locale, timeZone),
+      () => buildEventEmbed('confirmed', data, translate, timeZone),
     );
 
     const members = await prisma.user.findMany({

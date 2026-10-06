@@ -1,9 +1,14 @@
+import type { DiscordPayload } from './discord-embed';
+
 export interface NotificationMessage {
   subject: string;
   body: string;
   /** Recipient email address. Required by the email adapter, ignored by
    * webhook-based adapters (Discord/Slack post to a fixed channel). */
   to?: string;
+  /** The same notification as Discord cards. Only the Discord adapter reads it: email and Slack use
+   * `subject` and `body`, and Discord falls back to them when this is absent. */
+  discord?: DiscordPayload;
 }
 
 /** What happened to one message of a batch. */

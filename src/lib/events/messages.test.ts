@@ -17,8 +17,10 @@ const t: Translate = (key, values) =>
 const base: NotificationEventData = {
   eventId: 'evt1',
   title: 'Tournoi',
+  description: 'Venez nombreux.',
   location: 'Gymnase',
   categoryLabel: 'Sport',
+  categoryColor: '#0f766e',
   assigneeNames: ['Alice', 'Bob'],
   start: new Date('2026-10-10T18:00:00Z'),
   end: new Date('2026-10-10T21:00:00Z'),
@@ -28,6 +30,17 @@ const base: NotificationEventData = {
 };
 
 describe('event notification messages', () => {
+  it('says today, not tomorrow, for a reminder that goes out the same day', () => {
+    const tomorrow = buildReminderMessage(base, t, 'fr', 'Europe/Paris');
+    const today = buildReminderMessage(base, t, 'fr', 'Europe/Paris', 'today');
+
+    expect(tomorrow.subject).toContain('reminder.subject');
+    expect(tomorrow.body).toContain('reminder.intro');
+    expect(today.subject).toContain('reminderToday.subject');
+    expect(today.body).toContain('reminderToday.intro');
+    expect(today.subject).toContain('title=Tournoi');
+  });
+
   it('builds the confirmation subject and a body with every detail', () => {
     const { subject, body } = buildConfirmationMessage(base, t, 'fr', 'Europe/Paris');
     expect(subject).toBe('confirmed.subject(title=Tournoi)');

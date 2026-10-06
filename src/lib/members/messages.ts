@@ -10,7 +10,13 @@ export interface BuiltMessage {
 export interface MemberFacts {
   login: string;
   fullName: string;
-  campus?: string;
+  campus?: string | null;
+  /** The 42 profile picture, shown as the thumbnail of the Discord card. */
+  photoUrl?: string | null;
+  /** The role held (or just given). */
+  roleName?: string | null;
+  /** Who approved or removed them, by name; the Discord card says it. */
+  actorName?: string | null;
 }
 
 /** Someone asks for access: written for the people who can approve. */

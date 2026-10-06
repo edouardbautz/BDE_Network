@@ -5,6 +5,10 @@ vi.mock('@/lib/prisma', () => ({
   prisma: { event: { findMany: vi.fn() }, eventReminder: { create: vi.fn() } },
 }));
 vi.mock('@/lib/notifications/recipients', () => ({ emailsOfHolders: vi.fn() }));
+vi.mock('@/lib/notifications/discord-card', () => ({
+  withDiscordCard: vi.fn(async (_event: string, message: unknown) => message),
+}));
+vi.mock('./discord-embed', () => ({ buildEventEmbed: vi.fn() }));
 vi.mock('./messages', () => ({
   buildReminderMessage: vi.fn(() => ({ subject: 'Rappel', body: 'Demain' })),
 }));
@@ -17,8 +21,9 @@ vi.mock('./notifications', () => ({
 const { getConfig } = await import('@/config');
 const { prisma } = await import('@/lib/prisma');
 const { deliver } = await import('./notifications');
+const { buildReminderMessage } = await import('./messages');
 const { emailsOfHolders } = await import('@/lib/notifications/recipients');
-const { reminderDueAt, runReminderTick } = await import('./reminders');
+const { isSameLocalDay, reminderDueAt, runReminderTick } = await import('./reminders');
 
 const PARIS = 'Europe/Paris';
 
@@ -106,6 +111,27 @@ describe('reminderDueAt', () => {
   });
 });
 
+describe('isSameLocalDay', () => {
+  it('compares days on the wall clock of the BDE, not in UTC', () => {
+    // 23:30 and 00:30 Paris are one UTC day… and two local days; 00:10 and 23:50 Paris are one local day.
+    expect(
+      isSameLocalDay(new Date('2026-10-10T21:30:00Z'), new Date('2026-10-10T22:30:00Z'), PARIS),
+    ).toBe(false);
+    expect(
+      isSameLocalDay(new Date('2026-10-09T22:10:00Z'), new Date('2026-10-10T21:50:00Z'), PARIS),
+    ).toBe(true);
+  });
+
+  it('tells the same day of two different months or years apart', () => {
+    expect(
+      isSameLocalDay(new Date('2026-10-10T12:00:00Z'), new Date('2026-11-10T12:00:00Z'), PARIS),
+    ).toBe(false);
+    expect(
+      isSameLocalDay(new Date('2026-10-10T12:00:00Z'), new Date('2027-10-10T12:00:00Z'), PARIS),
+    ).toBe(false);
+  });
+});
+
 describe('runReminderTick', () => {
   it('does nothing when the events module is disabled', async () => {
     setConfig({ enabled: false });
@@ -137,6 +163,19 @@ describe('runReminderTick', () => {
     expect(result.claimed).toBe(1);
     expect(deliver).toHaveBeenCalledTimes(1);
     expect(deliver).toHaveBeenCalledWith('eventReminder', expect.anything(), ['alice@x.fr']);
+  });
+
+  it('says tomorrow for a reminder on time, today for one that goes out late (after a restart)', async () => {
+    vi.mocked(prisma.event.findMany).mockResolvedValue([event()] as never);
+    await runReminderTick(new Date('2026-10-09T16:00:00Z'));
+    expect(vi.mocked(buildReminderMessage).mock.calls[0]?.[4]).toBe('tomorrow');
+
+    vi.clearAllMocks();
+    fakeClaimTable();
+    vi.mocked(prisma.event.findMany).mockResolvedValue([event()] as never);
+    // The server was down all of the day before: back at 10:00 Paris on the day itself.
+    await runReminderTick(new Date('2026-10-10T08:00:00Z'));
+    expect(vi.mocked(buildReminderMessage).mock.calls[0]?.[4]).toBe('today');
   });
 
   it('never sends the same reminder twice, however many ticks run', async () => {

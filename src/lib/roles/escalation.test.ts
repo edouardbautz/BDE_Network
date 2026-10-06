@@ -983,7 +983,7 @@ describe('member notifications', () => {
     expect(notifyMemberApproved).not.toHaveBeenCalled(); // after the response, not before
 
     await runAfter();
-    expect(notifyMemberApproved).toHaveBeenCalledExactlyOnceWith('u_pend');
+    expect(notifyMemberApproved).toHaveBeenCalledExactlyOnceWith('u_pend', 'sec'); // and who approved
   });
 
   it('announces nothing when the approval is refused', async () => {
@@ -1000,10 +1000,10 @@ describe('member notifications', () => {
     await members.removeMember('u_mem');
 
     await runAfter();
-    expect(notifyMemberRemoved).toHaveBeenCalledExactlyOnceWith({
-      login: 'mem',
-      fullName: 'mem',
-    });
+    expect(notifyMemberRemoved).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ login: 'mem', fullName: 'mem', roleName: 'Membre' }),
+      'adm', // who removed them
+    );
   });
 
   it('announces nothing for a removal that is refused', async () => {
