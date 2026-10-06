@@ -16,8 +16,9 @@ bde:
   # Fuseau horaire IANA utilisé pour l'affichage des dates.
   timezone: 'Europe/Paris'
 
-  # Langue par défaut : "fr" ou "en". L'utilisateur peut changer de langue
-  # depuis l'interface ; ceci ne fixe que la langue initiale.
+  # Langue des messages envoyés par la plateforme (e-mails, Discord, Slack) :
+  # "fr" ou "en". Elle ne change pas la langue de l'interface, que chaque
+  # membre choisit par l'adresse (/fr/... ou /en/...).
   defaultLocale: 'fr'
 
   # Couleur d'accent de l'interface, au format hexadécimal.
@@ -25,6 +26,10 @@ bde:
 
   # Chemin du logo, servi depuis le dossier /public (donc en commençant par "/").
   logoPath: '/logo.svg'
+
+  # Facultatif : l'adresse e-mail où les membres peuvent écrire à propos de leurs
+  # données (affichée sur la page de confidentialité).
+  # contactEmail: 'bureau@exemple.fr'
 
 auth:
   # Logins 42 des propriétaires (OWNER). Un login listé ici obtient

@@ -252,3 +252,27 @@ describe('formatEnvironmentErrors', () => {
     );
   });
 });
+
+describe('modules.enabled', () => {
+  it('is quiet for the modules of this version', () => {
+    expect(check(VALID_ENV, configWith({ modules: ['events'] })).warnings).toEqual([]);
+  });
+
+  it('warns about a module that does not exist, naming it and the ones that do (a typo)', () => {
+    const { errors, warnings } = check(VALID_ENV, configWith({ modules: ['events', 'evnts'] }));
+
+    expect(errors).toEqual([]);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('« evnts »');
+    expect(warnings[0]).not.toContain('« events »');
+    expect(warnings[0]).toContain('modules disponibles : events');
+    expect(warnings[0]).toContain('KNOWN_MODULE_KEYS');
+  });
+
+  it('names every unknown module at once', () => {
+    const { warnings } = check(VALID_ENV, configWith({ modules: ['finnance', 'meetings'] }));
+
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('« finnance », « meetings »');
+  });
+});

@@ -21,6 +21,10 @@ export const NOTIFICATION_EVENTS = [
  * key from the config validation below. */
 export const EVENTS_MODULE_KEY = 'events';
 
+/** The modules this version ships. A fork that adds its own module adds its key here, which is
+ * what keeps a typo in `modules.enabled` from passing unnoticed (see config/env.ts). */
+export const KNOWN_MODULE_KEYS: readonly string[] = [EVENTS_MODULE_KEY];
+
 const hexColor = z
   .string({ error: "la couleur d'accent doit être une chaîne de caractères" })
   .regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, {
@@ -53,6 +57,9 @@ const bdeSection = z.object({
     error: () => `la langue par défaut doit être l'une de : ${SUPPORTED_LOCALES.join(', ')}`,
   }),
   accentColor: hexColor,
+  // Where members write about their data (privacy page). Optional: without it the page sends them
+  // to an administrator or owner.
+  contactEmail: z.email({ message: 'doit être une adresse e-mail valide' }).optional(),
   logoPath: z
     .string()
     .trim()

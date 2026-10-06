@@ -30,14 +30,15 @@ champs :
 
 ### `bde`
 
-| Champ           | Type                 | Description                                                      |
-| --------------- | -------------------- | ---------------------------------------------------------------- |
-| `name`          | texte                | Nom du BDE, affiché dans l'interface, le titre de l'onglet, etc. |
-| `campus`        | texte                | Campus principal du bureau (affichage uniquement).               |
-| `timezone`      | texte                | Fuseau horaire IANA, ex. `"Europe/Paris"`.                       |
-| `defaultLocale` | `"fr"` \| `"en"`     | Langue initiale de l'interface.                                  |
-| `accentColor`   | couleur hexadécimale | Couleur d'accent de l'interface (ex. `"#0f766e"`).               |
-| `logoPath`      | chemin               | Chemin du logo depuis `/public`, ex. `"/logo.svg"`.              |
+| Champ           | Type                 | Description                                                                                                                                 |
+| --------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`          | texte                | Nom du BDE, affiché dans l'interface, le titre de l'onglet, etc.                                                                            |
+| `campus`        | texte                | Campus principal du bureau (affichage uniquement).                                                                                          |
+| `timezone`      | texte                | Fuseau horaire IANA, ex. `"Europe/Paris"`.                                                                                                  |
+| `defaultLocale` | `"fr"` \| `"en"`     | Langue des **messages envoyés** (e-mails, Discord, Slack). La langue de l'interface se choisit par l'adresse (`/fr/…`, `/en/…`).            |
+| `contactEmail`  | e-mail, optionnel    | Adresse affichée sur la page de confidentialité pour exercer ses droits. Sans elle, la page renvoie vers un administrateur ou propriétaire. |
+| `accentColor`   | couleur hexadécimale | Couleur d'accent de l'interface (ex. `"#0f766e"`).                                                                                          |
+| `logoPath`      | chemin               | Chemin du logo depuis `/public`, ex. `"/logo.svg"`.                                                                                         |
 
 ### `auth`
 
@@ -48,9 +49,9 @@ champs :
 
 ### `modules`
 
-| Champ     | Type             | Description                                                                    |
-| --------- | ---------------- | ------------------------------------------------------------------------------ |
-| `enabled` | liste de chaînes | Clés des modules métier activés. Module disponible : `events` (voir ci-après). |
+| Champ     | Type             | Description                                                                                                                                                                          |
+| --------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `enabled` | liste de chaînes | Clés des modules métier activés. Module disponible : `events` (voir ci-après). Une clé inconnue (faute de frappe) ne bloque pas le démarrage mais est signalée par un avertissement. |
 
 Un module désactivé n'a ni route, ni lien, ni donnée visible. Un module activé s'attribue
 ensuite membre par membre depuis _Membres_ (voir le [guide du module](events.md)).

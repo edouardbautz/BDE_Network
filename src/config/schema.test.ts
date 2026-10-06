@@ -30,6 +30,26 @@ describe('bdeConfigSchema', () => {
     expect(result.success).toBe(true);
   });
 
+  it('accepts a contact address, which is optional', () => {
+    expect(bdeConfigSchema.safeParse(validConfig).success).toBe(true);
+    const withContact = bdeConfigSchema.safeParse({
+      ...validConfig,
+      bde: { ...validConfig.bde, contactEmail: 'bureau@exemple.fr' },
+    });
+    expect(withContact.success).toBe(true);
+  });
+
+  it.each(['pas une adresse', 'bureau@', '', 'a b@exemple.fr'])(
+    'rejects a contact address that is not one: %j',
+    (contactEmail) => {
+      const result = bdeConfigSchema.safeParse({
+        ...validConfig,
+        bde: { ...validConfig.bde, contactEmail },
+      });
+      expect(result.success).toBe(false);
+    },
+  );
+
   it('rejects an invalid accent color', () => {
     const result = bdeConfigSchema.safeParse({
       ...validConfig,

@@ -1,4 +1,4 @@
-import { EVENTS_MODULE_KEY, type BdeConfig } from './schema';
+import { EVENTS_MODULE_KEY, KNOWN_MODULE_KEYS, type BdeConfig } from './schema';
 
 /**
  * Checks of the secrets and machine settings in `.env`, the counterpart of the
@@ -177,6 +177,17 @@ export function validateEnvironment(env: Env, config: BdeConfig): EnvironmentRep
   }
 
   warnMemberNotifications(env, config, warnings);
+
+  // --- bde.config.yml: modules.enabled ---------------------------------------
+  const unknownModules = config.modules.enabled.filter((key) => !KNOWN_MODULE_KEYS.includes(key));
+  if (unknownModules.length > 0) {
+    warnings.push(
+      `modules.enabled de bde.config.yml contient ${unknownModules.map((key) => `« ${key} »`).join(', ')}, ` +
+        `qui n'est pas un module de cette version (modules disponibles : ${KNOWN_MODULE_KEYS.join(', ')}).\n` +
+        '    Une faute de frappe ? Ce module restera sans effet.\n' +
+        "    → Corrigez le nom, ou, si c'est un module ajouté à votre fork, déclarez-le dans KNOWN_MODULE_KEYS (src/config/schema.ts).",
+    );
+  }
 
   return { errors, warnings };
 }
