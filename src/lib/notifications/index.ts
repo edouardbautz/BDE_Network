@@ -19,9 +19,13 @@ function getAdapter(channel: string): NotificationAdapter {
   }
 }
 
-/** Sends a notification through the channel configured for this event in
- * bde.config.yml. Not called from any use case yet — future modules
- * (member approval, events, finances...) will call this directly. */
+/**
+ * Sends a notification through the channel configured for this event in bde.config.yml.
+ * Callers are the members notifications (lib/members/notifications.ts) and the events ones
+ * (lib/events/notifications.ts), always through `deliver()` (./deliver.ts), which turns a failure
+ * into a log line: a notification must never break the action that triggered it. This function
+ * itself throws if the adapter fails.
+ */
 export async function notify(
   event: NotificationEvent,
   message: NotificationMessage,
