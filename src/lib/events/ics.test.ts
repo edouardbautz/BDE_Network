@@ -4,6 +4,7 @@ import {
   escapeIcsText,
   foldIcsLine,
   formatIcsDate,
+  icsFilename,
   occurrenceUid,
   type IcsEvent,
 } from './ics';
@@ -21,6 +22,22 @@ function event(overrides: Partial<IcsEvent> = {}): IcsEvent {
     ...overrides,
   };
 }
+
+describe('icsFilename', () => {
+  it('names the file after the event, without accents or spaces', () => {
+    expect(icsFilename('Soirée de rentrée')).toBe('soiree-de-rentree.ics');
+    expect(icsFilename('  Tournoi  #2 !! ')).toBe('tournoi-2.ics');
+  });
+
+  it('falls back to "event" when nothing usable is left', () => {
+    expect(icsFilename('')).toBe('event.ics');
+    expect(icsFilename('🎉🎉')).toBe('event.ics');
+  });
+
+  it('can never contain a path or a quote', () => {
+    expect(icsFilename('../../etc/passwd"; rm')).toBe('etc-passwd-rm.ics');
+  });
+});
 
 describe('formatIcsDate', () => {
   it('formats a UTC instant as YYYYMMDDTHHMMSSZ', () => {

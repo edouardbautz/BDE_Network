@@ -33,11 +33,11 @@ function formatDateTime(date: Date, locale: string, timeZone: string): string {
   }).format(date);
 }
 
-function formatDate(date: Date, locale: string, timeZone: string): string {
+export function formatDate(date: Date, locale: string, timeZone: string): string {
   return new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeZone }).format(date);
 }
 
-function whenLine(data: NotificationEventData, locale: string, timeZone: string): string {
+export function whenLine(data: NotificationEventData, locale: string, timeZone: string): string {
   const startLocal = toLocalDateTime(data.start, timeZone);
   const endLocal = toLocalDateTime(data.end, timeZone);
   const sameDay =

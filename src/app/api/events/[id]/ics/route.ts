@@ -1,6 +1,7 @@
 import { getConfig } from '@/config';
 import { getEventsAccess } from '@/lib/events/access';
 import { buildCalendarIcs } from '@/lib/events/export';
+import { icsFilename } from '@/lib/events/ics';
 import { expandEvents } from '@/lib/events/occurrences';
 import { getVisibleEvent } from '@/lib/events/queries';
 
@@ -39,18 +40,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return notFound();
   }
 
-  const filename =
-    event.title
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-zA-Z0-9]+/g, '-')
-      .replace(/^-|-$/g, '')
-      .toLowerCase() || 'event';
-
   return new Response(buildCalendarIcs(occurrences), {
     headers: {
       'Content-Type': 'text/calendar; charset=utf-8',
-      'Content-Disposition': `attachment; filename="${filename}.ics"`,
+      'Content-Disposition': `attachment; filename="${icsFilename(event.title)}"`,
       'Cache-Control': 'private, no-store',
     },
   });

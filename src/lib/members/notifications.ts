@@ -1,11 +1,13 @@
 import { getConfig } from '@/config';
 import { deliver } from '@/lib/notifications/deliver';
 import { withDiscordCard } from '@/lib/notifications/discord-card';
+import { withEmailContent } from '@/lib/notifications/email-card';
 import { getNotificationTranslate } from '@/lib/notifications/translate';
 import { emailsOfHolders } from '@/lib/notifications/recipients';
 import { MEMBERS_MANAGE } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
 import { buildMemberEmbed } from './discord-embed';
+import { buildApprovedEmail, buildPendingEmail } from './email';
 import {
   buildApprovedMessage,
   buildPendingMessage,
@@ -26,7 +28,6 @@ function translate(locale: string) {
   return getNotificationTranslate(locale, 'members.notifications');
 }
 
-/** Absolute link into the app, or null when APP_URL is not set. */
 /** Who did it, by name (the login when the account is gone or unknown). */
 async function nameOf(login: string | undefined): Promise<string | null> {
   if (!login) return null;
@@ -34,6 +35,7 @@ async function nameOf(login: string | undefined): Promise<string | null> {
   return user?.fullName ?? login;
 }
 
+/** Absolute link into the app, or null when APP_URL is not set. */
 function appLink(locale: string, path = ''): string | null {
   const base = process.env.APP_URL?.trim().replace(/\/+$/, '');
   return base ? `${base}/${locale}${path}` : null;
@@ -54,10 +56,12 @@ export async function notifyMemberPending(userId: string): Promise<void> {
     const locale = config.bde.defaultLocale;
     const t = await translate(locale);
     const membersUrl = appLink(locale, '/members');
-    const message = await withDiscordCard(
+    const message = await withEmailContent(
       'memberPending',
-      buildPendingMessage(member, t, membersUrl),
-      () => buildMemberEmbed('pending', member, t, membersUrl),
+      await withDiscordCard('memberPending', buildPendingMessage(member, t, membersUrl), () =>
+        buildMemberEmbed('pending', member, t, membersUrl),
+      ),
+      (brand) => buildPendingEmail(member, t, membersUrl, brand, locale),
     );
     await deliver('memberPending', message, await emailsOfHolders(MEMBERS_MANAGE), LOG_PREFIX);
   } catch (error) {
@@ -89,23 +93,28 @@ export async function notifyMemberApproved(userId: string, actorLogin?: string):
     const locale = config.bde.defaultLocale;
     const t = await translate(locale);
     const actorName = channel === 'discord' ? await nameOf(actorLogin) : null;
-    const message = await withDiscordCard(
+    const roleName = member.role.name;
+    const message = await withEmailContent(
       'memberApproved',
-      buildApprovedMessage(
-        member,
-        member.role.name,
-        channel === 'email' ? 'member' : 'team',
-        t,
-        appLink(locale),
-        config.bde.name,
-      ),
-      () =>
-        buildMemberEmbed(
-          'approved',
-          { ...member, roleName: member.role?.name, actorName },
+      await withDiscordCard(
+        'memberApproved',
+        buildApprovedMessage(
+          member,
+          roleName,
+          channel === 'email' ? 'member' : 'team',
           t,
-          appLink(locale, '/members'),
+          appLink(locale),
+          config.bde.name,
         ),
+        () =>
+          buildMemberEmbed(
+            'approved',
+            { ...member, roleName, actorName },
+            t,
+            appLink(locale, '/members'),
+          ),
+      ),
+      (brand) => buildApprovedEmail(member, roleName, t, appLink(locale), brand, locale),
     );
     await deliver('memberApproved', message, [member.email], LOG_PREFIX);
   } catch (error) {

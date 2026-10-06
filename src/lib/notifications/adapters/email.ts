@@ -59,11 +59,22 @@ export class EmailAdapter implements NotificationAdapter {
         });
 
         try {
+          const { email } = message;
           await transport.sendMail({
             from: settings.from,
             to: message.to,
             subject: message.subject,
-            text: message.body,
+            text: email?.text ?? message.body,
+            ...(email && { html: email.html }),
+            // Sent as the calendar part of the message, which mail clients turn into an "add to
+            // calendar" offer, and as a file for those that do not.
+            ...(email?.ics && {
+              icalEvent: {
+                method: 'PUBLISH',
+                filename: email.ics.filename,
+                content: email.ics.content,
+              },
+            }),
           });
           outcomes.push({ ok: true });
         } catch (error) {

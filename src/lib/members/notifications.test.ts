@@ -23,6 +23,7 @@ vi.mock('@/lib/notifications/translate', () => ({
 }));
 vi.mock('@/lib/notifications/sender', () => ({
   discordSender: vi.fn(async () => ({ username: 'BDE Test' })),
+  resolveLogoUrl: vi.fn(async () => undefined),
 }));
 vi.mock('@/lib/prisma', () => ({
   prisma: { user: { findMany: vi.fn(), findUnique: vi.fn() } },
@@ -128,6 +129,36 @@ describe('notifyMemberPending', () => {
     ]);
   });
 
+  it('by e-mail, sends the approvers a designed e-mail with the photo and a button to the members page', async () => {
+    useChannels({ memberPending: 'email' });
+    vi.stubEnv('APP_URL', 'https://bde.exemple.fr/');
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      ...pendingUser,
+      photoUrl: 'https://cdn.intra.42.fr/u.jpg',
+    } as never);
+    vi.mocked(prisma.user.findMany).mockResolvedValue([{ email: 'owner@x.fr' }] as never);
+
+    await notifyMemberPending('u1');
+
+    const [, message, to] = firstCall(vi.mocked(deliver));
+    expect(to).toEqual(['owner@x.fr']);
+    expect(message.subject).toBe("Nouvelle demande d'accès : Jean Dupont");
+    expect(message.email?.html).toContain('<td bgcolor="#f59e0b" height="6"');
+    expect(message.email?.html).toContain('src="https://cdn.intra.42.fr/u.jpg" width="64"');
+    expect(message.email?.html).toContain('href="https://bde.exemple.fr/fr/members"');
+    expect(message).not.toHaveProperty('discord');
+  });
+
+  it('sends no e-mail to a chat channel', async () => {
+    useChannels({ memberPending: 'slack' });
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(pendingUser as never);
+    vi.mocked(prisma.user.findMany).mockResolvedValue([]);
+
+    await notifyMemberPending('u1');
+
+    expect(firstCall(vi.mocked(deliver))[1]).not.toHaveProperty('email');
+  });
+
   it('has no link at all without APP_URL (never a broken one)', async () => {
     useChannels({ memberPending: 'discord' });
     vi.mocked(prisma.user.findUnique).mockResolvedValue(pendingUser as never);
@@ -231,6 +262,25 @@ describe('notifyMemberApproved', () => {
         { name: 'Approuvé par', value: 'Paula Martin', inline: true },
       ]),
     );
+  });
+
+  it('by e-mail, welcomes the member with their role and a button to sign in, without their photo', async () => {
+    useChannels({ memberApproved: 'email' });
+    vi.stubEnv('APP_URL', 'https://bde.exemple.fr');
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      ...approved,
+      photoUrl: 'https://cdn.intra.42.fr/u.jpg',
+    } as never);
+
+    await notifyMemberApproved('u1', 'pmartin');
+
+    const [, message, to] = firstCall(vi.mocked(deliver));
+    expect(to).toEqual(['jean@x.fr']);
+    expect(message.email?.html).toContain('<td bgcolor="#10b981" height="6"');
+    expect(message.email?.text).toContain('Rôle : Trésorier');
+    expect(message.email?.html).toContain('href="https://bde.exemple.fr/fr"');
+    expect(message.email?.html).not.toContain('width="64"');
+    expect(message).not.toHaveProperty('discord');
   });
 
   it('sends no card to Slack or email: only the plain text', async () => {

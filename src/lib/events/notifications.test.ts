@@ -4,6 +4,7 @@ vi.mock('@/config', () => ({ getConfig: vi.fn() }));
 vi.mock('@/lib/notifications', () => ({ notify: vi.fn(), notifyMany: vi.fn() }));
 vi.mock('@/lib/notifications/sender', () => ({
   discordSender: vi.fn(async () => ({ username: 'BDE Test' })),
+  resolveLogoUrl: vi.fn(async () => undefined),
 }));
 vi.mock('next-intl', () => ({ createTranslator: vi.fn(() => (key: string) => key) }));
 vi.mock('@/lib/prisma', () => ({
@@ -22,7 +23,7 @@ type Channel = 'email' | 'discord' | 'slack' | 'none';
 
 function useChannel(channel: Channel) {
   vi.mocked(getConfig).mockReturnValue({
-    bde: { timezone: 'Europe/Paris', defaultLocale: 'fr' },
+    bde: { name: 'BDE Test', logoPath: '/logo.svg', timezone: 'Europe/Paris', defaultLocale: 'fr' },
     notifications: { eventConfirmed: channel, eventReminder: channel },
     events: { categories: [{ key: 'sport', label: 'Sport', color: '#16a34a' }], reminderHour: 18 },
   } as unknown as ReturnType<typeof getConfig>);
@@ -119,6 +120,8 @@ describe('notifyEventConfirmed', () => {
     id: 'evt1',
     title: 'Tournoi',
     description: 'Venez nombreux.',
+    updatedAt: new Date('2099-01-01T00:00:00Z'),
+    cancellations: [],
     location: 'Gymnase',
     categoryKey: 'sport',
     status: 'CONFIRMED' as const,
@@ -177,7 +180,12 @@ describe('notifyEventConfirmed', () => {
 
   it('decides on the channel of eventConfirmed, not of the reminder', async () => {
     vi.mocked(getConfig).mockReturnValue({
-      bde: { timezone: 'Europe/Paris', defaultLocale: 'fr' },
+      bde: {
+        name: 'BDE Test',
+        logoPath: '/logo.svg',
+        timezone: 'Europe/Paris',
+        defaultLocale: 'fr',
+      },
       notifications: { eventConfirmed: 'discord', eventReminder: 'email' },
       events: {
         categories: [{ key: 'sport', label: 'Sport', color: '#16a34a' }],
@@ -187,6 +195,130 @@ describe('notifyEventConfirmed', () => {
     await notifyEventConfirmed('evt1');
 
     expect(vi.mocked(notify).mock.calls[0]?.[1].discord).toBeDefined();
+  });
+
+  describe('by e-mail', () => {
+    const sentTo = () => vi.mocked(notifyMany).mock.calls[0]?.[1] ?? [];
+
+    it('sends every member the designed e-mail, with the plain text kept next to it', async () => {
+      await notifyEventConfirmed('evt1');
+
+      expect(sentTo()).toHaveLength(2);
+      for (const message of sentTo()) {
+        expect(message.subject).toBeTruthy();
+        expect(message.email?.html).toContain('<!doctype html>');
+        expect(message.email?.html).toContain('>Tournoi</h1>');
+        expect(message.email?.text).toContain('Tournoi');
+      }
+    });
+
+    it('has the colour of the category, and no Discord card', async () => {
+      await notifyEventConfirmed('evt1');
+
+      const [first] = sentTo();
+      expect(first?.email?.html).toContain('<td bgcolor="#16a34a" height="6"');
+      expect(first).not.toHaveProperty('discord');
+    });
+
+    it('attaches the calendar file of the event', async () => {
+      await notifyEventConfirmed('evt1');
+
+      const ics = sentTo()[0]?.email?.ics;
+      expect(ics?.filename).toBe('tournoi.ics');
+      expect(ics?.content).toContain('UID:evt1-20990510T180000Z@bde-network');
+      expect(ics?.content).toContain('SUMMARY:Tournoi');
+      expect(ics?.content).toContain('X-WR-CALNAME:BDE Test');
+    });
+
+    it('puts every occurrence still to come in the file, and not a cancelled one', async () => {
+      vi.mocked(prisma.event.findUnique).mockResolvedValue({
+        ...storedEvent,
+        recurrence: 'WEEKLY',
+        recurrenceUntil: new Date('2099-05-31T18:00:00Z'),
+        cancellations: [{ occurrenceStart: new Date('2099-05-17T18:00:00Z') }],
+      } as never);
+      await notifyEventConfirmed('evt1');
+
+      const content = sentTo()[0]?.email?.ics?.content ?? '';
+      expect(content.match(/BEGIN:VEVENT/g)).toHaveLength(3);
+      expect(content).toContain('DTSTART:20990510T180000Z');
+      expect(content).not.toContain('DTSTART:20990517T180000Z');
+      expect(content).toContain('DTSTART:20990524T180000Z');
+      expect(content).toContain('DTSTART:20990531T180000Z');
+    });
+
+    it('still attaches the event when every occurrence is already over', async () => {
+      vi.mocked(prisma.event.findUnique).mockResolvedValue({
+        ...storedEvent,
+        startsAt: new Date('2020-05-10T18:00:00Z'),
+        endsAt: new Date('2020-05-10T20:00:00Z'),
+      } as never);
+      await notifyEventConfirmed('evt1');
+
+      expect(sentTo()[0]?.email?.ics?.content).toContain('DTSTART:20200510T180000Z');
+    });
+
+    it('asks for the cancelled dates, to leave them out of the calendar file', async () => {
+      await notifyEventConfirmed('evt1');
+
+      expect(prisma.event.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: expect.objectContaining({
+            cancellations: { select: { occurrenceStart: true } },
+          }),
+        }),
+      );
+    });
+
+    it('leaves the occurrences already over out of the calendar file of a series', async () => {
+      const day = 86_400_000;
+      const start = new Date(Date.now() - 15 * day);
+      vi.mocked(prisma.event.findUnique).mockResolvedValue({
+        ...storedEvent,
+        recurrence: 'WEEKLY',
+        startsAt: start,
+        endsAt: new Date(start.getTime() + 3_600_000),
+        recurrenceUntil: new Date(Date.now() + 15 * day),
+      } as never);
+      await notifyEventConfirmed('evt1');
+
+      const content = sentTo()[0]?.email?.ics?.content ?? '';
+      // 15 and 8 days ago and yesterday are over; 6 and 13 days from now are not.
+      expect(content.match(/BEGIN:VEVENT/g)).toHaveLength(2);
+    });
+
+    it('decides on the channel of eventConfirmed, not of the reminder', async () => {
+      vi.mocked(getConfig).mockReturnValue({
+        bde: {
+          name: 'BDE Test',
+          logoPath: '/logo.svg',
+          timezone: 'Europe/Paris',
+          defaultLocale: 'fr',
+        },
+        notifications: { eventConfirmed: 'email', eventReminder: 'discord' },
+        events: {
+          categories: [{ key: 'sport', label: 'Sport', color: '#16a34a' }],
+          reminderHour: 18,
+        },
+      } as unknown as ReturnType<typeof getConfig>);
+      await notifyEventConfirmed('evt1');
+
+      expect(sentTo()[0]?.email).toBeDefined();
+    });
+
+    it('shows the logo of the BDE when it can be loaded', async () => {
+      const { resolveLogoUrl } = await import('@/lib/notifications/sender');
+      vi.mocked(resolveLogoUrl).mockResolvedValueOnce('https://bde.example.fr/logo.png');
+      await notifyEventConfirmed('evt1');
+
+      expect(sentTo()[0]?.email?.html).toContain('src="https://bde.example.fr/logo.png"');
+    });
+  });
+
+  it.each<Channel>(['discord', 'slack'])('on %s, builds no e-mail at all', async (channel) => {
+    useChannel(channel);
+    await notifyEventConfirmed('evt1');
+    expect(vi.mocked(notify).mock.calls[0]?.[1]).not.toHaveProperty('email');
   });
 
   it('keeps the plain text next to the card, and sends no card by email', async () => {

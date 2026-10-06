@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { PLATFORM_NAME, buildEventEmbed } from './discord-embed';
+import { PLATFORM_NAME } from '@/lib/notifications/platform';
+import { buildEventEmbed } from './discord-embed';
 import type { NotificationEventData, Translate } from './messages';
 
 // Echoes the key and values so the assertions don't depend on the catalog wording.
@@ -117,8 +118,25 @@ describe('buildEventEmbed', () => {
       'embed.fields.repeats',
     );
 
-    expect(repeats?.value).toBe('recurring(frequency=frequency.WEEKLY,until=<t:1797525000:D>)');
+    expect(repeats?.value).toBe('embed.repeatsValue.WEEKLY(until=<t:1797525000:D>)');
   });
+
+  it.each(['WEEKLY', 'BIWEEKLY', 'MONTHLY'] as const)(
+    'picks the %s wording of the repetition',
+    (recurrence) => {
+      const repeats = fieldNamed(
+        buildEventEmbed(
+          'confirmed',
+          { ...base, recurrence, recurrenceUntil: new Date('2026-12-17T16:30:00Z') },
+          t,
+          PARIS,
+          NOW,
+        ),
+        'embed.fields.repeats',
+      );
+      expect(repeats?.value).toBe(`embed.repeatsValue.${recurrence}(until=<t:1797525000:D>)`);
+    },
+  );
 
   it('shows no repetition line for a one-off event', () => {
     expect(

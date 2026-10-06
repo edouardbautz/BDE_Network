@@ -9,6 +9,15 @@ vi.mock('@/lib/notifications/discord-card', () => ({
   withDiscordCard: vi.fn(async (_event: string, message: unknown) => message),
 }));
 vi.mock('./discord-embed', () => ({ buildEventEmbed: vi.fn() }));
+vi.mock('@/lib/notifications/email-card', () => ({
+  withEmailContent: vi.fn(
+    async (_event: string, message: object, build: (brand: { name: string }) => unknown) => ({
+      ...message,
+      email: build({ name: 'BDE' }),
+    }),
+  ),
+}));
+vi.mock('./email', () => ({ buildEventEmail: vi.fn(() => ({ html: '<p>', text: 'p' })) }));
 vi.mock('./messages', () => ({
   buildReminderMessage: vi.fn(() => ({ subject: 'Rappel', body: 'Demain' })),
 }));
@@ -22,6 +31,7 @@ const { getConfig } = await import('@/config');
 const { prisma } = await import('@/lib/prisma');
 const { deliver } = await import('./notifications');
 const { buildReminderMessage } = await import('./messages');
+const { buildEventEmail } = await import('./email');
 const { emailsOfHolders } = await import('@/lib/notifications/recipients');
 const { isSameLocalDay, reminderDueAt, runReminderTick } = await import('./reminders');
 
@@ -176,6 +186,34 @@ describe('runReminderTick', () => {
     // The server was down all of the day before: back at 10:00 Paris on the day itself.
     await runReminderTick(new Date('2026-10-10T08:00:00Z'));
     expect(vi.mocked(buildReminderMessage).mock.calls[0]?.[4]).toBe('today');
+  });
+
+  it('sends the designed e-mail, with the same day as the plain text, and no calendar file', async () => {
+    vi.mocked(prisma.event.findMany).mockResolvedValue([event()] as never);
+    await runReminderTick(new Date('2026-10-09T16:00:00Z'));
+
+    const call = vi.mocked(buildEventEmail).mock.calls[0];
+    expect(call?.[0]).toBe('tomorrow');
+    expect(call?.[6]).toBeUndefined(); // no .ics for a reminder
+    expect(deliver).toHaveBeenCalledWith(
+      'eventReminder',
+      expect.objectContaining({ email: { html: '<p>', text: 'p' } }),
+      ['alice@x.fr'],
+    );
+
+    vi.clearAllMocks();
+    fakeClaimTable();
+    vi.mocked(prisma.event.findMany).mockResolvedValue([event()] as never);
+    await runReminderTick(new Date('2026-10-10T08:00:00Z')); // the day itself, after a downtime
+    expect(vi.mocked(buildEventEmail).mock.calls[0]?.[0]).toBe('today');
+  });
+
+  it('builds the e-mail of the reminder channel, not of another notification', async () => {
+    const { withEmailContent } = await import('@/lib/notifications/email-card');
+    vi.mocked(prisma.event.findMany).mockResolvedValue([event()] as never);
+    await runReminderTick(new Date('2026-10-09T16:00:00Z'));
+
+    expect(vi.mocked(withEmailContent).mock.calls[0]?.[0]).toBe('eventReminder');
   });
 
   it('never sends the same reminder twice, however many ticks run', async () => {

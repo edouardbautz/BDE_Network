@@ -291,3 +291,101 @@ describe('EmailAdapter', () => {
     smtp = await startSmtpServer();
   });
 });
+
+describe('EmailAdapter with a designed e-mail', () => {
+  const html = '<!doctype html><html><body><h1>Soirée</h1></body></html>';
+  const ics = {
+    filename: 'soiree.ics',
+    content: 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nMETHOD:PUBLISH\r\nEND:VCALENDAR\r\n',
+  };
+
+  /** The first delivery, with its base64 / quoted-printable bodies decoded so the text can be searched. */
+  function delivered(): string {
+    const data = smtp.deliveries[0]?.data ?? '';
+    return data.replace(/\r\n/g, '\n');
+  }
+
+  it('sends the HTML and the text version, as alternatives of one message', async () => {
+    await new EmailAdapter().send({
+      to: 'alice@example.org',
+      subject: 'Soirée',
+      body: 'plain body',
+      email: { html, text: 'Version texte soignée' },
+    });
+
+    const data = delivered();
+    expect(data).toMatch(/^Content-Type: multipart\/alternative;/m);
+    expect(data).toMatch(/^Content-Type: text\/plain; charset=utf-8/m);
+    expect(data).toMatch(/^Content-Type: text\/html; charset=utf-8/m);
+    expect(data).not.toContain('text/calendar');
+  });
+
+  it("uses the e-mail's own text, not the plain body, as the text version", async () => {
+    await new EmailAdapter().send({
+      to: 'alice@example.org',
+      subject: 's',
+      body: 'CORPS-BRUT',
+      email: { html, text: 'TEXTE-DU-MAIL' },
+    });
+
+    expect(decodeBodies(delivered())).not.toContain('CORPS-BRUT');
+    expect(decodeBodies(delivered())).toContain('TEXTE-DU-MAIL');
+  });
+
+  it('carries the calendar file as the calendar part of the message and as an attachment', async () => {
+    await new EmailAdapter().send({
+      to: 'alice@example.org',
+      subject: 's',
+      body: 'b',
+      email: { html, text: 't', ics },
+    });
+
+    const data = delivered();
+    expect(data).toMatch(/^Content-Type: multipart\/mixed;/m);
+    expect(data).toMatch(/^Content-Type: text\/calendar; charset=utf-8; method=PUBLISH/m);
+    expect(data).toMatch(/^Content-Disposition: attachment; filename=soiree\.ics/m);
+    expect(decodeBodies(data)).toContain('BEGIN:VCALENDAR');
+  });
+
+  it('keeps sending plain text for a message with no designed e-mail', async () => {
+    await new EmailAdapter().send({ to: 'alice@example.org', subject: 's', body: 'Corps simple' });
+
+    const data = delivered();
+    expect(data).toMatch(/^Content-Type: text\/plain; charset=utf-8/m);
+    expect(data).not.toContain('text/html');
+    expect(data).not.toContain('multipart');
+  });
+
+  it('sends each recipient the same designed e-mail over one connection', async () => {
+    await new EmailAdapter().sendMany(
+      ['a@example.org', 'b@example.org'].map((to) => ({
+        to,
+        subject: 's',
+        body: 'b',
+        email: { html, text: 't', ics },
+      })),
+    );
+
+    expect(smtp.connections()).toBe(1);
+    expect(smtp.deliveries.map((d) => d.rcptTo[0])).toEqual(['a@example.org', 'b@example.org']);
+    for (const delivery of smtp.deliveries) {
+      expect(delivery.data).toContain('text/calendar');
+      expect(delivery.data).toContain('text/html');
+    }
+  });
+});
+
+/** Decodes the base64 and quoted-printable bodies of a message into one searchable string. */
+function decodeBodies(raw: string): string {
+  const parts = raw.split(/\n\n/);
+  return parts
+    .map((part) => {
+      const compact = part.replace(/\n/g, '');
+      if (/^[A-Za-z0-9+/=]{16,}$/.test(compact))
+        return Buffer.from(compact, 'base64').toString('utf8');
+      return part
+        .replace(/=\n/g, '')
+        .replace(/=([0-9A-F]{2})/g, (_m, hex: string) => String.fromCharCode(parseInt(hex, 16)));
+    })
+    .join('\n');
+}

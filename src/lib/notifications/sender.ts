@@ -1,5 +1,6 @@
 import { getConfig } from '@/config';
-import { EMBED_LIMITS, httpUrl, truncate } from './discord-embed';
+import { EMBED_LIMITS } from './discord-embed';
+import { httpUrl, truncate } from './text';
 
 /**
  * Who a Discord message appears to come from: the BDE's name and, when it can be shown, its logo.
@@ -69,16 +70,21 @@ async function answersAsImage(url: string): Promise<boolean> {
   return usable;
 }
 
-/** The address of the BDE's avatar as Discord can fetch it, or undefined when it cannot. */
+/**
+ * The address of the BDE's logo, or undefined when it cannot be shown. `requirePublic` is for a
+ * reader that fetches it from the Internet (Discord); an e-mail client loads it from the reader's own
+ * machine, so a BDE on a private network can pass `false`.
+ */
 export async function resolveLogoUrl(
   appUrl: string | undefined,
   logoPath: string,
+  { requirePublic = true }: { requirePublic?: boolean } = {},
 ): Promise<string | undefined> {
   const base = httpUrl(appUrl?.trim());
   if (!base) return undefined;
 
   const root = new URL(base);
-  if (!isPublicHost(root.hostname)) return undefined;
+  if (requirePublic && !isPublicHost(root.hostname)) return undefined;
 
   // A path of this very site: `//other.example/x.png` would point elsewhere.
   const own = RASTER_PATH.test(logoPath) && /^\/(?!\/)/.test(logoPath);

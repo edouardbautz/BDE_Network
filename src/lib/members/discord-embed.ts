@@ -1,10 +1,10 @@
 import {
-  httpUrl,
   MEMBER_COLORS,
   type DiscordEmbed,
   type DiscordEmbedField,
 } from '@/lib/notifications/discord-embed';
-import { PLATFORM_NAME } from '@/lib/events/discord-embed';
+import { PLATFORM_NAME } from '@/lib/notifications/platform';
+import { httpUrl } from '@/lib/notifications/text';
 import type { Translate } from '@/lib/notifications/translate';
 import type { MemberFacts } from './messages';
 

@@ -233,6 +233,10 @@
           "approvedBy": "Approved by",
           "removedBy": "Removed by"
         }
+      },
+      "email": {
+        "footerApprovers": "You are receiving this message because you can manage the members of {bde}.",
+        "footerRequester": "You are receiving this message because you asked for access to {bde}."
       }
     },
     "rejectWarning": "The request is deleted. They can ask again by signing in.",
@@ -340,7 +344,17 @@
           "category": "Category",
           "inCharge": "Members in charge",
           "repeats": "Repeats"
+        },
+        "repeatsValue": {
+          "WEEKLY": "Every week, until {until}",
+          "BIWEEKLY": "Every 2 weeks, until {until}",
+          "MONTHLY": "Every month, until {until}"
         }
+      },
+      "email": {
+        "action": "View the event",
+        "calendarNote": "The attached file adds the event to your calendar.",
+        "footer": "You are receiving this message because you are a member of {bde}."
       }
     },
     "title": "Events",

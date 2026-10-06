@@ -1,10 +1,6 @@
-import {
-  colorToInt,
-  discordTime,
-  httpUrl,
-  truncate,
-  type DiscordEmbed,
-} from '@/lib/notifications/discord-embed';
+import { colorToInt, discordTime, type DiscordEmbed } from '@/lib/notifications/discord-embed';
+import { PLATFORM_NAME } from '@/lib/notifications/platform';
+import { httpUrl, truncate } from '@/lib/notifications/text';
 import type { NotificationEventData, ReminderDay, Translate } from './messages';
 import { toLocalDateTime } from './time';
 
@@ -16,9 +12,6 @@ const KIND_LABEL_KEY: Record<EventCardKind, string> = {
   tomorrow: 'embed.kind.reminderTomorrow',
   today: 'embed.kind.reminderToday',
 };
-
-/** The platform's name, in the discreet footer of every card. */
-export const PLATFORM_NAME = 'BDE_Network';
 
 /** How much of the event's description a card shows: it is a notice, the page has the rest. */
 const DESCRIPTION_PREVIEW = 350;
@@ -55,8 +48,7 @@ export function buildEventEmbed(
   if (data.recurrence !== 'NONE' && data.recurrenceUntil) {
     fields.push({
       name: t('embed.fields.repeats'),
-      value: t('recurring', {
-        frequency: t(`frequency.${data.recurrence}`),
+      value: t(`embed.repeatsValue.${data.recurrence}`, {
         until: discordTime(data.recurrenceUntil, 'D'),
       }),
     });

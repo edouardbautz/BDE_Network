@@ -4,7 +4,9 @@ import { emailsOfHolders } from '@/lib/notifications/recipients';
 import { managePermission } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
 import { withDiscordCard } from '@/lib/notifications/discord-card';
+import { withEmailContent } from '@/lib/notifications/email-card';
 import { buildEventEmbed } from './discord-embed';
+import { buildEventEmail } from './email';
 import { buildReminderMessage } from './messages';
 import { deliver, getTranslate, toNotificationData } from './notifications';
 import { allOccurrences } from './recurrence';
@@ -116,10 +118,14 @@ export async function runReminderTick(now: Date = new Date()): Promise<ReminderT
       // Normally tomorrow's; today's when the server was down at the usual time and this goes out late.
       const day = isSameLocalDay(occurrence.start, now, timeZone) ? 'today' : 'tomorrow';
       const data = toNotificationData(event, occurrence, locale);
-      const message = await withDiscordCard(
+      const message = await withEmailContent(
         'eventReminder',
-        buildReminderMessage(data, translate, locale, timeZone, day),
-        () => buildEventEmbed(day, data, translate, timeZone, now),
+        await withDiscordCard(
+          'eventReminder',
+          buildReminderMessage(data, translate, locale, timeZone, day),
+          () => buildEventEmbed(day, data, translate, timeZone, now),
+        ),
+        (brand) => buildEventEmail(day, data, translate, locale, timeZone, brand),
       );
       const assigneeEmails = event.assignees.flatMap((a) => (a.user ? [a.user.email] : []));
       // Nobody in charge to write to: the people who run the events get it, so a reminder is never

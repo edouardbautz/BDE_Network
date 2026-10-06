@@ -135,6 +135,25 @@ describe('resolveLogoUrl', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it('accepts a private address when the reader fetches the logo from its own machine (e-mail)', async () => {
+    const url = 'http://192.168.1.20/logo.png';
+    serve({ [url]: 'image/png' });
+    for (const appUrl of ['http://localhost:3000', 'http://192.168.1.20', 'http://nas.local']) {
+      forgetCheckedLogos();
+      serve({ [`${new URL(appUrl).origin}/logo.png`]: 'image/png' });
+      await expect(resolveLogoUrl(appUrl, '/logo.svg', { requirePublic: false })).resolves.toBe(
+        `${new URL(appUrl).origin}/logo.png`,
+      );
+    }
+  });
+
+  it('still checks that a private address answers as an image', async () => {
+    serve({});
+    await expect(
+      resolveLogoUrl('http://localhost:3000', '/logo.svg', { requirePublic: false }),
+    ).resolves.toBeUndefined();
+  });
+
   it('gives nothing when the picture is missing, is not an image or the server is down', async () => {
     serve({});
     await expect(resolveLogoUrl('https://bde.example.fr', '/logo.svg')).resolves.toBeUndefined();

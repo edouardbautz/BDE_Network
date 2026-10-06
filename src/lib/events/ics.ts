@@ -110,6 +110,18 @@ export function buildIcs(calendar: IcsCalendar, now: Date = new Date()): string 
   return lines.map(foldIcsLine).join('\r\n') + '\r\n';
 }
 
+/** `Soirée de rentrée` → `soiree-de-rentree.ics`: the name of the file a calendar client receives. */
+export function icsFilename(title: string): string {
+  const slug =
+    title
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .toLowerCase() || 'event';
+  return `${slug}.ics`;
+}
+
 /** UID of one occurrence: stable for a given event and original start. */
 export function occurrenceUid(eventId: string, occurrenceStart: Date): string {
   return `${eventId}-${formatIcsDate(occurrenceStart)}@bde-network`;

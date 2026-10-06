@@ -2,11 +2,13 @@ import { getConfig } from '@/config';
 import type { NotificationEvent } from '@/config/schema';
 import { deliver as deliverNotification, type DeliveryResult } from '@/lib/notifications/deliver';
 import { withDiscordCard } from '@/lib/notifications/discord-card';
+import { withEmailContent } from '@/lib/notifications/email-card';
 import type { NotificationMessage } from '@/lib/notifications/types';
 import { getNotificationTranslate } from '@/lib/notifications/translate';
 import { APPROVED_STATUSES } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
 import { buildEventEmbed } from './discord-embed';
+import { buildEventEmail, buildEventIcs } from './email';
 import { allOccurrences } from './recurrence';
 import { buildConfirmationMessage, type NotificationEventData, type Translate } from './messages';
 
@@ -92,7 +94,10 @@ export async function notifyEventConfirmed(eventId: string): Promise<void> {
 
     const event = await prisma.event.findUnique({
       where: { id: eventId },
-      include: { assignees: { select: { login: true, user: { select: { fullName: true } } } } },
+      include: {
+        assignees: { select: { login: true, user: { select: { fullName: true } } } },
+        cancellations: { select: { occurrenceStart: true } },
+      },
     });
     if (!event) {
       return;
@@ -112,10 +117,34 @@ export async function notifyEventConfirmed(eventId: string): Promise<void> {
 
     const data = toNotificationData(event, next, locale);
     const translate = await getTranslate(locale);
-    const message = await withDiscordCard(
+    // The calendar file carries every occurrence still to come (the next one, for a series that is over).
+    const cancelled = new Set((event.cancellations ?? []).map((c) => c.occurrenceStart.getTime()));
+    const upcoming = occurrences.filter(
+      (o) => o.end.getTime() > now && !cancelled.has(o.start.getTime()),
+    );
+
+    const message = await withEmailContent(
       'eventConfirmed',
-      buildConfirmationMessage(data, translate, locale, timeZone),
-      () => buildEventEmbed('confirmed', data, translate, timeZone),
+      await withDiscordCard(
+        'eventConfirmed',
+        buildConfirmationMessage(data, translate, locale, timeZone),
+        () => buildEventEmbed('confirmed', data, translate, timeZone),
+      ),
+      (brand) =>
+        buildEventEmail(
+          'confirmed',
+          data,
+          translate,
+          locale,
+          timeZone,
+          brand,
+          buildEventIcs(
+            event,
+            upcoming.length > 0 ? upcoming : [next],
+            data.categoryLabel,
+            config.bde.name,
+          ),
+        ),
     );
 
     const members = await prisma.user.findMany({
