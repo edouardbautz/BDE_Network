@@ -13,7 +13,7 @@ cp .env.example .env      # cp -> Copy-Item sous PowerShell
 docker compose -f docker-compose.dev.yml up
 ```
 
-Ceci lance PostgreSQL et l'application en mode développement (`next dev`) dans des conteneurs,
+Ceci lance PostgreSQL, **Mailpit** (une boîte mail de test, voir ci-dessous) et l'application en mode développement (`next dev`) dans des conteneurs,
 avec le code source monté en volume : vos modifications sont reprises à chaud (hot reload), sans
 reconstruction. `node_modules` et `.next` restent dans des volumes Docker nommés (jamais montés
 depuis l'hôte) pour éviter tout problème de binaires natifs incompatibles entre votre OS et le
@@ -26,19 +26,28 @@ Sous Windows, si le rechargement à chaud semble ne pas réagir à vos modificat
 `docker-compose.dev.yml`) — Docker Desktop ne propage pas toujours fidèlement les événements de
 système de fichiers natifs à travers un montage bind.
 
+### Voir les e-mails : Mailpit
+
+En développement, aucun e-mail ne sort de votre machine : l'application les envoie à
+[Mailpit](https://mailpit.axllent.org), qui les garde et les affiche sur
+**<http://localhost:8025>** (rendu HTML, version texte, fichier `.ics` joint, test de compatibilité des
+clients mail). Pour qu'une notification parte par e-mail, mettez son canal sur `email` dans votre
+`bde.config.local.yml` (voir [Notifications](notifications.md#tester-les-e-mails-en-développement-mailpit)).
+
 ### Option B — Node.js en local, PostgreSQL dans Docker
 
 Prérequis : Node.js 22+, npm.
 
 ```
 cp .env.example .env
-docker compose up postgres -d   # seulement la base de données
+docker compose -f docker-compose.dev.yml up postgres mailpit -d   # la base de données et la boîte mail de test
 npm install
 npm run db:migrate
 npm run dev
 ```
 
-L'application est disponible sur <http://localhost:3000>.
+L'application est disponible sur <http://localhost:3000>. Pour recevoir les e-mails dans Mailpit, mettez dans
+`.env` `SMTP_HOST=localhost`, `SMTP_PORT=1025` et `SMTP_FROM=bde@localhost` (dans l'option A, c'est déjà fait).
 
 ## Commandes utiles
 

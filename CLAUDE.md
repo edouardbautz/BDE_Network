@@ -273,6 +273,17 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
   request shows an image (cached 10 min); otherwise name only, never a broken picture. A new notification
   that should be a card gets a builder + a `withDiscordCard` call; who did an action is passed by the action
   (`ctx.actor.login`), the row being deleted before the message goes out.
+- **Designed e-mails** (`docs/notifications.md`). On the `email` channel a notification carries an
+  `EmailContent` (`html` + `text` + optional `.ics`) next to its plain `subject`/`body`: built by
+  `events/email.ts` / `members/email.ts` from the one layout `notifications/email-layout.ts` (`renderEmail`, a
+  pure function of a model) and added by `withEmailContent` **only when the event's channel is e-mail**. The
+  layout is for the worst clients, not browsers: tables, inline styles, `bgcolor`, a VML button for desktop
+  Outlook, a hidden preheader, a `<style>` only for dark mode / narrow screens. **Everything inserted goes
+  through `escapeHtml` / `httpUrl` / `normalizeHex` in that file** (never concatenate a member's text into the
+  HTML elsewhere). The logo is `resolveLogoUrl(…, { requirePublic: false })` (a mail client loads it itself).
+  A confirmation attaches the `.ics` through nodemailer's `icalEvent` (every occurrence to come, same UIDs as the
+  feeds); a reminder does not. `memberRemoved` never sends an e-mail. In development `docker-compose.dev.yml`
+  points `SMTP_*` at Mailpit (http://localhost:8025) unless `DEV_SMTP_*` say otherwise.
 - **There is no file storage.** A local-disk adapter and a public `/api/files/[...key]` route existed
   with nothing writing to them (it would have been a stored XSS the day an upload existed: no
   authentication, SVG served without `nosniff`); both were removed, with the `uploads` volume, rather
@@ -421,7 +432,9 @@ touching layout or adding UI. The short version:
   check it with `npx -y npm@10 ci --dry-run` (CI runs npm 10).
 - shadcn/ui components in `src/components/ui/` are excluded from ESLint/Prettier (generated
   code) — don't hand-edit; re-run `npx shadcn add <component>` instead.
-- `docker-compose.dev.yml` runs `prisma db push --accept-data-loss` on start (so the dev database gets neither
+- `docker-compose.dev.yml` installs with `npm install --no-save` (never `npm install`, which rewrites
+  `package-lock.json` with the container's npm, and never `npm ci`, which deletes `node_modules`: a mount point
+  there), then runs `prisma db push --accept-data-loss` on start (so the dev database gets neither
   the data conversions nor the CHECK / partial index of the migrations: `seed:demo` recreates the roles and
   demo accounts) (Prisma refuses to
   add a unique index to an existing table non-interactively); production applies the committed

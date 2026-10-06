@@ -102,6 +102,17 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
   (rattrapage après une panne), « demain » sinon (aussi en Slack et e-mail). Mentions neutralisées dans tous
   les textes de la carte, limites de taille de Discord respectées (texte coupé avec « … » ; description
   d'événement limitée à 350 caractères). Slack et e-mail inchangés.
+- **E-mails HTML mis en page** (`docs/notifications.md`), avec version texte de secours : logo et nom du BDE,
+  barre et bouton de la couleur de la catégorie, lignes Quand / Répétition / Lieu / Catégorie / Membres en
+  charge, bouton vers la page concernée, texte d'aperçu (preheader), pied discret. Tableaux et styles en ligne
+  (Gmail, Outlook y compris sur Windows avec bouton VML, Apple Mail, mobile), mode sombre. Confirmation
+  d'événement : fichier `.ics` joint (« Ajouter à l'agenda »). Rappel « aujourd'hui » / « demain ». Demande
+  d'accès (avec la photo 42) et approbation, mêmes soins ; FR / EN selon `bde.defaultLocale` ; tout texte saisi
+  par un membre est échappé.
+- Ligne « Répétition » courte (« Chaque semaine, jusqu'au 17 décembre 2026 ») dans les e-mails et les cartes
+  Discord ; en mode sombre, un fin liseré clair entoure le logo des e-mails.
+- **Mailpit dans `docker-compose.dev.yml`**, branché par défaut (`SMTP_HOST=mailpit`) : les e-mails de
+  développement se lisent sur <http://localhost:8025> sans serveur réel (`DEV_SMTP_*` pour en utiliser un).
 - **`public/logo.png`** : logo neutre fourni, utilisé comme avatar Discord quand `bde.logoPath` n'est pas une
   image PNG/JPEG/GIF/WebP (Discord n'accepte pas le SVG) ; sans adresse publique (`APP_URL`), le message part
   sans avatar.
@@ -179,6 +190,9 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Fixed
 
+- **L'environnement de développement Docker ne réécrit plus `package-lock.json`** : le conteneur lançait
+  `npm install`, dont le npm reclassait un champ du verrou à chaque démarrage et salissait le dépôt. Il lance
+  maintenant `npm install --no-save`, qui installe ce que dit le verrou sans jamais l'écrire.
 - Un membre retiré du BDE perd immédiatement l'accès : son cookie de session encore valide ne
   donne plus aucun droit (lecture des brouillons, création ou modification d'événements, export
   de données). Les contrôles de rôle et de permission refusent désormais tout identifiant ou rôle
