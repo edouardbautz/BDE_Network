@@ -155,8 +155,8 @@
     "title": "Dashboard",
     "welcome": "Welcome, {name}.",
     "empty": {
-      "title": "No modules enabled yet",
-      "description": "This platform currently covers accounts and member management. Once business modules (events, finances, meetings…) ship, they'll show up here.",
+      "title": "No module turned on",
+      "description": "The Events module (club calendar, reminders, calendar subscription) is available but not turned on. An owner can turn it on in the configuration file, key modules.enabled.",
       "cta": "Manage members"
     }
   },

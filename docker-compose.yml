@@ -8,8 +8,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - '127.0.0.1:5432:5432'
+    # No published port: only the app (same compose network) reaches the database. To look at it
+    # from the server: `docker compose exec postgres psql -U "$POSTGRES_USER" "$POSTGRES_DB"`.
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
       interval: 5s
@@ -29,7 +29,8 @@ services:
     ports:
       # Reachable from this machine only (a reverse proxy in front handles HTTPS).
       # Without a proxy, set APP_BIND=0.0.0.0 in .env: read the warning in docs/deployment.md first.
-      - '${APP_BIND:-127.0.0.1}:3000:3000'
+      # Another program already uses port 3000? Set APP_PORT=3001 (any free port) in .env.
+      - '${APP_BIND:-127.0.0.1}:${APP_PORT:-3000}:3000'
     volumes:
       - ./bde.config.yml:/app/bde.config.yml:ro
 

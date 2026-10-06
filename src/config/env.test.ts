@@ -50,7 +50,10 @@ describe('required variables', () => {
       const { errors } = check({ ...VALID_ENV, AUTH_SECRET: value });
       expect(errors).toHaveLength(1);
       expect(errors[0]).toContain('AUTH_SECRET est vide');
-      expect(errors[0]).toContain('openssl rand -base64 32');
+      expect(errors[0]).toContain(
+        'docker run --rm alpine sh -c "head -c 32 /dev/urandom | base64"',
+      );
+      expect(errors[0]).not.toContain('npx'); // no Node.js on the machine of a BDE
     }
   });
 

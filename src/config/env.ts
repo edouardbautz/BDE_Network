@@ -70,14 +70,16 @@ export function validateEnvironment(env: Env, config: BdeConfig): EnvironmentRep
   if (!secret) {
     errors.push(
       "AUTH_SECRET est vide. C'est la clé secrète qui protège les connexions des membres.\n" +
-        '    → Générez-en une avec la commande « openssl rand -base64 32 » (ou « npx auth secret »),\n' +
+        '    → Générez-en une avec cette commande (Docker, sous Windows, Linux et macOS) :\n' +
+        '        docker run --rm alpine sh -c "head -c 32 /dev/urandom | base64"\n' +
         '      puis collez le résultat après « AUTH_SECRET= » dans le fichier .env.',
     );
   } else if (secret.length < MIN_SECRET_LENGTH) {
     errors.push(
       `AUTH_SECRET est trop court (${secret.length} caractères, il en faut au moins ${MIN_SECRET_LENGTH}) : ` +
         'une clé courte se devine facilement.\n' +
-        '    → Générez-en une avec « openssl rand -base64 32 » et remplacez la valeur dans .env.',
+        '    → Générez-en une avec : docker run --rm alpine sh -c "head -c 32 /dev/urandom | base64"\n' +
+        '      et remplacez la valeur dans .env.',
     );
   }
 

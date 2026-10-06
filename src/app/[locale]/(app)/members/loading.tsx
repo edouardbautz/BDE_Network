@@ -22,7 +22,7 @@ export default function MembersLoading() {
       <Skeleton className="h-7 w-52" />
 
       <Card>
-        <CardHeader className="flex-row items-center gap-2 space-y-0">
+        <CardHeader className="flex flex-row items-center gap-2 space-y-0">
           <Skeleton className="h-4 w-40" />
         </CardHeader>
         <CardContent>
@@ -31,7 +31,7 @@ export default function MembersLoading() {
       </Card>
 
       <Card>
-        <CardHeader className="flex-row items-center gap-2 space-y-0">
+        <CardHeader className="flex flex-row items-center gap-2 space-y-0">
           <Skeleton className="h-4 w-32" />
         </CardHeader>
         <CardContent>

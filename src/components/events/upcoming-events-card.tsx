@@ -33,7 +33,7 @@ export async function UpcomingEventsCard({
 
   return (
     <Card>
-      <CardHeader className="flex-row items-center justify-between space-y-0">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle className="flex items-center gap-2 text-base">
           <CalendarDays className="text-muted-foreground size-4" />
           {t('dashboard.title')}

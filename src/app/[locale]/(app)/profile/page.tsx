@@ -38,7 +38,7 @@ export default async function ProfilePage() {
       </div>
 
       <Card className="max-w-xl">
-        <CardHeader className="flex-row items-center gap-3 space-y-0">
+        <CardHeader className="flex flex-row items-center gap-3 space-y-0">
           <Avatar size="lg">
             {user.image ? <AvatarImage src={user.image} alt="" /> : null}
             <AvatarFallback>{initials}</AvatarFallback>

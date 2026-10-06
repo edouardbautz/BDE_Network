@@ -9,7 +9,7 @@ export default function ProfileLoading() {
         <Skeleton className="h-4 w-56" />
       </div>
       <Card>
-        <CardHeader className="flex-row items-center gap-3 space-y-0">
+        <CardHeader className="flex flex-row items-center gap-3 space-y-0">
           <Skeleton className="size-10 rounded-full" />
           <div className="flex flex-1 flex-col gap-2">
             <Skeleton className="h-4 w-32" />

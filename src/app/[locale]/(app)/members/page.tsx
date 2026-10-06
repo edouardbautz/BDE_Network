@@ -153,7 +153,7 @@ export default async function MembersPage({
       )}
 
       <Card>
-        <CardHeader className="flex-row items-center justify-between space-y-0">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="flex items-center gap-2 text-base">
             <UserCheck className="text-muted-foreground size-4" />
             {t('pendingSection')}
@@ -202,7 +202,7 @@ export default async function MembersPage({
       </Card>
 
       <Card>
-        <CardHeader className="flex-row items-center justify-between space-y-0">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="flex items-center gap-2 text-base">
             <Users className="text-muted-foreground size-4" />
             {t('activeSection')}

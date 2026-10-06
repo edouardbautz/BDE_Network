@@ -45,7 +45,7 @@ export default async function DashboardPage() {
       </div>
 
       <Card className="max-w-sm">
-        <CardHeader className="flex-row items-center gap-3 space-y-0">
+        <CardHeader className="flex flex-row items-center gap-3 space-y-0">
           <Avatar size="lg">
             {session.user.image ? <AvatarImage src={session.user.image} alt="" /> : null}
             <AvatarFallback>{initials}</AvatarFallback>

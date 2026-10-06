@@ -155,8 +155,8 @@
     "title": "Tableau de bord",
     "welcome": "Bienvenue, {name}.",
     "empty": {
-      "title": "Aucun module activé pour l'instant",
-      "description": "Cette plateforme couvre pour l'instant les comptes et la gestion des membres. Les futurs modules métier (événements, finances, réunions…) apparaîtront ici.",
+      "title": "Aucun module activé",
+      "description": "Le module Événements (calendrier du bureau, rappels, abonnement à l'agenda) est disponible mais pas activé. Un propriétaire peut l'activer dans le fichier de configuration, clé modules.enabled.",
       "cta": "Gérer les membres"
     }
   },
