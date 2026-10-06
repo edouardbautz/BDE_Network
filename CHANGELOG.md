@@ -7,6 +7,18 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Added
 
+- **Notifications sur les membres** (`memberPending`, `memberApproved`, `memberRemoved`), qui ne
+  faisaient rien jusqu'ici : une nouvelle demande d'accès prévient les propriétaires et les rôles qui
+  ont « Gérer les membres » (e-mail) ou le salon (Discord / Slack) ; une approbation prévient le
+  membre par e-mail (ou le salon) ; un retrait écrit dans le salon seulement, **jamais d'e-mail à la
+  personne retirée**. Envoyées après l'action : un échec d'envoi est journalisé et ne bloque rien.
+  Un canal non configuré dans `.env` donne un avertissement au démarrage, pas une erreur.
+- **Pages d'erreur en français et en anglais**, dans le style de la plateforme : page introuvable
+  (y compris pour une adresse inconnue), erreur de page avec « Réessayer » et « Retour au tableau de
+  bord » (seule la référence de l'erreur est affichée, jamais son message), et une page de dernier
+  recours si la structure même du site échoue.
+- **Confirmation avant « Refuser »** une demande d'accès, comme pour « Retirer du BDE ».
+
 - **Rôles personnalisés** : chaque BDE crée ses rôles (Président, Trésorier, Secrétaire,
   Responsable événements…) depuis la nouvelle page **Rôles** et coche les droits exacts de chacun
   (gérer les membres, gérer les rôles, consulter / gérer chaque module activé, gérer l'agenda
@@ -43,6 +55,15 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
   en-têtes).
 
 ### Changed
+
+- **Cas attendus dans les actions** : supprimer ou changer le statut d'un événement déjà supprimé,
+  annuler une date qui n'existe plus, approuver une demande déjà traitée… ramènent à la liste avec un
+  message clair au lieu d'une erreur 500, et la liste se met à jour.
+- **Les messages Discord et Slack neutralisent les mentions** (`@everyone`, `@here`, `@channel`,
+  `<!channel>`, `<@…>`, liens `<url|texte>`) : un nom ou un titre d'événement ne peut plus notifier
+  tout un serveur. Le webhook Discord envoie `allowed_mentions: { parse: [] }`.
+- Les valeurs par défaut des notifications de membres de `bde.config.yml` et de l'exemple sont
+  `"none"`.
 
 - **Mise à jour depuis une version antérieure** : la migration `custom_roles` convertit les comptes
   sans perte et sans dépendre de `bde.config.yml` — les ADMIN deviennent le rôle « Admin », les

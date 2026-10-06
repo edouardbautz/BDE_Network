@@ -81,20 +81,34 @@ Canal utilisé pour chaque type de notification : `"email"`, `"discord"`, `"slac
 Le canal choisi doit être configuré dans `.env` pour fonctionner (SMTP pour email, URL de
 webhook pour Discord/Slack).
 
-| Événement        | Déclenché quand                   |
-| ---------------- | --------------------------------- |
-| `memberPending`  | un nouveau membre demande l'accès |
-| `memberApproved` | un membre est approuvé            |
-| `memberRemoved`  | un membre est retiré du BDE       |
-| `eventConfirmed` | un événement est confirmé         |
-| `eventReminder`  | rappel la veille d'un événement   |
+| Événement        | Déclenché quand                   | Qui est prévenu                                                                                                  |
+| ---------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `memberPending`  | un nouveau membre demande l'accès | `email` : les propriétaires et les rôles qui ont le droit « Gérer les membres ». `discord` / `slack` : le salon. |
+| `memberApproved` | une demande est approuvée         | `email` : **le membre approuvé** (rôle obtenu, lien de connexion). `discord` / `slack` : le salon.               |
+| `memberRemoved`  | un membre est retiré du BDE       | `discord` / `slack` : le salon. **Jamais d'e-mail** : la personne retirée ne reçoit rien, `email` n'envoie rien. |
+| `eventConfirmed` | un événement est confirmé         | voir le [guide du module](events.md#notifications)                                                               |
+| `eventReminder`  | rappel la veille d'un événement   | voir le [guide du module](events.md#notifications)                                                               |
 
 `eventConfirmed` et `eventReminder` (module Événements) sont optionnels et valent `"none"` par
 défaut, ce qui garde valide une configuration écrite avant ce module. Ils sont décrits dans le
 [guide du module](events.md#notifications).
 
-Les trois notifications de membres (`memberPending`, `memberApproved`, `memberRemoved`) ne sont
-pas encore branchées à un cas d'usage.
+Les trois notifications de membres (`memberPending`, `memberApproved`, `memberRemoved`) sont
+envoyées **après** l'action : un envoi qui échoue (webhook indisponible, serveur SMTP en panne)
+est seulement écrit dans les journaux du serveur, il ne bloque jamais l'approbation ni le retrait.
+Un lien vers la page _Membres_ ou la plateforme est ajouté si `APP_URL` est renseigné.
+
+Si le canal choisi n'est pas configuré dans `.env` (par exemple `email` sans `SMTP_HOST`), la
+plateforme **démarre quand même** et affiche un avertissement au démarrage : l'alerte ne partira
+pas. C'est volontaire : ces trois clés existaient avant d'envoyer quoi que ce soit, une
+configuration plus ancienne ne doit pas devenir invalide après une mise à jour. Les valeurs par défaut
+de `bde.config.yml` sont `"none"`.
+
+**Sécurité des messages Discord et Slack.** Les messages contiennent des textes saisis par des
+membres (nom du profil 42, titre d'un événement…). Ils sont neutralisés avant l'envoi :
+`@everyone`, `@here`, `@channel`, `<!channel>`, `<!here>`, les mentions `<@…>` et les liens
+`<url|texte>` s'affichent comme du texte et ne notifient personne. Sur Discord, le webhook envoie en
+plus `allowed_mentions: { parse: [] }`, qui interdit toute mention.
 
 ## `.env`
 

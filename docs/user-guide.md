@@ -49,8 +49,10 @@ listes :
 - **Membres actifs** : tous les membres actuels. Le menu de la colonne **Rôle** change le rôle
   d'un membre, tout de suite.
 
-**Approuver** donne accès à la plateforme avec le rôle choisi. **Refuser** supprime la demande.
-**Retirer du BDE** supprime le compte d'un membre après confirmation. Le propriétaire n'a pas de
+**Approuver** donne accès à la plateforme avec le rôle choisi. **Refuser** supprime la demande, et
+**Retirer du BDE** supprime le compte d'un membre : ces deux boutons **demandent une confirmation**
+avant d'agir. Si quelqu'un d'autre a déjà traité la demande ou retiré le membre, un message vous
+l'explique et la liste se met à jour toute seule. Le propriétaire n'a pas de
 menu : il se définit uniquement dans le fichier de configuration du serveur.
 
 Vous ne pouvez agir que dans la limite de vos propres droits : les rôles qui donnent un droit
@@ -67,6 +69,13 @@ droits sauf le journal d'audit) et **Membre** (consulter les événements).
 Un rôle encore attribué à des membres ne peut pas être supprimé : donnez d'abord un autre rôle à
 ces membres. Le détail des règles est dans [Rôles et droits](roles.md).
 
+### Être prévenu des nouvelles demandes
+
+Le BDE peut recevoir une alerte quand quelqu'un demande l'accès, quand une demande est approuvée
+(le membre reçoit alors un e-mail) ou quand un membre est retiré (message dans le salon Discord ou
+Slack uniquement). Cela se règle dans `bde.config.yml` : voir
+[la configuration](configuration.md#notifications).
+
 ### Consulter le journal d'audit (propriétaires uniquement)
 
 **Journal d'audit** liste, en lecture seule, les actions sensibles effectuées sur la
@@ -80,6 +89,14 @@ catégorie, membre en charge et année scolaire) et permet d'ajouter un événem
 ou de vous abonner à un flux qui se met à jour tout seul. Si votre rôle le permet (droit « Gérer
 les événements »), vous pouvez aussi créer et modifier les événements. Tout est expliqué dans le
 [guide du module Événements](events.md).
+
+## Si quelque chose ne marche pas
+
+- **« Page introuvable »** : l'adresse n'existe pas, ou l'élément a été supprimé entre-temps. Le
+  bouton _Retour au tableau de bord_ vous ramène à l'accueil.
+- **« Quelque chose s'est mal passé »** : une erreur est survenue côté serveur. Vos données ne sont
+  pas perdues. Essayez _Réessayer_ ; si cela continue, donnez à l'administrateur la _référence de
+  l'erreur_ affichée sous le message, elle permet de retrouver la cause dans les journaux.
 
 ## Vos données personnelles
 

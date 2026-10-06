@@ -142,7 +142,7 @@ point at a user (see `EventAssignee`).
   augmentation for `JWT` must target `@auth/core/jwt`, not `next-auth/jwt`: the latter only
   re-exports the type and declaration merging silently fails against it, which surfaces as
   `token.id` typing as `{}` instead of `string`, not as an import error).
-- **`signIn` callback** (`src/lib/auth/index.ts`): rejects if the user's primary 42 campus isn't
+- **`signIn` callback** (`signInCallback` in `src/lib/auth/callbacks.ts`, wired in `index.ts`): rejects if the user's primary 42 campus isn't
   in `bde.config.yml`'s `auth.allowedCampuses`. Otherwise upserts the `User` row: status becomes
   `OWNER` if the login is in `auth.owners`, `PENDING` on first login otherwise. An existing owner
   who is no longer listed becomes a `MEMBER` with the **default role** (`src/lib/auth/account.ts`; no default
@@ -233,11 +233,20 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
 - `src/lib/notifications/`: `NotificationAdapter` interface, adapters for email (nodemailer/SMTP),
   Discord webhook, Slack webhook, and a no-op `none`. `notify(event, message)` picks the adapter
   from the channel configured per event in `bde.config.yml`'s `notifications` section. The events
-  module is the first caller (`eventConfirmed`, `eventReminder`). `memberPending/Approved/Removed`
-  are still unwired. Notification keys added after the first release must default to `"none"` in
-  the Zod schema so old configs keep validating. Callers must treat notification as best-effort:
-  never let it throw into the action that triggered it (see `deliver()` in
-  `src/lib/events/notifications.ts`, which also isolates failures per email recipient).
+  module sends `eventConfirmed` / `eventReminder`; `src/lib/members/notifications.ts` sends
+  `memberPending` (new account created in the `signIn` callback → owners and holders of
+  `members.manage` by email, or the chat channel), `memberApproved` (email goes to the member, chat
+  gets a team message) and `memberRemoved` (**chat only, never an email to the removed member**: the
+  `email` channel sends nothing). Notification keys added after the first release must default to
+  `"none"` in the Zod schema so old configs keep validating. Callers must treat notification as
+  best-effort: run it in `after()`, never let it throw into the action that triggered it. The shared
+  `deliver()` (`src/lib/notifications/deliver.ts`) isolates failures per email recipient and only
+  logs; text builders are pure (`members/messages.ts`, `events/messages.ts`) and use
+  `getNotificationTranslate`. **Texts sent to Discord/Slack are neutralized in the adapters**
+  (`sanitize.ts`: `@everyone`/`@here`/`@channel`, `<!channel>`, `<@id>`, Slack `<url|text>`; Discord
+  also sends `allowed_mentions: { parse: [] }`) — every caller gets it, a new adapter must do the same.
+  A member-notification channel that is not set up in `.env` is a **startup warning, not an error**
+  (`env.ts`): those keys sat in every config before they sent anything.
 - `src/lib/storage/`: `StorageAdapter` interface, only a local-disk implementation
   (`storage/uploads/`, served through `/api/files/[...key]` rather than `/public` so a future
   access-control check can sit in front of it). `getStorageAdapter()` is the single factory
@@ -313,6 +322,15 @@ User guide: `docs/events.md`. The shape worth knowing before touching it:
   so an instance without an HTTPS proxy still works; profile pictures from `cdn.intra.42.fr`),
   nosniff, X-Frame-Options, Referrer-Policy, Permissions-Policy, and HSTS only when the request came
   with `X-Forwarded-Proto: https`. A new external image/script host must be added to the CSP.
+- **Error pages**: `[locale]/not-found.tsx` + `[locale]/[...rest]/page.tsx` (unknown URLs, a catch-all so
+  the localized 404 renders instead of Next's English one), `[locale]/(app)/not-found.tsx` (inside the
+  shell), `error.tsx` at both levels (`components/layout/error-view.tsx`: apology, retry, back to the
+  dashboard, and only the error's `digest` — never its message), and `app/global-error.tsx` +
+  `app/not-found.tsx`, which have no layout, locale or provider to rely on and so are the only places
+  with bilingual hard-coded text. Server actions must **not throw for an expected situation** (already
+  approved, already deleted, role gone): return a code the UI translates (`ActionResult`, see
+  `lib/roles/errors.ts`) or, for the events module, redirect with `?notice=` (`lib/events/notice.ts`).
+  `throw` stays for a crafted request (`Forbidden`, invalid status).
 - **Database down**: Auth.js turns a failing session lookup into "no session", which looks like a
   logged-out visitor. `(app)/layout.tsx` and the login page therefore call `isDatabaseReachable()`
   (`src/lib/health.ts`) before redirecting to `/` and send to `/unavailable` instead (translated,
