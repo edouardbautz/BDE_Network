@@ -51,9 +51,12 @@ des espaces publics.
 ## Application
 
 Les cas de comportement abusif, harcelant ou autrement inacceptable peuvent être signalés aux
-responsables du projet via une issue GitHub marquée confidentielle, ou par tout autre moyen de
-contact indiqué par votre BDE. Toutes les plaintes seront examinées et donneront lieu à une
+responsables du projet **sur Discord, en message privé à `meteore_1`**. Ne publiez pas le
+signalement dans une issue publique. Toutes les plaintes seront examinées et donneront lieu à une
 réponse jugée nécessaire et adaptée aux circonstances.
+
+_In English: to report unacceptable behaviour, send a direct message on Discord to `meteore_1`.
+Please do not post it in a public issue._
 
 ## Attribution
 

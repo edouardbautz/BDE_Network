@@ -12,7 +12,7 @@ respecter.
 
 ## Signaler un bug ou proposer une fonctionnalité
 
-Ouvrez une issue GitHub. Pour un bug, précisez les étapes de reproduction, le comportement
+Ouvrez une issue GitHub (des modèles vous guident : bug ou demande de fonctionnalité). Pour un bug, précisez les étapes de reproduction, le comportement
 attendu et observé, et votre environnement (OS, version de Docker...). Pour une fonctionnalité,
 décrivez le besoin avant la solution technique.
 
@@ -44,5 +44,7 @@ décrivez le besoin avant la solution technique.
 
 ## Questions
 
-Ouvrez une issue ou une discussion GitHub — il n'y a pas de canal de support séparé pour
-l'instant.
+Ouvrez une issue ou une discussion GitHub. Pour un contact plus direct (une question avant de
+se lancer, un signalement relevant du [Code de conduite](CODE_OF_CONDUCT.md)), le responsable du
+projet est joignable sur Discord : `meteore_1`. Une faille de sécurité ne se signale **pas** en
+public : voir [SECURITY.md](SECURITY.md).

@@ -1,0 +1,42 @@
+name: Feature request / Demande de fonctionnalité
+description: An idea to improve the platform. / Une idée pour améliorer la plateforme.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        English or French is fine. / Anglais ou français.
+        Describe the need before the solution. / Décrivez le besoin avant la solution.
+  - type: textarea
+    id: need
+    attributes:
+      label: What do you need to do? / Que voulez-vous pouvoir faire ?
+      description: Who is it for (a member, the board, the owner) and what is hard today?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea / Votre idée
+      description: Optional. How you imagine it, or what other tools do.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area / Domaine
+      options:
+        - Events module
+        - Roles and permissions
+        - Members
+        - Notifications
+        - A new module (finance, meetings…)
+        - Installation and deployment
+        - Interface and accessibility
+        - Other / Autre
+    validations:
+      required: true
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Contribution
+      options:
+        - label: I could help build it / Je pourrais aider à le réaliser

@@ -1,0 +1,55 @@
+name: Bug report / Signaler un bug
+description: Something does not work as it should. / Quelque chose ne fonctionne pas comme prévu.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. English or French is fine. / Merci, anglais ou français.
+        **Security problem?** Do not post it here: use the private report (see SECURITY.md).
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened? / Que s'est-il passé ?
+      description: What you did, what you expected, what you got instead. A screenshot helps.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / Étapes pour reproduire
+      placeholder: |
+        1. Sign in as a member with the role …
+        2. Open …
+        3. Click …
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit / Version ou commit
+      description: The release number, or the output of `git rev-parse --short HEAD`.
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: How do you run it? / Comment l'exécutez-vous ?
+      options:
+        - Docker Compose (production)
+        - Docker Compose (development)
+        - npm run dev
+        - Other / Autre
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: System / Système
+      placeholder: Windows 11 + Docker Desktop, Ubuntu 24.04, macOS 15 …
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Journaux
+      description: 'Output of `docker compose logs --tail 50 app`. Remove secrets and personal data first. / Retirez secrets et données personnelles.'
+      render: text
