@@ -54,20 +54,24 @@ apporte ses propres droits sans toucher au cœur ([comment](docs/architecture.md
 Il vous faut [Docker](https://www.docker.com/products/docker-desktop/) et Git, sous Windows,
 Linux ou macOS. Pas besoin de Node.js.
 
-1. **Clonez** le dépôt : `git clone https://github.com/<votre-fork>/BDE_Network.git`, puis `cd BDE_Network`.
-2. **Créez une application OAuth 42** sur <https://profile.intra.42.fr/oauth/applications/new>
-   (scope `public`) avec l'URL de redirection `http://localhost:3000/api/auth/callback/42-school`
-   pour un essai local. Gardez son UID et son secret.
-3. **Copiez `.env.example` vers `.env`** et remplissez-le : un mot de passe de base de données,
-   l'UID et le secret, et un `AUTH_SECRET` (32 caractères ou plus) obtenu avec
-   `docker run --rm alpine sh -c "head -c 32 /dev/urandom | base64"`.
-4. **Éditez `bde.config.yml`** : le nom du BDE, les campus autorisés, et **votre login 42** dans
-   `auth.owners`.
-5. **Lancez** `docker compose up --build -d`, ouvrez <http://localhost:3000> et connectez-vous avec
-   42 : votre login est propriétaire.
+1. **Installez Docker** (et lancez Docker Desktop sous Windows et macOS) et **Git**.
+2. **Clonez** le dépôt : `git clone https://github.com/<votre-fork>/BDE_Network.git`, puis `cd BDE_Network`.
+3. **Lancez l'assistant d'installation**, la même commande partout :
 
-Le guide d'installation complet, pas à pas (pour le bureau, puis pour la personne qui prépare le
-serveur), la mise en production avec HTTPS et les sauvegardes sont dans [docs/](docs/).
+   ```
+   docker compose -f docker-compose.setup.yml run --rm --build setup
+   ```
+
+Il pose quelques questions (nom, adresse, votre application OAuth 42, campus, propriétaires, notifications),
+vérifie vos réponses auprès de l'API 42 (vos identifiants, les campus, les logins des propriétaires), écrit
+`.env` et `bde.config.yml` à votre place, puis propose de démarrer la plateforme et donne l'adresse à
+ouvrir. Vous n'ouvrez aucun fichier de configuration ; Ctrl+C à tout moment ne modifie rien. Relancez la même
+commande plus tard pour changer la configuration : il propose les valeurs actuelles et sauvegarde les
+fichiers qu'il remplace.
+
+Vous préférez tout faire à la main ? L'ancienne méthode est conservée dans le
+[guide d'installation](docs/installation.md#annexe--installation-manuelle). Le guide complet, la mise en
+production avec HTTPS et les sauvegardes sont dans [docs/](docs/).
 
 ## Documentation
 

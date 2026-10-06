@@ -1,25 +1,141 @@
 # Installation
 
-Mettre en route la plateforme se fait en **deux temps**, par deux personnes différentes (ce peut
-être la même) :
+Mettre en route la plateforme se fait avec un **assistant interactif** : il pose quelques questions, vérifie
+les réponses, écrit la configuration à votre place et démarre la plateforme. **Vous n'ouvrez aucun fichier.**
+Le seul prérequis est **Docker** ; la commande est la même sous Windows, Linux et macOS.
 
-|                                                                    | Qui                                 | Ce que c'est                                                                          | Compétence                        |
-| ------------------------------------------------------------------ | ----------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------- |
-| [**1. Pour le bureau**](#1-pour-le-bureau)                         | Le bureau (président, trésorier…)   | Décider du nom, des campus, des propriétaires, des catégories d'événements, des rôles | Aucune : on remplit un formulaire |
-| [**2. Pour la personne technique**](#2-pour-la-personne-technique) | Un membre à l'aise avec un terminal | Un serveur, Docker, une application OAuth 42, le nom de domaine, le HTTPS             | Technique, mais tout est détaillé |
-
-Lisez la partie 1 même si vous êtes la personne technique : c'est elle qui dit **quelles valeurs
-mettre** dans les fichiers de la partie 2.
+Pour qui ? Pour tout le monde : le bureau peut le lancer lui-même sur son ordinateur pour essayer, et la
+personne technique s'en sert sur le serveur. Les personnes à l'aise avec un terminal qui préfèrent éditer les
+fichiers à la main trouvent l'ancienne méthode en [annexe](#annexe--installation-manuelle).
 
 ---
 
-## 1. Pour le bureau
+## L'assistant d'installation
 
-Vous n'avez rien à installer. Vous avez à **décider** quelques points, puis à les écrire dans un
-fichier texte, `bde.config.yml`, que la personne technique mettra sur le serveur. Les rôles, eux,
-se règlent ensuite directement dans la plateforme, sans fichier.
+### 1. Installer Docker et Git
 
-### Ce qu'il faut décider
+| Outil                                                 | Windows                                                                                        | Linux                                                        | macOS                                                             |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------- |
+| Docker Desktop (ou Docker Engine + Compose sur Linux) | [Docker Desktop](https://www.docker.com/products/docker-desktop/), avec le backend WSL2 activé | `docker` + `docker compose` (paquet `docker-compose-plugin`) | [Docker Desktop](https://www.docker.com/products/docker-desktop/) |
+| Git                                                   | [git-scm.com](https://git-scm.com/) ou `winget install Git.Git`                                | gestionnaire de paquets de votre distribution                | `brew install git` ou Xcode Command Line Tools                    |
+
+Sous Windows et macOS, **lancez Docker Desktop** et attendez qu'il indique qu'il tourne. Vérifiez :
+
+```
+git --version
+docker compose version
+```
+
+Pas besoin de Node.js.
+
+### 2. Récupérer le code
+
+```
+git clone https://github.com/<votre-fork>/BDE_Network.git
+cd BDE_Network
+```
+
+### 3. Lancer l'assistant
+
+Depuis le dossier `BDE_Network` (PowerShell, Terminal macOS ou Linux, c'est identique) :
+
+```
+docker compose -f docker-compose.setup.yml run --rm --build setup
+```
+
+La première fois, Docker prépare l'assistant (une minute). Choisissez ensuite le français ou l'anglais, puis
+répondez. **Entrée** accepte la valeur proposée entre crochets ; **Ctrl+C** quitte à tout moment **sans rien
+modifier**.
+
+### Ce que l'assistant demande
+
+| Étape | Question                    | Ce que fait l'assistant                                                                                                                                   |
+| ----- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | Nom du BDE, couleur, langue | Vérifie chaque réponse tout de suite (couleur hexadécimale, etc.).                                                                                        |
+| 2     | Adresse de la plateforme    | `localhost` pour un essai, ou votre nom de domaine. Il en déduit `APP_URL` et **l'URL de redirection exacte** à déclarer sur l'intra 42.                  |
+| 3     | Application OAuth 42        | Affiche le pas à pas et l'URL à copier, demande l'**UID** et le **secret**, et les **vérifie auprès de l'API 42** (il explique l'erreur s'ils sont faux). |
+| 4     | Campus autorisés            | Propose la **liste des campus 42** (recherche par nom, choix par numéro) au lieu de la taper, et en déduit le fuseau horaire.                             |
+| 5     | Propriétaires               | Demande les logins 42 et **vérifie qu'ils existent** sur l'intra.                                                                                         |
+| 6     | Module Événements           | Oui par défaut (calendrier, agenda synchronisé, rappels).                                                                                                 |
+| 7     | Notifications (facultatif)  | Discord, Slack, e-mail ou rien. Avec un webhook ou un serveur SMTP, il **envoie un message de test** et demande si vous l'avez bien reçu.                 |
+| 8     | Récapitulatif               | Montre tout (sans les secrets) et demande confirmation avant d'écrire.                                                                                    |
+| 9     | Démarrage                   | Construit et démarre la plateforme, attend qu'elle réponde et **donne l'adresse à ouvrir**.                                                               |
+
+Le **secret de session** (`AUTH_SECRET`) et le **mot de passe de la base de données** sont **générés
+automatiquement** : vous ne les voyez ni ne les tapez jamais.
+
+**À préparer avant** (l'assistant vous guide, mais c'est plus rapide si c'est prêt) :
+
+- un compte sur l'**intra 42**, pour créer l'application OAuth (l'assistant affiche exactement quoi remplir) ;
+- les **logins 42** des propriétaires ;
+- si vous voulez des notifications : une **URL de webhook** Discord ou Slack, ou les réglages SMTP.
+  Discord est l'option la plus simple ; pour Slack, un lien pré-rempli est fourni
+  ([détails](notifications.md#slack)).
+
+### Ce qu'il écrit
+
+Deux fichiers, à la racine du projet : **`.env`** (les secrets, jamais commité) et **`bde.config.yml`**
+(les réglages du BDE, versionné avec le code). Les deux sont vérifiés avec les règles mêmes de la plateforme
+avant d'être écrits, et **rien n'est écrit tant que vous n'avez pas confirmé le récapitulatif** ; un Ctrl+C
+n'écrit jamais rien de partiel.
+
+### Le modifier plus tard
+
+Relancez **la même commande**. L'assistant reprend les valeurs actuelles comme valeurs par défaut (Entrée
+partout ne change rien), puis ne réécrit que ce qui change. **Avant d'écraser un fichier, il en garde une
+copie** dans `.setup-backups/<date>/` (ces copies contiennent des secrets : elles ne sont jamais commitées).
+Il **conserve** l'`AUTH_SECRET` et le mot de passe de la base (les changer casserait la base existante), ainsi
+que ce qu'il ne demande pas (logo, catégories d'événements, autres réglages de `.env`).
+
+### Comment il démarre la plateforme
+
+L'assistant tourne dans son propre conteneur Docker. Pour démarrer la plateforme à votre place, il utilise le
+**socket Docker** de votre machine (`docker-compose.setup.yml` le monte pour cela) : il peut donc commander
+Docker, comme vous le feriez. Si ce n'est pas possible chez vous, il le dit et vous donne la commande à lancer
+vous-même (`docker compose up --build -d`) ; la configuration, elle, est déjà écrite. Si vous préférez ne pas
+lui donner cet accès, retirez la ligne du socket dans `docker-compose.setup.yml`.
+
+### Ensuite
+
+Ouvrez l'adresse donnée (`http://localhost:3000` pour un essai) et cliquez sur « Se connecter avec 42 » :
+comme votre login est dans la liste des propriétaires, vous avez directement tous les droits.
+
+### Après la mise en route : les rôles
+
+Connectez-vous avec 42 à l'adresse que l'assistant a donnée : comme votre login est dans la liste des
+propriétaires, vous êtes propriétaire. Ensuite, **sans toucher à un fichier** :
+
+1. **Rôles** (menu de gauche) : deux rôles existent déjà, _Admin_ (tous les droits) et _Membre_
+   (consulter les événements). Créez les vôtres : Président, Trésorier, Responsable événements… en
+   cochant ce que chacun peut faire ([détails](roles.md)).
+2. **Membres** : chaque personne qui se connecte pour la première fois arrive « en attente » ; vous
+   l'approuvez et choisissez son rôle.
+3. **Événements** : créez le premier événement, et proposez à chacun de [synchroniser son
+   agenda](events.md).
+
+### Mise en production
+
+Pour que les membres y accèdent : un serveur, un nom de domaine et un proxy HTTPS (Caddy,
+nginx…). La plateforme n'écoute volontairement que sur la machine elle-même ; le proxy la montre
+au monde en HTTPS. Tout est dans [le guide de déploiement](deployment.md), sauvegardes comprises.
+
+### Arrêter / réinitialiser
+
+```
+docker compose down          # arrête les conteneurs, conserve les données
+docker compose down -v       # arrête et supprime aussi les données (la base)
+```
+
+---
+
+## Annexe : installation manuelle
+
+Pour les personnes à l'aise avec un terminal qui préfèrent tout faire à la main : c'est exactement ce que fait
+l'assistant. Elle sert aussi à comprendre ce qui est écrit dans les fichiers.
+
+### Décider des valeurs et remplir `bde.config.yml`
+
+#### Ce qu'il faut décider
 
 | Question                                         | Où ça va               | Exemple                                   |
 | ------------------------------------------------ | ---------------------- | ----------------------------------------- |
@@ -35,7 +151,7 @@ Un **propriétaire** a tous les droits et ne peut être défini que dans ce fich
 au moins un, de confiance, et **donnez son vrai login 42** (celui de l'intra, en minuscules). Si
 vous laissez `votre-login-42`, personne n'aura accès à l'administration.
 
-### Remplir le fichier
+#### Remplir le fichier
 
 Ouvrez `bde.config.yml` avec n'importe quel éditeur de texte (le Bloc-notes suffit). Voici un
 exemple complet :
@@ -88,25 +204,7 @@ Les notifications (e-mail, Discord, Slack) sont **désactivées tant que vous ne
 fichier ci-dessus n'a pas besoin d'en parler. La liste complète des réglages, notifications comprises,
 est dans [la référence](configuration.md).
 
-### Après la mise en route : les rôles
-
-La personne technique vous donne l'adresse du site. Connectez-vous avec 42 : comme votre login est
-dans `owners`, vous êtes propriétaire. Ensuite, **sans toucher à un fichier** :
-
-1. **Rôles** (menu de gauche) : deux rôles existent déjà, _Admin_ (tous les droits) et _Membre_
-   (consulter les événements). Créez les vôtres : Président, Trésorier, Responsable événements… en
-   cochant ce que chacun peut faire ([détails](roles.md)).
-2. **Membres** : chaque personne qui se connecte pour la première fois arrive « en attente » ; vous
-   l'approuvez et choisissez son rôle.
-3. **Événements** : créez le premier événement, et proposez à chacun de [synchroniser son
-   agenda](events.md).
-
-À transmettre à la personne technique : le **fichier `bde.config.yml` rempli** et le **nom du
-site** voulu (par exemple `bde.exemple.fr`).
-
----
-
-## 2. Pour la personne technique
+### Mise en route à la main, pas à pas
 
 ### Prérequis
 
@@ -236,22 +334,29 @@ Ouvrez <http://localhost:3000>, cliquez sur « Se connecter avec 42 ». Si votre
 `auth.owners`, vous êtes propriétaire dès la première connexion. Sinon votre compte est « en
 attente » : un propriétaire doit l'approuver depuis la page Membres.
 
-### Mise en production
-
-Pour que les membres y accèdent : un serveur, un nom de domaine et un proxy HTTPS (Caddy,
-nginx…). La plateforme n'écoute volontairement que sur la machine elle-même ; le proxy la montre
-au monde en HTTPS. Tout est dans [le guide de déploiement](deployment.md), sauvegardes comprises.
-
-### Arrêter / réinitialiser
-
-```
-docker compose down          # arrête les conteneurs, conserve les données
-docker compose down -v       # arrête et supprime aussi les données (la base)
-```
-
 ---
 
 ## Problèmes fréquents
+
+**L'assistant dit « L'API 42 refuse ces identifiants (invalid_client) »**
+
+L'UID et le secret ne forment pas une paire valide : copiez-les à nouveau depuis la page de l'application sur
+l'intra (un espace en trop ou un caractère manquant suffit), vérifiez que le secret n'a pas expiré ni été
+régénéré, et qu'ils viennent de la **même** application.
+
+**L'assistant dit « Je ne peux pas démarrer la plateforme depuis ici »**
+
+Docker n'est pas joignable depuis l'assistant (socket Docker absent ou refusé). La configuration est écrite :
+lancez simplement `docker compose up --build -d` depuis le dossier du projet.
+
+**« L'API 42 est injoignable »**
+
+L'ordinateur n'a pas accès à Internet (ou l'API 42 est en panne). Vous pouvez continuer sans la vérification :
+les campus se tapent alors à la main, et les identifiants ne sont pas testés.
+
+**L'assistant ne trouve pas le dossier du projet**
+
+Lancez-le depuis le dossier `BDE_Network` (celui qui contient `docker-compose.yml`).
 
 **« Connexion refusée » après avoir autorisé sur l'intra**
 
@@ -271,7 +376,7 @@ l'application l'avertit au démarrage, voir `docker compose logs app`). Corrigez
 **L'intra répond « redirect URI not valid » / `redirect_uri_mismatch`**
 
 L'URL de redirection de l'application 42 n'est pas exactement
-`<adresse du site>/api/auth/callback/42-school` : voir l'étape 2.
+`<adresse du site>/api/auth/callback/42-school` : voir l'[annexe](#étape-2--créer-lapplication-oauth-sur-lintra-42).
 
 **Tout le monde est déconnecté, ou une page boucle, après un changement de `AUTH_SECRET`**
 
@@ -281,7 +386,7 @@ Chacun se reconnecte (si la page boucle, supprimer les cookies du site règle to
 
 **Plus personne ne peut se connecter du jour au lendemain**
 
-Le secret de l'application 42 a sans doute expiré (étape 2) : générez-en un nouveau.
+Le secret de l'application 42 a sans doute expiré ([annexe](#étape-2--créer-lapplication-oauth-sur-lintra-42)) : générez-en un nouveau sur la page de l'application, puis **relancez l'assistant** et collez-le (il vérifie qu'il est bon, et garde tout le reste).
 
 **`Cannot connect to the Docker daemon` / `failed to connect to the docker API`**
 
