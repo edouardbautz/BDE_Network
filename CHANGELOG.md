@@ -7,6 +7,18 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Added
 
+- **Confirmer un événement** demande confirmation (fenêtre au style normal, non destructif) et dit
+  si les membres seront prévenus : par e-mail, dans le salon Discord/Slack, ou pas du tout si aucune
+  notification n'est configurée — ou qu'ils l'ont déjà été (la notification n'est envoyée qu'une fois).
+- **Un titre par page** (« Membres · BDE Exemple »), un lien d'évitement « Aller au contenu », et la
+  description du site traduite.
+- **Page de confidentialité complétée** : e-mails et notifications (dont Discord/Slack), lien d'agenda
+  personnel, cookies exacts (session, sécurité de connexion, langue). Nouvelle clé facultative
+  `bde.contactEmail` pour afficher une vraie adresse de contact.
+- Avertissement au démarrage quand `modules.enabled` contient un module qui n'existe pas (faute de frappe).
+- `engines` (`node >= 22`) dans `package.json`.
+- Sauvegarde et restauration sous Windows : mode d'emploi (Git Bash, PowerShell, WSL), testé.
+
 - **Fenêtre de confirmation unique** (`ConfirmDialog`) pour toute action destructive ou irréversible :
   une boîte de dialogue centrée par-dessus la page, avec un titre clair, une phrase d'explication, un
   bouton d'action en style destructif et **Annuler**. Le focus démarre sur Annuler et reste piégé dans la
@@ -67,6 +79,20 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Changed
 
+- **Moins de requêtes SQL** : la session est résolue **une seule fois par requête** (`React.cache`), au
+  lieu d'une fois par composant qui la demande. Mesuré sur la base : tableau de bord 13 → 7 requêtes,
+  membres 9 → 6, rôles 7 → 4, profil 7 → 4, événements 16 → 13.
+- **E-mails groupés** : une seule connexion SMTP pour tous les destinataires d'un envoi (au lieu d'une
+  par destinataire) ; une adresse refusée n'arrête pas les autres.
+- **Rappel d'événement sans personne en charge** : il part aux propriétaires et aux membres dont le
+  rôle permet de gérer les événements, au lieu de ne partir à personne.
+- **Un même e-mail peut servir à deux comptes** (migration `user_email_not_unique`) : le login est
+  l'identité. Avant, une adresse déjà utilisée par un autre compte empêchait de se connecter. Une
+  double première connexion simultanée ne provoque plus d'erreur.
+- `dashboard` et `profile` vérifient eux-mêmes que le compte est approuvé (`requireApprovedSession`).
+- `bde.defaultLocale` est documentée pour ce qu'elle fait : la langue des messages envoyés.
+- `@types/node` passe à la version 22 (celle du runtime).
+
 - **Cas attendus dans les actions** : supprimer ou changer le statut d'un événement déjà supprimé,
   annuler une date qui n'existe plus, approuver une demande déjà traitée… ramènent à la liste avec un
   message clair au lieu d'une erreur 500, et la liste se met à jour.
@@ -94,6 +120,15 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 - `bde.config.local.yml`, `.audit/` et `.env*` ne sont plus copiés dans l'image Docker.
 
 ### Removed
+
+- **La route publique `/api/files/…` et tout le code de stockage de fichiers** (adaptateur local,
+  volume `uploads`, dossier `storage/`) : rien n'y écrivait, et servir des fichiers sans authentification
+  aurait été une faille dès le premier envoi. `backup.sh` ne sauvegarde plus que la base ; `restore.sh`
+  lit toujours les anciennes archives (leur dossier de fichiers est ignoré). On recréera un stockage
+  avec une vraie fonctionnalité d'envoi.
+- Des doublons : le calcul des initiales (4 copies → 1), les métadonnées de simulation de rôle, le
+  script `db:seed` (identique à `seed:demo`), le namespace de messages `common` et la clé inutilisée
+  `roles.page.membersLink`.
 
 - Le rôle fixe `ADMIN` (remplacé par un rôle personnalisé « Admin ») et la table `ModulePermission`
   (les droits d'un module sont maintenant portés par les rôles) ; les actions d'audit

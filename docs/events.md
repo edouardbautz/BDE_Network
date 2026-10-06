@@ -66,7 +66,9 @@ _Événements_ → **Nouvel événement**.
   en UTC.
 - **Catégorie** : choisie parmi celles de votre configuration.
 - **Membres en charge** : un ou plusieurs membres, **facultatif**. Ce sont eux qui reçoivent le
-  rappel de la veille par email.
+  rappel de la veille par email. Sans personne en charge (ou si leurs comptes n'existent plus),
+  le rappel part aux **propriétaires et aux membres dont le rôle permet de gérer les événements**,
+  pour qu'il ne soit jamais envoyé à personne.
 
 ### Champs obligatoires
 
@@ -223,10 +225,10 @@ variables correspondantes (`SMTP_*`, `DISCORD_WEBHOOK_URL`, `SLACK_WEBHOOK_URL`)
 `.env`. Pour que les messages contiennent un lien vers l'événement, renseignez `APP_URL` dans
 `.env` (par exemple `https://bde.exemple.fr`) ; sans lui, les messages sont envoyés sans lien.
 
-| Notification                    | Quand                                                                                            | Destinataires                                                                              |
-| ------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
-| `eventConfirmed` (confirmation) | un événement passe de brouillon à **confirmé** (une seule fois par événement)                    | tous les membres approuvés (email : un message par personne) ; ou le salon (Discord/Slack) |
-| `eventReminder` (rappel)        | la veille de chaque occurrence confirmée, à `events.reminderHour` (18h par défaut, heure du BDE) | les **membres en charge** (email) ; ou le salon (Discord/Slack)                            |
+| Notification                    | Quand                                                                                            | Destinataires                                                                                         |
+| ------------------------------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `eventConfirmed` (confirmation) | un événement passe de brouillon à **confirmé** (une seule fois par événement)                    | tous les membres approuvés (email : un message par personne) ; ou le salon (Discord/Slack)            |
+| `eventReminder` (rappel)        | la veille de chaque occurrence confirmée, à `events.reminderHour` (18h par défaut, heure du BDE) | les **membres en charge** (email), sinon ceux qui gèrent les événements ; ou le salon (Discord/Slack) |
 
 Un échec d'envoi n'empêche jamais d'enregistrer un événement : l'envoi se fait après la réponse.
 Par email, l'échec pour un destinataire (adresse refusée, erreur SMTP) n'empêche pas l'envoi

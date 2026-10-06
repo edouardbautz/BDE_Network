@@ -60,7 +60,6 @@ src/
         profile/                page + actions.ts: account info, personal calendar feed link
     api/
       auth/[...nextauth]/route.ts
-      files/[...key]/route.ts            serves local-storage uploads
       me/export/route.ts                 self-service RGPD data export
       calendar/[token]/route.ts          personal .ics subscription feed (token-authenticated)
       calendar/bde/[token]/route.ts      BDE-wide .ics feed (token-authenticated, confirmed events only)
@@ -84,7 +83,6 @@ src/
     notifications/         NotificationAdapter + email/discord/slack/none adapters
     events/                events module domain: time, recurrence, ics, access, queries, actions
                            helpers, notifications, reminders, scheduler (see "Events module")
-    storage/                StorageAdapter + local adapter
     permissions/           registry (the list of permissions) + resolution and `can()`
     roles/                 escalation rules (guards), input validation, transactional operations, `execute`
     roles/view.ts          what pages need to show the right choices (actor from a session, role facts) — display only
@@ -95,7 +93,7 @@ src/
 prisma/
   schema.prisma, seed.ts (+ seed-events.ts), migrations/ (20261005180000_custom_roles converts the old roles)
 scripts/
-  backup.sh, restore.sh     POSIX sh, need only Docker on the server (no Node): one tar.gz with DB + uploads
+  backup.sh, restore.sh     POSIX sh, need only Docker on the server (no Node): one tar.gz with the database dump
   audit-prod.mjs            CI gate on production dependency advisories (+ audit-allowlist.json)
 docker/
   prisma.config.mjs         Prisma config used by the production image to run `migrate deploy`
@@ -159,6 +157,14 @@ point at a user (see `EventAssignee`).
   row is gone but the JWT stays valid for 30 days, so `jwt` returns `null` (Auth.js then clears the cookie and
   `auth()` resolves to null) and `session` throws rather than return a user without id/status (or a member
   without a role, which the database refuses to store).
+- **The session is resolved once per request.** `getEffectiveSession` is wrapped in `React.cache`: the
+  layout, the page and every access check of one render share one resolution, instead of replaying the
+  `jwt` + `session` callbacks (3 SQL queries) each time — a page went from 13 statements to 7. It is
+  per request, never shared, so a removal or role change still shows on the next request. A page that
+  shows only the signed-in person's own data (dashboard, profile) calls `requireApprovedSession()`
+  (`lib/auth/require-session.ts`) itself instead of trusting the layout. The `signIn` callback tolerates two
+  simultaneous first sign-ins (the loser of the `P2002` race carries on as a return visit) and the
+  e-mail is **not unique**: the login is the identity.
 - **Fail closed on identity.** `getEffectiveSession` returns null unless the session carries an id, a login, a
   known status, resolved permissions and (for a member) a role; `isApproved` is an allow-list
   (`APPROVED_STATUSES`), never `!== 'PENDING'`; `can()` is false for anything missing or unknown; and any query
@@ -227,11 +233,13 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
   verified: `next build` emits only `instrumentation.js`). Keep every import in it dynamic and guarded.
 - `bde.config.local.yml` (git-ignored) replaces `bde.config.yml` when present, whole-file, no merge.
 - `src/middleware.ts` runs on the **Node.js runtime** (`export const config = { runtime:
-'nodejs' }`), stable since Next.js 15.5. It doesn't currently read `bde.config.yml` (locale
-  routing default is hardcoded to `"fr"` for simplicity — `bde.defaultLocale` is validated but
-  not yet wired into routing), but the Node runtime is there if that changes.
+'nodejs' }`), stable since Next.js 15.5. It doesn't read `bde.config.yml`: the interface
+  language comes from the URL (`/fr`, `/en`; the default `"fr"` is hardcoded in `i18n/routing.ts`, which
+  client code imports and so cannot read the config). `bde.defaultLocale` is **the language of outgoing
+  notifications**, nothing else — wiring it into routing was judged not worth a config read in the
+  middleware for a visitor whose browser language is neither French nor English.
 
-## Notifications & storage
+## Notifications
 
 - `src/lib/notifications/`: `NotificationAdapter` interface, adapters for email (nodemailer/SMTP),
   Discord webhook, Slack webhook, and a no-op `none`. `notify(event, message)` picks the adapter
@@ -243,17 +251,18 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
   `email` channel sends nothing). Notification keys added after the first release must default to
   `"none"` in the Zod schema so old configs keep validating. Callers must treat notification as
   best-effort: run it in `after()`, never let it throw into the action that triggered it. The shared
-  `deliver()` (`src/lib/notifications/deliver.ts`) isolates failures per email recipient and only
-  logs; text builders are pure (`members/messages.ts`, `events/messages.ts`) and use
+  `deliver()` (`src/lib/notifications/deliver.ts`) sends an email batch over **one SMTP connection**
+  (`notifyMany` → `EmailAdapter.sendMany`), isolates failures per recipient and only logs; text builders are pure (`members/messages.ts`, `events/messages.ts`) and use
   `getNotificationTranslate`. **Texts sent to Discord/Slack are neutralized in the adapters**
   (`sanitize.ts`: `@everyone`/`@here`/`@channel`, `<!channel>`, `<@id>`, Slack `<url|text>`; Discord
   also sends `allowed_mentions: { parse: [] }`) — every caller gets it, a new adapter must do the same.
   A member-notification channel that is not set up in `.env` is a **startup warning, not an error**
   (`env.ts`): those keys sat in every config before they sent anything.
-- `src/lib/storage/`: `StorageAdapter` interface, only a local-disk implementation
-  (`storage/uploads/`, served through `/api/files/[...key]` rather than `/public` so a future
-  access-control check can sit in front of it). `getStorageAdapter()` is the single factory
-  function to change when an S3 adapter is added.
+- **There is no file storage.** A local-disk adapter and a public `/api/files/[...key]` route existed
+  with nothing writing to them (it would have been a stored XSS the day an upload existed: no
+  authentication, SVG served without `nosniff`); both were removed, with the `uploads` volume, rather
+  than left as dead code. The day a feature needs uploads, build it with the feature: authenticated
+  access, a type allow-list, `nosniff`, a size limit, an entry in `scripts/backup.sh`.
 
 ## Events module (`modules.enabled: [events]`)
 
@@ -388,6 +397,11 @@ touching layout or adding UI. The short version:
   inside because Git Bash rewrites `/app/...` arguments).
 - All user-facing strings go through next-intl (`messages/fr.json` + `en.json`) — no hardcoded
   UI text in components.
+- **Every page has its own title** (WCAG 2.4.2): `export const generateMetadata = pageTitle('namespace', 'key');`
+  (`lib/page-title.ts`); the root layout adds " · BDE name". A new page without it shows only the BDE name.
+- **A new module's key goes in `KNOWN_MODULE_KEYS`** (`src/config/schema.ts`), or `modules.enabled` warns about it
+  at start-up (that warning is what catches a typo). Node ≥ 22 (`engines`); after touching `package-lock.json`
+  check it with `npx -y npm@10 ci --dry-run` (CI runs npm 10).
 - shadcn/ui components in `src/components/ui/` are excluded from ESLint/Prettier (generated
   code) — don't hand-edit; re-run `npx shadcn add <component>` instead.
 - `docker-compose.dev.yml` runs `prisma db push --accept-data-loss` on start (so the dev database gets neither
