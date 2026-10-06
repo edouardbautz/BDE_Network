@@ -52,7 +52,7 @@ L'application est disponible sur <http://localhost:3000>.
 | `npm run test` / `npm run test:watch`                    | Tests Vitest                                                                                              |
 | `npm run db:migrate`                                     | Crée et applique une migration Prisma (dev)                                                               |
 | `npm run db:studio`                                      | Interface graphique Prisma Studio                                                                         |
-| `npm run seed:demo`                                      | Peuple la base avec des utilisateurs fictifs de tous les rôles                                            |
+| `npm run seed:demo`                                      | Peuple la base avec des rôles et des utilisateurs fictifs (propriétaire, admin, président, membres)       |
 | `./scripts/backup.sh` / `./scripts/restore.sh <archive>` | Sauvegarde/restauration (base + fichiers envoyés), Docker seul requis (voir [déploiement](deployment.md)) |
 
 Toutes les commandes sont des scripts npm portables (aucun opérateur shell spécifique à Unix ou

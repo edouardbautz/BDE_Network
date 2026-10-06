@@ -7,6 +7,25 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Added
 
+- **Rôles personnalisés** : chaque BDE crée ses rôles (Président, Trésorier, Secrétaire,
+  Responsable événements…) depuis la nouvelle page **Rôles** et coche les droits exacts de chacun
+  (gérer les membres, gérer les rôles, consulter / gérer chaque module activé, gérer l'agenda
+  partagé). Un membre a **un seul rôle**, choisi dans un menu de la page _Membres_, où l'on choisit
+  aussi le rôle à l'approbation d'une demande. Deux rôles modifiables existent dès l'installation :
+  **Admin** (tous les droits sauf le journal d'audit, y compris ceux des futurs modules) et
+  **Membre**. Le propriétaire (OWNER, défini dans `bde.config.yml`) garde tous les droits ; le
+  journal d'audit reste réservé au propriétaire. Voir [docs/roles.md](docs/roles.md).
+- **Règles anti-escalade de privilèges**, vérifiées côté serveur dans la transaction qui écrit :
+  nul ne donne un droit qu'il n'a pas, ne modifie son propre rôle ni un rôle qui lui est supérieur,
+  ne change le rôle d'un propriétaire ou d'un membre plus puissant que lui ; un rôle encore
+  attribué ou par défaut ne se supprime pas. Chaque création, modification, suppression et
+  attribution de rôle est inscrite au journal d'audit (`role.*`, `member.*`). Les règles sont
+  vérifiées par plus de 130 tests et par mutation.
+- Retrait d'un membre : confirmation avant suppression, et refus clairement expliqués (messages
+  traduits) quand une action est interdite.
+- CI : un job `migrations` rejoue la migration des rôles sur PostgreSQL et vérifie l'absence de
+  dérive avec `schema.prisma`.
+
 - **Vérification du `.env` au démarrage**, avec des messages en français compréhensibles par un
   non-développeur : `AUTH_SECRET` (32 caractères minimum), identifiants 42, `DATABASE_URL`, et les
   variables SMTP/webhook des notifications du module Événements réellement utilisées. Un avertissement
@@ -25,6 +44,16 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Changed
 
+- **Mise à jour depuis une version antérieure** : la migration `custom_roles` convertit les comptes
+  sans perte et sans dépendre de `bde.config.yml` — les ADMIN deviennent le rôle « Admin », les
+  MEMBER le rôle « Membre » (qui reçoit toujours `events.view`), et un membre qui avait la
+  permission d'un module reçoit un rôle « Membre + `module` » ; une entrée `role.migrate` du
+  journal d'audit garde trace de l'ancien état. Un ADMIN a désormais aussi les droits de gestion des
+  événements et du calendrier partagé (rôle « Admin » : tous les droits). En développement
+  (`docker-compose.dev.yml`, `db push`), la base est recréée : relancez `npm run seed:demo`.
+- La simulation de rôle de développement propose « En attente » et chaque rôle du BDE ; les droits
+  simulés s'appliquent aussi aux actions (et le journal d'audit le mentionne).
+
 - **Image Docker de production réduite de 2,15 Go à 465 Mo** : build Next.js `standalone`, Prisma CLI
   installé à part et allégé, sharp et TypeScript retirés, ni npm ni yarn dans l'image finale.
 - Le port 3000 n'est plus publié que sur `127.0.0.1` par défaut (`APP_BIND` pour l'ouvrir) : seul le
@@ -33,6 +62,10 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 - `bde.config.local.yml`, `.audit/` et `.env*` ne sont plus copiés dans l'image Docker.
 
 ### Removed
+
+- Le rôle fixe `ADMIN` (remplacé par un rôle personnalisé « Admin ») et la table `ModulePermission`
+  (les droits d'un module sont maintenant portés par les rôles) ; les actions d'audit
+  `permission.grant` / `permission.revoke` sont remplacées par `role.*` et `member.role_change`.
 
 - `npm run db:backup` et `npm run db:restore` (remplacés par `scripts/backup.sh` et
   `scripts/restore.sh`, qui n'exigent que Docker).

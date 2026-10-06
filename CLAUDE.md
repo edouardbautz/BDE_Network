@@ -51,10 +51,11 @@ src/
       (app)/                route group: authenticated shell (sidebar/footer), guards auth+PENDING
         layout.tsx           builds navItems, delegates chrome to AppShell
         dashboard/page.tsx + loading.tsx
-        members/page.tsx + actions.ts + loading.tsx   member approval/removal (server actions)
+        members/page.tsx + actions.ts + loading.tsx   approve/refuse/remove members, give each one a role (server actions)
+        roles/                 page + new/ + [id]/ + actions.ts + loading.tsx: custom roles (needs roles.manage)
         audit-log/page.tsx + loading.tsx               OWNER-only
         events/                events module (404 unless enabled): page, new/, [id]/, [id]/edit/,
-                               shared-calendar/ (OWNER/ADMIN: BDE link), actions.ts (server actions),
+                               shared-calendar/ (events.shared_calendar: BDE link), actions.ts (server actions),
                                loading.tsx for each route
         profile/                page + actions.ts: account info, personal calendar feed link
     api/
@@ -70,6 +71,8 @@ src/
     ui/                    shadcn/ui primitives — do not hand-edit, regenerate via shadcn CLI
     layout/                app-shell (sidebar + mobile drawer), footer, user-menu
     events/                calendar, list, form, toolbar, category badge (module UI)
+    roles/                 role form (permission checkboxes), list actions, permission groups for the form
+    members/               role menu, approve/refuse and remove controls of the members panel
     theme-provider.tsx, theme-toggle.tsx
   config/                  bde.config.yml loader + Zod schema (src/config/index.ts, schema.ts)
   i18n/                    next-intl routing/navigation/request config
@@ -79,11 +82,15 @@ src/
     events/                events module domain: time, recurrence, ics, access, queries, actions
                            helpers, notifications, reminders, scheduler (see "Events module")
     storage/                StorageAdapter + local adapter
-    permissions.ts, audit-log.ts, prisma.ts, color.ts, utils.ts
+    permissions/           registry (the list of permissions) + resolution and `can()`
+    roles/                 escalation rules (guards), input validation, transactional operations, `execute`
+    roles/view.ts          what pages need to show the right choices (actor from a session, role facts) — display only
+    audit-log.ts, account-label.ts, health.ts, prisma.ts, color.ts, utils.ts
   types/next-auth.d.ts     Session/User/JWT module augmentation
+  test/                    session fixtures, in-memory roles database, migration tests
   middleware.ts             next-intl locale routing, Node.js runtime (not Edge — see below)
 prisma/
-  schema.prisma, seed.ts (+ seed-events.ts), migrations/
+  schema.prisma, seed.ts (+ seed-events.ts), migrations/ (20261005180000_custom_roles converts the old roles)
 scripts/
   backup.sh, restore.sh     POSIX sh, need only Docker on the server (no Node): one tar.gz with DB + uploads
   audit-prod.mjs            CI gate on production dependency advisories (+ audit-allowlist.json)
@@ -96,19 +103,24 @@ docs/                        installation, configuration, user guide, events, co
 
 ## Data model (Prisma)
 
-`User`, `Role` (enum), `ModulePermission`, `AuditLog`, plus the events module's `Event`,
+`User`, `UserStatus` (enum), `Role`, `AuditLog`, plus the events module's `Event`,
 `EventAssignee`, `EventCancellation`, `EventReminder`, `BdeCalendarFeed` (see "Events module"). Finances and
 meetings do not exist yet.
 
-- **`Role`**: `OWNER | ADMIN | MEMBER | PENDING`, ordered in that rank (see `src/lib/permissions.ts`).
+- **`UserStatus`**: `OWNER | MEMBER | PENDING`. OWNER comes only from `bde.config.yml` and holds every
+  permission; PENDING waits for approval and holds nothing; MEMBER's rights are those of its **one custom
+  role**. Neither OWNER nor PENDING is a role.
+- **`Role`** (custom, created by each BDE): `name` (unique, case-insensitively), `description`,
+  `permissions: String[]` (free-form keys checked against the registry in code, like module keys — a
+  new permission needs no migration), `allPermissions` ("everything, including future modules", the default
+  Admin role) and `isDefault` (exactly one: offered at approval, and where a former owner lands).
+  The migration adds database guards the Prisma schema cannot express: a CHECK that a member has a role and
+  nobody else does, a partial unique index on `isDefault`, and `onDelete: Restrict` on `User.roleId` (a role
+  still held cannot be deleted). CI checks the migrations leave no drift from `schema.prisma`.
 - **`User`**: synced from the 42 API on every login (`login`, `fullName`, `email`, `photoUrl`,
-  `campus`). Removing a member **deletes the row** — there's no soft-delete/status field beyond
-  `Role`. This is deliberate: it keeps the RGPD story simple (real erasure) and keeps `PENDING`
-  as just another role rather than a separate concept.
-- **`ModulePermission`**: grants a user access to one module (`module: String`, free-form —
-  validated against `bde.config.yml`'s `modules.enabled` at the app layer, not a Prisma enum,
-  because modules don't exist as a fixed set yet). `OWNER` bypasses this check entirely (see
-  `hasModuleAccess` in `src/lib/permissions.ts`).
+  `campus`). Removing a member **deletes the row** — there's no soft-delete: it keeps the RGPD story
+  simple (real erasure). `status` + `roleId` replace the old `role` enum; the per-user `ModulePermission`
+  table is gone (permissions live on roles).
 - **`AuditLog`**: append-only, OWNER-only to read, never edited/deleted from the app. Every row
   stores `actorLogin: String` (plain text) **and** an optional `actorId` FK (`onDelete: SetNull`).
   This is the pattern to replicate on any future business entity: keep a text field with the
@@ -131,41 +143,59 @@ point at a user (see `EventAssignee`).
   re-exports the type and declaration merging silently fails against it, which surfaces as
   `token.id` typing as `{}` instead of `string`, not as an import error).
 - **`signIn` callback** (`src/lib/auth/index.ts`): rejects if the user's primary 42 campus isn't
-  in `bde.config.yml`'s `auth.allowedCampuses`. Otherwise upserts the `User` row: role becomes
-  `OWNER` if the login is in `auth.owners`, `PENDING` on first login otherwise. An existing user
-  who is no longer listed as an owner is demoted to `MEMBER` (not `PENDING`) on next login —
-  config is the source of truth for `OWNER`, checked every login, never settable from the UI.
-- **`jwt` and `session` callbacks** (`src/lib/auth/callbacks.ts`) re-read the `User` row from the
-  DB on every call (not just at login). This means role/permission changes made by an admin take
-  effect on the affected user's very next request, without them needing to log out — worth the
-  extra query for a small BDE app. The same lookup is what signs out a **removed member**: their
-  row is gone but the JWT stays valid for 30 days, so `jwt` returns `null` (Auth.js then clears
-  the cookie and `auth()` resolves to null) and `session` throws rather than return a user
-  without id/role.
-- **Fail closed on identity.** `getEffectiveSession` returns null unless the session carries an
-  id, a login and a known role; `isApproved` is an allow-list (`APPROVED_ROLES`), never
-  `!== 'PENDING'`; and any query keyed on a user id must never see `undefined` — **Prisma drops a
-  filter whose value is `undefined`**, so `where: { userId }` returns every row. Guard the id
-  before the query (`getUserModuleKeys`, `requireUserId` in `events/export.ts`). The regression
-  test is `src/lib/auth/removed-account.test.ts` (real NextAuth config + forged cookie; its fake
-  database reproduces Prisma's `undefined` behaviour).
+  in `bde.config.yml`'s `auth.allowedCampuses`. Otherwise upserts the `User` row: status becomes
+  `OWNER` if the login is in `auth.owners`, `PENDING` on first login otherwise. An existing owner
+  who is no longer listed becomes a `MEMBER` with the **default role** (`src/lib/auth/account.ts`; no default
+  role: `PENDING`) on next login — config is the source of truth for `OWNER`, checked every login, never
+  settable from the UI.
+- **`jwt` and `session` callbacks** (`src/lib/auth/callbacks.ts`) re-read the `User` row **and its role** from
+  the DB on every call (not just at login) and resolve the permissions into the session
+  (`session.user.status / roleId / roleName / permissions / holdsAll`, built by `lib/auth/access.ts`). Role
+  changes made by an admin take effect on the affected user's very next request, without them needing to log
+  out — worth the extra query for a small BDE app. The same lookup is what signs out a **removed member**: their
+  row is gone but the JWT stays valid for 30 days, so `jwt` returns `null` (Auth.js then clears the cookie and
+  `auth()` resolves to null) and `session` throws rather than return a user without id/status (or a member
+  without a role, which the database refuses to store).
+- **Fail closed on identity.** `getEffectiveSession` returns null unless the session carries an id, a login, a
+  known status, resolved permissions and (for a member) a role; `isApproved` is an allow-list
+  (`APPROVED_STATUSES`), never `!== 'PENDING'`; `can()` is false for anything missing or unknown; and any query
+  keyed on a user id must never see `undefined` — **Prisma drops a filter whose value is `undefined`**, so
+  `where: { userId }` returns every row. Guard the id before the query (`requireUserId` in
+  `events/export.ts`). The regression test is `src/lib/auth/removed-account.test.ts` (real NextAuth config +
+  forged cookie; its fake database reproduces Prisma's `undefined` behaviour).
+
 - **Route guards live in Server Components**, not middleware (`(app)/layout.tsx` redirects
   unauthenticated users to `/`, `PENDING` users to `/pending`; `members/page.tsx` and
-  `audit-log/page.tsx` additionally check `canManageMembers`/`canViewAuditLog`). Every
+  `roles/` and `audit-log/page.tsx` additionally check `can(user, 'members.manage' | 'roles.manage')` /
+  `canViewAuditLog`). Every
   session/DB-backed route has `export const dynamic = 'force-dynamic'` — verify this stays true
   when adding new authenticated pages, otherwise Next's static optimization could theoretically
   cache one user's render for another (checked against the prerender manifest when this was
   built: none of these routes were actually being prerendered despite the build output's
   misleading `●` SSG marker, but the explicit export makes it a guarantee, not an accident).
-- Permission helpers: `src/lib/permissions.ts` (`hasMinRole`, `canManageMembers`,
-  `canViewAuditLog`, `hasModuleAccess`). Server actions (e.g. `members/actions.ts`) re-check
-  permissions themselves — never rely solely on a hidden button.
-- **Module permissions** are granted by an ADMIN/OWNER from the members panel
-  (`setModulePermission` in `members/actions.ts`, audited as `permission.grant`/`revoke`), only for
-  modules listed in `modules.enabled`. A module's pages/actions get their access through one
-  function (for events: `getEventsAccess` / `requireEventsManager` in `src/lib/events/access.ts`)
-  that returns null when the module is disabled — pages treat null as `notFound()`, actions throw
-  `Forbidden`. Always build on `getEffectiveSession`, never `auth()` directly.
+- **Permissions** (`src/lib/permissions/`): the list lives in code (`registry.ts`): core `members.manage`,
+  `roles.manage`, plus `<module>.view` / `<module>.manage` for **every enabled module** (managing implies
+  viewing) and the extras a module declares in `MODULE_EXTRA_PERMISSIONS` (events: `shared_calendar`). Check
+  with `can(session.user, key)`; server actions and pages re-check themselves — never rely solely on a hidden
+  button. The audit log is **not** a permission: `canViewAuditLog` is OWNER-only. Always build on
+  `getEffectiveSession`, never `auth()` directly. A module's pages/actions get their access through one
+  function (for events: `getEventsAccess` / `requireEventsManager` in `src/lib/events/access.ts`) that returns
+  null when the module is disabled — pages treat null as `notFound()`, actions throw `Forbidden`.
+- **Roles and privilege escalation** (`src/lib/roles/`, **non-negotiable**). One idea: you can only hand out,
+  edit or take away what you hold. `guards.ts` has the pure rules (a role is _covered_ by the actor when they
+  hold every permission it grants; a role with `allPermissions` is covered only by someone who holds all): no
+  granting a permission you lack; no editing/deleting/re-flagging **your own role** or one above you; no
+  changing **your own** role; no moving or removing a member whose current role you do not cover, nor assigning
+  one you do not cover; never an owner; a role still held (or the default) is not deleted. Colleagues with
+  exactly your rights _can_ be moved (everything is audited). `service.ts` applies them and writes the audit
+  entry **in the same transaction**; `execute.ts` wraps every action: permission gate, the actor's rights **read
+  again from the database inside the transaction**, SERIALIZABLE with retry, a refusal rolls back and comes out
+  as a code (`errors.ts`, translated under `roles.errors.*`). While the dev owner simulates a role, the
+  simulated rights bind the action and the audit entry says so. Tests: `escalation.test.ts` (real actions on
+  `test/fake-roles-db.ts`, which also enforces the database guards), `guards.test.ts`, `execute.test.ts`; they
+  were mutation-checked (each rule re-broken must fail a test) — redo that when touching a rule.
+- Permissions of a module that is not enabled stay in the role but are ignored (and an edit preserves them);
+  the form only offers enabled modules and the server refuses an unknown key rather than dropping it.
 
 ## Configuration: bde.config.yml vs .env
 
@@ -241,8 +271,8 @@ User guide: `docs/events.md`. The shape worth knowing before touching it:
 - **BDE-wide feed** (`/api/calendar/bde/[token]`, `BdeCalendarFeed` singleton row `id = "bde"`,
   `token` null = disabled): a second, independent secret from the per-member tokens. It has no owner,
   so it can never widen: `buildBdeSubscriptionFeed` asks for `includeDrafts: false` _and_ re-filters
-  to `CONFIRMED`. Managed only by OWNER/ADMIN (`canManageSharedCalendar` /
-  `requireSharedCalendarManager` — role-based, _not_ the events permission) from
+  to `CONFIRMED`. Managed only with the `events.shared_calendar` permission (`canManageSharedCalendar` /
+  `requireSharedCalendarManager` — _not_ `events.manage`) from
   `events/shared-calendar`. Enable is idempotent; regenerate/disable overwrite the single column, so the
   old link 404s at once. Audit actions `calendar_feed.enable|regenerate|disable` with targetType
   `CalendarFeed` and **never the token** (nor in logs). Removing a member does not touch it: the members
@@ -257,13 +287,13 @@ User guide: `docs/events.md`. The shape worth knowing before touching it:
   _before_ sending, ignore `P2002`. Due from `reminderHour` the day before; catch-up until the
   occurrence starts. Tested in `reminders.test.ts` including restart and concurrent callers.
 - **Tests that must keep passing** when you change access rules: `access.test.ts`,
-  `events/actions.test.ts` (every action refused for PENDING / member without permission / admin
-  without permission / module disabled), `events/pages.test.tsx`, `export.test.ts`, `export-bde.test.ts`, `shared-calendar/*.test.ts(x)`.
+  `events/actions.test.ts` (every action refused for PENDING / member without permission / a role that
+  only views / module disabled), `events/pages.test.tsx`, `export.test.ts`, `export-bde.test.ts`, `shared-calendar/*.test.ts(x)`.
 - **Adding another module** follows the same recipe: a key in `modules.enabled` + a config section
   validated in `src/config/schema.ts` (required only when enabled), one `getXAccess()` gate
   returning null when disabled, `notFound()` on pages, a nav entry in `(app)/layout.tsx` + `NavItem`
-  - `NAV_ICONS`, a toggle in the members panel (automatic for any enabled key), audit entries for
-    every mutation, FR/EN messages, `loading.tsx` per route, seed data, a `docs/<module>.md`.
+  - `NAV_ICONS`, its permissions (`<module>.view`/`.manage` are automatic; extras go in `MODULE_EXTRA_PERMISSIONS` with
+    their `permissions.items.<module>.<name>` messages), audit entries for every mutation, FR/EN messages, `loading.tsx` per route, seed data, a `docs/<module>.md`.
 
 ## Production image & hardening
 
@@ -330,7 +360,9 @@ touching layout or adding UI. The short version:
   UI text in components.
 - shadcn/ui components in `src/components/ui/` are excluded from ESLint/Prettier (generated
   code) — don't hand-edit; re-run `npx shadcn add <component>` instead.
-- `docker-compose.dev.yml` runs `prisma db push --accept-data-loss` on start (Prisma refuses to
+- `docker-compose.dev.yml` runs `prisma db push --accept-data-loss` on start (so the dev database gets neither
+  the data conversions nor the CHECK / partial index of the migrations: `seed:demo` recreates the roles and
+  demo accounts) (Prisma refuses to
   add a unique index to an existing table non-interactively); production applies the committed
   migrations with `prisma migrate deploy`. A new model therefore needs **both** the schema change and
   a migration (generate the SQL without touching a database via `prisma migrate diff

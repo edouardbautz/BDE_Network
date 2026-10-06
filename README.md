@@ -13,8 +13,11 @@ partagée entre instances.
 ## Fonctionnalités (base actuelle)
 
 - Connexion OAuth 42 uniquement, aucun mot de passe
-- Rôles OWNER / ADMIN / MEMBER / PENDING, permissions par module
-- Liste d'attente pour les nouveaux membres, approbation par un ADMIN/OWNER
+- **Rôles personnalisés** : chaque BDE crée les siens (Président, Trésorier, Secrétaire…) et coche
+  les droits de chacun ; un membre a un seul rôle. Nul ne peut donner un droit qu'il n'a pas
+  lui-même ni modifier son propre rôle ([docs/roles.md](docs/roles.md)). Le propriétaire (OWNER)
+  est défini dans `bde.config.yml`
+- Liste d'attente pour les nouveaux membres : un membre autorisé les approuve et leur donne un rôle
 - Journal d'audit en lecture seule (OWNER)
 - Interface bilingue (français / anglais), thème clair et sombre
 - Couleur d'accent et identité visuelle configurables sans toucher au code
@@ -43,7 +46,8 @@ Prérequis et détails : [docs/installation.md](docs/installation.md).
 
 `docker compose -f docker-compose.dev.yml up` lance l'app avec des comptes de démo déjà créés.
 Connectez-vous avec votre compte 42 (propriétaire), puis utilisez le bandeau en haut de page
-pour simuler PENDING / MEMBER / ADMIN et vérifier les restrictions d'accès — actif uniquement si
+pour simuler « en attente » ou n'importe quel rôle (Admin, Membre, Président…) et vérifier les
+restrictions d'accès — actif uniquement si
 `ENABLE_DEV_IMPERSONATION=true` dans `.env` (hors production, toujours).
 
 ## Documentation

@@ -3,9 +3,9 @@
 # your machine. Usage: docker compose -f docker-compose.dev.yml up
 #
 # The app service pushes the Prisma schema and seeds demo accounts
-# (demo-owner/demo-admin/demo-member1/demo-member2/demo-pending) on every
-# startup — both steps are idempotent (upsert / count-gated), so this stays
-# a single command whether the volume is fresh or already has data.
+# (demo-owner, demo-admin, demo-president, demo-secretary, demo-member1/2, demo-pending, with
+# their roles) on every startup — both steps are idempotent (upsert / count-gated), so
+# this stays a single command whether the volume is fresh or already has data.
 # `--accept-data-loss` is needed because Prisma refuses, non-interactively, to
 # add a unique index to an existing table; this is a throwaway dev database.
 # Production uses `prisma migrate deploy` instead (see the Dockerfile).

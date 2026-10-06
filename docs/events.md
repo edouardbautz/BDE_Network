@@ -36,17 +36,22 @@ configuration reste affiché, mais sans couleur.
 
 ## Qui peut faire quoi
 
-| Action                                                                        | Membre approuvé | Membre avec la permission « Événements » | Propriétaire |
-| ----------------------------------------------------------------------------- | :-------------: | :--------------------------------------: | :----------: |
-| Voir les événements **confirmés**                                             |       oui       |                   oui                    |     oui      |
-| Voir les **brouillons**                                                       |       non       |                   oui                    |     oui      |
-| Créer, modifier, supprimer, confirmer, annuler une date                       |       non       |                   oui                    |     oui      |
-| Ajouter un événement à son agenda / s'abonner au flux .ics                    |       oui       |                   oui                    |     oui      |
-| Gérer le lien d'agenda du **BDE** (administrateur ou propriétaire uniquement) |       non       |    non (sauf s'il est administrateur)    |     oui      |
+Les droits viennent du **rôle** du membre (voir [Rôles et droits](roles.md)). Trois droits
+concernent ce module :
 
-La permission est attribuée par un **administrateur** dans _Membres_ → colonne _Modules_ (bouton
-« Événements » de chaque membre actif). Chaque attribution ou retrait est inscrit au journal
-d'audit. Le propriétaire a toujours accès à tout.
+| Action                                                     | Consulter | Gérer | Gérer l'agenda partagé | Propriétaire |
+| ---------------------------------------------------------- | :-------: | :---: | :--------------------: | :----------: |
+| Voir les événements **confirmés**                          |    oui    |  oui  |          oui           |     oui      |
+| Voir les **brouillons**                                    |    non    |  oui  |          non           |     oui      |
+| Créer, modifier, supprimer, confirmer, annuler une date    |    non    |  oui  |          non           |     oui      |
+| Ajouter un événement à son agenda / s'abonner au flux .ics |    oui    |  oui  |          oui           |     oui      |
+| Gérer le lien d'agenda du **BDE**                          |    non    |  non  |          oui           |     oui      |
+
+« Gérer » inclut toujours « Consulter », et « Gérer l'agenda partagé » aussi. Les droits se
+choisissent dans _Rôles_ et se donnent aux membres dans _Membres_ ; chaque création, modification
+ou attribution de rôle est inscrite au journal d'audit. Le propriétaire a toujours accès à tout.
+Si le module est désactivé dans `bde.config.yml`, ses droits restent dans les rôles mais ne
+comptent plus.
 
 Ces règles sont vérifiées **côté serveur** sur chaque page et chaque action : masquer un
 bouton n'est jamais la seule protection. Un brouillon auquel vous n'avez pas droit n'est pas
@@ -134,12 +139,12 @@ Le lien contient un **jeton secret propre à chaque membre** :
 ## Le lien du BDE (agenda partagé)
 
 Les liens personnels demandent à chaque membre du bureau de s'abonner lui-même. Pour alléger
-cela, un **administrateur ou propriétaire** peut créer **un seul lien pour tout le BDE**, à
+cela, un membre qui a le droit **Gérer l'agenda partagé** (ou le propriétaire) peut créer **un seul lien pour tout le BDE**, à
 coller **une seule fois** dans l'agenda partagé du bureau. Il se met ensuite à jour tout seul.
 Les liens personnels existent toujours et ne changent pas.
 
-- **Où :** _Événements_ → bouton **Agenda partagé** (visible des seuls administrateurs et
-  propriétaires, même sans la permission « Événements »).
+- **Où :** _Événements_ → bouton **Agenda partagé** (visible des seuls comptes qui ont le
+  droit « Gérer l'agenda partagé », et du propriétaire — même sans le droit « Gérer les événements »).
 - **Ce qu'il contient :** uniquement les événements **confirmés** et **non annulés**. Jamais de
   brouillon, quoi qu'il arrive.
 - **Ce que vous pouvez faire :** afficher le lien, le copier, le **régénérer** (l'ancien lien
@@ -257,8 +262,7 @@ Les événements récurrents sont rappelés occurrence par occurrence.
 
 Visible des propriétaires : `event.create`, `event.update` (avec la liste des champs modifiés),
 `event.delete`, `event.status_change` (de → vers), `event.occurrence_cancel`,
-`event.occurrence_restore`, `permission.grant` / `permission.revoke` pour la permission du
-module, et `calendar_feed.enable` / `calendar_feed.regenerate` / `calendar_feed.disable` pour le
+`event.occurrence_restore`, et `calendar_feed.enable` / `calendar_feed.regenerate` / `calendar_feed.disable` pour le
 lien du BDE (sans jamais le lien lui-même). L'auteur est toujours le compte réel, en texte (il survit au retrait du membre).
 
 ## Données de démonstration

@@ -41,10 +41,10 @@ champs :
 
 ### `auth`
 
-| Champ             | Type               | Description                                                                                                                                                                                                     |
-| ----------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `owners`          | liste de logins 42 | Obtiennent automatiquement le rôle OWNER à la connexion. Le rôle OWNER **ne se change que via ce fichier**, jamais depuis l'interface. La comparaison ignore la casse et les espaces superflus.                 |
-| `allowedCampuses` | liste de campus    | Seuls les logins dont le campus 42 figure dans cette liste peuvent se connecter. La comparaison ignore la casse et les espaces superflus. **Liste vide (`[]`) = aucun filtre, tous les campus sont autorisés.** |
+| Champ             | Type               | Description                                                                                                                                                                                                                    |
+| ----------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `owners`          | liste de logins 42 | Obtiennent automatiquement le statut OWNER (propriétaire : tous les droits) à la connexion. Ce statut **ne se change que via ce fichier**, jamais depuis l'interface. La comparaison ignore la casse et les espaces superflus. |
+| `allowedCampuses` | liste de campus    | Seuls les logins dont le campus 42 figure dans cette liste peuvent se connecter. La comparaison ignore la casse et les espaces superflus. **Liste vide (`[]`) = aucun filtre, tous les campus sont autorisés.**                |
 
 ### `modules`
 

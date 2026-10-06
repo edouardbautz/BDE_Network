@@ -41,15 +41,31 @@ L'interface est disponible en français et en anglais. Changez de langue via l'U
 
 ### Gérer les membres
 
-Depuis **Membres**, vous voyez deux listes :
+Il faut le droit **Gérer les membres** (donné par votre rôle). Depuis **Membres**, vous voyez deux
+listes :
 
-- **En attente de validation** : nouveaux comptes à approuver ou refuser.
-- **Membres actifs** : tous les membres actuels, avec leur rôle.
+- **En attente de validation** : nouveaux comptes à approuver ou refuser. À côté de chaque
+  demande, un menu propose le **rôle à donner** (le rôle par défaut est choisi d'avance).
+- **Membres actifs** : tous les membres actuels. Le menu de la colonne **Rôle** change le rôle
+  d'un membre, tout de suite.
 
-**Approuver** donne accès à la plateforme (rôle Membre). **Refuser** supprime la demande.
-**Retirer du BDE** supprime l'accès d'un membre actif — cette action ne peut pas être appliquée
-à un propriétaire (le rôle propriétaire ne se change que dans le fichier de configuration du
-serveur, jamais depuis l'interface).
+**Approuver** donne accès à la plateforme avec le rôle choisi. **Refuser** supprime la demande.
+**Retirer du BDE** supprime le compte d'un membre après confirmation. Le propriétaire n'a pas de
+menu : il se définit uniquement dans le fichier de configuration du serveur.
+
+Vous ne pouvez agir que dans la limite de vos propres droits : les rôles qui donnent un droit
+que vous n'avez pas sont grisés, et vous ne pouvez pas changer votre propre rôle ni celui d'un
+membre qui en a plus que vous. Le message affiché vous explique pourquoi.
+
+### Gérer les rôles
+
+Il faut le droit **Gérer les rôles**. **Rôles** liste les rôles du BDE. **Créer un rôle** : donnez-lui
+un nom (Trésorier, Secrétaire…) et cochez ce que ses membres pourront faire — chaque case a une
+phrase d'explication. Deux rôles existent dès l'installation, modifiables : **Admin** (tous les
+droits sauf le journal d'audit) et **Membre** (consulter les événements).
+
+Un rôle encore attribué à des membres ne peut pas être supprimé : donnez d'abord un autre rôle à
+ces membres. Le détail des règles est dans [Rôles et droits](roles.md).
 
 ### Consulter le journal d'audit (propriétaires uniquement)
 
@@ -61,8 +77,8 @@ Ce journal ne peut pas être modifié ni supprimé depuis l'interface.
 
 Le menu _Événements_ donne le calendrier interne du bureau (vue calendrier ou liste, filtres par
 catégorie, membre en charge et année scolaire) et permet d'ajouter un événement à votre agenda
-ou de vous abonner à un flux qui se met à jour tout seul. Si un administrateur vous a accordé la
-permission, vous pouvez aussi créer et modifier les événements. Tout est expliqué dans le
+ou de vous abonner à un flux qui se met à jour tout seul. Si votre rôle le permet (droit « Gérer
+les événements »), vous pouvez aussi créer et modifier les événements. Tout est expliqué dans le
 [guide du module Événements](events.md).
 
 ## Vos données personnelles
