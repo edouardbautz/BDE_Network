@@ -1,3 +1,4 @@
+import { neutralizeForDiscord } from '../sanitize';
 import type { NotificationAdapter, NotificationMessage } from '../types';
 
 export class DiscordAdapter implements NotificationAdapter {
@@ -12,7 +13,11 @@ export class DiscordAdapter implements NotificationAdapter {
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: `**${message.subject}**\n${message.body}` }),
+      body: JSON.stringify({
+        content: `**${neutralizeForDiscord(message.subject)}**\n${neutralizeForDiscord(message.body)}`,
+        // Whatever the text says, this webhook never pings anyone.
+        allowed_mentions: { parse: [] },
+      }),
     });
 
     if (!response.ok) {

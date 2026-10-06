@@ -1,3 +1,4 @@
+import { neutralizeForSlack } from '../sanitize';
 import type { NotificationAdapter, NotificationMessage } from '../types';
 
 export class SlackAdapter implements NotificationAdapter {
@@ -12,7 +13,9 @@ export class SlackAdapter implements NotificationAdapter {
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: `*${message.subject}*\n${message.body}` }),
+      body: JSON.stringify({
+        text: `*${neutralizeForSlack(message.subject)}*\n${neutralizeForSlack(message.body)}`,
+      }),
     });
 
     if (!response.ok) {
