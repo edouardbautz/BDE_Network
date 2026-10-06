@@ -1,6 +1,7 @@
-# One weekly batch of updates instead of one pull request per package.
+# One weekly batch of updates instead of one pull request per package, minor and patch only:
+# a major version is never proposed (see `ignore`) and is taken on by hand, on its own.
 # Security updates are raised by GitHub as soon as an advisory is published,
-# independently of this schedule.
+# independently of this schedule and of `ignore`.
 version: 2
 
 updates:
@@ -9,6 +10,10 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    ignore:
+      # Major versions are handled by hand, in a pull request of their own.
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
     open-pull-requests-limit: 5
     groups:
       # These pairs must move together (see "Dependencies" in docs/contributing-guide.md).
@@ -24,6 +29,10 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    ignore:
+      # Major versions are handled by hand, in a pull request of their own.
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
     groups:
       github-actions:
         patterns: ['*']
@@ -33,6 +42,10 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    ignore:
+      # Major versions are handled by hand, in a pull request of their own.
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
     groups:
       docker:
         patterns: ['*']
@@ -42,6 +55,10 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    ignore:
+      # Major versions are handled by hand, in a pull request of their own.
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
     groups:
       docker-compose:
         patterns: ['*']

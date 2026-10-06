@@ -16,6 +16,13 @@ Ouvrez une issue GitHub (des modèles vous guident : bug ou demande de fonctionn
 attendu et observé, et votre environnement (OS, version de Docker...). Pour une fonctionnalité,
 décrivez le besoin avant la solution technique.
 
+## La branche `main` est protégée
+
+Personne ne pousse directement sur `main`, mainteneur compris, et aucun push forcé n'est possible. Toute
+modification passe par **une branche et une pull request**, et ne se fusionne que lorsque les quatre
+vérifications de l'intégration continue sont vertes : `ci (ubuntu-latest)`, `ci (windows-latest)`,
+`docker image` et `migrations`.
+
 ## Proposer une modification
 
 1. Forkez le dépôt et créez une branche depuis `main`.
@@ -32,7 +39,8 @@ décrivez le besoin avant la solution technique.
    npm run test
    npm run build
    ```
-5. Ouvrez la pull request avec une description claire de ce qui change et pourquoi.
+5. Ouvrez la pull request avec une description claire de ce qui change et pourquoi, puis attendez que
+   l'intégration continue soit verte : la pull request ne peut pas être fusionnée avant.
 
 ## Style de code
 
