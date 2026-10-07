@@ -52,7 +52,8 @@ docker compose logs app
 ```
 
 Corrigez le fichier concerné, puis `docker compose up -d` (après une modification de `bde.config.yml` :
-`docker compose up -d --build`, car il est copié dans l'image à la construction).
+`docker compose up -d --build`, car il est copié dans l'image à la construction ; une fois les réglages copiés
+dans la base de données, voir [Configuration](configuration.md#modifier-un-réglage-en-attendant)).
 
 Par défaut, l'application n'est accessible **que depuis le serveur lui-même** (`127.0.0.1`,
 port 3000, modifiable avec `APP_PORT`) : c'est le reverse proxy ci-dessous qui l'expose au public,
@@ -169,13 +170,29 @@ Les migrations de base de données s'appliquent automatiquement au démarrage du
 
 ## Sauvegardes et restauration
 
-Une sauvegarde contient **la base de données** dans une seule archive,
-`backups/bde-backup-AAAA-MM-JJ_HH-MM-SS.tar.gz`. Elle se fait avec Docker seul, sans Node.js
-(sous Windows, depuis Git Bash ou WSL).
+Une sauvegarde est faite de **deux archives**, créées ensemble par `scripts/backup.sh` :
+
+| Archive                                          | Contenu                                                                                                    |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| `backups/bde-backup-AAAA-MM-JJ_HH-MM-SS.tar.gz`  | **La base de données** : membres, événements, rôles, réglages.                                             |
+| `backups/bde-secrets-AAAA-MM-JJ_HH-MM-SS.tar.gz` | **Les clés du volume `secrets`** : la clé des sessions et la clé qui chiffre les secrets de la plateforme. |
+
+> **Sauvegardez le volume `secrets`, c'est indispensable.** Les secrets de la plateforme (clé de
+> l'application 42, mot de passe SMTP, adresses de webhooks) sont enregistrés **chiffrés** dans la base
+> de données ; la clé qui les déchiffre n'est que dans le volume `secrets`. Si vous restaurez la base sur un
+> autre serveur sans cette clé, ces secrets ne sont plus lisibles : il faut les ressaisir. C'est
+> volontaire (une fuite de la seule base ne les donne pas), mais cela veut dire que **l'archive des clés
+> compte autant que celle de la base**. Gardez les deux fichiers, mais **à deux endroits différents** : leur
+> réunion donne accès à tout.
+>
+> Ne lancez jamais `docker compose down -v` : l'option `-v` **supprime les volumes**, donc la base de
+> données ET les clés.
+
+Cela se fait avec Docker seul, sans Node.js (sous Windows, depuis Git Bash ou WSL).
 
 ```
-./scripts/backup.sh                 # une sauvegarde
-./scripts/backup.sh --keep 14       # ... en ne gardant que les 14 plus récentes
+./scripts/backup.sh                 # une sauvegarde (deux archives)
+./scripts/backup.sh --keep 14       # ... en ne gardant que les 14 plus récentes de chaque
 ```
 
 **Sous Windows**, ces scripts sont écrits en `sh` : ils se lancent depuis **Git Bash** (installé avec
@@ -193,7 +210,7 @@ Desktop démarré. Ni PowerShell ni l'Invite de commandes ne les exécutent dire
 wsl ./scripts/backup.sh
 ```
 
-`restore.sh` s'utilise de la même façon. Sous Windows, l'archive hérite des droits du dossier
+`restore.sh` s'utilise de la même façon. Sous Windows, les archives héritent des droits du dossier
 (la protection « lisible par vous seul » ne s'applique pas sur un disque NTFS) : gardez le dossier
 `backups/` dans un endroit privé. Testé avec Git Bash et avec WSL (Ubuntu) ; sous macOS et Linux,
 rien de particulier.
@@ -206,15 +223,23 @@ Pour la planifier tous les jours à 3 h du matin (sous Linux ou macOS) :
 ```
 
 **Copiez les sauvegardes hors du serveur** (`scp`, `rsync`, `rclone`...) : une sauvegarde qui reste
-sur le serveur ne le protège pas d'une panne du serveur. L'archive contient des données
+sur le serveur ne le protège pas d'une panne du serveur. L'archive de la base contient des données
 personnelles (membres, e-mails) : elle n'est lisible que par son propriétaire, gardez-la ainsi.
-Elle **ne contient pas** `.env` (les clés secrètes) : conservez ce fichier à part, dans un endroit
-sûr (gestionnaire de mots de passe). `bde.config.yml` est dans votre dépôt Git.
+Un `.env`, s'il existe encore, n'est pas sauvegardé : il n'est plus nécessaire une fois les réglages
+copiés dans la base (voir [Configuration](configuration.md)).
 
 ### Restaurer
 
+Sur **le même serveur** (le volume `secrets` est intact) :
+
 ```
 ./scripts/restore.sh backups/bde-backup-2026-10-05_03-00-01.tar.gz
+```
+
+Sur **un autre serveur**, ou si le volume `secrets` a été perdu, donnez aussi l'archive des clés :
+
+```
+./scripts/restore.sh backups/bde-backup-2026-10-05_03-00-01.tar.gz --secrets backups/bde-secrets-2026-10-05_03-00-01.tar.gz
 ```
 
 La restauration **remplace toutes les données actuelles** par celles de la sauvegarde. Le script
@@ -224,23 +249,23 @@ rien modifier. Juste avant, il fait une copie de sécurité de l'état actuel
 relance. Si la restauration de la base échoue, la base reste exactement comme avant.
 (`--yes` supprime la question, pour un script ; à n'utiliser qu'en connaissance de cause.)
 
-**Sur un nouveau serveur** : installez Docker, clonez le dépôt, recréez `.env` et `bde.config.yml`,
-lancez `docker compose up --build -d`, copiez l'archive dans `backups/`, puis restaurez-la comme
-ci-dessus.
-
-Essayez une restauration **avant d'en avoir besoin**, par exemple sur une machine de test.
+**Sur un nouveau serveur** : installez Docker, clonez le dépôt, lancez `docker compose up --build -d`
+(aucun `.env` n'est nécessaire), copiez les deux archives dans `backups/`, puis restaurez avec `--secrets`
+comme ci-dessus. Si vous n'avez plus l'archive des clés : la plateforme démarre quand même et dit dans
+ses journaux (`docker compose logs app`) que les secrets ne sont pas déchiffrables ; il faut alors les
+ressaisir (voir « Modifier la configuration »).
 
 ## Dépannage rapide
 
-| Symptôme                                            | Cause probable                                     | Que faire                                                                        |
-| --------------------------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Le site affiche une page « à corriger » (503)       | `.env`, mot de passe de la base, migration         | La page dit quoi faire ; le détail : `docker compose logs app`                   |
-| `docker compose up` : « env file … not found »      | Le fichier `.env` n'existe pas                     | Lancez l'assistant d'installation, ou copiez `.env.example` en `.env`            |
-| `docker compose up` : « port is already allocated » | Un autre programme utilise le port 3000            | Mettez `APP_PORT=3001` dans `.env` (et l'URL de redirection 42), puis `up -d`    |
-| La connexion 42 est « momentanément impossible »    | 42 refuse l'identifiant ou la clé secrète          | Vérifiez la clé sur l'intra, mettez-la dans `.env`, puis `docker compose up -d`  |
-| Page « Service momentanément indisponible »         | La base de données ne répond pas                   | `docker compose ps` puis `docker compose logs postgres`                          |
-| Personne ne peut valider les comptes                | Le login placeholder est encore dans `auth.owners` | Mettez votre login 42 dans `bde.config.yml`, puis `docker compose up -d --build` |
-| Le site ne répond pas depuis un autre ordinateur    | L'application n'écoute que sur le serveur (voulu)  | Passez par le reverse proxy HTTPS (ou lisez « Sans proxy HTTPS »)                |
+| Symptôme                                            | Cause probable                                     | Que faire                                                                                                                      |
+| --------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Le site affiche une page « à corriger » (503)       | `.env`, mot de passe de la base, migration         | La page dit quoi faire ; le détail : `docker compose logs app`                                                                 |
+| `docker compose up` : « env file … not found »      | Le fichier `.env` n'existe pas                     | Lancez l'assistant d'installation, ou copiez `.env.example` en `.env`                                                          |
+| `docker compose up` : « port is already allocated » | Un autre programme utilise le port 3000            | Mettez `APP_PORT=3001` dans `.env` (et l'URL de redirection 42), puis `up -d`                                                  |
+| La connexion 42 est « momentanément impossible »    | 42 refuse l'identifiant ou la clé secrète          | Vérifiez la clé sur l'intra, mettez-la dans `.env`, puis `docker compose up -d`                                                |
+| Page « Service momentanément indisponible »         | La base de données ne répond pas                   | `docker compose ps` puis `docker compose logs postgres`                                                                        |
+| Personne ne peut valider les comptes                | Le login placeholder est encore dans `auth.owners` | Mettez votre login 42 dans `bde.config.yml`, puis [appliquez le changement](configuration.md#modifier-un-réglage-en-attendant) |
+| Le site ne répond pas depuis un autre ordinateur    | L'application n'écoute que sur le serveur (voulu)  | Passez par le reverse proxy HTTPS (ou lisez « Sans proxy HTTPS »)                                                              |
 
 Voir aussi [docs/contributing-guide.md](contributing-guide.md) pour les commandes de
 développement, et [docs/configuration.md](configuration.md) pour la référence complète des

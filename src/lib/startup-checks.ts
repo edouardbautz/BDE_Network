@@ -1,6 +1,7 @@
 import { writeFileSync } from 'node:fs';
 import { ConfigError, getConfig } from '@/config';
 import { formatEnvironmentErrors, validateEnvironment } from '@/config/env';
+import { effectiveEnvironment } from '@/lib/settings/runtime';
 
 /** Exit code of a refusal to start because of the configuration (EX_CONFIG in sysexits.h). The container's
  * command (docker/start.mjs) knows it: it then explains the problem in the browser instead of letting the
@@ -48,7 +49,7 @@ export function runStartupChecks(): void {
     throw error;
   }
 
-  const { errors, warnings, variables } = validateEnvironment(process.env, config);
+  const { errors, warnings, variables } = validateEnvironment(effectiveEnvironment(), config);
 
   for (const warning of warnings) {
     console.warn(`\n⚠️  ${warning}\n`);

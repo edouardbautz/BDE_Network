@@ -129,19 +129,34 @@ Copié depuis `.env.example`. Ne jamais committer ce fichier.
 | `DISCORD_WEBHOOK_URL`                                               | si une notification du module Événements est sur `"discord"`                                                                 | URL de webhook d'un salon Discord.                                                                                                                                                                                                                                      |
 | `SLACK_WEBHOOK_URL`                                                 | si une notification du module Événements est sur `"slack"`                                                                   | URL de webhook Slack entrant.                                                                                                                                                                                                                                           |
 
-## Modifier la configuration
+## Où sont les réglages, et comment les modifier
 
-Avec `docker compose up` (fichier de production), `bde.config.yml` est **copié dans l'image** au moment de la
-construction ; il n'est pas monté dans le conteneur (un fichier monté devient illisible, ou un dossier vide, quand le démon
-Docker ne voit pas le dossier du projet ou que l'application ne peut pas le lire : Docker sans droits
-administrateur, partage réseau, Docker distant).
-Éditez-le, puis :
+**Au premier démarrage**, la plateforme copie dans sa **base de données** ce que disent `bde.config.yml` et
+`.env` (les secrets y sont **chiffrés** : clé de l'application 42, mot de passe SMTP, adresses de webhooks). À
+partir de là, **la base fait foi** : modifier ces deux fichiers ne change plus rien, et vous pouvez même les
+supprimer. Les clés qui chiffrent et signent (session, chiffrement des secrets, mot de passe de PostgreSQL) sont
+créées toutes seules, une fois, dans le volume Docker `secrets` : **sauvegardez-le** (voir
+[Sauvegardes et restauration](deployment.md#sauvegardes-et-restauration)), c'est lui qui permet de relire les
+secrets après une restauration.
 
-```
-docker compose up -d --build
-```
+Une installation neuve n'a donc plus besoin de `.env` : seuls `APP_BIND` et `APP_PORT` (réglages de Docker, pas de
+la plateforme) s'y écrivent encore, si besoin. Les réglages seront modifiables depuis la page « Paramètres »
+de la plateforme (prochaine étape).
 
-Les dépendances ne sont pas retéléchargées, mais l'application est recompilée : comptez de quelques dizaines de
-secondes à quelques minutes. Un fichier absent, vide, illisible ou
-invalide la fait échouer avec un message qui dit quoi corriger. Le logo (`bde.logoPath`) se change de la même
-façon ; une variable de `.env` demande seulement `docker compose up -d`.
+### Modifier un réglage en attendant
+
+Avec une installation qui a déjà copié ses réglages dans la base :
+
+1. Modifiez `bde.config.yml` et/ou `.env` (toutes les valeurs de l'ancienne configuration), et ajoutez
+   `BDE_REIMPORT=1` dans `.env`.
+2. Lancez `docker compose up -d --build`. Au démarrage, la plateforme remplace les réglages de la base par ceux
+   des fichiers (le journal le dit : `docker compose logs app`). Si les fichiers sont incomplets, elle l'ignore et
+   garde la base.
+3. **Retirez `BDE_REIMPORT=1`**, puis `docker compose up -d`. Tant qu'il reste, chaque démarrage écrase ce qui a
+   été modifié depuis l'application.
+
+Ce même mécanisme sert aux déploiements pilotés par des fichiers (personne n'ouvre le navigateur).
+
+Pour une installation qui n'a pas encore été copiée (`bde.config.yml` encore le modèle, ou `.env`
+incomplet) : éditez les fichiers, puis `docker compose up -d --build`. Un fichier absent, vide, illisible ou
+invalide est expliqué par la page « à corriger » de la plateforme, avec le chemin vérifié.

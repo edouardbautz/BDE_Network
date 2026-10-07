@@ -1,6 +1,7 @@
 import { getConfig } from '@/config';
 import { EMBED_LIMITS } from './discord-embed';
 import { httpUrl, truncate } from './text';
+import { setting } from '@/lib/settings/runtime';
 
 /**
  * Who a Discord message appears to come from: the BDE's name and, when it can be shown, its logo.
@@ -107,7 +108,7 @@ export async function discordSender(): Promise<DiscordSender> {
     sender.username = truncate(name, EMBED_LIMITS.username);
   }
 
-  const logo = await resolveLogoUrl(process.env.APP_URL, bde.logoPath);
+  const logo = await resolveLogoUrl(setting('APP_URL'), bde.logoPath);
   if (logo) sender.avatarUrl = logo;
 
   return sender;

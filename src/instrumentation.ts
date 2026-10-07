@@ -6,7 +6,16 @@ export async function register(): Promise<void> {
     process.env.NEXT_RUNTIME === 'nodejs' &&
     process.env.NEXT_PHASE !== 'phase-production-build'
   ) {
-    const { runStartupChecks } = await import('./lib/startup-checks');
+    // The settings come from the database (copied from bde.config.yml and .env at the first start after the
+    // update): load them before anything reads the configuration.
+    const { initializePlatform, PlatformSettingsError } = await import('./lib/settings/store');
+    const { refuseToStart, runStartupChecks } = await import('./lib/startup-checks');
+    try {
+      await initializePlatform();
+    } catch (error) {
+      if (error instanceof PlatformSettingsError) refuseToStart('config', error.message);
+      throw error;
+    }
     runStartupChecks();
 
     // In the background: only says, in the logs, when 42 refuses the application's identifiers.

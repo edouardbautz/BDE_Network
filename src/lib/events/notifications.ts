@@ -11,6 +11,7 @@ import { buildEventEmail, buildEventIcs } from './email';
 import { allOccurrences } from './recurrence';
 import { buildEventSlack } from './slack-blocks';
 import { buildConfirmationMessage, type NotificationEventData, type Translate } from './messages';
+import { setting } from '@/lib/settings/runtime';
 
 const LOG_PREFIX = '[events]';
 
@@ -29,7 +30,7 @@ export function getTranslate(locale: string): Promise<Translate> {
 
 /** Absolute link to an event page, or null when APP_URL is not set. */
 export function eventUrl(locale: string, eventId: string, occurrenceStart?: Date): string | null {
-  const base = process.env.APP_URL?.trim().replace(/\/+$/, '');
+  const base = setting('APP_URL')?.trim().replace(/\/+$/, '');
   if (!base) return null;
   const occurrence = occurrenceStart ? `?occ=${occurrenceStart.getTime()}` : '';
   return `${base}/${locale}/events/${eventId}${occurrence}`;

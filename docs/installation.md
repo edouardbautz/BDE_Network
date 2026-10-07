@@ -365,12 +365,13 @@ git pull
 docker compose up --build -d
 ```
 
-Si `bde.config.yml` est absent, vide, illisible ou invalide, la **construction s'arrête** (et non plus le démarrage,
-en boucle) avec un message qui nomme le cas, le chemin vérifié (dans le conteneur de construction) et ce qu'il faut
-faire. Si un **dossier** `bde.config.yml` traîne dans le projet (laissé par un ancien montage raté), supprimez-le
-avec `rmdir bde.config.yml`, puis relancez l'assistant d'installation ou faites
-`cp bde.config.example.yml bde.config.yml`. Après **toute modification** de `bde.config.yml`, relancez
-`docker compose up -d --build`.
+Si `bde.config.yml` est absent, vide, illisible ou invalide, la plateforme (tant que ses réglages ne sont pas
+encore dans sa base de données) n'est plus en boucle : elle affiche une page « à corriger » et son journal
+(`docker compose logs app`) nomme le cas, le chemin vérifié et ce qu'il faut faire. Si un **dossier**
+`bde.config.yml` traîne dans le projet (laissé par un ancien montage raté), supprimez-le avec
+`rmdir bde.config.yml`, puis relancez l'assistant d'installation ou faites
+`cp bde.config.example.yml bde.config.yml`, puis `docker compose up -d --build`. Pour **changer un réglage** d'une
+plateforme déjà démarrée, voir [modifier un réglage](configuration.md#modifier-un-réglage-en-attendant).
 
 Pour voir ce que le conteneur voit réellement (et ce que le démon Docker voit de votre dossier), depuis le
 dossier du projet, sous Linux ou macOS :
@@ -394,13 +395,13 @@ Lecture du résultat :
 C'est voulu : la plateforme n'a pas pu démarrer, et elle le dit au lieu de redémarrer sans fin. La page nomme le
 problème et donne les commandes à lancer ; le détail complet est dans `docker compose logs app`. Les cas :
 
-| La page dit…                                      | Cause                                                                                                                 | À faire                                                                                                                                                    |
-| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| « Un réglage du fichier .env est à corriger »     | Une valeur manque ou est invalide (la page liste les **noms** des réglages, jamais leurs valeurs).                    | Corrigez `.env`, puis `docker compose up -d`.                                                                                                              |
-| « Le fichier bde.config.yml est à corriger »      | Le fichier est absent, vide ou invalide.                                                                              | Corrigez-le, puis `docker compose up -d --build`.                                                                                                          |
-| « La base de données refuse la connexion »        | `POSTGRES_USER`, `POSTGRES_PASSWORD` ou `POSTGRES_DB` ont changé **après** la création de la base (c'est fréquent).   | Remettez les valeurs de départ dans `.env`, puis `docker compose up -d`. Pour changer vraiment le mot de passe, changez-le dans PostgreSQL (`ALTER USER`). |
-| « La base de données ne répond pas »              | La base n'est pas (encore) démarrée : normal une minute après un redémarrage du serveur. La page se rafraîchit seule. | Si cela dure : `docker compose ps`, puis `docker compose logs postgres`.                                                                                   |
-| « La mise à jour de la base de données a échoué » | Une migration n'a pas pu s'appliquer. Le code affiché (`P3009`…) aide à chercher.                                     | Ne supprimez rien ; lisez `docker compose logs app` ; au besoin restaurez la dernière sauvegarde (voir [le guide de déploiement](deployment.md)).          |
+| La page dit…                                      | Cause                                                                                                                                                                                        | À faire                                                                                                                                                            |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| « Un réglage du fichier .env est à corriger »     | Une valeur manque ou est invalide (la page liste les **noms** des réglages, jamais leurs valeurs).                                                                                           | Corrigez `.env`, puis `docker compose up -d`.                                                                                                                      |
+| « Le fichier bde.config.yml est à corriger »      | Le fichier est absent, vide ou invalide.                                                                                                                                                     | Corrigez-le, puis `docker compose up -d --build`.                                                                                                                  |
+| « La base de données refuse la connexion »        | Le volume `secrets` a été supprimé ou remplacé (par exemple par `docker compose down -v`, qui supprime aussi les données), ou `POSTGRES_PASSWORD` a changé **après** la création de la base. | Restaurez l'archive des clés (`scripts/restore.sh … --secrets …`). Sinon, remettez dans `.env` les valeurs de départ de `POSTGRES_*`, puis `docker compose up -d`. |
+| « La base de données ne répond pas »              | La base n'est pas (encore) démarrée : normal une minute après un redémarrage du serveur. La page se rafraîchit seule.                                                                        | Si cela dure : `docker compose ps`, puis `docker compose logs postgres`.                                                                                           |
+| « La mise à jour de la base de données a échoué » | Une migration n'a pas pu s'appliquer. Le code affiché (`P3009`…) aide à chercher.                                                                                                            | Ne supprimez rien ; lisez `docker compose logs app` ; au besoin restaurez la dernière sauvegarde (voir [le guide de déploiement](deployment.md)).                  |
 
 **« Connexion avec 42 momentanément impossible » sur la page de connexion**
 
@@ -432,7 +433,7 @@ Lancez-le depuis le dossier `BDE_Network` (celui qui contient `docker-compose.ym
 
 - _« Votre campus 42 (…) n'est pas autorisé »_ : le campus de la personne n'est pas dans
   `auth.allowedCampuses`. Ajoutez-le (ou mettez la liste vide `[]` pour accepter tous les
-  campus), puis `docker compose up -d --build`. Le nom doit être écrit comme sur l'intra (`Nice`,
+  campus), puis [appliquez le changement](configuration.md#modifier-un-réglage-en-attendant). Le nom doit être écrit comme sur l'intra (`Nice`,
   `Paris`…), la casse est sans importance.
 - _« Profil 42 incomplet »_ : le compte 42 n'a pas d'e-mail, de campus ou de login visible. Cela
   se règle sur l'intra, pas ici.
@@ -441,7 +442,7 @@ Lancez-le depuis le dossier `BDE_Network` (celui qui contient `docker-compose.ym
 
 Votre login n'est pas dans `auth.owners` (faute de frappe, ou `votre-login-42` encore en place :
 l'application l'avertit au démarrage, voir `docker compose logs app`). Corrigez, puis
-`docker compose up -d --build`, puis reconnectez-vous.
+[appliquez le changement](configuration.md#modifier-un-réglage-en-attendant), puis reconnectez-vous.
 
 **L'intra répond « redirect URI not valid » / `redirect_uri_mismatch`**
 

@@ -1,17 +1,50 @@
 services:
+  # Makes the password of the database, once, in the `secrets` volume: nobody has to choose or write it. An
+  # installation that already has a POSTGRES_PASSWORD in its .env keeps it (the database exists with it). Then it
+  # stops: the other services wait for it to have finished. The postgres image is reused (nothing more to pull).
+  secrets:
+    image: postgres:17-alpine
+    restart: 'no'
+    user: root
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+    volumes:
+      - secrets:/secrets
+    entrypoint: ['sh', '-c']
+    command:
+      - |
+        set -eu
+        umask 077
+        file=/secrets/postgres_password
+        if [ ! -s "$$file" ]; then
+          if [ -n "$$POSTGRES_PASSWORD" ]; then
+            printf '%s' "$$POSTGRES_PASSWORD" > "$$file"
+          else
+            head -c 48 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 32 > "$$file"
+          fi
+        fi
+        # The application (uid 1001 of its image) keeps its own keys in the same volume.
+        chown 1001:1001 /secrets "$$file"
+        chmod 700 /secrets
+        chmod 600 "$$file"
+
   postgres:
     image: postgres:17-alpine
     restart: unless-stopped
+    depends_on:
+      secrets:
+        condition: service_completed_successfully
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:-bde}
+      POSTGRES_DB: ${POSTGRES_DB:-bde_network}
+      POSTGRES_PASSWORD_FILE: /secrets/postgres_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - secrets:/secrets:ro
     # No published port: only the app (same compose network) reaches the database. To look at it
     # from the server: `docker compose exec postgres psql -U "$POSTGRES_USER" "$POSTGRES_DB"`.
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
       interval: 5s
       timeout: 5s
       retries: 10
@@ -22,24 +55,45 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    env_file:
-      - .env
+    # No `env_file`, on purpose: the platform works without a .env (it creates its own keys, and will be
+    # configured from the browser). What an installation that already has a .env needs from it is passed here,
+    # by name; docker compose reads .env itself when it exists and does not mind when it does not. These values
+    # are read once, at the first start after an update, to be copied into the database (src/lib/settings).
     environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bde}
+      POSTGRES_DB: ${POSTGRES_DB:-bde_network}
       # Left empty on purpose: it overrides a DATABASE_URL of .env (which is for `npm run dev`), and the container
-      # builds the address itself from POSTGRES_USER, POSTGRES_PASSWORD and POSTGRES_DB, encoding them. Written here, a password
-      # with @ / : ? # cut the address in the wrong place (and Prisma printed bits of it in the logs).
+      # builds the address itself from POSTGRES_USER, POSTGRES_DB and the password of the `secrets` volume,
+      # encoding them. Written here, a password with @ / : ? # cut the address in the wrong place (and Prisma
+      # printed bits of it in the logs).
       DATABASE_URL: ''
+      AUTH_SECRET: ${AUTH_SECRET:-}
+      APP_URL: ${APP_URL:-}
+      FORTYTWO_CLIENT_ID: ${FORTYTWO_CLIENT_ID:-}
+      FORTYTWO_CLIENT_SECRET: ${FORTYTWO_CLIENT_SECRET:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
+      BDE_REIMPORT: ${BDE_REIMPORT:-}
     ports:
       # Reachable from this machine only (a reverse proxy in front handles HTTPS).
       # Without a proxy, set APP_BIND=0.0.0.0 in .env: read the warning in docs/deployment.md first.
       # Another program already uses port 3000? Set APP_PORT=3001 (any free port) in .env.
       - '${APP_BIND:-127.0.0.1}:${APP_PORT:-3000}:3000'
+    volumes:
+      # The keys of the platform (session secret, key that seals the secret settings). BACK THIS VOLUME UP
+      # (scripts/backup.sh does): without it, the secrets of a restored database cannot be decrypted.
+      - secrets:/secrets
     # No bind mount of bde.config.yml, on purpose. A mount is resolved by the Docker daemon, on ITS
     # side, and a daemon that cannot see this folder (rootless Docker, a remote daemon, a home on a
-    # network share) answers by creating an EMPTY DIRECTORY there: the app then found a directory
-    # where its configuration should be. The configuration travels with the build instead (the
-    # Dockerfile copies it from the build context, which the docker client always sends itself).
-    # After editing bde.config.yml: `docker compose up -d --build`.
+    # network share) answers by creating an EMPTY DIRECTORY there, or the application cannot read the
+    # file. bde.config.yml travels with the build instead (the Dockerfile copies it from the build
+    # context, which the docker client always sends itself).
 
 volumes:
   postgres_data:
+  secrets:

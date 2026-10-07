@@ -1,17 +1,9 @@
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
-import { ConfigError, getConfig } from './src/config';
 import { securityHeaders } from './src/lib/security-headers';
 
-try {
-  getConfig();
-} catch (error) {
-  if (error instanceof ConfigError) {
-    console.error(`\n❌ ${error.message}\n`);
-    process.exit(1);
-  }
-  throw error;
-}
+// bde.config.yml is not read here any more: the build does not depend on the configuration (the platform's
+// settings live in its database, src/lib/settings), so a missing or broken file must not stop a rebuild.
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 

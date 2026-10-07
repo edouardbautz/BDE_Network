@@ -1,6 +1,7 @@
 #!/bin/sh
-# Sauvegarde la base de données dans UNE archive :
-#   backups/bde-backup-AAAA-MM-JJ_HH-MM-SS.tar.gz
+# Sauvegarde la plateforme dans DEUX archives :
+#   backups/bde-backup-AAAA-MM-JJ_HH-MM-SS.tar.gz   la base de données (membres, événements, réglages)
+#   backups/bde-secrets-AAAA-MM-JJ_HH-MM-SS.tar.gz  les clés du volume « secrets » de Docker
 #
 # Ne demande que Docker (avec « docker compose ») et les outils Unix habituels :
 # pas besoin de Node.js sur le serveur. Sous Windows, lancez-le depuis Git Bash ou WSL.
@@ -8,9 +9,13 @@
 # Usage : ./scripts/backup.sh [--keep N]
 #   --keep N   ne garde que les N sauvegardes les plus récentes (supprime les plus anciennes)
 #
-# L'archive contient des données personnelles : elle n'est lisible que par vous (chmod 600),
-# copiez-la hors du serveur. Elle ne contient PAS le fichier .env (clés secrètes) : gardez-le
-# à part, dans un endroit sûr.
+# Les deux archives sont lisibles par vous seul (chmod 600) ; copiez-les hors du serveur.
+#
+# L'archive des clés est INDISPENSABLE : les secrets de la plateforme (clé de l'application 42, mot de
+# passe SMTP, webhooks) sont chiffrés dans la base, et la clé qui les déchiffre n'est que dans le volume
+# « secrets ». Sans cette archive, une base restaurée sur un autre serveur ne peut plus les lire (il faut
+# alors les ressaisir). Elle contient aussi la clé des sessions : gardez-la à un AUTRE endroit que
+# l'archive de la base, pour qu'une fuite de l'une ne donne pas l'autre.
 set -eu
 
 # Git Bash (Windows) réécrit les chemins comme /app/... dans les arguments ; sans effet ailleurs.
@@ -69,6 +74,7 @@ mkdir -p backups
 STAMP="$(date +%Y-%m-%d_%H-%M-%S)"
 # BACKUP_LABEL est utilisé par restore.sh pour nommer sa sauvegarde de sécurité.
 OUTPUT="backups/bde-backup-${STAMP}${BACKUP_LABEL:-}.tar.gz"
+SECRETS_OUTPUT="backups/bde-secrets-${STAMP}${BACKUP_LABEL:-}.tar.gz"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT INT TERM
 
@@ -84,6 +90,21 @@ fi
   echo "Date : $(date '+%Y-%m-%d %H:%M:%S')"
 } >"$WORK/info.txt"
 
+# Les clés : lues dans le volume « secrets » par un conteneur éphémère de l'application (le même volume
+# que l'application, sans avoir à en deviner le nom). Pas de mot de passe de la base dedans : il ne sert
+# qu'à créer une base, pas à restaurer une sauvegarde.
+echo "Sauvegarde des clés (volume « secrets »)..."
+if docker compose run --rm --no-deps -T --entrypoint tar app -cf - -C /secrets auth_secret settings_key \
+  >"$WORK/secrets.tar" 2>"$WORK/secrets.err" && tar -tf "$WORK/secrets.tar" | grep -qx settings_key; then
+  gzip -c "$WORK/secrets.tar" >"$SECRETS_OUTPUT"
+else
+  SECRETS_OUTPUT=""
+  echo "" >&2
+  echo "ATTENTION : les clés du volume « secrets » n'ont pas pu être sauvegardées." >&2
+  echo "  (L'application a-t-elle déjà démarré une fois ? Le détail : docker compose logs app)" >&2
+  echo "  La base est sauvegardée, mais sans les clés ses secrets chiffrés ne seront pas lisibles sur un autre serveur." >&2
+fi
+
 tar -czf "$OUTPUT" -C "$WORK" database.sql info.txt
 
 if [ -n "$KEEP" ]; then
@@ -93,9 +114,23 @@ if [ -n "$KEEP" ]; then
     rm -f "$OLD"
     echo "Ancienne sauvegarde supprimée : $OLD"
   done
+  # shellcheck disable=SC2012
+  ls -1t backups/bde-secrets-*.tar.gz 2>/dev/null | tail -n +"$((KEEP + 1))" | while read -r OLD; do
+    rm -f "$OLD"
+    echo "Ancienne sauvegarde des clés supprimée : $OLD"
+  done
 fi
 
 SIZE="$(du -h "$OUTPUT" | cut -f1)"
 echo ""
-echo "Sauvegarde terminée : $OUTPUT ($SIZE)"
-echo "Pensez à la copier hors du serveur (scp, rsync, rclone...)."
+echo "Sauvegarde terminée :"
+echo "  base de données : $OUTPUT ($SIZE)"
+if [ -n "$SECRETS_OUTPUT" ]; then
+  echo "  clés (secrets)  : $SECRETS_OUTPUT"
+  echo ""
+  echo "Copiez les DEUX fichiers hors du serveur (scp, rsync, rclone...), à deux endroits différents."
+  echo "Sans l'archive des clés, une restauration sur un autre serveur ne peut plus déchiffrer les secrets."
+else
+  echo ""
+  echo "Pensez à la copier hors du serveur (scp, rsync, rclone...)."
+fi

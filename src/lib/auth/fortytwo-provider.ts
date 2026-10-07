@@ -1,4 +1,5 @@
 import type { OAuthConfig } from 'next-auth/providers';
+import { setting } from '@/lib/settings/runtime';
 
 interface FortyTwoCampus {
   id: number;
@@ -39,8 +40,8 @@ export function FortyTwoProvider(): OAuthConfig<FortyTwoProfile> {
     authorization: 'https://api.intra.42.fr/oauth/authorize?scope=public',
     token: 'https://api.intra.42.fr/oauth/token',
     userinfo: 'https://api.intra.42.fr/v2/me',
-    clientId: process.env.FORTYTWO_CLIENT_ID,
-    clientSecret: process.env.FORTYTWO_CLIENT_SECRET,
+    clientId: setting('FORTYTWO_CLIENT_ID'),
+    clientSecret: setting('FORTYTWO_CLIENT_SECRET'),
     profile(profile) {
       const campus = resolvePrimaryCampus(profile);
       return {

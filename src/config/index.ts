@@ -2,6 +2,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { load as parseYaml } from 'js-yaml';
 import { z } from 'zod';
+import { getRuntimeConfig } from '@/lib/settings/runtime';
 import { bdeConfigSchema, type BdeConfig } from './schema';
 
 export class ConfigError extends Error {}
@@ -152,14 +153,10 @@ function logLoadedConfig(config: BdeConfig, filename: string): void {
 
 let cachedConfig: BdeConfig | undefined;
 
-/** Loads, validates (Zod) and caches bde.config.local.yml if present, else bde.config.yml. Throws ConfigError with a
- * human-readable message on any failure — callers should let this crash the
- * process at boot rather than catch it silently. */
-export function getConfig(): BdeConfig {
-  if (cachedConfig) {
-    return cachedConfig;
-  }
-
+/** Reads and validates bde.config.local.yml if present, else bde.config.yml. Throws ConfigError with a
+ * human-readable message on any failure. Not cached: used by getConfig(), and once by the import of an
+ * installation that predates the database settings (src/lib/settings/store.ts). */
+export function loadConfigFile(): { config: BdeConfig; filename: string } {
   const filename = resolveConfigFilename();
   const raw = readConfigFile(filename);
   const result = bdeConfigSchema.safeParse(raw);
@@ -167,8 +164,24 @@ export function getConfig(): BdeConfig {
   if (!result.success) {
     throw new ConfigError(formatZodError(result.error, filename));
   }
+  return { config: result.data, filename };
+}
 
-  cachedConfig = result.data;
+/** The configuration of the BDE. Once the platform is loaded from its database settings it is theirs
+ * (kept up to date as they change); before that, bde.config.local.yml or bde.config.yml, loaded, validated
+ * and cached. Throws ConfigError with a human-readable message when the file cannot be used: callers
+ * should let this crash the process at boot rather than catch it silently. */
+export function getConfig(): BdeConfig {
+  const runtime = getRuntimeConfig();
+  if (runtime) {
+    return runtime;
+  }
+  if (cachedConfig) {
+    return cachedConfig;
+  }
+
+  const { config, filename } = loadConfigFile();
+  cachedConfig = config;
   logLoadedConfig(cachedConfig, filename);
   return cachedConfig;
 }

@@ -16,6 +16,7 @@ import { spawn as nodeSpawn } from 'node:child_process';
 import { readFileSync, rmSync } from 'node:fs';
 import { createServer as nodeCreateServer } from 'node:http';
 import { pathToFileURL } from 'node:url';
+import { ensureMasterSecrets } from './master-secrets.mjs';
 import {
   EXIT_CONFIG,
   RETRY_SECONDS,
@@ -220,6 +221,20 @@ export async function supervise({
 /** Wires the real commands of the image. */
 async function main() {
   const env = { ...process.env };
+
+  // The keys the platform needs before it can be configured, kept in the `secrets` volume.
+  const secrets = ensureMasterSecrets({ env });
+  for (const warning of secrets.warnings)
+    console.warn(`
+⚠️  ${warning}
+`);
+  env.AUTH_SECRET = secrets.authSecret;
+  if (secrets.settingsKey) env.SETTINGS_KEY = secrets.settingsKey;
+  else delete env.SETTINGS_KEY;
+  env.POSTGRES_USER ||= 'bde';
+  env.POSTGRES_DB ||= 'bde_network';
+  if (secrets.postgresPassword) env.POSTGRES_PASSWORD = secrets.postgresPassword;
+
   env.DATABASE_URL = env.DATABASE_URL?.trim() || buildDatabaseUrl(env);
   const reportPath = env.BDE_STARTUP_REPORT || '/tmp/bde-startup-report.json';
   env.BDE_STARTUP_REPORT = reportPath;

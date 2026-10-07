@@ -1,8 +1,9 @@
 import { headers } from 'next/headers';
+import { setting } from '@/lib/settings/runtime';
 
 /** Absolute URL of this instance: APP_URL when set, otherwise what the browser used. */
 export async function getOrigin(): Promise<string> {
-  const configured = process.env.APP_URL?.trim().replace(/\/+$/, '');
+  const configured = setting('APP_URL')?.trim().replace(/\/+$/, '');
   if (configured) return configured;
 
   const requestHeaders = await headers();

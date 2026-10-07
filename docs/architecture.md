@@ -87,6 +87,7 @@ src/
                            helpers, notifications, reminders, scheduler (see "Events module")
     permissions/           registry (the list of permissions) + resolution and `can()`
     roles/                 escalation rules (guards), input validation, transactional operations, `execute`
+    settings/              the platform's settings in the database: runtime cache, sealing (AES-GCM), store + import
     roles/view.ts          what pages need to show the right choices (actor from a session, role facts) — display only
     audit-log.ts, account-label.ts, health.ts, prisma.ts, color.ts, utils.ts
   types/next-auth.d.ts     Session/User/JWT module augmentation
@@ -101,6 +102,7 @@ setup/                      the interactive setup assistant (see "Setup assistan
 docker-compose.setup.yml    the one command that runs it
 docker/
   prisma.config.mjs         Prisma config used by the production image to run `migrate deploy`
+  master-secrets.mjs        the keys of the `secrets` volume (session secret, settings key), created once
   start.mjs                 the image's command: migrations, then the application, and the explanation page
                             when either cannot start (see "A startup problem is shown, not looped")
   startup-problems.mjs      its pure parts: Prisma failure classifier, redaction, database address, the page
@@ -114,7 +116,7 @@ SECURITY.md                  private vulnerability reporting; .github/ has issue
 
 ## Data model (Prisma)
 
-`User`, `UserStatus` (enum), `Role`, `AuditLog`, plus the events module's `Event`,
+`User`, `UserStatus` (enum), `Role`, `AuditLog`, `PlatformSettings` (see "Settings in the database"), plus the events module's `Event`,
 `EventAssignee`, `EventCancellation`, `EventReminder`, `BdeCalendarFeed` (see "Events module"). Finances and
 meetings do not exist yet.
 
@@ -215,6 +217,47 @@ point at a user (see `EventAssignee`).
   were mutation-checked (each rule re-broken must fail a test) — redo that when touching a rule.
 - Permissions of a module that is not enabled stay in the role but are ignored (and an edit preserves them);
   the form only offers enabled modules and the server refuses an unknown key rather than dropping it.
+
+## Settings in the database (`src/lib/settings/`)
+
+What used to be two files read at start-up, `bde.config.yml` and `.env`, lives in the database once the platform
+has started once: one `PlatformSettings` row (id `platform`; its existence means "installed"). The aim is that
+nobody opens a configuration file, and that a setting changes with no rebuild and no restart.
+
+- **Row** : `config` (what `bde.config.yml` held, validated by `src/config/schema.ts` on every load),
+  `environment` (the non-secret former `.env` values: `APP_URL`, `FORTYTWO_CLIENT_ID`, `SMTP_HOST/PORT/USER/FROM`),
+  `secrets` (a sealed text: `FORTYTWO_CLIENT_SECRET`, `SMTP_PASSWORD`, `DISCORD_WEBHOOK_URL`,
+  `SLACK_WEBHOOK_URL`), `source`. The managed keys are listed once, in `settings/runtime.ts` (`SETTING_KEYS`,
+  `SECRET_SETTING_KEYS`): a new setting is added there and nowhere else.
+- **Sealing** (`crypto.ts`): AES-256-GCM, a random IV each time, the format versioned (`v1.<iv>.<tag>.<data>`) and
+  authenticated. The key is **not in the database**: `docker/master-secrets.mjs` creates it once in the `secrets`
+  volume and the supervisor hands it to the server as `SETTINGS_KEY` (without it, `npm run dev` and the tests,
+  it is derived from `AUTH_SECRET` with HKDF). A database dump alone gives no secret away.
+- **Runtime cache** (`runtime.ts`): the settings are loaded into memory when the server starts (`instrumentation.ts`
+  → `initializePlatform`) and `getConfig()` / `setting(KEY)` read it, so the 35 readers of the configuration stay
+  synchronous. It sits on `globalThis` (Next.js bundles the instrumentation hook and the pages separately: a module
+  variable would exist twice). Until something is loaded, every reader falls back on the files and `process.env`,
+  exactly as before (`npm run dev`, the tests, an installation not imported yet). **Never read one of the managed
+  variables from `process.env` directly: use `setting()`.** Once the database is the source, a stale variable of `.env`
+  is ignored on purpose.
+- **NextAuth's configuration is a function** (`NextAuth(() => ({ ... }))`, supported by the version we pin): the 42
+  application's identifier and secret are read for each request, so they can change while the server runs.
+- **Existing installations are imported, once.** At the first start after the update, when there is no row,
+  `bde.config.yml` and `.env` are read for the last time: when they are complete (a real owner in place of the
+  template's `votre-login-42`, and `.env` passing `validateEnvironment`), they are copied into the row (secrets
+  sealed) and the platform is installed; otherwise it runs from the files as before and the start-up checks say
+  what is wrong. `BDE_REIMPORT=1` replaces the row by the files again at every start while it is set (for
+  deployments driven by files, and to change a setting by hand until the Settings page); incomplete files are
+  ignored and the database kept. A concurrent first start is safe (the loser of the unique violation loads the
+  winner's row).
+- **Losing the `secrets` volume** is survivable by design: the row's non-secret part still loads; the sealed part
+  cannot be opened, so the secrets of `.env` (if it is still there) are sealed again with the new key, or are missing
+  and the checks name them. Backups therefore save the volume's keys apart (`scripts/backup.sh` writes
+  `bde-secrets-*.tar.gz`, `restore.sh --secrets` puts them back; the postgres password is deliberately not in it:
+  it only serves to create the cluster, a dump restores into any password).
+- **Why a volume and not a file of the project folder**: a named volume belongs to the Docker daemon, so it behaves
+  the same on Windows, macOS, Linux and with rootless Docker, where a mounted file was not reliable (see "The
+  configuration is baked into the image").
 
 ## Configuration: bde.config.yml vs .env
 
@@ -412,21 +455,29 @@ Linux and macOS. It writes `.env` and `bde.config.yml`, and offers to start the 
   If a Prisma bump ever makes `migrate deploy` need a pruned file, the CI `docker` job (build + start
   against Postgres + `/api/health`) fails. `.dockerignore` must keep `.audit`, `.env*` and
   `bde.config.local.yml` out of the image. `HEALTHCHECK` calls `/api/health` (503 when the DB is down).
-- **The configuration is baked into the image, never bind-mounted.** `docker-compose.yml` has no volume for
-  `bde.config.yml`: a file mount is resolved by the Docker **daemon**, on its side, with the rights of the
-  container's user. On a rootless daemon, a remote one, or a home on a network/FUSE share, the file is either
-  not visible (the daemon creates an empty directory) or visible but unreadable by the app's uid 1001 (a
-  `chmod 644` changes nothing), and the app used to report "introuvable" for every one of those. The file now
-  travels in the **build context**, which the docker client sends itself with the user's own rights, through the
-  `builder` stage (`COPY --from=builder`), where `next.config.ts` validates it: an absent, empty, unreadable or
-  invalid file fails the **build** with a message that says what to do. Consequence: editing `bde.config.yml`
-  needs `docker compose up -d --build` (the dependency layers stay cached), and the build output must never
-  depend on the configuration (the only prerendered page, `/_not-found`, holds none: keep it so, or a stale
-  image would serve old values). Reproduced and fixed against a rootless Docker-in-Docker
-  (`docker:dind-rootless`, with the project mounted from a client container so the daemon cannot see it);
-  `src/config/index.ts` (`describeReadFailure`) tells a missing file, a directory in its place, an unreadable
-  file, an empty one and an invalid one apart, with the exact path checked. The commands that read what the
-  container sees are under "Problèmes fréquents" in `docs/installation.md`.
+- **bde.config.yml is never bind-mounted; it is the seed of an import.** `docker-compose.yml` has no volume for
+  it: a file mount is resolved by the Docker **daemon**, on its side, with the rights of the container's user. On a
+  rootless daemon, a remote one, or a home on a network/FUSE share, the file is either not visible (the daemon
+  creates an empty directory) or visible but unreadable by the app's uid 1001 (a `chmod 644` changes nothing), and
+  the app used to report "introuvable" for every one of those. The file now travels in the **build context**, which
+  the docker client sends itself with the user's own rights, through the `builder` stage (`COPY --from=builder`); a
+  missing file is replaced there by `bde.config.example.yml` (the template: "nothing decided"). **The build does not
+  read it** (`next.config.ts` no longer validates it: a broken file must not stop a rebuild once the database is the
+  source), and **the build output must never depend on the configuration** (the only prerendered page,
+  `/_not-found`, holds none: keep it so). At runtime the file is read only by an installation that has not been
+  imported yet (`src/config/index.ts`: `describeReadFailure` tells a missing file, a directory in its place, an
+  unreadable file, an empty one and an invalid one apart, with the exact path checked). Reproduced and fixed against
+  a rootless Docker-in-Docker (`docker:dind-rootless`, project mounted from a client container so the daemon cannot
+  see it). The commands that read what the container sees are under "Problèmes fréquents" in
+  `docs/installation.md`.
+- **docker-compose.yml needs no `.env`.** There is no `env_file`: the variables an installation that predates the
+  database needs from `.env` are passed by name (`${VAR:-}`; compose reads `.env` itself when it exists and does not
+  mind when it does not, with any Compose v2), to be copied into the database once. A one-shot `secrets` service
+  (`postgres:17-alpine`, already pulled) writes the password of PostgreSQL into the `secrets` volume the first time
+  (or copies the `POSTGRES_PASSWORD` of an existing `.env`, because the database exists with it), `postgres` reads
+  it with `POSTGRES_PASSWORD_FILE`, and the supervisor reads it to build `DATABASE_URL`. `APP_PORT` and `APP_BIND`
+  are the only settings left to `.env`: they are the daemon's, the application cannot change them. `/secrets` exists
+  in the image (owned by uid 1001) so that `docker run` without the volume (the CI) still works.
 - **A startup problem is shown, not looped** (`docker/start.mjs`, `docker/startup-problems.mjs`; tests next to
   them). `restart: unless-stopped` turned every fixable mistake (a typo in `.env`, a changed
   `POSTGRES_PASSWORD`, a database that is not up yet, a failing migration) into a silent restart loop whose only
