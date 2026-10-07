@@ -7,6 +7,7 @@ import {
   mkdirSync,
   readFileSync,
   renameSync,
+  rmdirSync,
   statSync,
   unlinkSync,
   writeFileSync,
@@ -72,8 +73,18 @@ export function parseEnv(text: string): Map<string, string> {
   return values;
 }
 
+const isDirectory = (path: string): boolean => {
+  try {
+    return statSync(path).isDirectory();
+  } catch {
+    return false;
+  }
+};
+
+/** The text of a file, or null when there is none. A directory is no file: Docker leaves an empty one
+ * where it could not mount bde.config.yml, and the assistant must be able to run again over it. */
 const readIfExists = (path: string): string | null =>
-  existsSync(path) ? readFileSync(path, 'utf8') : null;
+  existsSync(path) && !isDirectory(path) ? readFileSync(path, 'utf8') : null;
 
 export function readExisting(projectDir: string): ExistingState {
   const envText = readIfExists(join(projectDir, ENV_FILE));
@@ -371,6 +382,13 @@ export function writeFiles(
   files: { env: string; config: string },
   now: Date = new Date(),
 ): WriteResult {
+  // An EMPTY directory where a file belongs is what a failed Docker mount leaves behind: it holds
+  // nothing, so it goes (rmdir refuses a directory with something in it, which is then left alone).
+  for (const name of [ENV_FILE, CONFIG_FILE]) {
+    const path = join(projectDir, name);
+    if (isDirectory(path)) rmdirSync(path);
+  }
+
   const targets = [
     { name: ENV_FILE, content: files.env, mode: 0o600 },
     { name: CONFIG_FILE, content: files.config, mode: 0o644 },

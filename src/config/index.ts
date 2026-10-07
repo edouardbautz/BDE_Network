@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { load as parseYaml } from 'js-yaml';
 import { z } from 'zod';
@@ -40,25 +40,71 @@ function formatZodError(error: z.ZodError, filename: string): string {
   ].join('\n');
 }
 
+/** Why the file cannot be read, in words a non-developer can act on. "Not found" used to cover every
+ * failure and sent people looking for a file that was there: a directory, a permission, a mount. */
+export function describeReadFailure(filename: string, path: string, cause: unknown): string {
+  const code = (cause as NodeJS.ErrnoException | undefined)?.code;
+  const checked = `  Chemin vérifié : ${path}`;
+  const recreate =
+    "l'assistant d'installation (docker compose -f docker-compose.setup.yml run --rm --build setup) " +
+    `ou une copie de bde.config.example.yml nommée ${filename}`;
+
+  let isDirectory = false;
+  try {
+    isDirectory = statSync(path).isDirectory();
+  } catch {
+    /* not even visible: the error code below tells why */
+  }
+
+  if (isDirectory || code === 'EISDIR') {
+    return [
+      `Un DOSSIER nommé ${filename} se trouve à la place du fichier.`,
+      checked,
+      '',
+      "Cela arrive quand Docker doit « monter » un fichier qu'il ne voit pas (dossier personnel sur un",
+      'partage réseau, Docker sans droits administrateur) : il crée alors un dossier vide du même nom.',
+      '',
+      `À faire, depuis le dossier du projet : supprimez ce dossier (rmdir ${filename}), recréez le fichier avec`,
+      `${recreate}, puis relancez : docker compose up --build -d`,
+    ].join('\n');
+  }
+
+  if (code === 'ENOENT' || code === 'ENOTDIR') {
+    return [
+      `Le fichier ${filename} est introuvable.`,
+      checked,
+      '',
+      `À faire, depuis le dossier du projet : créez-le avec ${recreate},`,
+      'puis relancez : docker compose up --build -d',
+      "(avec Docker, le fichier est copié dans l'image pendant le « --build » : il doit exister à ce moment-là).",
+    ].join('\n');
+  }
+
+  return [
+    `Le fichier ${filename} existe mais ne peut pas être lu${code ? ` (code ${code})` : ''}.`,
+    checked,
+    '',
+    `À faire : vérifiez ses droits (ls -l ${filename}) : il doit être lisible par tout le monde`,
+    `(chmod 644 ${filename}), comme le dossier qui le contient. Si le projet est sur un partage réseau,`,
+    'copiez-le sur le disque local de la machine, puis relancez : docker compose up --build -d',
+  ].join('\n');
+}
+
 function readConfigFile(filename: string): unknown {
   const path = join(process.cwd(), filename);
 
   let raw: string;
   try {
     raw = readFileSync(path, 'utf-8');
-  } catch {
-    throw new ConfigError(
-      [
-        `Le fichier ${filename} est introuvable à la racine du projet.`,
-        '',
-        `Copiez bde.config.example.yml vers ${filename} et remplissez-le,`,
-        "puis relancez l'application.",
-      ].join('\n'),
-    );
+  } catch (cause) {
+    throw new ConfigError(describeReadFailure(filename, path, cause));
   }
 
+  // js-yaml refuses a file made only of comments and blank lines: say "empty", not "syntax error".
+  const isEmpty = raw.replace(/#.*/g, '').trim() === '';
+  let parsed: unknown;
   try {
-    return parseYaml(raw);
+    parsed = isEmpty ? undefined : parseYaml(raw);
   } catch (cause) {
     const message = cause instanceof Error ? cause.message : String(cause);
     throw new ConfigError(
@@ -71,6 +117,19 @@ function readConfigFile(filename: string): unknown {
       ].join('\n'),
     );
   }
+
+  if (parsed === undefined || parsed === null) {
+    throw new ConfigError(
+      [
+        `Le fichier ${filename} est vide.`,
+        `  Chemin vérifié : ${path}`,
+        '',
+        "Remplissez-le (modèle : bde.config.example.yml) ou recréez-le avec l'assistant d'installation,",
+        'puis relancez : docker compose up --build -d',
+      ].join('\n'),
+    );
+  }
+  return parsed;
 }
 
 function logLoadedConfig(config: BdeConfig, filename: string): void {

@@ -48,7 +48,8 @@ conteneur redémarre alors en boucle, et le message se lit avec :
 docker compose logs app
 ```
 
-Corrigez le fichier concerné, puis `docker compose up -d`.
+Corrigez le fichier concerné, puis `docker compose up -d` (après une modification de `bde.config.yml` :
+`docker compose up -d --build`, car il est copié dans l'image à la construction).
 
 Par défaut, l'application n'est accessible **que depuis le serveur lui-même** (`127.0.0.1`,
 port 3000, modifiable avec `APP_PORT`) : c'est le reverse proxy ci-dessous qui l'expose au public,
@@ -228,12 +229,12 @@ Essayez une restauration **avant d'en avoir besoin**, par exemple sur une machin
 
 ## Dépannage rapide
 
-| Symptôme                                         | Cause probable                                     | Que faire                                                                      |
-| ------------------------------------------------ | -------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Le conteneur `app` redémarre en boucle           | `.env` ou `bde.config.yml` incomplet               | `docker compose logs app` : le message dit quoi corriger                       |
-| Page « Service momentanément indisponible »      | La base de données ne répond pas                   | `docker compose ps` puis `docker compose logs postgres`                        |
-| Personne ne peut valider les comptes             | Le login placeholder est encore dans `auth.owners` | Mettez votre login 42 dans `bde.config.yml`, puis `docker compose restart app` |
-| Le site ne répond pas depuis un autre ordinateur | L'application n'écoute que sur le serveur (voulu)  | Passez par le reverse proxy HTTPS (ou lisez « Sans proxy HTTPS »)              |
+| Symptôme                                         | Cause probable                                     | Que faire                                                                        |
+| ------------------------------------------------ | -------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Le conteneur `app` redémarre en boucle           | `.env` ou `bde.config.yml` incomplet               | `docker compose logs app` : le message dit quoi corriger                         |
+| Page « Service momentanément indisponible »      | La base de données ne répond pas                   | `docker compose ps` puis `docker compose logs postgres`                          |
+| Personne ne peut valider les comptes             | Le login placeholder est encore dans `auth.owners` | Mettez votre login 42 dans `bde.config.yml`, puis `docker compose up -d --build` |
+| Le site ne répond pas depuis un autre ordinateur | L'application n'écoute que sur le serveur (voulu)  | Passez par le reverse proxy HTTPS (ou lisez « Sans proxy HTTPS »)                |
 
 Voir aussi [docs/contributing-guide.md](contributing-guide.md) pour les commandes de
 développement, et [docs/configuration.md](configuration.md) pour la référence complète des

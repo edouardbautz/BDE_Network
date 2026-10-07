@@ -129,14 +129,19 @@ Copié depuis `.env.example`. Ne jamais committer ce fichier.
 | `DISCORD_WEBHOOK_URL`                                               | si une notification du module Événements est sur `"discord"`                                                                 | URL de webhook d'un salon Discord.                                                                                                                                                                                                                                      |
 | `SLACK_WEBHOOK_URL`                                                 | si une notification du module Événements est sur `"slack"`                                                                   | URL de webhook Slack entrant.                                                                                                                                                                                                                                           |
 
-## Modifier la configuration sans reconstruire l'image
+## Modifier la configuration
 
-Avec `docker compose up` (fichier de production), `bde.config.yml` est monté en lecture seule
-dans le conteneur. Éditez-le, puis :
+Avec `docker compose up` (fichier de production), `bde.config.yml` est **copié dans l'image** au moment de la
+construction ; il n'est pas monté dans le conteneur (un fichier monté devient illisible, ou un dossier vide, quand le démon
+Docker ne voit pas le dossier du projet ou que l'application ne peut pas le lire : Docker sans droits
+administrateur, partage réseau, Docker distant).
+Éditez-le, puis :
 
 ```
-docker compose restart app
+docker compose up -d --build
 ```
 
-Le changement prend effet immédiatement, sans reconstruction de l'image. Pour changer le logo ou
-une variable de `.env`, une reconstruction est nécessaire (`docker compose up --build`).
+Les dépendances ne sont pas retéléchargées, mais l'application est recompilée : comptez de quelques dizaines de
+secondes à quelques minutes. Un fichier absent, vide, illisible ou
+invalide la fait échouer avec un message qui dit quoi corriger. Le logo (`bde.logoPath`) se change de la même
+façon ; une variable de `.env` demande seulement `docker compose up -d`.

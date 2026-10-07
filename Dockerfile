@@ -44,8 +44,12 @@ RUN rm -rf /usr/local/lib/node_modules /usr/local/bin/npm /usr/local/bin/npx /us
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-# Default configuration; docker-compose.yml mounts the operator's bde.config.yml over it.
-COPY --chown=nextjs:nodejs bde.config.yml ./
+# The operator's configuration. It comes from the build context (which the docker client sends itself, so it
+# works whatever the daemon can see of the host's folders: rootless, remote, network share), through the
+# builder stage, where next.config.ts has just validated it: a missing, empty, unreadable or invalid file
+# fails the BUILD with a message that says what to do, not the start in a loop. docker-compose.yml does NOT
+# mount it: a file bind mount that the daemon cannot resolve or the app cannot read breaks the start.
+COPY --from=builder --chown=nextjs:nodejs /app/bde.config.yml ./
 COPY --from=builder --chown=nextjs:nodejs /app/prisma/schema.prisma ./prisma/schema.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/prisma/migrations ./prisma/migrations
 COPY --from=migrate --chown=nextjs:nodejs /opt/migrate /opt/migrate

@@ -174,7 +174,7 @@ export function validateEnvironment(env: Env, config: BdeConfig): EnvironmentRep
       `bde.config.yml contient encore « ${PLACEHOLDER_OWNER} » dans auth.owners.\n` +
         "    Tant que vous n'y avez pas mis votre vrai login 42, personne n'est propriétaire :\n" +
         "    aucune demande d'accès ne pourra être validée.\n" +
-        '    → Remplacez-le par votre login 42, puis relancez : docker compose restart app',
+        '    → Remplacez-le par votre login 42, puis relancez : docker compose up -d --build',
     );
   }
 
