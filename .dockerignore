@@ -17,3 +17,4 @@ npm-debug.log*
 .setup-backups
 setup
 docker-compose.setup.yml
+e2e

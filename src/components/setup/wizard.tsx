@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import type { DraftView } from '@/lib/setup/draft';
@@ -20,7 +20,19 @@ const LAST_STEP = 7;
  * The installer: one step at a time, a progress bar, and a way back. Each step saves what it collected on the
  * server (the answers are kept there, never in the browser), so reloading the page loses nothing.
  */
-export function SetupWizard({ initial, locale }: { initial: DraftView; locale: string }) {
+export function SetupWizard({
+  initial,
+  locale,
+  brand,
+  switcher,
+}: {
+  initial: DraftView;
+  locale: string;
+  /** The name of the product, always shown. */
+  brand: ReactNode;
+  /** The language switch: it points at the installer, which is gone once the platform is installed. */
+  switcher: ReactNode;
+}) {
   const t = useTranslations('setup.progress');
   const router = useRouter();
   const [view, setView] = useState(initial);
@@ -58,6 +70,11 @@ export function SetupWizard({ initial, locale }: { initial: DraftView; locale: s
 
   return (
     <div className="flex flex-col gap-6">
+      <header className="flex items-center justify-between gap-4">
+        {brand}
+        {!done && switcher}
+      </header>
+
       {!done && (
         <div className="flex flex-col gap-2">
           <div

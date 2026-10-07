@@ -7,6 +7,18 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Added
 
+- **Installation dans le navigateur.** `docker compose up`, ouvrir l'adresse, et une page guide pas à pas jusqu'au
+  bout, en français ou en anglais, avec une barre de progression et un bouton Retour : nom, couleur, langue, adresse
+  publique, application OAuth 42 (pas à pas, adresse de redirection à copier, **identifiants vérifiés tout de suite
+  auprès de l'API 42**), **campus choisis dans la liste de 42 avec une recherche**, **propriétaires vérifiés** auprès
+  de 42, module Événements, notifications avec **message de test** (Discord, Slack, e-mail), récapitulatif. Aucun
+  fichier de configuration, aucun `.env`. Les secrets saisis ne reviennent jamais au navigateur et sont chiffrés
+  dans la base.
+- **Protection de l'installateur** : tant que la plateforme n'est pas installée, la page n'ouvre qu'avec un **code à
+  usage unique** (`K7QM-4XPD`) que le serveur écrit dans ses journaux, dans un encadré bien visible du terminal de
+  `docker compose up`. Nouveau à chaque démarrage, verrouillage progressif après 5 essais ratés, session de 2 heures
+  (cookie `HttpOnly`, `SameSite=Strict`). Le reste du site répond « pas installé » et **la page d'installation disparaît
+  définitivement** une fois terminé.
 - **Les réglages de la plateforme vivent dans sa base de données** (`PlatformSettings`), au lieu de deux fichiers
   lus au démarrage. Au premier démarrage après la mise à jour, `bde.config.yml` et `.env`, s'ils sont complets,
   sont **copiés dans la base** (aucune action à faire) : les secrets (clé de l'application 42, mot de passe SMTP,

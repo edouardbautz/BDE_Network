@@ -35,32 +35,41 @@ export default async function SetupPage({ params }: { params: Promise<{ locale: 
   const session = await getSetupSession();
   const other = locale === 'fr' ? 'en' : 'fr';
 
+  const brand = (
+    <p className="text-sm font-semibold tracking-tight">
+      BDE_Network <span className="text-muted-foreground font-normal">· {t('heading')}</span>
+    </p>
+  );
+  const switcher = (
+    <Link
+      href="/setup"
+      locale={other}
+      lang={other}
+      className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 rounded-sm text-sm underline underline-offset-4 outline-none focus-visible:ring-3"
+    >
+      {other === 'en' ? 'English' : 'Français'}
+    </Link>
+  );
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
       <Card className="w-full max-w-xl">
         <CardContent className="flex flex-col gap-6">
-          <header className="flex items-center justify-between gap-4">
-            <p className="text-sm font-semibold tracking-tight">
-              BDE_Network{' '}
-              <span className="text-muted-foreground font-normal">· {t('heading')}</span>
-            </p>
-            <Link
-              href="/setup"
-              locale={other}
-              lang={other}
-              className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 rounded-sm text-sm underline underline-offset-4 outline-none focus-visible:ring-3"
-            >
-              {other === 'en' ? 'English' : 'Français'}
-            </Link>
-          </header>
-
           {session ? (
             <SetupWizard
               initial={toView(session.draft, { addressUrl: await requestOrigin() })}
               locale={locale}
+              brand={brand}
+              switcher={switcher}
             />
           ) : (
-            <CodeForm />
+            <>
+              <header className="flex items-center justify-between gap-4">
+                {brand}
+                {switcher}
+              </header>
+              <CodeForm />
+            </>
           )}
         </CardContent>
       </Card>
