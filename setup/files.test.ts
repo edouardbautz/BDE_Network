@@ -495,6 +495,11 @@ describe('readExisting', () => {
     });
   });
 
+  it('does not take a directory for bde.config.yml (what a failed Docker mount leaves)', () => {
+    mkdirSync(join(dir, 'bde.config.yml'));
+    expect(readExisting(dir).config).toBeNull();
+  });
+
   it('reads .env and bde.config.yml, and notices bde.config.local.yml', () => {
     writeFileSync(join(dir, '.env'), 'APP_URL=http://localhost:3000\n');
     writeFileSync(join(dir, 'bde.config.yml'), "bde:\n  name: 'X'\n");
@@ -595,13 +600,25 @@ describe('writeFiles', () => {
 
   it('writes nothing, and leaves the old files untouched, when a write fails', () => {
     writeFileSync(join(dir, '.env'), 'OLD=1\n');
-    // bde.config.yml is a directory: the second file cannot be replaced
+    // bde.config.yml is a directory holding something: it is not ours to remove, the write fails
     mkdirSync(join(dir, 'bde.config.yml'));
+    writeFileSync(join(dir, 'bde.config.yml', 'precious'), 'x');
 
     expect(() => writeFiles(dir, files, now)).toThrow();
 
     expect(readFileSync(join(dir, '.env'), 'utf8')).toBe('OLD=1\n');
     expect(readdirSync(dir).filter((name) => name.includes('setup-tmp'))).toEqual([]);
+  });
+
+  it('replaces the empty directory a failed Docker mount leaves where bde.config.yml belongs', () => {
+    mkdirSync(join(dir, 'bde.config.yml'));
+
+    const result = writeFiles(dir, files, now);
+
+    expect(statSync(join(dir, 'bde.config.yml')).isFile()).toBe(true);
+    expect(readFileSync(join(dir, 'bde.config.yml'), 'utf8')).toBe(files.config);
+    expect(result.written).toEqual(['.env', 'bde.config.yml']);
+    expect(result.backupDir).toBeNull(); // nothing was there to keep
   });
 
   it.skipIf(process.platform === 'win32')(

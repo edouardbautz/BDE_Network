@@ -227,7 +227,7 @@ describe('placeholder owner', () => {
     expect(report.warnings).toHaveLength(1);
     expect(report.warnings[0]).toContain(PLACEHOLDER_OWNER);
     expect(report.warnings[0]).toContain("personne n'est propriétaire");
-    expect(report.warnings[0]).toContain('docker compose restart app');
+    expect(report.warnings[0]).toContain('docker compose up -d --build');
   });
 
   it('warns whatever the case, and even next to a real owner', () => {

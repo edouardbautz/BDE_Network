@@ -31,8 +31,12 @@ services:
       # Without a proxy, set APP_BIND=0.0.0.0 in .env: read the warning in docs/deployment.md first.
       # Another program already uses port 3000? Set APP_PORT=3001 (any free port) in .env.
       - '${APP_BIND:-127.0.0.1}:${APP_PORT:-3000}:3000'
-    volumes:
-      - ./bde.config.yml:/app/bde.config.yml:ro
+    # No bind mount of bde.config.yml, on purpose. A mount is resolved by the Docker daemon, on ITS
+    # side, and a daemon that cannot see this folder (rootless Docker, a remote daemon, a home on a
+    # network share) answers by creating an EMPTY DIRECTORY there: the app then found a directory
+    # where its configuration should be. The configuration travels with the build instead (the
+    # Dockerfile copies it from the build context, which the docker client always sends itself).
+    # After editing bde.config.yml: `docker compose up -d --build`.
 
 volumes:
   postgres_data:
