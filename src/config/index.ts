@@ -2,7 +2,8 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { load as parseYaml } from 'js-yaml';
 import { z } from 'zod';
-import { getRuntimeConfig } from '@/lib/settings/runtime';
+// Relative on purpose: next.config.ts loads this file before Next.js knows the "@/" alias.
+import { getRuntimeConfig } from '../lib/settings/runtime';
 import { bdeConfigSchema, type BdeConfig } from './schema';
 
 export class ConfigError extends Error {}
