@@ -40,5 +40,5 @@ export default function middleware(request: NextRequest) {
 export const config = {
   runtime: 'nodejs',
   // Everything but Next's own files and files with an extension (images, the favicon...).
-  matcher: ['/((?!_next|_vercel|.*\..*).*)'],
+  matcher: ['/((?!_next|_vercel|.*\\..*).*)'],
 };
