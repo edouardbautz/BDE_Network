@@ -56,21 +56,26 @@ Linux ou macOS. Pas besoin de Node.js.
 
 1. **Installez Docker** (et lancez Docker Desktop sous Windows et macOS) et **Git**.
 2. **Clonez** le dépôt : `git clone https://github.com/<votre-fork>/BDE_Network.git`, puis `cd BDE_Network`.
-3. **Lancez l'assistant d'installation**, la même commande partout :
+3. **Démarrez la plateforme** (sans `-d` la première fois, pour que le code d'installation s'affiche dans le terminal) :
 
    ```
-   docker compose -f docker-compose.setup.yml run --rm --build setup
+   docker compose up
    ```
 
-Il pose quelques questions (nom, adresse, votre application OAuth 42, campus, propriétaires, notifications),
-vérifie vos réponses auprès de l'API 42 (vos identifiants, les campus, les logins des propriétaires), écrit
-`.env` et `bde.config.yml` à votre place, puis propose de démarrer la plateforme et donne l'adresse à
-ouvrir. Vous n'ouvrez aucun fichier de configuration ; Ctrl+C à tout moment ne modifie rien. Relancez la même
-commande plus tard pour changer la configuration : il propose les valeurs actuelles et sauvegarde les
-fichiers qu'il remplace.
+4. **Ouvrez l'adresse affichée** (`http://localhost:3000`), entrez le **code d'installation** que le terminal
+   montre dans un encadré (il est aussi dans l'onglet _Logs_ du conteneur `app` de Docker Desktop, ou avec
+   `docker compose logs app`), et suivez les étapes dans votre navigateur.
 
-Vous préférez tout faire à la main ? L'ancienne méthode est conservée dans le
-[guide d'installation](docs/installation.md#annexe--installation-manuelle). Le guide complet, la mise en
+L'installateur vous guide en huit étapes (nom, adresse, votre application OAuth 42, campus, propriétaires,
+modules, notifications) et vérifie vos réponses auprès de l'API 42 (vos identifiants, les campus, les logins
+des propriétaires). Vous n'ouvrez aucun fichier de configuration, et il n'y a rien à créer avant : pas de
+`.env`. Le code évite que quelqu'un d'autre installe la plateforme à votre place, et l'installateur disparaît
+définitivement une fois la plateforme installée. Ensuite, faites Ctrl+C puis `docker compose up -d` pour
+qu'elle tourne en arrière-plan, et **sauvegardez le volume `secrets`** (`./scripts/backup.sh`) : sans lui, les
+secrets enregistrés ne peuvent plus être déchiffrés après une restauration.
+
+Vous préférez un questionnaire dans le terminal, ou tout faire à la main ? Les deux sont conservés dans le
+[guide d'installation](docs/installation.md#alternative--lassistant-en-terminal). Le guide complet, la mise en
 production avec HTTPS et les sauvegardes sont dans [docs/](docs/).
 
 ## Documentation

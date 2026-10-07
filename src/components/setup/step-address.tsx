@@ -1,0 +1,88 @@
+'use client';
+
+import { useState, useTransition } from 'react';
+import { useTranslations } from 'next-intl';
+import { TriangleAlert } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { saveAddress, type ActionFailure } from '@/app/[locale]/setup/actions';
+import type { DraftView } from '@/lib/setup/draft';
+import { validateAddress } from '@/lib/setup/validate';
+import { Field, fieldError, useFailureText } from './fields';
+import { StepFrame, type StepProps } from './step-frame';
+
+export function StepAddress({
+  view,
+  onSaved,
+  run,
+  onNext,
+  onBack,
+}: StepProps & { view: DraftView; onSaved: (patch: Partial<DraftView>) => void }) {
+  const t = useTranslations('setup.address');
+  const text = useFailureText();
+  const [address, setAddress] = useState(view.addressUrl);
+  const [accepted, setAccepted] = useState(false);
+  const [failure, setFailure] = useState<ActionFailure | null>(null);
+  const [pending, start] = useTransition();
+
+  // The same check as the server's, to warn at once; the server runs it again.
+  const checked = validateAddress(address);
+  const insecure = checked.ok && checked.value.insecureDomain;
+
+  function submit() {
+    start(async () => {
+      const result = await run(saveAddress({ address, acceptInsecure: accepted }));
+      if (!result.ok) return setFailure(result);
+      setFailure(null);
+      onSaved({ addressUrl: result.url });
+      onNext();
+    });
+  }
+
+  return (
+    <StepFrame
+      title={t('title')}
+      description={t('description')}
+      onSubmit={submit}
+      onBack={onBack}
+      pending={pending}
+      failure={failure}
+    >
+      <Field
+        id="setup-address"
+        label={t('label')}
+        hint={t('help')}
+        error={fieldError(failure, 'address', text)}
+      >
+        <Input
+          id="setup-address"
+          value={address}
+          onChange={(event) => setAddress(event.target.value)}
+          inputMode="url"
+          autoComplete="off"
+          autoFocus
+          aria-invalid={failure?.field === 'address'}
+          aria-describedby="setup-address-hint"
+        />
+      </Field>
+
+      {insecure && (
+        <div role="alert" className="bg-destructive/10 flex flex-col gap-2 rounded-lg p-3 text-sm">
+          <p className="flex items-center gap-2 font-medium">
+            <TriangleAlert className="text-destructive size-4 shrink-0" aria-hidden="true" />
+            {t('insecureTitle')}
+          </p>
+          <p>{t('insecureBody')}</p>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={accepted}
+              onChange={(event) => setAccepted(event.target.checked)}
+              className="size-4"
+            />
+            {t('insecureAccept')}
+          </label>
+        </div>
+      )}
+    </StepFrame>
+  );
+}

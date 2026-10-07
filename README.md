@@ -53,20 +53,26 @@ macOS. No Node.js.
 
 1. **Install Docker** (and start Docker Desktop on Windows and macOS) and **Git**.
 2. **Clone** the repository: `git clone https://github.com/<your-fork>/BDE_Network.git`, then `cd BDE_Network`.
-3. **Run the setup assistant**, the same command everywhere:
+3. **Start the platform** (without `-d` the first time, so that the setup code shows in the terminal):
 
    ```
-   docker compose -f docker-compose.setup.yml run --rm --build setup
+   docker compose up
    ```
 
-It asks a few questions (name, address, your 42 OAuth application, campuses, owners, notifications), checks
-your answers against the 42 API (your credentials, the campuses, the owners' logins), writes `.env` and
-`bde.config.yml` for you, and offers to start the platform and gives you the address to open. You never
-open a configuration file; Ctrl+C at any moment changes nothing. Run the same command again later to change
-the configuration: it proposes the current values and backs up the files it replaces.
+4. **Open the address shown** (`http://localhost:3000`), enter the **setup code** the terminal displays in a
+   box (it is also in the _Logs_ tab of the `app` container in Docker Desktop, or with
+   `docker compose logs app`), and follow the steps in your browser.
 
-Prefer to do it by hand? The manual method is kept in the
-[installation guide](docs/installation.md#annexe--installation-manuelle). The full guide, the production
+The installer walks you through eight steps (name, address, your 42 OAuth application, campuses, owners,
+modules, notifications) and checks your answers against the 42 API (your credentials, the campuses, the
+owners' logins). You never open a configuration file, and there is nothing to create beforehand: no `.env`.
+The setup code keeps anybody else from installing the platform in your place, and the installer disappears
+for good once the platform is installed. Then press Ctrl+C and run `docker compose up -d` so that it runs in
+the background, and **back up the `secrets` volume** (`./scripts/backup.sh`): without it the saved secrets
+cannot be decrypted after a restore.
+
+Prefer a terminal questionnaire, or to do it by hand? Both are kept in the
+[installation guide](docs/installation.md#alternative--lassistant-en-terminal). The full guide, the production
 deployment with HTTPS and the backups are in [docs/](docs/) — **currently written in French**.
 
 ## Documentation

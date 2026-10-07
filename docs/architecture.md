@@ -259,6 +259,52 @@ nobody opens a configuration file, and that a setting changes with no rebuild an
   the same on Windows, macOS, Linux and with rootless Docker, where a mounted file was not reliable (see "The
   configuration is baked into the image").
 
+## The web installer (`src/lib/setup/`, `src/app/[locale]/setup/`, `src/components/setup/`)
+
+A platform with nothing decided (no `PlatformSettings` row and `bde.config.yml` is the unfilled template, the
+`votre-login-42` owner) is installed from the browser: `initializePlatform` answers `{ source: 'setup' }`,
+`instrumentation.ts` calls `enterSetupMode` and returns **without running the start-up checks, the 42 warning or the
+reminder scheduler** (none of them can pass on a platform that has no configuration). A platform whose files are
+filled (an installation that predates the database, or a deployment driven by files) is imported instead and never
+sees the installer.
+
+- **Protection** (`guard.ts`, all of it on `globalThis`, like the runtime settings). A code of 8 characters from a
+  31-letter alphabet without look-alikes (`K7QM-4XPD`), made at every start and kept in memory only, written to the logs
+  in a box (`mode.ts`; `BDE_HOST_PORT`, passed by compose from `APP_PORT`, is only there to print the right address).
+  5 wrong tries lock the entry for 30 s, doubling to 15 min (never a guess, only a delay; a restart gives a new code
+  and clears the lock). The right code gives a session: 256 random bits in an `HttpOnly`, `SameSite=Strict` cookie (`Secure`
+  behind an HTTPS proxy), 2 h, of which the server keeps only the SHA-256. At most 20 sessions.
+- **Nothing is served but the installer** (`src/middleware.ts`, Node.js runtime): every page redirects to
+  `/<locale>/setup`, every API route answers 503 `not-installed`, except `/api/health`. The state is read from
+  `globalThis`, which the middleware shares with the server. **Two traps met while building it**: the `matcher` is a
+  regular expression compiled by Next, and a lost backslash (`.*..*` for `.*\..*`) made the middleware see only `/`
+  (`middleware.test.ts` checks which paths it sees); and a redirect built from a relative `Location`, or from
+  `request.url` (the container's own host name behind Docker), is refused or wrong, so it is cloned from
+  `request.nextUrl`, which carries the host the visitor used.
+- **Server actions** (`actions.ts`, one per step). Every one answers 404 once installed (`isSetupMode`), `session` without
+  the installer cookie, re-validates its input with Zod and the validators of `validate.ts` (the browser is not
+  trusted), and keeps the answer in the server's memory (`draft.ts`: per session, lost on restart, which also changes the
+  code). **A `'use server'` file may only export async functions, and each export is a public entry point**: the
+  helpers (`session.ts`) live outside. What goes back to the browser is a **code** of what is wrong (translated by the
+  page: `setup.errors.<code>`, a test checks every code the actions can answer has a sentence in both languages) or a
+  `DraftView` (`toView`): no secret, only whether there is one. The 42 secret travels in the body of the token request
+  only; the token of the application stays server side to list the campuses and check the logins.
+- **Finishing** (`finishInstallation`): `buildInstallation` assembles the configuration and the settings from the draft
+  and checks them with the schema and `validateEnvironment` the platform applies at start-up (so what is written always
+  starts), `installPlatform` creates the row (`source: 'installer'`, unique id: two people finishing at once, the loser
+  gets a 404) and loads it into the runtime cache, then the code, the sessions and the drafts are forgotten and the reminder
+  scheduler starts. The action **does not touch a cookie**: that would make Next reload the page, which no longer
+  exists, before the last screen is read. From then on `/setup` is a 404 for good; there is no way to reopen it.
+- **The 42 client** (`fortytwo.ts`): the credentials are checked with the client-credentials grant, the campuses listed
+  (paged, 600 ms apart, a 429 waited out), a login looked up; 8 s timeouts; every failure is a code
+  (`invalidCredentials`, `rateLimited`, `network`) and the person may go on without the check (campuses typed by hand).
+  `FORTYTWO_API_URL` replaces the address of the API for the end-to-end test (`fortyTwoApiBase`); the sign-in itself
+  always uses the real 42.
+- **Tests**: unit tests for each piece, the real French messages in `setup-ui.test.tsx`, and `e2e/install.mjs`, run
+  by CI against the real image: a browser (`puppeteer-core` driving the installed Chrome) goes through every step with
+  `e2e/mock-fortytwo.mjs` standing in for the 42 API, then checks the installer is a 404 and no secret was in a page, a
+  log or the database in clear.
+
 ## Configuration: bde.config.yml vs .env
 
 - **`bde.config.yml`** is _versioned_ (committed) — each BDE's fork edits it directly, no

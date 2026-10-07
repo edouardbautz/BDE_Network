@@ -1,3 +1,4 @@
+import { fortyTwoApiBase } from '@/lib/fortytwo-api';
 import { setting } from '@/lib/settings/runtime';
 /**
  * Whether 42 still accepts this platform's OAuth application (`FORTYTWO_CLIENT_ID` / `FORTYTWO_CLIENT_SECRET`).
@@ -13,7 +14,6 @@ import { setting } from '@/lib/settings/runtime';
 
 export type FortyTwoCredentials = 'valid' | 'rejected' | 'unknown';
 
-const TOKEN_URL = 'https://api.intra.42.fr/oauth/token';
 const TIMEOUT_MS = 2500;
 /** How long an answer is kept. A refusal is rechecked sooner: whoever fixes it on the intra is waiting. */
 const TTL_MS: Record<FortyTwoCredentials, number> = {
@@ -42,7 +42,7 @@ async function ask(fetchImpl: typeof fetch): Promise<FortyTwoCredentials> {
   if (!clientId || !clientSecret) return 'unknown'; // refused at start-up already (env.ts)
 
   try {
-    const response = await fetchImpl(TOKEN_URL, {
+    const response = await fetchImpl(`${fortyTwoApiBase()}/oauth/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({

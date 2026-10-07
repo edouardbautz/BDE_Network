@@ -10,12 +10,22 @@ export async function register(): Promise<void> {
     // update): load them before anything reads the configuration.
     const { initializePlatform, PlatformSettingsError } = await import('./lib/settings/store');
     const { refuseToStart, runStartupChecks } = await import('./lib/startup-checks');
+    let initialized;
     try {
-      await initializePlatform();
+      initialized = await initializePlatform();
     } catch (error) {
       if (error instanceof PlatformSettingsError) refuseToStart('config', error.message);
       throw error;
     }
+
+    // Nothing decided yet (the unfilled template, nothing in the database): the platform is installed from the
+    // browser, with a code that is written to the logs. Nothing else runs until it is installed.
+    if (initialized.source === 'setup') {
+      const { enterSetupMode } = await import('./lib/setup/mode');
+      enterSetupMode();
+      return;
+    }
+
     runStartupChecks();
 
     // In the background: only says, in the logs, when 42 refuses the application's identifiers.

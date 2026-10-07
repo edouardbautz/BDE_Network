@@ -137,13 +137,14 @@ describe('the settings store', () => {
       );
     });
 
-    it('does not import the template (the placeholder owner means nothing was decided)', async () => {
+    it('does not import the template (the placeholder owner means nothing was decided): the installer opens', async () => {
       loadConfigFile.mockReturnValue({
         config: configWith(['votre-login-42']),
         filename: 'bde.config.yml',
       });
       const { db, current } = fakeDb();
-      expect(await initializePlatform(db, logger())).toEqual({ source: 'files' });
+      // nothing was decided: the installer of the browser takes over
+      expect(await initializePlatform(db, logger())).toEqual({ source: 'setup' });
       expect(current()).toBeUndefined();
       expect(getRuntimeSettings()).toBeUndefined();
     });

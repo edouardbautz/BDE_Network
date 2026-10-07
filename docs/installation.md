@@ -1,16 +1,18 @@
 # Installation
 
-Mettre en route la plateforme se fait avec un **assistant interactif** : il pose quelques questions, vérifie
-les réponses, écrit la configuration à votre place et démarre la plateforme. **Vous n'ouvrez aucun fichier.**
-Le seul prérequis est **Docker** ; la commande est la même sous Windows, Linux et macOS.
+Mettre en route la plateforme se fait **dans le navigateur** : vous lancez une commande, vous ouvrez
+l'adresse, et une page d'installation vous guide pas à pas. **Vous n'ouvrez aucun fichier de configuration** et
+il n'y a **rien à créer avant** (pas de `.env`). Le seul prérequis est **Docker** ; la commande est la même sous
+Windows, Linux et macOS, y compris sur un poste où Docker tourne sans droits administrateur (comme les postes
+de l'école).
 
 Pour qui ? Pour tout le monde : le bureau peut le lancer lui-même sur son ordinateur pour essayer, et la
-personne technique s'en sert sur le serveur. Les personnes à l'aise avec un terminal qui préfèrent éditer les
-fichiers à la main trouvent l'ancienne méthode en [annexe](#annexe--installation-manuelle).
+personne technique s'en sert sur le serveur. Il existe aussi un
+[questionnaire dans le terminal et une méthode à la main](#alternative--lassistant-en-terminal).
 
 ---
 
-## L'assistant d'installation
+## L'installation dans le navigateur
 
 ### 1. Installer Docker et Git
 
@@ -35,7 +37,114 @@ git clone https://github.com/<votre-fork>/BDE_Network.git
 cd BDE_Network
 ```
 
-### 3. Lancer l'assistant
+### 3. Démarrer la plateforme
+
+Depuis le dossier `BDE_Network` (PowerShell, Terminal macOS ou Linux, c'est identique) :
+
+```
+docker compose up
+```
+
+**Sans `-d` la première fois** : le terminal reste ouvert et affiche ce que fait la plateforme, ce qui permet de
+voir le code d'installation. La première fois, Docker construit l'image (quelques minutes), puis le terminal
+affiche un encadré comme celui-ci :
+
+```
+╔════════════════════════════════════════════════════════════════════════════╗
+║  INSTALLATION DE LA PLATEFORME  ·  PLATFORM SETUP                          ║
+║                                                                            ║
+║  1. Ouvrez / Open :              http://localhost:3000                     ║
+║  2. Code d'installation / Code : K7QM-4XPD                                 ║
+║                                                                            ║
+║  (Ce code change à chaque démarrage. / This code changes at every start.)  ║
+╚════════════════════════════════════════════════════════════════════════════╝
+```
+
+### 4. Ouvrir la page et suivre les étapes
+
+Ouvrez l'adresse de l'encadré dans votre navigateur. La page demande le **code d'installation** : recopiez celui
+de l'encadré. Vous pouvez aussi le retrouver, si vous avez fermé le terminal :
+
+- dans **Docker Desktop**, onglet **Containers**, cliquez sur le conteneur `app` puis sur l'onglet **Logs** ;
+- ou avec la commande `docker compose logs app`.
+
+Le code **change à chaque redémarrage** de la plateforme : prenez toujours le dernier affiché. La page est
+disponible en **français et en anglais** (lien en haut à droite), une étape à la fois, avec une barre de
+progression et un bouton **Retour**.
+
+| Étape | Ce que vous indiquez        | Ce que fait la page                                                                                                                                                 |
+| ----- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | Nom du BDE, couleur, langue | Un aperçu de la couleur ; vérifie chaque réponse tout de suite.                                                                                                     |
+| 2     | Adresse de la plateforme    | Propose l'adresse que vous utilisez. Elle sert aux liens des notifications et à **l'URL de redirection exacte** à déclarer sur l'intra 42. Prévient pour `http://`. |
+| 3     | Application OAuth 42        | Donne le pas à pas et l'adresse à copier (bouton **Copier**), demande l'**UID** et le **secret**, et les **vérifie tout de suite auprès de l'API 42**.              |
+| 4     | Campus autorisés            | Propose la **liste des campus 42** avec une recherche (accents ignorés) ; en déduit le fuseau horaire.                                                              |
+| 5     | Propriétaires               | Demande les logins 42 et **vérifie qu'ils existent** sur l'intra.                                                                                                   |
+| 6     | Module Événements           | Activé par défaut (calendrier, agenda synchronisé, rappels).                                                                                                        |
+| 7     | Notifications (facultatif)  | Discord, Slack, e-mail ou rien. Avec un webhook ou un serveur SMTP, un bouton **envoie un message de test**.                                                        |
+| 8     | Récapitulatif               | Montre tout (les secrets restent masqués) ; **Installer la plateforme** enregistre.                                                                                 |
+
+Les réponses sont gardées par la plateforme le temps de l'installation : recharger la page ne fait rien perdre.
+Les secrets saisis (clé 42, mot de passe SMTP, webhooks) **ne sont jamais renvoyés au navigateur** et sont
+**chiffrés** quand ils sont enregistrés.
+
+### 5. Finir
+
+La page « Plateforme installée » apparaît. Il reste deux choses :
+
+1. **Passer en arrière-plan.** Si vous avez lancé `docker compose up` sans `-d`, appuyez sur **Ctrl+C** dans le
+   terminal, puis lancez :
+
+   ```
+   docker compose up -d
+   ```
+
+   La plateforme tourne alors sans garder le terminal ouvert (et redémarre toute seule avec l'ordinateur).
+
+2. **Se connecter avec 42.** Le bouton **Se connecter avec 42** ouvre la page de connexion. Les propriétaires
+   de la liste ont tous les droits dès leur première connexion ; les autres personnes demandent l'accès et un
+   propriétaire les valide.
+
+**Sauvegardez le volume `secrets`** (`./scripts/backup.sh`, voir
+[Sauvegardes et restauration](deployment.md#sauvegardes-et-restauration)) : c'est lui qui contient la clé qui
+déchiffre les secrets enregistrés. Sans lui, après une restauration sur un autre serveur, il faudrait les ressaisir.
+
+### La sécurité de la page d'installation
+
+Tant que la plateforme n'est pas installée, n'importe qui qui joindrait l'adresse pourrait l'installer et
+choisir les propriétaires. Trois protections :
+
+- **le code d'installation**, affiché dans les journaux du serveur, là où seule la personne qui lance la
+  plateforme regarde. 8 caractères sans ambiguïté (pas de 0/O ni de 1/I/L), nouveau à chaque démarrage, gardé en
+  mémoire seulement ;
+- **un verrouillage** : 5 mauvais essais bloquent la saisie un moment (30 secondes, puis 1 minute, 2 minutes…
+  jusqu'à 15 minutes). On peut retarder l'installation en essayant des codes, jamais le deviner ; redémarrer la
+  plateforme donne un nouveau code ;
+- **rien n'est montré sans le code** : avant, la page ne montre que le champ du code, et le reste du site
+  répond « pas installé ».
+
+Une fois l'installation terminée, **la page d'installation disparaît définitivement** (elle répond « introuvable »)
+et il n'existe aucun bouton pour la rouvrir. Si l'adresse est en `http://` et n'est pas votre ordinateur, la page
+prévient que les secrets circuleraient en clair : placez la plateforme derrière un proxy HTTPS
+([guide de déploiement](deployment.md)).
+
+### Si l'installation ne démarre pas
+
+| Ce que vous voyez                                   | Que faire                                                                                                                                  |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Pas d'encadré dans le terminal                      | Attendez la fin de la construction. Sinon `docker compose logs app`. Une plateforme déjà installée n'affiche pas d'encadré (c'est normal). |
+| « Ce code n'est pas le bon »                        | Prenez le **dernier** code affiché : il change à chaque redémarrage. `docker compose logs app` le montre.                                  |
+| « Trop d'essais »                                   | Patientez le temps indiqué, ou redémarrez : `docker compose restart app` (nouveau code, saisie débloquée).                                 |
+| « 42 refuse ces identifiants »                      | L'UID et le secret ne sont pas une paire valide : recopiez-les depuis la page de l'application sur l'intra.                                |
+| « 42 est injoignable »                              | L'ordinateur n'a pas accès à Internet. Vous pouvez continuer sans la vérification ; les campus se tapent alors à la main.                  |
+| La page de l'étape disparaît, le code est redemandé | La session d'installation (2 heures) a pris fin, ou la plateforme a redémarré : entrez le nouveau code ; vos réponses sont à refaire.      |
+
+---
+
+## Alternative : l'assistant en terminal
+
+Pour qui préfère un questionnaire dans le terminal (même prérequis que ci-dessus : Docker et le dépôt cloné) :
+
+### Lancer l'assistant
 
 Depuis le dossier `BDE_Network` (PowerShell, Terminal macOS ou Linux, c'est identique) :
 

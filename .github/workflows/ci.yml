@@ -109,7 +109,10 @@ jobs:
       # stays up, answers 503 with a page naming the problem (and no secret), and never restarts by itself.
       - name: A broken .env is explained, not looped on
         run: |
+          # bde.config.yml of the image is the unfilled template, which opens the installer: give it a real owner
+          sed 's/votre-login-42/ci-owner/' bde.config.yml > "$RUNNER_TEMP/filled-config.yml"
           docker run -d --name broken-env --network host -e PORT=3001 \
+            -v "$RUNNER_TEMP/filled-config.yml:/app/bde.config.yml:ro" \
             -e DATABASE_URL='postgresql://bde:ci-password@127.0.0.1:5432/bde_network?schema=public' \
             -e FORTYTWO_CLIENT_ID= -e FORTYTWO_CLIENT_SECRET=ci-client-secret \
             bde-network
@@ -146,9 +149,44 @@ jobs:
           [ "$(docker inspect -f '{{.State.Running}} {{.RestartCount}}' broken-db)" = "true 0" ]
           docker rm -f broken-db
 
+      # The installer, in a real browser, against the real image: puppeteer-core drives the Chrome of the runner
+      # and e2e/mock-fortytwo.mjs stands in for the 42 API. It has its own database, so the other steps see
+      # nothing of it. Nothing secret may be in a log or in clear in the database afterwards.
+      - name: The installer, end to end in a browser
+        run: |
+          PGPASSWORD=ci-password psql -h 127.0.0.1 -U bde -d postgres -c 'CREATE DATABASE bde_install'
+          mkdir "$RUNNER_TEMP/e2e-deps"
+          npm install --prefix "$RUNNER_TEMP/e2e-deps" --no-audit --no-fund puppeteer-core@25.12.0
+          ln -s "$RUNNER_TEMP/e2e-deps/node_modules" e2e/node_modules
+          node e2e/mock-fortytwo.mjs 4242 &
+          docker run -d --name installer --network host -e PORT=3003 \
+            -e DATABASE_URL='postgresql://bde:ci-password@127.0.0.1:5432/bde_install?schema=public' \
+            -e FORTYTWO_API_URL=http://127.0.0.1:4242 \
+            bde-network
+          code=""
+          for attempt in $(seq 1 45); do
+            code="$(docker logs installer 2>&1 | grep -o 'Code : [A-Z0-9-]*' | tail -1 | sed 's/Code : //')"
+            [ -n "$code" ] && break
+            sleep 2
+          done
+          [ -n "$code" ] || { docker logs installer; exit 1; }
+          SHOTS="$RUNNER_TEMP/shots" node e2e/install.mjs http://127.0.0.1:3003 "$code"
+          ! docker logs installer 2>&1 | grep -q 's-s4t2ud-e2e-test-secret'
+          [ "$(PGPASSWORD=ci-password psql -h 127.0.0.1 -U bde -d bde_install -tAc 'SELECT secrets LIKE $$%e2e-test-secret%$$ FROM "PlatformSettings"')" = f ]
+          [ "$(docker inspect -f '{{.State.Running}} {{.RestartCount}}' installer)" = "true 0" ]
+          docker rm -f installer
+          rm e2e/node_modules
+
+      - name: Screenshots of the installer
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-screenshots
+          path: ${{ runner.temp }}/shots
+
       # The real docker-compose.yml, without any .env: the platform makes its own keys (the `secrets`
-      # volume), the database starts with a generated password, the migrations apply, and the page that
-      # says what is still missing names the two 42 settings, not AUTH_SECRET (which nobody has to write).
+      # volume), the database starts with a generated password, the migrations apply, and, with nothing decided,
+      # it opens the installer: the code is in the logs, the page asks for it, the rest of the site is closed.
       - name: A fresh installation needs no .env
         env:
           APP_PORT: '3100'
@@ -157,13 +195,16 @@ jobs:
           test ! -e .env
           docker compose up -d --build
           for attempt in $(seq 1 45); do
-            code="$(curl -s -o "$RUNNER_TEMP/fresh.html" -w '%{http_code}' http://127.0.0.1:3100/ || true)"
-            [ "$code" = 503 ] && break
+            code="$(curl -s -o "$RUNNER_TEMP/fresh.html" -w '%{http_code}' http://127.0.0.1:3100/fr/setup || true)"
+            [ "$code" = 200 ] && break
             sleep 2
           done
-          [ "$code" = 503 ] || { docker compose logs; exit 1; }
-          grep -q '<code>FORTYTWO_CLIENT_ID</code>' "$RUNNER_TEMP/fresh.html"
-          ! grep -q '<code>AUTH_SECRET</code>' "$RUNNER_TEMP/fresh.html"
+          [ "$code" = 200 ] || { docker compose logs; exit 1; }
+          grep -q "Entrez le code d'installation" "$RUNNER_TEMP/fresh.html"
+          docker compose logs app | grep -q 'Code d.installation / Code : [A-Z0-9]\{4\}-[A-Z0-9]\{4\}'
+          [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/fr)" = 307 ]
+          [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/api/auth/session)" = 503 ]
+          [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/api/health)" = 200 ]
           docker compose exec -T app ls /secrets | sort | tr '\n' ' ' | grep -q 'auth_secret postgres_password settings_key'
           docker compose down -v
 

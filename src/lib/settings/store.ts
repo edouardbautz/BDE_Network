@@ -35,7 +35,9 @@ export type InitializeResult =
   /** Copied from bde.config.yml and .env just now, then loaded. */
   | { source: 'import' }
   /** Nothing in the database and the files are not complete: the platform runs from the files, as before. */
-  | { source: 'files' };
+  | { source: 'files' }
+  /** Nothing in the database and nothing decided in the files (the unfilled template): to be installed from the browser. */
+  | { source: 'setup' };
 
 interface Logger {
   log(message: string): void;
@@ -168,8 +170,10 @@ function readFiles(): { config: BdeConfig; values: SettingValues } | { problem: 
 
 async function importFromFiles(db: SettingsDb, logger: Logger): Promise<InitializeResult> {
   const files = readFiles();
+  // The unfilled template: nothing was decided, the installer in the browser takes over.
+  if (!files) return { source: 'setup' };
   // Not complete: the platform runs from the files, as before, and the start-up checks report what is wrong.
-  if (!files || 'problem' in files) return { source: 'files' };
+  if ('problem' in files) return { source: 'files' };
   const { config, values } = files;
 
   const { environment, secrets } = splitSettings(values);
@@ -258,4 +262,36 @@ export async function initializePlatform(
     return { source: 'database' };
   }
   return importFromFiles(db, logger);
+}
+
+/**
+ * Installs the platform from what the installer collected: writes the settings row (the secrets sealed) and
+ * loads it, so the platform works at once. `already-installed` when a row exists: the installer is over.
+ */
+export async function installPlatform(
+  input: { config: BdeConfig; values: SettingValues },
+  db: SettingsDb = prisma,
+): Promise<'installed' | 'already-installed'> {
+  const { environment, secrets } = splitSettings(input.values);
+  try {
+    await db.platformSettings.create({
+      data: {
+        id: PLATFORM_ID,
+        config: JSON.parse(JSON.stringify(input.config)),
+        environment,
+        secrets: Object.keys(secrets).length > 0 ? seal(secrets, settingsKey()) : null,
+        source: 'installer',
+        installedAt: new Date(),
+      },
+    });
+  } catch (error) {
+    if (isUniqueViolation(error)) return 'already-installed';
+    throw error;
+  }
+  setRuntimeSettings({
+    config: input.config,
+    values: managed({ ...environment, ...secrets }),
+    source: 'database',
+  });
+  return 'installed';
 }
