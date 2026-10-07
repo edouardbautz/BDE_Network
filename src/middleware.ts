@@ -21,11 +21,14 @@ export default function middleware(request: NextRequest) {
     }
     if (!SETUP_PATH.test(pathname)) {
       const locale = pathname === '/en' || pathname.startsWith('/en/') ? 'en' : 'fr';
-      // A relative address on purpose: behind Docker, `request.url` can carry the container's own host name.
-      return new NextResponse(null, {
-        status: 307,
-        headers: { Location: `/${locale}/setup`, 'Cache-Control': 'no-store' },
-      });
+      // From request.nextUrl, which carries the host the visitor used (a relative address is refused here, and
+      // `request.url` can carry the container's own host name).
+      const target = request.nextUrl.clone();
+      target.pathname = `/${locale}/setup`;
+      target.search = '';
+      const response = NextResponse.redirect(target);
+      response.headers.set('Cache-Control', 'no-store');
+      return response;
     }
   }
 
