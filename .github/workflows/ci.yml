@@ -105,6 +105,47 @@ jobs:
           done
           if echo "$headers" | grep -qi '^x-powered-by:'; then echo "X-Powered-By must not be sent"; exit 1; fi
 
+      # A problem the operator can fix must be explained in the browser, not looped on: the container
+      # stays up, answers 503 with a page naming the problem (and no secret), and never restarts by itself.
+      - name: A broken .env is explained, not looped on
+        run: |
+          docker run -d --name broken-env --network host -e PORT=3001 \
+            -e DATABASE_URL='postgresql://bde:ci-password@127.0.0.1:5432/bde_network?schema=public' \
+            -e AUTH_SECRET=short -e FORTYTWO_CLIENT_ID=ci -e FORTYTWO_CLIENT_SECRET=ci-client-secret \
+            bde-network
+          for attempt in $(seq 1 30); do
+            code="$(curl -s -o page.html -w '%{http_code}' http://127.0.0.1:3001/ || true)"
+            [ "$code" = 503 ] && break
+            sleep 2
+          done
+          [ "$code" = 503 ] || { docker logs broken-env; exit 1; }
+          grep -q '<code>AUTH_SECRET</code>' page.html
+          curl -s -H 'Accept-Language: en' http://127.0.0.1:3001/ | grep -q 'needs fixing'
+          [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3001/api/health)" = 503 ]
+          ! grep -q 'ci-client-secret' page.html
+          [ "$(docker inspect -f '{{.State.Running}} {{.RestartCount}}' broken-env)" = "true 0" ]
+          docker rm -f broken-env
+
+      - name: A refused database password is explained, not looped on
+        run: |
+          docker run -d --name broken-db --network host -e PORT=3002 \
+            -e DATABASE_URL='postgresql://bde:wrong-password@127.0.0.1:5432/bde_network?schema=public' \
+            -e AUTH_SECRET='ci-only-secret-not-used-anywhere-else-0123456789' \
+            -e FORTYTWO_CLIENT_ID=ci -e FORTYTWO_CLIENT_SECRET=ci \
+            bde-network
+          for attempt in $(seq 1 30); do
+            code="$(curl -s -o page.html -w '%{http_code}' http://127.0.0.1:3002/ || true)"
+            [ "$code" = 503 ] && break
+            sleep 2
+          done
+          [ "$code" = 503 ] || { docker logs broken-db; exit 1; }
+          grep -q 'refuse la connexion' page.html
+          grep -q '<code>P1000</code>' page.html
+          ! grep -q 'wrong-password' page.html
+          ! docker logs broken-db 2>&1 | grep -q 'wrong-password'
+          [ "$(docker inspect -f '{{.State.Running}} {{.RestartCount}}' broken-db)" = "true 0" ]
+          docker rm -f broken-db
+
       # The setup assistant (setup/): its image builds, and it starts and stops cleanly. With no
       # answer to read it must say so, exit with 1 and write nothing (the real run needs a 42 account).
       - name: Build the setup assistant and check that it starts

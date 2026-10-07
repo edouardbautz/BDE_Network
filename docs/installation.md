@@ -389,6 +389,36 @@ Lecture du résultat :
 | La liste sous « vu par le démon Docker » est vide ou sans `bde.config.yml` | Le démon ne voit pas votre dossier : aucun montage ne pouvait marcher.                            |
 | `securite=[… name=rootless …]`                                             | Docker tourne sans droits administrateur.                                                         |
 
+**Le site affiche une page « … à corriger » ou « … ne répond pas » (erreur 503) au lieu de la plateforme**
+
+C'est voulu : la plateforme n'a pas pu démarrer, et elle le dit au lieu de redémarrer sans fin. La page nomme le
+problème et donne les commandes à lancer ; le détail complet est dans `docker compose logs app`. Les cas :
+
+| La page dit…                                      | Cause                                                                                                                 | À faire                                                                                                                                                    |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| « Un réglage du fichier .env est à corriger »     | Une valeur manque ou est invalide (la page liste les **noms** des réglages, jamais leurs valeurs).                    | Corrigez `.env`, puis `docker compose up -d`.                                                                                                              |
+| « Le fichier bde.config.yml est à corriger »      | Le fichier est absent, vide ou invalide.                                                                              | Corrigez-le, puis `docker compose up -d --build`.                                                                                                          |
+| « La base de données refuse la connexion »        | `POSTGRES_USER`, `POSTGRES_PASSWORD` ou `POSTGRES_DB` ont changé **après** la création de la base (c'est fréquent).   | Remettez les valeurs de départ dans `.env`, puis `docker compose up -d`. Pour changer vraiment le mot de passe, changez-le dans PostgreSQL (`ALTER USER`). |
+| « La base de données ne répond pas »              | La base n'est pas (encore) démarrée : normal une minute après un redémarrage du serveur. La page se rafraîchit seule. | Si cela dure : `docker compose ps`, puis `docker compose logs postgres`.                                                                                   |
+| « La mise à jour de la base de données a échoué » | Une migration n'a pas pu s'appliquer. Le code affiché (`P3009`…) aide à chercher.                                     | Ne supprimez rien ; lisez `docker compose logs app` ; au besoin restaurez la dernière sauvegarde (voir [le guide de déploiement](deployment.md)).          |
+
+**« Connexion avec 42 momentanément impossible » sur la page de connexion**
+
+42 refuse l'identifiant (UID) ou la clé secrète de l'application du BDE : la clé a expiré ou a été régénérée sur
+l'intra. Allez sur <https://profile.intra.42.fr/oauth/applications>, ouvrez votre application, copiez la clé
+actuelle dans `FORTYTWO_CLIENT_SECRET` (fichier `.env`), puis `docker compose up -d`. L'avertissement est aussi
+dans `docker compose logs app`.
+
+**`docker compose up` s'arrête avec « env file … .env not found »**
+
+Le fichier `.env` n'existe pas dans le dossier du projet : lancez l'assistant d'installation (il l'écrit), ou
+copiez `.env.example` vers `.env` et remplissez-le.
+
+**`docker compose up` s'arrête avec « Bind for … failed: port is already allocated »**
+
+Un autre programme de l'ordinateur utilise déjà le port 3000. Ajoutez `APP_PORT=3001` (ou un autre port libre) dans
+`.env`, mettez le même port dans l'URL de redirection de l'application 42, puis `docker compose up -d`.
+
 **« L'API 42 est injoignable »**
 
 L'ordinateur n'a pas accès à Internet (ou l'API 42 est en panne). Vous pouvez continuer sans la vérification :

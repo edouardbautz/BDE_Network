@@ -101,6 +101,9 @@ setup/                      the interactive setup assistant (see "Setup assistan
 docker-compose.setup.yml    the one command that runs it
 docker/
   prisma.config.mjs         Prisma config used by the production image to run `migrate deploy`
+  start.mjs                 the image's command: migrations, then the application, and the explanation page
+                            when either cannot start (see "A startup problem is shown, not looped")
+  startup-problems.mjs      its pure parts: Prisma failure classifier, redaction, database address, the page
 messages/
   fr.json, en.json          next-intl message catalogs
 docs/                        installation (two paths: the board / the technical person), configuration, user guide, notifications,
@@ -404,7 +407,8 @@ Linux and macOS. It writes `.env` and `bde.config.yml`, and offers to start the 
   removes the `/_next/image` endpoint), run with `node server.js` — no npm in the final image.
   The Prisma CLI (a dev dependency, so not in the bundle) is installed separately at the lockfile's
   exact version into `/opt/migrate` and **pruned of what only Studio / `prisma dev` use** (~120 MB);
-  `CMD` runs `prisma migrate deploy --config /opt/migrate/prisma.config.mjs` then `node server.js`.
+  `CMD` is `node /opt/start/start.mjs`, which runs `prisma migrate deploy --config /opt/migrate/prisma.config.mjs`
+  then `node server.js` (next bullet).
   If a Prisma bump ever makes `migrate deploy` need a pruned file, the CI `docker` job (build + start
   against Postgres + `/api/health`) fails. `.dockerignore` must keep `.audit`, `.env*` and
   `bde.config.local.yml` out of the image. `HEALTHCHECK` calls `/api/health` (503 when the DB is down).
@@ -423,6 +427,38 @@ Linux and macOS. It writes `.env` and `bde.config.yml`, and offers to start the 
   `src/config/index.ts` (`describeReadFailure`) tells a missing file, a directory in its place, an unreadable
   file, an empty one and an invalid one apart, with the exact path checked. The commands that read what the
   container sees are under "Problèmes fréquents" in `docs/installation.md`.
+- **A startup problem is shown, not looped** (`docker/start.mjs`, `docker/startup-problems.mjs`; tests next to
+  them). `restart: unless-stopped` turned every fixable mistake (a typo in `.env`, a changed
+  `POSTGRES_PASSWORD`, a database that is not up yet, a failing migration) into a silent restart loop whose only
+  explanation was in `docker compose logs`, half of it Prisma's English. The container's command is now a small
+  supervisor (plain JavaScript: the image has `node` and nothing else) that **never exits for a problem the
+  operator can fix**: it classifies a failed `migrate deploy` by its Prisma code (`P1000`/`P1003` wrong
+  credentials, `P1001`/`P1002`/`P1017` database not there, `P1012`/`P1013` bad address, anything else a failed
+  migration), and the application leaves exit code **78** (`EXIT_CONFIG`, kept equal in both files by a test)
+  with a report (`BDE_STARTUP_REPORT`: `{ kind: 'env' | 'config', variables: [names] }`, written by
+  `refuseToStart` in `startup-checks.ts`) when `.env` or `bde.config.yml` is unusable. In both cases it answers every
+  request itself with a **503 page** (FR/EN by `Accept-Language` or `?lang=`, `no-store`, `noindex`, CSP, no script)
+  and `/api/health` with 503 (the container shows as unhealthy), and logs one French line. A database that is not
+  there yet (and a refused password, which the operator may fix inside PostgreSQL) is awaited every 15 s and the
+  application starts by itself, giving the port back; a failed migration or a bad `.env` waits for the operator
+  (`docker compose up -d` recreates the container). A real crash of the application still ends the container with
+  its exit code: that is what the restart policy is for. **Nothing a person typed reaches the page**: it is
+  fixed sentences, a kind from a closed list, a Prisma code matched by `^P\d{4}$` and the NAMES of variables
+  matched by `^[A-Z][A-Z0-9_]+$`; Prisma's own output goes to the logs only through `redact` (every secret of
+  the environment, clear or URL-encoded, and any `postgres://` address). The page has its own inline CSS: a test
+  keeps its tokens equal to those of `globals.css`. The in-app pages (login, error) are unaffected.
+- **The database address is built in the container, encoded.** `docker-compose.yml` sets `DATABASE_URL: ''` (it
+  overrides the one of `.env`, which is for `npm run dev`) and `start.mjs` builds
+  `postgresql://user:password@postgres:5432/db` from `POSTGRES_*` with `encodeURIComponent`. Interpolated by
+  compose, a password with `@ / : ? #` cut the address in the wrong place and Prisma printed pieces of it in
+  the logs. A `DATABASE_URL` given to `docker run` (the CI) is used as is.
+- **42 refusing the application is told, not guessed** (`src/lib/auth/oauth-check.ts`). A secret that expired or
+  was regenerated on the intra breaks nothing until someone signs in, and Auth.js then only says "failed". The
+  `client_credentials` grant (no member needed) tells "refused" (`invalid_client`) from "42 is slow": cached
+  10 min (a refusal 2 min, "unknown" 30 s), 2.5 s timeout, never throws. Used by the login page (an alert and a
+  disabled button), by `auth-error` (`OAuthCallbackError` / `Configuration` become "the platform cannot sign in
+  with 42" only when 42 says so; a visitor who cancelled still gets "try again") and, once at start-up, as a
+  warning in the logs. The secret only travels in the body of the request.
 - **docker-compose.yml** publishes the app on `${APP_BIND:-127.0.0.1}:${APP_PORT:-3000}`: only the reverse proxy
   reaches it unless the operator opts out (`APP_BIND=0.0.0.0`, documented in `docs/deployment.md`). **PostgreSQL
   publishes no port** (only the app, on the compose network, reaches it); `docker-compose.dev.yml` still

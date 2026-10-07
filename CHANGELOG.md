@@ -24,6 +24,23 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Fixed
 
+- **Un problème de démarrage que l'opérateur peut corriger est maintenant affiché dans le navigateur, au lieu
+  d'un redémarrage en boucle silencieux** (`restart: unless-stopped` + une explication seulement dans
+  `docker compose logs`, en partie en anglais). Un petit superviseur (`docker/start.mjs`) remplace la commande
+  `sh -c "migrate && serveur"` : `.env` ou `bde.config.yml` inutilisable, mot de passe de la base refusé
+  (`POSTGRES_PASSWORD` changé après coup), base qui ne répond pas, migration qui échoue. Il reste en vie et sert
+  une **page 503 en français ou en anglais** (selon le navigateur, au style de la plateforme) qui nomme le
+  problème et donne les commandes ; `/api/health` répond 503 (le conteneur apparaît « unhealthy »). Une base
+  absente est attendue et la plateforme démarre toute seule dès qu'elle répond. **Aucun secret n'y apparaît**
+  (phrases fixes, noms de variables, code Prisma ; la sortie de Prisma est expurgée des secrets dans les logs).
+  Un vrai plantage de l'application arrête toujours le conteneur.
+- **Un mot de passe PostgreSQL contenant `@`, `/`, `:`, `?` ou `#` cassait l'adresse de la base** (construite sans
+  encodage par `docker-compose.yml`) et Prisma en affichait des morceaux dans les logs. L'adresse est maintenant
+  construite par le conteneur, encodée.
+- **Une clé secrète 42 expirée ou régénérée n'était visible que par « La connexion a échoué. Merci de réessayer. »**
+  La plateforme interroge 42 (jeton de l'application, sans membre) : la page de connexion explique que l'application
+  est refusée et désactive le bouton, la page d'erreur de connexion aussi, et un avertissement est écrit au
+  démarrage. L'erreur « Configuration » d'Auth.js reçoit un texte clair.
 - **L'application bouclait avec « bde.config.yml est introuvable » alors que le fichier existait**, sur les postes où
   Docker tourne sans droits administrateur (rootless) ou dont le dossier personnel est sur un partage réseau. La
   cause : `bde.config.yml` était **monté** dans le conteneur ; ce montage est fait par le démon Docker, qui ne voyait
