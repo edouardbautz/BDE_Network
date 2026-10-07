@@ -123,7 +123,14 @@
       "campusNotAllowed": "Votre campus 42 ({campus}) n'est pas autorisé à accéder à cette plateforme. Contactez un administrateur si vous pensez qu'il s'agit d'une erreur.",
       "AccessDenied": "Votre campus 42 n'est pas autorisé à accéder à cette plateforme. Contactez un administrateur si vous pensez qu'il s'agit d'une erreur.",
       "Default": "La connexion a échoué. Merci de réessayer.",
-      "backToLogin": "Retour à la connexion"
+      "backToLogin": "Retour à la connexion",
+      "oauthRejected": "La plateforme ne peut pas se connecter à 42 : l'identifiant ou la clé secrète de son application ont été refusés. Réessayer ne servira à rien : prévenez la personne qui gère le serveur.",
+      "Configuration": "La connexion a rencontré un problème du côté de la plateforme. Réessayez dans quelques minutes ; si cela continue, prévenez la personne qui gère le serveur."
+    },
+    "oauthRejected": {
+      "title": "Connexion avec 42 momentanément impossible",
+      "description": "42 refuse l'identifiant ou la clé secrète de l'application de ce BDE (clé expirée ou régénérée ?). Réessayer ne servira à rien : prévenez la personne qui gère le serveur.",
+      "operator": "Pour la personne qui gère le serveur : vérifiez la clé sur https://profile.intra.42.fr/oauth/applications, recopiez-la dans FORTYTWO_CLIENT_SECRET (fichier .env), puis lancez docker compose up -d."
     }
   },
   "pending": {

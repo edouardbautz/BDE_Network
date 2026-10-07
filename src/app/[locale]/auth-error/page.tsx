@@ -1,6 +1,7 @@
 import { TriangleAlert } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { getEffectiveSession } from '@/lib/auth/session';
+import { checkFortyTwoCredentials } from '@/lib/auth/oauth-check';
 import { Link, redirect } from '@/i18n/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { pageTitle } from '@/lib/page-title';
@@ -33,13 +34,24 @@ export default async function AuthErrorPage({
 
   const t = await getTranslations('auth.errors');
 
+  // Auth.js reports a refused application (bad secret) as OAuthCallbackError, and anything that went
+  // wrong on the platform's side as Configuration: only 42 itself can tell the first from a visitor who
+  // simply cancelled on the intra.
+  const oauthRejected =
+    (error === 'OAuthCallbackError' || error === 'Configuration') &&
+    (await checkFortyTwoCredentials()) === 'rejected';
+
   const message = isKnownReason(reason)
     ? reason === 'campus-not-allowed'
       ? t('campusNotAllowed', { campus: campus ?? '' })
       : t('missingProfile')
-    : error === 'AccessDenied'
-      ? t('AccessDenied')
-      : t('Default');
+    : oauthRejected
+      ? t('oauthRejected')
+      : error === 'AccessDenied'
+        ? t('AccessDenied')
+        : error === 'Configuration'
+          ? t('Configuration')
+          : t('Default');
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-6">

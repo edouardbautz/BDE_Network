@@ -179,6 +179,7 @@ export async function supervise({
         }
         problem = report ?? { kind: 'env', code: '', retry: false, variables: [] };
         retrying = false;
+        announce('');
         await showPage();
         await stopped;
         return 0;
