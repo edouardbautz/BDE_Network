@@ -9,6 +9,10 @@ export async function register(): Promise<void> {
     const { runStartupChecks } = await import('./lib/startup-checks');
     runStartupChecks();
 
+    // In the background: only says, in the logs, when 42 refuses the application's identifiers.
+    const { warnIfFortyTwoRejectsTheApplication } = await import('./lib/auth/oauth-check');
+    warnIfFortyTwoRejectsTheApplication();
+
     const { startEventReminderScheduler } = await import('./lib/events/scheduler');
     startEventReminderScheduler();
   }

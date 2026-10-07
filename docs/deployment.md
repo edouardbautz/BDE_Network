@@ -40,9 +40,12 @@ docker compose up --build -d
 docker compose ps
 ```
 
-Au démarrage, l'application vérifie `.env` et `bde.config.yml`. Si une valeur obligatoire manque
-ou est invalide, **elle refuse de démarrer** et explique, en français, quoi corriger : le
-conteneur redémarre alors en boucle, et le message se lit avec :
+Au démarrage, l'application vérifie `.env` et `bde.config.yml`, puis la base de données. Si quelque chose
+ne va pas (valeur manquante ou invalide, mot de passe de la base refusé, base qui ne répond pas, mise à jour
+de la base qui échoue), le conteneur **ne tourne pas en boucle** : il reste en vie et affiche, à l'adresse
+du site, une **page qui explique le problème et quoi faire** (en français ou en anglais selon le navigateur,
+sans jamais montrer de secret). `docker compose ps` montre alors `app` en « unhealthy ». Le détail complet
+se lit avec :
 
 ```
 docker compose logs app
@@ -229,12 +232,15 @@ Essayez une restauration **avant d'en avoir besoin**, par exemple sur une machin
 
 ## Dépannage rapide
 
-| Symptôme                                         | Cause probable                                     | Que faire                                                                        |
-| ------------------------------------------------ | -------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Le conteneur `app` redémarre en boucle           | `.env` ou `bde.config.yml` incomplet               | `docker compose logs app` : le message dit quoi corriger                         |
-| Page « Service momentanément indisponible »      | La base de données ne répond pas                   | `docker compose ps` puis `docker compose logs postgres`                          |
-| Personne ne peut valider les comptes             | Le login placeholder est encore dans `auth.owners` | Mettez votre login 42 dans `bde.config.yml`, puis `docker compose up -d --build` |
-| Le site ne répond pas depuis un autre ordinateur | L'application n'écoute que sur le serveur (voulu)  | Passez par le reverse proxy HTTPS (ou lisez « Sans proxy HTTPS »)                |
+| Symptôme                                            | Cause probable                                     | Que faire                                                                        |
+| --------------------------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Le site affiche une page « à corriger » (503)       | `.env`, mot de passe de la base, migration         | La page dit quoi faire ; le détail : `docker compose logs app`                   |
+| `docker compose up` : « env file … not found »      | Le fichier `.env` n'existe pas                     | Lancez l'assistant d'installation, ou copiez `.env.example` en `.env`            |
+| `docker compose up` : « port is already allocated » | Un autre programme utilise le port 3000            | Mettez `APP_PORT=3001` dans `.env` (et l'URL de redirection 42), puis `up -d`    |
+| La connexion 42 est « momentanément impossible »    | 42 refuse l'identifiant ou la clé secrète          | Vérifiez la clé sur l'intra, mettez-la dans `.env`, puis `docker compose up -d`  |
+| Page « Service momentanément indisponible »         | La base de données ne répond pas                   | `docker compose ps` puis `docker compose logs postgres`                          |
+| Personne ne peut valider les comptes                | Le login placeholder est encore dans `auth.owners` | Mettez votre login 42 dans `bde.config.yml`, puis `docker compose up -d --build` |
+| Le site ne répond pas depuis un autre ordinateur    | L'application n'écoute que sur le serveur (voulu)  | Passez par le reverse proxy HTTPS (ou lisez « Sans proxy HTTPS »)                |
 
 Voir aussi [docs/contributing-guide.md](contributing-guide.md) pour les commandes de
 développement, et [docs/configuration.md](configuration.md) pour la référence complète des

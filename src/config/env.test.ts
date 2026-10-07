@@ -42,7 +42,7 @@ const check = (env: Record<string, string | undefined>, config = configWith({}))
 
 describe('required variables', () => {
   it('accepts a complete .env', () => {
-    expect(check(VALID_ENV)).toEqual({ errors: [], warnings: [] });
+    expect(check(VALID_ENV)).toEqual({ errors: [], warnings: [], variables: [] });
   });
 
   it('explains how to generate AUTH_SECRET when it is empty or missing', () => {
@@ -117,6 +117,7 @@ describe('APP_URL', () => {
     expect(check({ ...VALID_ENV, APP_URL: 'https://bde.exemple.fr' })).toEqual({
       errors: [],
       warnings: [],
+      variables: [],
     });
     expect(check({ ...VALID_ENV, APP_URL: 'http://localhost:3000' }).warnings).toEqual([]);
   });
@@ -277,5 +278,50 @@ describe('modules.enabled', () => {
 
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toContain('« finnance », « meetings »');
+  });
+});
+
+describe('the variables an error is about', () => {
+  it('names them, once each, and never gives a value', () => {
+    const { variables, errors } = check({
+      ...VALID_ENV,
+      AUTH_SECRET: 'hunter2',
+      FORTYTWO_CLIENT_ID: '',
+      FORTYTWO_CLIENT_SECRET: '',
+      APP_URL: 'not a url',
+    });
+    expect(variables).toEqual([
+      'AUTH_SECRET',
+      'FORTYTWO_CLIENT_ID',
+      'FORTYTWO_CLIENT_SECRET',
+      'APP_URL',
+    ]);
+    expect(variables.join(' ')).not.toContain('hunter2');
+    expect(errors).toHaveLength(4);
+  });
+
+  it('has one for every error, whatever its cause', () => {
+    const config = configWith({
+      modules: ['events'],
+      notifications: { eventConfirmed: 'email', eventReminder: 'discord' },
+    });
+    const { errors, variables } = check(
+      { ...VALID_ENV, DATABASE_URL: '', SMTP_PORT: 'abc', DISCORD_WEBHOOK_URL: 'http://x' },
+      config,
+    );
+    expect(errors.length).toBeGreaterThan(4);
+    // each error message begins with the variable it speaks of: that is what the list is built from
+    for (const error of errors) {
+      expect(variables).toContain(/^[A-Z][A-Z0-9_]+/.exec(error)?.[0]);
+    }
+    expect(variables).toEqual(
+      expect.arrayContaining([
+        'DATABASE_URL',
+        'SMTP_HOST',
+        'SMTP_PORT',
+        'SMTP_FROM',
+        'DISCORD_WEBHOOK_URL',
+      ]),
+    );
   });
 });

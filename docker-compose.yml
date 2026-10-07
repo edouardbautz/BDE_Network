@@ -25,7 +25,10 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      # Left empty on purpose: it overrides a DATABASE_URL of .env (which is for `npm run dev`), and the container
+      # builds the address itself from POSTGRES_USER, POSTGRES_PASSWORD and POSTGRES_DB, encoding them. Written here, a password
+      # with @ / : ? # cut the address in the wrong place (and Prisma printed bits of it in the logs).
+      DATABASE_URL: ''
     ports:
       # Reachable from this machine only (a reverse proxy in front handles HTTPS).
       # Without a proxy, set APP_BIND=0.0.0.0 in .env: read the warning in docs/deployment.md first.

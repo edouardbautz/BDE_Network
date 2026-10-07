@@ -3,6 +3,8 @@ import { signIn } from '@/lib/auth';
 import { getEffectiveSession } from '@/lib/auth/session';
 import { getConfig } from '@/config';
 import { isDatabaseReachable } from '@/lib/health';
+import { checkFortyTwoCredentials } from '@/lib/auth/oauth-check';
+import { TriangleAlert } from 'lucide-react';
 import { Link, redirect } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +28,10 @@ export default async function LoginPage({ params }: { params: Promise<{ locale: 
     return null;
   }
 
+  // 42 refusing this platform's application (expired or regenerated secret) is the operator's to fix:
+  // say so, instead of sending the visitor to a 42 error page or a "try again" that cannot work.
+  const oauthRejected = (await checkFortyTwoCredentials()) === 'rejected';
+
   const config = getConfig();
   const t = await getTranslations('auth');
   const tNav = await getTranslations('nav');
@@ -40,13 +46,26 @@ export default async function LoginPage({ params }: { params: Promise<{ locale: 
           <CardDescription>{t('loginSubtitle')}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
+          {oauthRejected && (
+            <div
+              role="alert"
+              className="bg-destructive/10 flex flex-col gap-2 rounded-lg p-3 text-left text-sm"
+            >
+              <p className="flex items-center gap-2 font-medium">
+                <TriangleAlert className="text-destructive size-4 shrink-0" aria-hidden="true" />
+                {t('oauthRejected.title')}
+              </p>
+              <p>{t('oauthRejected.description')}</p>
+              <p className="text-muted-foreground text-xs">{t('oauthRejected.operator')}</p>
+            </div>
+          )}
           <form
             action={async () => {
               'use server';
               await signIn('42-school');
             }}
           >
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={oauthRejected}>
               {t('loginButton')}
             </Button>
           </form>
