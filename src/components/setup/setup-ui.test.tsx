@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, configure, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fr from '../../../messages/fr.json';
@@ -9,6 +9,9 @@ import type { DraftView } from '@/lib/setup/draft';
  * The installer's screens, with the real French messages and the server actions played: what a person sees,
  * and what is sent to the server when they click.
  */
+
+// The default wait (1 s) is short for a slow CI runner: these screens run server actions through transitions.
+configure({ asyncUtilTimeout: 5000 });
 
 const mocks = vi.hoisted(() => ({
   refresh: vi.fn(),

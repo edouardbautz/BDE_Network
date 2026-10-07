@@ -109,7 +109,10 @@ jobs:
       # stays up, answers 503 with a page naming the problem (and no secret), and never restarts by itself.
       - name: A broken .env is explained, not looped on
         run: |
+          # bde.config.yml of the image is the unfilled template, which opens the installer: give it a real owner
+          sed 's/votre-login-42/ci-owner/' bde.config.yml > "$RUNNER_TEMP/filled-config.yml"
           docker run -d --name broken-env --network host -e PORT=3001 \
+            -v "$RUNNER_TEMP/filled-config.yml:/app/bde.config.yml:ro" \
             -e DATABASE_URL='postgresql://bde:ci-password@127.0.0.1:5432/bde_network?schema=public' \
             -e FORTYTWO_CLIENT_ID= -e FORTYTWO_CLIENT_SECRET=ci-client-secret \
             bde-network
