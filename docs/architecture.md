@@ -408,6 +408,21 @@ Linux and macOS. It writes `.env` and `bde.config.yml`, and offers to start the 
   If a Prisma bump ever makes `migrate deploy` need a pruned file, the CI `docker` job (build + start
   against Postgres + `/api/health`) fails. `.dockerignore` must keep `.audit`, `.env*` and
   `bde.config.local.yml` out of the image. `HEALTHCHECK` calls `/api/health` (503 when the DB is down).
+- **The configuration is baked into the image, never bind-mounted.** `docker-compose.yml` has no volume for
+  `bde.config.yml`: a file mount is resolved by the Docker **daemon**, on its side, with the rights of the
+  container's user. On a rootless daemon, a remote one, or a home on a network/FUSE share, the file is either
+  not visible (the daemon creates an empty directory) or visible but unreadable by the app's uid 1001 (a
+  `chmod 644` changes nothing), and the app used to report "introuvable" for every one of those. The file now
+  travels in the **build context**, which the docker client sends itself with the user's own rights, through the
+  `builder` stage (`COPY --from=builder`), where `next.config.ts` validates it: an absent, empty, unreadable or
+  invalid file fails the **build** with a message that says what to do. Consequence: editing `bde.config.yml`
+  needs `docker compose up -d --build` (the dependency layers stay cached), and the build output must never
+  depend on the configuration (the only prerendered page, `/_not-found`, holds none: keep it so, or a stale
+  image would serve old values). Reproduced and fixed against a rootless Docker-in-Docker
+  (`docker:dind-rootless`, with the project mounted from a client container so the daemon cannot see it);
+  `src/config/index.ts` (`describeReadFailure`) tells a missing file, a directory in its place, an unreadable
+  file, an empty one and an invalid one apart, with the exact path checked. The commands that read what the
+  container sees are under "Problèmes fréquents" in `docs/installation.md`.
 - **docker-compose.yml** publishes the app on `${APP_BIND:-127.0.0.1}:${APP_PORT:-3000}`: only the reverse proxy
   reaches it unless the operator opts out (`APP_BIND=0.0.0.0`, documented in `docs/deployment.md`). **PostgreSQL
   publishes no port** (only the app, on the compose network, reaches it); `docker-compose.dev.yml` still

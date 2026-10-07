@@ -22,6 +22,21 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 - Le démarrage rapide des README (FR et EN) et `docs/installation.md` deviennent : installer Docker, cloner,
   lancer l'assistant. L'ancienne méthode manuelle reste en annexe.
 
+### Fixed
+
+- **L'application bouclait avec « bde.config.yml est introuvable » alors que le fichier existait**, sur les postes où
+  Docker tourne sans droits administrateur (rootless) ou dont le dossier personnel est sur un partage réseau. La
+  cause : `bde.config.yml` était **monté** dans le conteneur ; ce montage est fait par le démon Docker, qui ne voyait
+  pas le dossier ou dont l'utilisateur du conteneur n'avait pas le droit de lire le fichier (un `chmod 644` n'y
+  changeait rien), et le message répondait « introuvable » dans tous les cas. Le fichier est désormais **copié dans
+  l'image à la construction** (le client Docker l'envoie avec ses propres droits) et plus rien n'est monté :
+  la modification de `bde.config.yml` demande `docker compose up -d --build` au lieu de `restart`.
+- Le message d'erreur distingue maintenant **fichier absent, dossier à la place du fichier, fichier illisible
+  (avec le code d'erreur), fichier vide et fichier invalide**, avec le chemin exact vérifié et la marche à suivre ;
+  une configuration inutilisable fait échouer la **construction** de l'image, au lieu d'un démarrage en boucle.
+- L'assistant d'installation repasse sur le dossier vide qu'un montage raté laisse à la place de `bde.config.yml`.
+- `docs/installation.md` : entrée « Problèmes fréquents » et commande de diagnostic de ce que voit le conteneur.
+
 ### Changed
 
 - La référence d'architecture et de conventions est maintenant **`docs/architecture.md`** (elle était dans un
