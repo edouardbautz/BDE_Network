@@ -294,6 +294,10 @@ describe('the wizard', () => {
 
       expect(await screen.findByText(/42 ne répond pas depuis cet ordinateur/)).toBeInTheDocument();
       expect(screen.getByText(/ENOTFOUND/)).toBeInTheDocument();
+      // the button is disabled while the first answer is still being settled: a slow runner clicks too early
+      await waitFor(() =>
+        expect(screen.getByRole('button', { name: 'Continuer sans vérifier' })).toBeEnabled(),
+      );
       click('Continuer sans vérifier');
       await waitFor(() => expect(mocks.skipFortyTwoVerification).toHaveBeenCalled());
     });
@@ -441,6 +445,9 @@ describe('the wizard', () => {
         { locale: 'fr', to: '' },
       );
 
+      await waitFor(() =>
+        expect(screen.getByRole('button', { name: 'Envoyer un message de test' })).toBeEnabled(),
+      );
       click('Envoyer un message de test');
       expect(await screen.findByText(/L'envoi a échoué \(HTTP 404\)/)).toBeInTheDocument();
     });

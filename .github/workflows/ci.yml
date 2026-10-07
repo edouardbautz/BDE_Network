@@ -185,8 +185,8 @@ jobs:
           path: ${{ runner.temp }}/shots
 
       # The real docker-compose.yml, without any .env: the platform makes its own keys (the `secrets`
-      # volume), the database starts with a generated password, the migrations apply, and the page that
-      # says what is still missing names the two 42 settings, not AUTH_SECRET (which nobody has to write).
+      # volume), the database starts with a generated password, the migrations apply, and, with nothing decided,
+      # it opens the installer: the code is in the logs, the page asks for it, the rest of the site is closed.
       - name: A fresh installation needs no .env
         env:
           APP_PORT: '3100'
@@ -195,13 +195,16 @@ jobs:
           test ! -e .env
           docker compose up -d --build
           for attempt in $(seq 1 45); do
-            code="$(curl -s -o "$RUNNER_TEMP/fresh.html" -w '%{http_code}' http://127.0.0.1:3100/ || true)"
-            [ "$code" = 503 ] && break
+            code="$(curl -s -o "$RUNNER_TEMP/fresh.html" -w '%{http_code}' http://127.0.0.1:3100/fr/setup || true)"
+            [ "$code" = 200 ] && break
             sleep 2
           done
-          [ "$code" = 503 ] || { docker compose logs; exit 1; }
-          grep -q '<code>FORTYTWO_CLIENT_ID</code>' "$RUNNER_TEMP/fresh.html"
-          ! grep -q '<code>AUTH_SECRET</code>' "$RUNNER_TEMP/fresh.html"
+          [ "$code" = 200 ] || { docker compose logs; exit 1; }
+          grep -q "Entrez le code d'installation" "$RUNNER_TEMP/fresh.html"
+          docker compose logs app | grep -q 'Code d.installation / Code : [A-Z0-9]\{4\}-[A-Z0-9]\{4\}'
+          [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/fr)" = 307 ]
+          [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/api/auth/session)" = 503 ]
+          [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/api/health)" = 200 ]
           docker compose exec -T app ls /secrets | sort | tr '\n' ' ' | grep -q 'auth_secret postgres_password settings_key'
           docker compose down -v
 
