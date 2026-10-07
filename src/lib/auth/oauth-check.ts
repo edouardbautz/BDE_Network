@@ -1,3 +1,4 @@
+import { setting } from '@/lib/settings/runtime';
 /**
  * Whether 42 still accepts this platform's OAuth application (`FORTYTWO_CLIENT_ID` / `FORTYTWO_CLIENT_SECRET`).
  *
@@ -36,8 +37,8 @@ export function resetFortyTwoCredentialsCheck(): void {
 }
 
 async function ask(fetchImpl: typeof fetch): Promise<FortyTwoCredentials> {
-  const clientId = process.env.FORTYTWO_CLIENT_ID?.trim();
-  const clientSecret = process.env.FORTYTWO_CLIENT_SECRET?.trim();
+  const clientId = setting('FORTYTWO_CLIENT_ID')?.trim();
+  const clientSecret = setting('FORTYTWO_CLIENT_SECRET')?.trim();
   if (!clientId || !clientSecret) return 'unknown'; // refused at start-up already (env.ts)
 
   try {

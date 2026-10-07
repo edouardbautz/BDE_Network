@@ -56,7 +56,10 @@ COPY --from=migrate --chown=nextjs:nodejs /opt/migrate /opt/migrate
 COPY --chown=nextjs:nodejs docker/prisma.config.mjs /opt/migrate/prisma.config.mjs
 # What starts the container: applies the migrations, then the application, and explains in the browser what
 # the operator can fix instead of letting the restart policy loop (see the top of docker/start.mjs).
-COPY --chown=nextjs:nodejs docker/start.mjs docker/startup-problems.mjs /opt/start/
+COPY --chown=nextjs:nodejs docker/start.mjs docker/startup-problems.mjs docker/master-secrets.mjs /opt/start/
+# Where the `secrets` volume is mounted (docker/master-secrets.mjs). Created here so that the keys can also be
+# written when the image runs without the volume, and so that a new volume starts with the right owner.
+RUN mkdir /secrets && chown nextjs:nodejs /secrets && chmod 700 /secrets
 USER nextjs
 EXPOSE 3000
 

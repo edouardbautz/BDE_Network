@@ -1,6 +1,7 @@
 import { neutralizeForSlack } from '../sanitize';
 import { fitSlackPayload } from '../slack-blocks';
 import type { NotificationAdapter, NotificationMessage } from '../types';
+import { setting } from '@/lib/settings/runtime';
 
 /** What is posted to the webhook for this message: the card (blocks under a colour bar) when the
  * notification has one, the plain subject and body otherwise. The summary for notifications goes in the
@@ -23,7 +24,7 @@ function payloadOf(message: NotificationMessage): Record<string, unknown> {
 
 export class SlackAdapter implements NotificationAdapter {
   async send(message: NotificationMessage): Promise<void> {
-    const webhookUrl = process.env.SLACK_WEBHOOK_URL;
+    const webhookUrl = setting('SLACK_WEBHOOK_URL');
     if (!webhookUrl) {
       throw new Error(
         'SlackAdapter: SLACK_WEBHOOK_URL must be set in .env to send Slack notifications',

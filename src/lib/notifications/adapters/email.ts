@@ -1,10 +1,11 @@
 import { createTransport, type Transporter } from 'nodemailer';
 import type { NotificationAdapter, NotificationMessage, SendOutcome } from '../types';
+import { setting } from '@/lib/settings/runtime';
 
 function smtpSettings() {
-  const host = process.env.SMTP_HOST;
-  const port = process.env.SMTP_PORT;
-  const from = process.env.SMTP_FROM;
+  const host = setting('SMTP_HOST');
+  const port = setting('SMTP_PORT');
+  const from = setting('SMTP_FROM');
 
   if (!host || !port || !from) {
     throw new Error(
@@ -51,8 +52,8 @@ export class EmailAdapter implements NotificationAdapter {
           host: settings.host,
           port: settings.port,
           secure: settings.port === 465,
-          auth: process.env.SMTP_USER
-            ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
+          auth: setting('SMTP_USER')
+            ? { user: setting('SMTP_USER'), pass: setting('SMTP_PASSWORD') }
             : undefined,
           pool: true,
           maxConnections: 1,

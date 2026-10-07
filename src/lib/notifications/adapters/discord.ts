@@ -1,6 +1,7 @@
 import { fitEmbed } from '../discord-embed';
 import { neutralizeEmbedForDiscord, neutralizeForDiscord } from '../sanitize';
 import type { NotificationAdapter, NotificationMessage } from '../types';
+import { setting } from '@/lib/settings/runtime';
 
 /** Discord accepts up to ten cards in a message; the platform sends one. */
 const MAX_EMBEDS = 10;
@@ -32,7 +33,7 @@ function payloadOf(message: NotificationMessage): Record<string, unknown> {
 
 export class DiscordAdapter implements NotificationAdapter {
   async send(message: NotificationMessage): Promise<void> {
-    const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+    const webhookUrl = setting('DISCORD_WEBHOOK_URL');
     if (!webhookUrl) {
       throw new Error(
         'DiscordAdapter: DISCORD_WEBHOOK_URL must be set in .env to send Discord notifications',

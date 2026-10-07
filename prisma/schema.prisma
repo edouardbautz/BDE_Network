@@ -198,3 +198,24 @@ model BdeCalendarFeed {
   token     String?  @unique
   updatedAt DateTime @updatedAt
 }
+
+/// Singleton (id "platform"): the platform's settings once it is installed: what bde.config.yml
+/// and .env used to hold, so that they can be changed from the app without rebuilding or restarting.
+/// A row exists exactly when the platform is installed. The values that are secrets (42 client
+/// secret, SMTP password, webhook addresses) are sealed in `secrets` with AES-256-GCM
+/// (src/lib/settings/crypto.ts); the key lives in the `secrets` Docker volume, never in this database,
+/// so a database dump alone does not give them away.
+model PlatformSettings {
+  id          String   @id @default("platform")
+  /// The configuration of the BDE, validated on every load by src/config/schema.ts.
+  config      Json
+  /// The settings that are not secret and used to be variables of .env (APP_URL, SMTP_HOST...).
+  environment Json     @default("{}")
+  /// The secret settings, sealed ("v1.<iv>.<tag>.<data>", base64url); null when there are none.
+  secrets     String?
+  /// Where the settings come from: "import" (bde.config.yml + .env read at the first start of an
+  /// installation that predates this table), later "installer" and "settings".
+  source      String
+  installedAt DateTime
+  updatedAt   DateTime @updatedAt
+}

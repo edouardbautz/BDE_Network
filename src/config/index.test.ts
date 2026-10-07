@@ -56,6 +56,26 @@ describe('getConfig', () => {
     expect(() => getConfig()).toThrow(/bde\.config\.local\.yml/);
   });
 
+  it('uses the configuration loaded from the database, and not the file, once there is one', async () => {
+    writeFileSync(join(dir, 'bde.config.yml'), yamlFor('Versioned'));
+    const { getConfig } = await import('./index');
+    const { bdeConfigSchema } = await import('./schema');
+    const { load } = await import('js-yaml');
+    const { setRuntimeSettings } = await import('@/lib/settings/runtime');
+
+    expect(getConfig().bde.name).toBe('Versioned');
+    setRuntimeSettings({
+      config: bdeConfigSchema.parse(load(yamlFor('From the database'))),
+      values: {},
+      source: 'database',
+    });
+    try {
+      expect(getConfig().bde.name).toBe('From the database');
+    } finally {
+      setRuntimeSettings(undefined);
+    }
+  });
+
   describe('when the file cannot be loaded', () => {
     const messageOf = async (): Promise<string> => {
       const { getConfig } = await import('./index');

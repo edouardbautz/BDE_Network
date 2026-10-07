@@ -13,6 +13,7 @@ export const EXIT_CONFIG = 78;
 /** Values that must never be printed, in a log or on a page. */
 const SECRET_VARIABLES = [
   'AUTH_SECRET',
+  'SETTINGS_KEY',
   'FORTYTWO_CLIENT_SECRET',
   'POSTGRES_PASSWORD',
   'DATABASE_URL',
@@ -141,19 +142,19 @@ const PROBLEMS = {
     fr: {
       title: 'La base de données refuse la connexion',
       description:
-        "Le nom d'utilisateur, le mot de passe ou le nom de la base écrits dans le fichier .env ne sont pas ceux avec lesquels la base a été créée. Changer `POSTGRES_PASSWORD` après coup ne change pas le mot de passe d'une base qui existe déjà. Vos données sont intactes.",
+        "Le mot de passe (ou le nom d'utilisateur, ou le nom de la base) que la plateforme utilise n'est pas celui avec lequel la base a été créée. C'est le cas quand le volume « secrets » a été supprimé ou remplacé, ou quand `POSTGRES_PASSWORD` a été changé après coup : cela ne change pas le mot de passe d'une base qui existe déjà. Vos données sont intactes.",
       steps: [
-        'Remettez dans `.env` les valeurs de départ de `POSTGRES_USER`, `POSTGRES_PASSWORD` et `POSTGRES_DB`.',
-        'Relancez la plateforme : `docker compose up -d`.',
+        'Si vous avez une sauvegarde du volume « secrets », restaurez-la (`scripts/restore.sh --secrets`).',
+        'Sinon, remettez dans `.env` les valeurs de départ de `POSTGRES_USER`, `POSTGRES_PASSWORD` et `POSTGRES_DB`, puis relancez : `docker compose up -d`.',
       ],
     },
     en: {
       title: 'The database refuses the connection',
       description:
-        'The user name, password or database name in the .env file are not the ones the database was created with. Changing `POSTGRES_PASSWORD` afterwards does not change the password of a database that already exists. Your data is intact.',
+        'The password (or user name, or database name) the platform uses is not the one the database was created with. This happens when the "secrets" volume was deleted or replaced, or when `POSTGRES_PASSWORD` was changed afterwards: that does not change the password of a database that already exists. Your data is intact.',
       steps: [
-        'Put the original values of `POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_DB` back in `.env`.',
-        'Start the platform again: `docker compose up -d`.',
+        'If you have a backup of the "secrets" volume, restore it (`scripts/restore.sh --secrets`).',
+        'Otherwise put the original values of `POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_DB` back in `.env`, then start again: `docker compose up -d`.',
       ],
     },
   },
