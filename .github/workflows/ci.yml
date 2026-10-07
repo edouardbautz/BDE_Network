@@ -114,15 +114,15 @@ jobs:
             -e AUTH_SECRET=short -e FORTYTWO_CLIENT_ID=ci -e FORTYTWO_CLIENT_SECRET=ci-client-secret \
             bde-network
           for attempt in $(seq 1 30); do
-            code="$(curl -s -o page.html -w '%{http_code}' http://127.0.0.1:3001/ || true)"
+            code="$(curl -s -o "$RUNNER_TEMP/page.html" -w '%{http_code}' http://127.0.0.1:3001/ || true)"
             [ "$code" = 503 ] && break
             sleep 2
           done
           [ "$code" = 503 ] || { docker logs broken-env; exit 1; }
-          grep -q '<code>AUTH_SECRET</code>' page.html
+          grep -q '<code>AUTH_SECRET</code>' "$RUNNER_TEMP/page.html"
           curl -s -H 'Accept-Language: en' http://127.0.0.1:3001/ | grep -q 'needs fixing'
           [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3001/api/health)" = 503 ]
-          ! grep -q 'ci-client-secret' page.html
+          ! grep -q 'ci-client-secret' "$RUNNER_TEMP/page.html"
           [ "$(docker inspect -f '{{.State.Running}} {{.RestartCount}}' broken-env)" = "true 0" ]
           docker rm -f broken-env
 
@@ -134,14 +134,14 @@ jobs:
             -e FORTYTWO_CLIENT_ID=ci -e FORTYTWO_CLIENT_SECRET=ci \
             bde-network
           for attempt in $(seq 1 30); do
-            code="$(curl -s -o page.html -w '%{http_code}' http://127.0.0.1:3002/ || true)"
+            code="$(curl -s -o "$RUNNER_TEMP/page.html" -w '%{http_code}' http://127.0.0.1:3002/ || true)"
             [ "$code" = 503 ] && break
             sleep 2
           done
           [ "$code" = 503 ] || { docker logs broken-db; exit 1; }
-          grep -q 'refuse la connexion' page.html
-          grep -q '<code>P1000</code>' page.html
-          ! grep -q 'wrong-password' page.html
+          grep -q 'refuse la connexion' "$RUNNER_TEMP/page.html"
+          grep -q '<code>P1000</code>' "$RUNNER_TEMP/page.html"
+          ! grep -q 'wrong-password' "$RUNNER_TEMP/page.html"
           ! docker logs broken-db 2>&1 | grep -q 'wrong-password'
           [ "$(docker inspect -f '{{.State.Running}} {{.RestartCount}}' broken-db)" = "true 0" ]
           docker rm -f broken-db
