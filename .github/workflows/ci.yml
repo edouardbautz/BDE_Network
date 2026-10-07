@@ -111,7 +111,7 @@ jobs:
         run: |
           docker run -d --name broken-env --network host -e PORT=3001 \
             -e DATABASE_URL='postgresql://bde:ci-password@127.0.0.1:5432/bde_network?schema=public' \
-            -e AUTH_SECRET=short -e FORTYTWO_CLIENT_ID=ci -e FORTYTWO_CLIENT_SECRET=ci-client-secret \
+            -e FORTYTWO_CLIENT_ID= -e FORTYTWO_CLIENT_SECRET=ci-client-secret \
             bde-network
           for attempt in $(seq 1 30); do
             code="$(curl -s -o "$RUNNER_TEMP/page.html" -w '%{http_code}' http://127.0.0.1:3001/ || true)"
@@ -119,7 +119,7 @@ jobs:
             sleep 2
           done
           [ "$code" = 503 ] || { docker logs broken-env; exit 1; }
-          grep -q '<code>AUTH_SECRET</code>' "$RUNNER_TEMP/page.html"
+          grep -q '<code>FORTYTWO_CLIENT_ID</code>' "$RUNNER_TEMP/page.html"
           curl -s -H 'Accept-Language: en' http://127.0.0.1:3001/ | grep -q 'needs fixing'
           [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3001/api/health)" = 503 ]
           ! grep -q 'ci-client-secret' "$RUNNER_TEMP/page.html"
