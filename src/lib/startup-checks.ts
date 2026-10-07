@@ -1,5 +1,32 @@
+import { writeFileSync } from 'node:fs';
 import { ConfigError, getConfig } from '@/config';
 import { formatEnvironmentErrors, validateEnvironment } from '@/config/env';
+
+/** Exit code of a refusal to start because of the configuration (EX_CONFIG in sysexits.h). The container's
+ * command (docker/start.mjs) knows it: it then explains the problem in the browser instead of letting the
+ * restart policy loop. `docker/startup-problems.mjs` holds the same number (a test keeps them equal). */
+export const EXIT_CONFIG = 78;
+
+/**
+ * Prints why, leaves a small report for docker/start.mjs (`BDE_STARTUP_REPORT`: the kind of problem and
+ * the NAMES of the variables, never a value) and ends the process with EXIT_CONFIG.
+ */
+export function refuseToStart(
+  kind: 'env' | 'config',
+  message: string,
+  variables: readonly string[] = [],
+): never {
+  console.error(`\n❌ ${message}\n`);
+  const reportPath = process.env.BDE_STARTUP_REPORT;
+  if (reportPath) {
+    try {
+      writeFileSync(reportPath, JSON.stringify({ kind, variables }));
+    } catch {
+      /* the explanation page then speaks of .env in general: not worth failing for */
+    }
+  }
+  return process.exit(EXIT_CONFIG);
+}
 
 /**
  * Runs once when the server starts (from instrumentation.ts). Refuses to start,
@@ -16,20 +43,18 @@ export function runStartupChecks(): void {
     config = getConfig();
   } catch (error) {
     if (error instanceof ConfigError) {
-      console.error(`\n❌ ${error.message}\n`);
-      process.exit(1);
+      refuseToStart('config', error.message);
     }
     throw error;
   }
 
-  const { errors, warnings } = validateEnvironment(process.env, config);
+  const { errors, warnings, variables } = validateEnvironment(process.env, config);
 
   for (const warning of warnings) {
     console.warn(`\n⚠️  ${warning}\n`);
   }
 
   if (errors.length > 0) {
-    console.error(`\n❌ ${formatEnvironmentErrors(errors)}\n`);
-    process.exit(1);
+    refuseToStart('env', formatEnvironmentErrors(errors), variables);
   }
 }

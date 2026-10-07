@@ -54,6 +54,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma/schema.prisma ./prisma/sch
 COPY --from=builder --chown=nextjs:nodejs /app/prisma/migrations ./prisma/migrations
 COPY --from=migrate --chown=nextjs:nodejs /opt/migrate /opt/migrate
 COPY --chown=nextjs:nodejs docker/prisma.config.mjs /opt/migrate/prisma.config.mjs
+# What starts the container: applies the migrations, then the application, and explains in the browser what
+# the operator can fix instead of letting the restart policy loop (see the top of docker/start.mjs).
+COPY --chown=nextjs:nodejs docker/start.mjs docker/startup-problems.mjs /opt/start/
 USER nextjs
 EXPOSE 3000
 
@@ -61,4 +64,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
   CMD wget -qO- http://127.0.0.1:3000/api/health >/dev/null || exit 1
 
-CMD ["sh", "-c", "node /opt/migrate/node_modules/prisma/build/index.js migrate deploy --config /opt/migrate/prisma.config.mjs && exec node server.js"]
+CMD ["node", "/opt/start/start.mjs"]
