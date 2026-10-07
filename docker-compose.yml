@@ -78,6 +78,7 @@ services:
       SMTP_FROM: ${SMTP_FROM:-}
       DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
       SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
+      BDE_REIMPORT: ${BDE_REIMPORT:-}
     ports:
       # Reachable from this machine only (a reverse proxy in front handles HTTPS).
       # Without a proxy, set APP_BIND=0.0.0.0 in .env: read the warning in docs/deployment.md first.

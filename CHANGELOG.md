@@ -7,6 +7,19 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Added
 
+- **Les réglages de la plateforme vivent dans sa base de données** (`PlatformSettings`), au lieu de deux fichiers
+  lus au démarrage. Au premier démarrage après la mise à jour, `bde.config.yml` et `.env`, s'ils sont complets,
+  sont **copiés dans la base** (aucune action à faire) : les secrets (clé de l'application 42, mot de passe SMTP,
+  webhooks) y sont **chiffrés** (AES-256-GCM) avec une clé qui n'est pas dans la base. À partir de là la base fait
+  foi ; `BDE_REIMPORT=1` remplace les réglages par le contenu des fichiers (déploiements pilotés par fichiers).
+  Première étape vers une installation et des « Paramètres » dans le navigateur.
+- **Volume Docker `secrets`** : la clé des sessions, la clé de chiffrement et le mot de passe de PostgreSQL sont
+  **générés tout seuls** une fois. `docker compose up` **n'a plus besoin de `.env`** (une installation existante
+  garde son `AUTH_SECRET` et son `POSTGRES_PASSWORD`, repris dans le volume). **Il faut le sauvegarder** :
+  `scripts/backup.sh` fait maintenant deux archives (`bde-backup-*` pour la base, `bde-secrets-*` pour les clés, à
+  garder à deux endroits différents) et `scripts/restore.sh --secrets` remet les clés ; sans elles, les secrets d'une
+  base restaurée sur un autre serveur ne sont plus déchiffrables.
+
 - **Assistant d'installation interactif** (`setup/`, `docker-compose.setup.yml`) : un BDE non technique installe
   la plateforme en répondant à quelques questions, sans ouvrir de fichier. **Le seul prérequis est Docker** ; une
   seule commande, identique sous Windows, Linux et macOS (`docker compose -f docker-compose.setup.yml run --rm --build setup`).
@@ -56,6 +69,10 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Changed
 
+- **Le build ne lit plus `bde.config.yml`** : un fichier absent ou cassé n'empêche plus de reconstruire l'image (il
+  ne sert plus que de modèle à l'import du premier démarrage). La configuration d'Auth.js est construite à chaque
+  requête, pour suivre les réglages.
+- La page « La base de données refuse la connexion » parle maintenant du volume `secrets`.
 - La référence d'architecture et de conventions est maintenant **`docs/architecture.md`** (elle était dans un
   fichier à la racine du dépôt) ; tous les liens y mènent.
 

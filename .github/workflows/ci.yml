@@ -146,6 +146,63 @@ jobs:
           [ "$(docker inspect -f '{{.State.Running}} {{.RestartCount}}' broken-db)" = "true 0" ]
           docker rm -f broken-db
 
+      # The real docker-compose.yml, without any .env: the platform makes its own keys (the `secrets`
+      # volume), the database starts with a generated password, the migrations apply, and the page that
+      # says what is still missing names the two 42 settings, not AUTH_SECRET (which nobody has to write).
+      - name: A fresh installation needs no .env
+        env:
+          APP_PORT: '3100'
+          COMPOSE_PROJECT_NAME: ci-fresh
+        run: |
+          test ! -e .env
+          docker compose up -d --build
+          for attempt in $(seq 1 45); do
+            code="$(curl -s -o "$RUNNER_TEMP/fresh.html" -w '%{http_code}' http://127.0.0.1:3100/ || true)"
+            [ "$code" = 503 ] && break
+            sleep 2
+          done
+          [ "$code" = 503 ] || { docker compose logs; exit 1; }
+          grep -q '<code>FORTYTWO_CLIENT_ID</code>' "$RUNNER_TEMP/fresh.html"
+          ! grep -q '<code>AUTH_SECRET</code>' "$RUNNER_TEMP/fresh.html"
+          docker compose exec -T app ls /secrets | sort | tr '\n' ' ' | grep -q 'auth_secret postgres_password settings_key'
+          docker compose down -v
+
+      # An installation that predates the settings table (a .env and a filled bde.config.yml): the first start
+      # copies them into the database with the secrets sealed, and the platform then runs without either file.
+      - name: An existing installation is imported, then runs from its database
+        env:
+          APP_PORT: '3101'
+          COMPOSE_PROJECT_NAME: ci-import
+        run: |
+          sed -i 's/votre-login-42/ci-owner/' bde.config.yml
+          cat > .env <<'EOF'
+          POSTGRES_PASSWORD=ci-legacy-password
+          AUTH_SECRET=ci-legacy-session-secret-0123456789-abcdefghij
+          FORTYTWO_CLIENT_ID=ci-uid
+          FORTYTWO_CLIENT_SECRET=ci-sealed-42-secret
+          EOF
+          wait_healthy() {
+            for attempt in $(seq 1 45); do
+              curl -fsS http://127.0.0.1:3101/api/health >/dev/null && return 0
+              sleep 2
+            done
+            docker compose logs
+            return 1
+          }
+          docker compose up -d --build
+          wait_healthy
+          docker compose logs app | grep -q 'copiés dans la base de données'
+          [ "$(docker compose exec -T postgres psql -U bde -d bde_network -tAc "SELECT secrets LIKE '%ci-sealed-42-secret%' FROM \"PlatformSettings\"")" = f ]
+          # the files no longer matter: remove .env, break bde.config.yml, restart
+          rm .env
+          echo 'owners: [broken]' > bde.config.yml
+          docker compose up -d --force-recreate app
+          wait_healthy
+          docker compose logs app --since 60s | grep -q 'Ready'
+          ! docker compose logs app --since 60s | grep -q 'copiés dans la base de données'
+          docker compose down -v
+          git checkout bde.config.yml
+
       # The setup assistant (setup/): its image builds, and it starts and stops cleanly. With no
       # answer to read it must say so, exit with 1 and write nothing (the real run needs a 42 account).
       - name: Build the setup assistant and check that it starts

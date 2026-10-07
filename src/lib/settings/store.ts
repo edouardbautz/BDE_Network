@@ -141,22 +141,36 @@ async function loadFromRow(
   });
 }
 
-async function importFromFiles(db: SettingsDb, logger: Logger): Promise<InitializeResult> {
+/** What bde.config.yml and .env say, when they are complete; otherwise why they cannot be used. */
+function readFiles(): { config: BdeConfig; values: SettingValues } | { problem: string } | null {
   let config: BdeConfig;
   try {
     config = loadConfigFile().config;
   } catch (error) {
-    if (error instanceof ConfigError) return { source: 'files' }; // reported by the start-up checks
+    if (error instanceof ConfigError) {
+      return { problem: error.message.split('\n')[0] ?? 'bde.config.yml' };
+    }
     throw error;
   }
 
-  const placeholder = config.auth.owners.some(
-    (owner) => owner.trim().toLowerCase() === PLACEHOLDER_OWNER,
-  );
   const values = settingValuesFrom(process.env);
-  if (placeholder || validateEnvironment({ ...process.env, ...values }, config).errors.length > 0) {
-    return { source: 'files' };
+  if (config.auth.owners.some((owner) => owner.trim().toLowerCase() === PLACEHOLDER_OWNER)) {
+    return null; // the template: nothing was decided
   }
+  const { errors } = validateEnvironment({ ...process.env, ...values }, config);
+  if (errors.length > 0) {
+    return {
+      problem: `${errors.length} valeur(s) de .env à corriger (voir « docker compose logs app »)`,
+    };
+  }
+  return { config, values };
+}
+
+async function importFromFiles(db: SettingsDb, logger: Logger): Promise<InitializeResult> {
+  const files = readFiles();
+  // Not complete: the platform runs from the files, as before, and the start-up checks report what is wrong.
+  if (!files || 'problem' in files) return { source: 'files' };
+  const { config, values } = files;
 
   const { environment, secrets } = splitSettings(values);
   try {
@@ -181,7 +195,8 @@ async function importFromFiles(db: SettingsDb, logger: Logger): Promise<Initiali
 
   logger.log(
     '\n📦 Les réglages de bde.config.yml et de .env ont été copiés dans la base de données (les secrets y sont\n' +
-      '   chiffrés). Désormais la base fait foi : modifier ces deux fichiers ne change plus rien.\n',
+      '   chiffrés). Désormais la base fait foi : modifier ces deux fichiers ne change plus rien.\n' +
+      '   (Pour les remplacer par le contenu des fichiers : BDE_REIMPORT=1 dans .env, voir docs/configuration.md.)\n',
   );
   setRuntimeSettings({
     config,
@@ -192,6 +207,40 @@ async function importFromFiles(db: SettingsDb, logger: Logger): Promise<Initiali
 }
 
 /**
+ * BDE_REIMPORT=1: replaces the settings of the database by the content of bde.config.yml and .env. For a
+ * deployment that is driven by files (nobody opens the browser), and for whoever must change a setting by hand.
+ * It does it at EVERY start while it is set, which overwrites what was changed from the app since.
+ */
+async function reimportFromFiles(db: SettingsDb, logger: Logger): Promise<boolean> {
+  const files = readFiles();
+  if (!files || 'problem' in files) {
+    const why = files ? files.problem : 'bde.config.yml est le modèle non rempli';
+    logger.warn(
+      `\n⚠️  BDE_REIMPORT=1 est ignoré : bde.config.yml et .env ne sont pas complets (${why}).\n` +
+        '    Les réglages de la base sont conservés.\n',
+    );
+    return false;
+  }
+
+  const { environment, secrets } = splitSettings(files.values);
+  await db.platformSettings.update({
+    where: { id: PLATFORM_ID },
+    data: {
+      config: JSON.parse(JSON.stringify(files.config)),
+      environment,
+      secrets: Object.keys(secrets).length > 0 ? seal(secrets, settingsKey()) : null,
+      source: 'import',
+    },
+  });
+  logger.warn(
+    '\n🔁 BDE_REIMPORT=1 : les réglages de la base ont été remplacés par bde.config.yml et .env.\n' +
+      '   Retirez cette variable de .env une fois fini : sinon, à chaque démarrage, elle écrase ce qui a été\n' +
+      "   modifié depuis l'application.\n",
+  );
+  return true;
+}
+
+/**
  * Loads the settings of the platform into memory (see runtime.ts). Called once when the server starts, after
  * the migrations. Throws PlatformSettingsError when the stored settings cannot be used.
  */
@@ -199,8 +248,12 @@ export async function initializePlatform(
   db: SettingsDb = prisma,
   logger: Logger = console,
 ): Promise<InitializeResult> {
-  const row = await db.platformSettings.findUnique({ where: { id: PLATFORM_ID } });
+  let row = await db.platformSettings.findUnique({ where: { id: PLATFORM_ID } });
   if (row) {
+    if (process.env.BDE_REIMPORT === '1' && (await reimportFromFiles(db, logger))) {
+      row = await db.platformSettings.findUnique({ where: { id: PLATFORM_ID } });
+      if (!row) throw new PlatformSettingsError('Les réglages ont disparu de la base de données.');
+    }
     await loadFromRow(db, row, logger);
     return { source: 'database' };
   }

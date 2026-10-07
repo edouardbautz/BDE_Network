@@ -272,4 +272,69 @@ describe('the settings store', () => {
       expect(platformSettings.update).not.toHaveBeenCalled(); // nothing to reseal: the row is left as it is
     });
   });
+
+  describe('BDE_REIMPORT=1', () => {
+    const installed = (): Row => ({
+      id: 'platform',
+      config: configWith(['alice']),
+      environment: { APP_URL: 'https://from-database.example' },
+      secrets: seal({ FORTYTWO_CLIENT_SECRET: 'secret-from-database' }, settingsKey()),
+      source: 'installer',
+      installedAt: new Date(),
+    });
+
+    afterEach(() => {
+      delete process.env.BDE_REIMPORT;
+    });
+
+    it('is not looked at unless it is set: the files of an installed platform are not read', async () => {
+      loadConfigFile.mockReturnValue({ config: configWith(['bob']), filename: 'bde.config.yml' });
+      const { db, platformSettings } = fakeDb(installed());
+      await initializePlatform(db, logger());
+      expect(loadConfigFile).not.toHaveBeenCalled();
+      expect(platformSettings.update).not.toHaveBeenCalled();
+      expect(getRuntimeConfig()?.auth.owners).toEqual(['alice']);
+    });
+
+    it('replaces the settings of the database by the files, and says to remove the variable', async () => {
+      process.env.BDE_REIMPORT = '1';
+      loadConfigFile.mockReturnValue({ config: configWith(['bob']), filename: 'bde.config.yml' });
+      const { db, current } = fakeDb(installed());
+      const log = logger();
+
+      await initializePlatform(db, log);
+
+      expect(getRuntimeConfig()?.auth.owners).toEqual(['bob']);
+      expect(setting('FORTYTWO_CLIENT_SECRET')).toBe('the-42-secret-value');
+      expect(setting('APP_URL')).toBe('https://bde.example.fr');
+      expect((current() as Row).source).toBe('import');
+      expect(JSON.stringify(current())).not.toContain('the-42-secret-value');
+      expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('Retirez cette variable'));
+    });
+
+    it('is ignored, and says why, when the files are not complete: the database is kept', async () => {
+      process.env.BDE_REIMPORT = '1';
+      loadConfigFile.mockReturnValue({ config: configWith(['bob']), filename: 'bde.config.yml' });
+      delete process.env.FORTYTWO_CLIENT_SECRET;
+      const { db, platformSettings } = fakeDb(installed());
+      const log = logger();
+
+      await initializePlatform(db, log);
+
+      expect(platformSettings.update).not.toHaveBeenCalled();
+      expect(getRuntimeConfig()?.auth.owners).toEqual(['alice']);
+      expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('BDE_REIMPORT=1 est ignoré'));
+    });
+
+    it('is ignored when bde.config.yml is the unfilled template', async () => {
+      process.env.BDE_REIMPORT = '1';
+      loadConfigFile.mockReturnValue({
+        config: configWith(['votre-login-42']),
+        filename: 'bde.config.yml',
+      });
+      const { db, platformSettings } = fakeDb(installed());
+      await initializePlatform(db, logger());
+      expect(platformSettings.update).not.toHaveBeenCalled();
+    });
+  });
 });
