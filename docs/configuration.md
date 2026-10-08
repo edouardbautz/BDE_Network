@@ -167,6 +167,12 @@ campus, les propriétaires, les modules et les notifications (avec un message de
   personne n'est connecté, ajoutez `FORTYTWO_CLIENT_SECRET=<la nouvelle clé>` et `BDE_REIMPORT=settings` dans `.env`,
   lancez `docker compose up -d`, puis **retirez ces deux lignes** : seules les valeurs de `.env` sont reprises
   (42, adresse, e-mail, webhooks), le reste est laissé tel quel.
+- **L'adresse publique** est celle que 42 connaît (l'URL de redirection est cette adresse suivie de
+  `/api/auth/callback/42-school`) et celle de tous les liens envoyés : elle doit être celle que vos membres tapent.
+  `0.0.0.0` est refusée (ce n'est pas une adresse, c'est celle sur laquelle le serveur écoute) et `127.0.0.1` est
+  écrite `localhost`. La page avertit quand l'adresse enregistrée n'est pas celle du navigateur. Si elle est fausse
+  et que plus personne ne peut se connecter : `APP_URL=<adresse>` avec `BDE_REIMPORT=settings` dans `.env`, de la même
+  façon ([pas à pas](installation.md#problèmes-fréquents)).
 - **Pensez à sauvegarder le volume `secrets`** : la page vous le rappelle en haut. Sans lui, après une restauration,
   les secrets enregistrés ne peuvent plus être lus.
 
