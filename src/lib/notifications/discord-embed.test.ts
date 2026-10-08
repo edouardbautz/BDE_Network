@@ -1,10 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { discordTime, fitEmbed, type DiscordEmbed } from './discord-embed';
+import {
+  BLANK_LINE,
+  discordTime,
+  fitEmbed,
+  headingLine,
+  kindLine,
+  oneLine,
+  quoteBlock,
+  type DiscordEmbed,
+} from './discord-embed';
 
 const total = (embed: DiscordEmbed) =>
   Array.from(
     [
       embed.title,
+      embed.author?.name,
       embed.description,
       embed.footer?.text,
       ...(embed.fields ?? []).flatMap((field) => [field.name, field.value]),
@@ -41,6 +51,7 @@ describe('fitEmbed', () => {
 
   it('cuts every text to its own limit', () => {
     const fitted = fitEmbed({
+      author: { name: 'A'.repeat(500) },
       title: 'T'.repeat(500),
       description: 'D'.repeat(5000),
       footer: { text: 'F'.repeat(3000) },
@@ -48,10 +59,27 @@ describe('fitEmbed', () => {
     });
 
     expect(Array.from(fitted.title ?? '')).toHaveLength(256);
+    expect(Array.from(fitted.author?.name ?? '')).toHaveLength(256);
     expect(fitted.footer?.text.length).toBe(2048);
     expect(Array.from(fitted.fields?.[0]?.name ?? '')).toHaveLength(256);
     expect(Array.from(fitted.fields?.[0]?.value ?? '')).toHaveLength(1024);
     expect(fitted.title?.endsWith('…')).toBe(true);
+  });
+
+  it('counts the name of the author in the 6000 characters', () => {
+    const fitted = fitEmbed({
+      author: { name: 'A'.repeat(256) },
+      title: 'T'.repeat(256),
+      description: 'D'.repeat(4096),
+      // 5902 characters without the author, 6158 with it.
+      fields: [
+        { name: 'N', value: 'V'.repeat(1024) },
+        { name: 'N', value: 'V'.repeat(524) },
+      ],
+    });
+
+    expect(total(fitted)).toBeLessThanOrEqual(6000);
+    expect(fitted.author?.name).toHaveLength(256); // the description gives way, not the author
   });
 
   it('keeps the whole under 6000 characters, giving up the description first', () => {
@@ -107,5 +135,37 @@ describe('fitEmbed', () => {
     const embed: DiscordEmbed = { title: 'T'.repeat(300), fields: [{ name: 'a', value: 'b' }] };
     fitEmbed(embed);
     expect(embed.title).toHaveLength(300);
+  });
+});
+
+describe('the building blocks of a card', () => {
+  it('has a blank line that Discord does not collapse: a zero-width space, not nothing', () => {
+    expect(BLANK_LINE).toBe(String.fromCharCode(0x200b));
+    expect(BLANK_LINE.trim()).not.toBe('');
+  });
+
+  it('keeps a blank line field alive through fitEmbed, which drops a field with nothing in it', () => {
+    const fitted = fitEmbed({ fields: [{ name: BLANK_LINE, value: BLANK_LINE }] });
+
+    expect(fitted.fields).toHaveLength(1);
+  });
+
+  it('puts text on one line, cut at its limit', () => {
+    expect(oneLine('  Salle  B\n\r\n### piège\t! ')).toBe('Salle B ### piège !');
+    expect(Array.from(oneLine('x'.repeat(500)))).toHaveLength(200);
+    expect(Array.from(oneLine('x'.repeat(500), 20))).toHaveLength(20);
+  });
+
+  it('writes the kind in small capitals, whatever the language', () => {
+    expect(kindLine('Nouvel événement confirmé')).toBe('-# NOUVEL ÉVÉNEMENT CONFIRMÉ');
+    expect(kindLine('Rappel · demain')).toBe('-# RAPPEL · DEMAIN');
+  });
+
+  it('writes an essential fact as a large heading, with its icon, on one line', () => {
+    expect(headingLine('📍', 'Foyer\ndu campus')).toBe('### 📍  Foyer du campus');
+  });
+
+  it('quotes every line, a blank one included', () => {
+    expect(quoteBlock('Un\r\n\n  Deux  \n')).toBe(`> Un\n> ${BLANK_LINE}\n> Deux`);
   });
 });

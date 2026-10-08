@@ -169,13 +169,12 @@ describe('notifyEventConfirmed', () => {
     const [, posted] = vi.mocked(notify).mock.calls[0] ?? [];
     const [embed] = posted?.discord?.embeds ?? [];
     expect(posted?.discord?.username).toBe('BDE Test');
-    expect(embed?.title).toBe('Tournoi');
+    expect(embed?.title).toBe('🎉  Tournoi');
     expect(embed?.color).toBe(0x16a34a); // the colour of "sport" in the config
     expect(embed?.description).toContain('Venez nombreux.');
-    expect(embed?.description).toContain('embed.kind.confirmed'); // not a reminder's heading
-    expect(embed?.fields?.map((field) => field.value)).toEqual(
-      expect.arrayContaining(['Gymnase', 'Sport', 'Alice A']),
-    );
+    expect(embed?.description).toContain('EMBED.KIND.CONFIRMED'); // not a reminder's heading
+    expect(embed?.description).toContain('### 📍  Gymnase'); // the place is an essential: a heading
+    expect(embed?.fields?.map((field) => field.value)).toEqual(['Sport', 'Alice A']);
   });
 
   it('decides on the channel of eventConfirmed, not of the reminder', async () => {

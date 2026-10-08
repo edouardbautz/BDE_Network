@@ -118,6 +118,13 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Changed
 
+- **Cartes Discord plus aérées et plus lisibles**, les mêmes pour tous les types (confirmation, rappels, demande
+  d'accès, membre approuvé ou retiré) : l'essentiel en grands titres avec une icône devant chacun (📅 quand, 📍 où, la
+  description en citation ; 🪪 login et 🏫 campus pour un membre), des lignes vides entre les blocs, le secondaire en
+  petits champs côte à côte (🏷️ catégorie, 👥 en charge, 🔁 répétition, 🎭 rôle, 🤝 / 🚪 qui a agi), une icône par type
+  dans le titre, le nom et le logo du BDE au-dessus du titre et le logo en vignette des événements (la photo 42
+  pour un membre). Une demande d'accès se termine par un lien « Approuver ou refuser ». Mentions neutralisées,
+  limites de taille, dates Discord et repli sans logo public : inchangés.
 - **Le build ne lit plus `bde.config.yml`** : un fichier absent ou cassé n'empêche plus de reconstruire l'image (il
   ne sert plus que de modèle à l'import du premier démarrage). La configuration d'Auth.js est construite à chaque
   requête, pour suivre les réglages.

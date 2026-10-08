@@ -10,7 +10,7 @@ vi.mock('./sender', () => ({
 
 const { getConfig } = await import('@/config');
 const { discordSender } = await import('./sender');
-const { withDiscordCard } = await import('./discord-card');
+const { signCard, withDiscordCard } = await import('./discord-card');
 
 type Channel = 'email' | 'discord' | 'slack' | 'none';
 
@@ -22,6 +22,11 @@ function useChannel(channel: Channel) {
 
 const message = { subject: 'Sujet', body: 'Corps' };
 const embed = { title: 'Soirée' };
+const signedEmbed = {
+  title: 'Soirée',
+  author: { name: 'BDE Nice', icon_url: 'https://bde.example.fr/logo.png' },
+  thumbnail: { url: 'https://bde.example.fr/logo.png' },
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -35,7 +40,7 @@ describe('withDiscordCard', () => {
       subject: 'Sujet',
       body: 'Corps',
       discord: {
-        embeds: [embed],
+        embeds: [signedEmbed],
         username: 'BDE Nice',
         avatarUrl: 'https://bde.example.fr/logo.png',
       },
@@ -61,5 +66,34 @@ describe('withDiscordCard', () => {
 
     expect((await withDiscordCard('eventReminder', message, () => embed)).discord).toBeDefined();
     expect((await withDiscordCard('eventConfirmed', message, () => embed)).discord).toBeUndefined();
+  });
+});
+
+describe('signCard', () => {
+  const sender = { username: 'BDE Nice', avatarUrl: 'https://bde.example.fr/logo.png' };
+
+  it('puts the name and the logo of the BDE above the title, and the logo as the thumbnail', () => {
+    expect(signCard({ title: 'Soirée' }, sender)).toEqual({
+      title: 'Soirée',
+      author: { name: 'BDE Nice', icon_url: 'https://bde.example.fr/logo.png' },
+      thumbnail: { url: 'https://bde.example.fr/logo.png' },
+    });
+  });
+
+  it('keeps the picture a card already has (the 42 photo of a member)', () => {
+    const photo = { url: 'https://cdn.intra.42.fr/u.jpg' };
+
+    expect(signCard({ title: 'Jean', thumbnail: photo }, sender).thumbnail).toEqual(photo);
+  });
+
+  it('shows no logo, nowhere, when Discord cannot fetch it: the name alone, never a broken picture', () => {
+    const signed = signCard({ title: 'Soirée' }, { username: 'BDE Nice' });
+
+    expect(signed.author).toEqual({ name: 'BDE Nice' });
+    expect(signed).not.toHaveProperty('thumbnail');
+  });
+
+  it('adds nothing when the sender has no name either', () => {
+    expect(signCard({ title: 'Soirée' }, {})).toEqual({ title: 'Soirée' });
   });
 });

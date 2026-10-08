@@ -461,7 +461,16 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
 - **Discord cards** (`docs/notifications.md`). On the `discord` channel a notification is an _embed_, built
   next to what it says (`events/discord-embed.ts`, `members/discord-embed.ts`) on the Discord-specific parts
   in `notifications/discord-embed.ts` (colours, `<t:…>` date markup, `fitEmbed` = every limit of Discord:
-  256/4096/1024/25 fields/6000 in total, cut with “…”). `withDiscordCard` (`discord-card.ts`) adds the card to
+  256/4096/1024/25 fields/6000 in total, cut with “…”). **One layout for every card**: the essentials are large
+  headings in the description (`-# KIND` in capitals, `### 📅 when`, `### 📍 where`, the text as a `>` quote, a
+  zero-width-space line between blocks: a truly empty line is collapsed, and `fitEmbed` keeps a field made of it),
+  the secondary facts are small inline fields with an icon, and the title carries the icon of the kind. The helpers
+  are `kindLine` / `headingLine` / `quoteBlock` / `oneLine` / `BLANK_LINE` (`notifications/discord-embed.ts`):
+  **anything a member typed that lands in a heading goes through `oneLine`** (a place or a login must not open a
+  second heading), a quote keeps every line (a blank one as `> ​`). `withDiscordCard` signs the card (`signCard`: the
+  BDE's name and logo as `author`, its logo as the thumbnail of a card without a picture of its own — an event; a member
+  keeps their 42 photo — and neither logo when Discord cannot fetch it); a new card follows this layout and leaves the
+  signature to it. `withDiscordCard` (`discord-card.ts`) adds the card to
   a message **only when the event's channel is Discord** — email and Slack never build one and keep their
   plain `subject`/`body`, which Discord also falls back to. The adapter neutralizes **every text of the card**
   (`neutralizeEmbedForDiscord`) and always sends `allowed_mentions: { parse: [] }`. The sender (`sender.ts`)

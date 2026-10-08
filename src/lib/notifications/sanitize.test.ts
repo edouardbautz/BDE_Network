@@ -70,6 +70,7 @@ describe('neutralizeEmbedForDiscord', () => {
 
   it('defuses every text a member could have written in a card', () => {
     const out = neutralizeEmbedForDiscord({
+      author: { name: hostile, icon_url: 'https://bde.example.fr/logo.png' },
       title: hostile,
       description: hostile,
       footer: { text: hostile },
@@ -77,6 +78,7 @@ describe('neutralizeEmbedForDiscord', () => {
     });
 
     const texts = [
+      out.author?.name,
       out.title,
       out.description,
       out.footer?.text,
@@ -90,6 +92,7 @@ describe('neutralizeEmbedForDiscord', () => {
       expect(text).not.toContain('<!');
     }
     expect(out.fields?.[0]?.inline).toBe(true);
+    expect(out.author?.icon_url).toBe('https://bde.example.fr/logo.png');
   });
 
   it('keeps the link, the colour, the thumbnail, the timestamp and the column layout', () => {
