@@ -151,8 +151,9 @@ jobs:
 
       # The installer, in a real browser, against the real image: puppeteer-core drives the Chrome of the runner
       # and e2e/mock-fortytwo.mjs stands in for the 42 API. It has its own database, so the other steps see
-      # nothing of it. Nothing secret may be in a log or in clear in the database afterwards.
-      - name: The installer, end to end in a browser
+      # nothing of it. Nothing secret may be in a log or in clear in the database afterwards (the settings page
+      # is then tried on the same platform).
+      - name: The installer and the settings page, end to end in a browser
         run: |
           PGPASSWORD=ci-password psql -h 127.0.0.1 -U bde -d postgres -c 'CREATE DATABASE bde_install'
           mkdir "$RUNNER_TEMP/e2e-deps"
@@ -171,13 +172,20 @@ jobs:
           done
           [ -n "$code" ] || { docker logs installer; exit 1; }
           SHOTS="$RUNNER_TEMP/shots" node e2e/install.mjs http://127.0.0.1:3003 "$code"
+          # The settings page, on the platform the installer has just made: its owner ("alice") and a plain member
+          # get an account, and the test forges their sessions with the platform's own secret (nobody can sign in
+          # through 42 here). A member must be sent away; the owner changes the settings, which apply at once.
+          PGPASSWORD=ci-password psql -h 127.0.0.1 -U bde -d bde_install -v ON_ERROR_STOP=1 \
+            -c "INSERT INTO \"User\" (id, login, \"fullName\", email, campus, status, \"updatedAt\") VALUES ('e2e-alice', 'alice', 'Alice', 'alice@example.org', 'Nice', 'OWNER', now()) ON CONFLICT (login) DO UPDATE SET status = 'OWNER', \"roleId\" = NULL" \
+            -c "INSERT INTO \"User\" (id, login, \"fullName\", email, campus, status, \"roleId\", \"updatedAt\") SELECT 'e2e-carol', 'carol', 'Carol', 'carol@example.org', 'Nice', 'MEMBER', id, now() FROM \"Role\" WHERE \"isDefault\""
+          AUTH_SECRET="$(docker exec installer cat /secrets/auth_secret)" SHOTS="$RUNNER_TEMP/shots/settings" node e2e/settings.mjs http://127.0.0.1:3003
           ! docker logs installer 2>&1 | grep -q 's-s4t2ud-e2e-test-secret'
           [ "$(PGPASSWORD=ci-password psql -h 127.0.0.1 -U bde -d bde_install -tAc 'SELECT secrets LIKE $$%e2e-test-secret%$$ FROM "PlatformSettings"')" = f ]
           [ "$(docker inspect -f '{{.State.Running}} {{.RestartCount}}' installer)" = "true 0" ]
           docker rm -f installer
           rm e2e/node_modules
 
-      - name: Screenshots of the installer
+      - name: Screenshots of the installer and the settings page
         if: failure()
         uses: actions/upload-artifact@v4
         with:
