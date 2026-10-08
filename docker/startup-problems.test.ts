@@ -10,7 +10,37 @@ import {
   problemTitle,
   redact,
   renderProblemPage,
+  terminalLine,
 } from './startup-problems.mjs';
+
+describe('terminalLine', () => {
+  it('leaves out the Network line: 0.0.0.0 is where the server listens, nobody can open it', () => {
+    expect(terminalLine('   - Network:      http://0.0.0.0:3000', 3000)).toBeNull();
+  });
+
+  it('shows the address of the browser, with the port of this computer, on the Local line', () => {
+    expect(terminalLine('   - Local:        http://localhost:3000', 3000)).toBe(
+      '   - Local:        http://localhost:3000',
+    );
+    expect(terminalLine('   - Local:        http://localhost:3000', 3001)).toBe(
+      '   - Local:        http://localhost:3001',
+    );
+    expect(terminalLine('   - Local:        http://0.0.0.0:3000', 3001)).toBe(
+      '   - Local:        http://localhost:3001',
+    );
+  });
+
+  it('does not touch any other line', () => {
+    for (const line of [
+      '   ▲ Next.js 15.5.27',
+      ' ✓ Ready in 111ms',
+      '',
+      'visit http://0.0.0.0:3000 now',
+    ]) {
+      expect(terminalLine(line, 3000)).toBe(line);
+    }
+  });
+});
 
 describe('classifyMigrationFailure', () => {
   const cases: Array<[string, string, string, boolean]> = [

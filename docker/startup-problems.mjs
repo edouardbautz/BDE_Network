@@ -85,6 +85,23 @@ export function parseReport(text) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// The terminal
+
+const NETWORK_LINE = /^\s*-\s*Network:\s+https?:\/\/0\.0\.0\.0/;
+const LOCAL_LINE = /^(\s*-\s*Local:\s+)https?:\/\/\S+\s*$/;
+
+/**
+ * A line of the application's own start-up banner, as the terminal should show it. Next.js prints the address
+ * the server LISTENS on (`Network: http://0.0.0.0:3000`, which nobody can open) and the port inside the
+ * container; the person at the keyboard needs the address of their browser: `http://localhost:<host port>`.
+ * Returns null for a line to leave out.
+ */
+export function terminalLine(line, hostPort) {
+  if (NETWORK_LINE.test(line)) return null;
+  return line.replace(LOCAL_LINE, `$1http://localhost:${hostPort}`);
+}
+
+// ---------------------------------------------------------------------------------------------
 // The page
 
 /** How long a page that waits for the database waits before it asks again. */
