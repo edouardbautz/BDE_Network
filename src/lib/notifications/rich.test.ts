@@ -35,7 +35,7 @@ describe('withRichMessage', () => {
     const b = builders();
     const out = await withRichMessage('eventConfirmed', message, b);
 
-    expect(out.discord?.embeds).toEqual([{ title: 'carte' }]);
+    expect(out.discord?.embeds).toEqual([{ title: 'carte', author: { name: 'BDE Nice' } }]);
     expect(out).not.toHaveProperty('email');
     expect(out).not.toHaveProperty('slack');
     expect(b.email).not.toHaveBeenCalled();

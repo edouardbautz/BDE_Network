@@ -28,6 +28,7 @@ export function neutralizeEmbedForDiscord(embed: DiscordEmbed): DiscordEmbed {
   const safe = neutralizeForDiscord;
   return {
     ...embed,
+    ...(embed.author && { author: { ...embed.author, name: safe(embed.author.name) } }),
     ...(embed.title !== undefined && { title: safe(embed.title) }),
     ...(embed.description !== undefined && { description: safe(embed.description) }),
     ...(embed.footer && { footer: { text: safe(embed.footer.text) } }),

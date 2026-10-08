@@ -17,26 +17,39 @@ Discord et Slack ont leurs cartes, l'e-mail sa propre mise en page : voir [Le re
 
 ## Le rendu sur Discord
 
-Sur Discord, chaque notification est une **carte** (un _embed_) :
+Sur Discord, chaque notification est une **carte** (un _embed_), construite de la même façon pour les
+événements, les rappels et les membres : **l'essentiel en grands titres, le secondaire en petits champs**.
 
 ![Une carte d'événement dans un salon Discord](images/discord-card.webp)
 
-_Illustration dessinée à partir de la vraie carte envoyée par la plateforme ; Discord l'affiche avec
+![Une demande d'accès dans un salon Discord](images/discord-card-member.webp)
+
+_Illustrations dessinées à partir des vraies cartes envoyées par la plateforme ; Discord les affiche avec
 sa propre police et selon le thème de chaque lecteur._
 
+- **L'essentiel, en titres, avec une icône devant chacun et une ligne vide entre eux** : le type de
+  carte en petites capitales (« NOUVEL ÉVÉNEMENT CONFIRMÉ »), puis 📅 _quand_ (la date, l'heure de début
+  et de fin, le compte à rebours), 📍 _où_, et la description de l'événement en citation. Pour un membre :
+  🪪 le login 42, 🏫 le campus, et ce qui s'est passé en citation.
+- **Le secondaire, en champs côte à côte** : 🏷️ _Catégorie_ et 👥 _Membres en charge_ (une série
+  récurrente ajoute une ligne 🔁 _Répétition_) ; pour un membre approuvé ou retiré, 🎭 _Rôle_ et
+  **qui** a fait l'action (🤝 « Approuvé par … », 🚪 « Retiré par … »).
+- **Une icône dans le titre** selon le type : 🎉 événement confirmé, ⏰ rappel de demain, 🔔 rappel du
+  jour, 🙋 demande d'accès, ✅ membre approuvé, 👋 membre retiré.
 - **Barre de couleur** : la couleur de la catégorie pour un événement ; ambre, vert ou rouge pour une
   demande, une approbation, un retrait. Ces trois teintes restent lisibles sur le thème clair comme
   sur le thème sombre de Discord.
 - **Titre cliquable** vers la page concernée (l'événement, ou la page _Membres_), **sans** carte
-  d'aperçu en double. Sans `APP_URL`, le titre n'est simplement pas un lien.
-- **Champs en colonnes** : _Quand_ sur toute la largeur, puis _Lieu_, _Catégorie_ et _Membres en
-  charge_ côte à côte. Une série récurrente ajoute une ligne _Répétition_.
+  d'aperçu en double. Sans adresse publique, le titre n'est simplement pas un lien.
+- **Une demande d'accès se termine par un lien « 👉 Approuver ou refuser »** vers la page _Membres_
+  (seulement quand l'adresse de la plateforme est connue).
 - **Dates au format Discord** : chaque lecteur les voit **dans son propre fuseau horaire et sa
   propre langue**, avec un compte à rebours (« dans 3 jours ») qui se met à jour tout seul, sans que
   le message soit modifié.
-- **Expéditeur** : le message arrive au nom du BDE (`bde.name`) avec son logo en avatar.
-- **Membres** : la photo 42 de la personne en vignette, son rôle, et **qui** a fait l'action
-  (« Approuvé par … », « Retiré par … »).
+- **Signature du BDE** : le message arrive au nom du BDE (`bde.name`) avec son logo en avatar, et la
+  carte porte son nom et son logo au-dessus du titre. Le logo sert aussi de **vignette** aux
+  événements ; pour un membre, c'est sa **photo 42** (le logo à défaut). Si le logo n'est pas public
+  (voir plus bas), il n'y a ni icône ni vignette : le nom seul, jamais une image cassée.
 - **Pied de carte** discret : `BDE_Network`.
 - **Rappel** : « Rappel · demain » en temps normal ; « Rappel · aujourd'hui » quand le rappel part le
   jour même de l'événement (serveur éteint à l'heure habituelle, voir
@@ -48,9 +61,9 @@ long pour Discord est coupé plutôt que de faire refuser le message.
 
 ### Sécurité des textes
 
-Un titre, un lieu ou un nom viennent de membres : `@everyone`, `@here`, `<@123…>` ou `<!channel>` y
+Un titre, un lieu ou un nom viennent de membres (un lieu ou un login tient sur **une seule ligne** : il ne peut pas ouvrir un faux titre) : `@everyone`, `@here`, `<@123…>` ou `<!channel>` y
 sont rendus **inoffensifs** (ils s'affichent comme du texte, personne n'est notifié), dans la carte
-comme dans le nom de l'expéditeur, et chaque envoi interdit toute mention (`allowed_mentions`).
+(y compris la ligne du BDE) comme dans le nom de l'expéditeur, et chaque envoi interdit toute mention (`allowed_mentions`).
 
 ## Le logo de l'expéditeur
 

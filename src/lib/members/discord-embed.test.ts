@@ -12,6 +12,8 @@ const t: Translate = (key, values) =>
     : key;
 
 const NOW = new Date('2026-10-06T12:00:00Z');
+const BLANK = '​';
+const URL = 'https://bde.example.fr/fr/members';
 
 const member: MemberFacts = {
   login: 'cmartin',
@@ -22,7 +24,13 @@ const member: MemberFacts = {
   actorName: 'Paula Martin',
 };
 
-const names = (fields: { name: string }[] | undefined) => fields?.map((field) => field.name);
+const build = (
+  kind: 'pending' | 'approved' | 'removed',
+  facts: Partial<MemberFacts> = {},
+  url: string | null = null,
+) => buildMemberEmbed(kind, { ...member, ...facts }, t, url, NOW);
+const lines = (embed: ReturnType<typeof build>) => (embed.description ?? '').split('\n');
+const names = (embed: ReturnType<typeof build>) => embed.fields?.map((field) => field.name);
 
 describe('buildMemberEmbed', () => {
   it.each([
@@ -30,92 +38,118 @@ describe('buildMemberEmbed', () => {
     ['approved', 0x10b981],
     ['removed', 0xef4444],
   ] as const)('gives the %s card its own colour', (kind, color) => {
-    expect(buildMemberEmbed(kind, member, t, null, NOW).color).toBe(color);
+    expect(build(kind).color).toBe(color);
   });
 
-  it('names the person in the title and says what happened above it, in bold', () => {
-    const embed = buildMemberEmbed('approved', member, t, null, NOW);
+  it.each([
+    ['pending', '🙋'],
+    ['approved', '✅'],
+    ['removed', '👋'],
+  ] as const)('names the person in the title, with the icon of a %s card', (kind, icon) => {
+    expect(build(kind).title).toBe(`${icon}  Camille Martin`);
+  });
 
-    expect(embed.title).toBe('Camille Martin');
-    expect(embed.description).toBe(
-      '**embed.kind.approved**\nembed.description.approved(name=Camille Martin)',
-    );
+  describe('the description: the essentials as headings', () => {
+    it('is the kind in small capitals, the 42 login and campus, then what happened as a quote', () => {
+      expect(lines(build('approved'))).toEqual([
+        '-# EMBED.KIND.APPROVED',
+        BLANK,
+        '### 🪪  cmartin',
+        '🏫  Nice',
+        BLANK,
+        '> embed.description.approved(name=Camille Martin)',
+        BLANK, // before the fields
+      ]);
+    });
+
+    it('leaves out the campus when it is not known, and nothing follows the quote without fields', () => {
+      expect(lines(build('pending', { campus: undefined }))).toEqual([
+        '-# EMBED.KIND.PENDING',
+        BLANK,
+        '### 🪪  cmartin',
+        BLANK,
+        '> embed.description.pending(name=Camille Martin)',
+      ]);
+    });
+
+    it('keeps the login and the campus on one line each: nothing typed can open another heading', () => {
+      const embed = build('pending', { login: 'a\n### 💥', campus: 'Nice\n# x' });
+
+      expect(lines(embed).filter((line) => line.startsWith('#'))).toHaveLength(1);
+    });
+
+    it('ends a request with the link to decide it, once the address of the platform is known', () => {
+      expect(lines(build('pending', {}, URL)).slice(-2)).toEqual([
+        BLANK,
+        `👉  [embed.action.pending](${URL})`,
+      ]);
+      expect(build('pending').description).not.toContain('👉');
+    });
+
+    it('offers no link on an approval or a removal: nothing is left to decide', () => {
+      expect(build('approved', {}, URL).description).not.toContain('👉');
+      expect(build('removed', {}, URL).description).not.toContain('👉');
+    });
+
+    it('does not let a parenthesis of the address end the link early', () => {
+      const embed = build('pending', {}, 'https://bde.example.fr/a)b');
+
+      expect(embed.description).toContain('(https://bde.example.fr/a%29b)');
+    });
   });
 
   it('shows the 42 photo as a thumbnail, and none when there is no photo or it is not an http address', () => {
-    expect(buildMemberEmbed('pending', member, t, null, NOW).thumbnail).toEqual({
+    expect(build('pending').thumbnail).toEqual({
       url: 'https://cdn.intra.42.fr/users/cmartin.jpg',
     });
-    expect(
-      buildMemberEmbed('pending', { ...member, photoUrl: null }, t, null, NOW),
-    ).not.toHaveProperty('thumbnail');
-    expect(
-      buildMemberEmbed('pending', { ...member, photoUrl: 'javascript:alert(1)' }, t, null, NOW),
-    ).not.toHaveProperty('thumbnail');
+    expect(build('pending', { photoUrl: null })).not.toHaveProperty('thumbnail');
+    expect(build('pending', { photoUrl: 'javascript:alert(1)' })).not.toHaveProperty('thumbnail');
   });
 
   it('links the title to the members page when its address is known, and nowhere otherwise', () => {
-    expect(
-      buildMemberEmbed('pending', member, t, 'https://bde.example.fr/fr/members', NOW).url,
-    ).toBe('https://bde.example.fr/fr/members');
-    expect(buildMemberEmbed('pending', member, t, null, NOW).url).toBeUndefined();
-    expect(buildMemberEmbed('pending', member, t, 'javascript:alert(1)', NOW).url).toBeUndefined();
+    expect(build('pending', {}, URL).url).toBe(URL);
+    expect(build('pending').url).toBeUndefined();
+    expect(build('pending', {}, 'javascript:alert(1)').url).toBeUndefined();
   });
 
-  it('shows login and campus, as columns, for a request: no role yet, nobody to credit', () => {
-    const { fields } = buildMemberEmbed('pending', member, t, null, NOW);
+  describe('the fields: the secondary facts', () => {
+    it('has none for a request: no role yet, nobody to credit', () => {
+      expect(build('pending')).not.toHaveProperty('fields');
+    });
 
-    expect(names(fields)).toEqual(['embed.fields.login', 'embed.fields.campus']);
-    expect(fields?.every((field) => field.inline)).toBe(true);
-  });
+    it('adds the role and who approved on an approval, side by side', () => {
+      const { fields } = build('approved');
 
-  it('adds the role and who approved on an approval', () => {
-    const { fields } = buildMemberEmbed('approved', member, t, null, NOW);
+      expect(fields?.map((field) => field.name)).toEqual([
+        '🎭  embed.fields.role',
+        '🤝  embed.fields.approvedBy',
+      ]);
+      expect(fields?.map((field) => field.value)).toEqual(['Trésorier', 'Paula Martin']);
+      expect(fields?.every((field) => field.inline)).toBe(true);
+    });
 
-    expect(names(fields)).toEqual([
-      'embed.fields.login',
-      'embed.fields.campus',
-      'embed.fields.role',
-      'embed.fields.approvedBy',
-    ]);
-    expect(fields?.find((field) => field.name === 'embed.fields.role')?.value).toBe('Trésorier');
-    expect(fields?.find((field) => field.name === 'embed.fields.approvedBy')?.value).toBe(
-      'Paula Martin',
-    );
-  });
+    it('adds the role they held and who removed them on a removal', () => {
+      expect(names(build('removed'))).toEqual([
+        '🎭  embed.fields.role',
+        '🚪  embed.fields.removedBy',
+      ]);
+    });
 
-  it('adds the role they held and who removed them on a removal', () => {
-    const { fields } = buildMemberEmbed('removed', member, t, null, NOW);
+    it('never shows a request as approved or removed by someone, even if the data has an actor', () => {
+      expect(build('pending')).not.toHaveProperty('fields');
+      expect(names(build('approved'))?.join()).not.toContain('removedBy');
+      expect(names(build('removed'))?.join()).not.toContain('approvedBy');
+    });
 
-    expect(names(fields)).toEqual([
-      'embed.fields.login',
-      'embed.fields.campus',
-      'embed.fields.role',
-      'embed.fields.removedBy',
-    ]);
-  });
+    it('leaves out what is not known instead of showing an empty column', () => {
+      const bare = build('removed', { roleName: undefined, actorName: undefined });
 
-  it('never shows a request as approved or removed by someone, even if the data has an actor', () => {
-    expect(names(buildMemberEmbed('pending', member, t, null, NOW).fields)).not.toContain(
-      'embed.fields.approvedBy',
-    );
-    expect(names(buildMemberEmbed('approved', member, t, null, NOW).fields)).not.toContain(
-      'embed.fields.removedBy',
-    );
-    expect(names(buildMemberEmbed('removed', member, t, null, NOW).fields)).not.toContain(
-      'embed.fields.approvedBy',
-    );
-  });
-
-  it('leaves out what is not known instead of showing an empty column', () => {
-    const bare: MemberFacts = { login: 'cmartin', fullName: 'Camille Martin' };
-    const { fields } = buildMemberEmbed('removed', bare, t, null, NOW);
-
-    expect(names(fields)).toEqual(['embed.fields.login']);
+      expect(bare).not.toHaveProperty('fields');
+    });
   });
 
   it('signs the card with the platform name, and stamps it with the sending time', () => {
-    const embed = buildMemberEmbed('pending', member, t, null, NOW);
+    const embed = build('pending');
 
     expect(embed.footer).toEqual({ text: 'BDE_Network' });
     expect(embed.timestamp).toBe('2026-10-06T12:00:00.000Z');

@@ -123,10 +123,13 @@ describe('notifyMemberPending', () => {
     const embed = firstCall(vi.mocked(deliver))[1].discord?.embeds[0];
     expect(embed?.color).toBe(0xf59e0b);
     expect(embed?.url).toBe('https://bde.exemple.fr/fr/members');
-    expect(embed?.fields).toEqual([
-      { name: 'Login 42', value: 'jdupont', inline: true },
-      { name: 'Campus', value: 'Nice', inline: true },
-    ]);
+    // The login and the campus are headings of the description; a request has no field.
+    expect(embed?.description).toContain('### 🪪  jdupont');
+    expect(embed?.description).toContain('🏫  Nice');
+    expect(embed?.description).toContain(
+      '👉  [Approuver ou refuser](https://bde.exemple.fr/fr/members)',
+    );
+    expect(embed).not.toHaveProperty('fields');
   });
 
   it('by e-mail, sends the approvers a designed e-mail with the photo and a button to the members page', async () => {
@@ -275,12 +278,12 @@ describe('notifyMemberApproved', () => {
     expect(card?.username).toBe('BDE Test');
     const embed = card?.embeds[0];
     expect(embed?.color).toBe(0x10b981);
-    expect(embed?.title).toBe('Jean Dupont');
+    expect(embed?.title).toBe('✅  Jean Dupont');
     expect(embed?.thumbnail?.url).toBe('https://cdn.intra.42.fr/u.jpg');
     expect(embed?.fields).toEqual(
       expect.arrayContaining([
-        { name: 'Rôle', value: 'Trésorier', inline: true },
-        { name: 'Approuvé par', value: 'Paula Martin', inline: true },
+        { name: '🎭  Rôle', value: 'Trésorier', inline: true },
+        { name: '🤝  Approuvé par', value: 'Paula Martin', inline: true },
       ]),
     );
   });
@@ -395,7 +398,7 @@ describe('notifyMemberRemoved', () => {
     const embed = firstCall(vi.mocked(deliver))[1].discord?.embeds[0];
     expect(embed?.color).toBe(0xef4444);
     expect(embed?.fields).toEqual(
-      expect.arrayContaining([{ name: 'Retiré par', value: 'Paula Martin', inline: true }]),
+      expect.arrayContaining([{ name: '🚪  Retiré par', value: 'Paula Martin', inline: true }]),
     );
   });
 

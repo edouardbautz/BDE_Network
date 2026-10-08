@@ -16,6 +16,8 @@ export interface DiscordEmbedField {
 }
 
 export interface DiscordEmbed {
+  /** The small line above the title: who it comes from (the BDE's name and logo). */
+  author?: { name: string; icon_url?: string };
   title?: string;
   description?: string;
   /** Makes the title a link. An embed does not unfurl it into a second preview card. */
@@ -41,6 +43,7 @@ export interface DiscordPayload {
 /** Discord's documented limits for an embed. */
 export const EMBED_LIMITS = {
   title: 256,
+  author: 256,
   description: 4096,
   fieldName: 256,
   fieldValue: 1024,
@@ -60,6 +63,36 @@ export type DiscordTimeStyle =
   | 'F' // mercredi 7 octobre 2026 20:00
   | 'R'; // dans 2 jours
 
+/**
+ * A line that shows as an empty one. A really empty line next to a heading or a quote is collapsed by
+ * Discord; a zero-width space is not.
+ */
+export const BLANK_LINE = '\u200b';
+
+/** Text on one line, whatever the member typed: a place or a login must not open a second heading. */
+export function oneLine(text: string, max = 200): string {
+  return truncate(text.replace(/\s+/g, ' ').trim(), max);
+}
+
+/** The small capitals line above a card's heading: "NOUVEL ÉVÉNEMENT CONFIRMÉ". */
+export function kindLine(label: string): string {
+  return `-# ${oneLine(label).toUpperCase()}`;
+}
+
+/** An essential fact as a large heading, an icon in front: `### 📍  Foyer du campus`. */
+export function headingLine(icon: string, text: string): string {
+  return `### ${icon}  ${oneLine(text)}`;
+}
+
+/** A block quote, every line of it (a blank one included, or the quote would stop there). */
+export function quoteBlock(text: string): string {
+  return text
+    .trim()
+    .split(/\r?\n/)
+    .map((line) => `> ${line.trim() || BLANK_LINE}`)
+    .join('\n');
+}
+
 /** Discord's date markup: each reader sees it in their own language and time zone, and `R`
  * counts down by itself ("in 2 days") without the message ever being edited. */
 export function discordTime(date: Date, style: DiscordTimeStyle): string {
@@ -71,6 +104,7 @@ const length = (text: string | undefined) => (text ? Array.from(text).length : 0
 function textOf(embed: DiscordEmbed): number {
   return (
     length(embed.title) +
+    length(embed.author?.name) +
     length(embed.description) +
     length(embed.footer?.text) +
     (embed.fields ?? []).reduce((sum, field) => sum + length(field.name) + length(field.value), 0)
@@ -87,6 +121,9 @@ export function fitEmbed(embed: DiscordEmbed): DiscordEmbed {
   const fitted: DiscordEmbed = { ...embed };
 
   if (fitted.title !== undefined) fitted.title = truncate(fitted.title, EMBED_LIMITS.title);
+  if (fitted.author) {
+    fitted.author = { ...fitted.author, name: truncate(fitted.author.name, EMBED_LIMITS.author) };
+  }
   if (fitted.description !== undefined) {
     fitted.description = truncate(fitted.description, EMBED_LIMITS.description);
   }

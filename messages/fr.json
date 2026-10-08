@@ -243,6 +243,9 @@
           "role": "Rôle",
           "approvedBy": "Approuvé par",
           "removedBy": "Retiré par"
+        },
+        "action": {
+          "pending": "Approuver ou refuser"
         }
       },
       "email": {
