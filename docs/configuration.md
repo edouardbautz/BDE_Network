@@ -42,10 +42,10 @@ champs :
 
 ### `auth`
 
-| Champ             | Type               | Description                                                                                                                                                                                                                    |
-| ----------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `owners`          | liste de logins 42 | Obtiennent automatiquement le statut OWNER (propriétaire : tous les droits) à la connexion. Ce statut **ne se change que via ce fichier**, jamais depuis l'interface. La comparaison ignore la casse et les espaces superflus. |
-| `allowedCampuses` | liste de campus    | Seuls les logins dont le campus 42 figure dans cette liste peuvent se connecter. La comparaison ignore la casse et les espaces superflus. **Liste vide (`[]`) = aucun filtre, tous les campus sont autorisés.**                |
+| Champ             | Type               | Description                                                                                                                                                                                                                                                                                                                                                       |
+| ----------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `owners`          | liste de logins 42 | Obtiennent automatiquement le statut OWNER (propriétaire : tous les droits) à la connexion. Ce statut **ne se change que par un propriétaire**, depuis la page « Paramètres » (ou par ce fichier, pour une installation qui n'est pas encore dans la base) : jamais depuis la page Membres ni les rôles. La comparaison ignore la casse et les espaces superflus. |
+| `allowedCampuses` | liste de campus    | Seuls les logins dont le campus 42 figure dans cette liste peuvent se connecter. La comparaison ignore la casse et les espaces superflus. **Liste vide (`[]`) = aucun filtre, tous les campus sont autorisés.**                                                                                                                                                   |
 
 ### `modules`
 
@@ -140,12 +140,37 @@ créées toutes seules, une fois, dans le volume Docker `secrets` : **sauvegarde
 secrets après une restauration.
 
 Une installation neuve n'a donc plus besoin de `.env` : seuls `APP_BIND` et `APP_PORT` (réglages de Docker, pas de
-la plateforme) s'y écrivent encore, si besoin. Les réglages seront modifiables depuis la page « Paramètres »
-de la plateforme (prochaine étape).
+la plateforme) s'y écrivent encore, si besoin. Les réglages se modifient depuis la page « Paramètres » de la
+plateforme (voir [ci-dessous](#la-page-paramètres)).
 
-### Modifier un réglage en attendant
+### La page Paramètres
 
-Avec une installation qui a déjà copié ses réglages dans la base :
+Les **propriétaires** (et eux seuls) ont une entrée **Paramètres** dans le menu. Elle reprend les sections de
+l'installateur : le nom, la couleur et la langue des messages, l'adresse publique, l'application OAuth 42, les
+campus, les propriétaires, les modules et les notifications (avec un message de test).
+
+- **Chaque section s'enregistre à part**, est vérifiée avant d'être écrite, **s'applique tout de suite** (pas de
+  redémarrage, pas de reconstruction) et est inscrite au **journal d'audit**. Pour un secret, le journal dit
+  seulement qu'il a changé, jamais ce qu'il vaut ; la page ne le renvoie jamais au navigateur (laissez le champ
+  vide pour garder le secret enregistré).
+- **L'application 42** est vérifiée auprès de 42 _avant_ d'être enregistrée : une clé fausse empêcherait tout le
+  monde de se connecter. Si 42 est injoignable, vous pouvez enregistrer sans vérification, en connaissance de cause.
+- **Les propriétaires** : ajouter ou retirer demande une confirmation. Le login est vérifié sur l'intra. Vous ne
+  pouvez pas vous retirer vous-même, et il reste toujours au moins un propriétaire.
+- **Si 42 refuse l'application** (clé expirée ou régénérée), plus personne ne peut se connecter : la page de
+  connexion le dit, et un propriétaire encore connecté voit un bandeau avec un lien vers cette page. Si plus
+  personne n'est connecté, ajoutez `FORTYTWO_CLIENT_SECRET=<la nouvelle clé>` et `BDE_REIMPORT=settings` dans `.env`,
+  lancez `docker compose up -d`, puis **retirez ces deux lignes** : seules les valeurs de `.env` sont reprises
+  (42, adresse, e-mail, webhooks), le reste est laissé tel quel.
+- **Pensez à sauvegarder le volume `secrets`** : la page vous le rappelle en haut. Sans lui, après une restauration,
+  les secrets enregistrés ne peuvent plus être lus.
+
+Tant que les réglages sont encore dans les fichiers (installation pas encore copiée dans la base), la page le dit
+et reste en lecture seule.
+
+### Remplacer les réglages par les fichiers
+
+Pour un déploiement piloté par des fichiers, ou pour repartir de `bde.config.yml` et `.env`, avec une installation qui a déjà copié ses réglages dans la base :
 
 1. Modifiez `bde.config.yml` et/ou `.env` (toutes les valeurs de l'ancienne configuration), et ajoutez
    `BDE_REIMPORT=1` dans `.env`.

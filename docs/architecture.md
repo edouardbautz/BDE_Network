@@ -56,6 +56,7 @@ src/
         members/page.tsx + actions.ts + loading.tsx   approve/refuse/remove members, give each one a role (server actions)
         roles/                 page + new/ + [id]/ + actions.ts + loading.tsx: custom roles (needs roles.manage)
         audit-log/page.tsx + loading.tsx               OWNER-only
+        settings/              page + actions.ts + loading.tsx: the platform's settings, OWNER-only (see "Settings in the database")
         events/                events module (404 unless enabled): page, new/, [id]/, [id]/edit/,
                                shared-calendar/ (events.shared_calendar: BDE link), actions.ts (server actions),
                                loading.tsx for each route
@@ -77,6 +78,7 @@ src/
     events/                calendar, list, form, toolbar, category badge (module UI)
     roles/                 role form (permission checkboxes), list actions, permission groups for the form
     members/               role menu, approve/refuse and remove controls of the members panel
+    settings/              the settings page: panels (the installer's forms in "section" mode), owners, 42 refusal alert
     theme-provider.tsx, theme-toggle.tsx
   config/                  bde.config.yml loader + Zod schema (src/config/index.ts, schema.ts)
   i18n/                    next-intl routing/navigation/request config
@@ -87,7 +89,8 @@ src/
                            helpers, notifications, reminders, scheduler (see "Events module")
     permissions/           registry (the list of permissions) + resolution and `can()`
     roles/                 escalation rules (guards), input validation, transactional operations, `execute`
-    settings/              the platform's settings in the database: runtime cache, sealing (AES-GCM), store + import
+    settings/              the platform's settings in the database: runtime cache, sealing (AES-GCM), store + import,
+                           `update.ts` (changing them from the settings page), owners, access (OWNER-only)
     roles/view.ts          what pages need to show the right choices (actor from a session, role facts) — display only
     audit-log.ts, account-label.ts, health.ts, prisma.ts, color.ts, utils.ts
   types/next-auth.d.ts     Session/User/JWT module augmentation
@@ -120,7 +123,8 @@ SECURITY.md                  private vulnerability reporting; .github/ has issue
 `EventAssignee`, `EventCancellation`, `EventReminder`, `BdeCalendarFeed` (see "Events module"). Finances and
 meetings do not exist yet.
 
-- **`UserStatus`**: `OWNER | MEMBER | PENDING`. OWNER comes only from `bde.config.yml` and holds every
+- **`UserStatus`**: `OWNER | MEMBER | PENDING`. OWNER comes only from the list of owners in the platform's
+  settings (`auth.owners`; edited by an OWNER on the settings page, never from the members or roles pages) and holds every
   permission; PENDING waits for approval and holds nothing; MEMBER's rights are those of its **one custom
   role**. Neither OWNER nor PENDING is a role.
 - **`Role`** (custom, created by each BDE): `name` (unique, case-insensitively), `description`,
@@ -159,8 +163,10 @@ point at a user (see `EventAssignee`).
   in `bde.config.yml`'s `auth.allowedCampuses`. Otherwise upserts the `User` row: status becomes
   `OWNER` if the login is in `auth.owners`, `PENDING` on first login otherwise. An existing owner
   who is no longer listed becomes a `MEMBER` with the **default role** (`src/lib/auth/account.ts`; no default
-  role: `PENDING`) on next login — config is the source of truth for `OWNER`, checked every login, never
-  settable from the UI.
+  role: `PENDING`) on next login — the list of owners in the settings is the source of truth for `OWNER`, checked every
+  login, and settable only by an OWNER on the settings page (never through a role or the members page). The accounts
+  follow the list at once, not at the next login (`syncOwnerAccounts`, in the same transaction as the change; at start-up
+  `reconcileOwnerAccounts` does the same for a list changed through the files).
 - **`jwt` and `session` callbacks** (`src/lib/auth/callbacks.ts`) re-read the `User` row **and its role** from
   the DB on every call (not just at login) and resolve the permissions into the session
   (`session.user.status / roleId / roleName / permissions / holdsAll`, built by `lib/auth/access.ts`). Role
@@ -187,8 +193,8 @@ point at a user (see `EventAssignee`).
 
 - **Route guards live in Server Components**, not middleware (`(app)/layout.tsx` redirects
   unauthenticated users to `/`, `PENDING` users to `/pending`; `members/page.tsx` and
-  `roles/` and `audit-log/page.tsx` additionally check `can(user, 'members.manage' | 'roles.manage')` /
-  `canViewAuditLog`). Every
+  `roles/`, `audit-log/page.tsx` and `settings/` additionally check `can(user, 'members.manage' | 'roles.manage')` /
+  `canViewAuditLog` / `canManageSettings`). Every
   session/DB-backed route has `export const dynamic = 'force-dynamic'` — verify this stays true
   when adding new authenticated pages, otherwise Next's static optimization could theoretically
   cache one user's render for another (checked against the prerender manifest when this was
@@ -198,7 +204,8 @@ point at a user (see `EventAssignee`).
   `roles.manage`, plus `<module>.view` / `<module>.manage` for **every enabled module** (managing implies
   viewing) and the extras a module declares in `MODULE_EXTRA_PERMISSIONS` (events: `shared_calendar`). Check
   with `can(session.user, key)`; server actions and pages re-check themselves — never rely solely on a hidden
-  button. The audit log is **not** a permission: `canViewAuditLog` is OWNER-only. Always build on
+  button. The audit log and the settings are **not** permissions: `canViewAuditLog` and `canManageSettings` are OWNER-only
+  (a permission a role could hold would let its holder make themselves an owner). Always build on
   `getEffectiveSession`, never `auth()` directly. A module's pages/actions get their access through one
   function (for events: `getEventsAccess` / `requireEventsManager` in `src/lib/events/access.ts`) that returns
   null when the module is disabled — pages treat null as `notFound()`, actions throw `Forbidden`.
@@ -258,6 +265,51 @@ nobody opens a configuration file, and that a setting changes with no rebuild an
 - **Why a volume and not a file of the project folder**: a named volume belongs to the Docker daemon, so it behaves
   the same on Windows, macOS, Linux and with rootless Docker, where a mounted file was not reliable (see "The
   configuration is baked into the image").
+
+### The settings page (`src/app/[locale]/(app)/settings/`, `src/lib/settings/update.ts`)
+
+OWNER-only (`canManageSettings`; a role simulated in development counts for what it simulates), and read only
+while the settings are still in the files (`isSettingsEditable`: no runtime cache, nothing to write to). It reuses the
+installer: the same step components (`components/setup/*`) in **"section" mode** (`FrameModeContext`: their own Save
+button, nothing takes the focus), the same validators (`lib/setup/validate.ts`, `notifications.ts`, `fortytwo.ts`,
+`notify-test.ts`), one copy of each. The forms call an `api` object (`StepApi`) that is the installer's actions on
+`/setup` and the settings actions here; both answer `ActionResult` with the same codes (`setup.errors.<code>`).
+
+- **One section, one save, one transaction.** `updateSettings(change, actor)` takes a `SettingsChange` (identity,
+  address, oauth, campuses, owner-add, owner-remove, modules, notifications), reads the row **again inside the
+  transaction**, applies the change, re-validates the whole result with the Zod schema and `validateEnvironment` (what
+  is written always starts), writes only if nobody changed the row meanwhile (`updatedAt` compare-and-set, 3 tries, then
+  `conflict`), writes the **audit entry in the same transaction** and only then loads the new settings into the runtime
+  cache (`setRuntimeSettings`): `getConfig()` and `setting()` answer the new values for the next request. Nothing to
+  restart or rebuild. A change that changes nothing writes nothing (`changed: false`).
+- **Every action is an entry point**: `requireSettingsManager()` first (throws `Forbidden` for a crafted request), the
+  input parsed again with Zod, validation again in `updateSettings`. A refused change is a code, never a throw.
+- **Secrets never go back to the browser, nor to a log or the audit log.** The page gets `settingsView()` (only
+  `hasClientSecret`, `hasDiscordWebhook`...); a blank secret field keeps the saved one; the audit metadata says
+  `secretChanged` / `changedSecrets: [names]`, never a value.
+- **The 42 application is asked to 42 before it is saved** (`verifyFortyTwo`): a wrong pair would lock everybody out.
+  Only when 42 cannot be reached can the owner save without the check (`skipFortyTwoVerification`). The campus list and
+  the owners' logins are checked with a token of the saved application (`fortytwo-token.ts`, cached, forgotten when the
+  credentials change).
+- **Owners.** `addOwner` re-checks the login on the intra (a login 42 does not know is refused; a 42 that cannot answer
+  needs an explicit `acceptUnverified`); adding and removing both go through a `ConfirmDialog`. The rules are in
+  `updateSettings` and tested there: **never oneself** (`ownerSelf`), **never zero** (`noOwner`), no duplicate, at most 30.
+  The accounts follow in the same transaction (`syncOwnerAccounts`: listed becomes OWNER, no longer listed becomes a member
+  with the default role); the audit entry records who was promoted or demoted.
+- **Effect on running parts.** NextAuth reads the 42 identifiers for each request (function config), so a new secret
+  applies to the next sign-in. The reminder scheduler is started when the events module is turned on and **stopped**
+  (`stopEventReminderScheduler`) when it is turned off. A change of name, colour or modules is shown by
+  `revalidatePath('/', 'layout')`.
+- **If 42 refuses the application** (`oauth-check.ts`), the login page says to warn an owner, and an owner who still has
+  a session sees an alert with a link to the settings on the dashboard (`OAuthRejectedAlert`) and on the page itself. A
+  visitor is never told more than that (the login page cannot know who is an owner). When nobody can sign in at all,
+  `BDE_REIMPORT=settings` copies the values of `.env` (and nothing else) into the settings at the next start.
+- **The page always reminds to back up the `secrets` volume** (the key is not in the database), with the command, and
+  says so loudly when the secrets were found unreadable (`secretsStatus` of the runtime cache: `lost`, `resealed`).
+- **Tests**: `update.test.ts` (every section, the owner rules, the concurrent save, no secret in the audit), `actions.test.ts`
+  (every action refused unless OWNER, read-only mode), `page.test.tsx`, `settings-ui.test.tsx`, `scheduler.test.ts`, and
+  `e2e/settings.mjs` (a real browser against the real image, run by CI after the installer). The access tests were
+  mutation-checked: re-break a guard (`canManageSettings`, `requireSettingsManager`, an action's first line) and one fails.
 
 ## The web installer (`src/lib/setup/`, `src/app/[locale]/setup/`, `src/components/setup/`)
 

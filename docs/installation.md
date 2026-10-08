@@ -256,7 +256,7 @@ l'assistant. Elle sert aussi à comprendre ce qui est écrit dans les fichiers.
 | Quelles catégories d'événements ?                | `events.categories`    | Soirée, Sport, Réunion                    |
 | Une adresse pour les questions sur les données ? | `bde.contactEmail`     | `bureau@exemple.fr` (facultatif)          |
 
-Un **propriétaire** a tous les droits et ne peut être défini que dans ce fichier : choisissez-en
+Un **propriétaire** a tous les droits (ensuite, il se gère depuis la page **Paramètres**) : choisissez-en
 au moins un, de confiance, et **donnez son vrai login 42** (celui de l'intra, en minuscules). Si
 vous laissez `votre-login-42`, personne n'aura accès à l'administration.
 
@@ -480,7 +480,7 @@ encore dans sa base de données) n'est plus en boucle : elle affiche une page «
 `bde.config.yml` traîne dans le projet (laissé par un ancien montage raté), supprimez-le avec
 `rmdir bde.config.yml`, puis relancez l'assistant d'installation ou faites
 `cp bde.config.example.yml bde.config.yml`, puis `docker compose up -d --build`. Pour **changer un réglage** d'une
-plateforme déjà démarrée, voir [modifier un réglage](configuration.md#modifier-un-réglage-en-attendant).
+plateforme déjà démarrée, voir [modifier un réglage](configuration.md#remplacer-les-réglages-par-les-fichiers).
 
 Pour voir ce que le conteneur voit réellement (et ce que le démon Docker voit de votre dossier), depuis le
 dossier du projet, sous Linux ou macOS :
@@ -542,7 +542,7 @@ Lancez-le depuis le dossier `BDE_Network` (celui qui contient `docker-compose.ym
 
 - _« Votre campus 42 (…) n'est pas autorisé »_ : le campus de la personne n'est pas dans
   `auth.allowedCampuses`. Ajoutez-le (ou mettez la liste vide `[]` pour accepter tous les
-  campus), puis [appliquez le changement](configuration.md#modifier-un-réglage-en-attendant). Le nom doit être écrit comme sur l'intra (`Nice`,
+  campus), puis [appliquez le changement](configuration.md#remplacer-les-réglages-par-les-fichiers). Le nom doit être écrit comme sur l'intra (`Nice`,
   `Paris`…), la casse est sans importance.
 - _« Profil 42 incomplet »_ : le compte 42 n'a pas d'e-mail, de campus ou de login visible. Cela
   se règle sur l'intra, pas ici.
@@ -551,7 +551,7 @@ Lancez-le depuis le dossier `BDE_Network` (celui qui contient `docker-compose.ym
 
 Votre login n'est pas dans `auth.owners` (faute de frappe, ou `votre-login-42` encore en place :
 l'application l'avertit au démarrage, voir `docker compose logs app`). Corrigez, puis
-[appliquez le changement](configuration.md#modifier-un-réglage-en-attendant), puis reconnectez-vous.
+[appliquez le changement](configuration.md#remplacer-les-réglages-par-les-fichiers), puis reconnectez-vous.
 
 **L'intra répond « redirect URI not valid » / `redirect_uri_mismatch`**
 

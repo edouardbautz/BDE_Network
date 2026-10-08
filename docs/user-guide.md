@@ -98,6 +98,14 @@ Slack uniquement). Cela se règle dans `bde.config.yml` : voir
 plateforme (qui a approuvé qui, qui a été retiré...), avec la date et l'auteur de chaque action.
 Ce journal ne peut pas être modifié ni supprimé depuis l'interface.
 
+### Modifier les réglages de la plateforme (propriétaires uniquement)
+
+**Paramètres** (dans le menu) regroupe ce que l'installateur a demandé : nom, couleur, adresse, application 42,
+campus, propriétaires, modules et notifications. Chaque section a son bouton **Enregistrer** et le changement
+s'applique tout de suite. Ajouter ou retirer un propriétaire demande une confirmation. En haut de la page, un
+rappel vous invite à **sauvegarder le volume « secrets »** : c'est lui qui permet de relire les mots de passe et
+clés enregistrés après une restauration. Le détail est dans le [guide de configuration](configuration.md#la-page-paramètres).
+
 ## Événements (si le module est activé)
 
 Le menu _Événements_ donne le calendrier interne du bureau (vue calendrier ou liste, filtres par
