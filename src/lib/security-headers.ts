@@ -29,7 +29,8 @@ export function contentSecurityPolicy(): string {
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline'",
-    `img-src 'self' data: ${FORTYTWO_IMAGES}`,
+    // blob: only for the preview of the logo the owner has just chosen, before it is sent
+    `img-src 'self' data: blob: ${FORTYTWO_IMAGES}`,
     "font-src 'self'",
     "connect-src 'self'",
     "object-src 'none'",

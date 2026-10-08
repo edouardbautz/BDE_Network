@@ -10,7 +10,7 @@ import { prisma } from '@/lib/prisma';
 import { pageTitle } from '@/lib/page-title';
 import { getSettingsManager, isSettingsEditable } from '@/lib/settings/access';
 import { getRuntimeSettings } from '@/lib/settings/runtime';
-import { settingsView } from '@/lib/settings/view';
+import { settingsExtras, settingsView } from '@/lib/settings/view';
 
 export const dynamic = 'force-dynamic';
 export const generateMetadata = pageTitle('settings', 'title');
@@ -83,7 +83,11 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
       )}
 
       {editable ? (
-        <SettingsPanels view={settingsView()} actorLogin={session.user.login} />
+        <SettingsPanels
+          view={settingsView()}
+          extras={await settingsExtras()}
+          actorLogin={session.user.login}
+        />
       ) : (
         <Alert>
           <FileWarning aria-hidden="true" />

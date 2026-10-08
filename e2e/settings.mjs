@@ -7,8 +7,10 @@
 //
 // Nobody can sign in through 42 here, so the session cookies are forged with the platform's own secret, exactly as
 // Auth.js writes them: the page, the actions and the database are the real ones.
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { deflateSync } from 'node:zlib';
 import { encode } from '@auth/core/jwt';
 import puppeteer from 'puppeteer-core';
 
@@ -37,6 +39,40 @@ if (!executablePath) {
 }
 const shots = process.env.SHOTS;
 if (shots) mkdirSync(shots, { recursive: true });
+
+/** A real PNG of one colour, made here (no file to ship): the server checks what it receives. */
+function makePng(side) {
+  const crcTable = Array.from({ length: 256 }, (_, n) => {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    return c >>> 0;
+  });
+  const crc = (bytes) => {
+    let c = 0xffffffff;
+    for (const b of bytes) c = crcTable[(c ^ b) & 255] ^ (c >>> 8);
+    return (c ^ 0xffffffff) >>> 0;
+  };
+  const chunk = (type, data) => {
+    const body = Buffer.concat([Buffer.from(type), data]);
+    const out = Buffer.alloc(8 + data.length + 4);
+    out.writeUInt32BE(data.length, 0);
+    body.copy(out, 4);
+    out.writeUInt32BE(crc(body), 8 + data.length);
+    return out;
+  };
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(side, 0);
+  header.writeUInt32BE(side, 4);
+  header.set([8, 2, 0, 0, 0], 8); // 8 bits, RGB
+  const row = Buffer.concat([Buffer.from([0]), Buffer.alloc(side * 3, 0x70)]);
+  const pixels = Buffer.concat(Array.from({ length: side }, () => row));
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk('IHDR', header),
+    chunk('IDAT', deflateSync(pixels)),
+    chunk('IEND', Buffer.alloc(0)),
+  ]);
+}
 
 const COOKIE = 'authjs.session-token';
 const sessionFor = async (login) => encode({ token: { login }, secret, salt: COOKIE });
@@ -172,6 +208,103 @@ try {
   step('the events module is turned off and the menu follows');
   await page.click('[role="switch"]');
   await save('Enregistrer', '[role="switch"]');
+  await page.waitForSelector('#settings-events-hour');
+
+  // 3b. the contact address, shown on the privacy page
+  await page.type('#setup-contact', 'bureau@exemple.fr');
+  await save('Enregistrer', '#setup-name');
+  await page.goto(`${base}/fr/privacy`, { waitUntil: 'networkidle0' });
+  if (!(await text()).includes('bureau@exemple.fr'))
+    fail('the contact address is not on the privacy page');
+  await page.goto(`${base}/fr/settings`, { waitUntil: 'networkidle0' });
+  step('the contact address is saved and shown on the privacy page');
+
+  // 3c. the logo: a refused file, then a real one, served as an image and used at once, then the default again
+  const dir = tmpdir();
+  const bad = join(dir, 'not-a-logo.png');
+  writeFileSync(bad, '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128"></svg>');
+  await (await page.$('#settings-logo-file')).uploadFile(bad);
+  await clickButton('Enregistrer le logo');
+  await waitText('Format non accepté');
+  step('a file that is not an image (an SVG named .png) is refused by its content');
+
+  const good = join(dir, 'logo-e2e.png');
+  writeFileSync(good, makePng(128));
+  await (await page.$('#settings-logo-file')).uploadFile(good);
+  await clickButton('Enregistrer le logo');
+  await page.waitForFunction(
+    () =>
+      document
+        .querySelector('img[alt="Logo actuel"]')
+        ?.getAttribute('src')
+        ?.startsWith('/api/logo?v=') &&
+      !document.querySelector('img[alt="Logo actuel"]')?.getAttribute('src')?.startsWith('blob:'),
+  );
+  const logoSrc = await page.$eval('img[alt="Logo actuel"]', (el) => el.getAttribute('src'));
+  const served = await page.evaluate(async (src) => {
+    const response = await fetch(src);
+    return [
+      response.status,
+      response.headers.get('content-type'),
+      response.headers.get('x-content-type-options'),
+    ];
+  }, logoSrc);
+  if (served.join() !== '200,image/png,nosniff') fail(`the logo is served as ${served.join()}`);
+  const shellLogo = await page.$eval('aside img', (el) => el.getAttribute('src'));
+  if (shellLogo !== logoSrc) fail(`the menu shows ${shellLogo}, not the new logo`);
+  await shot('logo');
+  step(
+    'an uploaded logo is stored, served as an image that cannot be taken for a page, and used in the menu at once',
+  );
+
+  await clickButton('Revenir au logo par défaut');
+  await page.waitForSelector('[role="dialog"]');
+  await page.evaluate(() => {
+    const dialog = document.querySelector('[role="dialog"]');
+    [...dialog.querySelectorAll('button')]
+      .find((b) => b.textContent.trim() === 'Revenir au logo par défaut')
+      .click();
+  });
+  await page.waitForFunction(
+    () => document.querySelector('img[alt="Logo actuel"]')?.getAttribute('src') === '/logo.svg',
+  );
+  // 'reload': the address was served as immutable, so the browser would answer from its own cache
+  const gone = await page.evaluate(
+    async (src) => (await fetch(src, { cache: 'reload' })).status,
+    logoSrc,
+  );
+  if (gone !== 404) fail(`the old logo is still served (${gone})`);
+  step('going back to the default logo removes the uploaded file');
+
+  // 3d. the events: a category added, the hour of the reminder, a category taken out after a confirmation
+  await page.reload({ waitUntil: 'networkidle0' });
+  await clickButton('Ajouter une catégorie');
+  await page.type('[aria-label="Nom de la catégorie 5"]', 'Tournoi');
+  await page.select('#settings-events-hour', '9');
+  await save('Enregistrer', '#settings-events-hour');
+  await page.reload({ waitUntil: 'networkidle0' });
+  const fifth = await page.$eval('[aria-label="Nom de la catégorie 5"]', (el) => el.value);
+  const hour = await page.$eval('#settings-events-hour', (el) => el.value);
+  if (fifth !== 'Tournoi' || hour !== '9') fail(`the events settings are "${fifth}" at ${hour}`);
+  step(
+    'a category is added, the hour of the reminder changes, and both are still there after a reload',
+  );
+
+  await page.click('button[aria-label="Retirer Tournoi"]');
+  await waitText("Seront retirées à l'enregistrement");
+  // no request yet: the confirmation comes first
+  await clickButton('Enregistrer', '#settings-events-hour');
+  await page.waitForSelector('[role="dialog"]');
+  await page.evaluate(() => {
+    const dialog = document.querySelector('[role="dialog"]');
+    [...dialog.querySelectorAll('button')]
+      .find((b) => b.textContent.trim() === 'Retirer et enregistrer')
+      .click();
+  });
+  await page.waitForFunction(() => !document.querySelector('[role="dialog"]'));
+  await page.reload({ waitUntil: 'networkidle0' });
+  if (await page.$('[aria-label="Nom de la catégorie 5"]')) fail('the category is still there');
+  step('a category is taken out only after a confirmation');
 
   // 4. the 42 application: a wrong secret is refused, the real one saved without leaving the page
   await clear('#setup-secret');
@@ -181,11 +314,19 @@ try {
   await shot('oauth-refused');
   step('a wrong 42 secret is refused before it is saved (it would lock everybody out)');
 
-  // 5. the English page
-  await page.goto(`${base}/en/settings`, { waitUntil: 'networkidle0' });
+  // 5. the language switcher keeps the page
+  await page.goto(`${base}/fr/settings`, { waitUntil: 'networkidle0' });
+  await page.click('aside button[aria-label="Langue"]');
+  await page.waitForSelector('[role="menuitem"]');
+  await page.evaluate(() => {
+    [...document.querySelectorAll('[role="menuitem"]')]
+      .find((i) => i.textContent.includes('English'))
+      .click();
+  });
+  await page.waitForFunction(() => location.pathname === '/en/settings');
   await waitText('Back up the "secrets" volume');
   await shot('settings-en');
-  step('the page exists in English');
+  step('the language switcher moves to the same page in English');
 
   console.log('\nAll good.');
 } catch (error) {

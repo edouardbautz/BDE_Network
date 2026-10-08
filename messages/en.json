@@ -4,6 +4,9 @@
     "dark": "Dark",
     "system": "System"
   },
+  "language": {
+    "label": "Language"
+  },
   "roles": {
     "OWNER": "Owner",
     "MEMBER": "Member",
@@ -683,7 +686,10 @@
       "localeLabel": "Language of the messages sent",
       "localeHelp": "The language of notifications (Discord, Slack, e-mail). Each member then chooses the language of the interface.",
       "fr": "Français",
-      "en": "English"
+      "en": "English",
+      "contactLabel": "Contact address (optional)",
+      "contactHelp": "Shown on the privacy page: this is where members write about their data.",
+      "contactPlaceholder": "board@my-school.org"
     },
     "address": {
       "title": "Address of the platform",
@@ -864,7 +870,18 @@
       "ownerNotFound": "This login is not in the list of owners.",
       "ownerSelf": "You cannot remove yourself: ask another owner.",
       "tooManyOwners": "There are already 30 owners, which is the maximum.",
-      "loginUnverified": "42 could not confirm this login: check it, then confirm the addition."
+      "loginUnverified": "42 could not confirm this login: check it, then confirm the addition.",
+      "logoEmpty": "The file is empty.",
+      "logoTooBig": "This file is too large: 2 MB at most.",
+      "logoFormat": "Format not accepted: send a PNG, a JPEG, a GIF or a WebP (no SVG).",
+      "logoSmall": "This image is too small: at least 64 pixels on each side.",
+      "logoLarge": "This image is too large: 4096 pixels on a side at most.",
+      "reminderHour": "The reminder hour must be between 0 and 23.",
+      "categoryLabel": "A category name must be between 1 and 40 characters.",
+      "categoryDuplicate": "Two categories have the same name.",
+      "categoryLast": "Keep at least one category.",
+      "categoryInUse": "Events still use \"{detail}\": choose the category to move them to.",
+      "tooManyCategories": "There are already 30 categories, which is the maximum."
     }
   },
   "settings": {
@@ -912,6 +929,45 @@
       "removeTitle": "Remove {login} from the owners?",
       "removeBody": "This person loses their owner rights immediately: they become a member with the default role and can no longer change the settings.",
       "removeConfirm": "Remove"
+    },
+    "logo": {
+      "title": "Logo",
+      "description": "It appears in the menu, on the sign-in page and in the messages sent (Discord, Slack, e-mail).",
+      "currentAlt": "Current logo",
+      "newLogo": "Preview of the new logo",
+      "custom": "Your BDE's logo",
+      "default": "The logo that comes with the platform",
+      "requirements": "PNG, JPEG, GIF or WebP · 2 MB at most · 64 to 4096 pixels on a side. A square of at least 512 pixels is ideal.",
+      "fileLabel": "Choose an image",
+      "fileHint": "SVG is not accepted: Discord, Slack and mail apps do not display it.",
+      "send": "Save the logo",
+      "sending": "Sending…",
+      "reset": "Back to the default logo",
+      "resetTitle": "Go back to the default logo?",
+      "resetBody": "The uploaded logo will be deleted from the server. You can upload another one at any time.",
+      "resetConfirm": "Back to the default logo"
+    },
+    "events": {
+      "title": "Events",
+      "description": "The categories offered when an event is created, and the hour of the reminder sent the day before.",
+      "categories": "Categories",
+      "labelOf": "Name of category {position}",
+      "labelPlaceholder": "Category name",
+      "colorOf": "Colour of {label}",
+      "newCategory": "new category",
+      "usage": "{count, plural, one {# event} other {# events}}",
+      "remove": "Remove {label}",
+      "add": "Add a category",
+      "keepOne": "At least one category must stay.",
+      "pendingTitle": "To be removed when you save",
+      "keep": "Keep",
+      "moveTo": "{count, plural, one {Its event will move} other {Its # events will move}} to the category:",
+      "reminderLabel": "Reminder hour",
+      "reminderHelp": "The reminder goes out the day before each event, at this hour ({timezone} time zone).",
+      "removeTitle": "{count, plural, one {Remove this category?} other {Remove these # categories?}}",
+      "removeBodyMoved": "{count, plural, one {The event concerned is} other {The # events concerned are}} moved to the chosen category right away. This cannot be undone.",
+      "removeBodyUnused": "{count, plural, one {No event uses this category.} other {No event uses these categories.}} Removing cannot be undone.",
+      "removeConfirm": "Remove and save"
     }
   }
 }

@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { getEffectiveSession } from '@/lib/auth/session';
 import { getConfig } from '@/config';
+import { LocaleSwitcher } from '@/components/locale-switcher';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { pageTitle } from '@/lib/page-title';
@@ -15,6 +16,9 @@ export default async function PrivacyPage() {
 
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-8 px-4 py-12 sm:px-6">
+      <div className="fixed top-3 right-3 z-10">
+        <LocaleSwitcher />
+      </div>
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
         <p className="text-muted-foreground mt-2 text-sm">{t('intro', { bdeName })}</p>

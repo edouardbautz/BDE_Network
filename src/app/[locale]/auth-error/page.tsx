@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { getEffectiveSession } from '@/lib/auth/session';
 import { checkFortyTwoCredentials } from '@/lib/auth/oauth-check';
 import { Link, redirect } from '@/i18n/navigation';
+import { LocaleSwitcher } from '@/components/locale-switcher';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { pageTitle } from '@/lib/page-title';
 
@@ -55,6 +56,9 @@ export default async function AuthErrorPage({
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
+      <div className="fixed top-3 right-3 z-10">
+        <LocaleSwitcher />
+      </div>
       <Card className="w-full max-w-sm text-center">
         <CardHeader className="items-center gap-1">
           <div className="bg-destructive/10 text-destructive mb-2 flex size-10 items-center justify-center rounded-full">

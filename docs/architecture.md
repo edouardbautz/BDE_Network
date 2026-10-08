@@ -64,6 +64,7 @@ src/
     api/
       auth/[...nextauth]/route.ts
       me/export/route.ts                 self-service RGPD data export
+      logo/route.ts                      the logo the BDE uploaded (public, an image checked by its bytes)
       calendar/[token]/route.ts          personal .ics subscription feed (token-authenticated)
       calendar/bde/[token]/route.ts      BDE-wide .ics feed (token-authenticated, confirmed events only)
       events/[id]/ics/route.ts           "add to my calendar" download (session-authenticated)
@@ -79,7 +80,7 @@ src/
     roles/                 role form (permission checkboxes), list actions, permission groups for the form
     members/               role menu, approve/refuse and remove controls of the members panel
     settings/              the settings page: panels (the installer's forms in "section" mode), owners, 42 refusal alert
-    theme-provider.tsx, theme-toggle.tsx
+    theme-provider.tsx, theme-toggle.tsx, locale-switcher.tsx (FR/EN, in the menu and on the public pages)
   config/                  bde.config.yml loader + Zod schema (src/config/index.ts, schema.ts)
   i18n/                    next-intl routing/navigation/request config
   lib/
@@ -92,6 +93,7 @@ src/
     settings/              the platform's settings in the database: runtime cache, sealing (AES-GCM), store + import,
                            `update.ts` (changing them from the settings page), owners, access (OWNER-only)
     roles/view.ts          what pages need to show the right choices (actor from a session, role facts) — display only
+    branding/              the uploaded logo: what is accepted (image.ts), where it lives (storage.ts)
     audit-log.ts, account-label.ts, health.ts, prisma.ts, color.ts, utils.ts
   types/next-auth.d.ts     Session/User/JWT module augmentation
   test/                    session fixtures, in-memory roles database, migration tests
@@ -295,6 +297,15 @@ button, nothing takes the focus), the same validators (`lib/setup/validate.ts`, 
   `updateSettings` and tested there: **never oneself** (`ownerSelf`), **never zero** (`noOwner`), no duplicate, at most 30.
   The accounts follow in the same transaction (`syncOwnerAccounts`: listed becomes OWNER, no longer listed becomes a member
   with the default role); the audit entry records who was promoted or demoted.
+- **Logo, events, contact address.** The logo (`saveLogo` takes a `FormData`, so the 3 MB `serverActions.bodySizeLimit` of
+  `next.config.ts` applies to every action): the size is refused before the file is read, the bytes are checked and
+  stored, **then** the settings point to them, and only after that are the older files removed (a failed save leaves
+  the previous logo working). The events section (`section: 'events'`): categories are renamed and recoloured freely
+  and a new one gets a key made from its name (`categoryKeyFor`, unique, never changed afterwards: events refer to
+  it); taking one out while events use it **needs a category to move them to** (`reassign`), and the move happens in
+  the same transaction as the settings write, which the audit entry counts (`removed: [{ label, events, movedTo }]`);
+  at least one category stays; the hour of the reminder is read on every tick, so it is immediate. The contact address
+  (identity section, also asked by the installer) is optional and blank removes it.
 - **Effect on running parts.** NextAuth reads the 42 identifiers for each request (function config), so a new secret
   applies to the next sign-in. The reminder scheduler is started when the events module is turned on and **stopped**
   (`stopEventReminderScheduler`) when it is turned off. A change of name, colour or modules is shown by
@@ -307,7 +318,7 @@ button, nothing takes the focus), the same validators (`lib/setup/validate.ts`, 
   says so loudly when the secrets were found unreadable (`secretsStatus` of the runtime cache: `lost`, `resealed`).
 - **Tests**: `update.test.ts` (every section, the owner rules, the concurrent save, no secret in the audit), `actions.test.ts`
   (every action refused unless OWNER, read-only mode), `page.test.tsx`, `settings-ui.test.tsx`, `scheduler.test.ts`, and
-  `e2e/settings.mjs` (a real browser against the real image, run by CI after the installer). The access tests were
+  `e2e/settings.mjs` (a real browser against the real image, run by CI after the installer: logo upload and removal, categories, language switch, contact address). The access tests were
   mutation-checked: re-break a guard (`canManageSettings`, `requireSettingsManager`, an action's first line) and one fails.
 
 ## The web installer (`src/lib/setup/`, `src/app/[locale]/setup/`, `src/components/setup/`)
@@ -449,11 +460,20 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
   A confirmation attaches the `.ics` through nodemailer's `icalEvent` (every occurrence to come, same UIDs as the
   feeds); a reminder does not. `memberRemoved` never sends an e-mail. In development `docker-compose.dev.yml`
   points `SMTP_*` at Mailpit (http://localhost:8025) unless `DEV_SMTP_*` say otherwise.
-- **There is no file storage.** A local-disk adapter and a public `/api/files/[...key]` route existed
-  with nothing writing to them (it would have been a stored XSS the day an upload existed: no
-  authentication, SVG served without `nosniff`); both were removed, with the `uploads` volume, rather
-  than left as dead code. The day a feature needs uploads, build it with the feature: authenticated
-  access, a type allow-list, `nosniff`, a size limit, an entry in `scripts/backup.sh`.
+- **The one file the platform stores is the BDE's logo** (`src/lib/branding/`, `src/app/api/logo/route.ts`). An
+  earlier local-disk adapter with a public `/api/files/[...key]` route was removed because nothing wrote to it and
+  it would have been a stored XSS the day something did (no authentication, SVG served without `nosniff`). The logo
+  is built the way that note asked: the format is **read from the bytes** (PNG, JPEG, GIF, WebP; never trusted from
+  the name or the browser's type; **no SVG**, which can carry a script and which Discord, Slack and mail clients do
+  not show), 2 MB at most, 64 to 4096 px; the file lives in the `uploads` volume (`UPLOADS_DIR`, `/uploads` in the
+  image) under a name made of its SHA-256 (`logo-<16 hex>`), written to a temporary name and renamed; the route
+  answers `404` for anything that is not an image **when read back**, with `nosniff` and
+  `Content-Security-Policy: default-src 'none'; sandbox`, and never builds a path from the request (the version must
+  match `^[a-f0-9]{16}$`). It is public on purpose (login page, Discord, Slack, mail clients). `bde.logoPath` is
+  `/logo.svg` (the default) or `/api/logo?v=<version>`: a new logo is a new address, so nothing keeps showing the old
+  one (see `resolveLogoUrl`, which knows that path is an image). `scripts/backup.sh` puts the file in the database
+  archive (`logo.tar`: it holds nothing secret) and `restore.sh` puts it back. Anything else that needs uploads
+  gets the same treatment, with its own checks: do not widen this one.
 
 ## Events module (`modules.enabled: [events]`)
 

@@ -4,9 +4,10 @@ import { bdeConfigSchema } from '@/config/schema';
 import { forgetApplicationToken, applicationToken } from './fortytwo-token';
 import { reconcileOwnerAccounts, syncOwnerAccounts } from './owners';
 import { setRuntimeSettings } from './runtime';
-import { settingsView } from './view';
+import { settingsExtras, settingsView } from './view';
 
-vi.mock('@/lib/prisma', () => ({ prisma: {} }));
+const mocks = vi.hoisted(() => ({ groupBy: vi.fn() }));
+vi.mock('@/lib/prisma', () => ({ prisma: { event: { groupBy: mocks.groupBy } } }));
 
 const config = (notifications: Record<string, string> = {}) =>
   bdeConfigSchema.parse({
@@ -76,6 +77,51 @@ describe('settingsView: what the page may show', () => {
     expect(view.notifications.mode).toBe('none');
     expect(view.hasClientSecret).toBe(false);
     expect(view.addressUrl).toBe('');
+  });
+});
+
+describe('settingsExtras: what only the settings page shows', () => {
+  beforeEach(() => {
+    setRuntimeSettings(undefined);
+    mocks.groupBy.mockReset();
+  });
+  afterEach(() => setRuntimeSettings(undefined));
+
+  const load = (cfg = config()) =>
+    setRuntimeSettings({ config: cfg, values: {}, source: 'database' });
+
+  it('has the categories, how many events each has, the hour and the time zone', async () => {
+    load();
+    mocks.groupBy.mockResolvedValue([{ categoryKey: 'soiree', _count: { _all: 7 } }]);
+    expect(await settingsExtras()).toEqual({
+      logo: { path: '/logo.svg', custom: false },
+      events: {
+        categories: [{ key: 'soiree', label: 'Soirée', color: '#db2777' }],
+        usage: { soiree: 7 },
+        reminderHour: 18,
+        timezone: 'Europe/Paris',
+      },
+    });
+  });
+
+  it('knows an uploaded logo from the default one', async () => {
+    const cfg = config();
+    cfg.bde.logoPath = '/api/logo?v=0123456789abcdef';
+    load(cfg);
+    mocks.groupBy.mockResolvedValue([]);
+    expect((await settingsExtras()).logo).toEqual({
+      path: '/api/logo?v=0123456789abcdef',
+      custom: true,
+    });
+  });
+
+  it('has nothing about events, and does not ask the database, while the module is off', async () => {
+    load(config());
+    const off = config();
+    off.modules.enabled = [];
+    load(off);
+    expect((await settingsExtras()).events).toBeNull();
+    expect(mocks.groupBy).not.toHaveBeenCalled();
   });
 });
 

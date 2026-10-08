@@ -177,10 +177,20 @@ if ! docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGR
   exit 1
 fi
 
-# Les sauvegardes faites avant le retrait du stockage de fichiers contiennent aussi un
-# uploads.tar. Rien dans l'application n'écrit ni ne lit de fichiers envoyés : il est ignoré.
+# Les sauvegardes faites avant le retrait de l'ancien stockage de fichiers contiennent aussi un
+# uploads.tar. Il est ignoré : le logo, lui, est dans logo.tar (voir backup.sh).
 if [ -f "$WORK/uploads.tar" ]; then
-  echo "    (Cette sauvegarde contient un dossier de fichiers envoyés, que l'application n'utilise plus : ignoré.)"
+  echo "    (Cette sauvegarde contient un ancien dossier de fichiers envoyés, que l'application n'utilise plus : ignoré.)"
+fi
+
+# Le logo envoyé depuis la page Paramètres : remplacé par celui de la sauvegarde. Un échec n'arrête pas la
+# restauration (la base est déjà restaurée) : le logo se renvoie depuis Paramètres.
+if [ -f "$WORK/logo.tar" ]; then
+  echo "    Restauration du logo (volume « uploads »)..."
+  if ! docker compose run --rm --no-deps -T --entrypoint sh app -c 'rm -f /uploads/logo-* && tar -xf - -C /uploads' <"$WORK/logo.tar" >"$WORK/logo.log" 2>&1; then
+    cat "$WORK/logo.log" >&2
+    echo "    Le logo n'a pas pu être restauré : renvoyez-le depuis la page Paramètres." >&2
+  fi
 fi
 
 echo "5/5 Relance de l'application..."

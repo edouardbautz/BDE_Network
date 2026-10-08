@@ -56,7 +56,12 @@ describe('contentSecurityPolicy', () => {
   it('only loads from itself, except profile pictures from 42', () => {
     expect(directives.get('default-src')).toEqual(["'self'"]);
     expect(directives.get('connect-src')).toEqual(["'self'"]);
-    expect(directives.get('img-src')).toEqual(["'self'", 'data:', 'https://cdn.intra.42.fr']);
+    expect(directives.get('img-src')).toEqual([
+      "'self'",
+      'data:',
+      'blob:',
+      'https://cdn.intra.42.fr',
+    ]);
   });
 
   it('lets the sign-in form go to 42, and nowhere else', () => {

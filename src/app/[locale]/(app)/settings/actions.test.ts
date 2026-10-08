@@ -20,6 +20,8 @@ const mocks = vi.hoisted(() => ({
   revalidatePath: vi.fn(),
   startScheduler: vi.fn(),
   stopScheduler: vi.fn(),
+  storeLogo: vi.fn(),
+  pruneLogos: vi.fn(),
   saved: {} as Record<string, string | undefined>,
 }));
 
@@ -32,6 +34,11 @@ vi.mock('@/config', () => ({ getConfig: () => ({ bde: { name: 'BDE Test' } }) })
 vi.mock('@/lib/events/scheduler', () => ({
   startEventReminderScheduler: mocks.startScheduler,
   stopEventReminderScheduler: mocks.stopScheduler,
+}));
+vi.mock('@/lib/branding/storage', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/branding/storage')>()),
+  saveLogo: mocks.storeLogo,
+  pruneLogos: mocks.pruneLogos,
 }));
 vi.mock('@/lib/settings/access', () => ({
   requireSettingsManager: mocks.requireManager,
@@ -74,6 +81,11 @@ beforeEach(() => {
   mocks.requireManager.mockResolvedValue(ACTOR);
   mocks.editable.mockReturnValue(true);
   mocks.updateSettings.mockResolvedValue({ ok: true, changed: true });
+  mocks.storeLogo.mockResolvedValue({
+    ok: true,
+    version: '0123456789abcdef',
+    info: { type: 'png', mime: 'image/png', width: 512, height: 512 },
+  });
   mocks.applicationToken.mockResolvedValue('app-token');
   mocks.verifyCredentials.mockResolvedValue({ ok: true, token: 'app-token' });
   mocks.checkLogin.mockResolvedValue('exists');
@@ -97,12 +109,17 @@ describe('who may call them', () => {
       () => actions.removeOwner({}),
       () => actions.saveModules({}),
       () => actions.saveNotifications({}),
+      () => actions.saveLogo(new FormData()),
+      () => actions.removeLogo(),
+      () => actions.saveEvents({}),
       () => actions.testNotification({}, {}),
     ];
     for (const call of calls) await expect(call()).rejects.toThrow('Forbidden');
     expect(mocks.updateSettings).not.toHaveBeenCalled();
     expect(mocks.verifyCredentials).not.toHaveBeenCalled();
     expect(mocks.checkLogin).not.toHaveBeenCalled();
+    expect(mocks.storeLogo).not.toHaveBeenCalled();
+    expect(mocks.pruneLogos).not.toHaveBeenCalled();
   });
 
   it('answers "readOnly" while the settings are still in the files, and writes nothing', async () => {
@@ -409,5 +426,162 @@ describe('a test notification', () => {
         { locale: 'fr', to: 'me@exemple.fr' },
       ),
     ).toEqual({ ok: true });
+  });
+});
+
+describe('the logo', () => {
+  const upload = (file: File | string | null) => {
+    const body = new FormData();
+    if (file !== null) body.set('logo', file);
+    return body;
+  };
+  const image = (size = 1024) =>
+    new File([new Uint8Array(size)], 'logo.png', { type: 'image/png' });
+
+  it('is stored, then pointed to by the settings, and only then are the older ones removed', async () => {
+    const order: string[] = [];
+    mocks.storeLogo.mockImplementation(async () => {
+      order.push('stored');
+      return { ok: true, version: '0123456789abcdef', info: {} };
+    });
+    mocks.updateSettings.mockImplementation(async () => {
+      order.push('settings');
+      return { ok: true, changed: true };
+    });
+    mocks.pruneLogos.mockImplementation(async () => void order.push('pruned'));
+
+    expect(await actions.saveLogo(upload(image()))).toEqual({ ok: true });
+    expect(order).toEqual(['stored', 'settings', 'pruned']);
+    expect(mocks.updateSettings).toHaveBeenCalledWith(
+      { section: 'logo', logoPath: '/api/logo?v=0123456789abcdef' },
+      { login: 'alice', id: 'u-alice' },
+    );
+    expect(mocks.pruneLogos).toHaveBeenCalledWith('0123456789abcdef');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/', 'layout');
+  });
+
+  it('keeps the older logos when the settings could not be saved, and says why', async () => {
+    mocks.updateSettings.mockResolvedValue({ ok: false, code: 'conflict' });
+    expect(await actions.saveLogo(upload(image()))).toMatchObject({ ok: false, code: 'conflict' });
+    expect(mocks.pruneLogos).not.toHaveBeenCalled();
+  });
+
+  it('is refused when what came is not a file', async () => {
+    expect(await actions.saveLogo(upload('not a file'))).toMatchObject({ code: 'invalid' });
+    expect(await actions.saveLogo(upload(null))).toMatchObject({ code: 'invalid' });
+    expect(await actions.saveLogo(null as never)).toMatchObject({ code: 'invalid' });
+    expect(mocks.storeLogo).not.toHaveBeenCalled();
+  });
+
+  it('is refused for its size before it is read', async () => {
+    const huge = image(2 * 1024 * 1024 + 1);
+    const read = vi.spyOn(huge, 'arrayBuffer');
+    expect(await actions.saveLogo(upload(huge))).toEqual({
+      ok: false,
+      code: 'logoTooBig',
+      field: 'logo',
+    });
+    expect(read).not.toHaveBeenCalled();
+    expect(mocks.storeLogo).not.toHaveBeenCalled();
+  });
+
+  it('gives back what the storage found wrong with the image, on the logo field', async () => {
+    mocks.storeLogo.mockResolvedValue({ ok: false, code: 'logoFormat' });
+    expect(await actions.saveLogo(upload(image()))).toEqual({
+      ok: false,
+      code: 'logoFormat',
+      field: 'logo',
+    });
+    expect(mocks.updateSettings).not.toHaveBeenCalled();
+  });
+
+  it('is read only while the settings are in the files, and nothing is stored', async () => {
+    mocks.editable.mockReturnValue(false);
+    expect(await actions.saveLogo(upload(image()))).toMatchObject({ code: 'readOnly' });
+    expect(await actions.removeLogo()).toMatchObject({ code: 'readOnly' });
+    expect(mocks.storeLogo).not.toHaveBeenCalled();
+    expect(mocks.pruneLogos).not.toHaveBeenCalled();
+  });
+
+  it('goes back to the default one, and the uploaded files are removed', async () => {
+    expect(await actions.removeLogo()).toEqual({ ok: true });
+    expect(mocks.updateSettings).toHaveBeenCalledWith(
+      { section: 'logo', logoPath: '/logo.svg' },
+      { login: 'alice', id: 'u-alice' },
+    );
+    expect(mocks.pruneLogos).toHaveBeenCalledWith(null);
+  });
+
+  it('keeps the files when going back to the default one is refused', async () => {
+    mocks.updateSettings.mockResolvedValue({ ok: false, code: 'conflict' });
+    expect(await actions.removeLogo()).toMatchObject({ ok: false });
+    expect(mocks.pruneLogos).not.toHaveBeenCalled();
+  });
+});
+
+describe('the events settings', () => {
+  it('go to the update as they come, which validates them', async () => {
+    const input = {
+      categories: [
+        { key: 'soiree', label: 'Soirée', color: '#db2777' },
+        { label: 'Tournoi', color: '#000' },
+      ],
+      reminderHour: 9,
+      reassign: { sport: 'soiree' },
+    };
+    expect(await actions.saveEvents(input)).toEqual({ ok: true });
+    expect(mocks.updateSettings).toHaveBeenCalledWith(
+      { section: 'events', ...input },
+      { login: 'alice', id: 'u-alice' },
+    );
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/', 'layout');
+  });
+
+  it('are refused when what the browser sent is not what the form sends', async () => {
+    for (const input of [
+      null,
+      {},
+      { categories: 'x', reminderHour: 9 },
+      { categories: [], reminderHour: '9' },
+      { categories: [{ label: 5, color: '#000' }], reminderHour: 9 },
+      {
+        categories: Array.from({ length: 61 }, () => ({ label: 'a', color: '#000' })),
+        reminderHour: 9,
+      },
+    ]) {
+      expect(await actions.saveEvents(input)).toMatchObject({ ok: false, code: 'invalid' });
+    }
+    expect(mocks.updateSettings).not.toHaveBeenCalled();
+  });
+
+  it('give back the refusal of the update with its field and detail', async () => {
+    mocks.updateSettings.mockResolvedValue({
+      ok: false,
+      code: 'categoryInUse',
+      field: 'categories',
+      detail: 'Sport',
+    });
+    expect(await actions.saveEvents({ categories: [], reminderHour: 9 })).toEqual({
+      ok: false,
+      code: 'categoryInUse',
+      field: 'categories',
+      detail: 'Sport',
+    });
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
+  });
+});
+
+describe('the contact address', () => {
+  it('goes with the identity, and is optional', async () => {
+    await actions.saveIdentity({
+      name: 'Le BDE',
+      accentColor: '#0f766e',
+      messageLocale: 'fr',
+      contactEmail: 'bureau@exemple.fr',
+    });
+    expect(mocks.updateSettings).toHaveBeenCalledWith(
+      expect.objectContaining({ section: 'identity', contactEmail: 'bureau@exemple.fr' }),
+      expect.anything(),
+    );
   });
 });

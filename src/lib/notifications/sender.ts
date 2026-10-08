@@ -1,4 +1,5 @@
 import { getConfig } from '@/config';
+import { logoVersionOf } from '@/lib/branding/storage';
 import { EMBED_LIMITS } from './discord-embed';
 import { httpUrl, truncate } from './text';
 import { setting } from '@/lib/settings/runtime';
@@ -7,8 +8,8 @@ import { setting } from '@/lib/settings/runtime';
  * Who a Discord message appears to come from: the BDE's name and, when it can be shown, its logo.
  * The picture is an address Discord itself fetches, so it must be a **public** image in a format
  * Discord accepts (PNG, JPEG, GIF or WebP: not the SVG the interface uses by default). It is the
- * BDE's `logoPath` when that is such an image, `/logo.png` otherwise (the neutral one shipped in
- * `public/`, which a BDE replaces by its own). When Discord cannot reach it (a local install, a
+ * BDE's `logoPath` when that is such an image (the logo it uploaded, served by `/api/logo`, or a raster file of
+ * `public/`), `/logo.png` otherwise (the neutral one shipped in `public/`). When Discord cannot reach it (a local install, a
  * private network, a server that does not answer), the message is simply sent under the BDE's name
  * without a picture, never with a broken one.
  */
@@ -88,7 +89,8 @@ export async function resolveLogoUrl(
   if (requirePublic && !isPublicHost(root.hostname)) return undefined;
 
   // A path of this very site: `//other.example/x.png` would point elsewhere.
-  const own = RASTER_PATH.test(logoPath) && /^\/(?!\/)/.test(logoPath);
+  const own =
+    (RASTER_PATH.test(logoPath) || logoVersionOf(logoPath) !== null) && /^\/(?!\/)/.test(logoPath);
   const logo = root.origin + (own ? logoPath : DEFAULT_AVATAR_PATH);
   return (await answersAsImage(logo)) ? logo : undefined;
 }

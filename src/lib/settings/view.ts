@@ -1,4 +1,7 @@
 import { getConfig } from '@/config';
+import { EVENTS_MODULE_KEY, type EventCategory } from '@/config/schema';
+import { logoVersionOf } from '@/lib/branding/storage';
+import { prisma } from '@/lib/prisma';
 import type { DraftView } from '@/lib/setup/draft';
 import { setting } from './runtime';
 import { channelOf } from './update';
@@ -14,6 +17,7 @@ export function settingsView(): DraftView {
     name: config.bde.name,
     accentColor: config.bde.accentColor,
     messageLocale: config.bde.defaultLocale,
+    contactEmail: config.bde.contactEmail ?? '',
     addressUrl: setting('APP_URL') ?? '',
     clientId: setting('FORTYTWO_CLIENT_ID') ?? '',
     hasClientSecret: Boolean(setting('FORTYTWO_CLIENT_SECRET')),
@@ -36,6 +40,40 @@ export function settingsView(): DraftView {
         from: setting('SMTP_FROM') ?? '',
         hasPassword: Boolean(setting('SMTP_PASSWORD')),
       },
+    },
+  };
+}
+
+export interface EventsSettingsView {
+  categories: EventCategory[];
+  /** How many events each category (by key) is the category of: what a removal has to move. */
+  usage: Record<string, number>;
+  reminderHour: number;
+  timezone: string;
+}
+
+/** What only the settings page shows, besides the forms it shares with the installer. */
+export interface SettingsExtras {
+  logo: { path: string; custom: boolean };
+  /** Null while the events module is off: there is nothing to set. */
+  events: EventsSettingsView | null;
+}
+
+export async function settingsExtras(): Promise<SettingsExtras> {
+  const config = getConfig();
+  const logo = { path: config.bde.logoPath, custom: logoVersionOf(config.bde.logoPath) !== null };
+  if (!config.events || !config.modules.enabled.includes(EVENTS_MODULE_KEY)) {
+    return { logo, events: null };
+  }
+
+  const counts = await prisma.event.groupBy({ by: ['categoryKey'], _count: { _all: true } });
+  return {
+    logo,
+    events: {
+      categories: config.events.categories,
+      usage: Object.fromEntries(counts.map((row) => [row.categoryKey, row._count._all])),
+      reminderHour: config.events.reminderHour,
+      timezone: config.bde.timezone,
     },
   };
 }

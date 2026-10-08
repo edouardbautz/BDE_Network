@@ -54,6 +54,20 @@ describe('buildInstallation', () => {
     });
   });
 
+  it('carries the contact address when there is one, and none otherwise', () => {
+    const without = buildInstallation(complete(), ENV);
+    if (!without.ok) throw new Error(without.reason);
+    expect(without.config.bde).not.toHaveProperty('contactEmail');
+
+    const withIt = buildInstallation({ ...complete(), contactEmail: 'bureau@exemple.fr' }, ENV);
+    if (!withIt.ok) throw new Error(withIt.reason);
+    expect(withIt.config.bde.contactEmail).toBe('bureau@exemple.fr');
+    expect(
+      toView({ ...complete(), contactEmail: 'bureau@exemple.fr' }, { addressUrl: '' }).contactEmail,
+    ).toBe('bureau@exemple.fr');
+    expect(toView(complete(), { addressUrl: '' }).contactEmail).toBe('');
+  });
+
   it('has no events section when the module is off, and every campus when none is listed', () => {
     const result = buildInstallation({ ...complete(), events: false, campuses: [] }, ENV);
     if (!result.ok) throw new Error(result.reason);

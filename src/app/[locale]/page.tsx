@@ -6,6 +6,7 @@ import { isDatabaseReachable } from '@/lib/health';
 import { checkFortyTwoCredentials } from '@/lib/auth/oauth-check';
 import { TriangleAlert } from 'lucide-react';
 import { Link, redirect } from '@/i18n/navigation';
+import { LocaleSwitcher } from '@/components/locale-switcher';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { pageTitle } from '@/lib/page-title';
@@ -38,10 +39,19 @@ export default async function LoginPage({ params }: { params: Promise<{ locale: 
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-5 p-6">
+      <div className="fixed top-3 right-3 z-10">
+        <LocaleSwitcher />
+      </div>
       <Card className="w-full max-w-sm">
         <CardHeader className="items-center gap-1 text-center">
           {/* eslint-disable-next-line @next/next/no-img-element -- local SVG logo, next/image blocks SVG optimization by default */}
-          <img src={config.bde.logoPath} alt="" width={40} height={40} className="mb-2" />
+          <img
+            src={config.bde.logoPath}
+            alt=""
+            width={40}
+            height={40}
+            className="mb-2 object-contain"
+          />
           <CardTitle className="text-xl font-semibold tracking-tight">{config.bde.name}</CardTitle>
           <CardDescription>{t('loginSubtitle')}</CardDescription>
         </CardHeader>

@@ -26,17 +26,28 @@ export function StepIdentity({
   const [name, setName] = useState(view.name);
   const [color, setColor] = useState(view.accentColor);
   const [locale, setLocale] = useState(view.messageLocale);
+  const [contact, setContact] = useState(view.contactEmail);
   const [failure, setFailure] = useState<ActionFailure | null>(null);
   const [pending, start] = useTransition();
 
   function submit() {
     start(async () => {
       const result = await run(
-        api.saveIdentity({ name, accentColor: color, messageLocale: locale }),
+        api.saveIdentity({
+          name,
+          accentColor: color,
+          messageLocale: locale,
+          contactEmail: contact,
+        }),
       );
       if (!result.ok) return setFailure(result);
       setFailure(null);
-      onSaved({ name: name.trim(), accentColor: color, messageLocale: locale });
+      onSaved({
+        name: name.trim(),
+        accentColor: color,
+        messageLocale: locale,
+        contactEmail: contact.trim(),
+      });
       onNext();
     });
   }
@@ -114,6 +125,25 @@ export function StepIdentity({
             </span>
           </p>
         )}
+      </Field>
+
+      <Field
+        id="setup-contact"
+        label={t('contactLabel')}
+        hint={t('contactHelp')}
+        error={fieldError(failure, 'contactEmail', text)}
+      >
+        <Input
+          id="setup-contact"
+          type="email"
+          value={contact}
+          onChange={(event) => setContact(event.target.value)}
+          placeholder={t('contactPlaceholder')}
+          maxLength={120}
+          autoComplete="off"
+          aria-invalid={failure?.field === 'contactEmail'}
+          aria-describedby={failure?.field === 'contactEmail' ? 'setup-contact-error' : undefined}
+        />
       </Field>
 
       <Field id="setup-locale" label={t('localeLabel')} hint={t('localeHelp')}>

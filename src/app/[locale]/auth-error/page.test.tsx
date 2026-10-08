@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ session: vi.fn(), credentials: vi.fn() }));
 
+vi.mock('@/components/locale-switcher', () => ({ LocaleSwitcher: () => null }));
 vi.mock('@/lib/auth/session', () => ({ getEffectiveSession: mocks.session }));
 vi.mock('@/lib/auth/oauth-check', () => ({ checkFortyTwoCredentials: mocks.credentials }));
 vi.mock('@/i18n/navigation', () => ({
