@@ -43,6 +43,19 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
   reste visible en haut de la page. Quand 42 refuse l'application, la page de connexion demande de prévenir un
   propriétaire, et un propriétaire connecté voit un bandeau avec un lien vers la page. `BDE_REIMPORT=settings`
   remet dans les réglages les seules valeurs de `.env` si plus personne ne peut se connecter.
+- **Logo envoyé depuis Paramètres.** Un propriétaire envoie l'image de son BDE (PNG, JPEG, GIF ou WebP, 2 Mo au
+  plus, de 64 à 4096 pixels ; **pas de SVG**) : le format est lu dans les octets du fichier, jamais d'après son nom.
+  Il est rangé dans un nouveau volume Docker `uploads`, servi par `/api/logo` (public, `nosniff`, politique de contenu
+  qui interdit tout) et utilisé tout de suite dans le menu, sur la page de connexion et dans les messages Discord,
+  Slack et e-mail. Un nouveau logo a une nouvelle adresse : rien n'affiche l'ancien. Un bouton revient au logo fourni.
+  `scripts/backup.sh` et `scripts/restore.sh` sauvegardent et restaurent le logo avec l'archive de la base.
+- **Catégories d'événements et heure du rappel modifiables dans Paramètres** (module Événements activé) : renommer,
+  recolorer, ajouter, retirer. Une catégorie que des événements utilisent encore ne se retire qu'en choisissant celle
+  où les déplacer (fait dans la même transaction, inscrit au journal d'audit avec le nombre d'événements) ; il en reste
+  toujours au moins une. L'heure du rappel s'applique au prochain passage de la boucle, sans redémarrage.
+- **Adresse de contact** (page de confidentialité) : demandée par l'installateur (facultatif) et modifiable dans Paramètres.
+- **Sélecteur de langue FR/EN** dans le menu de la plateforme et sur les pages publiques (connexion, confidentialité,
+  attente, erreur) : la page reste la même et le choix est retenu.
 - **Le démarrage rapide des README (FR et EN) et `docs/installation.md` ne décrivent plus que l'installation dans le
   navigateur** : installer Docker, cloner, `docker compose up` sans `-d` la première fois, l'encadré avec le code (ou
   l'onglet Logs de Docker Desktop), les étapes, puis `docker compose up -d`. Les README montrent l'installateur et la

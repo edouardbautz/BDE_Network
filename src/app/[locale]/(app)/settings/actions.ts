@@ -5,6 +5,13 @@ import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 import { getConfig } from '@/config';
 import type { ActionResult, CampusOption } from '@/app/[locale]/setup/actions';
+import { LOGO_MAX_BYTES } from '@/lib/branding/image';
+import {
+  DEFAULT_LOGO_PATH,
+  logoPathFor,
+  pruneLogos,
+  saveLogo as storeLogo,
+} from '@/lib/branding/storage';
 import { startEventReminderScheduler, stopEventReminderScheduler } from '@/lib/events/scheduler';
 import { isSettingsEditable, requireSettingsManager } from '@/lib/settings/access';
 import { applicationToken } from '@/lib/settings/fortytwo-token';
@@ -91,6 +98,7 @@ const identitySchema = z.object({
   name: text,
   accentColor: text,
   messageLocale: z.string().max(10),
+  contactEmail: text.optional(),
 });
 
 export async function saveIdentity(input: unknown): Promise<ActionResult> {
@@ -99,6 +107,65 @@ export async function saveIdentity(input: unknown): Promise<ActionResult> {
   if (!parsed.success) return failure('invalid');
   return change({ section: 'identity', ...parsed.data });
 }
+
+// ---------------------------------------------------------------------------------------------
+// The logo: an image the owner sends. Checked on its bytes (`branding/image`), stored in the `uploads` volume, and
+// only then pointed to by the settings.
+
+export async function saveLogo(formData: FormData): Promise<ActionResult> {
+  await requireSettingsManager();
+  const file = formData instanceof FormData ? formData.get('logo') : null;
+  if (!(file instanceof File)) return failure('invalid');
+  // Said before the file is read: a large one is refused without being held in memory.
+  if (file.size > LOGO_MAX_BYTES) return failure('logoTooBig', { field: 'logo' });
+
+  const context = await owner();
+  if (!context) return readOnly;
+
+  const stored = await storeLogo(new Uint8Array(await file.arrayBuffer()));
+  if (!stored.ok) return failure(stored.code, { field: 'logo' });
+
+  const result = await updateSettings(
+    { section: 'logo', logoPath: logoPathFor(stored.version) },
+    context.actor,
+  );
+  if (result.ok) await pruneLogos(stored.version);
+  return answer(result);
+}
+
+/** Back to the logo that comes with the platform. */
+export async function removeLogo(): Promise<ActionResult> {
+  await requireSettingsManager();
+  const context = await owner();
+  if (!context) return readOnly;
+
+  const result = await updateSettings(
+    { section: 'logo', logoPath: DEFAULT_LOGO_PATH },
+    context.actor,
+  );
+  if (result.ok) await pruneLogos(null);
+  return answer(result);
+}
+
+// ---------------------------------------------------------------------------------------------
+// The events module: its categories and the hour of the reminder
+
+const categoriesSchema = z.object({
+  categories: z
+    .array(z.object({ key: z.string().max(60).optional(), label: text, color: z.string().max(20) }))
+    .max(60),
+  reminderHour: z.number(),
+  reassign: z.record(z.string().max(60), z.string().max(60)).optional(),
+});
+
+export async function saveEvents(input: unknown): Promise<ActionResult> {
+  await requireSettingsManager();
+  const parsed = categoriesSchema.safeParse(input);
+  if (!parsed.success) return failure('invalid');
+  return change({ section: 'events', ...parsed.data });
+}
+
+// ---------------------------------------------------------------------------------------------
 
 const addressSchema = z.object({ address: text, acceptInsecure: z.boolean().optional() });
 

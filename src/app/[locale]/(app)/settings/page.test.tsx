@@ -45,6 +45,7 @@ vi.mock('@/lib/settings/runtime', () => ({
 }));
 vi.mock('@/lib/settings/view', () => ({
   settingsView: () => ({ name: 'BDE Test', owners: ['alice'] }),
+  settingsExtras: async () => ({ logo: { path: '/logo.svg', custom: false }, events: null }),
 }));
 vi.mock('@/lib/prisma', () => ({
   prisma: {
@@ -57,7 +58,7 @@ vi.mock('@/components/events/copy-field', () => ({
   CopyField: ({ value }: { value: string }) => <code data-testid="command">{value}</code>,
 }));
 vi.mock('@/components/settings/settings-panels', () => ({
-  SettingsPanels: (props: { actorLogin: string; view: { name: string } }) => {
+  SettingsPanels: (props: { actorLogin: string; view: { name: string }; extras: unknown }) => {
     mocks.panels(props);
     return <div>panels for {props.actorLogin}</div>;
   },
@@ -90,6 +91,10 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'title' })).toBeInTheDocument();
     expect(screen.getByText('panels for alice')).toBeInTheDocument();
     expect(mocks.panels.mock.calls[0]?.[0].view.name).toBe('BDE Test');
+    expect(mocks.panels.mock.calls[0]?.[0].extras).toEqual({
+      logo: { path: '/logo.svg', custom: false },
+      events: null,
+    });
   });
 
   it('always reminds to back up the secrets volume, with the command', async () => {

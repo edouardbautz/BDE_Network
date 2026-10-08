@@ -60,6 +60,7 @@ const view = (patch: Partial<DraftView> = {}): DraftView => ({
   name: '',
   accentColor: '#0f766e',
   messageLocale: 'fr',
+  contactEmail: '',
   addressUrl: 'http://localhost:3500',
   clientId: '',
   hasClientSecret: false,
@@ -197,6 +198,7 @@ describe('the wizard', () => {
       name: 'BDE Test',
       accentColor: '#0f766e',
       messageLocale: 'fr',
+      contactEmail: '',
     });
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '2');
 

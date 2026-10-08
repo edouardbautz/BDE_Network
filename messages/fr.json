@@ -4,6 +4,9 @@
     "dark": "Sombre",
     "system": "Système"
   },
+  "language": {
+    "label": "Langue"
+  },
   "roles": {
     "OWNER": "Propriétaire",
     "MEMBER": "Membre",
@@ -683,7 +686,10 @@
       "localeLabel": "Langue des messages envoyés",
       "localeHelp": "La langue des notifications (Discord, Slack, e-mail). Chaque membre choisit ensuite la langue de l'interface.",
       "fr": "Français",
-      "en": "English"
+      "en": "English",
+      "contactLabel": "Adresse de contact (facultatif)",
+      "contactHelp": "Affichée sur la page de confidentialité : c'est là que les membres écrivent à propos de leurs données.",
+      "contactPlaceholder": "bureau@mon-ecole.fr"
     },
     "address": {
       "title": "Adresse de la plateforme",
@@ -864,7 +870,18 @@
       "ownerNotFound": "Ce login n'est pas dans la liste des propriétaires.",
       "ownerSelf": "Vous ne pouvez pas vous retirer vous-même : demandez à un autre propriétaire.",
       "tooManyOwners": "Il y a déjà 30 propriétaires, c'est le maximum.",
-      "loginUnverified": "42 n'a pas pu confirmer ce login : vérifiez-le, puis confirmez l'ajout."
+      "loginUnverified": "42 n'a pas pu confirmer ce login : vérifiez-le, puis confirmez l'ajout.",
+      "logoEmpty": "Le fichier est vide.",
+      "logoTooBig": "Ce fichier est trop lourd : 2 Mo au plus.",
+      "logoFormat": "Format non accepté : envoyez un PNG, un JPEG, un GIF ou un WebP (pas de SVG).",
+      "logoSmall": "Cette image est trop petite : au moins 64 pixels de côté.",
+      "logoLarge": "Cette image est trop grande : 4096 pixels de côté au plus.",
+      "reminderHour": "L'heure du rappel doit être comprise entre 0 et 23.",
+      "categoryLabel": "Le nom d'une catégorie doit faire entre 1 et 40 caractères.",
+      "categoryDuplicate": "Deux catégories portent le même nom.",
+      "categoryLast": "Gardez au moins une catégorie.",
+      "categoryInUse": "Des événements utilisent encore « {detail} » : choisissez la catégorie où les déplacer.",
+      "tooManyCategories": "Il y a déjà 30 catégories, c'est le maximum."
     }
   },
   "settings": {
@@ -912,6 +929,45 @@
       "removeTitle": "Retirer {login} des propriétaires ?",
       "removeBody": "Cette personne perd ses droits de propriétaire immédiatement : elle devient un membre avec le rôle par défaut et ne pourra plus modifier les réglages.",
       "removeConfirm": "Retirer"
+    },
+    "logo": {
+      "title": "Logo",
+      "description": "Il apparaît dans le menu, sur la page de connexion et dans les messages envoyés (Discord, Slack, e-mail).",
+      "currentAlt": "Logo actuel",
+      "newLogo": "Aperçu du nouveau logo",
+      "custom": "Le logo de votre BDE",
+      "default": "Le logo fourni avec la plateforme",
+      "requirements": "PNG, JPEG, GIF ou WebP · 2 Mo au plus · de 64 à 4096 pixels de côté. Un carré d'au moins 512 pixels est idéal.",
+      "fileLabel": "Choisir une image",
+      "fileHint": "Le SVG n'est pas accepté : Discord, Slack et les messageries ne l'affichent pas.",
+      "send": "Enregistrer le logo",
+      "sending": "Envoi…",
+      "reset": "Revenir au logo par défaut",
+      "resetTitle": "Revenir au logo par défaut ?",
+      "resetBody": "Le logo envoyé sera supprimé du serveur. Vous pourrez en envoyer un autre à tout moment.",
+      "resetConfirm": "Revenir au logo par défaut"
+    },
+    "events": {
+      "title": "Événements",
+      "description": "Les catégories proposées quand on crée un événement, et l'heure du rappel envoyé la veille.",
+      "categories": "Catégories",
+      "labelOf": "Nom de la catégorie {position}",
+      "labelPlaceholder": "Nom de la catégorie",
+      "colorOf": "Couleur de {label}",
+      "newCategory": "nouvelle catégorie",
+      "usage": "{count, plural, one {# événement} other {# événements}}",
+      "remove": "Retirer {label}",
+      "add": "Ajouter une catégorie",
+      "keepOne": "Il faut garder au moins une catégorie.",
+      "pendingTitle": "Seront retirées à l'enregistrement",
+      "keep": "Garder",
+      "moveTo": "{count, plural, one {Son événement passera} other {Ses # événements passeront}} dans la catégorie :",
+      "reminderLabel": "Heure du rappel",
+      "reminderHelp": "Le rappel part la veille de chaque événement, à cette heure (fuseau {timezone}).",
+      "removeTitle": "{count, plural, one {Retirer cette catégorie ?} other {Retirer ces # catégories ?}}",
+      "removeBodyMoved": "{count, plural, one {L'événement concerné sera déplacé} other {Les # événements concernés seront déplacés}} tout de suite vers la catégorie choisie. Le retrait ne peut pas être annulé.",
+      "removeBodyUnused": "{count, plural, one {Aucun événement n'utilise cette catégorie.} other {Aucun événement n'utilise ces catégories.}} Le retrait ne peut pas être annulé.",
+      "removeConfirm": "Retirer et enregistrer"
     }
   }
 }

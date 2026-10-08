@@ -237,6 +237,20 @@ describe('the steps', () => {
     ).toEqual({ ok: true });
   });
 
+  it('1. validates the contact address (optional) again: blank is fine, a wrong one is refused', async () => {
+    const identity = { name: 'BDE', accentColor: '#0f766e', messageLocale: 'fr' } as const;
+    expect(await actions.saveIdentity({ ...identity, contactEmail: '' })).toEqual({ ok: true });
+    expect(await actions.saveIdentity(identity)).toEqual({ ok: true });
+    expect(
+      await actions.saveIdentity({ ...identity, contactEmail: ' bureau@exemple.fr ' }),
+    ).toEqual({ ok: true });
+    expect(await actions.saveIdentity({ ...identity, contactEmail: 'bureau@' })).toMatchObject({
+      ok: false,
+      code: 'email',
+      field: 'contactEmail',
+    });
+  });
+
   it('2. gives the redirect address to declare, and wants an explicit yes for plain http on a domain', async () => {
     expect(await actions.saveAddress({ address: 'nonsense' })).toMatchObject({
       ok: false,

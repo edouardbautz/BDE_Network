@@ -42,7 +42,12 @@ interface Account {
 
 /** A database with the few tables a settings change touches, and transactions that roll back. */
 function fakeDb(
-  options: { config?: BdeConfig; values?: SettingValues; accounts?: Account[] } = {},
+  options: {
+    config?: BdeConfig;
+    values?: SettingValues;
+    accounts?: Account[];
+    events?: Array<{ id: string; categoryKey: string }>;
+  } = {},
 ) {
   const config = options.config ?? baseConfig();
   const values = options.values ?? baseValues;
@@ -70,6 +75,7 @@ function fakeDb(
       updatedAt: new Date('2026-10-01T10:00:00Z'),
     } as Record<string, unknown> | null,
     accounts: options.accounts ?? [],
+    events: options.events ?? [],
     audit: [] as Array<Record<string, unknown>>,
     defaultRole: 'role-default' as string | null,
     /** Called once, before the write: another save lands in between. */
@@ -128,6 +134,21 @@ function fakeDb(
         return { count: 1 };
       },
     },
+    event: {
+      count: async ({ where }: { where: { categoryKey: string } }) =>
+        state.events.filter((event) => event.categoryKey === where.categoryKey).length,
+      updateMany: async ({
+        where,
+        data,
+      }: {
+        where: { categoryKey: string };
+        data: { categoryKey: string };
+      }) => {
+        const hit = state.events.filter((event) => event.categoryKey === where.categoryKey);
+        for (const event of hit) event.categoryKey = data.categoryKey;
+        return { count: hit.length };
+      },
+    },
     role: { findFirst: async () => (state.defaultRole ? { id: state.defaultRole } : null) },
     auditLog: {
       create: async ({ data }: { data: Record<string, unknown> }) => void state.audit.push(data),
@@ -139,6 +160,7 @@ function fakeDb(
       const snapshot = structuredClone({
         row: state.row,
         accounts: state.accounts,
+        events: state.events,
         audit: state.audit,
       });
       try {
@@ -717,5 +739,279 @@ describe('what is never accepted', () => {
     expect(result).toEqual({ ok: true, changed: true });
     expect(JSON.stringify(state.row)).not.toContain('sneaky');
     expect(JSON.stringify(state.row)).not.toContain('evil');
+  });
+});
+
+describe('the contact address', () => {
+  const identity = {
+    section: 'identity',
+    name: 'BDE Test',
+    accentColor: '#0f766e',
+    messageLocale: 'fr',
+  } as const;
+
+  it('is saved, trimmed, and shown in the audit as changed', async () => {
+    const { db, state } = fakeDb();
+    expect(await run({ ...identity, contactEmail: ' bureau@exemple.fr ' }, db)).toEqual({
+      ok: true,
+      changed: true,
+    });
+    expect((state.row?.config as BdeConfig).bde.contactEmail).toBe('bureau@exemple.fr');
+    expect(state.audit[0]?.metadata).toMatchObject({
+      contactEmail: { from: null, to: 'bureau@exemple.fr' },
+    });
+  });
+
+  it('is kept when the change does not mention it, and removed when it is blank', async () => {
+    const config = baseConfig();
+    config.bde.contactEmail = 'bureau@exemple.fr';
+    const { db, state } = fakeDb({ config });
+
+    expect(await run({ ...identity, name: 'Autre nom' }, db)).toMatchObject({ ok: true });
+    expect((state.row?.config as BdeConfig).bde.contactEmail).toBe('bureau@exemple.fr');
+
+    expect(await run({ ...identity, name: 'Autre nom', contactEmail: '  ' }, db)).toMatchObject({
+      ok: true,
+      changed: true,
+    });
+    expect((state.row?.config as BdeConfig).bde).not.toHaveProperty('contactEmail');
+  });
+
+  it('is refused when it is not an address, and nothing is written', async () => {
+    const { db, state } = fakeDb();
+    expect(await run({ ...identity, contactEmail: 'pas une adresse' }, db)).toMatchObject({
+      ok: false,
+      code: 'email',
+      field: 'contactEmail',
+    });
+    expect(state.audit).toEqual([]);
+  });
+});
+
+describe('the logo', () => {
+  it('can be an uploaded one, then the default one again, and each is audited', async () => {
+    const { db, state } = fakeDb();
+    expect(await run({ section: 'logo', logoPath: '/api/logo?v=0123456789abcdef' }, db)).toEqual({
+      ok: true,
+      changed: true,
+    });
+    expect((state.row?.config as BdeConfig).bde.logoPath).toBe('/api/logo?v=0123456789abcdef');
+    expect(getRuntimeSettings()?.config.bde.logoPath).toBe('/api/logo?v=0123456789abcdef');
+
+    await run({ section: 'logo', logoPath: '/logo.svg' }, db);
+    expect((state.row?.config as BdeConfig).bde.logoPath).toBe('/logo.svg');
+    expect(state.audit.map((entry) => [entry.action, entry.metadata])).toEqual([
+      ['settings.logo.update', { from: 'default', to: 'uploaded' }],
+      ['settings.logo.update', { from: 'uploaded', to: 'default' }],
+    ]);
+  });
+
+  it.each([
+    '/etc/passwd',
+    'https://elsewhere.example/logo.png',
+    '/api/logo?v=../../x',
+    '/public/x.png',
+    '',
+  ])('refuses %j: only the default logo or an uploaded one', async (logoPath) => {
+    const { db, state } = fakeDb();
+    expect(await run({ section: 'logo', logoPath }, db)).toMatchObject({
+      ok: false,
+      code: 'invalid',
+    });
+    expect(state.audit).toEqual([]);
+  });
+});
+
+describe('the events settings', () => {
+  const cat = (key: string | undefined, label: string, color = '#db2777') => ({
+    key,
+    label,
+    color,
+  });
+  const events = (change: Partial<Extract<SettingsChange, { section: 'events' }>> = {}) =>
+    ({
+      section: 'events',
+      categories: [cat('soiree', 'Soirée')],
+      reminderHour: 18,
+      ...change,
+    }) as SettingsChange;
+  const twoCategories = () =>
+    baseConfig({
+      events: {
+        categories: [
+          { key: 'soiree', label: 'Soirée', color: '#db2777' },
+          { key: 'sport', label: 'Sport', color: '#16a34a' },
+        ],
+        reminderHour: 18,
+      },
+    });
+
+  it('adds a category: its key is made from its name, and never changes afterwards', async () => {
+    const { db, state } = fakeDb();
+    const result = await run(
+      events({
+        categories: [cat('soiree', 'Soirée'), cat(undefined, 'Soirée de rentrée', '#ABC')],
+      }),
+      db,
+    );
+    expect(result).toEqual({ ok: true, changed: true });
+    expect((state.row?.config as BdeConfig).events?.categories).toEqual([
+      { key: 'soiree', label: 'Soirée', color: '#db2777' },
+      { key: 'soiree-de-rentree', label: 'Soirée de rentrée', color: '#aabbcc' },
+    ]);
+    expect(getRuntimeSettings()?.config.events?.categories).toHaveLength(2);
+    expect(state.audit[0]).toMatchObject({
+      action: 'settings.events.update',
+      metadata: { added: ['Soirée de rentrée'], removed: [] },
+    });
+  });
+
+  it('gives a new category a key of its own even when its name is that of another', async () => {
+    const { db, state } = fakeDb();
+    await run(events({ categories: [cat('soiree', 'Soirée'), cat(undefined, 'SOIREE!')] }), db);
+    await run(
+      events({
+        categories: [
+          cat('soiree', 'Soirée'),
+          cat('soiree-2', 'SOIREE!'),
+          cat(undefined, 'soirée ?'),
+        ],
+      }),
+      db,
+    );
+    const keys = (state.row?.config as BdeConfig).events?.categories.map((c) => c.key);
+    expect(keys).toEqual(['soiree', 'soiree-2', 'soiree-3']);
+  });
+
+  it('renames and recolours without touching the key (the events keep their category)', async () => {
+    const { db, state } = fakeDb({ events: [{ id: 'e1', categoryKey: 'soiree' }] });
+    await run(events({ categories: [cat('soiree', 'Fête', '#000000')] }), db);
+    expect((state.row?.config as BdeConfig).events?.categories).toEqual([
+      { key: 'soiree', label: 'Fête', color: '#000000' },
+    ]);
+    expect(state.events).toEqual([{ id: 'e1', categoryKey: 'soiree' }]);
+    expect(state.audit[0]?.metadata).toMatchObject({
+      renamed: [{ from: 'Soirée', to: 'Fête' }],
+      recolored: ['Fête'],
+    });
+  });
+
+  it('changes the hour of the reminder, at once', async () => {
+    const { db, state } = fakeDb();
+    await run(events({ reminderHour: 9 }), db);
+    expect((state.row?.config as BdeConfig).events?.reminderHour).toBe(9);
+    expect(getRuntimeSettings()?.config.events?.reminderHour).toBe(9);
+    expect(state.audit[0]?.metadata).toMatchObject({ reminderHour: { from: 18, to: 9 } });
+  });
+
+  it.each([-1, 24, 1.5, Number.NaN])('refuses %s as an hour', async (reminderHour) => {
+    const { db, state } = fakeDb();
+    expect(await run(events({ reminderHour }), db)).toMatchObject({
+      ok: false,
+      code: 'reminderHour',
+    });
+    expect(state.audit).toEqual([]);
+  });
+
+  it('takes out a category no event uses', async () => {
+    const { db, state } = fakeDb({ config: twoCategories() });
+    expect(await run(events(), db)).toMatchObject({ ok: true, changed: true });
+    expect((state.row?.config as BdeConfig).events?.categories.map((c) => c.key)).toEqual([
+      'soiree',
+    ]);
+    expect(state.audit[0]?.metadata).toMatchObject({ removed: [{ label: 'Sport', events: 0 }] });
+  });
+
+  it('refuses to take out a category events still use, and changes nothing', async () => {
+    const { db, state } = fakeDb({
+      config: twoCategories(),
+      events: [
+        { id: 'e1', categoryKey: 'sport' },
+        { id: 'e2', categoryKey: 'sport' },
+      ],
+    });
+    expect(await run(events(), db)).toMatchObject({
+      ok: false,
+      code: 'categoryInUse',
+      detail: 'Sport',
+    });
+    expect((state.row?.config as BdeConfig).events?.categories).toHaveLength(2);
+    expect(state.events.map((e) => e.categoryKey)).toEqual(['sport', 'sport']);
+    expect(state.audit).toEqual([]);
+  });
+
+  it('moves the events of a category taken out to the one chosen, in the same transaction, and says how many', async () => {
+    const { db, state } = fakeDb({
+      config: twoCategories(),
+      events: [
+        { id: 'e1', categoryKey: 'sport' },
+        { id: 'e2', categoryKey: 'sport' },
+        { id: 'e3', categoryKey: 'soiree' },
+      ],
+    });
+    expect(await run(events({ reassign: { sport: 'soiree' } }), db)).toMatchObject({ ok: true });
+    expect(state.events.map((e) => e.categoryKey)).toEqual(['soiree', 'soiree', 'soiree']);
+    expect(state.audit[0]?.metadata).toMatchObject({
+      removed: [{ label: 'Sport', events: 2, movedTo: 'Soirée' }],
+    });
+  });
+
+  it('does not move events to a category that is going too, nor to one that does not exist', async () => {
+    const { db, state } = fakeDb({
+      config: twoCategories(),
+      events: [{ id: 'e1', categoryKey: 'sport' }],
+    });
+    expect(await run(events({ reassign: { sport: 'sport' } }), db)).toMatchObject({
+      ok: false,
+      code: 'invalid',
+    });
+    expect(await run(events({ reassign: { sport: 'nothing' } }), db)).toMatchObject({
+      ok: false,
+      code: 'invalid',
+    });
+    expect(state.events[0]?.categoryKey).toBe('sport');
+  });
+
+  it('applies the move once when the write loses against another save and is retried', async () => {
+    const { db, state } = fakeDb({
+      config: twoCategories(),
+      events: [{ id: 'e1', categoryKey: 'sport' }],
+    });
+    state.beforeWrite = () => {
+      state.row = { ...state.row, updatedAt: new Date('2026-10-01T10:30:00Z') };
+    };
+    expect(await run(events({ reassign: { sport: 'soiree' } }), db)).toMatchObject({ ok: true });
+    expect(state.events[0]?.categoryKey).toBe('soiree');
+    expect(state.audit).toHaveLength(1);
+  });
+
+  it.each([
+    ['no category at all', { categories: [] }, 'categoryLast'],
+    ['an empty name', { categories: [cat('soiree', '   ')] }, 'categoryLabel'],
+    ['a name of 41 characters', { categories: [cat('soiree', 'x'.repeat(41))] }, 'categoryLabel'],
+    ['a bad colour', { categories: [cat('soiree', 'Soirée', 'rouge')] }, 'color'],
+    [
+      'two categories of the same name',
+      { categories: [cat('soiree', 'Fête'), cat(undefined, 'fête')] },
+      'categoryDuplicate',
+    ],
+    ['a key nobody knows', { categories: [cat('mystery', 'Autre')] }, 'invalid'],
+    ['the same key twice', { categories: [cat('soiree', 'A'), cat('soiree', 'B')] }, 'invalid'],
+    [
+      'more than 30 categories',
+      { categories: Array.from({ length: 31 }, (_, i) => cat(undefined, `Catégorie ${i}`)) },
+      'tooManyCategories',
+    ],
+  ])('refuses %s', async (_what, change, code) => {
+    const { db, state } = fakeDb();
+    expect(await run(events(change), db)).toMatchObject({ ok: false, code });
+    expect(state.audit).toEqual([]);
+    expect((state.row?.config as BdeConfig).events?.categories).toHaveLength(1);
+  });
+
+  it('is refused while the events module is off', async () => {
+    const config = baseConfig({ modules: { enabled: [] } });
+    const { db } = fakeDb({ config });
+    expect(await run(events(), db)).toMatchObject({ ok: false, code: 'invalid' });
   });
 });

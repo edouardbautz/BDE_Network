@@ -13,6 +13,8 @@ export interface SetupDraft {
   name?: string;
   accentColor?: string;
   messageLocale?: Language;
+  /** Where members write about their data (privacy page). Optional. */
+  contactEmail?: string;
   address?: Address;
   clientId?: string;
   clientSecret?: string;
@@ -63,6 +65,7 @@ export interface DraftView {
   name: string;
   accentColor: string;
   messageLocale: Language;
+  contactEmail: string;
   addressUrl: string;
   clientId: string;
   hasClientSecret: boolean;
@@ -90,6 +93,7 @@ export function toView(draft: SetupDraft, defaults: { addressUrl: string }): Dra
     name: draft.name ?? '',
     accentColor: draft.accentColor ?? DEFAULT_ACCENT,
     messageLocale: draft.messageLocale ?? 'fr',
+    contactEmail: draft.contactEmail ?? '',
     addressUrl: draft.address?.url ?? defaults.addressUrl,
     clientId: draft.clientId ?? '',
     hasClientSecret: Boolean(draft.clientSecret),

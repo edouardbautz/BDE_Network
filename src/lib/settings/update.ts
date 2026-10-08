@@ -1,5 +1,6 @@
 import { validateEnvironment } from '@/config/env';
 import { EVENTS_MODULE_KEY, bdeConfigSchema, type BdeConfig } from '@/config/schema';
+import { DEFAULT_LOGO_PATH, logoVersionOf } from '@/lib/branding/storage';
 import type { PrismaClient } from '@/generated/prisma/client';
 import { logAuditEvent } from '@/lib/audit-log';
 import { prisma } from '@/lib/prisma';
@@ -27,8 +28,34 @@ import { PLATFORM_ID, splitSettings } from './store';
  * The audit entries never hold a secret: for a secret, only "it changed".
  */
 
+/** A category as the settings page sends it: a new one has no `key` (the server makes it from the name). */
+export interface CategoryInput {
+  key?: string;
+  label: string;
+  color: string;
+}
+
 export type SettingsChange =
-  | { section: 'identity'; name: string; accentColor: string; messageLocale: string }
+  /** `contactEmail`: left out keeps the saved one, blank removes it. */
+  | {
+      section: 'identity';
+      name: string;
+      accentColor: string;
+      messageLocale: string;
+      contactEmail?: string;
+    }
+  /** `logoPath`: the default logo, or the address of an uploaded one (already stored, see `branding/storage`). */
+  | { section: 'logo'; logoPath: string }
+  /**
+   * The categories of the events module and the hour of the reminder. A category taken out while events still
+   * use it needs `reassign[key]`: the category those events move to (they are never left without one).
+   */
+  | {
+      section: 'events';
+      categories: CategoryInput[];
+      reminderHour: number;
+      reassign?: Record<string, string>;
+    }
   | { section: 'address'; address: string; acceptInsecure?: boolean }
   /** `clientSecret` blank keeps the saved one. */
   | { section: 'oauth'; clientId: string; clientSecret: string }
@@ -60,9 +87,28 @@ interface Applied {
   config: BdeConfig;
   values: SettingValues;
   audit: { action: string; targetLabel?: string; metadata: Record<string, unknown> };
+  /** Categories taken out by this change: the events that use them move to another one, in the same transaction. */
+  removedCategories?: Array<{ key: string; label: string; target?: string }>;
 }
 
 const MAX_OWNERS = 30;
+const MAX_CATEGORIES = 30;
+
+/** `Soirée de rentrée` → `soiree-de-rentree`: the stable identifier of a new category. */
+export function categoryKeyFor(label: string, taken: ReadonlySet<string>): string {
+  const base =
+    label
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 30)
+      .replace(/-+$/g, '') || 'categorie';
+  let key = base;
+  for (let n = 2; taken.has(key); n++) key = `${base}-${n}`;
+  return key;
+}
 const normalize = (login: string): string => login.trim().toLowerCase();
 
 /** The notification settings as the row holds them (the channel itself is in the configuration). */
@@ -108,17 +154,27 @@ function apply(change: SettingsChange, state: State, actor: SettingsActor): Appl
       if (change.messageLocale !== 'fr' && change.messageLocale !== 'en') return fail('invalid');
       const locale: 'fr' | 'en' = change.messageLocale === 'en' ? 'en' : 'fr';
 
-      const next = {
-        ...config,
-        bde: {
-          ...config.bde,
-          name: name.value,
-          accentColor: color.value,
-          defaultLocale: locale,
-        },
+      let contactEmail = config.bde.contactEmail;
+      if (change.contactEmail !== undefined) {
+        if (change.contactEmail.trim() === '') {
+          contactEmail = undefined;
+        } else {
+          const email = validate.validateEmail(change.contactEmail);
+          if (!email.ok) return fail(email.error, { field: 'contactEmail' });
+          contactEmail = email.value;
+        }
+      }
+
+      const bde = {
+        ...config.bde,
+        name: name.value,
+        accentColor: color.value,
+        defaultLocale: locale,
       };
+      if (contactEmail) bde.contactEmail = contactEmail;
+      else delete bde.contactEmail;
       return {
-        config: next,
+        config: { ...config, bde },
         values,
         audit: {
           action: 'settings.identity.update',
@@ -126,6 +182,98 @@ function apply(change: SettingsChange, state: State, actor: SettingsActor): Appl
             name: { from: config.bde.name, to: name.value },
             accentColor: { from: config.bde.accentColor, to: color.value },
             messageLocale: { from: config.bde.defaultLocale, to: locale },
+            contactEmail: { from: config.bde.contactEmail ?? null, to: contactEmail ?? null },
+          },
+        },
+      };
+    }
+
+    case 'logo': {
+      const uploaded = logoVersionOf(change.logoPath) !== null;
+      if (!uploaded && change.logoPath !== DEFAULT_LOGO_PATH) return fail('invalid');
+      return {
+        config: { ...config, bde: { ...config.bde, logoPath: change.logoPath } },
+        values,
+        audit: {
+          action: 'settings.logo.update',
+          metadata: {
+            from: logoVersionOf(config.bde.logoPath) ? 'uploaded' : 'default',
+            to: uploaded ? 'uploaded' : 'default',
+          },
+        },
+      };
+    }
+
+    case 'events': {
+      if (!config.events || !config.modules.enabled.includes(EVENTS_MODULE_KEY)) {
+        return fail('invalid');
+      }
+      const hour = change.reminderHour;
+      if (!Number.isInteger(hour) || hour < 0 || hour > 23) {
+        return fail('reminderHour', { field: 'reminderHour' });
+      }
+      if (!Array.isArray(change.categories) || change.categories.length === 0) {
+        return fail('categoryLast', { field: 'categories' });
+      }
+      if (change.categories.length > MAX_CATEGORIES) {
+        return fail('tooManyCategories', { field: 'categories' });
+      }
+
+      const before = config.events.categories;
+      const known = new Map(before.map((category) => [category.key, category]));
+      const taken = new Set(known.keys());
+      const seen = new Set<string>();
+      const labels = new Set<string>();
+      const categories: NonNullable<BdeConfig['events']>['categories'] = [];
+
+      for (const input of change.categories) {
+        const label = validate.validateCategoryLabel(input.label);
+        if (!label.ok) return fail(label.error, { field: 'categories' });
+        const color = validate.validateColor(input.color);
+        if (!color.ok) return fail('color', { field: 'categories' });
+        const folded = label.value.toLocaleLowerCase();
+        if (labels.has(folded)) return fail('categoryDuplicate', { field: 'categories' });
+        labels.add(folded);
+
+        let key = input.key;
+        if (key !== undefined) {
+          // An existing category keeps its key for ever (the events refer to it): only a known one may come back.
+          if (!known.has(key) || seen.has(key)) return fail('invalid');
+        } else {
+          key = categoryKeyFor(label.value, taken);
+          taken.add(key);
+        }
+        seen.add(key);
+        categories.push({ key, label: label.value, color: color.value });
+      }
+
+      const removed = before
+        .filter((category) => !seen.has(category.key))
+        .map(({ key, label }) => ({ key, label, target: change.reassign?.[key] }));
+      for (const gone of removed) {
+        if (gone.target !== undefined && !categories.some((c) => c.key === gone.target)) {
+          return fail('invalid');
+        }
+      }
+
+      const renamed = categories
+        .filter((c) => known.has(c.key) && known.get(c.key)?.label !== c.label)
+        .map((c) => ({ from: known.get(c.key)?.label, to: c.label }));
+      const recolored = categories
+        .filter((c) => known.has(c.key) && known.get(c.key)?.color !== c.color)
+        .map((c) => c.label);
+
+      return {
+        config: { ...config, events: { ...config.events, categories, reminderHour: hour } },
+        values,
+        removedCategories: removed,
+        audit: {
+          action: 'settings.events.update',
+          metadata: {
+            added: categories.filter((c) => !known.has(c.key)).map((c) => c.label),
+            renamed,
+            recolored,
+            reminderHour: { from: config.events.reminderHour, to: hour },
           },
         },
       };
@@ -370,6 +518,15 @@ export async function updateSettings(
       const after: State = { config: next.data, values: applied.values };
       if (canonical(after) === canonical(current)) return { ok: true, changed: false } as const;
 
+      // A category taken out while events still use it: they must have been given another one (never left without).
+      const moves: Array<{ key: string; label: string; to: string; events: number }> = [];
+      for (const gone of applied.removedCategories ?? []) {
+        const events = await tx.event.count({ where: { categoryKey: gone.key } });
+        if (events === 0) continue;
+        if (!gone.target) return fail('categoryInUse', { field: 'categories', detail: gone.label });
+        moves.push({ key: gone.key, label: gone.label, to: gone.target, events });
+      }
+
       const split = splitSettings(after.values);
       const written = await tx.platformSettings.updateMany({
         where: { id: PLATFORM_ID, updatedAt: row.updatedAt },
@@ -383,6 +540,27 @@ export async function updateSettings(
       if (written.count === 0) return 'retry' as const; // somebody saved something else first
 
       let metadata: Record<string, unknown> = applied.audit.metadata;
+      if (change.section === 'events') {
+        for (const move of moves) {
+          await tx.event.updateMany({
+            where: { categoryKey: move.key },
+            data: { categoryKey: move.to },
+          });
+        }
+        const labelOf = (key: string) =>
+          after.config.events?.categories.find((category) => category.key === key)?.label ?? key;
+        metadata = {
+          ...metadata,
+          removed: (applied.removedCategories ?? []).map((gone) => {
+            const move = moves.find((m) => m.key === gone.key);
+            return {
+              label: gone.label,
+              events: move?.events ?? 0,
+              ...(move && { movedTo: labelOf(move.to) }),
+            };
+          }),
+        };
+      }
       if (change.section === 'owner-add' || change.section === 'owner-remove') {
         const accounts = await syncOwnerAccounts(tx, after.config.auth.owners);
         metadata = { ...metadata, promoted: accounts.promoted, demoted: accounts.demoted };

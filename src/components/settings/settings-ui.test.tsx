@@ -2,6 +2,7 @@ import { cleanup, configure, fireEvent, render, screen, waitFor } from '@testing
 import { NextIntlClientProvider } from 'next-intl';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fr from '../../../messages/fr.json';
+import type { SettingsExtras } from '@/lib/settings/view';
 import type { DraftView } from '@/lib/setup/draft';
 
 configure({ asyncUtilTimeout: 5000 });
@@ -23,6 +24,9 @@ const mocks = vi.hoisted(() => ({
   checkOwner: vi.fn(),
   addOwner: vi.fn(),
   removeOwner: vi.fn(),
+  saveLogo: vi.fn(),
+  removeLogo: vi.fn(),
+  saveEvents: vi.fn(),
 }));
 
 vi.mock('sonner', () => ({ toast: { success: mocks.toastSuccess, error: mocks.toastError } }));
@@ -39,6 +43,9 @@ vi.mock('@/app/[locale]/(app)/settings/actions', () => ({
   checkOwner: mocks.checkOwner,
   addOwner: mocks.addOwner,
   removeOwner: mocks.removeOwner,
+  saveLogo: mocks.saveLogo,
+  removeLogo: mocks.removeLogo,
+  saveEvents: mocks.saveEvents,
 }));
 
 const { SettingsPanels } = await import('./settings-panels');
@@ -48,6 +55,7 @@ const view = (patch: Partial<DraftView> = {}): DraftView => ({
   name: 'BDE Test',
   accentColor: '#0f766e',
   messageLocale: 'fr',
+  contactEmail: '',
   addressUrl: 'https://bde.exemple.fr',
   clientId: 'u-s4t2ud-uid-abcdef',
   hasClientSecret: true,
@@ -67,10 +75,21 @@ const view = (patch: Partial<DraftView> = {}): DraftView => ({
   ...patch,
 });
 
-function renderPanels(patch: Partial<DraftView> = {}) {
+const extras = (patch: Partial<SettingsExtras> = {}): SettingsExtras => ({
+  logo: { path: '/logo.svg', custom: false },
+  events: {
+    categories: [{ key: 'soiree', label: 'Soirée', color: '#db2777' }],
+    usage: { soiree: 3 },
+    reminderHour: 18,
+    timezone: 'Europe/Paris',
+  },
+  ...patch,
+});
+
+function renderPanels(patch: Partial<DraftView> = {}, extra: Partial<SettingsExtras> = {}) {
   return render(
     <NextIntlClientProvider locale="fr" messages={fr}>
-      <SettingsPanels view={view(patch)} actorLogin="alice" />
+      <SettingsPanels view={view(patch)} extras={extras(extra)} actorLogin="alice" />
     </NextIntlClientProvider>,
   );
 }
@@ -105,11 +124,13 @@ describe('the sections', () => {
 
     for (const title of [
       'Votre BDE',
+      'Logo',
       'Adresse de la plateforme',
       'Application 42',
       'Campus',
       'Propriétaires',
       'Modules',
+      'Événements',
       'Notifications',
     ]) {
       expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
@@ -148,6 +169,7 @@ describe('the sections', () => {
         name: 'Le BDE',
         accentColor: '#0f766e',
         messageLocale: 'fr',
+        contactEmail: '',
       }),
     );
     await waitFor(() => expect(mocks.toastSuccess).toHaveBeenCalledWith('Enregistré'));

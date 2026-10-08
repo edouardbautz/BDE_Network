@@ -91,6 +91,18 @@ describe('resolveLogoUrl', () => {
     );
   });
 
+  it('gives the logo the BDE uploaded, whatever its image type, and nothing but that address under /api/logo', async () => {
+    const uploaded = 'https://bde.example.fr/api/logo?v=0123456789abcdef';
+    serve({ [uploaded]: 'image/png' });
+    await expect(
+      resolveLogoUrl('https://bde.example.fr', '/api/logo?v=0123456789abcdef'),
+    ).resolves.toBe(uploaded);
+
+    // another query under the same path is not an uploaded logo: the default one is used
+    serve({ [png]: 'image/png' });
+    await expect(resolveLogoUrl('https://bde.example.fr', '/api/logo?v=../x')).resolves.toBe(png);
+  });
+
   it.each(['/a.png', '/a.PNG', '/a.jpg', '/a.jpeg', '/a.gif', '/a.webp'])(
     'accepts %s as an avatar',
     async (path) => {

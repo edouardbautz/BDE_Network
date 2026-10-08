@@ -110,6 +110,7 @@ const identitySchema = z.object({
   name: stringField,
   accentColor: stringField,
   messageLocale: z.enum(['fr', 'en']),
+  contactEmail: stringField.optional(),
 });
 
 export async function saveIdentity(input: unknown): Promise<ActionResult> {
@@ -126,6 +127,14 @@ export async function saveIdentity(input: unknown): Promise<ActionResult> {
   ctx.draft.name = name.value;
   ctx.draft.accentColor = color.value;
   ctx.draft.messageLocale = parsed.data.messageLocale;
+  const contact = (parsed.data.contactEmail ?? '').trim();
+  if (contact === '') {
+    delete ctx.draft.contactEmail;
+  } else {
+    const email = validateEmail(contact);
+    if (!email.ok) return fail(email.error, { field: 'contactEmail' });
+    ctx.draft.contactEmail = email.value;
+  }
   reach(ctx.draft, 1);
   return { ok: true };
 }
