@@ -152,12 +152,12 @@ jobs:
       # The installer, in a real browser, against the real image: puppeteer-core drives the Chrome of the runner
       # and e2e/mock-fortytwo.mjs stands in for the 42 API. It has its own database, so the other steps see
       # nothing of it. Nothing secret may be in a log or in clear in the database afterwards (the settings page
-      # is then tried on the same platform).
+      # is then tried on the same platform; it forges session cookies with @auth/core, at the version of the lockfile).
       - name: The installer and the settings page, end to end in a browser
         run: |
           PGPASSWORD=ci-password psql -h 127.0.0.1 -U bde -d postgres -c 'CREATE DATABASE bde_install'
           mkdir "$RUNNER_TEMP/e2e-deps"
-          npm install --prefix "$RUNNER_TEMP/e2e-deps" --no-audit --no-fund puppeteer-core@25.12.0
+          npm install --prefix "$RUNNER_TEMP/e2e-deps" --no-audit --no-fund puppeteer-core@25.12.0 @auth/core@0.41.3
           ln -s "$RUNNER_TEMP/e2e-deps/node_modules" e2e/node_modules
           node e2e/mock-fortytwo.mjs 4242 &
           docker run -d --name installer --network host -e PORT=3003 \
