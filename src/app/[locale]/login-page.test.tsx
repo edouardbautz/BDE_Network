@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@/lib/auth', () => ({ signIn: vi.fn() }));
+vi.mock('@/components/locale-switcher', () => ({ LocaleSwitcher: () => null }));
 vi.mock('@/lib/auth/session', () => ({ getEffectiveSession: mocks.session }));
 vi.mock('@/lib/health', () => ({ isDatabaseReachable: mocks.reachable }));
 vi.mock('@/lib/auth/oauth-check', () => ({ checkFortyTwoCredentials: mocks.credentials }));

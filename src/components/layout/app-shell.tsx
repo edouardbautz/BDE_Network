@@ -22,6 +22,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { LocaleSwitcher } from '@/components/locale-switcher';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 export interface NavItem {
@@ -60,7 +61,7 @@ function BrandMark({ bdeName, logoPath }: { bdeName: string; logoPath: string })
       className="flex min-w-0 items-center gap-2.5 rounded-sm font-semibold focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
     >
       {/* eslint-disable-next-line @next/next/no-img-element -- local SVG logo, next/image blocks SVG optimization by default */}
-      <img src={logoPath} alt="" width={24} height={24} className="shrink-0" />
+      <img src={logoPath} alt="" width={24} height={24} className="shrink-0 object-contain" />
       <span className="truncate">{bdeName}</span>
     </Link>
   );
@@ -138,7 +139,10 @@ export function AppShell({
         </div>
         <div className="flex items-center justify-between gap-2 border-t border-sidebar-border p-3">
           {userMenu}
-          <ThemeToggle />
+          <div className="flex shrink-0 items-center">
+            <LocaleSwitcher />
+            <ThemeToggle />
+          </div>
         </div>
       </aside>
 
@@ -162,7 +166,10 @@ export function AppShell({
               </div>
               <div className="flex items-center justify-between gap-2 border-t border-sidebar-border p-3">
                 {userMenu}
-                <ThemeToggle />
+                <div className="flex shrink-0 items-center">
+                  <LocaleSwitcher />
+                  <ThemeToggle />
+                </div>
               </div>
             </SheetContent>
           </Sheet>
