@@ -78,7 +78,7 @@ Si Discord ne peut pas récupérer l'image, **le message part quand même**, au 
 avatar : jamais d'image cassée. C'est le cas quand :
 
 - `APP_URL` n'est pas renseignée, ou n'est pas une adresse publique (`localhost`, un réseau privé :
-  Discord ne les voit pas). Renseignez par exemple `APP_URL=https://bde.exemple.fr` dans `.env` ;
+  Discord ne les voit pas). Renseignez l'adresse publique (par exemple `https://bde.exemple.fr`) dans **Paramètres**, section Adresse de la plateforme ;
 - le fichier est introuvable, ou le serveur ne le sert pas comme une image.
 
 La plateforme vérifie l'image (une requête rapide, mémorisée dix minutes) avant de l'envoyer, pour ne

@@ -252,22 +252,6 @@ jobs:
           docker compose down -v
           git checkout bde.config.yml
 
-      # The setup assistant (setup/): its image builds, and it starts and stops cleanly. With no
-      # answer to read it must say so, exit with 1 and write nothing (the real run needs a 42 account).
-      - name: Build the setup assistant and check that it starts
-        run: |
-          docker compose -f docker-compose.setup.yml build
-          set +e
-          output="$(printf '1\n' | docker compose -f docker-compose.setup.yml run --rm -T setup 2>&1)"
-          code=$?
-          set -e
-          echo "$output"
-          [ "$code" -eq 1 ] || { echo "expected exit code 1, got $code"; exit 1; }
-          echo "$output" | grep -q 'Assistant d.installation de BDE_Network' || { echo "no welcome message"; exit 1; }
-          echo "$output" | grep -q 'aucun fichier n.*modifié' || { echo "no 'nothing written' message"; exit 1; }
-          test ! -e .env
-          test -z "$(git status --porcelain)" || { git status --short; echo "the assistant changed files"; exit 1; }
-
       - name: Show the logs
         if: always()
         run: docker logs app

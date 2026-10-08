@@ -60,6 +60,3 @@ next-env.d.ts
 
 # internal pre-release audit notes (never committed)
 /.audit/
-
-# setup assistant: copies of the files it replaces (they hold secrets)
-/.setup-backups/

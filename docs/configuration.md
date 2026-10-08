@@ -1,11 +1,16 @@
 # Configuration
 
-Deux fichiers gouvernent la configuration : `bde.config.yml` (versionné, non-secret) et `.env`
-(secrets, jamais commité). Les deux sont validés **à chaque démarrage** de l'application — une
-valeur manquante ou mal formée l'empêche de démarrer, avec un message en français qui explique
-quoi corriger (à lire avec `docker compose logs app`). Un simple avertissement est affiché, sans
-bloquer, pour ce qui est probablement une erreur : par exemple le login « votre-login-42 » encore
-présent dans `auth.owners`, ou une `APP_URL` en `http://` sur une adresse publique.
+Les réglages de la plateforme sont choisis **dans le navigateur** : à l'[installation](installation.md), puis
+dans la page **Paramètres** (propriétaires). Ils sont enregistrés dans la base de données (les secrets,
+chiffrés). Cette page est la **référence de chaque réglage** : elle présente leurs noms tels qu'ils figurent dans
+les deux fichiers d'origine, `bde.config.yml` (non secret) et `.env` (secrets), que l'on n'utilise plus que pour
+une installation faite avant la page d'installation, ou pour un déploiement piloté par fichiers (voir
+[Où sont les réglages](#où-sont-les-réglages-et-comment-les-modifier)).
+
+Les réglages sont validés **à chaque démarrage** — une valeur manquante ou mal formée empêche de démarrer, avec
+un message en français qui explique quoi corriger (à lire avec `docker compose logs app`). Un simple
+avertissement est affiché, sans bloquer, pour ce qui est probablement une erreur : par exemple le login
+« votre-login-42 » encore présent dans `auth.owners`, ou une `APP_URL` en `http://` sur une adresse publique.
 
 ## `bde.config.yml`
 

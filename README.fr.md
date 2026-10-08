@@ -62,34 +62,38 @@ Linux ou macOS. Pas besoin de Node.js.
    docker compose up
    ```
 
-4. **Ouvrez l'adresse affichée** (`http://localhost:3000`), entrez le **code d'installation** que le terminal
-   montre dans un encadré (il est aussi dans l'onglet _Logs_ du conteneur `app` de Docker Desktop, ou avec
-   `docker compose logs app`), et suivez les étapes dans votre navigateur.
+4. **Ouvrez l'adresse affichée** (`http://localhost:3000`) et entrez le **code d'installation** : le terminal
+   le montre dans un encadré (si vous l'avez fermé, il est dans l'onglet _Logs_ du conteneur `app` de Docker
+   Desktop, ou avec `docker compose logs app`). Suivez ensuite les étapes dans votre navigateur.
+5. **Une fois la plateforme installée**, faites `Ctrl+C` dans le terminal puis lancez `docker compose up -d` :
+   elle tourne alors en arrière-plan, et c'est cette commande qu'on utilise désormais.
 
 L'installateur vous guide en huit étapes (nom, adresse, votre application OAuth 42, campus, propriétaires,
 modules, notifications) et vérifie vos réponses auprès de l'API 42 (vos identifiants, les campus, les logins
 des propriétaires). Vous n'ouvrez aucun fichier de configuration, et il n'y a rien à créer avant : pas de
 `.env`. Le code évite que quelqu'un d'autre installe la plateforme à votre place, et l'installateur disparaît
-définitivement une fois la plateforme installée. Ensuite, faites Ctrl+C puis `docker compose up -d` pour
-qu'elle tourne en arrière-plan, et **sauvegardez le volume `secrets`** (`./scripts/backup.sh`) : sans lui, les
-secrets enregistrés ne peuvent plus être déchiffrés après une restauration.
+définitivement une fois la plateforme installée. Les réglages se modifient ensuite dans la page **Paramètres**
+(propriétaires). **Sauvegardez le volume `secrets`** (`./scripts/backup.sh`) : sans lui, les secrets enregistrés
+ne peuvent plus être déchiffrés après une restauration.
 
-Vous préférez un questionnaire dans le terminal, ou tout faire à la main ? Les deux sont conservés dans le
-[guide d'installation](docs/installation.md#alternative--lassistant-en-terminal). Le guide complet, la mise en
-production avec HTTPS et les sauvegardes sont dans [docs/](docs/).
+|                                                                     |                                                     |
+| ------------------------------------------------------------------- | --------------------------------------------------- |
+| ![L'installateur dans le navigateur](docs/images/fr/installer.webp) | ![La page Paramètres](docs/images/fr/settings.webp) |
+
+Le guide complet, la mise en production avec HTTPS et les sauvegardes sont dans [docs/](docs/).
 
 ## Documentation
 
-|                                                                                    |                                                                                        |
-| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| [Installation](docs/installation.md)                                               | deux parcours : pour le bureau (aucune notion technique) et pour la personne technique |
-| [Configuration](docs/configuration.md)                                             | tous les réglages de `bde.config.yml` et `.env`                                        |
-| [Guide utilisateur](docs/user-guide.md)                                            | pour les membres                                                                       |
-| [Rôles et droits](docs/roles.md)                                                   | le modèle, les règles de sécurité, un exemple d'organisation                           |
-| [Module Événements](docs/events.md)                                                | calendrier, synchronisation, rappels, notifications                                    |
-| [Notifications](docs/notifications.md)                                             | e-mail, Discord (cartes), Slack ; le logo de l'expéditeur                              |
-| [Déploiement](docs/deployment.md)                                                  | VPS, Docker Compose, proxy HTTPS, sauvegardes                                          |
-| [Guide contributeur](docs/contributing-guide.md) · [Design system](docs/design.md) | pour les développeurs                                                                  |
+|                                                                                    |                                                              |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| [Installation](docs/installation.md)                                               | pas à pas, dans le navigateur (aucune notion technique)      |
+| [Configuration](docs/configuration.md)                                             | la référence de chaque réglage, et la page Paramètres        |
+| [Guide utilisateur](docs/user-guide.md)                                            | pour les membres                                             |
+| [Rôles et droits](docs/roles.md)                                                   | le modèle, les règles de sécurité, un exemple d'organisation |
+| [Module Événements](docs/events.md)                                                | calendrier, synchronisation, rappels, notifications          |
+| [Notifications](docs/notifications.md)                                             | e-mail, Discord (cartes), Slack ; le logo de l'expéditeur    |
+| [Déploiement](docs/deployment.md)                                                  | VPS, Docker Compose, proxy HTTPS, sauvegardes                |
+| [Guide contributeur](docs/contributing-guide.md) · [Design system](docs/design.md) | pour les développeurs                                        |
 
 ## Essayer les rôles chez soi
 
