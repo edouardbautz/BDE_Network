@@ -698,7 +698,11 @@
       "help": "For example https://bde.my-school.org, or http://localhost:3000 for a try-out on this computer. We took the address you are using right now.",
       "insecureTitle": "An http:// address (not encrypted)",
       "insecureBody": "With this address, passwords and keys travel in clear over the network. Put the platform behind an HTTPS proxy (see the deployment guide) or choose an https:// address.",
-      "insecureAccept": "I understand, continue anyway"
+      "insecureAccept": "I understand, continue anyway",
+      "differsTitle": "This is not the address of this browser",
+      "differsBody": "You are on {current} right now, and you are saving {typed}. After signing in, 42 sends the visitor back to {typed}: if you cannot open it from this browser, signing in will fail. If that is intended (installing from another computer), carry on; otherwise reopen this page on {typed}.",
+      "unspecifiedTitle": "This browser is on 0.0.0.0",
+      "unspecifiedBody": "0.0.0.0 is not a site address, it is the address the server listens on. Open http://localhost:3000 (or your site's address) instead, then start again: signing in with 42 only works from the registered address."
     },
     "fortyTwo": {
       "title": "42 application",
@@ -843,6 +847,7 @@
       "color": "Invalid color: write it like #0f766e.",
       "timezone": "Unknown time zone (example: Europe/Paris).",
       "address": "Invalid address. Examples: https://bde.my-school.org or http://localhost:3000.",
+      "addressUnspecified": "0.0.0.0 is not a site address: it is the address the server listens on. Write http://localhost:3000 for a try-out on this computer, or your site's address (https://bde.my-school.org).",
       "insecure": "Tick the box to continue with an http:// address.",
       "clientId": "The UID must be at least 8 characters, with no space.",
       "clientSecret": "The SECRET must be at least 8 characters, with no space or apostrophe.",

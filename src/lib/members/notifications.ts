@@ -14,7 +14,7 @@ import {
   buildRemovedMessage,
   type MemberFacts,
 } from './messages';
-import { setting } from '@/lib/settings/runtime';
+import { registeredAddress } from '@/lib/public-address';
 
 /**
  * Notifications about members: a request waiting (`memberPending`), a member approved
@@ -38,7 +38,7 @@ async function nameOf(login: string | undefined): Promise<string | null> {
 
 /** Absolute link into the app, or null when APP_URL is not set. */
 function appLink(locale: string, path = ''): string | null {
-  const base = setting('APP_URL')?.trim().replace(/\/+$/, '');
+  const base = registeredAddress();
   return base ? `${base}/${locale}${path}` : null;
 }
 

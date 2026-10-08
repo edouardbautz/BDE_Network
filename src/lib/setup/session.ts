@@ -1,4 +1,5 @@
 import { cookies, headers } from 'next/headers';
+import { originOfRequest } from '@/lib/public-address';
 import { notFound } from 'next/navigation';
 import { draftFor, type SetupDraft } from './draft';
 import { SETUP_COOKIE, isSetupMode, setupSessionKey } from './guard';
@@ -19,11 +20,10 @@ export async function getSetupSession(): Promise<SetupSession | null> {
   return key ? { key, draft: draftFor(key) } : null;
 }
 
-/** The address this request came by, as a default for the public address of the platform. */
+/**
+ * The address this request came by, as a default for the public address of the platform. Never `0.0.0.0`
+ * (a browser that was pointed there gets `localhost`).
+ */
 export async function requestOrigin(): Promise<string> {
-  const requestHeaders = await headers();
-  const host =
-    requestHeaders.get('x-forwarded-host') ?? requestHeaders.get('host') ?? 'localhost:3000';
-  const protocol = requestHeaders.get('x-forwarded-proto') ?? 'http';
-  return `${protocol}://${host}`;
+  return originOfRequest(await headers());
 }

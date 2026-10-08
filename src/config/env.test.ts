@@ -122,6 +122,14 @@ describe('APP_URL', () => {
     expect(check({ ...VALID_ENV, APP_URL: 'http://localhost:3000' }).warnings).toEqual([]);
   });
 
+  it('warns, without refusing to start, about 0.0.0.0: the platform ignores it, so it must not lock anyone out', () => {
+    const report = check({ ...VALID_ENV, APP_URL: 'http://0.0.0.0:3000' });
+    expect(report.errors).toEqual([]);
+    expect(report.warnings).toHaveLength(1);
+    expect(report.warnings[0]).toContain('0.0.0.0');
+    expect(report.warnings[0]).toContain('La connexion avec 42 échoue');
+  });
+
   it('warns, without refusing to start, about a public http address', () => {
     const report = check({ ...VALID_ENV, APP_URL: 'http://bde.exemple.fr' });
     expect(report.errors).toEqual([]);

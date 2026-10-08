@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
 import {
+  addressNotice,
   redirectUrl,
   validateAddress,
   validateCampusName,
@@ -71,9 +72,24 @@ describe('validateAddress', () => {
     expect(value(validateAddress('http://localhost:3500/'))).toMatchObject({
       url: 'http://localhost:3500',
     });
+    // This computer is always written localhost: Next.js does the same in the URLs it builds, and the
+    // redirect_uri sent to 42 must be the same on the way out and on the way back.
     expect(value(validateAddress('127.0.0.1:3500'))).toMatchObject({
-      url: 'http://127.0.0.1:3500',
+      url: 'http://localhost:3500',
+      isLocal: true,
     });
+  });
+
+  it('never accepts 0.0.0.0: it is where the server listens, not an address', () => {
+    for (const typed of [
+      '0.0.0.0',
+      '0.0.0.0:3000',
+      'http://0.0.0.0:3000',
+      'http://0.0.0.0:3000/',
+      '0.1.2.3',
+    ]) {
+      expect(value(validateAddress(typed)), typed).toBe('addressUnspecified');
+    }
   });
 
   it('takes a domain name as https, without its usual port or a trailing slash', () => {
@@ -207,5 +223,26 @@ describe('validateCampusName', () => {
   });
   it.each(['', '  ', 'x'.repeat(81), 'a\nb'])('refuses %j', (input) => {
     expect(validateCampusName(input)).toEqual({ ok: false, error: 'campus' });
+  });
+});
+
+describe('addressNotice', () => {
+  it('says nothing when the browser is on the address that is being saved', () => {
+    expect(addressNotice('http://localhost:3000', 'http://localhost:3000')).toBeNull();
+    expect(addressNotice('https://bde.exemple.fr', 'https://bde.exemple.fr')).toBeNull();
+  });
+
+  it('warns when the browser is somewhere else: 42 would send the visitor to an address it cannot reach', () => {
+    expect(addressNotice('https://bde.exemple.fr', 'http://localhost:3000')).toBe('differs');
+    expect(addressNotice('http://localhost:3000', 'http://127.0.0.1:3000')).toBe('differs');
+    expect(addressNotice('http://localhost:3000', 'http://localhost:3001')).toBe('differs');
+  });
+
+  it('says so when the browser itself is on 0.0.0.0', () => {
+    expect(addressNotice('http://localhost:3000', 'http://0.0.0.0:3000')).toBe('unspecified');
+  });
+
+  it('ignores an origin it cannot read', () => {
+    expect(addressNotice('http://localhost:3000', 'null')).toBeNull();
   });
 });

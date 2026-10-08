@@ -3,13 +3,13 @@ import type { NotificationEvent } from '@/config/schema';
 import type { EmailModel } from './email-layout';
 import { resolveLogoUrl } from './sender';
 import type { EmailContent, NotificationMessage } from './types';
-import { setting } from '@/lib/settings/runtime';
+import { registeredAddress } from '@/lib/public-address';
 
 /** The BDE as the header of an e-mail shows it: its name and, when it can be loaded, its logo. */
 export async function emailBrand(): Promise<EmailModel['brand']> {
   const { bde } = getConfig();
   // A mail client loads the logo itself, from the reader's machine: a private address is fine.
-  const logoUrl = await resolveLogoUrl(setting('APP_URL'), bde.logoPath, {
+  const logoUrl = await resolveLogoUrl(registeredAddress() ?? undefined, bde.logoPath, {
     requirePublic: false,
   });
   return { name: bde.name, ...(logoUrl && { logoUrl }) };
