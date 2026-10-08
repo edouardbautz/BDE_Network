@@ -15,6 +15,7 @@ import {
   verifySetupCode,
 } from '@/lib/setup/guard';
 import { buildInstallation } from '@/lib/setup/install';
+import { parseNotifications, type NotificationSettings } from '@/lib/setup/notifications';
 import {
   checkLogin,
   listCampuses,
@@ -28,7 +29,6 @@ import {
   sendDiscordTest,
   sendSlackTest,
   sendTestMail,
-  type SmtpSettings,
 } from '@/lib/setup/notify-test';
 import {
   redirectUrl,
@@ -37,15 +37,9 @@ import {
   validateClientId,
   validateClientSecret,
   validateColor,
-  validateDiscordWebhook,
   validateEmail,
   validateLogin,
   validateName,
-  validateOptionalText,
-  validatePort,
-  validateSecretText,
-  validateSlackWebhook,
-  validateSmtpHost,
   validateTimezone,
   type SetupErrorCode,
 } from '@/lib/setup/validate';
@@ -353,82 +347,12 @@ export async function saveModules(input: unknown): Promise<ActionResult> {
 // ---------------------------------------------------------------------------------------------
 // 7. The notifications
 
-const notificationsSchema = z.object({
-  mode: z.enum(['none', 'discord', 'slack', 'email']),
-  /** Blank: keep the one typed before. */
-  discordWebhook: stringField.optional(),
-  slackWebhook: stringField.optional(),
-  smtp: z
-    .object({
-      host: stringField,
-      port: stringField,
-      user: stringField,
-      password: stringField,
-      from: stringField,
-    })
-    .optional(),
-});
-
-type Notifications = NonNullable<SetupDraft['notifications']>;
-
 function takeNotifications(
   draft: SetupDraft,
   input: unknown,
-): { ok: true; value: Notifications } | ActionFailure {
-  const parsed = notificationsSchema.safeParse(input);
-  if (!parsed.success) return fail('invalid');
-  const { mode } = parsed.data;
-  const before = draft.notifications;
-
-  if (mode === 'none') return { ok: true, value: { mode } };
-
-  if (mode === 'discord') {
-    const typed = (parsed.data.discordWebhook ?? '').trim();
-    const url =
-      typed === '' && before?.discordWebhook
-        ? { ok: true as const, value: before.discordWebhook }
-        : validateDiscordWebhook(typed);
-    return url.ok
-      ? { ok: true, value: { mode, discordWebhook: url.value } }
-      : fail(url.error, { field: 'discordWebhook' });
-  }
-
-  if (mode === 'slack') {
-    const typed = (parsed.data.slackWebhook ?? '').trim();
-    const url =
-      typed === '' && before?.slackWebhook
-        ? { ok: true as const, value: before.slackWebhook }
-        : validateSlackWebhook(typed);
-    return url.ok
-      ? { ok: true, value: { mode, slackWebhook: url.value } }
-      : fail(url.error, { field: 'slackWebhook' });
-  }
-
-  const smtp = parsed.data.smtp;
-  if (!smtp) return fail('invalid');
-  const host = validateSmtpHost(smtp.host);
-  if (!host.ok) return fail(host.error, { field: 'smtpHost' });
-  const port = validatePort(smtp.port);
-  if (!port.ok) return fail(port.error, { field: 'smtpPort' });
-  const user = validateOptionalText(smtp.user);
-  if (!user.ok) return fail(user.error, { field: 'smtpUser' });
-  const from = validateEmail(smtp.from);
-  if (!from.ok) return fail(from.error, { field: 'smtpFrom' });
-  const typedPassword = smtp.password;
-  const password =
-    typedPassword === '' && before?.smtp?.password
-      ? { ok: true as const, value: before.smtp.password }
-      : validateSecretText(typedPassword);
-  if (!password.ok) return fail(password.error, { field: 'smtpPassword' });
-
-  const settings: SmtpSettings = {
-    host: host.value,
-    port: port.value,
-    user: user.value,
-    password: password.value,
-    from: from.value,
-  };
-  return { ok: true, value: { mode, smtp: settings } };
+): { ok: true; value: NotificationSettings } | ActionFailure {
+  const parsed = parseNotifications(input, draft.notifications);
+  return parsed.ok ? parsed : fail(parsed.code, parsed.field ? { field: parsed.field } : {});
 }
 
 export async function saveNotifications(input: unknown): Promise<ActionResult> {

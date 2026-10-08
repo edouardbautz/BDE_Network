@@ -5,11 +5,8 @@ import { useTranslations } from 'next-intl';
 import { CheckCircle2, ExternalLink } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  skipFortyTwoVerification,
-  verifyFortyTwo,
-  type ActionFailure,
-} from '@/app/[locale]/setup/actions';
+import type { ActionFailure } from '@/app/[locale]/setup/actions';
+import { useFrameMode, type StepApi } from './api';
 import type { DraftView } from '@/lib/setup/draft';
 import { redirectUrl } from '@/lib/setup/validate';
 import { CopyField } from '@/components/events/copy-field';
@@ -19,12 +16,14 @@ import { StepFrame, type StepProps } from './step-frame';
 const INTRA_APPS = 'https://profile.intra.42.fr/oauth/applications';
 
 export function StepFortyTwo({
+  api,
   view,
   onSaved,
   run,
   onNext,
   onBack,
-}: StepProps & { view: DraftView; onSaved: (patch: Partial<DraftView>) => void }) {
+}: StepProps & { api: StepApi; view: DraftView; onSaved: (patch: Partial<DraftView>) => void }) {
+  const mode = useFrameMode();
   const t = useTranslations('setup.fortyTwo');
   const text = useFailureText();
   const [clientId, setClientId] = useState(view.clientId);
@@ -36,7 +35,7 @@ export function StepFortyTwo({
 
   function verify() {
     start(async () => {
-      const result = await run(verifyFortyTwo(credentials));
+      const result = await run(api.verifyFortyTwo(credentials));
       if (!result.ok) return setFailure(result);
       setFailure(null);
       onSaved({
@@ -51,7 +50,7 @@ export function StepFortyTwo({
 
   function skip() {
     start(async () => {
-      const result = await run(skipFortyTwoVerification(credentials));
+      const result = await run(api.skipFortyTwoVerification(credentials));
       if (!result.ok) return setFailure(result);
       setFailure(null);
       onSaved({
@@ -64,6 +63,27 @@ export function StepFortyTwo({
     });
   }
 
+  const instructions = (
+    <>
+      <ol className="flex list-decimal flex-col gap-1 pl-5 text-sm">
+        <li>{t('step1')}</li>
+        <li>{t('step2')}</li>
+        <li>{t('step3')}</li>
+        <li>{t('step4')}</li>
+        <li>{t('step5')}</li>
+      </ol>
+      <a
+        href={INTRA_APPS}
+        target="_blank"
+        rel="noreferrer noopener"
+        className={buttonVariants({ variant: 'outline', className: 'w-fit' })}
+      >
+        {t('openIntra')}
+        <ExternalLink data-icon="inline-end" />
+      </a>
+    </>
+  );
+
   // 42 could not be asked (or answered with something unexpected): the person may go on by hand.
   const unreachable = failure?.code === 'network' || failure?.code === 'rateLimited';
 
@@ -74,28 +94,21 @@ export function StepFortyTwo({
       onSubmit={verify}
       onBack={onBack}
       pending={pending}
-      nextLabel={pending ? t('verifying') : t('verify')}
+      nextLabel={pending ? t('verifying') : mode === 'section' ? t('verifySave') : t('verify')}
       failure={failure && !unreachable ? failure : null}
     >
-      <div className="bg-muted/50 flex flex-col gap-3 rounded-lg p-3">
-        <p className="text-sm font-medium">{t('stepsTitle')}</p>
-        <ol className="flex list-decimal flex-col gap-1 pl-5 text-sm">
-          <li>{t('step1')}</li>
-          <li>{t('step2')}</li>
-          <li>{t('step3')}</li>
-          <li>{t('step4')}</li>
-          <li>{t('step5')}</li>
-        </ol>
-        <a
-          href={INTRA_APPS}
-          target="_blank"
-          rel="noreferrer noopener"
-          className={buttonVariants({ variant: 'outline', className: 'w-fit' })}
-        >
-          {t('openIntra')}
-          <ExternalLink data-icon="inline-end" />
-        </a>
-      </div>
+      {mode === 'section' ? (
+        // On the settings page the guide is there if needed, not in the way of a form the owner knows.
+        <details className="bg-muted/50 rounded-lg p-3">
+          <summary className="cursor-pointer text-sm font-medium">{t('stepsTitle')}</summary>
+          <div className="mt-3 flex flex-col gap-3">{instructions}</div>
+        </details>
+      ) : (
+        <div className="bg-muted/50 flex flex-col gap-3 rounded-lg p-3">
+          <p className="text-sm font-medium">{t('stepsTitle')}</p>
+          {instructions}
+        </div>
+      )}
 
       <Field id="setup-redirect" label={t('redirectLabel')}>
         <CopyField

@@ -28,6 +28,12 @@ export async function register(): Promise<void> {
 
     runStartupChecks();
 
+    // OWNER is the status of an account, and the settings only list logins: bring the accounts in line with the
+    // list (a change made while the platform was stopped, through the files, must not wait for a sign-in).
+    const { reconcileOwnerAccounts } = await import('./lib/settings/owners');
+    const { getConfig } = await import('./config');
+    await reconcileOwnerAccounts(getConfig().auth.owners);
+
     // In the background: only says, in the logs, when 42 refuses the application's identifiers.
     const { warnIfFortyTwoRejectsTheApplication } = await import('./lib/auth/oauth-check');
     warnIfFortyTwoRejectsTheApplication();

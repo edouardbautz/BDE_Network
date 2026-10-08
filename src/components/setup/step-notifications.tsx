@@ -4,11 +4,8 @@ import { useState, useTransition } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  saveNotifications,
-  testNotification,
-  type ActionFailure,
-} from '@/app/[locale]/setup/actions';
+import type { ActionFailure } from '@/app/[locale]/setup/actions';
+import type { StepApi } from './api';
 import type { Channel, DraftView } from '@/lib/setup/draft';
 import { Field, fieldError, useFailureText } from './fields';
 import { StepFrame, type StepProps } from './step-frame';
@@ -16,12 +13,13 @@ import { StepFrame, type StepProps } from './step-frame';
 const MODES: Channel[] = ['none', 'discord', 'slack', 'email'];
 
 export function StepNotifications({
+  api,
   view,
   onSaved,
   run,
   onNext,
   onBack,
-}: StepProps & { view: DraftView; onSaved: (patch: Partial<DraftView>) => void }) {
+}: StepProps & { api: StepApi; view: DraftView; onSaved: (patch: Partial<DraftView>) => void }) {
   const t = useTranslations('setup.notifications');
   const locale = useLocale();
   const text = useFailureText();
@@ -47,7 +45,7 @@ export function StepNotifications({
 
   function submit() {
     start(async () => {
-      const result = await run(saveNotifications(payload));
+      const result = await run(api.saveNotifications(payload));
       if (!result.ok) return setFailure(result);
       setFailure(null);
       onSaved({
@@ -71,7 +69,7 @@ export function StepNotifications({
   function sendTest() {
     setTested(null);
     startTest(async () => {
-      const result = await run(testNotification(payload, { locale, to: testTo }));
+      const result = await run(api.testNotification(payload, { locale, to: testTo }));
       setFailure(result.ok ? null : result.field ? result : null);
       setTested(result.ok ? 'ok' : result);
     });

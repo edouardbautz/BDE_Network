@@ -4,6 +4,7 @@ import {
   activePermissionKeys,
   APPROVED_STATUSES,
   can,
+  canManageSettings,
   canViewAuditLog,
   holdsAllOf,
   isApproved,
@@ -220,5 +221,23 @@ describe('the audit log', () => {
     expect(canViewAuditLog({ status: 'PENDING' })).toBe(false);
     expect(canViewAuditLog(null)).toBe(false);
     expect(canViewAuditLog({ status: asStatus('OWNERS') })).toBe(false);
+  });
+});
+
+describe('the settings of the platform', () => {
+  it('are for the owner only, whatever roles exist and whatever they grant', () => {
+    expect(canManageSettings({ status: 'OWNER' })).toBe(true);
+    expect(canManageSettings({ status: 'MEMBER' })).toBe(false);
+    expect(canManageSettings({ status: 'PENDING' })).toBe(false);
+    expect(canManageSettings(null)).toBe(false);
+    expect(canManageSettings(undefined)).toBe(false);
+    expect(canManageSettings({ status: asStatus('OWNERS') })).toBe(false);
+    // not even a member who holds every permission of every module
+    expect(
+      canManageSettings({
+        status: 'MEMBER',
+        permissions: ['members.manage', 'roles.manage'],
+      } as never),
+    ).toBe(false);
   });
 });

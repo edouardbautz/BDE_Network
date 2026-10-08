@@ -19,7 +19,7 @@ configuration, sa propre application OAuth 42. Rien n'est partagé entre les ins
 - **Rôles et droits sur mesure.** Chaque BDE crée ses rôles (Président, Trésorier, Responsable
   événements…) et coche exactement ce que chacun peut faire. Nul ne peut donner un droit qu'il n'a
   pas, ni modifier son propre rôle : l'escalade de privilèges est bloquée côté serveur et testée
-  ([détails](docs/roles.md)). Le propriétaire se définit dans le fichier de configuration et a
+  ([détails](docs/roles.md)). Les propriétaires se gèrent depuis la page Paramètres et ont
   tous les droits.
 - **Module Événements** : calendrier (vues mois et liste), catégories colorées, événements
   récurrents (chaque semaine, toutes les deux semaines, chaque mois), brouillons invisibles tant

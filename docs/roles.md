@@ -6,14 +6,14 @@ choisit dans un menu déroulant de la page **Membres**.
 
 ## Les trois situations d'un compte
 
-| Situation        | Ce que ça veut dire                                                                                                                                   |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Propriétaire** | Défini uniquement dans `bde.config.yml` (`auth.owners`). A **tous les droits**, y compris le journal d'audit. Ne se change jamais depuis l'interface. |
-| **Membre**       | Compte approuvé. Ses droits sont exactement ceux de son rôle.                                                                                         |
-| **En attente**   | Vient de se connecter, attend qu'on l'approuve. N'a accès à rien d'autre qu'à la page d'attente.                                                      |
+| Situation        | Ce que ça veut dire                                                                                                                                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Propriétaire** | Défini uniquement par un propriétaire, dans la page « Paramètres » (section Propriétaires). A **tous les droits**, y compris le journal d'audit et les paramètres. Ne se change jamais depuis les pages Membres ou Rôles. |
+| **Membre**       | Compte approuvé. Ses droits sont exactement ceux de son rôle.                                                                                                                                                             |
+| **En attente**   | Vient de se connecter, attend qu'on l'approuve. N'a accès à rien d'autre qu'à la page d'attente.                                                                                                                          |
 
 Le propriétaire et « en attente » ne sont pas des rôles : on ne peut ni les modifier ni les attribuer.
-**Le journal d'audit est réservé aux propriétaires**, quels que soient les rôles.
+**Le journal d'audit et les paramètres sont réservés aux propriétaires**, quels que soient les rôles.
 
 ## Les deux rôles créés à l'installation
 
@@ -78,7 +78,9 @@ Elles sont appliquées par le serveur à chaque action, quelle que soit l'interf
 5. **On ne déplace pas un membre dont le rôle dépasse le sien.** Un secrétaire ne peut pas rétrograder la
    présidente, ni la retirer du BDE. Il peut en revanche déplacer ou retirer un collègue qui a exactement
    les mêmes droits que lui : tout est dans le journal d'audit.
-6. **Un propriétaire ne peut être ni modifié ni retiré** depuis l'interface (son statut vient de la config).
+6. **Un propriétaire ne peut être ni modifié ni retiré** depuis les pages Membres et Rôles. Seul un propriétaire
+   peut en ajouter ou en retirer un, depuis les Paramètres (avec confirmation, journal d'audit, et jamais
+   lui-même : il reste toujours au moins un propriétaire).
 7. **Un rôle encore attribué ne peut pas être supprimé.**
 8. Les droits sont **relus en base à chaque action** : retirer un droit à un rôle prend effet tout de suite, même
    pour quelqu'un dont la page était déjà ouverte.

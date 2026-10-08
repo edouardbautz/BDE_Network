@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import * as setupActions from '@/app/[locale]/setup/actions';
 import type { DraftView } from '@/lib/setup/draft';
+import type { StepApi } from './api';
 import { Done } from './done';
 import { StepAddress } from './step-address';
 import { StepCampuses } from './step-campuses';
@@ -65,6 +67,7 @@ export function SetupWizard({
   const next = () => setCurrent((step) => Math.min(step + 1, LAST_STEP));
   const back = current > 0 ? () => setCurrent((step) => step - 1) : undefined;
   const common = { run, onNext: next, onBack: back };
+  const api: StepApi = setupActions;
 
   const names = t.raw('steps') as string[];
 
@@ -103,19 +106,19 @@ export function SetupWizard({
         {done ? (
           <Done locale={locale} />
         ) : current === 0 ? (
-          <StepIdentity {...common} onBack={undefined} view={view} onSaved={save} />
+          <StepIdentity api={api} {...common} onBack={undefined} view={view} onSaved={save} />
         ) : current === 1 ? (
-          <StepAddress {...common} view={view} onSaved={save} />
+          <StepAddress api={api} {...common} view={view} onSaved={save} />
         ) : current === 2 ? (
-          <StepFortyTwo {...common} view={view} onSaved={save} />
+          <StepFortyTwo api={api} {...common} view={view} onSaved={save} />
         ) : current === 3 ? (
-          <StepCampuses {...common} view={view} onSaved={save} />
+          <StepCampuses api={api} {...common} view={view} onSaved={save} />
         ) : current === 4 ? (
           <StepOwners {...common} view={view} onSaved={save} />
         ) : current === 5 ? (
-          <StepModules {...common} view={view} onSaved={save} />
+          <StepModules api={api} {...common} view={view} onSaved={save} />
         ) : current === 6 ? (
-          <StepNotifications {...common} view={view} onSaved={save} />
+          <StepNotifications api={api} {...common} view={view} onSaved={save} />
         ) : (
           <StepSummary {...common} view={view} onNext={() => setDone(true)} />
         )}

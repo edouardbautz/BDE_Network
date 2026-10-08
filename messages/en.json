@@ -124,13 +124,13 @@
       "AccessDenied": "Your 42 campus isn't allowed to access this platform. Contact an administrator if you think this is a mistake.",
       "Default": "Sign in failed. Please try again.",
       "backToLogin": "Back to sign in",
-      "oauthRejected": "The platform cannot sign in with 42: the identifier or the secret of its application were refused. Trying again will not help: let the person who runs the server know.",
+      "oauthRejected": "The platform cannot sign in with 42: the identifier or the secret of its application were refused. Trying again will not help: let a BDE owner know.",
       "Configuration": "The sign-in ran into a problem on the platform's side. Try again in a few minutes; if it keeps happening, let the person who runs the server know."
     },
     "oauthRejected": {
       "title": "Signing in with 42 is temporarily impossible",
-      "description": "42 refuses the identifier or the secret of this BDE's application (expired or regenerated key?). Trying again will not help: let the person who runs the server know.",
-      "operator": "For the person who runs the server: check the key at https://profile.intra.42.fr/oauth/applications, copy it into FORTYTWO_CLIENT_SECRET (.env file), then run docker compose up -d."
+      "description": "42 refuses the identifier or the secret of this BDE's application (expired or regenerated key?). Trying again will not help: let a BDE owner know.",
+      "operator": "For an owner: check the key at https://profile.intra.42.fr/oauth/applications, then update it in Settings, 42 application section (you must still be signed in). If nobody can sign in any more, the person who runs the server can add FORTYTWO_CLIENT_SECRET=<the new key> and BDE_REIMPORT=settings to the .env file, run docker compose up -d, then remove those two lines again."
     }
   },
   "pending": {
@@ -156,7 +156,8 @@
     "menuDescription": "Main navigation links for this organization's platform.",
     "events": "Events",
     "profile": "My profile",
-    "skipToContent": "Skip to the content"
+    "skipToContent": "Skip to the content",
+    "settings": "Settings"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -668,7 +669,8 @@
     "nav": {
       "back": "Back",
       "next": "Continue",
-      "saving": "Saving…"
+      "saving": "Saving…",
+      "save": "Save"
     },
     "identity": {
       "title": "Your BDE",
@@ -712,7 +714,8 @@
       "verified": "42 accepted these credentials.",
       "unreachableTitle": "42 does not answer from this computer",
       "unreachableBody": "You can go on without the check: campuses will have to be typed by hand, and the credentials will only be tested at the first sign-in.",
-      "skip": "Continue without checking"
+      "skip": "Continue without checking",
+      "verifySave": "Check and save"
     },
     "campuses": {
       "title": "Campuses",
@@ -851,7 +854,64 @@
       "smtpHost": "Invalid server name (example: smtp.my-school.org).",
       "port": "Invalid port number (example: 587).",
       "email": "Invalid e-mail address.",
-      "secretChars": "This field cannot contain an apostrophe or a line break."
+      "secretChars": "This field cannot contain an apostrophe or a line break.",
+      "readOnly": "The settings are still in files: they cannot be changed here.",
+      "notInstalled": "The platform is not installed.",
+      "storedInvalid": "The saved settings are invalid: restore the latest backup of the database.",
+      "secretsUnreadable": "The saved secrets cannot be read (the \"secrets\" volume is lost): restore it with scripts/restore.sh --secrets, or use BDE_REIMPORT=settings (see the configuration guide).",
+      "conflict": "Somebody changed the settings at the same time. Reload the page and try again.",
+      "ownerExists": "This login is already an owner.",
+      "ownerNotFound": "This login is not in the list of owners.",
+      "ownerSelf": "You cannot remove yourself: ask another owner.",
+      "tooManyOwners": "There are already 30 owners, which is the maximum.",
+      "loginUnverified": "42 could not confirm this login: check it, then confirm the addition."
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "The platform's settings, for owners only. Every change applies at once, with no restart, and is written to the audit log.",
+    "saved": "Saved",
+    "since": "Settings stored in the database, installed on {date}.",
+    "readOnly": {
+      "title": "The settings are still in files",
+      "body": "This platform still reads its settings from bde.config.yml and .env, which are not complete: they cannot be changed here. Once those files are completed and the platform restarted, they are copied into the database and this page becomes usable (see the configuration guide)."
+    },
+    "backup": {
+      "title": "Back up the \"secrets\" volume",
+      "body": "The platform's secrets (the 42 application's key, the mail server's password, webhooks) are stored encrypted in the database. The key that decrypts them is not in the database: it is in the Docker volume \"secrets\". Without a backup of that volume, after a restore on another server, those secrets can no longer be read and have to be entered again.",
+      "command": "Backup command",
+      "commandLabel": "Backup command",
+      "note": "It creates two files in the backups folder: the database and the keys. Keep them in two different places, off the server. Never run \"docker compose down -v\": the -v option deletes the volumes."
+    },
+    "oauthRejected": {
+      "title": "42 refuses this BDE's application",
+      "body": "Nobody can sign in any more: the identifier or the secret of the 42 application were refused (expired or regenerated key?). Check the key at https://profile.intra.42.fr/oauth/applications, then save it in the \"42 application\" section below.",
+      "cta": "Open the settings"
+    },
+    "secrets": {
+      "lostTitle": "The saved secrets can no longer be read",
+      "lostBody": "At start-up, the key that decrypts them was not found (the \"secrets\" volume was lost or replaced). Enter them again below: the 42 application's key, the mail server's password and the webhooks. If you have a backup of the volume, restore it instead with scripts/restore.sh --secrets.",
+      "resealedTitle": "The secrets were taken again from .env",
+      "resealedBody": "At start-up, the key that decrypts them was not found (the \"secrets\" volume was lost or replaced). The values present in .env were saved again. Check them below, remove them from .env, and back up the new volume."
+    },
+    "owners": {
+      "title": "Owners",
+      "description": "Owners have every right: members, roles, settings, audit log. Adding or removing an owner takes effect immediately.",
+      "you": "you",
+      "cannotRemoveSelf": "You cannot remove yourself: ask another owner.",
+      "loginLabel": "Add an owner (42 login)",
+      "loginPlaceholder": "jdoe",
+      "add": "Add",
+      "checking": "Checking…",
+      "listTitle": "Current owners",
+      "remove": "Remove {login}",
+      "addTitle": "Add {login} as an owner?",
+      "addBody": "This person will have every right on the platform, from now on: members, roles, settings and the audit log.",
+      "addBodyUnverified": "42 could not confirm that this login exists. Check the spelling: a wrong login could never sign in, and you would believe somebody has every right. This person will have every right from now on.",
+      "addConfirm": "Add as an owner",
+      "removeTitle": "Remove {login} from the owners?",
+      "removeBody": "This person loses their owner rights immediately: they become a member with the default role and can no longer change the settings.",
+      "removeConfirm": "Remove"
     }
   }
 }

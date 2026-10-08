@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { ActionFailure } from '@/app/[locale]/setup/actions';
+import { useFrameMode } from './api';
 import { useFailureText } from './fields';
 
 export interface StepProps {
@@ -39,6 +40,7 @@ export function StepFrame({
   children: ReactNode;
 }) {
   const t = useTranslations('setup.nav');
+  const mode = useFrameMode();
   const failureText = useFailureText();
 
   function submit(event: FormEvent) {
@@ -62,7 +64,7 @@ export function StepFrame({
       )}
 
       <div className="flex items-center justify-between gap-2">
-        {onBack ? (
+        {onBack && mode === 'wizard' ? (
           <Button type="button" variant="ghost" onClick={onBack} disabled={pending}>
             <ArrowLeft data-icon="inline-start" />
             {t('back')}
@@ -71,7 +73,7 @@ export function StepFrame({
           <span />
         )}
         <Button type="submit" disabled={pending || nextDisabled}>
-          {pending ? t('saving') : (nextLabel ?? t('next'))}
+          {pending ? t('saving') : (nextLabel ?? (mode === 'section' ? t('save') : t('next')))}
         </Button>
       </div>
     </form>

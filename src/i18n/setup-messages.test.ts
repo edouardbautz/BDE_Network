@@ -31,9 +31,11 @@ const VALIDATOR_CODES = [
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
-/** The codes the actions can answer with (`fail('code'` and `fail(error.code`). */
+/** The codes the actions can answer with (`fail('code'` / `failure('code'`), the installer's and the settings page's. */
 const actionCodes = [
   ...read('../app/[locale]/setup/actions.ts').matchAll(/fail\('([A-Za-z]+)'/g),
+  ...read('../app/[locale]/(app)/settings/actions.ts').matchAll(/failure\('([A-Za-z]+)'/g),
+  ...read('../lib/settings/update.ts').matchAll(/fail\('([A-Za-z]+)'/g),
 ].map((match) => match[1] as string);
 
 describe.each(Object.entries(catalogs))('setup messages (%s)', (_lang, catalog) => {
@@ -48,7 +50,7 @@ describe.each(Object.entries(catalogs))('setup messages (%s)', (_lang, catalog) 
     const elsewhere = new Set(['testFailed']);
     const missing = actionCodes.filter((code) => !elsewhere.has(code) && !errors[code]);
     expect(missing).toEqual([]);
-    expect(actionCodes.length).toBeGreaterThan(15);
+    expect(actionCodes.length).toBeGreaterThan(30);
     expect((catalog.notifications as Record<string, string>).testFailed).toBeTruthy();
   });
 

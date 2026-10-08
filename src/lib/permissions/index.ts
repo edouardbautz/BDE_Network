@@ -102,3 +102,14 @@ export function canViewAuditLog(
 ): boolean {
   return holder?.status === 'OWNER';
 }
+
+/**
+ * The settings of the platform (its name, the 42 application, the owners, the notifications...) are reserved for
+ * OWNER, like the audit log and for the same reason: they decide who may do anything at all. Not a permission a
+ * role can hold: whoever holds it can make themselves an owner.
+ */
+export function canManageSettings(
+  holder: Pick<PermissionHolder, 'status'> | null | undefined,
+): boolean {
+  return holder?.status === 'OWNER';
+}

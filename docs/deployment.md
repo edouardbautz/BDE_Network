@@ -31,7 +31,8 @@ Remplissez `.env` avec des valeurs de production :
 
 Éditez `bde.config.yml` avec les informations réelles de votre BDE. **Mettez votre propre login 42
 dans `auth.owners`** : tant que « votre-login-42 » y figure, personne n'est propriétaire et aucune
-demande d'accès ne peut être validée (l'application l'indique au démarrage).
+demande d'accès ne peut être validée (l'application l'indique au démarrage). Ensuite, les propriétaires se gèrent
+depuis la page **Paramètres**.
 
 ## 2. Lancer l'application
 
@@ -53,7 +54,7 @@ docker compose logs app
 
 Corrigez le fichier concerné, puis `docker compose up -d` (après une modification de `bde.config.yml` :
 `docker compose up -d --build`, car il est copié dans l'image à la construction ; une fois les réglages copiés
-dans la base de données, voir [Configuration](configuration.md#modifier-un-réglage-en-attendant)).
+dans la base de données, voir [Configuration](configuration.md#remplacer-les-réglages-par-les-fichiers)).
 
 Par défaut, l'application n'est accessible **que depuis le serveur lui-même** (`127.0.0.1`,
 port 3000, modifiable avec `APP_PORT`) : c'est le reverse proxy ci-dessous qui l'expose au public,
@@ -257,15 +258,15 @@ ressaisir (voir « Modifier la configuration »).
 
 ## Dépannage rapide
 
-| Symptôme                                            | Cause probable                                     | Que faire                                                                                                                      |
-| --------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Le site affiche une page « à corriger » (503)       | `.env`, mot de passe de la base, migration         | La page dit quoi faire ; le détail : `docker compose logs app`                                                                 |
-| `docker compose up` : « env file … not found »      | Le fichier `.env` n'existe pas                     | Lancez l'assistant d'installation, ou copiez `.env.example` en `.env`                                                          |
-| `docker compose up` : « port is already allocated » | Un autre programme utilise le port 3000            | Mettez `APP_PORT=3001` dans `.env` (et l'URL de redirection 42), puis `up -d`                                                  |
-| La connexion 42 est « momentanément impossible »    | 42 refuse l'identifiant ou la clé secrète          | Vérifiez la clé sur l'intra, mettez-la dans `.env`, puis `docker compose up -d`                                                |
-| Page « Service momentanément indisponible »         | La base de données ne répond pas                   | `docker compose ps` puis `docker compose logs postgres`                                                                        |
-| Personne ne peut valider les comptes                | Le login placeholder est encore dans `auth.owners` | Mettez votre login 42 dans `bde.config.yml`, puis [appliquez le changement](configuration.md#modifier-un-réglage-en-attendant) |
-| Le site ne répond pas depuis un autre ordinateur    | L'application n'écoute que sur le serveur (voulu)  | Passez par le reverse proxy HTTPS (ou lisez « Sans proxy HTTPS »)                                                              |
+| Symptôme                                            | Cause probable                                     | Que faire                                                                                                                             |
+| --------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Le site affiche une page « à corriger » (503)       | `.env`, mot de passe de la base, migration         | La page dit quoi faire ; le détail : `docker compose logs app`                                                                        |
+| `docker compose up` : « env file … not found »      | Le fichier `.env` n'existe pas                     | Lancez l'assistant d'installation, ou copiez `.env.example` en `.env`                                                                 |
+| `docker compose up` : « port is already allocated » | Un autre programme utilise le port 3000            | Mettez `APP_PORT=3001` dans `.env` (et l'URL de redirection 42), puis `up -d`                                                         |
+| La connexion 42 est « momentanément impossible »    | 42 refuse l'identifiant ou la clé secrète          | Un propriétaire met la clé à jour dans **Paramètres**, section Application 42 ([détails](configuration.md#la-page-paramètres))        |
+| Page « Service momentanément indisponible »         | La base de données ne répond pas                   | `docker compose ps` puis `docker compose logs postgres`                                                                               |
+| Personne ne peut valider les comptes                | Le login placeholder est encore dans `auth.owners` | Mettez votre login 42 dans `bde.config.yml`, puis [appliquez le changement](configuration.md#remplacer-les-réglages-par-les-fichiers) |
+| Le site ne répond pas depuis un autre ordinateur    | L'application n'écoute que sur le serveur (voulu)  | Passez par le reverse proxy HTTPS (ou lisez « Sans proxy HTTPS »)                                                                     |
 
 Voir aussi [docs/contributing-guide.md](contributing-guide.md) pour les commandes de
 développement, et [docs/configuration.md](configuration.md) pour la référence complète des

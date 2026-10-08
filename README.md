@@ -19,7 +19,7 @@ configuration, its own 42 OAuth application. Nothing is shared between instances
 - **Custom roles and permissions.** Each BDE creates its own roles (President, Treasurer, Events
   lead…) and ticks exactly what each one may do. Nobody can hand out a right they do not hold, or
   change their own role: escalation is blocked on the server and tested ([details](docs/roles.md)).
-  The owner is set in the configuration file and holds every right.
+  Owners are managed from the Settings page and hold every right.
 - **Events module**: a calendar (month and list views), categories with colours, recurring events
   (weekly, every two weeks, monthly), drafts that stay private until confirmed, people in charge,
   and cancelling a single date of a series ([guide](docs/events.md)).

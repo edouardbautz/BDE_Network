@@ -2,14 +2,27 @@ import { validateEnvironment } from '@/config/env';
 import { bdeConfigSchema, type BdeConfig } from '@/config/schema';
 import type { SettingValues } from '@/lib/settings/runtime';
 import type { SetupDraft } from './draft';
+import type { Channel } from './notifications';
 
 /** The event categories a BDE starts with (the ones of the example configuration); editable later. */
-const DEFAULT_CATEGORIES = [
+export const DEFAULT_CATEGORIES = [
   { key: 'soiree', label: 'Soirée', color: '#db2777' },
   { key: 'sport', label: 'Sport', color: '#16a34a' },
   { key: 'wei', label: 'WEI', color: '#ea580c' },
   { key: 'partenariat', label: 'Partenariat', color: '#2563eb' },
 ];
+
+/** The channel of every notification, for one channel chosen for all. */
+export function notificationChannels(channel: Channel) {
+  return {
+    memberPending: channel,
+    memberApproved: channel,
+    // Nobody is written to when a member is removed: the e-mail channel does nothing for it.
+    memberRemoved: channel === 'email' ? ('none' as const) : channel,
+    eventConfirmed: channel,
+    eventReminder: channel,
+  };
+}
 
 export type Installation =
   | { ok: true; config: BdeConfig; values: SettingValues }
@@ -74,14 +87,7 @@ export function buildInstallation(
     auth: { owners, allowedCampuses: campuses },
     modules: { enabled: events ? ['events'] : [] },
     ...(events ? { events: { categories: DEFAULT_CATEGORIES, reminderHour: 18 } } : {}),
-    notifications: {
-      memberPending: channel,
-      memberApproved: channel,
-      // Nobody is written to when a member is removed: the e-mail channel does nothing for it.
-      memberRemoved: channel === 'email' ? 'none' : channel,
-      eventConfirmed: channel,
-      eventReminder: channel,
-    },
+    notifications: notificationChannels(channel),
   };
 
   const parsed = bdeConfigSchema.safeParse(candidate);

@@ -2,7 +2,15 @@
 
 import type { ReactNode } from 'react';
 import { useState } from 'react';
-import { CalendarDays, LayoutDashboard, Menu, ScrollText, ShieldCheck, Users } from 'lucide-react';
+import {
+  CalendarDays,
+  LayoutDashboard,
+  Menu,
+  ScrollText,
+  Settings,
+  ShieldCheck,
+  Users,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link, usePathname } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
@@ -17,7 +25,7 @@ import {
 import { ThemeToggle } from '@/components/theme-toggle';
 
 export interface NavItem {
-  id: 'dashboard' | 'events' | 'members' | 'roles' | 'auditLog';
+  id: 'dashboard' | 'events' | 'members' | 'roles' | 'auditLog' | 'settings';
   href: string;
   label: string;
 }
@@ -28,6 +36,7 @@ const NAV_ICONS: Record<NavItem['id'], typeof LayoutDashboard> = {
   members: Users,
   roles: ShieldCheck,
   auditLog: ScrollText,
+  settings: Settings,
 };
 
 interface AppShellProps {

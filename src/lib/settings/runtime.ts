@@ -54,6 +54,11 @@ export interface RuntimeSettings {
   values: SettingValues;
   /** "database" once the platform has been loaded from its settings row. */
   source: 'database';
+  /**
+   * What became of the sealed secrets at start-up: readable (`ok`), unreadable but taken again from .env
+   * (`resealed`), or unreadable and gone (`lost`: the `secrets` volume was replaced). The settings page says so.
+   */
+  secretsStatus?: 'ok' | 'resealed' | 'lost';
 }
 
 const SLOT = Symbol.for('bde-network.runtime-settings');

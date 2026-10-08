@@ -4,17 +4,19 @@ import { useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { CalendarDays } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
-import { saveModules, type ActionFailure } from '@/app/[locale]/setup/actions';
+import type { ActionFailure } from '@/app/[locale]/setup/actions';
+import type { StepApi } from './api';
 import type { DraftView } from '@/lib/setup/draft';
 import { StepFrame, type StepProps } from './step-frame';
 
 export function StepModules({
+  api,
   view,
   onSaved,
   run,
   onNext,
   onBack,
-}: StepProps & { view: DraftView; onSaved: (patch: Partial<DraftView>) => void }) {
+}: StepProps & { api: StepApi; view: DraftView; onSaved: (patch: Partial<DraftView>) => void }) {
   const t = useTranslations('setup.modules');
   const [events, setEvents] = useState(view.events);
   const [failure, setFailure] = useState<ActionFailure | null>(null);
@@ -22,7 +24,7 @@ export function StepModules({
 
   function submit() {
     start(async () => {
-      const result = await run(saveModules({ events }));
+      const result = await run(api.saveModules({ events }));
       if (!result.ok) return setFailure(result);
       setFailure(null);
       onSaved({ events });
