@@ -338,4 +338,93 @@ describe('the settings store', () => {
       expect(platformSettings.update).not.toHaveBeenCalled();
     });
   });
+
+  describe('BDE_REIMPORT=settings', () => {
+    const installed = (): Row => ({
+      id: 'platform',
+      config: configWith(['alice', 'bob']),
+      environment: { APP_URL: 'https://from-database.example', FORTYTWO_CLIENT_ID: 'id-db' },
+      secrets: seal(
+        { FORTYTWO_CLIENT_SECRET: 'expired-secret', SMTP_PASSWORD: 'smtp-from-db' },
+        settingsKey(),
+      ),
+      source: 'installer',
+      installedAt: new Date(),
+    });
+
+    afterEach(() => {
+      delete process.env.BDE_REIMPORT;
+    });
+
+    it('puts the values of .env into the settings and leaves the owners and the rest alone', async () => {
+      process.env.BDE_REIMPORT = 'settings';
+      for (const name of ['APP_URL', 'SMTP_HOST', 'SMTP_PASSWORD']) delete process.env[name];
+      process.env.FORTYTWO_CLIENT_SECRET = 'the-renewed-secret';
+      const { db, current } = fakeDb(installed());
+      const log = logger();
+
+      await initializePlatform(db, log);
+
+      expect(setting('FORTYTWO_CLIENT_SECRET')).toBe('the-renewed-secret'); // from .env
+      expect(setting('SMTP_PASSWORD')).toBe('smtp-from-db'); // not in .env: kept
+      expect(setting('APP_URL')).toBe('https://from-database.example');
+      expect(getRuntimeConfig()?.auth.owners).toEqual(['alice', 'bob']); // the configuration is not touched
+      expect(JSON.stringify(current())).not.toContain('the-renewed-secret'); // sealed
+      expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('FORTYTWO_CLIENT_SECRET'));
+      expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('Retirez cette variable'));
+    });
+
+    it('works when the sealed secrets cannot be read any more (the volume was lost)', async () => {
+      process.env.BDE_REIMPORT = 'settings';
+      process.env.FORTYTWO_CLIENT_SECRET = 'the-renewed-secret';
+      const row = installed();
+      row.secrets = seal({ FORTYTWO_CLIENT_SECRET: 'old' }, randomBytes(32));
+      await initializePlatform(fakeDb(row).db, logger());
+      expect(setting('FORTYTWO_CLIENT_SECRET')).toBe('the-renewed-secret');
+    });
+
+    it('is ignored, and says so, when .env gives nothing', async () => {
+      process.env.BDE_REIMPORT = 'settings';
+      for (const name of [
+        'APP_URL',
+        'FORTYTWO_CLIENT_ID',
+        'FORTYTWO_CLIENT_SECRET',
+        'SMTP_HOST',
+        'SMTP_PASSWORD',
+      ]) {
+        delete process.env[name];
+      }
+      const { db, platformSettings } = fakeDb(installed());
+      const log = logger();
+      await initializePlatform(db, log);
+      expect(platformSettings.update).not.toHaveBeenCalled();
+      expect(log.warn).toHaveBeenCalledWith(
+        expect.stringContaining('BDE_REIMPORT=settings est ignoré'),
+      );
+    });
+  });
+
+  describe('the state of the secrets, for the settings page', () => {
+    it('is ok when they open, resealed when .env gave them back, lost when nothing did', async () => {
+      const sealed = (key: Buffer) => ({
+        id: 'platform',
+        config: configWith(['alice']),
+        environment: {},
+        secrets: seal({ FORTYTWO_CLIENT_SECRET: 's' }, key),
+        source: 'installer',
+        installedAt: new Date(),
+      });
+
+      await initializePlatform(fakeDb(sealed(settingsKey())).db, logger());
+      expect(getRuntimeSettings()?.secretsStatus).toBe('ok');
+
+      await initializePlatform(fakeDb(sealed(randomBytes(32))).db, logger());
+      expect(getRuntimeSettings()?.secretsStatus).toBe('resealed'); // .env of the test holds the 42 secret
+
+      delete process.env.FORTYTWO_CLIENT_SECRET;
+      delete process.env.SMTP_PASSWORD;
+      await initializePlatform(fakeDb(sealed(randomBytes(32))).db, logger());
+      expect(getRuntimeSettings()?.secretsStatus).toBe('lost');
+    });
+  });
 });

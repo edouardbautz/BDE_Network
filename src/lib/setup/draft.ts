@@ -1,8 +1,8 @@
 import type { Address } from './validate';
 import type { Campus } from './fortytwo';
-import type { SmtpSettings } from './notify-test';
+import type { Channel, NotificationSettings } from './notifications';
 
-export type Channel = 'none' | 'discord' | 'slack' | 'email';
+export type { Channel };
 export type Language = 'fr' | 'en';
 
 /** What the person has answered so far. Kept in the server's memory, per installer session: never sent back
@@ -29,12 +29,7 @@ export interface SetupDraft {
   timezone?: string;
   owners?: string[];
   events?: boolean;
-  notifications?: {
-    mode: Channel;
-    discordWebhook?: string;
-    slackWebhook?: string;
-    smtp?: SmtpSettings;
-  };
+  notifications?: NotificationSettings;
 }
 
 export const STEP_COUNT = 8;

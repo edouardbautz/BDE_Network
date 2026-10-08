@@ -84,3 +84,21 @@ describe('(app) layout — the shared gate for /dashboard, /members, /audit-log'
     },
   );
 });
+
+describe('(app) layout — the menu entry of the settings', () => {
+  const navIds = async () => {
+    const shell = (await callLayout()) as { props: { navItems: { id: string }[] } };
+    return shell.props.navItems.map((item) => item.id);
+  };
+
+  it('is offered to an owner', async () => {
+    mockAuth.mockResolvedValue(sessionFor('OWNER'));
+    expect(await navIds()).toContain('settings');
+  });
+
+  // An admin holds every permission, and still is not an owner: the settings decide who may do anything at all.
+  it.each<AccountKind>(['ADMIN', 'MEMBER'])('is not offered to a %s', async (kind) => {
+    mockAuth.mockResolvedValue(sessionFor(kind));
+    expect(await navIds()).not.toContain('settings');
+  });
+});

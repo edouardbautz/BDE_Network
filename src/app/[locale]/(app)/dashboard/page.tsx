@@ -2,12 +2,14 @@ import { LayoutGrid } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { getConfig } from '@/config';
 import { UpcomingEventsCard } from '@/components/events/upcoming-events-card';
+import { OAuthRejectedAlert } from '@/components/settings/oauth-rejected-alert';
 import { accountLabel } from '@/lib/account-label';
+import { checkFortyTwoCredentials } from '@/lib/auth/oauth-check';
 import { requireApprovedSession } from '@/lib/auth/require-session';
 import { getEventsAccess } from '@/lib/events/access';
 import { getCategories } from '@/lib/events/categories';
 import { listUpcomingOccurrences } from '@/lib/events/queries';
-import { can, MEMBERS_MANAGE } from '@/lib/permissions';
+import { can, canManageSettings, MEMBERS_MANAGE } from '@/lib/permissions';
 import { Link } from '@/i18n/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +36,10 @@ export default async function DashboardPage() {
       })
     : [];
 
+  // Only an owner can fix a 42 application that 42 refuses, and only an owner is told (and sent to the settings).
+  const oauthRejected =
+    canManageSettings(session.user) && (await checkFortyTwoCredentials()) === 'rejected';
+
   const displayName = session.user.name ?? session.user.login;
   const initials = initialsOf(displayName);
 
@@ -43,6 +49,8 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
         <p className="text-muted-foreground mt-1 text-sm">{t('welcome', { name: displayName })}</p>
       </div>
+
+      {oauthRejected && <OAuthRejectedAlert withLink />}
 
       <Card className="max-w-sm">
         <CardHeader className="flex flex-row items-center gap-3 space-y-0">

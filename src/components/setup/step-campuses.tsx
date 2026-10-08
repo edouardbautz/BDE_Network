@@ -6,12 +6,8 @@ import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/events/field-styles';
-import {
-  loadCampuses,
-  saveCampuses,
-  type ActionFailure,
-  type CampusOption,
-} from '@/app/[locale]/setup/actions';
+import type { ActionFailure, CampusOption } from '@/app/[locale]/setup/actions';
+import type { StepApi } from './api';
 import type { DraftView } from '@/lib/setup/draft';
 import { searchCampuses } from '@/lib/setup/campus-search';
 import { Field, fieldError, useFailureText } from './fields';
@@ -21,12 +17,13 @@ const MAX_SUGGESTIONS = 8;
 const DEFAULT_TIMEZONE = 'Europe/Paris';
 
 export function StepCampuses({
+  api,
   view,
   onSaved,
   run,
   onNext,
   onBack,
-}: StepProps & { view: DraftView; onSaved: (patch: Partial<DraftView>) => void }) {
+}: StepProps & { api: StepApi; view: DraftView; onSaved: (patch: Partial<DraftView>) => void }) {
   const t = useTranslations('setup.campuses');
   const text = useFailureText();
   // `undefined`: loading; `null`: 42 could not give the list (names are typed by hand).
@@ -41,7 +38,7 @@ export function StepCampuses({
 
   useEffect(() => {
     let cancelled = false;
-    void run(loadCampuses()).then((result) => {
+    void run(api.loadCampuses()).then((result) => {
       if (!cancelled) setOptions(result.ok ? result.campuses : null);
     });
     return () => {
@@ -87,7 +84,7 @@ export function StepCampuses({
   function submit() {
     start(async () => {
       const campuses = allowAll ? [] : selected;
-      const result = await run(saveCampuses({ campuses, mainCampus: main, timezone }));
+      const result = await run(api.saveCampuses({ campuses, mainCampus: main, timezone }));
       if (!result.ok) return setFailure(result);
       setFailure(null);
       onSaved({ campuses, mainCampus: main, timezone });

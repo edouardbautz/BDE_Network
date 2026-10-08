@@ -4,19 +4,22 @@ import { useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { TriangleAlert } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { saveAddress, type ActionFailure } from '@/app/[locale]/setup/actions';
+import type { ActionFailure } from '@/app/[locale]/setup/actions';
+import { useFrameMode, type StepApi } from './api';
 import type { DraftView } from '@/lib/setup/draft';
 import { validateAddress } from '@/lib/setup/validate';
 import { Field, fieldError, useFailureText } from './fields';
 import { StepFrame, type StepProps } from './step-frame';
 
 export function StepAddress({
+  api,
   view,
   onSaved,
   run,
   onNext,
   onBack,
-}: StepProps & { view: DraftView; onSaved: (patch: Partial<DraftView>) => void }) {
+}: StepProps & { api: StepApi; view: DraftView; onSaved: (patch: Partial<DraftView>) => void }) {
+  const mode = useFrameMode();
   const t = useTranslations('setup.address');
   const text = useFailureText();
   const [address, setAddress] = useState(view.addressUrl);
@@ -30,7 +33,7 @@ export function StepAddress({
 
   function submit() {
     start(async () => {
-      const result = await run(saveAddress({ address, acceptInsecure: accepted }));
+      const result = await run(api.saveAddress({ address, acceptInsecure: accepted }));
       if (!result.ok) return setFailure(result);
       setFailure(null);
       onSaved({ addressUrl: result.url });
@@ -59,7 +62,7 @@ export function StepAddress({
           onChange={(event) => setAddress(event.target.value)}
           inputMode="url"
           autoComplete="off"
-          autoFocus
+          autoFocus={mode === 'wizard'}
           aria-invalid={failure?.field === 'address'}
           aria-describedby="setup-address-hint"
         />

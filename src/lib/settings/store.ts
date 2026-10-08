@@ -111,6 +111,7 @@ async function loadFromRow(
   }
 
   let secrets: Record<string, string> = {};
+  let secretsStatus: 'ok' | 'resealed' | 'lost' = 'ok';
   if (row.secrets) {
     const key = settingsKey();
     try {
@@ -126,6 +127,7 @@ async function loadFromRow(
           '    le volume « secrets » de Docker a été perdu ou remplacé. Restaurez-le avec la sauvegarde\n' +
           '    des secrets (scripts/restore.sh --secrets), ou remettez ces valeurs dans .env.\n',
       );
+      secretsStatus = Object.keys(secrets).length > 0 ? 'resealed' : 'lost';
       if (Object.keys(secrets).length > 0) {
         await db.platformSettings.update({
           where: { id: PLATFORM_ID },
@@ -140,6 +142,7 @@ async function loadFromRow(
     config: parsed.data,
     values: managed({ ...asStrings(row.environment), ...secrets }),
     source: 'database',
+    secretsStatus,
   });
 }
 
@@ -245,6 +248,45 @@ async function reimportFromFiles(db: SettingsDb, logger: Logger): Promise<boolea
 }
 
 /**
+ * BDE_REIMPORT=settings: puts the values of .env (the 42 application, the address, the mail server, the webhooks)
+ * into the settings of the database, and nothing else: the owners, the campuses and the rest are left as they are.
+ * It is the way back when nobody can sign in to the settings page (the secret of the 42 application expired, so
+ * nobody can sign in at all) or when the `secrets` volume was lost.
+ */
+async function reimportEnvironment(db: SettingsDb, logger: Logger): Promise<void> {
+  const fromEnvironment = settingValuesFrom(process.env);
+  const row = await db.platformSettings.findUnique({ where: { id: PLATFORM_ID } });
+  if (!row || Object.keys(fromEnvironment).length === 0) {
+    logger.warn(
+      "\n⚠️  BDE_REIMPORT=settings est ignoré : aucune des valeurs de .env (FORTYTWO_CLIENT_SECRET...) n'est renseignée.\n",
+    );
+    return;
+  }
+
+  let secrets: Record<string, string> = {};
+  if (row.secrets) {
+    try {
+      secrets = unseal(row.secrets, settingsKey());
+    } catch (error) {
+      if (!(error instanceof SettingsDecryptError)) throw error;
+    }
+  }
+  const merged = { ...asStrings(row.environment), ...secrets, ...fromEnvironment };
+  const { environment, secrets: sealedValues } = splitSettings(managed(merged));
+  await db.platformSettings.update({
+    where: { id: PLATFORM_ID },
+    data: {
+      environment,
+      secrets: Object.keys(sealedValues).length > 0 ? seal(sealedValues, settingsKey()) : null,
+    },
+  });
+  logger.warn(
+    `\n🔁 BDE_REIMPORT=settings : ${Object.keys(fromEnvironment).join(', ')} ont été repris de .env dans les réglages.\n` +
+      '   Retirez cette variable de .env une fois fini.\n',
+  );
+}
+
+/**
  * Loads the settings of the platform into memory (see runtime.ts). Called once when the server starts, after
  * the migrations. Throws PlatformSettingsError when the stored settings cannot be used.
  */
@@ -254,7 +296,11 @@ export async function initializePlatform(
 ): Promise<InitializeResult> {
   let row = await db.platformSettings.findUnique({ where: { id: PLATFORM_ID } });
   if (row) {
-    if (process.env.BDE_REIMPORT === '1' && (await reimportFromFiles(db, logger))) {
+    const replaced =
+      process.env.BDE_REIMPORT === 'settings'
+        ? (await reimportEnvironment(db, logger), true)
+        : process.env.BDE_REIMPORT === '1' && (await reimportFromFiles(db, logger));
+    if (replaced) {
       row = await db.platformSettings.findUnique({ where: { id: PLATFORM_ID } });
       if (!row) throw new PlatformSettingsError('Les réglages ont disparu de la base de données.');
     }

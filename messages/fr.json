@@ -124,13 +124,13 @@
       "AccessDenied": "Votre campus 42 n'est pas autorisé à accéder à cette plateforme. Contactez un administrateur si vous pensez qu'il s'agit d'une erreur.",
       "Default": "La connexion a échoué. Merci de réessayer.",
       "backToLogin": "Retour à la connexion",
-      "oauthRejected": "La plateforme ne peut pas se connecter à 42 : l'identifiant ou la clé secrète de son application ont été refusés. Réessayer ne servira à rien : prévenez la personne qui gère le serveur.",
+      "oauthRejected": "La plateforme ne peut pas se connecter à 42 : l'identifiant ou la clé secrète de son application ont été refusés. Réessayer ne servira à rien : prévenez un propriétaire du BDE.",
       "Configuration": "La connexion a rencontré un problème du côté de la plateforme. Réessayez dans quelques minutes ; si cela continue, prévenez la personne qui gère le serveur."
     },
     "oauthRejected": {
       "title": "Connexion avec 42 momentanément impossible",
-      "description": "42 refuse l'identifiant ou la clé secrète de l'application de ce BDE (clé expirée ou régénérée ?). Réessayer ne servira à rien : prévenez la personne qui gère le serveur.",
-      "operator": "Pour la personne qui gère le serveur : vérifiez la clé sur https://profile.intra.42.fr/oauth/applications, recopiez-la dans FORTYTWO_CLIENT_SECRET (fichier .env), puis lancez docker compose up -d."
+      "description": "42 refuse l'identifiant ou la clé secrète de l'application de ce BDE (clé expirée ou régénérée ?). Réessayer ne servira à rien : prévenez un propriétaire du BDE.",
+      "operator": "Pour un propriétaire : vérifiez la clé sur https://profile.intra.42.fr/oauth/applications, puis mettez-la à jour dans Paramètres, section Application 42 (il faut être encore connecté). Si plus personne ne peut se connecter, la personne qui gère le serveur peut ajouter FORTYTWO_CLIENT_SECRET=<la nouvelle clé> et BDE_REIMPORT=settings dans le fichier .env, lancer docker compose up -d, puis retirer ces deux lignes."
     }
   },
   "pending": {
@@ -156,7 +156,8 @@
     "menuDescription": "Liens de navigation principaux de la plateforme du bureau.",
     "events": "Événements",
     "profile": "Mon profil",
-    "skipToContent": "Aller au contenu"
+    "skipToContent": "Aller au contenu",
+    "settings": "Paramètres"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -668,7 +669,8 @@
     "nav": {
       "back": "Retour",
       "next": "Continuer",
-      "saving": "Enregistrement…"
+      "saving": "Enregistrement…",
+      "save": "Enregistrer"
     },
     "identity": {
       "title": "Votre BDE",
@@ -712,7 +714,8 @@
       "verified": "42 a accepté ces identifiants.",
       "unreachableTitle": "42 ne répond pas depuis cet ordinateur",
       "unreachableBody": "Vous pouvez continuer sans la vérification : les campus seront à saisir à la main, et les identifiants ne seront testés qu'à la première connexion.",
-      "skip": "Continuer sans vérifier"
+      "skip": "Continuer sans vérifier",
+      "verifySave": "Vérifier et enregistrer"
     },
     "campuses": {
       "title": "Campus",
@@ -851,7 +854,64 @@
       "smtpHost": "Nom de serveur invalide (exemple : smtp.mon-ecole.fr).",
       "port": "Numéro de port invalide (exemple : 587).",
       "email": "Adresse e-mail invalide.",
-      "secretChars": "Ce champ ne peut contenir ni apostrophe ni retour à la ligne."
+      "secretChars": "Ce champ ne peut contenir ni apostrophe ni retour à la ligne.",
+      "readOnly": "Les réglages sont encore dans des fichiers : ils ne peuvent pas être modifiés ici.",
+      "notInstalled": "La plateforme n'est pas installée.",
+      "storedInvalid": "Les réglages enregistrés sont invalides : restaurez la dernière sauvegarde de la base de données.",
+      "secretsUnreadable": "Les secrets enregistrés ne peuvent pas être lus (le volume « secrets » est perdu) : restaurez-le avec scripts/restore.sh --secrets, ou utilisez BDE_REIMPORT=settings (voir le guide de configuration).",
+      "conflict": "Quelqu'un a modifié les réglages en même temps. Rechargez la page et recommencez.",
+      "ownerExists": "Ce login est déjà propriétaire.",
+      "ownerNotFound": "Ce login n'est pas dans la liste des propriétaires.",
+      "ownerSelf": "Vous ne pouvez pas vous retirer vous-même : demandez à un autre propriétaire.",
+      "tooManyOwners": "Il y a déjà 30 propriétaires, c'est le maximum.",
+      "loginUnverified": "42 n'a pas pu confirmer ce login : vérifiez-le, puis confirmez l'ajout."
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "subtitle": "Les réglages de la plateforme, réservés aux propriétaires. Chaque changement s'applique tout de suite, sans redémarrage, et est inscrit au journal d'audit.",
+    "saved": "Enregistré",
+    "since": "Réglages enregistrés dans la base de données, installés le {date}.",
+    "readOnly": {
+      "title": "Les réglages sont encore dans des fichiers",
+      "body": "Cette plateforme lit encore ses réglages dans bde.config.yml et .env, qui ne sont pas complets : ils ne peuvent pas être modifiés ici. Une fois ces fichiers complétés et la plateforme relancée, ils sont copiés dans la base de données et cette page devient utilisable (voir le guide de configuration)."
+    },
+    "backup": {
+      "title": "Sauvegardez le volume « secrets »",
+      "body": "Les secrets de la plateforme (clé de l'application 42, mot de passe du serveur d'e-mail, webhooks) sont enregistrés chiffrés dans la base de données. La clé qui les déchiffre n'est pas dans la base : elle est dans le volume Docker « secrets ». Sans une sauvegarde de ce volume, après une restauration sur un autre serveur, ces secrets ne pourront plus être lus et il faudra les ressaisir.",
+      "command": "Commande de sauvegarde",
+      "commandLabel": "Commande de sauvegarde",
+      "note": "Elle crée deux fichiers dans le dossier backups : la base de données et les clés. Gardez-les à deux endroits différents, et hors du serveur. Ne lancez jamais « docker compose down -v » : l'option -v supprime les volumes."
+    },
+    "oauthRejected": {
+      "title": "42 refuse l'application de ce BDE",
+      "body": "Plus personne ne peut se connecter : l'identifiant ou la clé secrète de l'application 42 ont été refusés (clé expirée ou régénérée ?). Vérifiez la clé sur https://profile.intra.42.fr/oauth/applications, puis enregistrez-la dans la section « Application 42 » ci-dessous.",
+      "cta": "Ouvrir les paramètres"
+    },
+    "secrets": {
+      "lostTitle": "Les secrets enregistrés ne peuvent plus être lus",
+      "lostBody": "Au démarrage, la clé qui les déchiffre n'a pas été trouvée (le volume « secrets » a été perdu ou remplacé). Ressaisissez-les ci-dessous : la clé de l'application 42, le mot de passe du serveur d'e-mail et les webhooks. Si vous avez une sauvegarde du volume, restaurez-la plutôt avec scripts/restore.sh --secrets.",
+      "resealedTitle": "Les secrets ont été repris depuis .env",
+      "resealedBody": "Au démarrage, la clé qui les déchiffre n'a pas été trouvée (le volume « secrets » a été perdu ou remplacé). Les valeurs présentes dans .env ont été enregistrées de nouveau. Vérifiez-les ci-dessous, retirez-les de .env, et sauvegardez le nouveau volume."
+    },
+    "owners": {
+      "title": "Propriétaires",
+      "description": "Les propriétaires ont tous les droits : membres, rôles, réglages, journal d'audit. Ajouter ou retirer un propriétaire prend effet immédiatement.",
+      "you": "vous",
+      "cannotRemoveSelf": "Vous ne pouvez pas vous retirer vous-même : demandez à un autre propriétaire.",
+      "loginLabel": "Ajouter un propriétaire (login 42)",
+      "loginPlaceholder": "jdupont",
+      "add": "Ajouter",
+      "checking": "Vérification…",
+      "listTitle": "Propriétaires actuels",
+      "remove": "Retirer {login}",
+      "addTitle": "Ajouter {login} comme propriétaire ?",
+      "addBody": "Cette personne aura tous les droits sur la plateforme, dès maintenant : membres, rôles, réglages et journal d'audit.",
+      "addBodyUnverified": "42 n'a pas pu confirmer que ce login existe. Vérifiez l'orthographe : un login erroné ne pourrait jamais se connecter, et vous croiriez que quelqu'un a tous les droits. Cette personne aura tous les droits dès maintenant.",
+      "addConfirm": "Ajouter comme propriétaire",
+      "removeTitle": "Retirer {login} des propriétaires ?",
+      "removeBody": "Cette personne perd ses droits de propriétaire immédiatement : elle devient un membre avec le rôle par défaut et ne pourra plus modifier les réglages.",
+      "removeConfirm": "Retirer"
     }
   }
 }

@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => {
     enterSetupMode: vi.fn(),
     warnFortyTwo: vi.fn(),
     startScheduler: vi.fn(),
+    reconcile: vi.fn(async () => ({ promoted: [], demoted: [] })),
   };
 });
 
@@ -30,6 +31,8 @@ vi.mock('./lib/setup/mode', () => ({ enterSetupMode: mocks.enterSetupMode }));
 vi.mock('./lib/auth/oauth-check', () => ({
   warnIfFortyTwoRejectsTheApplication: mocks.warnFortyTwo,
 }));
+vi.mock('./lib/settings/owners', () => ({ reconcileOwnerAccounts: mocks.reconcile }));
+vi.mock('./config', () => ({ getConfig: () => ({ auth: { owners: ['alice', 'bob'] } }) }));
 vi.mock('./lib/events/scheduler', () => ({ startEventReminderScheduler: mocks.startScheduler }));
 
 const { register } = await import('./instrumentation');
@@ -51,6 +54,8 @@ describe('register', () => {
       expect(mocks.warnFortyTwo).toHaveBeenCalledTimes(1);
       expect(mocks.startScheduler).toHaveBeenCalledTimes(1);
       expect(mocks.enterSetupMode).not.toHaveBeenCalled();
+      // the accounts follow the list of owners, before anything else needs them
+      expect(mocks.reconcile).toHaveBeenCalledWith(['alice', 'bob']);
     },
   );
 
@@ -61,6 +66,7 @@ describe('register', () => {
     expect(mocks.runStartupChecks).not.toHaveBeenCalled(); // the .env of a platform not installed is empty
     expect(mocks.warnFortyTwo).not.toHaveBeenCalled();
     expect(mocks.startScheduler).not.toHaveBeenCalled();
+    expect(mocks.reconcile).not.toHaveBeenCalled(); // there is no account yet
   });
 
   it('refuses to start, with the explanation, when the stored settings cannot be used', async () => {

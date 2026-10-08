@@ -3,7 +3,8 @@
 import { useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
-import { saveIdentity, type ActionFailure } from '@/app/[locale]/setup/actions';
+import type { ActionFailure } from '@/app/[locale]/setup/actions';
+import { useFrameMode, type StepApi } from './api';
 import type { DraftView } from '@/lib/setup/draft';
 import { NativeSelect } from '@/components/events/field-styles';
 import { Field, fieldError, useFailureText } from './fields';
@@ -13,11 +14,13 @@ import { StepFrame, type StepProps } from './step-frame';
 const PRESETS = ['#0f766e', '#2563eb', '#7c3aed', '#db2777', '#ea580c', '#16a34a'];
 
 export function StepIdentity({
+  api,
   view,
   onSaved,
   run,
   onNext,
-}: StepProps & { view: DraftView; onSaved: (patch: Partial<DraftView>) => void }) {
+}: StepProps & { api: StepApi; view: DraftView; onSaved: (patch: Partial<DraftView>) => void }) {
+  const mode = useFrameMode();
   const t = useTranslations('setup.identity');
   const text = useFailureText();
   const [name, setName] = useState(view.name);
@@ -28,7 +31,9 @@ export function StepIdentity({
 
   function submit() {
     start(async () => {
-      const result = await run(saveIdentity({ name, accentColor: color, messageLocale: locale }));
+      const result = await run(
+        api.saveIdentity({ name, accentColor: color, messageLocale: locale }),
+      );
       if (!result.ok) return setFailure(result);
       setFailure(null);
       onSaved({ name: name.trim(), accentColor: color, messageLocale: locale });
@@ -53,7 +58,7 @@ export function StepIdentity({
           onChange={(event) => setName(event.target.value)}
           placeholder={t('namePlaceholder')}
           maxLength={60}
-          autoFocus
+          autoFocus={mode === 'wizard'}
           autoComplete="off"
           aria-invalid={failure?.field === 'name'}
           aria-describedby={failure?.field === 'name' ? 'setup-name-error' : undefined}

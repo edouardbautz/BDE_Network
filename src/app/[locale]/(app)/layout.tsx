@@ -3,7 +3,13 @@ import { getEffectiveSession } from '@/lib/auth/session';
 import { getConfig } from '@/config';
 import { canViewEvents } from '@/lib/events/access';
 import { isDatabaseReachable } from '@/lib/health';
-import { can, canViewAuditLog, MEMBERS_MANAGE, ROLES_MANAGE } from '@/lib/permissions';
+import {
+  can,
+  canManageSettings,
+  canViewAuditLog,
+  MEMBERS_MANAGE,
+  ROLES_MANAGE,
+} from '@/lib/permissions';
 import { accountLabel } from '@/lib/account-label';
 import { redirect } from '@/i18n/navigation';
 import { AppShell, type NavItem } from '@/components/layout/app-shell';
@@ -53,6 +59,9 @@ export default async function AppLayout({
   }
   if (canViewAuditLog(session.user)) {
     navItems.push({ id: 'auditLog', href: '/audit-log', label: t('auditLog') });
+  }
+  if (canManageSettings(session.user)) {
+    navItems.push({ id: 'settings', href: '/settings', label: t('settings') });
   }
 
   return (
