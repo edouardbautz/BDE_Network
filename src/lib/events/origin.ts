@@ -1,13 +1,7 @@
 import { headers } from 'next/headers';
-import { setting } from '@/lib/settings/runtime';
+import { publicOrigin } from '@/lib/public-address';
 
-/** Absolute URL of this instance: APP_URL when set, otherwise what the browser used. */
+/** Absolute URL of this instance: the registered address when there is one, otherwise what the browser used. */
 export async function getOrigin(): Promise<string> {
-  const configured = setting('APP_URL')?.trim().replace(/\/+$/, '');
-  if (configured) return configured;
-
-  const requestHeaders = await headers();
-  const host = requestHeaders.get('x-forwarded-host') ?? requestHeaders.get('host') ?? 'localhost';
-  const protocol = requestHeaders.get('x-forwarded-proto') ?? 'http';
-  return `${protocol}://${host}`;
+  return publicOrigin(await headers());
 }

@@ -242,6 +242,57 @@ describe('the wizard', () => {
       renderWizard(view({ step: 1 }));
       expect(screen.queryByRole('alert')).toBeNull();
     });
+
+    describe('compared with the address of the browser', () => {
+      const original = window.location;
+      const browserOn = (origin: string) =>
+        Object.defineProperty(window, 'location', { value: { origin }, configurable: true });
+      afterEach(() => {
+        Object.defineProperty(window, 'location', { value: original, configurable: true });
+      });
+
+      it('says nothing when the browser is on the address being saved', () => {
+        browserOn('http://localhost:3500');
+        renderWizard(view({ step: 1, addressUrl: 'http://localhost:3500' }));
+        expect(screen.queryByRole('status')).toBeNull();
+      });
+
+      it('warns, without blocking, when the browser is somewhere else', async () => {
+        browserOn('http://localhost:3000');
+        renderWizard(view({ step: 1, addressUrl: 'https://bde.exemple.fr' }));
+        const notice = await screen.findByRole('status');
+        expect(notice).toHaveTextContent("Ce n'est pas l'adresse de ce navigateur");
+        expect(notice).toHaveTextContent('http://localhost:3000');
+        expect(notice).toHaveTextContent('https://bde.exemple.fr');
+
+        click('Continuer'); // a warning, not a refusal
+        await waitFor(() => expect(mocks.saveAddress).toHaveBeenCalled());
+      });
+
+      it('tells a browser that is on 0.0.0.0 to open localhost instead', async () => {
+        browserOn('http://0.0.0.0:3000');
+        renderWizard(view({ step: 1, addressUrl: 'http://localhost:3000' }));
+        expect(await screen.findByRole('status')).toHaveTextContent(
+          'Ce navigateur est sur 0.0.0.0',
+        );
+      });
+    });
+
+    it('refuses 0.0.0.0 with an explanation', async () => {
+      mocks.saveAddress.mockResolvedValue({
+        ok: false,
+        code: 'addressUnspecified',
+        field: 'address',
+      });
+      renderWizard(view({ step: 1, addressUrl: 'http://localhost:3000' }));
+      fireEvent.change(screen.getByLabelText('Adresse publique'), {
+        target: { value: 'http://0.0.0.0:3000' },
+      });
+      click('Continuer');
+      expect(
+        await screen.findByText(/0\.0\.0\.0 n'est pas une adresse de site/),
+      ).toBeInTheDocument();
+    });
   });
 
   describe('the 42 application', () => {

@@ -269,6 +269,36 @@ est sur <https://profile.intra.42.fr/oauth/applications>). Si plus personne n'es
 [Configuration](configuration.md#la-page-paramètres) : la personne qui gère le serveur peut la remettre avec
 `BDE_REIMPORT=settings`.
 
+**« La connexion avec 42 échoue » : `invalid_grant`, « redirection URI », ou une page sur `0.0.0.0`**
+
+La page `…/fr/auth-error?error=Configuration` (ou `OAuthCallbackError` dans `docker compose logs app`) avec le
+message _« does not match the redirection URI used in the authorization request »_ veut dire que l'adresse que la
+plateforme donne à 42 n'est pas celle que l'application 42 a déclarée, ou que vous n'êtes pas sur cette adresse.
+Vérifiez dans l'ordre :
+
+1. **Vous ouvrez la plateforme à l'adresse enregistrée**, caractère pour caractère : `http://localhost:3000`, pas
+   `http://127.0.0.1:3000`, pas `http://0.0.0.0:3000` (qui s'affichait dans le terminal d'anciennes versions : ce n'est
+   pas une adresse, c'est celle sur laquelle le serveur écoute). Le navigateur garde les cookies de connexion par
+   adresse : démarrer la connexion sur une adresse et revenir sur une autre ne peut pas marcher.
+2. **L'URL de redirection de l'application 42** (<https://profile.intra.42.fr/oauth/applications>) est exactement
+   l'adresse enregistrée suivie de `/api/auth/callback/42-school`, par exemple
+   `http://localhost:3000/api/auth/callback/42-school`. Un propriétaire peut lire l'adresse enregistrée dans
+   **Paramètres**, section Adresse.
+3. **L'adresse enregistrée est la bonne.** Si elle est fausse et que plus personne ne peut se connecter pour la
+   corriger, la personne qui gère le serveur la remet sans être connectée : créez (ou ouvrez) le fichier `.env` à la
+   racine du projet, avec un éditeur de texte (Bloc-notes, VS Code…), et ajoutez ces deux lignes, avec **votre**
+   adresse :
+
+   ```
+   APP_URL=http://localhost:3000
+   BDE_REIMPORT=settings
+   ```
+
+   Puis `docker compose up -d`. Le journal le confirme (`docker compose logs app` : _« Adresse du site : ancienne →
+   nouvelle »_). Seules les valeurs de `.env` sont reprises dans les réglages, rien d'autre ne change. **Retirez
+   ensuite ces deux lignes de `.env`** et relancez `docker compose up -d` : sinon la valeur de `.env` est reprise à
+   chaque démarrage et écrase ce qui est modifié depuis Paramètres.
+
 **« Connexion refusée » après avoir autorisé sur l'intra**
 
 - _« Votre campus 42 (…) n'est pas autorisé »_ : le campus de la personne n'est pas dans la liste des campus

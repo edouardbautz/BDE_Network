@@ -27,18 +27,44 @@ import {
   problemTitle,
   redact,
   renderProblemPage,
+  terminalLine,
 } from './startup-problems.mjs';
 
 const MAX_OUTPUT = 64 * 1024;
 
-/** Runs a command to its end; resolves with its exit code and what it printed (both streams, capped). */
-function run(spawn, { command, args, cwd, env, inherit = false }, onChild) {
+/** Passes the output of a child on, line by line, through `rewrite` (which may drop a line by answering null). */
+function forward(stream, sink, rewrite) {
+  let pending = '';
+  const write = (line) => {
+    const out = rewrite(line);
+    if (out !== null) sink.write(`${out}\n`);
+  };
+  stream.on('data', (chunk) => {
+    const lines = (pending + chunk).split('\n');
+    pending = lines.pop() ?? '';
+    for (const line of lines) write(line);
+  });
+  stream.on('end', () => {
+    if (pending) write(pending);
+    pending = '';
+  });
+}
+
+/**
+ * Runs a command to its end; resolves with its exit code and what it printed (both streams, capped).
+ * `inherit`: it prints straight to this terminal; with `rewrite` as well, line by line through it.
+ */
+function run(spawn, { command, args, cwd, env, inherit = false, rewrite }, onChild) {
   return new Promise((resolve) => {
     let output = '';
     const child = spawn(command, args, {
       cwd,
       env,
-      stdio: inherit ? 'inherit' : ['ignore', 'pipe', 'pipe'],
+      stdio: rewrite
+        ? ['inherit', 'pipe', 'pipe']
+        : inherit
+          ? 'inherit'
+          : ['ignore', 'pipe', 'pipe'],
     });
     onChild?.(child);
     const collect = (chunk) => {
@@ -46,6 +72,10 @@ function run(spawn, { command, args, cwd, env, inherit = false }, onChild) {
     };
     child.stdout?.on('data', collect);
     child.stderr?.on('data', collect);
+    if (rewrite) {
+      forward(child.stdout, process.stdout, rewrite);
+      forward(child.stderr, process.stderr, rewrite);
+    }
     child.on('error', (error) => resolve({ code: 1, output: `${output}\n${error.message}` }));
     child.on('close', (code, signal) => resolve({ code: code ?? (signal ? 1 : 0), output }));
   });
@@ -240,7 +270,9 @@ async function main() {
   env.BDE_STARTUP_REPORT = reportPath;
 
   // The child processes print for themselves (their messages stay in the logs), except Prisma, whose
-  // output is captured and printed through `redact` only when it fails.
+  // output is captured and printed through `redact` only when it fails, and the application's start-up
+  // banner, whose addresses are those of the container and are replaced by the one to open (terminalLine).
+  const hostPort = env.BDE_HOST_PORT?.trim() || String(Number(env.PORT || 3000));
   const code = await supervise({
     env,
     port: Number(env.PORT || 3000),
@@ -258,7 +290,14 @@ async function main() {
       cwd: '/app',
       env,
     },
-    server: { command: process.execPath, args: ['server.js'], cwd: '/app', env, inherit: true },
+    server: {
+      command: process.execPath,
+      args: ['server.js'],
+      cwd: '/app',
+      env,
+      inherit: true,
+      rewrite: (line) => terminalLine(line, hostPort),
+    },
   });
   process.exit(code);
 }

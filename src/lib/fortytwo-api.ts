@@ -1,7 +1,7 @@
 /**
- * Where the 42 API is. `FORTYTWO_API_URL` replaces it for the end-to-end tests of the installer (a small
- * stand-in server): the sign-in itself (authorization, token and profile addresses of the provider) is
- * not affected, it is always the real 42.
+ * Where the 42 API is. `FORTYTWO_API_URL` replaces it for the end-to-end tests (a small stand-in server,
+ * e2e/mock-fortytwo.mjs): the installer's checks and the sign-in itself (authorization, token and profile
+ * addresses of the provider) go there. It is not set in a real installation.
  */
 export function fortyTwoApiBase(): string {
   const custom = process.env.FORTYTWO_API_URL?.trim().replace(/\/+$/, '');

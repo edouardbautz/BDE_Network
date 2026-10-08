@@ -1,4 +1,5 @@
 import type { OAuthConfig } from 'next-auth/providers';
+import { fortyTwoApiBase } from '@/lib/fortytwo-api';
 import { setting } from '@/lib/settings/runtime';
 
 interface FortyTwoCampus {
@@ -33,13 +34,14 @@ function resolvePrimaryCampus(profile: FortyTwoProfile): string | undefined {
 }
 
 export function FortyTwoProvider(): OAuthConfig<FortyTwoProfile> {
+  const api = fortyTwoApiBase();
   return {
     id: '42-school',
     name: '42',
     type: 'oauth',
-    authorization: 'https://api.intra.42.fr/oauth/authorize?scope=public',
-    token: 'https://api.intra.42.fr/oauth/token',
-    userinfo: 'https://api.intra.42.fr/v2/me',
+    authorization: `${api}/oauth/authorize?scope=public`,
+    token: `${api}/oauth/token`,
+    userinfo: `${api}/v2/me`,
     clientId: setting('FORTYTWO_CLIENT_ID'),
     clientSecret: setting('FORTYTWO_CLIENT_SECRET'),
     profile(profile) {

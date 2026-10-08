@@ -3,6 +3,7 @@ import { PLACEHOLDER_OWNER, validateEnvironment } from '@/config/env';
 import { bdeConfigSchema, type BdeConfig } from '@/config/schema';
 import type { PrismaClient } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
+import { validateAddress } from '@/lib/setup/validate';
 import { seal, settingsKey, SettingsDecryptError, unseal } from './crypto';
 import {
   SETTING_KEYS,
@@ -255,6 +256,19 @@ async function reimportFromFiles(db: SettingsDb, logger: Logger): Promise<boolea
  */
 async function reimportEnvironment(db: SettingsDb, logger: Logger): Promise<void> {
   const fromEnvironment = settingValuesFrom(process.env);
+  // The address is the setting that locks everybody out when it is wrong: what is typed in .env is checked
+  // like in the installer (and written the same way) rather than copied as it is.
+  if (fromEnvironment.APP_URL) {
+    const address = validateAddress(fromEnvironment.APP_URL);
+    if (address.ok) fromEnvironment.APP_URL = address.value.url;
+    else {
+      delete fromEnvironment.APP_URL;
+      logger.warn(
+        "\n⚠️  APP_URL de .env est ignorée : ce n'est pas une adresse de site valable (exemples :\n" +
+          "    https://bde.mon-ecole.fr ou http://localhost:3000 ; 0.0.0.0 n'en est pas une).\n",
+      );
+    }
+  }
   const row = await db.platformSettings.findUnique({ where: { id: PLATFORM_ID } });
   if (!row || Object.keys(fromEnvironment).length === 0) {
     logger.warn(
@@ -271,6 +285,7 @@ async function reimportEnvironment(db: SettingsDb, logger: Logger): Promise<void
       if (!(error instanceof SettingsDecryptError)) throw error;
     }
   }
+  const before = asStrings(row.environment).APP_URL;
   const merged = { ...asStrings(row.environment), ...secrets, ...fromEnvironment };
   const { environment, secrets: sealedValues } = splitSettings(managed(merged));
   await db.platformSettings.update({
@@ -282,6 +297,9 @@ async function reimportEnvironment(db: SettingsDb, logger: Logger): Promise<void
   });
   logger.warn(
     `\n🔁 BDE_REIMPORT=settings : ${Object.keys(fromEnvironment).join(', ')} ont été repris de .env dans les réglages.\n` +
+      (fromEnvironment.APP_URL && fromEnvironment.APP_URL !== before
+        ? `   Adresse du site : ${before ?? '(aucune)'} → ${fromEnvironment.APP_URL}\n`
+        : '') +
       '   Retirez cette variable de .env une fois fini.\n',
   );
 }

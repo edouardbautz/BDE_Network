@@ -4,7 +4,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { supervise } from './start.mjs';
 
 /** A command that runs a few lines of JavaScript: stands for Prisma, or for the application. */
@@ -76,6 +76,29 @@ describe('supervise', () => {
   it('starts the application once the migrations are applied, and ends with its exit code', async () => {
     expect(await start({})).toBe(0);
     expect(await start({ server: script('process.exit(3)') })).toBe(3);
+  });
+
+  it('passes the output of the application on through `rewrite`, line by line, and can drop a line', async () => {
+    const written: string[] = [];
+    const spy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk) => {
+      written.push(String(chunk));
+      return true;
+    });
+    try {
+      const code = await start({
+        server: {
+          ...script(
+            'process.stdout.write("- Local: a\\n- Network: http://0.0.0.0:3000\\nlast line without newline")',
+          ),
+          inherit: true,
+          rewrite: (line: string) => (line.includes('Network') ? null : line.toUpperCase()),
+        },
+      });
+      expect(code).toBe(0);
+    } finally {
+      spy.mockRestore();
+    }
+    expect(written.join('')).toBe('- LOCAL: A\nLAST LINE WITHOUT NEWLINE\n');
   });
 
   it('does not hide a real crash of the application behind an explanation page', async () => {

@@ -1,4 +1,5 @@
 import { EVENTS_MODULE_KEY, KNOWN_MODULE_KEYS, type BdeConfig } from './schema';
+import { isUnspecifiedHost } from '@/lib/public-address';
 
 /**
  * Checks of the secrets and machine settings in `.env`, the counterpart of the
@@ -72,7 +73,10 @@ export function validateEnvironment(env: Env, config: BdeConfig): EnvironmentRep
 
   const appUrl = env.APP_URL?.trim() || undefined;
   const parsedAppUrl = appUrl ? parseUrl(appUrl) : null;
-  const publicUrl = (parsedAppUrl && appUrl ? appUrl : 'http://localhost:3000').replace(/\/+$/, '');
+  const unspecified = parsedAppUrl !== null && isUnspecifiedHost(parsedAppUrl.hostname);
+  const publicUrl = (
+    parsedAppUrl && appUrl && !unspecified ? appUrl : 'http://localhost:3000'
+  ).replace(/\/+$/, '');
 
   // --- Authentication -------------------------------------------------------
   const secret = env.AUTH_SECRET?.trim();
@@ -126,6 +130,14 @@ export function validateEnvironment(env: Env, config: BdeConfig): EnvironmentRep
     fail(
       `APP_URL (« ${appUrl} ») doit commencer par https:// (ou http://).\n` +
         '    → Exemple : https://bde.exemple.fr',
+    );
+  } else if (unspecified) {
+    // A warning, not an error: an older installation may have saved it, and the platform ignores it (the sign-in
+    // uses the address of the request instead), so refusing to start would only lock out the person who must fix it.
+    warnings.push(
+      `APP_URL (« ${appUrl} ») n'est pas une adresse de site : 0.0.0.0 est l'adresse sur laquelle le serveur écoute.\n` +
+        '    → Elle est ignorée. Corrigez-la dans les réglages (adresse du site) ou, si plus personne ne peut se\n' +
+        '      connecter, voir docs/installation.md, « Problèmes fréquents », « La connexion avec 42 échoue ».',
     );
   } else if (parsedAppUrl?.protocol === 'http:' && !isLocalAddress(parsedAppUrl)) {
     warnings.push(

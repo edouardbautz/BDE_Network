@@ -251,6 +251,16 @@ describe('the steps', () => {
     });
   });
 
+  it('2. never accepts 0.0.0.0, which is where the server listens and not an address (crafted request included)', async () => {
+    for (const address of ['http://0.0.0.0:3000', '0.0.0.0', '0.0.0.0:3000']) {
+      expect(await actions.saveAddress({ address, acceptInsecure: true })).toMatchObject({
+        ok: false,
+        code: 'addressUnspecified',
+        field: 'address',
+      });
+    }
+  });
+
   it('2. gives the redirect address to declare, and wants an explicit yes for plain http on a domain', async () => {
     expect(await actions.saveAddress({ address: 'nonsense' })).toMatchObject({
       ok: false,

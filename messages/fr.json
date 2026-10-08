@@ -698,7 +698,11 @@
       "help": "Par exemple https://bde.mon-ecole.fr, ou http://localhost:3000 pour un essai sur cet ordinateur. Nous avons repris l'adresse que vous utilisez en ce moment.",
       "insecureTitle": "Adresse en http:// (non chiffrée)",
       "insecureBody": "Avec cette adresse, les mots de passe et les clés circulent en clair sur le réseau. Placez la plateforme derrière un proxy HTTPS (voir la documentation de déploiement) ou choisissez une adresse en https://.",
-      "insecureAccept": "Je comprends, continuer quand même"
+      "insecureAccept": "Je comprends, continuer quand même",
+      "differsTitle": "Ce n'est pas l'adresse de ce navigateur",
+      "differsBody": "Vous utilisez {current} en ce moment, et vous enregistrez {typed}. Après la connexion, 42 renvoie le visiteur vers {typed} : si vous ne pouvez pas l'ouvrir depuis ce navigateur, la connexion échouera. Si c'est voulu (installation depuis un autre ordinateur), continuez ; sinon rouvrez cette page sur {typed}.",
+      "unspecifiedTitle": "Ce navigateur est sur 0.0.0.0",
+      "unspecifiedBody": "0.0.0.0 n'est pas une adresse de site, c'est l'adresse sur laquelle le serveur écoute. Ouvrez plutôt http://localhost:3000 (ou l'adresse de votre site), puis recommencez : la connexion avec 42 ne fonctionnera que depuis l'adresse enregistrée."
     },
     "fortyTwo": {
       "title": "Application 42",
@@ -843,6 +847,7 @@
       "color": "Couleur invalide : écrivez-la comme #0f766e.",
       "timezone": "Fuseau horaire inconnu (exemple : Europe/Paris).",
       "address": "Adresse invalide. Exemples : https://bde.mon-ecole.fr ou http://localhost:3000.",
+      "addressUnspecified": "0.0.0.0 n'est pas une adresse de site : c'est l'adresse sur laquelle le serveur écoute. Écrivez http://localhost:3000 pour un essai sur cet ordinateur, ou l'adresse de votre site (https://bde.mon-ecole.fr).",
       "insecure": "Cochez la case pour continuer avec une adresse en http://.",
       "clientId": "L'UID doit faire au moins 8 caractères, sans espace.",
       "clientSecret": "Le SECRET doit faire au moins 8 caractères, sans espace ni apostrophe.",

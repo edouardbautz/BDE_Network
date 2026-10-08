@@ -63,6 +63,30 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Fixed
 
+- **« Se connecter avec 42 » échouait après une installation neuve** (`invalid_grant`, « does not match the
+  redirection URI », puis une redirection vers `http://0.0.0.0:3000/...`). Dans l'image de production le serveur écoute
+  sur `0.0.0.0` et Next.js construit alors chaque `request.url` à partir de cette adresse : au retour de 42, Auth.js
+  donnait `http://0.0.0.0:3000/api/auth/callback/42-school` comme `redirect_uri` pour échanger le code, alors que
+  l'autorisation avait été demandée avec `http://localhost:3000/...`. Toutes les adresses que la plateforme envoie
+  (le `redirect_uri` à l'aller **et** au retour, les redirections de la page d'erreur, les liens des notifications
+  et des cartes Discord, Slack et e-mail) viennent maintenant d'**une seule fonction**, qui part de l'adresse
+  enregistrée dans les réglages (`src/lib/public-address.ts`) ; à défaut, de l'adresse que le navigateur a utilisée,
+  jamais de celle d'écoute. `127.0.0.1` est écrit `localhost` partout (Next.js le fait de lui-même : sans cela, aller
+  et retour auraient eu deux orthographes). Test de non-régression : un vrai serveur qui écoute sur `0.0.0.0`, les
+  vrais routeurs NextAuth, et un faux 42 qui refuse un code dont le `redirect_uri` n'est pas celui de l'autorisation ;
+  la CI rejoue en plus la connexion complète dans un navigateur contre l'image.
+- **`0.0.0.0` n'est plus jamais proposé ni accepté comme adresse** : l'installateur et la page Paramètres le refusent
+  avec une explication, l'adresse proposée par défaut vaut `localhost` quand le navigateur est sur `0.0.0.0`, et une
+  adresse `0.0.0.0` déjà enregistrée par une version précédente est ignorée (avertissement au démarrage) au lieu de
+  bloquer la connexion. Le terminal n'affiche plus `Network: http://0.0.0.0:3000` : il indique l'adresse à ouvrir
+  (`http://localhost:3000`, ou le port de `APP_PORT`).
+- **Installation : un avertissement quand l'adresse saisie n'est pas celle du navigateur.** 42 renvoie le visiteur vers
+  l'adresse enregistrée ; depuis un autre nom ou un autre port, la connexion ne peut pas aboutir. Le message ne
+  bloque pas (installer depuis un autre ordinateur est légitime) ; il apparaît aussi dans Paramètres.
+- **Moyen de secours quand l'adresse enregistrée est fausse** (plus personne ne peut se connecter pour la corriger) :
+  `APP_URL=<adresse>` et `BDE_REIMPORT=settings` dans `.env`, puis `docker compose up -d` (voir
+  `docs/installation.md`). L'adresse est maintenant vérifiée comme dans l'installateur, et le journal dit l'ancienne
+  et la nouvelle valeur.
 - **Un problème de démarrage que l'opérateur peut corriger est maintenant affiché dans le navigateur, au lieu
   d'un redémarrage en boucle silencieux** (`restart: unless-stopped` + une explication seulement dans
   `docker compose logs`, en partie en anglais). Un petit superviseur (`docker/start.mjs`) remplace la commande

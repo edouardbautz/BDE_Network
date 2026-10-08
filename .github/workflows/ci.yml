@@ -179,6 +179,10 @@ jobs:
             -c "INSERT INTO \"User\" (id, login, \"fullName\", email, campus, status, \"updatedAt\") VALUES ('e2e-alice', 'alice', 'Alice', 'alice@example.org', 'Nice', 'OWNER', now()) ON CONFLICT (login) DO UPDATE SET status = 'OWNER', \"roleId\" = NULL" \
             -c "INSERT INTO \"User\" (id, login, \"fullName\", email, campus, status, \"roleId\", \"updatedAt\") SELECT 'e2e-carol', 'carol', 'Carol', 'carol@example.org', 'Nice', 'MEMBER', id, now() FROM \"Role\" WHERE \"isDefault\""
           AUTH_SECRET="$(docker exec installer cat /secrets/auth_secret)" SHOTS="$RUNNER_TEMP/shots/settings" node e2e/settings.mjs http://127.0.0.1:3003
+          # The sign-in with 42 (the stand-in plays 42, and refuses a code like the real one when the redirect_uri of
+          # the exchange is not the one of the authorization). The image listens on 0.0.0.0, which is what Next.js puts
+          # in every request URL: the registered address (this computer is written localhost) must be what 42 is given.
+          SHOTS="$RUNNER_TEMP/shots/signin" node e2e/signin.mjs http://localhost:3003 http://127.0.0.1:4242 http://127.0.0.1:3003
           ! docker logs installer 2>&1 | grep -q 's-s4t2ud-e2e-test-secret'
           [ "$(PGPASSWORD=ci-password psql -h 127.0.0.1 -U bde -d bde_install -tAc 'SELECT secrets LIKE $$%e2e-test-secret%$$ FROM "PlatformSettings"')" = f ]
           [ "$(docker inspect -f '{{.State.Running}} {{.RestartCount}}' installer)" = "true 0" ]

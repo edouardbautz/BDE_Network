@@ -315,6 +315,10 @@ describe('the sections', () => {
       ok: false,
       code: 'address',
     });
+    expect(await run({ section: 'address', address: 'http://0.0.0.0:3000' }, db)).toMatchObject({
+      ok: false,
+      code: 'addressUnspecified',
+    });
     expect(await run({ section: 'address', address: 'http://bde.exemple.fr' }, db)).toMatchObject({
       ok: false,
       code: 'insecure',

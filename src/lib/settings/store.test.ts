@@ -374,6 +374,43 @@ describe('the settings store', () => {
       expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('Retirez cette variable'));
     });
 
+    describe('the address, which locks everybody out when it is wrong', () => {
+      const reimportWith = async (appUrl: string) => {
+        process.env.BDE_REIMPORT = 'settings';
+        process.env.APP_URL = appUrl;
+        for (const name of [
+          'FORTYTWO_CLIENT_ID',
+          'FORTYTWO_CLIENT_SECRET',
+          'SMTP_HOST',
+          'SMTP_PASSWORD',
+        ]) {
+          delete process.env[name];
+        }
+        const log = logger();
+        await initializePlatform(fakeDb(installed()).db, log);
+        return log;
+      };
+      afterEach(() => {
+        delete process.env.APP_URL;
+      });
+
+      it('is written the way the installer writes it, and the log says what changed', async () => {
+        const log = await reimportWith('localhost:3000/');
+        expect(setting('APP_URL')).toBe('http://localhost:3000');
+        expect(log.warn).toHaveBeenCalledWith(
+          expect.stringContaining('https://from-database.example → http://localhost:3000'),
+        );
+      });
+
+      it('is refused when it is not an address (0.0.0.0): the saved one is kept', async () => {
+        const log = await reimportWith('http://0.0.0.0:3000');
+        expect(setting('APP_URL')).toBe('https://from-database.example');
+        expect(log.warn).toHaveBeenCalledWith(
+          expect.stringContaining('APP_URL de .env est ignorée'),
+        );
+      });
+    });
+
     it('works when the sealed secrets cannot be read any more (the volume was lost)', async () => {
       process.env.BDE_REIMPORT = 'settings';
       process.env.FORTYTWO_CLIENT_SECRET = 'the-renewed-secret';

@@ -94,6 +94,7 @@ src/
                            `update.ts` (changing them from the settings page), owners, access (OWNER-only)
     roles/view.ts          what pages need to show the right choices (actor from a session, role facts) — display only
     branding/              the uploaded logo: what is accepted (image.ts), where it lives (storage.ts)
+    public-address.ts      the platform's public address, in one place (see "The public address")
     audit-log.ts, account-label.ts, health.ts, prisma.ts, color.ts, utils.ts
   types/next-auth.d.ts     Session/User/JWT module augmentation
   test/                    session fixtures, in-memory roles database, migration tests
@@ -103,7 +104,7 @@ prisma/
 scripts/
   backup.sh, restore.sh     POSIX sh, need only Docker on the server (no Node): one tar.gz with the database dump
   audit-prod.mjs            CI gate on production dependency advisories (+ audit-allowlist.json)
-e2e/                        browser tests run by CI against the real image (installer, settings page) + a stand-in 42 API
+e2e/                        browser tests run by CI against the real image (installer, settings page, sign-in) + a stand-in 42 API
 docker/
   prisma.config.mjs         Prisma config used by the production image to run `migrate deploy`
   master-secrets.mjs        the keys of the `secrets` volume (session secret, settings key), created once
@@ -176,6 +177,29 @@ point at a user (see `EventAssignee`).
   row is gone but the JWT stays valid for 30 days, so `jwt` returns `null` (Auth.js then clears the cookie and
   `auth()` resolves to null) and `session` throws rather than return a user without id/status (or a member
   without a role, which the database refuses to store).
+- **The public address** (`src/lib/public-address.ts`, **non-negotiable**). Everything the platform sends out is built from
+  the address registered in the settings (`APP_URL`): the `redirect_uri` given to 42 on the way out **and** on the way
+  back, Auth.js's redirects (the error page), the links of notifications and cards, the feed links. Never from what the
+  server believes its address is. In the production image the server listens on `0.0.0.0` and Next.js builds every
+  `request.url` from that (`http://0.0.0.0:3000/api/auth/callback/42-school` while the browser asked for
+  `localhost:3000`): Auth.js made its `redirect_uri` from that URL, so 42 answered `invalid_grant` ("does not match the
+  redirection URI used in the authorization request") and the visitor was sent to `0.0.0.0`. Reproduced against the real
+  image, fixed in two places that must stay together: the NextAuth config function sets `AUTH_URL` from
+  `registeredAddress()` (read by `signIn()` and `auth()` through `createActionURL`, and by `reqWithEnvURL` for the
+  handlers), and the route handlers (`api/auth/[...nextauth]/route.ts`) rewrite the request to `publicOrigin()` first
+  (`auth/public-request.ts`) — which is also the fallback when no address is registered: the forwarded host / `Host` of
+  the request, **`0.0.0.0` becoming `localhost`**. `registeredAddress()` returns an origin, or null when the value is not
+  http(s) or is an unspecified host (an older installation may have saved `0.0.0.0`: it is ignored, and a start-up warning
+  says so, rather than locking the sign-in). `isUnspecifiedHost` (`0.x.x.x`, `::`) is refused by `validateAddress` (the
+  installer and the settings page: code `addressUnspecified`) and by the `.env` rescue. **`127.0.0.1` / `::1` are written
+  `localhost`** (`canonicalHost`, in `validateAddress` and `registeredAddress`): Next.js's `NextURL` rewrites them to
+  `localhost` in every URL it builds, so an address saved as `127.0.0.1` gave `127.0.0.1` on the way out and `localhost`
+  on the way back. A new place that needs the platform's URL calls `registeredAddress()` / `publicOrigin(headers)`; it does
+  not read `APP_URL`, `request.url` or `Host` itself. Tests: `auth/public-address-signin.test.ts` (a server listening on
+  `0.0.0.0` that builds `request.url` like Next, the real handlers and config, a 42 that refuses a code whose
+  `redirect_uri` differs from the authorization's; mutation-checked: without the rewrite or `AUTH_URL` it receives
+  `http://0.0.0.0:<port>/…`), `public-address.test.ts`, and `e2e/signin.mjs` in CI (the whole sign-in in a browser, the
+  stand-in 42 playing `/oauth/authorize`, `/oauth/token`, `/v2/me`).
 - **The session is resolved once per request.** `getEffectiveSession` is wrapped in `React.cache`: the
   layout, the page and every access check of one render share one resolution, instead of replaying the
   `jwt` + `session` callbacks (3 SQL queries) each time — a page went from 13 statements to 7. It is
@@ -313,7 +337,10 @@ button, nothing takes the focus), the same validators (`lib/setup/validate.ts`, 
 - **If 42 refuses the application** (`oauth-check.ts`), the login page says to warn an owner, and an owner who still has
   a session sees an alert with a link to the settings on the dashboard (`OAuthRejectedAlert`) and on the page itself. A
   visitor is never told more than that (the login page cannot know who is an owner). When nobody can sign in at all,
-  `BDE_REIMPORT=settings` copies the values of `.env` (and nothing else) into the settings at the next start.
+  `BDE_REIMPORT=settings` copies the values of `.env` (and nothing else) into the settings at the next start. It is also
+  **the rescue for a wrong address** (`APP_URL=…` + `BDE_REIMPORT=settings`, documented in `docs/installation.md`): the
+  address is run through `validateAddress` first (so it is written like the installer writes it, and `0.0.0.0` is
+  refused), and the log says `ancienne → nouvelle`. There is deliberately no second mechanism.
 - **The page always reminds to back up the `secrets` volume** (the key is not in the database), with the command, and
   says so loudly when the secrets were found unreadable (`secretsStatus` of the runtime cache: `lost`, `resealed`).
 - **Tests**: `update.test.ts` (every section, the owner rules, the concurrent save, no secret in the audit), `actions.test.ts`
@@ -350,6 +377,11 @@ sees the installer.
   (`middleware.test.ts` checks which paths it sees); and a redirect built from a relative `Location`, or from
   `request.url` (the container's own host name behind Docker), is refused or wrong, so it is cloned from
   `request.nextUrl`, which carries the host the visitor used.
+- **The address step never proposes nor accepts `0.0.0.0`** (see "The public address"): the proposal is
+  `originOfRequest(headers)` (a browser on `0.0.0.0` gets `localhost`), `validateAddress` refuses it, and the screen
+  **warns, without blocking**, when the address typed is not the one of the browser (`addressNotice`, compared with
+  `window.location.origin` after hydration: 42 sends the visitor back to the saved address, and the sign-in cookies belong to
+  the address it started from, so another name or port cannot succeed). The same component serves the settings page.
 - **Server actions** (`actions.ts`, one per step). Every one answers 404 once installed (`isSetupMode`), `session` without
   the installer cookie, re-validates its input with Zod and the validators of `validate.ts` (the browser is not
   trusted), and keeps the answer in the server's memory (`draft.ts`: per session, lost on restart, which also changes the
@@ -367,8 +399,8 @@ sees the installer.
 - **The 42 client** (`fortytwo.ts`): the credentials are checked with the client-credentials grant, the campuses listed
   (paged, 600 ms apart, a 429 waited out), a login looked up; 8 s timeouts; every failure is a code
   (`invalidCredentials`, `rateLimited`, `network`) and the person may go on without the check (campuses typed by hand).
-  `FORTYTWO_API_URL` replaces the address of the API for the end-to-end test (`fortyTwoApiBase`); the sign-in itself
-  always uses the real 42.
+  `FORTYTWO_API_URL` replaces the address of the API for the end-to-end tests (`fortyTwoApiBase`, used by the installer's
+  checks and by the sign-in provider: `e2e/signin.mjs` plays a whole sign-in). It is never set in a real installation.
 - **Tests**: unit tests for each piece, the real French messages in `setup-ui.test.tsx`, and `e2e/install.mjs`, run
   by CI against the real image: a browser (`puppeteer-core` driving the installed Chrome) goes through every step with
   `e2e/mock-fortytwo.mjs` standing in for the 42 API, then checks the installer is a 404 and no secret was in a page, a
@@ -582,6 +614,10 @@ User guide: `docs/events.md`. The shape worth knowing before touching it:
   matched by `^[A-Z][A-Z0-9_]+$`; Prisma's own output goes to the logs only through `redact` (every secret of
   the environment, clear or URL-encoded, and any `postgres://` address). The page has its own inline CSS: a test
   keeps its tokens equal to those of `globals.css`. The in-app pages (login, error) are unaffected.
+- **The terminal shows the address to open, not the one the server listens on.** Next.js prints
+  `Network: http://0.0.0.0:3000` and the container's port; the supervisor passes the application's output through
+  `terminalLine` (`startup-problems.mjs`): the Network line is dropped and `Local:` becomes
+  `http://localhost:<BDE_HOST_PORT>`. The installer's code box already said `http://localhost:<port>`.
 - **The database address is built in the container, encoded.** `docker-compose.yml` sets `DATABASE_URL: ''` (it
   overrides the one of `.env`, which is for `npm run dev`) and `start.mjs` builds
   `postgresql://user:password@postgres:5432/db` from `POSTGRES_*` with `encodeURIComponent`. Interpolated by

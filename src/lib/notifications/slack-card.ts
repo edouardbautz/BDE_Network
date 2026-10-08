@@ -4,14 +4,14 @@ import type { EmailModel } from './email-layout';
 import { resolveLogoUrl } from './sender';
 import type { SlackPayload } from './slack-blocks';
 import type { NotificationMessage } from './types';
-import { setting } from '@/lib/settings/runtime';
+import { registeredAddress } from '@/lib/public-address';
 
 /** The BDE as the footer of a Slack message shows it: its name and, when Slack can fetch it, its logo.
  * Slack loads the image itself from the Internet: a private address, an SVG or a server that does not
  * answer gives the name alone, never a broken picture. */
 export async function slackBrand(): Promise<EmailModel['brand']> {
   const { bde } = getConfig();
-  const logoUrl = await resolveLogoUrl(setting('APP_URL'), bde.logoPath);
+  const logoUrl = await resolveLogoUrl(registeredAddress() ?? undefined, bde.logoPath);
   return { name: bde.name, ...(logoUrl && { logoUrl }) };
 }
 
