@@ -46,6 +46,9 @@ next-env.d.ts
 # prisma generated client
 /src/generated/prisma
 
+# the logo uploaded from the settings page when running outside Docker
+/.uploads/
+
 # database backups
 /backups/*
 !/backups/.gitkeep

@@ -11,6 +11,8 @@ const nextConfig: NextConfig = {
   // A self-contained server (server.js + only the files it needs) for the Docker image.
   output: 'standalone',
   poweredByHeader: false,
+  // The settings page sends the logo (2 MB at most, src/lib/branding/image.ts) to a server action.
+  experimental: { serverActions: { bodySizeLimit: '3mb' } },
   // No image goes through next/image (the logo is a local SVG, avatars are plain <img>):
   // switching the optimizer off removes the /_next/image endpoint and the native
   // image libraries it needs.

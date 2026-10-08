@@ -90,6 +90,8 @@ services:
       # The keys of the platform (session secret, key that seals the secret settings). BACK THIS VOLUME UP
       # (scripts/backup.sh does): without it, the secrets of a restored database cannot be decrypted.
       - secrets:/secrets
+      # The logo the owner uploaded. scripts/backup.sh puts it in the database archive.
+      - uploads:/uploads
     # No bind mount of bde.config.yml, on purpose. A mount is resolved by the Docker daemon, on ITS
     # side, and a daemon that cannot see this folder (rootless Docker, a remote daemon, a home on a
     # network share) answers by creating an EMPTY DIRECTORY there, or the application cannot read the
@@ -99,3 +101,4 @@ services:
 volumes:
   postgres_data:
   secrets:
+  uploads:

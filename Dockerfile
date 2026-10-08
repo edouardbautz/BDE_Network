@@ -36,7 +36,8 @@ ENV NODE_ENV=production \
     PORT=3000 \
     HOSTNAME=0.0.0.0 \
     PRISMA_HIDE_UPDATE_MESSAGE=1 \
-    CHECKPOINT_DISABLE=1
+    CHECKPOINT_DISABLE=1 \
+    UPLOADS_DIR=/uploads
 # Nothing here needs npm or yarn: the server is started with `node`.
 RUN rm -rf /usr/local/lib/node_modules /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /opt/yarn-* /usr/local/bin/yarn /usr/local/bin/yarnpkg \
  && addgroup --system --gid 1001 nodejs \
@@ -60,7 +61,8 @@ COPY --chown=nextjs:nodejs docker/prisma.config.mjs /opt/migrate/prisma.config.m
 COPY --chown=nextjs:nodejs docker/start.mjs docker/startup-problems.mjs docker/master-secrets.mjs /opt/start/
 # Where the `secrets` volume is mounted (docker/master-secrets.mjs). Created here so that the keys can also be
 # written when the image runs without the volume, and so that a new volume starts with the right owner.
-RUN mkdir /secrets && chown nextjs:nodejs /secrets && chmod 700 /secrets
+# Where the `uploads` volume is mounted: the BDE's logo (src/lib/branding). Also created here, for the same reason.
+RUN mkdir /secrets /uploads && chown nextjs:nodejs /secrets /uploads && chmod 700 /secrets
 USER nextjs
 EXPOSE 3000
 

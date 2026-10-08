@@ -105,7 +105,19 @@ else
   echo "  La base est sauvegardée, mais sans les clés ses secrets chiffrés ne seront pas lisibles sur un autre serveur." >&2
 fi
 
-tar -czf "$OUTPUT" -C "$WORK" database.sql info.txt
+# Le logo envoyé depuis la page Paramètres (volume « uploads »), s'il y en a un : il va dans l'archive de la base,
+# car il ne contient rien de secret. Sans logo envoyé, rien à sauvegarder.
+echo "Sauvegarde du logo (volume « uploads »)..."
+CONTENT="database.sql info.txt"
+if docker compose run --rm --no-deps -T --entrypoint sh app -c 'cd /uploads 2>/dev/null && ls logo-* >/dev/null 2>&1 && tar -cf - logo-*' \
+  >"$WORK/logo.tar" 2>/dev/null && [ -s "$WORK/logo.tar" ]; then
+  CONTENT="$CONTENT logo.tar"
+else
+  echo "  (aucun logo envoyé : rien à sauvegarder)"
+fi
+
+# shellcheck disable=SC2086
+tar -czf "$OUTPUT" -C "$WORK" $CONTENT
 
 if [ -n "$KEEP" ]; then
   # ls -t : du plus récent au plus ancien ; on supprime tout ce qui dépasse N.
