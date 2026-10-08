@@ -14,7 +14,4 @@ coverage
 *.pem
 bde.config.local.yml
 npm-debug.log*
-.setup-backups
-setup
-docker-compose.setup.yml
 e2e

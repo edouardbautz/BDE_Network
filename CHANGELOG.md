@@ -32,20 +32,21 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
   garder à deux endroits différents) et `scripts/restore.sh --secrets` remet les clés ; sans elles, les secrets d'une
   base restaurée sur un autre serveur ne sont plus déchiffrables.
 
-- **Assistant d'installation interactif** (`setup/`, `docker-compose.setup.yml`) : un BDE non technique installe
-  la plateforme en répondant à quelques questions, sans ouvrir de fichier. **Le seul prérequis est Docker** ; une
-  seule commande, identique sous Windows, Linux et macOS (`docker compose -f docker-compose.setup.yml run --rm --build setup`).
-  Il demande le nom, la couleur, la langue, l'adresse (il en déduit `APP_URL` et l'URL de redirection exacte à
-  déclarer sur l'intra 42), guide la création de l'application OAuth 42 et **vérifie l'UID et le secret auprès de
-  l'API 42**, propose la **liste des campus** (recherche par nom, fuseau horaire déduit), **vérifie que les
-  propriétaires existent**, génère `AUTH_SECRET` et le mot de passe PostgreSQL, propose Discord, Slack ou
-  e-mail avec un **message de test** à confirmer, écrit `.env` et `bde.config.yml` (validés avec le schéma de la
-  plateforme), puis démarre la plateforme et donne l'adresse. En français ou en anglais.
-  Relançable : il reprend les valeurs existantes, conserve les secrets et les réglages qu'il ne demande pas, et
-  **sauvegarde chaque fichier avant de l'écraser** (`.setup-backups/`). Chaque réponse est validée sur le moment ;
-  Ctrl+C n'écrit rien de partiel ; aucun secret n'est affiché (saisies masquées, récapitulatif sans secrets).
-- Le démarrage rapide des README (FR et EN) et `docs/installation.md` deviennent : installer Docker, cloner,
-  lancer l'assistant. L'ancienne méthode manuelle reste en annexe.
+- **Page « Paramètres »** (propriétaires uniquement) : tout ce que l'installateur demande (nom, couleur, langue des
+  messages, adresse, application 42, campus, propriétaires, modules, notifications avec message de test) se modifie
+  depuis la plateforme, section par section. Chaque enregistrement est validé, écrit avec son entrée du **journal
+  d'audit** dans une seule transaction, puis appliqué **tout de suite** (ni redémarrage ni reconstruction) ; les
+  secrets ne reviennent jamais au navigateur et le journal dit seulement « modifié ». L'application 42 est vérifiée
+  auprès de 42 **avant** d'être enregistrée. **Les propriétaires se gèrent ici** (confirmation, jamais soi-même,
+  jamais zéro propriétaire, login vérifié sur l'intra) : ils ne viennent plus uniquement de `bde.config.yml`. Les
+  rappels du module Événements démarrent et s'arrêtent avec le module. Un rappel de sauvegarder le volume `secrets`
+  reste visible en haut de la page. Quand 42 refuse l'application, la page de connexion demande de prévenir un
+  propriétaire, et un propriétaire connecté voit un bandeau avec un lien vers la page. `BDE_REIMPORT=settings`
+  remet dans les réglages les seules valeurs de `.env` si plus personne ne peut se connecter.
+- **Le démarrage rapide des README (FR et EN) et `docs/installation.md` ne décrivent plus que l'installation dans le
+  navigateur** : installer Docker, cloner, `docker compose up` sans `-d` la première fois, l'encadré avec le code (ou
+  l'onglet Logs de Docker Desktop), les étapes, puis `docker compose up -d`. Les README montrent l'installateur et la
+  page Paramètres ; `docs/deployment.md` est réécrit dans le même sens (plus de `.env` à remplir).
 
 ### Fixed
 
@@ -76,7 +77,6 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 - Le message d'erreur distingue maintenant **fichier absent, dossier à la place du fichier, fichier illisible
   (avec le code d'erreur), fichier vide et fichier invalide**, avec le chemin exact vérifié et la marche à suivre ;
   une configuration inutilisable fait échouer la **construction** de l'image, au lieu d'un démarrage en boucle.
-- L'assistant d'installation repasse sur le dossier vide qu'un montage raté laisse à la place de `bde.config.yml`.
 - `docs/installation.md` : entrée « Problèmes fréquents » et commande de diagnostic de ce que voit le conteneur.
 
 ### Changed

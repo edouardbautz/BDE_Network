@@ -46,9 +46,7 @@ function formatZodError(error: z.ZodError, filename: string): string {
 export function describeReadFailure(filename: string, path: string, cause: unknown): string {
   const code = (cause as NodeJS.ErrnoException | undefined)?.code;
   const checked = `  Chemin vérifié : ${path}`;
-  const recreate =
-    "l'assistant d'installation (docker compose -f docker-compose.setup.yml run --rm --build setup) " +
-    `ou une copie de bde.config.example.yml nommée ${filename}`;
+  const recreate = `une copie de bde.config.example.yml nommée ${filename}`;
 
   let isDirectory = false;
   try {
@@ -125,7 +123,7 @@ function readConfigFile(filename: string): unknown {
         `Le fichier ${filename} est vide.`,
         `  Chemin vérifié : ${path}`,
         '',
-        "Remplissez-le (modèle : bde.config.example.yml) ou recréez-le avec l'assistant d'installation,",
+        'Remplissez-le (modèle : bde.config.example.yml) ou recopiez ce modèle,',
         'puis relancez : docker compose up --build -d',
       ].join('\n'),
     );

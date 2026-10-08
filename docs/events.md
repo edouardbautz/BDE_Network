@@ -220,10 +220,10 @@ Sur iPhone ou iPad : **Réglages** → **Calendrier** → **Comptes** → **Ajou
 
 ## Notifications
 
-Le canal (email, Discord, Slack ou aucun) se règle dans `notifications` de la configuration. Les
-variables correspondantes (`SMTP_*`, `DISCORD_WEBHOOK_URL`, `SLACK_WEBHOOK_URL`) sont dans
-`.env`. Pour que les messages contiennent un lien vers l'événement, renseignez `APP_URL` dans
-`.env` (par exemple `https://bde.exemple.fr`) ; sans lui, les messages sont envoyés sans lien.
+Le canal (email, Discord, Slack ou aucun) se règle dans **Paramètres**, section Notifications (avec un message
+de test), ainsi que les réglages qui vont avec (serveur SMTP, webhooks). Pour que les messages contiennent un
+lien vers l'événement, renseignez l'adresse publique de la plateforme (par exemple `https://bde.exemple.fr`)
+dans la section Adresse ; sans elle, les messages sont envoyés sans lien.
 
 | Notification                    | Quand                                                                                            | Destinataires                                                                                         |
 | ------------------------------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |

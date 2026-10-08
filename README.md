@@ -59,36 +59,41 @@ macOS. No Node.js.
    docker compose up
    ```
 
-4. **Open the address shown** (`http://localhost:3000`), enter the **setup code** the terminal displays in a
-   box (it is also in the _Logs_ tab of the `app` container in Docker Desktop, or with
-   `docker compose logs app`), and follow the steps in your browser.
+4. **Open the address shown** (`http://localhost:3000`) and enter the **setup code**: the terminal displays it
+   in a box (if you closed it, it is in the _Logs_ tab of the `app` container in Docker Desktop, or with
+   `docker compose logs app`). Then follow the steps in your browser.
+5. **Once the platform is installed**, press `Ctrl+C` in the terminal and run `docker compose up -d`: it then
+   runs in the background, and that is the command to use from now on.
 
 The installer walks you through eight steps (name, address, your 42 OAuth application, campuses, owners,
 modules, notifications) and checks your answers against the 42 API (your credentials, the campuses, the
 owners' logins). You never open a configuration file, and there is nothing to create beforehand: no `.env`.
 The setup code keeps anybody else from installing the platform in your place, and the installer disappears
-for good once the platform is installed. Then press Ctrl+C and run `docker compose up -d` so that it runs in
-the background, and **back up the `secrets` volume** (`./scripts/backup.sh`): without it the saved secrets
-cannot be decrypted after a restore.
+for good once the platform is installed. Settings are then changed on the **Settings** page (owners only).
+**Back up the `secrets` volume** (`./scripts/backup.sh`): without it the saved secrets cannot be decrypted
+after a restore.
 
-Prefer a terminal questionnaire, or to do it by hand? Both are kept in the
-[installation guide](docs/installation.md#alternative--lassistant-en-terminal). The full guide, the production
-deployment with HTTPS and the backups are in [docs/](docs/) — **currently written in French**.
+|                                                                |                                                    |
+| -------------------------------------------------------------- | -------------------------------------------------- |
+| ![The installer in the browser](docs/images/en/installer.webp) | ![The Settings page](docs/images/en/settings.webp) |
+
+The full guide, the production deployment with HTTPS and the backups are in [docs/](docs/) — **currently
+written in French**.
 
 ## Documentation
 
 All in French for now; the interface and this page are bilingual.
 
-|                                                                                   |                                                                                |
-| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| [Installation](docs/installation.md)                                              | two paths: for the board (no technical knowledge) and for the technical person |
-| [Configuration](docs/configuration.md)                                            | every setting of `bde.config.yml` and `.env`                                   |
-| [User guide](docs/user-guide.md)                                                  | for the members                                                                |
-| [Roles and permissions](docs/roles.md)                                            | the model, the security rules, an example organisation                         |
-| [Events module](docs/events.md)                                                   | calendar, sync, reminders, notifications                                       |
-| [Notifications](docs/notifications.md)                                            | email, Discord (cards), Slack; the sender's logo                               |
-| [Deployment](docs/deployment.md)                                                  | VPS, Docker Compose, HTTPS reverse proxy, backups                              |
-| [Contributor guide](docs/contributing-guide.md) · [Design system](docs/design.md) | for developers                                                                 |
+|                                                                                   |                                                        |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| [Installation](docs/installation.md)                                              | step by step, in the browser (no technical knowledge)  |
+| [Configuration](docs/configuration.md)                                            | the reference of every setting, and the Settings page  |
+| [User guide](docs/user-guide.md)                                                  | for the members                                        |
+| [Roles and permissions](docs/roles.md)                                            | the model, the security rules, an example organisation |
+| [Events module](docs/events.md)                                                   | calendar, sync, reminders, notifications               |
+| [Notifications](docs/notifications.md)                                            | email, Discord (cards), Slack; the sender's logo       |
+| [Deployment](docs/deployment.md)                                                  | VPS, Docker Compose, HTTPS reverse proxy, backups      |
+| [Contributor guide](docs/contributing-guide.md) · [Design system](docs/design.md) | for developers                                         |
 
 ## Try the roles on your machine
 
