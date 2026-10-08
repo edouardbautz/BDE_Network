@@ -100,11 +100,24 @@ try {
   await page.waitForSelector('#setup-address');
   step('1. identity');
 
-  // 2. the address (the one the browser used is proposed)
+  // 2. the address (the one the browser used is proposed; this computer is always written localhost)
   await shot('address');
+  const proposed = await page.$eval('#setup-address', (input) => input.value);
+  const browserAddress = new URL(base);
+  const wanted = `${browserAddress.protocol}//${/^127\./.test(browserAddress.hostname) ? 'localhost' : browserAddress.hostname}:${browserAddress.port}`;
+  if (proposed !== wanted) fail(`the address proposed is ${proposed}, expected ${wanted}`);
+  // The browser is on another name than the proposed one (CI opens 127.0.0.1): the person is warned, not blocked.
+  if (wanted !== browserAddress.origin) await waitText("Ce n'est pas l'adresse de ce navigateur");
+  // 0.0.0.0 is where the server listens, never an address: refused, with a reason, whatever the browser is on.
+  await clear('#setup-address');
+  await page.type('#setup-address', `http://0.0.0.0:${browserAddress.port}`);
+  await clickButton('Continuer');
+  await waitText("0.0.0.0 n'est pas une adresse de site");
+  await clear('#setup-address');
+  await page.type('#setup-address', proposed);
   await clickButton('Continuer');
   await page.waitForSelector('#setup-uid');
-  step('2. address');
+  step('2. address (never 0.0.0.0, a different browser address is flagged)');
 
   // 3. the 42 application: a wrong pair first
   await page.type('#setup-uid', CLIENT_ID);
