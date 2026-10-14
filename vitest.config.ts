@@ -8,9 +8,9 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.test.{ts,tsx}', 'docker/**/*.test.ts'],
-    // next-auth imports "next/server" without an extension, which Node's own ESM
+    // next-auth and next-intl import "next/server" or "next/navigation" without an extension, which Node's own ESM
     // loader rejects; inlining lets Vite resolve it (and lets tests mock next/headers).
-    server: { deps: { inline: ['next-auth'] } },
+    server: { deps: { inline: ['next-auth', 'next-intl'] } },
   },
   resolve: {
     alias: {
