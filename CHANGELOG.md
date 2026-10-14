@@ -63,6 +63,13 @@ versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Fixed
 
+- **Page Événements : les boutons mois précédent / suivant et, sur ordinateur, le passage du calendrier à la liste ne
+  faisaient rien.** Dans la version de production, le routeur de Next.js 15 accepte le clic sur un lien qui ne change que
+  l'adresse de la page où l'on est (`/events` → `/events?view=list`), charge la page, puis ne l'affiche jamais, sans
+  aucun message ; `next dev` ne le fait pas, c'est pourquoi ça n'avait pas été vu. Un lien vers la page courante est
+  désormais un simple lien qui recharge la page (`src/i18n/link.tsx`), ce qui corrige aussi le choix d'un jour dans le
+  calendrier, le choix d'une date d'une série, et l'entrée « Événements » du menu quand on est déjà sur la page. La CI
+  clique pour de vrai sur ces boutons, sur ordinateur et sur téléphone, en français et en anglais (`e2e/events.mjs`).
 - **« Se connecter avec 42 » échouait après une installation neuve** (`invalid_grant`, « does not match the
   redirection URI », puis une redirection vers `http://0.0.0.0:3000/...`). Dans l'image de production le serveur écoute
   sur `0.0.0.0` et Next.js construit alors chaque `request.url` à partir de cette adresse : au retour de 42, Auth.js
