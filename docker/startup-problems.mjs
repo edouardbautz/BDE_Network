@@ -61,7 +61,10 @@ export function classifyMigrationFailure(output) {
   ) {
     return { kind: 'database-unreachable', code, retry: true };
   }
-  if (['P1012', 'P1013'].includes(code) || /datasource\.url|DATABASE_URL/.test(text)) {
+  if (
+    ['P1012', 'P1013'].includes(code) ||
+    /datasource\.url|DATABASE_URL|Connection url is empty/i.test(text)
+  ) {
     return { kind: 'database-url', code, retry: false };
   }
   return { kind: 'migration', code, retry: false };
@@ -75,7 +78,7 @@ export function parseReport(text) {
   } catch {
     return null;
   }
-  if (!data || (data.kind !== 'env' && data.kind !== 'config')) return null;
+  if (!data || !['env', 'config', 'existing-data'].includes(data.kind)) return null;
   const variables = Array.isArray(data.variables)
     ? data.variables
         .filter((name) => typeof name === 'string' && /^[A-Z][A-Z0-9_]{1,63}$/.test(name))
@@ -203,6 +206,7 @@ const PROBLEMS = {
       description:
         'La plateforme ne sait pas se connecter à sa base : `DATABASE_URL` est absente ou mal écrite (un `@`, `:`, `/`, `?` ou `#` du mot de passe doit y être encodé).',
       steps: [
+        "Souvent, l'image est plus ancienne que `docker-compose.yml` (après un `git pull`) : reconstruisez-la avec `docker compose up -d --build`.",
         'Avec le `docker-compose.yml` fourni, supprimez `DATABASE_URL` de `.env` : elle est construite à partir de `POSTGRES_USER`, `POSTGRES_PASSWORD` et `POSTGRES_DB`.',
         'Relancez la plateforme : `docker compose up -d`.',
       ],
@@ -212,8 +216,191 @@ const PROBLEMS = {
       description:
         'The platform does not know how to reach its database: `DATABASE_URL` is missing or badly written (an `@`, `:`, `/`, `?` or `#` in the password must be encoded there).',
       steps: [
+        'Often the image is older than `docker-compose.yml` (after a `git pull`): rebuild it with `docker compose up -d --build`.',
         'With the provided `docker-compose.yml`, remove `DATABASE_URL` from `.env`: it is built from `POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_DB`.',
         'Start the platform again: `docker compose up -d`.',
+      ],
+    },
+  },
+  'stack-old-compose': {
+    icon: 'alert',
+    fr: {
+      title: "docker-compose.yml est plus ancien que l'image",
+      description:
+        "L'image de la plateforme attend un docker-compose.yml plus récent que celui du dossier. Aucune donnée n'est touchée.",
+      steps: [
+        'Mettez à jour le dossier du projet : `git pull`.',
+        'Relancez : `docker compose up -d`.',
+        'Si vous avez modifié `docker-compose.yml` vous-même, reportez vos changements dans la nouvelle version (guide de mise à jour).',
+      ],
+    },
+    en: {
+      title: 'docker-compose.yml is older than the image',
+      description:
+        "The platform's image expects a newer docker-compose.yml than the one in the folder. No data is touched.",
+      steps: [
+        'Update the project folder: `git pull`.',
+        'Start again: `docker compose up -d`.',
+        'If you edited `docker-compose.yml` yourself, carry your changes over to the new version (upgrading guide).',
+      ],
+    },
+  },
+  'stack-old-image': {
+    icon: 'alert',
+    fr: {
+      title: "L'image est plus ancienne que docker-compose.yml",
+      description:
+        "Le docker-compose.yml du dossier est plus récent que l'image qui tourne : l'ancienne image est restée en place (typiquement après un `git pull` suivi d'un `docker compose up -d` sans reconstruction). Aucune donnée n'est touchée.",
+      steps: [
+        "Reconstruisez l'image avec le dossier à jour : `docker compose up -d --build`.",
+        'Suivez le guide de mise à jour : il décrit la bonne suite de commandes.',
+      ],
+    },
+    en: {
+      title: 'The image is older than docker-compose.yml',
+      description:
+        'The docker-compose.yml in the folder is newer than the image that is running: the old image stayed in place (typically after a `git pull` followed by `docker compose up -d` without rebuilding). No data is touched.',
+      steps: [
+        'Rebuild the image with the up-to-date folder: `docker compose up -d --build`.',
+        'Follow the upgrading guide: it gives the right sequence of commands.',
+      ],
+    },
+  },
+  'database-newer': {
+    icon: 'database',
+    fr: {
+      title: 'La base de données est plus récente que cette version',
+      description:
+        "La base contient des mises à jour que cette version de la plateforme ne connaît pas : une version plus récente l'a utilisée. La plateforme reste arrêtée plutôt que de risquer d'abîmer vos données, qui sont intactes.",
+      steps: [
+        "Si vous êtes revenu volontairement à une ancienne version : restaurez d'abord la copie faite avant la mise à jour (`./scripts/restore.sh --pre-update`), sans quoi elle ne peut pas lire la base.",
+        "Sinon, c'est l'image qui est trop ancienne : reprenez la version récente (`git pull`, puis `docker compose up -d --build`).",
+        'Ne supprimez pas le volume de la base.',
+      ],
+    },
+    en: {
+      title: 'The database is newer than this version',
+      description:
+        'The database holds updates that this version of the platform does not know: a newer version has used it. The platform stays stopped rather than risk damaging your data, which is intact.',
+      steps: [
+        'If you went back to an older version on purpose: first restore the copy made before the update (`./scripts/restore.sh --pre-update`), otherwise it cannot read the database.',
+        'Otherwise the image is too old: take the recent version again (`git pull`, then `docker compose up -d --build`).',
+        'Do not delete the database volume.',
+      ],
+    },
+  },
+  'migration-stuck': {
+    icon: 'database',
+    fr: {
+      title: 'Une mise à jour précédente de la base est restée inachevée',
+      description:
+        "Une mise à jour de la base de données a échoué auparavant et l'a laissée dans un état que la plateforme refuse de reprendre à l'aveugle.",
+      steps: [
+        'Ne supprimez rien. Notez les migrations indiquées ci-dessous.',
+        "Restaurez la copie d'avant la mise à jour (`./scripts/restore.sh --pre-update`), puis relancez : `docker compose up -d`.",
+        'Signalez le problème avec le détail de `docker compose logs app`.',
+      ],
+    },
+    en: {
+      title: 'An earlier update of the database was left unfinished',
+      description:
+        'An update of the database failed earlier and left it in a state the platform refuses to carry on from blindly.',
+      steps: [
+        'Do not delete anything. Write down the migrations listed below.',
+        'Restore the copy made before the update (`./scripts/restore.sh --pre-update`), then start again: `docker compose up -d`.',
+        'Report the problem with the details from `docker compose logs app`.',
+      ],
+    },
+  },
+  'migration-restored': {
+    icon: 'database',
+    fr: {
+      title: 'La mise à jour a échoué : votre base a été remise comme avant',
+      description:
+        "Une étape de la mise à jour de la base de données a échoué. La plateforme a remis la base dans l'état exact où elle était juste avant, à partir de la copie indiquée ci-dessous, et reste arrêtée. Vos données sont intactes.",
+      steps: [
+        'Revenez à la version précédente de la plateforme (guide de mise à jour, « Revenir en arrière ») : elle redémarre avec vos données.',
+        'Signalez le problème avec le code ci-dessous et le détail de `docker compose logs app`.',
+        'La copie reste dans le volume « backups » (`./scripts/restore.sh --pre-update` la restaure).',
+      ],
+    },
+    en: {
+      title: 'The update failed: your database was put back as it was',
+      description:
+        'A step of the database update failed. The platform put the database back in the exact state it was in just before, from the copy shown below, and stays stopped. Your data is intact.',
+      steps: [
+        'Go back to the previous version of the platform (upgrading guide, "Rolling back"): it starts again with your data.',
+        'Report the problem with the code below and the details from `docker compose logs app`.',
+        'The copy stays in the "backups" volume (`./scripts/restore.sh --pre-update` restores it).',
+      ],
+    },
+  },
+  'migration-restore-failed': {
+    icon: 'alert',
+    fr: {
+      title: "La mise à jour a échoué et la base n'a pas pu être remise comme avant",
+      description:
+        "Une étape de la mise à jour a échoué, puis la remise en état automatique a échoué à son tour. La copie d'avant la mise à jour est conservée : rien n'est perdu.",
+      steps: [
+        'Ne relancez pas la plateforme avant la restauration.',
+        'Restaurez la copie indiquée ci-dessous : `./scripts/restore.sh --pre-update`.',
+        'Signalez le problème avec le détail de `docker compose logs app`.',
+      ],
+    },
+    en: {
+      title: 'The update failed and the database could not be put back as it was',
+      description:
+        'A step of the update failed, then the automatic put-back failed in turn. The copy made before the update is kept: nothing is lost.',
+      steps: [
+        'Do not start the platform before the restore.',
+        'Restore the copy shown below: `./scripts/restore.sh --pre-update`.',
+        'Report the problem with the details from `docker compose logs app`.',
+      ],
+    },
+  },
+  'backup-failed': {
+    icon: 'database',
+    fr: {
+      title: 'La copie de sécurité avant mise à jour a échoué',
+      description:
+        "Par prudence, la mise à jour de la base de données n'a pas été appliquée : la plateforme reste arrêtée et n'a rien modifié.",
+      steps: [
+        "Vérifiez l'espace libre du serveur (la copie est faite dans le volume « backups »), puis relancez : `docker compose up -d`.",
+        "Pour appliquer la mise à jour sans cette copie (à vos risques : faites d'abord `./scripts/backup.sh`), ajoutez `BDE_SKIP_BACKUP=1` dans `.env`.",
+        'Le détail est donné par `docker compose logs app`.',
+      ],
+    },
+    en: {
+      title: 'The safety copy before the update failed',
+      description:
+        'To be safe, the database update was not applied: the platform stays stopped and has changed nothing.',
+      steps: [
+        'Check the server\'s free space (the copy is made in the "backups" volume), then start again: `docker compose up -d`.',
+        'To apply the update without this copy (at your own risk: run `./scripts/backup.sh` first), add `BDE_SKIP_BACKUP=1` to `.env`.',
+        'The details are given by `docker compose logs app`.',
+      ],
+    },
+  },
+  'existing-data': {
+    icon: 'alert',
+    fr: {
+      title: "Des données existent, mais aucun réglage n'est enregistré",
+      description:
+        "La base contient déjà des comptes, mais ni réglages enregistrés ni fichier de configuration complet n'ont été trouvés (typiquement une plateforme installée avant l'installateur, démarrée avec une image qui ne contient pas votre bde.config.yml). L'installateur n'est pas ouvert : il remplacerait vos réglages. Aucune donnée n'est touchée.",
+      steps: [
+        "Placez votre `bde.config.yml` et votre `.env` d'origine dans le dossier du projet.",
+        "Reconstruisez l'image : `docker compose up -d --build` : ils sont alors importés dans la base, une seule fois.",
+        "Voir « Si votre plateforme date d'avant l'installateur » dans le guide de mise à jour.",
+      ],
+    },
+    en: {
+      title: 'Data exists, but no settings are saved',
+      description:
+        'The database already holds accounts, but neither saved settings nor a complete configuration file were found (typically a platform installed before the installer, started with an image that does not contain your bde.config.yml). The installer is not opened: it would replace your settings. No data is touched.',
+      steps: [
+        'Put your original `bde.config.yml` and `.env` in the project folder.',
+        'Rebuild the image: `docker compose up -d --build`: they are then imported into the database, once.',
+        'See "If your platform predates the installer" in the upgrading guide.',
       ],
     },
   },
@@ -255,6 +442,9 @@ const LABELS = {
       "Si ce n'est pas vous, prévenez-la : la plateforme sera de nouveau disponible dès que ce sera corrigé.",
     variables: 'Réglages à vérifier',
     code: "Code d'erreur",
+    backup: 'Copie de sécurité',
+    migrations: 'Migrations concernées',
+    version: 'Version de la plateforme',
     waiting: 'Nouvelle tentative automatique dans quelques secondes.',
     switchTo: 'English',
     switchLang: 'en',
@@ -265,6 +455,9 @@ const LABELS = {
       'If that is not you, let them know: the platform will be available again as soon as this is fixed.',
     variables: 'Settings to check',
     code: 'Error code',
+    backup: 'Safety copy',
+    migrations: 'Migrations involved',
+    version: 'Platform version',
     waiting: 'Trying again automatically in a few seconds.',
     switchTo: 'Français',
     switchLang: 'fr',
@@ -322,6 +515,10 @@ export function pickLanguage(url, acceptLanguage) {
   return en !== -1 && (fr === -1 || en < fr) ? 'en' : 'fr';
 }
 
+const BACKUP_FILE = /^pre-update_\d{8}T\d{6}Z_v[0-9A-Za-z.+-]{1,40}\.sql\.gz$/;
+const MIGRATION_NAME = /^[0-9]{14}_[A-Za-z0-9_]{1,80}$/;
+const VERSION = /^[0-9A-Za-z.+-]{1,40}$/;
+
 /** The page for a problem: `{ kind, code, variables }`, in `lang`. `retry` makes it ask again by itself. */
 export function renderProblemPage(problem, lang, retry) {
   const text = PROBLEMS[problem.kind] ?? PROBLEMS.migration;
@@ -340,6 +537,22 @@ export function renderProblemPage(problem, lang, retry) {
   const codeBlock = code
     ? `<p class="meta"><strong>${escapeHtml(labels.code)}</strong> : <code>${code}</code></p>`
     : '';
+  // Only what looks like what the supervisor writes goes on the page: a file name of ours, migration names, a version.
+  const backup = BACKUP_FILE.test(problem.backup ?? '') ? problem.backup : '';
+  const migrations = (problem.migrations ?? [])
+    .filter((name) => MIGRATION_NAME.test(name))
+    .slice(0, 5);
+  const version = VERSION.test(problem.version ?? '') ? problem.version : '';
+  const facts = [
+    backup &&
+      `<p class="meta"><strong>${escapeHtml(labels.backup)}</strong> : <code>${escapeHtml(backup)}</code></p>`,
+    migrations.length > 0 &&
+      `<p class="meta"><strong>${escapeHtml(labels.migrations)}</strong> : ${migrations.map((name) => `<code>${escapeHtml(name)}</code>`).join(', ')}</p>`,
+    version &&
+      `<p class="meta"><strong>${escapeHtml(labels.version)}</strong> : <code>${escapeHtml(version)}</code></p>`,
+  ]
+    .filter(Boolean)
+    .join('\n');
 
   return `<!doctype html>
 <html lang="${lang}">
@@ -353,12 +566,13 @@ ${refresh}
 </head>
 <body>
 <main>
-<div class="icon ${problem.kind === 'env' || problem.kind === 'config' ? 'alert' : ''}"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[text.icon]}</svg></div>
+<div class="icon ${text.icon === 'alert' ? 'alert' : ''}"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[text.icon]}</svg></div>
 <h1>${inline(copy.title)}</h1>
 <p class="lead">${inline(copy.description)}</p>
 <h2>${escapeHtml(labels.operator)}</h2>
 <ol>${copy.steps.map((step) => `<li>${inline(step)}</li>`).join('')}</ol>
 ${variablesBlock}
+${facts}
 ${codeBlock}
 <p class="small">${escapeHtml(labels.visitor)}</p>
 ${retry ? `<p class="wait" role="status">${escapeHtml(labels.waiting)}</p>` : ''}

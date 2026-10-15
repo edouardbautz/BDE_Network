@@ -1005,6 +1005,7 @@
       "removeBodyMoved": "{count, plural, one {L'événement concerné sera déplacé} other {Les # événements concernés seront déplacés}} tout de suite vers la catégorie choisie. Le retrait ne peut pas être annulé.",
       "removeBodyUnused": "{count, plural, one {Aucun événement n'utilise cette catégorie.} other {Aucun événement n'utilise ces catégories.}} Le retrait ne peut pas être annulé.",
       "removeConfirm": "Retirer et enregistrer"
-    }
+    },
+    "version": "Version de la plateforme : {version}"
   }
 }

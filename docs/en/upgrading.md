@@ -93,15 +93,24 @@ If the files were incomplete (for example the login `votre-login-42` still among
 reading the files and the Settings page stays read-only. Fix the files, then `docker compose up -d --build`. See
 [Configuration](configuration.md#where-the-settings-are).
 
+## If the update itself fails
+
+Before it changes the database, the platform makes a copy of it, by itself (see
+[Automatic copy before an update](deployment.md#automatic-copy-before-an-update)). If a step of the update fails, the
+platform **puts that copy back**, checks the database is exactly as it was, stays stopped, and says so on its page. Your
+data is intact: [roll back](#rolling-back) to the previous version, then report the problem.
+
 ## Rolling back
 
 If the new version causes trouble, you can go back to the previous one with your backup. **Data entered since the
 backup is lost**: the restore puts the database back in the state of the backup.
 
-1. Restore the backup made before the upgrade (the current version's script replaces the whole database):
+1. Restore the backup made before the upgrade (the current version's script replaces the whole database), either
+   the one you made yourself, or the copy the platform made before the update:
 
    ```text
    ./scripts/restore.sh backups/bde-backup-YYYY-MM-DD_HH-MM-SS.tar.gz
+   ./scripts/restore.sh --pre-update
    ```
 
    The script asks you to type `RESTAURER`. It first makes a safety copy of the current state.

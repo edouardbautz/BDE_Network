@@ -12,11 +12,18 @@
 //     the application starts by itself as soon as it answers;
 //   - a real crash of the application still ends the container (with its exit code): that is what the
 //     restart policy is for.
+//
+// It is also what makes an update safe (see "Updates" in docs/architecture.md): before the migrations it checks
+// that the image and docker-compose.yml belong together and that the database is one this image can use, keeps a
+// copy of the database when migrations are pending, and puts that copy back if they fail (docker/safe-update.mjs,
+// docker/database-tools.mjs).
 import { spawn as nodeSpawn } from 'node:child_process';
 import { readFileSync, rmSync } from 'node:fs';
 import { createServer as nodeCreateServer } from 'node:http';
 import { pathToFileURL } from 'node:url';
+import { createDatabaseTools } from './database-tools.mjs';
 import { ensureMasterSecrets } from './master-secrets.mjs';
+import { checkStack } from './safe-update.mjs';
 import {
   EXIT_CONFIG,
   RETRY_SECONDS,
@@ -98,6 +105,8 @@ export async function supervise({
   createServer = nodeCreateServer,
   log = (line) => console.log(line),
   signals = process,
+  /** What makes an update safe: `{ stack(), tools, skipBackup, version }`. Absent: migrations run as they are. */
+  safety = null,
 }) {
   let stopping = false;
   let child = null;
@@ -185,13 +194,78 @@ export async function supervise({
     log('');
   };
 
+  /** Stops here with a page that explains `next`, until the container is stopped (the operator fixes, restarts). */
+  const stay = async (next, details = '') => {
+    problem = next;
+    retrying = false;
+    announce(details);
+    await showPage();
+    await stopped;
+    return 0;
+  };
+
+  // The copy made for the migrations that are pending, by the names of those migrations: asking again (a
+  // database that is slow to answer) must not make a second one.
+  const copies = new Map();
+
   try {
     for (;;) {
+      let copy = null;
+      let before = null;
+      if (safety) {
+        const stack = safety.stack();
+        if (stack) return await stay({ ...stack, version: safety.version });
+        if (!safety.tools.hasAddress()) return await stay({ kind: 'database-url', code: '' });
+
+        before = await safety.tools.inspect();
+        if (before.state === 'newer') {
+          return await stay({
+            kind: 'database-newer',
+            migrations: before.unknown,
+            version: safety.version,
+          });
+        }
+        if (before.state === 'stuck') {
+          return await stay({
+            kind: 'migration-stuck',
+            migrations: before.failed,
+            backup: safety.tools.latestBackup() ?? '',
+            version: safety.version,
+          });
+        }
+        if (before.state === 'pending' && !safety.skipBackup) {
+          const key = before.pending.join(',');
+          copy = copies.get(key) ?? null;
+          if (!copy) {
+            log(
+              `Mise à jour de la base de données : copie de sécurité avant d'appliquer ${before.pending.length} migration(s)...`,
+            );
+            try {
+              copy = await safety.tools.backup();
+              copies.set(key, copy);
+              log(`  copie faite : ${copy} (volume « backups »)`);
+            } catch (error) {
+              return await stay(
+                { kind: 'backup-failed', code: '', version: safety.version },
+                redact(String(error?.message ?? error), env),
+              );
+            }
+          }
+        }
+      }
+
       const migration = await run(spawn, migrate);
       if (stopping) return 0;
 
       if (migration.code === 0) {
         log(redact(migration.output, env).trim());
+        if (safety) {
+          try {
+            safety.tools.prune();
+          } catch {
+            /* an old copy that stays is not worth failing for */
+          }
+        }
         await hidePage();
         rmSync(reportPath, { force: true });
         const outcome = await run(spawn, server, (started) => {
@@ -217,6 +291,42 @@ export async function supervise({
       }
 
       const failure = classifyMigrationFailure(migration.output);
+
+      // A migration that really failed (not a database that is slow or refuses a password: those are waited for)
+      // may have changed part of the database. The copy made just before is put back, and the result is checked.
+      if (copy && failure.kind === 'migration') {
+        const details = redact(migration.output, env).trim().split('\n').slice(-12).join('\n');
+        log("La mise à jour de la base a échoué : remise de la base dans son état d'avant...");
+        try {
+          await safety.tools.restore(copy);
+          const after = await safety.tools.inspect();
+          const same =
+            after.state === before.state && after.pending.join(',') === before.pending.join(',');
+          if (!same) throw new Error('the database is not in the state it was in');
+          copies.delete(before.pending.join(','));
+          log('  la base est revenue exactement comme avant.');
+          return await stay(
+            {
+              kind: 'migration-restored',
+              code: failure.code,
+              backup: copy,
+              version: safety.version,
+            },
+            details,
+          );
+        } catch (error) {
+          return await stay(
+            {
+              kind: 'migration-restore-failed',
+              code: failure.code,
+              backup: copy,
+              version: safety.version,
+            },
+            `${details}\n${redact(String(error?.message ?? error), env)}`,
+          );
+        }
+      }
+
       const changed = problem?.kind !== failure.kind;
       problem = { ...failure, variables: [] };
       retrying = failure.retry;
@@ -266,6 +376,13 @@ async function main() {
   if (secrets.postgresPassword) env.POSTGRES_PASSWORD = secrets.postgresPassword;
 
   env.DATABASE_URL = env.DATABASE_URL?.trim() || buildDatabaseUrl(env);
+  // The version of this image, written when it was built (see the Dockerfile): the application shows it, the
+  // copies made before an update carry it.
+  try {
+    env.BDE_VERSION = readFileSync('/opt/start/version', 'utf8').trim() || 'unknown';
+  } catch {
+    env.BDE_VERSION ||= 'unknown';
+  }
   const reportPath = env.BDE_STARTUP_REPORT || '/tmp/bde-startup-report.json';
   env.BDE_STARTUP_REPORT = reportPath;
 
@@ -278,6 +395,12 @@ async function main() {
     port: Number(env.PORT || 3000),
     hostname: env.HOSTNAME || '0.0.0.0',
     reportPath,
+    safety: {
+      stack: () => checkStack(env),
+      tools: createDatabaseTools({ env }),
+      skipBackup: env.BDE_SKIP_BACKUP === '1',
+      version: env.BDE_VERSION,
+    },
     migrate: {
       command: process.execPath,
       args: [

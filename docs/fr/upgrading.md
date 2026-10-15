@@ -95,15 +95,25 @@ Si les fichiers étaient incomplets (par exemple le login `votre-login-42` encor
 plateforme continue de lire les fichiers et la page Paramètres reste en lecture seule. Corrigez les fichiers, puis
 `docker compose up -d --build`. Voir [Configuration](configuration.md#où-sont-les-réglages).
 
+## Si la mise à jour elle-même échoue
+
+Avant de modifier la base de données, la plateforme en fait une copie, toute seule (voir
+[Copie automatique avant une mise à jour](deployment.md#copie-automatique-avant-une-mise-à-jour)). Si une étape de la
+mise à jour échoue, la plateforme **remet cette copie en place**, vérifie que la base est exactement comme avant,
+reste arrêtée, et le dit sur sa page. Vos données sont intactes : [revenez en arrière](#revenir-en-arrière) à la version
+précédente, puis signalez le problème.
+
 ## Revenir en arrière
 
 Si la nouvelle version pose problème, vous pouvez revenir à la précédente avec votre sauvegarde. **Les données
 saisies depuis la sauvegarde sont perdues** : la restauration remet la base dans l'état de la sauvegarde.
 
-1. Restaurez la sauvegarde faite avant la mise à jour (le script de la version actuelle remplace toute la base) :
+1. Restaurez la sauvegarde faite avant la mise à jour (le script de la version actuelle remplace toute la base),
+   soit celle que vous avez faite vous-même, soit la copie que la plateforme a faite avant la mise à jour :
 
    ```text
    ./scripts/restore.sh backups/bde-backup-AAAA-MM-JJ_HH-MM-SS.tar.gz
+   ./scripts/restore.sh --pre-update
    ```
 
    Le script vous demande de taper `RESTAURER`. Il fait d'abord une copie de sécurité de l'état actuel.

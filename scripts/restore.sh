@@ -5,6 +5,10 @@
 # pas besoin de Node.js sur le serveur. Sous Windows, lancez-le depuis Git Bash ou WSL.
 #
 # Usage : ./scripts/restore.sh backups/bde-backup-AAAA-MM-JJ_HH-MM-SS.tar.gz [--secrets backups/bde-secrets-....tar.gz] [--yes]
+#         ./scripts/restore.sh --pre-update [pre-update_AAAAMMJJTHHMMSSZ_vX.Y.Z.sql.gz] [--yes]
+#   --pre-update  restaure la copie que la plateforme a faite TOUTE SEULE avant d'appliquer une mise à jour de la
+#              base (volume « backups » de Docker ; la plus récente si vous n'en nommez pas). Elle ne contient que la
+#              base : les clés du volume « secrets » n'ont pas changé.
 #   --secrets  l'archive des clés (volume « secrets ») : INDISPENSABLE sur un autre serveur que l'original,
 #              sinon les secrets chiffrés de la base (clé 42, SMTP, webhooks) ne peuvent plus être lus.
 #              Sur le serveur d'origine, dont le volume « secrets » est intact, elle n'est pas nécessaire.
@@ -19,16 +23,30 @@ umask 077
 
 usage() {
   echo "Usage : ./scripts/restore.sh backups/bde-backup-AAAA-MM-JJ_HH-MM-SS.tar.gz [--secrets backups/bde-secrets-....tar.gz] [--yes]"
+  echo "        ./scripts/restore.sh --pre-update [pre-update_....sql.gz] [--yes]"
 }
 
 FILE=""
 SECRETS_FILE=""
 ASSUME_YES=0
+PRE_UPDATE=0
+PRE_UPDATE_NAME=
 while [ $# -gt 0 ]; do
   case "$1" in
     --yes)
       ASSUME_YES=1
       shift
+      ;;
+    --pre-update)
+      PRE_UPDATE=1
+      shift
+      # Un nom de copie peut suivre ; sinon, la plus récente.
+      case "${1:-}" in
+        pre-update_*.sql.gz)
+          PRE_UPDATE_NAME="$1"
+          shift
+          ;;
+      esac
       ;;
     --secrets)
       if [ $# -lt 2 ]; then
@@ -59,7 +77,12 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-if [ -z "$FILE" ]; then
+if [ "$PRE_UPDATE" -eq 1 ] && [ -n "$FILE" ]; then
+  echo "--pre-update et un fichier de sauvegarde ne vont pas ensemble : choisissez l'un ou l'autre." >&2
+  exit 2
+fi
+
+if [ "$PRE_UPDATE" -eq 0 ] && [ -z "$FILE" ]; then
   echo "Indiquez la sauvegarde à restaurer." >&2
   usage >&2
   echo "" >&2
@@ -72,7 +95,7 @@ fi
 
 # Chemin relatif donné depuis le dossier où l'on se trouve, avant de se placer à la racine du projet.
 case "$FILE" in
-  /*) ;;
+  "" | /*) ;;
   *) FILE="$(pwd)/$FILE" ;;
 esac
 
@@ -83,7 +106,7 @@ esac
 
 cd "$(dirname "$0")/.."
 
-if [ ! -f "$FILE" ]; then
+if [ "$PRE_UPDATE" -eq 0 ] && [ ! -f "$FILE" ]; then
   echo "Fichier introuvable : $FILE" >&2
   exit 1
 fi
@@ -105,7 +128,33 @@ if ! command -v docker >/dev/null 2>&1 || ! docker compose version >/dev/null 2>
   exit 1
 fi
 
-if ! tar -tzf "$FILE" 2>/dev/null | grep -qx "database.sql"; then
+WORK="$(mktemp -d)"
+trap 'rm -rf "$WORK"' EXIT INT TERM
+
+if [ "$PRE_UPDATE" -eq 1 ]; then
+  # Les copies d'avant mise à jour sont dans le volume « backups » : on les lit avec un conteneur éphémère de
+  # l'application (le même volume qu'elle, sans en deviner le nom).
+  AVAILABLE="$(docker compose run --rm --no-deps -T --entrypoint ls app -1 /backups 2>/dev/null | grep '^pre-update_.*\.sql\.gz$' | sort || true)"
+  if [ -z "$AVAILABLE" ]; then
+    echo "Aucune copie d'avant mise à jour dans le volume « backups »." >&2
+    echo "(Elles sont faites quand la plateforme applique une mise à jour de la base ; sinon, utilisez une sauvegarde de scripts/backup.sh.)" >&2
+    exit 1
+  fi
+  if [ -z "$PRE_UPDATE_NAME" ]; then
+    PRE_UPDATE_NAME="$(printf '%s\n' "$AVAILABLE" | tail -n 1)"
+  elif ! printf '%s\n' "$AVAILABLE" | grep -qx "$PRE_UPDATE_NAME"; then
+    echo "Copie introuvable : $PRE_UPDATE_NAME. Disponibles :" >&2
+    printf '%s\n' "$AVAILABLE" >&2
+    exit 1
+  fi
+  FILE="$PRE_UPDATE_NAME"
+  docker compose run --rm --no-deps -T --entrypoint cat app "/backups/$PRE_UPDATE_NAME" >"$WORK/pre-update.sql.gz"
+  gzip -dc "$WORK/pre-update.sql.gz" >"$WORK/database.sql"
+  if ! tail -n 5 "$WORK/database.sql" | grep -q "PostgreSQL database dump complete"; then
+    echo "La copie « $PRE_UPDATE_NAME » est incomplète : restauration annulée, rien n'a été modifié." >&2
+    exit 1
+  fi
+elif ! tar -tzf "$FILE" 2>/dev/null | grep -qx "database.sql"; then
   echo "« $FILE » n'est pas une sauvegarde de BDE_Network (database.sql absent) :" >&2
   echo "elle doit avoir été créée par scripts/backup.sh." >&2
   exit 1
@@ -137,9 +186,6 @@ if [ "$ASSUME_YES" -ne 1 ]; then
   fi
 fi
 
-WORK="$(mktemp -d)"
-trap 'rm -rf "$WORK"' EXIT INT TERM
-
 echo ""
 echo "1/5 Copie de sécurité de l'état actuel..."
 docker compose up -d --wait postgres >/dev/null
@@ -148,7 +194,9 @@ if ! BACKUP_LABEL="-avant-restauration" ./scripts/backup.sh; then
   exit 1
 fi
 
-tar -xzf "$FILE" -C "$WORK"
+if [ "$PRE_UPDATE" -eq 0 ]; then
+  tar -xzf "$FILE" -C "$WORK"
+fi
 
 echo ""
 echo "2/5 Arrêt de l'application..."

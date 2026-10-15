@@ -14,6 +14,9 @@ RUN [ -f bde.config.yml ] || cp bde.config.example.yml bde.config.yml
 # next.config.ts sets `output: 'standalone'`: .next/standalone is a self-contained
 # server (server.js + only the node_modules it uses).
 RUN npm run build
+# The version of this image (package.json): the start-up command reads it, the application shows it, and the copies of
+# the database made before an update carry it.
+RUN node -p "require('./package.json').version" > /app/.bde-version
 
 # The Prisma CLI, installed on its own at the exact version of the lockfile. It is a
 # development dependency of the app, so it is not part of the standalone bundle, but
@@ -38,6 +41,9 @@ ENV NODE_ENV=production \
     PRISMA_HIDE_UPDATE_MESSAGE=1 \
     CHECKPOINT_DISABLE=1 \
     UPLOADS_DIR=/uploads
+# `psql` and `pg_dump` (the same major version as the bundled PostgreSQL): the start-up command keeps a copy of the database
+# before applying migrations and puts it back if they fail (docker/database-tools.mjs).
+RUN apk add --no-cache postgresql17-client
 # Nothing here needs npm or yarn: the server is started with `node`.
 RUN rm -rf /usr/local/lib/node_modules /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /opt/yarn-* /usr/local/bin/yarn /usr/local/bin/yarnpkg \
  && addgroup --system --gid 1001 nodejs \
@@ -58,16 +64,18 @@ COPY --from=migrate --chown=nextjs:nodejs /opt/migrate /opt/migrate
 COPY --chown=nextjs:nodejs docker/prisma.config.mjs /opt/migrate/prisma.config.mjs
 # What starts the container: applies the migrations, then the application, and explains in the browser what
 # the operator can fix instead of letting the restart policy loop (see the top of docker/start.mjs).
-COPY --chown=nextjs:nodejs docker/start.mjs docker/startup-problems.mjs docker/master-secrets.mjs /opt/start/
+COPY --chown=nextjs:nodejs docker/start.mjs docker/startup-problems.mjs docker/master-secrets.mjs docker/safe-update.mjs docker/database-tools.mjs /opt/start/
+COPY --from=builder --chown=nextjs:nodejs /app/.bde-version /opt/start/version
 # Where the `secrets` volume is mounted (docker/master-secrets.mjs). Created here so that the keys can also be
 # written when the image runs without the volume, and so that a new volume starts with the right owner.
 # Where the `uploads` volume is mounted: the BDE's logo (src/lib/branding). Also created here, for the same reason.
-RUN mkdir /secrets /uploads && chown nextjs:nodejs /secrets /uploads && chmod 700 /secrets
+# Where the `backups` volume is mounted: the copies of the database made before an update. Created here for the same reason.
+RUN mkdir /secrets /uploads /backups && chown nextjs:nodejs /secrets /uploads /backups && chmod 700 /secrets /backups
 USER nextjs
 EXPOSE 3000
 
 # 503 while the database is unreachable (see src/lib/health.ts).
-HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \
   CMD wget -qO- http://127.0.0.1:3000/api/health >/dev/null || exit 1
 
 CMD ["node", "/opt/start/start.mjs"]

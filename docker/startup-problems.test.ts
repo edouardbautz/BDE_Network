@@ -284,3 +284,100 @@ describe('the page looks like the app', () => {
     expect(PAGE_STYLE).toContain(`--radius:${token(':root', 'radius')}`);
   });
 });
+
+describe('the pages of a safe update', () => {
+  const KINDS = [
+    'stack-old-compose',
+    'stack-old-image',
+    'database-newer',
+    'migration-stuck',
+    'migration-restored',
+    'migration-restore-failed',
+    'backup-failed',
+    'existing-data',
+  ];
+  const COPY = 'pre-update_20261015T101530Z_v1.1.0.sql.gz';
+
+  it.each(KINDS)(
+    '%s has a title, a lead and steps in both languages, and is not the generic page',
+    (kind) => {
+      for (const lang of ['fr', 'en']) {
+        const html = renderProblemPage({ kind, code: '' }, lang, false);
+        expect(problemTitle(kind, lang)).not.toBe(problemTitle('migration', lang));
+        expect(html).toContain('<ol><li>');
+        expect(html).toContain(`lang="${lang}"`);
+      }
+    },
+  );
+
+  it('names the safety copy, the migrations and the version, as code', () => {
+    const html = renderProblemPage(
+      {
+        kind: 'migration-restored',
+        code: 'P3018',
+        backup: COPY,
+        migrations: ['20261015120000_event_series_scope'],
+        version: '1.1.0',
+      },
+      'fr',
+      false,
+    );
+    expect(html).toContain(`<code>${COPY}</code>`);
+    expect(html).toContain('<code>20261015120000_event_series_scope</code>');
+    expect(html).toContain('<code>1.1.0</code>');
+    expect(html).toContain('<code>P3018</code>');
+  });
+
+  it('shows nothing that is not what the supervisor writes: a file name of ours, migration names, a version', () => {
+    const html = renderProblemPage(
+      {
+        kind: 'migration-restored',
+        backup: '<script>alert(1)</script>.sql.gz',
+        migrations: ['<img src=x onerror=alert(1)>', 'secret-password'],
+        version: '1.0"><script>',
+      },
+      'en',
+      false,
+    );
+    expect(html).not.toContain('<script>alert');
+    expect(html).not.toContain('onerror');
+    expect(html).not.toContain('secret-password');
+    expect(html).not.toContain('Safety copy');
+    expect(html).not.toContain('Migrations involved');
+    expect(html).not.toContain('Platform version');
+  });
+
+  it('points to the command that puts the copy back, where it matters', () => {
+    for (const kind of ['migration-restore-failed', 'migration-stuck', 'database-newer']) {
+      expect(renderProblemPage({ kind, code: '' }, 'en', false)).toContain(
+        'restore.sh --pre-update',
+      );
+    }
+  });
+
+  it("draws the problems that need the operator's eyes as alerts, and the others as database problems", () => {
+    expect(renderProblemPage({ kind: 'migration-restore-failed' }, 'en', false)).toContain(
+      'class="icon alert"',
+    );
+    expect(renderProblemPage({ kind: 'migration-restored' }, 'en', false)).not.toContain(
+      'class="icon alert"',
+    );
+  });
+});
+
+describe('what the container learns from a failed start', () => {
+  it('an empty database address is the address problem, not "another failure" (the incident of an old image)', () => {
+    expect(
+      classifyMigrationFailure('Error: Connection url is empty. See https://pris.ly/d/config-url'),
+    ).toMatchObject({
+      kind: 'database-url',
+      retry: false,
+    });
+  });
+
+  it('knows the report of an installer that refuses to open over existing data', () => {
+    expect(parseReport(JSON.stringify({ kind: 'existing-data', variables: [] }))).toMatchObject({
+      kind: 'existing-data',
+    });
+  });
+});

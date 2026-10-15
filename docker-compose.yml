@@ -79,6 +79,11 @@ services:
       DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
       SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
       BDE_REIMPORT: ${BDE_REIMPORT:-}
+      # What this file gives the image (its variables, its volumes), as a number: the image refuses to start with
+      # a message, not a loop, when the file and the image do not belong together (docker/safe-update.mjs).
+      BDE_STACK: '2'
+      # Applies the migrations without the copy that is made before them, when that copy cannot be made (a full disk).
+      BDE_SKIP_BACKUP: ${BDE_SKIP_BACKUP:-}
       # Only to write the right address in the installer's code box (the container does not know it).
       BDE_HOST_PORT: ${APP_PORT:-3000}
     ports:
@@ -92,6 +97,9 @@ services:
       - secrets:/secrets
       # The logo the owner uploaded. scripts/backup.sh puts it in the database archive.
       - uploads:/uploads
+      # The copies of the database made automatically before an update (the newest five, nothing older than 90 days).
+      # `./scripts/restore.sh --pre-update` puts one back.
+      - backups:/backups
     # No bind mount of bde.config.yml, on purpose. A mount is resolved by the Docker daemon, on ITS
     # side, and a daemon that cannot see this folder (rootless Docker, a remote daemon, a home on a
     # network share) answers by creating an EMPTY DIRECTORY there, or the application cannot read the
@@ -102,3 +110,4 @@ volumes:
   postgres_data:
   secrets:
   uploads:
+  backups:

@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => {
     warnFortyTwo: vi.fn(),
     startScheduler: vi.fn(),
     reconcile: vi.fn(async () => ({ promoted: [], demoted: [] })),
+    userCount: vi.fn(async () => 0),
   };
 });
 
@@ -27,6 +28,7 @@ vi.mock('./lib/startup-checks', () => ({
   runStartupChecks: mocks.runStartupChecks,
   refuseToStart: mocks.refuseToStart,
 }));
+vi.mock('./lib/prisma', () => ({ prisma: { user: { count: mocks.userCount } } }));
 vi.mock('./lib/setup/mode', () => ({ enterSetupMode: mocks.enterSetupMode }));
 vi.mock('./lib/auth/oauth-check', () => ({
   warnIfFortyTwoRejectsTheApplication: mocks.warnFortyTwo,
@@ -67,6 +69,17 @@ describe('register', () => {
     expect(mocks.warnFortyTwo).not.toHaveBeenCalled();
     expect(mocks.startScheduler).not.toHaveBeenCalled();
     expect(mocks.reconcile).not.toHaveBeenCalled(); // there is no account yet
+  });
+
+  it('never opens the installer over a database that already has accounts: it says so instead', async () => {
+    mocks.initializePlatform.mockResolvedValue({ source: 'setup' });
+    mocks.userCount.mockResolvedValue(7);
+    await expect(register()).rejects.toThrow('refused');
+    expect(mocks.refuseToStart).toHaveBeenCalledWith(
+      'existing-data',
+      expect.stringContaining('installateur'),
+    );
+    expect(mocks.enterSetupMode).not.toHaveBeenCalled();
   });
 
   it('refuses to start, with the explanation, when the stored settings cannot be used', async () => {
