@@ -92,9 +92,17 @@ async function run(lang) {
   await page.setExtraHTTPHeaders({ 'Accept-Language': lang });
   await page.setCookie({ name: COOKIE, value: token, url: base, httpOnly: true });
   page.setDefaultTimeout(15000);
-  const errors = [];
+  // What the page raised, with when. A page that is left while it is still hydrating (the next step starts at once)
+  // raises React errors that are the test's own doing: an error followed within 1.5 s by another navigation is
+  // ignored; one on a page that stayed is not (the same pages loaded 60 times with the processor slowed six times
+  // raise none).
+  const raised = [];
+  const navigations = [];
+  page.on('framenavigated', (frame) => {
+    if (frame === page.mainFrame()) navigations.push(Date.now());
+  });
   page.on('pageerror', (error) =>
-    errors.push(`${error.message} (on ${page.url().replace(base, '')})`),
+    raised.push({ at: Date.now(), text: `${error.message} (on ${page.url().replace(base, '')})` }),
   );
   const step = (message) => console.log(`✓ [${lang}] ${message}`);
   /** Runs a question to the page again when the page was being replaced while it was asked (a hard load is on its way). */
@@ -339,6 +347,9 @@ async function run(lang) {
   if (goneStatus !== 404) fail(`[${lang}] the deleted event still answers ${goneStatus}`);
   step('"this one and the following" on the first date deleted the whole event');
 
+  const errors = raised
+    .filter((error) => !navigations.some((at) => at > error.at && at - error.at < 1500))
+    .map((error) => error.text);
   if (errors.length > 0) fail(`[${lang}] errors in the page: ${errors.join(' | ')}`);
   await page.close();
 }
