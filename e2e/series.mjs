@@ -93,7 +93,9 @@ async function run(lang) {
   await page.setCookie({ name: COOKIE, value: token, url: base, httpOnly: true });
   page.setDefaultTimeout(15000);
   const errors = [];
-  page.on('pageerror', (error) => errors.push(error.message));
+  page.on('pageerror', (error) =>
+    errors.push(`${error.message} (on ${page.url().replace(base, '')})`),
+  );
   const step = (message) => console.log(`✓ [${lang}] ${message}`);
   /** Runs a question to the page again when the page was being replaced while it was asked (a hard load is on its way). */
   const whenSettled = async (ask) => {
@@ -327,8 +329,14 @@ async function run(lang) {
   if (new URL(page.url()).pathname !== `/${lang}/events`)
     fail(`[${lang}] deleting from the first date should go back to the list`);
   // (The page itself answers 200 with its "not found" content: the response is streamed before the page knows.)
-  const gone = await page.goto(`${base}/api/events/${tailId}/ics`, { waitUntil: 'networkidle0' });
-  if (gone?.status() !== 404) fail(`[${lang}] the deleted event still answers ${gone?.status()}`);
+  // Asked from the page that is open: leaving it for another page while it is still hydrating raises errors that are
+  // the test's own doing.
+  await page.waitForNetworkIdle({ idleTime: 500 }).catch(() => undefined);
+  const goneStatus = await page.evaluate(
+    (address) => fetch(address).then((response) => response.status),
+    `/api/events/${tailId}/ics`,
+  );
+  if (goneStatus !== 404) fail(`[${lang}] the deleted event still answers ${goneStatus}`);
   step('"this one and the following" on the first date deleted the whole event');
 
   if (errors.length > 0) fail(`[${lang}] errors in the page: ${errors.join(' | ')}`);
