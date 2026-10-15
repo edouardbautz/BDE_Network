@@ -64,6 +64,19 @@ All notable changes to this project are written here, in English. Format based o
 - **CI for the documentation**: a `docs` job, required on `main` (internal links and anchors, images' alternative
   text, French and English pages that are twins, markdownlint on top of Prettier), and a weekly check of external
   links (`.github/workflows/links.yml`, which opens an issue when a link breaks).
+- **The platform keeps a copy of its database before applying an update, and puts it back if the update fails.** When a
+  new version has migrations to apply, the start-up command first dumps the database to the new `backups` volume
+  (`pre-update_<date>_v<version>.sql.gz`: the 5 most recent kept, nothing older than 90 days, the newest never deleted;
+  none when nothing is applied). If a migration fails, the copy is put back (the schema is replaced, in one transaction),
+  the result is checked (same migrations, same tables), the platform stays stopped and its page says so, in French and in
+  English, with the name of the copy and the way back. If the copy cannot be made the update is not applied, and the page
+  says how to go on (`BDE_SKIP_BACKUP=1`). `./scripts/restore.sh --pre-update` restores a copy by hand.
+- **A mismatch is explained, not looped on.** The page now says: an image older than `docker-compose.yml` (what an old
+  image kept after a `git pull` gave: "Connection url is empty", in a loop), a compose file older than the image, a
+  database newer than the image, a database left half-updated by an earlier failure, a database address that cannot
+  be built, and a database that has accounts but no saved settings (the installer is never opened over it: it would
+  replace them). `docker-compose.yml` tells the image which stack it belongs to (`BDE_STACK`).
+- The version of the platform is shown on the Settings page (written into the image when it is built).
 - **A browser test of what every action shows afterwards** (`e2e/actions.mjs`, run by CI on the real image): members
   (approve, refuse, remove, change a role), roles (default, delete, create, edit), settings (identity, owners, logo,
   modules), profile, shared calendar and language. A test (`src/lib/server-actions-coverage.test.ts`) fails until every

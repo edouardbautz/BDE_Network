@@ -27,6 +27,12 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
   const t = await getTranslations('settings');
   const editable = isSettingsEditable();
   const secretsStatus = getRuntimeSettings()?.secretsStatus ?? 'ok';
+  // Written into the image when it is built (docker/start.mjs hands it over); absent in development.
+  const version =
+    /^[0-9A-Za-z.+-]{1,40}$/.test(process.env.BDE_VERSION ?? '') &&
+    process.env.BDE_VERSION !== 'unknown'
+      ? process.env.BDE_VERSION
+      : null;
   const installation = editable
     ? await prisma.platformSettings.findUnique({
         where: { id: 'platform' },
@@ -47,6 +53,9 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
               ),
             })}
           </p>
+        )}
+        {version && (
+          <p className="text-muted-foreground mt-1 text-xs">{t('version', { version })}</p>
         )}
       </div>
 

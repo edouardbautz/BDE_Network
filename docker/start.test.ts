@@ -272,6 +272,281 @@ describe('supervise', () => {
     });
   });
 
+  describe('an update that keeps a copy of the database', () => {
+    const COPY = 'pre-update_20261015T101530Z_v1.1.0.sql.gz';
+    const M = '20261015120000_event_series_scope';
+    type State = { state: string; pending: string[]; unknown: string[]; failed: string[] };
+    const pending: State = { state: 'pending', pending: [M], unknown: [], failed: [] };
+
+    const failWith = (message: string) =>
+      script(`console.error(${JSON.stringify(message)}); process.exit(1)`);
+
+    /** What the start-up command asks of the database, by hand: every call can be looked at, and made to fail. */
+    function tools(over: Record<string, unknown> = {}) {
+      return {
+        hasAddress: () => true,
+        inspect: vi.fn(async () => pending),
+        backup: vi.fn(async () => COPY),
+        restore: vi.fn(async () => undefined),
+        prune: vi.fn(),
+        latestBackup: vi.fn(() => COPY),
+        ...over,
+      };
+    }
+    const safety = (db: ReturnType<typeof tools>, over: Record<string, unknown> = {}) => ({
+      stack: () => null,
+      skipBackup: false,
+      version: '1.1.0',
+      tools: db,
+      ...over,
+    });
+    const pageText = async (lang = 'fr') =>
+      (await (await get('/', { 'Accept-Language': lang })).text()).replaceAll('&#39;', "'");
+
+    it('keeps a copy BEFORE the migrations that are pending are applied, then starts the application', async () => {
+      const made = join(dir, 'copy-made');
+      const db = tools({
+        backup: vi.fn(async () => {
+          writeFileSync(made, '1');
+          return COPY;
+        }),
+      });
+      // The migration only succeeds when the copy already exists.
+      const code = await start({
+        safety: safety(db),
+        migrate: script(`process.exit(require('fs').existsSync(${JSON.stringify(made)}) ? 0 : 9)`),
+      });
+      expect(code).toBe(0);
+      expect(db.backup).toHaveBeenCalledTimes(1);
+      expect(db.restore).not.toHaveBeenCalled();
+      expect(db.prune).toHaveBeenCalledTimes(1);
+      expect(lines.join('\n')).toContain(COPY);
+    });
+
+    it.each(['current', 'fresh'])(
+      'makes no copy when the database is %s: nothing is going to change',
+      async (state) => {
+        const db = tools({
+          inspect: vi.fn(async () => ({ state, pending: [], unknown: [], failed: [] })),
+        });
+        expect(await start({ safety: safety(db) })).toBe(0);
+        expect(db.backup).not.toHaveBeenCalled();
+      },
+    );
+
+    it('makes no copy when told to go on without one (BDE_SKIP_BACKUP)', async () => {
+      const db = tools();
+      expect(await start({ safety: safety(db, { skipBackup: true }) })).toBe(0);
+      expect(db.backup).not.toHaveBeenCalled();
+    });
+
+    describe('when a migration fails', () => {
+      it('puts the copy back, checks the database is as it was, and says so in both languages', async () => {
+        const inspect = vi
+          .fn()
+          .mockResolvedValueOnce(pending) // before
+          .mockResolvedValueOnce(pending); // after the restore: the same
+        const db = tools({ inspect });
+        const ran = join(dir, 'server-ran');
+        const done = start({
+          safety: safety(db),
+          migrate: failWith(
+            'Error: P3018 A migration failed to apply. relation "x" already exists',
+          ),
+          server: script(`require('fs').writeFileSync(${JSON.stringify(ran)},'1')`),
+          retryMs: 60_000,
+        });
+        await until(serving, 'the page');
+
+        expect(db.restore).toHaveBeenCalledWith(COPY);
+        const fr = await pageText('fr');
+        expect(fr).toContain('votre base a été remise comme avant');
+        expect(fr).toContain(COPY);
+        expect(fr).toContain('<code>P3018</code>');
+        expect(await pageText('en')).toContain('your database was put back as it was');
+        expect((await get('/api/health')).status).toBe(503);
+        expect(existsSync(ran)).toBe(false); // the application never ran on that database
+
+        signals.emit('SIGTERM');
+        expect(await done).toBe(0);
+        expect(lines.join('\n')).toContain('revenue exactement comme avant');
+      });
+
+      it('says the database could NOT be put back, and where the copy is, when the restore fails', async () => {
+        const db = tools({
+          restore: vi.fn(async () => {
+            throw new Error('psql exited with 2');
+          }),
+        });
+        const done = start({
+          safety: safety(db),
+          migrate: failWith('P3018 boom'),
+          retryMs: 60_000,
+        });
+        await until(serving, 'the page');
+
+        const html = await pageText();
+        expect(html).toContain("n'a pas pu être remise comme avant");
+        expect(html).toContain(COPY);
+        expect(html).toContain('--pre-update');
+        signals.emit('SIGTERM');
+        await done;
+      });
+
+      it('does not trust a restore that left the database in another state than before', async () => {
+        const db = tools({
+          inspect: vi
+            .fn()
+            .mockResolvedValueOnce(pending)
+            .mockResolvedValueOnce({ state: 'current', pending: [], unknown: [], failed: [] }),
+        });
+        const done = start({
+          safety: safety(db),
+          migrate: failWith('P3018 boom'),
+          retryMs: 60_000,
+        });
+        await until(serving, 'the page');
+
+        expect(await pageText()).toContain("n'a pas pu être remise comme avant");
+        signals.emit('SIGTERM');
+        await done;
+      });
+
+      it('does not restore for a database that is slow or refuses a password: those are waited for, nothing was changed', async () => {
+        const db = tools();
+        const done = start({
+          safety: safety(db),
+          migrate: failWith("Error: P1001: Can't reach database server"),
+          retryMs: 60_000,
+        });
+        await until(serving, 'the page');
+
+        expect(db.restore).not.toHaveBeenCalled();
+        expect(await pageText()).toContain('La base de données ne répond pas');
+        signals.emit('SIGTERM');
+        await done;
+      });
+
+      it('makes one copy, not one per attempt, when the same migrations are tried again', async () => {
+        const db = tools();
+        const marker = join(dir, 'attempt');
+        // First attempt: the database does not answer. Second: it does.
+        const migrate = script(
+          `const fs=require('fs');if(!fs.existsSync(${JSON.stringify(marker)})){fs.writeFileSync(${JSON.stringify(marker)},'1');console.error('P1001 cannot reach');process.exit(1)}process.exit(0)`,
+        );
+        expect(await start({ safety: safety(db), migrate, retryMs: 20 })).toBe(0);
+        expect(db.backup).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    it('does not apply the migrations when the copy cannot be made, and says how to go on', async () => {
+      const db = tools({
+        backup: vi.fn(async () => {
+          throw new Error('No space left on device');
+        }),
+      });
+      const ran = join(dir, 'migrated');
+      const done = start({
+        safety: safety(db),
+        migrate: script(`require('fs').writeFileSync(${JSON.stringify(ran)},'1')`),
+        retryMs: 60_000,
+      });
+      await until(serving, 'the page');
+
+      const html = await pageText();
+      expect(html).toContain('La copie de sécurité avant mise à jour a échoué');
+      expect(html).toContain('BDE_SKIP_BACKUP=1');
+      expect(existsSync(ran)).toBe(false);
+      signals.emit('SIGTERM');
+      await done;
+    });
+
+    describe('when the stack does not fit', () => {
+      const stays = async (over: Record<string, unknown>, db = tools()) => {
+        const ran = join(dir, 'migrated');
+        const done = start({
+          safety: safety(db, over),
+          migrate: script(`require('fs').writeFileSync(${JSON.stringify(ran)},'1')`),
+          retryMs: 60_000,
+        });
+        await until(serving, 'the page');
+        return {
+          html: await pageText(),
+          en: await pageText('en'),
+          touched: existsSync(ran) || (db.backup as ReturnType<typeof vi.fn>).mock.calls.length > 0,
+          stop: async () => {
+            signals.emit('SIGTERM');
+            await done;
+          },
+        };
+      };
+
+      it('explains a compose file older than the image, and touches nothing', async () => {
+        const page = await stays({ stack: () => ({ kind: 'stack-old-compose' }) });
+        expect(page.html).toContain("docker-compose.yml est plus ancien que l'image");
+        expect(page.en).toContain('docker-compose.yml is older than the image');
+        expect(page.touched).toBe(false);
+        await page.stop();
+      });
+
+      it('explains an image older than the compose file: the old image kept after a git pull', async () => {
+        const page = await stays({ stack: () => ({ kind: 'stack-old-image' }) });
+        expect(page.html).toContain("L'image est plus ancienne que docker-compose.yml");
+        expect(page.html).toContain('1.1.0'); // the version of the image that is running
+        expect(page.touched).toBe(false);
+        await page.stop();
+      });
+
+      it('explains a database address that cannot be built, instead of letting Prisma fail in a loop', async () => {
+        const page = await stays({}, tools({ hasAddress: () => false }));
+        expect(page.html).toContain("L'adresse de la base de données est invalide");
+        expect(page.touched).toBe(false);
+        await page.stop();
+      });
+
+      it('refuses a database that is newer than the image, names the migrations, and changes nothing', async () => {
+        const future = '20270101000000_something_new';
+        const page = await stays(
+          {},
+          tools({
+            inspect: vi.fn(async () => ({
+              state: 'newer',
+              pending: [],
+              unknown: [future],
+              failed: [],
+            })),
+          }),
+        );
+        expect(page.html).toContain('La base de données est plus récente que cette version');
+        expect(page.html).toContain(future);
+        expect(page.touched).toBe(false);
+        await page.stop();
+      });
+
+      it('refuses a database that an earlier failed migration left unfinished, and points to the copy', async () => {
+        const page = await stays(
+          {},
+          tools({
+            inspect: vi.fn(async () => ({ state: 'stuck', pending: [], unknown: [], failed: [M] })),
+          }),
+        );
+        expect(page.html).toContain('est restée inachevée');
+        expect(page.html).toContain(M);
+        expect(page.html).toContain(COPY);
+        expect(page.touched).toBe(false);
+        await page.stop();
+      });
+
+      it('goes on to the migration, which classifies the failure, when the database cannot be asked yet', async () => {
+        const db = tools({
+          inspect: vi.fn(async () => ({ state: 'unreachable', output: 'connection refused' })),
+        });
+        expect(await start({ safety: safety(db) })).toBe(0);
+        expect(db.backup).not.toHaveBeenCalled();
+      });
+    });
+  });
+
   it('passes a stop request to the application and ends cleanly', async () => {
     const listening = join(dir, 'listening');
     const done = start({

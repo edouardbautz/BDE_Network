@@ -244,6 +244,29 @@ personnelles (membres, e-mails) : elle n'est lisible que par son propriétaire, 
 Un `.env`, s'il existe, n'est pas sauvegardé : il n'est plus nécessaire une fois la plateforme installée
 (voir [Configuration](configuration.md)).
 
+### Copie automatique avant une mise à jour
+
+Quand une nouvelle version doit modifier la base de données (une « migration »), la plateforme en fait **une copie
+toute seule, d'abord**, avant d'appliquer quoi que ce soit. La copie est gardée dans le volume Docker `backups`, sous
+le nom `pre-update_<date>_v<version>.sql.gz`.
+
+- **Conservation** : les 5 plus récentes sont gardées, toute copie de plus de 90 jours est supprimée, et la plus
+  récente n'est jamais supprimée. Rien n'est fait quand une mise à jour ne change rien à la base : un simple
+  redémarrage ne fait pas de copie.
+- **Elle ne contient que la base de données.** Les clés du volume `secrets` ne changent pas lors d'une mise à jour. Elle
+  ne **remplace pas** les sauvegardes planifiées ci-dessus, que vous copiez hors du serveur.
+- **Si une migration échoue**, la plateforme remet cette copie en place **toute seule**, vérifie que la base est
+  exactement comme avant (mêmes migrations, mêmes tables), reste arrêtée, et sa page le dit, avec le nom de la copie.
+  Vos données sont intactes ; revenez à la version précédente ([Mise à jour](upgrading.md#revenir-en-arrière)).
+- **Pour en restaurer une à la main** : `./scripts/restore.sh --pre-update` (la plus récente, ou nommez-en une :
+  `./scripts/restore.sh --pre-update pre-update_20261015T101530Z_v1.1.0.sql.gz`). Pour les lister :
+  `docker compose run --rm --no-deps --entrypoint ls app -1 /backups`.
+- **Si la copie ne peut pas être faite** (un disque plein, par exemple), la mise à jour n'est **pas appliquée** et la
+  page le dit. Libérez de l'espace, puis `docker compose up -d`. Pour appliquer la mise à jour sans copie, en connaissant
+  le risque (faites d'abord `./scripts/backup.sh`), ajoutez `BDE_SKIP_BACKUP=1` dans `.env`.
+
+`docker compose down -v` supprime aussi ce volume.
+
 ### Restaurer
 
 Sur **le même serveur** (le volume `secrets` est intact) :

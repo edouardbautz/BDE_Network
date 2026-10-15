@@ -1005,6 +1005,7 @@
       "removeBodyMoved": "{count, plural, one {The event concerned is} other {The # events concerned are}} moved to the chosen category right away. This cannot be undone.",
       "removeBodyUnused": "{count, plural, one {No event uses this category.} other {No event uses these categories.}} Removing cannot be undone.",
       "removeConfirm": "Remove and save"
-    }
+    },
+    "version": "Platform version: {version}"
   }
 }

@@ -21,6 +21,18 @@ export async function register(): Promise<void> {
     // Nothing decided yet (the unfilled template, nothing in the database): the platform is installed from the
     // browser, with a code that is written to the logs. Nothing else runs until it is installed.
     if (initialized.source === 'setup') {
+      // ...but never over a database that already has people in it (a platform installed before the installer, started
+      // with an image that does not hold its bde.config.yml): the installer would replace their settings. It is said
+      // in the browser instead (docker/startup-problems.mjs, "existing-data").
+      const { prisma } = await import('./lib/prisma');
+      if ((await prisma.user.count()) > 0) {
+        refuseToStart(
+          'existing-data',
+          'La base contient déjà des comptes, mais aucun réglage enregistré ni fichier de configuration complet : ' +
+            "l'installateur n'est pas ouvert (il remplacerait vos réglages). Voir « Si votre plateforme date d'avant l'installateur » " +
+            'dans le guide de mise à jour.',
+        );
+      }
       const { enterSetupMode } = await import('./lib/setup/mode');
       enterSetupMode();
       return;

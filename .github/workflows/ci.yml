@@ -134,6 +134,11 @@ jobs:
           done
           if echo "$headers" | grep -qi '^x-powered-by:'; then echo "X-Powered-By must not be sent"; exit 1; fi
 
+      # The update: a copy of the database is made before migrations are applied, put back when one fails, and a database
+      # or a stack that does not fit the image is explained (docker/start.mjs). Against the real image and a real PostgreSQL.
+      - name: A safe update, against the real image
+        run: sh ./e2e/safe-update.sh bde-network
+
       # A problem the operator can fix must be explained in the browser, not looped on: the container
       # stays up, answers 503 with a page naming the problem (and no secret), and never restarts by itself.
       - name: A broken .env is explained, not looped on

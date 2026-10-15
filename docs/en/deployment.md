@@ -235,6 +235,27 @@ from the server failing. The database archive holds personal data (members, emai
 owner, keep it that way. A `.env`, if there is one, is not backed up: it is no longer needed once the platform is
 installed (see [Configuration](configuration.md)).
 
+### Automatic copy before an update
+
+When a new version has to change the database (a "migration"), the platform makes **a copy of it by itself, first**,
+before applying anything. The copy is kept in the `backups` Docker volume, as `pre-update_<date>_v<version>.sql.gz`.
+
+- **Retention**: the 5 most recent are kept, and any older than 90 days is deleted; the most recent one is never
+  deleted. Nothing is made when an update changes nothing in the database, so a simple restart makes no copy.
+- **It holds the database only.** The keys of the `secrets` volume do not change in an update. It does **not** replace
+  the scheduled backups above, which you copy off the server.
+- **If a migration fails**, the platform puts that copy back **by itself**, checks that the database is exactly as it was
+  (same migrations, same tables), stays stopped, and its page says so, with the name of the copy. Your data is
+  intact; go back to the previous version ([Upgrading](upgrading.md#rolling-back)).
+- **To restore one by hand**: `./scripts/restore.sh --pre-update` (the most recent, or name one:
+  `./scripts/restore.sh --pre-update pre-update_20261015T101530Z_v1.1.0.sql.gz`). To list them:
+  `docker compose run --rm --no-deps --entrypoint ls app -1 /backups`.
+- **If the copy cannot be made** (a full disk, for example), the update is **not applied** and the page says so. Free
+  some space, then `docker compose up -d`. To apply the update without a copy, knowing the risk (run
+  `./scripts/backup.sh` first), add `BDE_SKIP_BACKUP=1` to `.env`.
+
+`docker compose down -v` deletes this volume too.
+
 ### Restoring
 
 On **the same server** (the `secrets` volume is intact):

@@ -13,7 +13,7 @@ export const EXIT_CONFIG = 78;
  * the NAMES of the variables, never a value) and ends the process with EXIT_CONFIG.
  */
 export function refuseToStart(
-  kind: 'env' | 'config',
+  kind: 'env' | 'config' | 'existing-data',
   message: string,
   variables: readonly string[] = [],
 ): never {

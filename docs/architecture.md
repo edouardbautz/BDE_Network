@@ -113,6 +113,8 @@ docker/
   start.mjs                 the image's command: migrations, then the application, and the explanation page
                             when either cannot start (see "A startup problem is shown, not looped")
   startup-problems.mjs      its pure parts: Prisma failure classifier, redaction, database address, the page
+  safe-update.mjs           the pure rules of a safe update (stack contract, migrations plan, copies and retention)
+  database-tools.mjs        what it does to the database with psql and pg_dump: inspect, copy, put back, prune
 messages/
   fr.json, en.json          next-intl message catalogs
 docs/en/, docs/fr/           the documentation, the SAME files in both languages (README = index by reader, glossary, faq,
@@ -678,6 +680,43 @@ User guide: `docs/en/events.md`. The shape worth knowing before touching it:
   matched by `^[A-Z][A-Z0-9_]+$`; Prisma's own output goes to the logs only through `redact` (every secret of
   the environment, clear or URL-encoded, and any `postgres://` address). The page has its own inline CSS: a test
   keeps its tokens equal to those of `globals.css`. The in-app pages (login, error) are unaffected.
+- **A safe update** (`docker/start.mjs`, `safe-update.mjs`, `database-tools.mjs`; tests next to them, and
+  `e2e/safe-update.sh` against the real image and a real PostgreSQL, run by CI). Before the migrations the
+  supervisor looks at three things and answers each in the browser, not in a loop:
+  - **the stack**: `docker-compose.yml` passes `BDE_STACK` (a number, `STACK_VERSION` in `safe-update.mjs`, raised
+    when the file and the image have to change together). An image older than its compose file (the incident that
+    made this: an old image kept by `docker compose up -d` after a `git pull`, which answered "Connection url is
+    empty" in a loop), or the reverse, is a page (`stack-old-image`, `stack-old-compose`). A plain `docker run` passes
+    nothing and is not checked. A database address that cannot be built is a page too (`database-url`), before
+    Prisma is run;
+  - **the database against the image** (`planMigrations`, from `_prisma_migrations` read with `psql` and the folders of
+    `/app/prisma/migrations`): `newer` (migrations this image does not have: refused, untouched), `stuck` (a migration
+    failed earlier and was neither finished nor rolled back: Prisma refuses to go on), `pending`, `current`,
+    `fresh`;
+  - **a copy** when migrations are `pending`: `pg_dump --clean --if-exists` (the dump `scripts/backup.sh` makes) to
+    `/backups` (the `backups` volume), compressed, checked complete (its last line), named
+    `pre-update_<UTC>_v<version>.sql.gz` (`BDE_VERSION` is written into the image from `package.json`); 5 kept, nothing
+    older than 90 days, never the newest; none for `current` or `fresh`; one per set of pending migrations even if the
+    attempt is repeated. A copy that cannot be made **stops the update** (`backup-failed`; `BDE_SKIP_BACKUP=1` goes on
+    without, knowingly).
+  - **A failed migration puts the copy back**, but only a real failure (`classifyMigrationFailure` says `migration`:
+    a database that is slow or refuses a password is waited for, and nothing was changed). The restore **drops the
+    schema first** (a migration that failed halfway may have added tables the copy does not know, and the next attempt
+    would stop on "already exists"), in one transaction (`--single-transaction`, `ON_ERROR_STOP`), then the plan is
+    read again and must be the one from before; otherwise the page says the database could not be put back
+    (`migration-restore-failed`) and names the copy. Either way the platform stays stopped, `/api/health` answers 503,
+    and the application never ran on that database. `scripts/restore.sh --pre-update` restores a copy by hand, with
+    the same confirmation and safety copy as any restore.
+  - **Existing data, no settings.** The application, not the supervisor, knows whether the files hold a complete
+    configuration: when it would open the installer (`initialized.source === 'setup'`) **on a database that has
+    accounts**, it refuses (`refuseToStart('existing-data')`, exit 78, the page `existing-data`): the installer would
+    replace the settings of a platform that was installed before it. (A platform whose image does not hold its
+    `bde.config.yml`, which is what a published image is: rebuild with `--build`, see "If your platform predates the
+    installer" in the upgrading guide.)
+  - What goes on the pages is fixed sentences, a file name matching `BACKUP_PATTERN`, migration names matching
+    `^[0-9]{14}_[A-Za-z0-9_]+$` and a version: nothing read from the database or the environment as it is
+    (`renderProblemPage` filters again).
+    Add a row to `e2e/safe-update.sh` for every new case, and a page in `PROBLEMS` in both languages.
 - **The terminal shows the address to open, not the one the server listens on.** Next.js prints
   `Network: http://0.0.0.0:3000` and the container's port; the supervisor passes the application's output through
   `terminalLine` (`startup-problems.mjs`): the Network line is dropped and `Local:` becomes
