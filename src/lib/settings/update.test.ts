@@ -467,6 +467,52 @@ describe('the sections', () => {
     });
   });
 
+  describe('updates', () => {
+    it('is on until an owner turns it off, and is audited without anything else', async () => {
+      const { db, state } = fakeDb();
+      expect(baseConfig().updates.check).toBe(true);
+      expect(await run({ section: 'updates', check: false }, db)).toEqual({
+        ok: true,
+        changed: true,
+      });
+      expect(getRuntimeSettings()?.config.updates.check).toBe(false);
+      expect(state.audit.at(-1)).toMatchObject({
+        action: 'settings.updates.update',
+        targetType: 'Settings',
+        metadata: { check: { from: true, to: false } },
+      });
+      expect(await run({ section: 'updates', check: true }, db)).toEqual({
+        ok: true,
+        changed: true,
+      });
+      expect(getRuntimeSettings()?.config.updates.check).toBe(true);
+    });
+
+    it('writes nothing when nothing changes', async () => {
+      const { db, state } = fakeDb();
+      const before = state.audit.length;
+      expect(await run({ section: 'updates', check: true }, db)).toEqual({
+        ok: true,
+        changed: false,
+      });
+      expect(state.audit).toHaveLength(before);
+    });
+
+    it('refuses anything but a boolean', async () => {
+      const { db } = fakeDb();
+      expect(
+        await run({ section: 'updates', check: 'no' } as unknown as SettingsChange, db),
+      ).toMatchObject({ ok: false, code: 'invalid' });
+    });
+
+    it('leaves the other settings alone', async () => {
+      const { db } = fakeDb();
+      await run({ section: 'updates', check: false }, db);
+      expect(getRuntimeSettings()?.config.bde.name).toBe('BDE Test');
+      expect(getRuntimeSettings()?.config.auth.owners).toEqual(['alice', 'bob']);
+    });
+  });
+
   describe('notifications', () => {
     const discord = 'https://discord.com/api/webhooks/123456789/secret-part';
 

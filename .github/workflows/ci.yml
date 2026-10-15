@@ -193,10 +193,11 @@ jobs:
           mkdir "$RUNNER_TEMP/e2e-deps"
           npm install --prefix "$RUNNER_TEMP/e2e-deps" --no-audit --no-fund puppeteer-core@25.12.0 @auth/core@0.41.3
           ln -s "$RUNNER_TEMP/e2e-deps/node_modules" e2e/node_modules
-          node e2e/mock-fortytwo.mjs 4242 &
+          MOCK_LATEST_RELEASE=v99.0.0 node e2e/mock-fortytwo.mjs 4242 &
           docker run -d --name installer --network host -e PORT=3003 \
             -e DATABASE_URL='postgresql://bde:ci-password@127.0.0.1:5432/bde_install?schema=public' \
             -e FORTYTWO_API_URL=http://127.0.0.1:4242 \
+            -e RELEASES_API_URL=http://127.0.0.1:4242 \
             bde-network
           code=""
           for attempt in $(seq 1 45); do

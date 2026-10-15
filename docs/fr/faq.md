@@ -141,9 +141,11 @@ prévenu.
 
 ### Où sont mes données ?
 
-Sur **votre** serveur, dans votre base de données. Elles ne quittent la plateforme que pour trois raisons : la
-connexion avec 42, l'envoi des notifications que vous avez choisies (Discord, Slack, serveur e-mail), et le logo que
-Discord vient chercher lui-même.
+Sur **votre** serveur, dans votre base de données. Elles ne quittent la plateforme que pour quelques raisons : la
+connexion avec 42, l'envoi des notifications que vous avez choisies (Discord, Slack, serveur e-mail), le logo que
+Discord vient chercher lui-même et, sauf si vous le désactivez dans Paramètres, une requête vers GitHub qui demande la
+dernière version publiée (elle ne transporte rien de votre BDE ; voir
+[Nouvelles versions](configuration.md#nouvelles-versions)).
 
 ### Quelles données sont collectées ?
 

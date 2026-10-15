@@ -9,6 +9,9 @@ themselves at start, after a copy that the platform makes. Allow ten minutes, a 
 This guide was tried for real, going from a platform on **version 1.0.0** (settings in `.env` and `bde.config.yml`)
 to the next version, with members, roles and events, then rolling back.
 
+Owners are told when a new version is published, by a banner on the dashboard and on the Settings page, with the two
+commands (see [New versions](configuration.md#new-versions)).
+
 ## Before you start
 
 1. **Read the [CHANGELOG](../../CHANGELOG.md)**: it says what changes and what you need to know.

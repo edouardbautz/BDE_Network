@@ -1,6 +1,6 @@
 // covers: members.approveMember, members.rejectMember, members.removeMember, members.changeMemberRole
 // covers: roles.createRole, roles.updateRole, roles.deleteRole, roles.setDefaultRole
-// covers: settings.saveIdentity, settings.saveLogo, settings.removeLogo, settings.saveModules, settings.checkOwner
+// covers: settings.saveIdentity, settings.saveLogo, settings.removeLogo, settings.saveModules, settings.checkOwner, settings.saveUpdates
 // covers: settings.addOwner, settings.removeOwner
 // covers: profile.regenerateMyCalendarToken
 // covers: shared-calendar.enableSharedCalendar, shared-calendar.regenerateSharedCalendar, shared-calendar.disableSharedCalendar
@@ -559,6 +559,47 @@ const SCENARIOS = [
       await toggle();
       const on = await expectPage(wasOn ? withEntry : withoutEntry, undefined, 'modules-back');
       return off === 'ok' ? on : off;
+    },
+  },
+  {
+    name: 'settings: turn the notice of new versions off and on',
+    async run() {
+      // The platform is started with RELEASES_API_URL pointing at the stand-in, which publishes a version newer than
+      // any real one (MOCK_LATEST_RELEASE): the notice is there until an owner turns it off.
+      await goto('/settings');
+      const banner = () => Boolean(document.querySelector('#update-banner'));
+      const noBanner = () => !document.querySelector('#update-banner');
+      const first = await expectPage(banner, undefined, 'updates-shown');
+      if (first !== 'ok') return first;
+      const toggleAndSave = async () => {
+        const handle = await page.evaluateHandle(() =>
+          document.querySelector('[role="switch"][aria-labelledby="settings-updates-title"]'),
+        );
+        await handle.asElement().click();
+        const save = await page.evaluateHandle(() =>
+          document
+            .querySelector('[role="switch"][aria-labelledby="settings-updates-title"]')
+            .closest('form')
+            .querySelector('button[type="submit"]'),
+        );
+        await save.asElement().click();
+      };
+      try {
+        await toggleAndSave();
+        const off = await expectPage(noBanner, undefined, 'updates-off');
+        if (off !== 'ok') return off;
+        // the dashboard follows (the notice is asked after the page is shown: give it the time it needs to appear)
+        await goto('/dashboard');
+        await sleep(2500);
+        if (!(await page.evaluate(noBanner))) return 'FAILED';
+        await goto('/settings');
+        await toggleAndSave();
+        return await expectPage(banner, undefined, 'updates-on');
+      } finally {
+        sql(
+          `UPDATE "PlatformSettings" SET config = jsonb_set(config, '{updates,check}', 'true'::jsonb, true) WHERE id = 'platform'`,
+        );
+      }
     },
   },
   {

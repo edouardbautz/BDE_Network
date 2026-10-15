@@ -63,6 +63,8 @@ export type SettingsChange =
   | { section: 'owner-add'; login: string }
   | { section: 'owner-remove'; login: string }
   | { section: 'modules'; events: boolean }
+  /** Whether the owners are told about a newer version (`updates.check`). */
+  | { section: 'updates'; check: boolean }
   | { section: 'notifications'; notifications: unknown };
 
 export interface SettingsActor {
@@ -393,6 +395,18 @@ function apply(change: SettingsChange, state: State, actor: SettingsActor): Appl
           action: 'settings.owner.remove',
           targetLabel: login.value,
           metadata: { owners: owners.length },
+        },
+      };
+    }
+
+    case 'updates': {
+      if (typeof change.check !== 'boolean') return fail('invalid');
+      return {
+        config: { ...config, updates: { check: change.check } },
+        values,
+        audit: {
+          action: 'settings.updates.update',
+          metadata: { check: { from: config.updates.check, to: change.check } },
         },
       };
     }

@@ -108,6 +108,7 @@ describe('who may call them', () => {
       () => actions.addOwner({}),
       () => actions.removeOwner({}),
       () => actions.saveModules({}),
+      () => actions.saveUpdates({}),
       () => actions.saveNotifications({}),
       () => actions.saveLogo(new FormData()),
       () => actions.removeLogo(),
@@ -194,6 +195,19 @@ describe('a change', () => {
     await actions.saveModules({ events: false });
     expect(mocks.stopScheduler).not.toHaveBeenCalled();
     expect(mocks.startScheduler).not.toHaveBeenCalled();
+  });
+
+  it('updates: only a boolean goes to the update', async () => {
+    expect(await actions.saveUpdates({ check: 'yes' })).toMatchObject({
+      ok: false,
+      code: 'invalid',
+    });
+    expect(mocks.updateSettings).not.toHaveBeenCalled();
+    await actions.saveUpdates({ check: false });
+    expect(mocks.updateSettings).toHaveBeenCalledWith(
+      { section: 'updates', check: false },
+      expect.anything(),
+    );
   });
 
   it('notifications: what the form sent goes to the update untouched, which validates it', async () => {

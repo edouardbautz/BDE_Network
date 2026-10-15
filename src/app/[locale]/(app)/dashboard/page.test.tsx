@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
  * else: a member cannot fix it, and must not even cause the check (it is a request to 42).
  */
 
-const mocks = vi.hoisted(() => ({ session: vi.fn(), credentials: vi.fn() }));
+const mocks = vi.hoisted(() => ({ session: vi.fn(), credentials: vi.fn(), updatesCheck: true }));
 
 vi.mock('next-intl/server', () => ({
   getTranslations: async () => (key: string) => key,
@@ -20,7 +20,17 @@ vi.mock('@/i18n/navigation', () => ({
 vi.mock('@/lib/auth/require-session', () => ({ requireApprovedSession: mocks.session }));
 vi.mock('@/lib/auth/oauth-check', () => ({ checkFortyTwoCredentials: mocks.credentials }));
 vi.mock('@/config', () => ({
-  getConfig: () => ({ modules: { enabled: [] }, bde: { timezone: 'Europe/Paris' } }),
+  getConfig: () => ({
+    modules: { enabled: [] },
+    bde: { timezone: 'Europe/Paris' },
+    updates: { check: mocks.updatesCheck },
+  }),
+}));
+vi.mock('@/components/updates/update-banner', () => ({
+  // a client component that asks the network: its own test is next to it
+  UpdateBanner: ({ enabled }: { enabled: boolean }) => (
+    <div>update banner, enabled: {String(enabled)}</div>
+  ),
 }));
 vi.mock('@/components/settings/oauth-rejected-alert', () => ({
   // an async Server Component cannot be rendered inside another by Testing Library: its own test is next to it
@@ -50,6 +60,7 @@ const user = (status: 'OWNER' | 'MEMBER') => ({
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.credentials.mockResolvedValue('rejected');
+  mocks.updatesCheck = true;
 });
 afterEach(cleanup);
 
@@ -72,5 +83,23 @@ describe('DashboardPage, when 42 refuses the application', () => {
     mocks.session.mockResolvedValue(user('OWNER'));
     render(await DashboardPage());
     expect(screen.queryByRole('alert')).toBeNull();
+  });
+});
+
+describe('DashboardPage, the notice of a new version', () => {
+  it('is for an owner, who is told whether the check is on', async () => {
+    mocks.session.mockResolvedValue(user('OWNER'));
+    const { unmount } = render(await DashboardPage());
+    expect(screen.getByText('update banner, enabled: true')).toBeInTheDocument();
+    unmount();
+    mocks.updatesCheck = false;
+    render(await DashboardPage());
+    expect(screen.getByText('update banner, enabled: false')).toBeInTheDocument();
+  });
+
+  it('is not for a member', async () => {
+    mocks.session.mockResolvedValue(user('MEMBER'));
+    render(await DashboardPage());
+    expect(screen.queryByText(/update banner/)).toBeNull();
   });
 });

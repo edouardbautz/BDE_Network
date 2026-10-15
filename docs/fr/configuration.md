@@ -35,6 +35,7 @@ vide pour garder celui qui est enregistré.
 | **Modules**                  | Activer ou désactiver le module Événements.                                                                                                                           |
 | **Événements**               | Les catégories et l'heure du rappel de la veille (si le module est activé).                                                                                           |
 | **Notifications**            | Le canal (Discord, Slack, e-mail ou aucun), ses réglages, et un message de test.                                                                                      |
+| **Nouvelles versions**       | Prévenir ou non les propriétaires quand une nouvelle version de la plateforme est publiée (activé par défaut).                                                        |
 
 ![La section Événements de la page Paramètres](../images/fr/settings-events.webp)
 
@@ -101,6 +102,23 @@ Une personne retirée de la liste devient un membre avec le **rôle par défaut*
 Dans Paramètres, **un seul canal** sert pour toutes les notifications. Le choisir réécrit le canal de chacune des
 cinq, sauf le retrait d'un membre, qui n'envoie jamais d'e-mail. Les réglages d'un canal que vous quittez sont
 conservés : y revenir les retrouve. Voir [Notifications](notifications.md).
+
+### Nouvelles versions
+
+Quand une version plus récente de la plateforme est publiée, les **propriétaires** (et eux seuls) voient un bandeau en
+haut du **tableau de bord** et de cette page : la nouvelle version, de quoi il s'agit, un lien vers ses notes, et les
+deux commandes qui la mettent en place (`git pull`, puis `docker compose up -d` ; voir [Mettre à jour](upgrading.md)).
+**Masquer jusqu'à la prochaine version** le cache dans ce navigateur jusqu'à la sortie d'une version plus récente. Rien
+ne se met à jour tout seul : la plateforme ne touche jamais à sa propre installation.
+
+Pour le savoir, la plateforme demande à **GitHub** la dernière version publiée du projet (une simple requête vers
+`api.github.com`, répondue depuis une mémoire de six heures, trente minutes après un échec). La requête est faite par le
+serveur, seulement quand un propriétaire ouvre le tableau de bord ou cette page, et ne transporte **rien de votre BDE
+ni de ses membres** : ni adresse, ni réglage, ni login. GitHub voit l'adresse du serveur et la version qu'il fait
+tourner, comme pour n'importe quel téléchargement. Si GitHub est injoignable, rien n'est affiché et rien n'est ralenti
+(le bandeau se charge après la page).
+
+La section **Nouvelles versions** le désactive (`updates.check`) : la plateforme ne demande alors rien à personne.
 
 ### Le rappel de sauvegarde
 
@@ -223,6 +241,14 @@ partira pas.
 événement…). `@everyone`, `@here`, `@channel`, `<!channel>`, `<@…>` et les liens `<url|texte>` sont rendus
 inoffensifs : ils s'affichent comme du texte et ne notifient personne. Sur Discord, chaque envoi interdit aussi
 toute mention.
+
+### `updates`
+
+Section **facultative**.
+
+| Clé     | Type    | Défaut | Rôle                                                                                                                                       |
+| ------- | ------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `check` | booléen | `true` | Prévenir les propriétaires d'une nouvelle version (voir [Nouvelles versions](#nouvelles-versions)). `false` arrête la requête vers GitHub. |
 
 ### `.env`
 

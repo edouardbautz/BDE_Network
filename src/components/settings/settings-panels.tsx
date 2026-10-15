@@ -17,6 +17,7 @@ import type { SettingsExtras } from '@/lib/settings/view';
 import { EventsSection } from './events-section';
 import { LogoSection } from './logo-section';
 import { OwnersSection } from './owners-section';
+import { UpdatesSection } from './updates-section';
 
 const api: StepApi = settingsActions;
 
@@ -81,6 +82,9 @@ export function SettingsPanels({
         )}
         <Panel>
           <StepNotifications {...common} />
+        </Panel>
+        <Panel>
+          <UpdatesSection check={extras.updates.check} />
         </Panel>
       </div>
     </FrameModeContext.Provider>

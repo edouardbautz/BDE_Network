@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => {
     installedAt: new Date('2026-10-01T10:00:00Z') as Date | null,
     panels: vi.fn(),
     credentials: vi.fn(),
+    updatesCheck: true,
   };
 });
 
@@ -30,6 +31,13 @@ vi.mock('@/i18n/navigation', () => ({
   },
 }));
 vi.mock('@/lib/auth/oauth-check', () => ({ checkFortyTwoCredentials: mocks.credentials }));
+vi.mock('@/config', () => ({ getConfig: () => ({ updates: { check: mocks.updatesCheck } }) }));
+vi.mock('@/components/updates/update-banner', () => ({
+  // a client component that asks the network: its own test is next to it
+  UpdateBanner: ({ enabled }: { enabled: boolean }) => (
+    <div>update banner, enabled: {String(enabled)}</div>
+  ),
+}));
 vi.mock('@/components/settings/oauth-rejected-alert', () => ({
   // an async Server Component cannot be rendered inside another by Testing Library: its own test is next to it
   OAuthRejectedAlert: ({ withLink }: { withLink?: boolean }) => (
@@ -45,7 +53,11 @@ vi.mock('@/lib/settings/runtime', () => ({
 }));
 vi.mock('@/lib/settings/view', () => ({
   settingsView: () => ({ name: 'BDE Test', owners: ['alice'] }),
-  settingsExtras: async () => ({ logo: { path: '/logo.svg', custom: false }, events: null }),
+  settingsExtras: async () => ({
+    logo: { path: '/logo.svg', custom: false },
+    updates: { check: true },
+    events: null,
+  }),
 }));
 vi.mock('@/lib/prisma', () => ({
   prisma: {
@@ -75,6 +87,7 @@ beforeEach(() => {
   mocks.editable.mockReturnValue(true);
   mocks.credentials.mockResolvedValue('valid');
   mocks.secretsStatus = 'ok';
+  mocks.updatesCheck = true;
   mocks.installedAt = new Date('2026-10-01T10:00:00Z');
 });
 afterEach(cleanup);
@@ -93,8 +106,18 @@ describe('SettingsPage', () => {
     expect(mocks.panels.mock.calls[0]?.[0].view.name).toBe('BDE Test');
     expect(mocks.panels.mock.calls[0]?.[0].extras).toEqual({
       logo: { path: '/logo.svg', custom: false },
+      updates: { check: true },
       events: null,
     });
+  });
+
+  it('shows the notice of a new version, with the setting that turns it off', async () => {
+    await renderPage();
+    expect(screen.getByText('update banner, enabled: true')).toBeInTheDocument();
+    cleanup();
+    mocks.updatesCheck = false;
+    await renderPage();
+    expect(screen.getByText('update banner, enabled: false')).toBeInTheDocument();
   });
 
   it('always reminds to back up the secrets volume, with the command', async () => {

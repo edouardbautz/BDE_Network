@@ -10,6 +10,9 @@ Comptez dix minutes, dont quelques-unes d'attente pendant le téléchargement.
 Ce guide a été essayé pour de vrai, en passant d'une plateforme de la **version 1.0.0** (réglages dans `.env` et
 `bde.config.yml`) à la version suivante, avec des membres, des rôles et des événements, puis en revenant en arrière.
 
+Les propriétaires sont prévenus quand une nouvelle version est publiée, par un bandeau sur le tableau de bord et sur la
+page Paramètres, avec les deux commandes (voir [Nouvelles versions](configuration.md#nouvelles-versions)).
+
 ## Avant de commencer
 
 1. **Lisez le [CHANGELOG](../../CHANGELOG.md)** : il dit ce qui change et ce qu'il faut savoir.

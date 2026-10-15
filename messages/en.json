@@ -1006,6 +1006,25 @@
       "removeBodyUnused": "{count, plural, one {No event uses this category.} other {No event uses these categories.}} Removing cannot be undone.",
       "removeConfirm": "Remove and save"
     },
-    "version": "Platform version: {version}"
+    "version": "Platform version: {version}",
+    "updates": {
+      "title": "New versions",
+      "description": "Owners can be told on the dashboard and on this page when a new version of the platform is published.",
+      "checkTitle": "Tell me about new versions",
+      "checkBody": "The platform asks GitHub for the latest published version, at most every few hours and only when an owner opens the dashboard or this page. The request carries nothing about your BDE or its members. Turned off, the platform asks nobody."
+    }
+  },
+  "updates": {
+    "banner": {
+      "title": "Version {latest} is available",
+      "running": "This platform runs version {current}.",
+      "notes": "What is new",
+      "guide": "Upgrading guide",
+      "howTo": "To update, run these two commands in the project folder, one after the other:",
+      "commandPull": "First command: get the new files",
+      "commandUp": "Second command: start the new version",
+      "backup": "The platform makes a copy of its database by itself before changing it. For your own peace of mind, you can also run ./scripts/backup.sh first.",
+      "dismiss": "Hide until the next version"
+    }
   }
 }

@@ -138,8 +138,10 @@ notified.
 
 ### Where is my data?
 
-On **your** server, in your database. It only leaves the platform for three reasons: signing in with 42, sending the
-notifications you chose (Discord, Slack, mail server), and the logo that Discord fetches itself.
+On **your** server, in your database. It only leaves the platform for a few reasons: signing in with 42, sending the
+notifications you chose (Discord, Slack, mail server), the logo that Discord fetches itself, and, unless you turn it off
+in Settings, a request to GitHub that asks for the latest published version (it carries nothing about your BDE; see
+[New versions](configuration.md#new-versions)).
 
 ### What data is collected?
 

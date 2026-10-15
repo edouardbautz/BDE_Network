@@ -338,6 +338,16 @@ export async function saveModules(input: unknown): Promise<ActionResult> {
   return result;
 }
 
+const updatesSchema = z.object({ check: z.boolean() });
+
+/** Whether the owners are told when a newer version is published (a request to GitHub, see lib/updates). */
+export async function saveUpdates(input: unknown): Promise<ActionResult> {
+  await requireSettingsManager();
+  const parsed = updatesSchema.safeParse(input);
+  if (!parsed.success) return failure('invalid');
+  return change({ section: 'updates', check: parsed.data.check });
+}
+
 export async function saveNotifications(input: unknown): Promise<ActionResult> {
   await requireSettingsManager();
   return change({ section: 'notifications', notifications: input });

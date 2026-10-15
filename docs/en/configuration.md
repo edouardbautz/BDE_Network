@@ -33,6 +33,7 @@ The page never sends a secret back to the browser: leave the field empty to keep
 | **Modules**                 | Turn the Events module on or off.                                                                                                                 |
 | **Events**                  | The categories and the hour of the day-before reminder (if the module is on).                                                                     |
 | **Notifications**           | The channel (Discord, Slack, email or none), its settings, and a test message.                                                                    |
+| **New versions**            | Whether owners are told when a new version of the platform is published (on by default).                                                          |
 
 ![The Events section of the Settings page](../images/en/settings-events.webp)
 
@@ -98,6 +99,22 @@ A person removed from the list becomes a member with the **default role**.
 In Settings, **a single channel** serves every notification. Choosing it rewrites the channel of each of the five,
 except that removing a member never sends an email. The settings of a channel you leave are kept: coming back finds
 them again. See [Notifications](notifications.md).
+
+### New versions
+
+When a newer version of the platform is published, **owners** (and only owners) see a banner at the top of the
+**dashboard** and of this page: the new version, what it is about, a link to its notes, and the two commands that update
+it (`git pull`, then `docker compose up -d`; see [Upgrading](upgrading.md)). **Hide until the next version** hides it in
+that browser until a newer version comes out. Nothing is updated by itself: the platform never touches its own
+installation.
+
+To know it, the platform asks **GitHub** for the project's latest published version (a plain request to
+`api.github.com`, answered from a cache for six hours, thirty minutes after a failure). The request is made by the
+server, only when an owner opens the dashboard or this page, and carries **nothing about your BDE or its members**: no
+address, no setting, no login. GitHub sees the server's address and the version it runs, as for any download. If GitHub
+cannot be reached, nothing is shown and nothing is slowed down (the banner is loaded after the page).
+
+The **New versions** section turns this off (`updates.check`): the platform then asks nobody.
 
 ### The backup reminder
 
@@ -217,6 +234,14 @@ an SMTP server), the platform still starts and warns: the alert will not go out.
 **Message safety.** They contain text typed by members (42 profile name, event title…). `@everyone`, `@here`,
 `@channel`, `<!channel>`, `<@…>` and `<url|text>` links are made harmless: they show as plain text and notify
 nobody. On Discord, every send also forbids any mention.
+
+### `updates`
+
+An **optional** section.
+
+| Key     | Type    | Default | Role                                                                                                                  |
+| ------- | ------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
+| `check` | boolean | `true`  | Tell owners when a new version is published (see [New versions](#new-versions)). `false` stops the request to GitHub. |
 
 ### `.env`
 
