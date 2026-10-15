@@ -1,3 +1,5 @@
+// covers: settings.saveIdentity, settings.saveLogo, settings.removeLogo, settings.saveEvents, settings.verifyFortyTwo
+// covers: settings.checkOwner, settings.addOwner, settings.removeOwner, settings.saveModules
 // End-to-end test of the settings page, in a real browser, on a platform that the installer has just installed
 // (e2e/install.mjs, owner "alice") with e2e/mock-fortytwo.mjs standing in for the 42 API.
 //

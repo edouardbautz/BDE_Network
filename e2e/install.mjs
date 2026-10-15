@@ -1,3 +1,6 @@
+// covers: setup.submitCode, setup.saveIdentity, setup.saveAddress, setup.verifyFortyTwo, setup.skipFortyTwoVerification
+// covers: setup.loadCampuses, setup.saveCampuses, setup.checkOwner, setup.saveOwners, setup.saveModules
+// covers: setup.saveNotifications, setup.testNotification, setup.finishInstallation
 // End-to-end test of the installer, in a real browser (puppeteer-core drives the Chrome or Edge that is already
 // installed: nothing is downloaded).
 //

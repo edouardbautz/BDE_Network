@@ -741,13 +741,46 @@ The address is built by next-intl's `getPathname`, so it is the one the real `Li
 language (`locale` prop) stays the router's. **Do not call `router.push`/`replace` to the pathname you are on.** The only such call, the member removal, was
 checked by hand; the CI test below does not cover it.
 
-**Actions that stay on the page** (confirm, back to draft, cancel and restore a date, delete the following) have the same
-problem and **do not refresh by themselves**: a server action that calls `revalidatePath` and returns, from a page that has a
-`loading.tsx`, leaves the old state on screen in about half of the clicks of a production build (measured on the real image
-with a real browser: the action is done, the audit entry written, the page not updated; `next dev` never does it). Such an
-action **returns an `ActionTarget`** (`{ href }`, `lib/action-target.ts`, built with `getPathname`) and the browser **loads**
-it: `ConfirmDialog` does it when `onConfirm` answers one, and `ActionButton` for what asks no question. An action that
-leaves for another pathname (the edit form, deleting an event) may still `redirect()`; one that stays must not.
+**Actions that stay on the page** (every button that changes something and leaves you on the same page) can leave the
+old state on screen in the production build: the action is done, the audit entry written, the page not updated, nothing in
+the console, and `next dev` never does it. It is the same family of router bug, but it is **not** random across the
+platform: it was **measured**, in a real browser on the real image (`e2e/actions.mjs`, `MEASURE=1`, 15 plays of each
+scenario, a reload telling "the page did not follow" from "the action did not work"):
+
+| Action (page)                                                                                       | Stale in the production build          |
+| --------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| confirm, back to draft, cancel, restore (event page, before `ActionTarget`)                         | about 1 click in 2                     |
+| turn the BDE calendar link on / regenerate / turn off (`redirect()` to itself)                      | 14 plays in 15                         |
+| approve, refuse, remove, change the role of a member                                                | 0 in 15 each                           |
+| make a role the default, delete a role, create, edit a role                                         | 0 in 15 each                           |
+| settings: identity, owners (add, remove), logo, modules (the menu follows)                          | 0 in 15 each                           |
+| regenerate one's personal calendar link (`ActionTarget` since the CI saw it stale once in 45 plays) | 0 in 15 before; 1 in 45 in a later run |
+| switch language                                                                                     | 0 in 15                                |
+
+We could not isolate why the members, roles, settings and profile pages are spared (they have the same `loading.tsx`,
+the same `revalidatePath`, the same `ConfirmDialog`), so **do not assume a new page is spared**.
+
+**Rule.**
+
+1. An action that stays on the page and **redirects to the page it is on** is never acceptable (it is the same click on
+   a link to the page you are on, see above).
+2. An action whose result the page must show (a row that disappears, a link that changes, the menu) **returns an
+   `ActionTarget`** (`{ href }`, `lib/action-target.ts`, built with `getPathname`) and the browser **loads** it:
+   `ConfirmDialog` does it when `onConfirm` answers one, `ActionButton` for what asks no question. This is what the
+   events and the shared calendar do. The cost is a page load, which keeps the scroll position but not a toast or the
+   local state of a form: say what happened in the page itself (a `?status=` notice, as the shared calendar does).
+3. An action may keep the soft refresh (a server action that returns a result, then `revalidatePath`) **only if a
+   scenario of `e2e/actions.mjs` plays it in a real browser and the table above says 0 stale**. Members, roles and settings
+   are in that case today: converting them would only cost their toasts. If a scenario ever goes STALE,
+   the action moves to rule 2; the CI fails it.
+4. An action that leaves for **another pathname** (the edit form, deleting an event, sign-out) may `redirect()`.
+
+**Nothing is left to memory.** `src/lib/server-actions-coverage.test.ts` lists the exported actions of every `'use server'`
+file and fails until each one is named in a `// covers: <folder>.<action>` line of an `e2e/*.mjs` script or in its `EXEMPT`
+list with the reason it needs none. A module's author therefore writes the scenario (a few lines in `e2e/actions.mjs`:
+create what it needs with `sql`, click, `expectPage(...)`) before the CI is green. `e2e/actions.mjs` runs in CI on the real
+image (3 plays of each scenario: a defect that was 1 in 2 is missed 1 time in 8 per scenario, and one that is 14 in 15 is
+never missed); `MEASURE=1 ROUNDS=15 node e2e/actions.mjs` is how to measure a new page before choosing rule 2 or 3.
 
 **Tests.** `src/i18n/link.test.tsx` (the choice of the element, the address, no router option on the anchor). The proof that
 the buttons work is `e2e/events.mjs`, run by CI against the real image: it clicks next/previous month and "today", a day of

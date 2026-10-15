@@ -1,3 +1,5 @@
+// covers: events.updateEvent, events.setEventStatus, events.cancelOccurrence, events.restoreOccurrence
+// covers: events.deleteFollowingDates
 // End-to-end test of the dialogs of a series of events (one date, or this date and the following), in a real
 // browser, against the real image: edit, put back to draft, confirm, cancel, restore and delete, in French and in
 // English. The unit tests run the same operations on an in-memory database; this one proves the buttons, the
@@ -90,10 +92,36 @@ async function run(lang) {
   await page.setExtraHTTPHeaders({ 'Accept-Language': lang });
   await page.setCookie({ name: COOKIE, value: token, url: base, httpOnly: true });
   page.setDefaultTimeout(15000);
-  const errors = [];
-  page.on('pageerror', (error) => errors.push(error.message));
+  // What the page raised, with when. A page that is left while it is still hydrating (the next step starts at once)
+  // raises React errors that are the test's own doing: an error followed within 1.5 s by another navigation is
+  // ignored; one on a page that stayed is not (the same pages loaded 60 times with the processor slowed six times
+  // raise none).
+  const raised = [];
+  const navigations = [];
+  page.on('framenavigated', (frame) => {
+    if (frame === page.mainFrame()) navigations.push(Date.now());
+  });
+  page.on('pageerror', (error) =>
+    raised.push({ at: Date.now(), text: `${error.message} (on ${page.url().replace(base, '')})` }),
+  );
   const step = (message) => console.log(`✓ [${lang}] ${message}`);
-  const text = () => page.evaluate(() => document.body.innerText);
+  /** Runs a question to the page again when the page was being replaced while it was asked (a hard load is on its way). */
+  const whenSettled = async (ask) => {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await ask();
+      } catch (error) {
+        if (
+          attempt >= 6 ||
+          !/context was destroyed|Cannot find context|Execution context/.test(error.message)
+        ) {
+          throw error;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
+    }
+  };
+  const text = () => whenSettled(() => page.evaluate(() => document.body.innerText));
 
   /** Waits until `until` is true in the page (which may be replaced while we wait: a failing query is "not yet"). */
   const waitFor = async (until, argument, timeout = 12000) => {
@@ -118,13 +146,15 @@ async function run(lang) {
   };
   /** The dates of the series, as listed on the page: [{ occ, label }] in order. */
   const dates = () =>
-    page.$$eval('a[href*="occ="]:not([href^="/api/"])', (links) =>
-      links
-        .filter((link) => link.closest('li'))
-        .map((link) => ({
-          occ: new URL(link.href).searchParams.get('occ'),
-          label: link.closest('li')?.innerText.replace(/\s+/g, ' ').trim() ?? '',
-        })),
+    whenSettled(() =>
+      page.$$eval('a[href*="occ="]:not([href^="/api/"])', (links) =>
+        links
+          .filter((link) => link.closest('li'))
+          .map((link) => ({
+            occ: new URL(link.href).searchParams.get('occ'),
+            label: link.closest('li')?.innerText.replace(/\s+/g, ' ').trim() ?? '',
+          })),
+      ),
     );
   const goTo = async (path) => {
     await page.goto(`${base}/${lang}${path}`, { waitUntil: 'networkidle0' });
@@ -307,10 +337,19 @@ async function run(lang) {
   if (new URL(page.url()).pathname !== `/${lang}/events`)
     fail(`[${lang}] deleting from the first date should go back to the list`);
   // (The page itself answers 200 with its "not found" content: the response is streamed before the page knows.)
-  const gone = await page.goto(`${base}/api/events/${tailId}/ics`, { waitUntil: 'networkidle0' });
-  if (gone?.status() !== 404) fail(`[${lang}] the deleted event still answers ${gone?.status()}`);
+  // Asked from the page that is open: leaving it for another page while it is still hydrating raises errors that are
+  // the test's own doing.
+  await page.waitForNetworkIdle({ idleTime: 500 }).catch(() => undefined);
+  const goneStatus = await page.evaluate(
+    (address) => fetch(address).then((response) => response.status),
+    `/api/events/${tailId}/ics`,
+  );
+  if (goneStatus !== 404) fail(`[${lang}] the deleted event still answers ${goneStatus}`);
   step('"this one and the following" on the first date deleted the whole event');
 
+  const errors = raised
+    .filter((error) => !navigations.some((at) => at > error.at && at - error.at < 1500))
+    .map((error) => error.text);
   if (errors.length > 0) fail(`[${lang}] errors in the page: ${errors.join(' | ')}`);
   await page.close();
 }

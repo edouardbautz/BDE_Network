@@ -17,6 +17,7 @@ import {
   type MemberLock,
   type RoleChoice,
 } from '@/components/members/member-controls';
+import { ActionButton } from '@/components/action-button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -134,16 +135,15 @@ export default async function MembersPage({
           <AlertDescription className="flex flex-col gap-3">
             <p>{t('feedRemoval.description')}</p>
             <div className="flex flex-wrap items-center gap-2">
-              <form
+              <ActionButton
+                variant="default"
                 action={async () => {
                   'use server';
-                  await regenerateSharedCalendar(removedLogin);
+                  return regenerateSharedCalendar(removedLogin);
                 }}
               >
-                <Button size="sm" type="submit">
-                  {t('feedRemoval.regenerate')}
-                </Button>
-              </form>
+                {t('feedRemoval.regenerate')}
+              </ActionButton>
               <Button variant="ghost" size="sm" render={<Link href="/members" />}>
                 {t('feedRemoval.later')}
               </Button>

@@ -237,16 +237,25 @@ async function run(screen, lang) {
       () => !location.search.includes('view=list') && document.querySelector('table') !== null,
       'the menu entry of the page you are on did not bring the calendar back',
     );
+    // Let the page finish loading before leaving it: leaving a page that is still hydrating raises errors that are
+    // the test's own doing, not the page's.
+    await page.waitForNetworkIdle({ idleTime: 500 }).catch(() => undefined);
     await clickAndWait(
       entry('dashboard'),
       () => location.pathname.endsWith('/dashboard'),
       'the menu did not open the dashboard',
     );
+    // Let the page finish loading before leaving it: leaving a page that is still hydrating raises errors that are
+    // the test's own doing, not the page's.
+    await page.waitForNetworkIdle({ idleTime: 500 }).catch(() => undefined);
     await clickAndWait(
       entry('events'),
       () => location.pathname.endsWith('/events') && document.querySelector('table') !== null,
       'the menu did not open the events',
     );
+    // Let the page finish loading before leaving it: leaving a page that is still hydrating raises errors that are
+    // the test's own doing, not the page's.
+    await page.waitForNetworkIdle({ idleTime: 500 }).catch(() => undefined);
     step('the menu opens the events page, from itself and from the dashboard');
   }
 

@@ -217,6 +217,9 @@ jobs:
           # for real, in both languages: a series is cut in two rows, and the page after the action must be the one that holds
           # the date. The page must also CHANGE after an action that stays on it (see "Navigation" in docs/architecture.md).
           AUTH_SECRET="$(docker exec installer cat /secrets/auth_secret)" SHOTS="$RUNNER_TEMP/shots/series" node e2e/series.mjs http://127.0.0.1:3003
+          # What every action of the platform shows afterwards (members, roles, settings, profile, shared calendar, language), 3
+          # plays of each, with no reload: see "Actions that stay on the page" in docs/architecture.md.
+          AUTH_SECRET="$(docker exec installer cat /secrets/auth_secret)" OWNER=alice OWNER_CANDIDATE=bob PGPASSWORD=ci-password PSQL="psql -h 127.0.0.1 -U bde -d bde_install" SHOTS="$RUNNER_TEMP/shots/actions" node e2e/actions.mjs http://127.0.0.1:3003
           AUTH_SECRET="$(docker exec installer cat /secrets/auth_secret)" SHOTS="$RUNNER_TEMP/shots/settings" node e2e/settings.mjs http://127.0.0.1:3003
           # The sign-in with 42 (the stand-in plays 42, and refuses a code like the real one when the redirect_uri of
           # the exchange is not the one of the authorization). The image listens on 0.0.0.0, which is what Next.js puts
