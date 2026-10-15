@@ -333,8 +333,13 @@ async function run(lang) {
   await page.waitForSelector(dialog);
   await pickChoice(words.following);
   await clickAndLoad(words.deleteButton, dialog);
-  if (new URL(page.url()).pathname !== `/${lang}/events`)
-    fail(`[${lang}] deleting from the first date should go back to the list`);
+  const backToList = await waitFor((path) => location.pathname === path, `/${lang}/events`, 5000);
+  if (!backToList) {
+    if (shots) await page.screenshot({ path: join(shots, `series-${lang}-fail.png`) });
+    fail(
+      `[${lang}] deleting from the first date should go back to the list, but the page is on ${page.url()}: ${(await text()).slice(0, 300)}`,
+    );
+  }
   // (The page itself answers 200 with its "not found" content: the response is streamed before the page knows.)
   // Asked from the page that is open: leaving it for another page while it is still hydrating raises errors that are
   // the test's own doing.
