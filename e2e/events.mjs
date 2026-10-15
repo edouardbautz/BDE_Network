@@ -208,7 +208,8 @@ async function run(screen, lang) {
   );
   step('the "calendar" button shows the calendar again');
 
-  // 4. one date of a series, on the page of the event
+  // 4. one date of a series, on the page of the event (the selected one is the bold link of the list: the buttons
+  // of the page, such as "Edit", carry the date too and are bold as well)
   await page.goto(`${base}/${lang}/events/${EVENT}`, { waitUntil: 'networkidle0' });
   const dates = await page.$$eval(`a[href^="/${lang}/events/${EVENT}?occ="]`, (links) =>
     links.map((el) => ({ href: el.getAttribute('href'), text: el.textContent?.trim() })),
@@ -220,7 +221,7 @@ async function run(screen, lang) {
     `a[href="${wanted.href}"]`,
     (text) =>
       document
-        .querySelector('a[href*="/events/"][href*="occ="]:not([href^="/api/"]).font-medium')
+        .querySelector('li a[href*="/events/"][href*="occ="].font-medium')
         ?.textContent?.trim() === text,
     'the other date of the series was not selected',
     wanted.text,
