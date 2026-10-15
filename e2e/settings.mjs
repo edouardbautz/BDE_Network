@@ -84,6 +84,17 @@ const page = await browser.newPage();
 await page.setViewport({ width: 1100, height: 1400 });
 await page.setExtraHTTPHeaders({ 'Accept-Language': 'fr' });
 page.setDefaultTimeout(20000);
+// LATENCY_MS slows every request down (a busy server, a distant one): the clicks of this script must not depend on an
+// answer being quick. It is how the races of this script were found; the CI plays it with some.
+if (process.env.LATENCY_MS) {
+  const session = await page.createCDPSession();
+  await session.send('Network.emulateNetworkConditions', {
+    offline: false,
+    latency: Number(process.env.LATENCY_MS),
+    downloadThroughput: -1,
+    uploadThroughput: -1,
+  });
+}
 
 let count = 0;
 const shot = async (name) => {
@@ -297,12 +308,19 @@ try {
   // no request yet: the confirmation comes first
   await clickButton('Enregistrer', '#settings-events-hour');
   await page.waitForSelector('[role="dialog"]');
+  // The dialog closes the moment it is confirmed; the category is not removed until the server has answered. Reloading
+  // before that cancels the request (the category "is still there"): wait for the answer, as `save` does.
+  const removed = page.waitForResponse(
+    (r) => r.request().method() === 'POST' && r.url().includes('/settings'),
+  );
   await page.evaluate(() => {
     const dialog = document.querySelector('[role="dialog"]');
     [...dialog.querySelectorAll('button')]
       .find((b) => b.textContent.trim() === 'Retirer et enregistrer')
       .click();
   });
+  await removed;
+  await page.waitForNetworkIdle({ idleTime: 500 });
   await page.waitForFunction(() => !document.querySelector('[role="dialog"]'));
   await page.reload({ waitUntil: 'networkidle0' });
   if (await page.$('[aria-label="Nom de la catégorie 5"]')) fail('the category is still there');

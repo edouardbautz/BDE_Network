@@ -1,0 +1,115 @@
+name: e2e stress
+
+# One browser test played many times against a fresh platform made from the real image, to tell a test that fails
+# one time in fifty from one that always passes. A test that fails now and then is never "retried until green": it
+# is run here until it either holds for every round or shows what goes wrong (the evidence of each failure, the HTML
+# the browser drew against the HTML the server sent, is kept as an artifact). Run it by hand (Actions → e2e stress →
+# Run workflow) after touching a script of e2e/ or what it clicks; it also runs on a pull request that changes it.
+on:
+  workflow_dispatch:
+    inputs:
+      rounds:
+        description: How many times each script is played
+        default: '20'
+  pull_request:
+    paths:
+      - '.github/workflows/e2e-stress.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  stress:
+    name: ${{ matrix.script }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        script: [events, settings, series, actions]
+    env:
+      ROUNDS: ${{ inputs.rounds || '20' }}
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: bde
+          POSTGRES_PASSWORD: ci-password
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U bde"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the image
+        run: docker build -t bde-network .
+
+      # The same platform as the `docker image` job of ci.yml before the browser tests: installed through its
+      # installer, an owner, a member and the events the scripts expect.
+      - name: Install a platform
+        run: |
+          PGPASSWORD=ci-password psql -h 127.0.0.1 -U bde -d postgres -c 'CREATE DATABASE bde_install'
+          mkdir "$RUNNER_TEMP/e2e-deps"
+          npm install --prefix "$RUNNER_TEMP/e2e-deps" --no-audit --no-fund puppeteer-core@25.12.0 @auth/core@0.41.3
+          ln -s "$RUNNER_TEMP/e2e-deps/node_modules" e2e/node_modules
+          MOCK_LATEST_RELEASE=v99.0.0 node e2e/mock-fortytwo.mjs 4242 &
+          docker run -d --name installer --network host -e PORT=3003 \
+            -e DATABASE_URL='postgresql://bde:ci-password@127.0.0.1:5432/bde_install?schema=public' \
+            -e FORTYTWO_API_URL=http://127.0.0.1:4242 \
+            -e RELEASES_API_URL=http://127.0.0.1:4242 \
+            bde-network
+          code=""
+          for attempt in $(seq 1 45); do
+            code="$(docker logs installer 2>&1 | grep -o 'Code : [A-Z0-9-]*' | tail -1 | sed 's/Code : //')"
+            [ -n "$code" ] && break
+            sleep 2
+          done
+          [ -n "$code" ] || { docker logs installer; exit 1; }
+          node e2e/install.mjs http://127.0.0.1:3003 "$code"
+          PGPASSWORD=ci-password psql -h 127.0.0.1 -U bde -d bde_install -v ON_ERROR_STOP=1 \
+            -c "INSERT INTO \"User\" (id, login, \"fullName\", email, campus, status, \"updatedAt\") VALUES ('e2e-alice', 'alice', 'Alice', 'alice@example.org', 'Nice', 'OWNER', now()) ON CONFLICT (login) DO UPDATE SET status = 'OWNER', \"roleId\" = NULL" \
+            -c "INSERT INTO \"User\" (id, login, \"fullName\", email, campus, status, \"roleId\", \"updatedAt\") SELECT 'e2e-carol', 'carol', 'Carol', 'carol@example.org', 'Nice', 'MEMBER', id, now() FROM \"Role\" WHERE \"isDefault\"" \
+            -c "INSERT INTO \"Event\" (id, title, description, location, \"categoryKey\", status, \"startsAt\", \"endsAt\", recurrence, \"recurrenceUntil\", \"schoolYear\", \"authorLogin\", \"updatedAt\") VALUES ('e2e-weekly', 'E2E weekly', 'Test', 'Room', 'soiree', 'CONFIRMED', now() + interval '1 day', now() + interval '1 day 2 hours', 'WEEKLY', now() + interval '70 days', '2026-2027', 'alice', now())" \
+            -c "INSERT INTO \"Event\" (id, title, description, location, \"categoryKey\", status, \"startsAt\", \"endsAt\", recurrence, \"recurrenceUntil\", \"schoolYear\", \"authorLogin\", \"updatedAt\") SELECT 'e2e-series-' || lang, 'E2E series', 'Test', 'Room', 'soiree', 'CONFIRMED', now() + interval '2 days', now() + interval '2 days 2 hours', 'WEEKLY', now() + interval '38 days', '2026-2027', 'alice', now() FROM (VALUES ('fr'), ('en')) AS languages(lang)"
+
+      - name: Play ${{ matrix.script }} ${{ env.ROUNDS }} times
+        run: |
+          export AUTH_SECRET="$(docker exec installer cat /secrets/auth_secret)"
+          export OWNER=alice OWNER_CANDIDATE=bob PGPASSWORD=ci-password PSQL="psql -h 127.0.0.1 -U bde -d bde_install"
+          zones=(UTC Pacific/Auckland America/Los_Angeles Asia/Kolkata)
+          failures=0
+          for round in $(seq 1 "$ROUNDS"); do
+            # The browser is set to a time zone other than the server's, one after the other: a page that the server
+            # and the browser draw differently according to the time zone would show here.
+            export TIMEZONE="${zones[$(( (round - 1) % ${#zones[@]} ))]}"
+            export SHOTS="$RUNNER_TEMP/shots/${{ matrix.script }}-round-$round"
+            # The series script cuts and deletes its events: each round starts from the same two series.
+            if [ "${{ matrix.script }}" = series ]; then
+              psql -h 127.0.0.1 -U bde -d bde_install -v ON_ERROR_STOP=1 -q                 -c "DELETE FROM \"Event\" WHERE id LIKE 'e2e-series-%' OR \"seriesId\" LIKE 'e2e-series-%'"                 -c "INSERT INTO \"Event\" (id, title, description, location, \"categoryKey\", status, \"startsAt\", \"endsAt\", recurrence, \"recurrenceUntil\", \"schoolYear\", \"authorLogin\", \"updatedAt\") SELECT 'e2e-series-' || lang, 'E2E series', 'Test', 'Room', 'soiree', 'CONFIRMED', now() + interval '2 days', now() + interval '2 days 2 hours', 'WEEKLY', now() + interval '38 days', '2026-2027', 'alice', now() FROM (VALUES ('fr'), ('en')) AS languages(lang)"
+            fi
+            if node "e2e/${{ matrix.script }}.mjs" http://127.0.0.1:3003 > "$RUNNER_TEMP/round.log" 2>&1; then
+              echo "round $round ($TIMEZONE): ok"
+            else
+              failures=$((failures + 1))
+              echo "round $round ($TIMEZONE): FAILED"
+              grep -E '✗|Error' "$RUNNER_TEMP/round.log" | head -5 | cut -c1-400
+              cp "$RUNNER_TEMP/round.log" "$RUNNER_TEMP/shots/${{ matrix.script }}-round-$round.log" 2>/dev/null || { mkdir -p "$RUNNER_TEMP/shots"; cp "$RUNNER_TEMP/round.log" "$RUNNER_TEMP/shots/${{ matrix.script }}-round-$round.log"; }
+            fi
+          done
+          echo "${{ matrix.script }}: $((ROUNDS - failures)) of $ROUNDS rounds passed"
+          [ "$failures" = 0 ]
+
+      - name: Evidence of the failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stress-${{ matrix.script }}
+          path: ${{ runner.temp }}/shots
+          if-no-files-found: ignore
