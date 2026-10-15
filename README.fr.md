@@ -85,7 +85,7 @@ comptes rendus). Un module apporte ses propres droits sans toucher au cœur
 
 ## Construite avec
 
-Next.js 15 (App Router) · TypeScript (strict) · PostgreSQL · Prisma 7 · Tailwind CSS v4 · shadcn/ui · NextAuth v5
+Next.js 16 (App Router) · TypeScript (strict) · PostgreSQL · Prisma 7 · Tailwind CSS v4 · shadcn/ui · NextAuth v5
 (beta, version épinglée) · next-intl · Docker Compose
 
 ## Contribuer et sécurité

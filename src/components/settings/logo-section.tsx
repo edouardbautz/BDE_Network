@@ -29,15 +29,24 @@ export function LogoSection({ logoPath, custom }: { logoPath: string; custom: bo
   const [failure, setFailure] = useState<ActionFailure | null>(null);
   const [pending, start] = useTransition();
 
-  useEffect(() => {
-    if (!file) return setPreview(null);
-    const url = URL.createObjectURL(file);
-    setPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
+  // The preview is a temporary address for the chosen file: made when a file is chosen, released when it changes.
+  const previewUrl = useRef<string | null>(null);
+  useEffect(
+    () => () => {
+      if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
+    },
+    [],
+  );
+
+  function show(chosen: File | null) {
+    if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
+    previewUrl.current = chosen ? URL.createObjectURL(chosen) : null;
+    setPreview(previewUrl.current);
+    setFile(chosen);
+  }
 
   function choose(chosen: File | null) {
-    setFile(chosen);
+    show(chosen);
     // The same refusals as the server's, said before sending anything.
     if (chosen && chosen.size > LOGO_MAX_BYTES) {
       setFailure({ ok: false, code: 'logoTooBig', field: 'logo' });
@@ -54,7 +63,7 @@ export function LogoSection({ logoPath, custom }: { logoPath: string; custom: bo
       const result = await saveLogo(body);
       if (!result.ok) return setFailure(result);
       setFailure(null);
-      setFile(null);
+      show(null);
       if (input.current) input.current.value = '';
       toast.success(tSaved('saved'));
     });

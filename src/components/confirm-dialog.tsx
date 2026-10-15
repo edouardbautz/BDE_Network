@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  useEffect,
   useRef,
   useState,
   useTransition,
@@ -102,10 +101,14 @@ export function ConfirmDialog({
   const open = controlledOpen ?? localOpen;
   const firstChoice = choices?.[0]?.value ?? '';
 
-  // Each time the dialog opens, by its button or by its parent, the narrowest choice is the selected one.
-  useEffect(() => {
+  // Each time the dialog opens, by its button or by its parent, the narrowest choice is the selected one. (Done while
+  // rendering, the way React asks for a state that follows another: an effect would draw the old choice first.)
+  const resetKey = open ? firstChoice : null;
+  const [seenKey, setSeenKey] = useState(resetKey);
+  if (seenKey !== resetKey) {
+    setSeenKey(resetKey);
     if (open) setChoice(firstChoice);
-  }, [open, firstChoice]);
+  }
 
   const setOpen = (next: boolean) => {
     setLocalOpen(next);

@@ -19,6 +19,7 @@ import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { encode } from '@auth/core/jwt';
 import puppeteer from 'puppeteer-core';
+import { watchPage } from './watch-page.mjs';
 
 const [base] = process.argv.slice(2);
 const secret = process.env.AUTH_SECRET;
@@ -79,7 +80,13 @@ const WORDS = {
   },
 };
 
-const browser = await puppeteer.launch({ executablePath, headless: true, args: ['--no-sandbox'] });
+const browser = await puppeteer.launch({
+  executablePath,
+  headless: true,
+  args: ['--no-sandbox'],
+  // A busy runner can take longer than the 30 s allowed by default to start the browser.
+  timeout: 120000,
+});
 const fail = (message) => {
   throw new Error(message);
 };
@@ -92,18 +99,10 @@ async function run(lang) {
   await page.setExtraHTTPHeaders({ 'Accept-Language': lang });
   await page.setCookie({ name: COOKIE, value: token, url: base, httpOnly: true });
   page.setDefaultTimeout(15000);
-  // What the page raised, with when. A page that is left while it is still hydrating (the next step starts at once)
-  // raises React errors that are the test's own doing: an error followed within 1.5 s by another navigation is
-  // ignored; one on a page that stayed is not (the same pages loaded 60 times with the processor slowed six times
-  // raise none).
-  const raised = [];
-  const navigations = [];
-  page.on('framenavigated', (frame) => {
-    if (frame === page.mainFrame()) navigations.push(Date.now());
+  const watch = await watchPage(page, {
+    label: `series ${lang}`,
+    shots: shots && join(shots, 'errors'),
   });
-  page.on('pageerror', (error) =>
-    raised.push({ at: Date.now(), text: `${error.message} (on ${page.url().replace(base, '')})` }),
-  );
   const step = (message) => console.log(`✓ [${lang}] ${message}`);
   /** Runs a question to the page again when the page was being replaced while it was asked (a hard load is on its way). */
   const whenSettled = async (ask) => {
@@ -334,8 +333,13 @@ async function run(lang) {
   await page.waitForSelector(dialog);
   await pickChoice(words.following);
   await clickAndLoad(words.deleteButton, dialog);
-  if (new URL(page.url()).pathname !== `/${lang}/events`)
-    fail(`[${lang}] deleting from the first date should go back to the list`);
+  const backToList = await waitFor((path) => location.pathname === path, `/${lang}/events`, 5000);
+  if (!backToList) {
+    if (shots) await page.screenshot({ path: join(shots, `series-${lang}-fail.png`) });
+    fail(
+      `[${lang}] deleting from the first date should go back to the list, but the page is on ${page.url()}: ${(await text()).slice(0, 300)}`,
+    );
+  }
   // (The page itself answers 200 with its "not found" content: the response is streamed before the page knows.)
   // Asked from the page that is open: leaving it for another page while it is still hydrating raises errors that are
   // the test's own doing.
@@ -347,10 +351,9 @@ async function run(lang) {
   if (goneStatus !== 404) fail(`[${lang}] the deleted event still answers ${goneStatus}`);
   step('"this one and the following" on the first date deleted the whole event');
 
-  const errors = raised
-    .filter((error) => !navigations.some((at) => at > error.at && at - error.at < 1500))
-    .map((error) => error.text);
-  if (errors.length > 0) fail(`[${lang}] errors in the page: ${errors.join(' | ')}`);
+  if (watch.errors.length > 0) {
+    fail(`[${lang}] errors in the page: ${(await watch.describe()).join(' | ')}`);
+  }
   await page.close();
 }
 

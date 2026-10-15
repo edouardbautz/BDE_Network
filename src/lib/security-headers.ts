@@ -4,7 +4,7 @@
  * The Content-Security-Policy keeps `'unsafe-inline'` for scripts and styles:
  * Next.js hydrates the page with inline scripts, next-themes sets the theme
  * with one, and the accent colour is an inline style. A nonce-based policy would
- * need every page to be rendered per request through the middleware; the rest of
+ * need every page to be rendered per request through the proxy; the rest of
  * the policy (no framing, no plugins, same-origin connections, a fixed list of
  * image hosts and form targets) is what protects an administration interface here.
  *

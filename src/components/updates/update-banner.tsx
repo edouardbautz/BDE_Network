@@ -42,7 +42,6 @@ export function UpdateBanner({ enabled }: { enabled: boolean }) {
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
-    setAvailable(null);
     if (!enabled) return;
     const controller = new AbortController();
     fetch('/api/updates', { signal: controller.signal, cache: 'no-store' })

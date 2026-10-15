@@ -20,8 +20,8 @@ flowchart LR
   browser["A member's browser"]
 
   subgraph docker["docker compose"]
-    subgraph app["app container (Next.js 15)"]
-      middleware["Middleware<br/>/fr /en language<br/>installer gate"]
+    subgraph app["app container (Next.js 16)"]
+      middleware["Proxy<br/>/fr /en language<br/>installer gate"]
       pages["Pages and server actions<br/>(Server Components)"]
       api["API routes<br/>auth, .ics feeds, logo,<br/>export, health"]
       lib["src/lib<br/>rights and roles, events,<br/>settings, notifications"]

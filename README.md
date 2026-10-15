@@ -82,7 +82,7 @@ minutes). A module brings its own rights without touching the core
 
 ## Built with
 
-Next.js 15 (App Router) · TypeScript (strict) · PostgreSQL · Prisma 7 · Tailwind CSS v4 · shadcn/ui · NextAuth v5
+Next.js 16 (App Router) · TypeScript (strict) · PostgreSQL · Prisma 7 · Tailwind CSS v4 · shadcn/ui · NextAuth v5
 (beta, pinned version) · next-intl · Docker Compose
 
 ## Contributing and security

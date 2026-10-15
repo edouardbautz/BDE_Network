@@ -7,7 +7,7 @@ const intl = createMiddleware(routing);
 
 const SETUP_PATH = /^\/(?:fr|en)\/setup(?:\/|$)/;
 
-export default function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // The platform is not installed: the installer is the only page, and the only thing that answers besides
@@ -37,8 +37,8 @@ export default function middleware(request: NextRequest) {
   return intl(request);
 }
 
+// (Next.js 16 calls this file a "proxy" and always runs it on the Node.js runtime.)
 export const config = {
-  runtime: 'nodejs',
   // Everything but Next's own files and files with an extension (images, the favicon...).
   matcher: ['/((?!_next|_vercel|.*\\..*).*)'],
 };

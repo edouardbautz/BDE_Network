@@ -16,7 +16,12 @@ _using_ the deployed app (BDE members) are not necessarily technical — the UI 
 
 ## Stack
 
-- **Next.js 15** (App Router, `src/` directory), **TypeScript strict**, no `any`.
+- **Next.js 16** (App Router, `src/` directory), **TypeScript strict**, no `any`. Pinned to an **exact** version, with
+  `eslint-config-next`. **Why 16 and not 15.5**: Next.js 15.5 ships a React from August 2025 with a hydration bug that made
+  about one page load in seven raise errors on a slow connection (see "A hydration error on a slow connection"); the React of
+  Next.js 16 carries the fix, and 15.5 will not get it. The **bundler stays webpack** (`next build --webpack`, `next dev
+--webpack`): Turbopack is the default of 16 and builds this application, but it traces the whole project for the few
+  dynamic file reads (`bde.config.yml`, the uploads folder) and nothing here needs it; switching is a decision of its own.
 - **PostgreSQL** via **Prisma 7**, using the `@prisma/adapter-pg` driver adapter — no Rust
   query engine binary, no `DATABASE_URL` in `schema.prisma` (it lives in `prisma.config.ts` for
   the CLI, and is passed to `PrismaPg` explicitly in `src/lib/prisma.ts` for the app).
@@ -100,7 +105,7 @@ src/
     audit-log.ts, account-label.ts, health.ts, prisma.ts, color.ts, utils.ts
   types/next-auth.d.ts     Session/User/JWT module augmentation
   test/                    session fixtures, in-memory roles database, migration tests
-  middleware.ts             next-intl locale routing, Node.js runtime (not Edge — see below)
+  proxy.ts                  next-intl locale routing and the installer gate, Node.js runtime (called `middleware.ts` before Next.js 16)
 prisma/
   schema.prisma, seed.ts (+ seed-events.ts), migrations/ (20261005180000_custom_roles converts the old roles)
 scripts/
@@ -380,11 +385,11 @@ sees the installer.
   5 wrong tries lock the entry for 30 s, doubling to 15 min (never a guess, only a delay; a restart gives a new code
   and clears the lock). The right code gives a session: 256 random bits in an `HttpOnly`, `SameSite=Strict` cookie (`Secure`
   behind an HTTPS proxy), 2 h, of which the server keeps only the SHA-256. At most 20 sessions.
-- **Nothing is served but the installer** (`src/middleware.ts`, Node.js runtime): every page redirects to
+- **Nothing is served but the installer** (`src/proxy.ts`, Node.js runtime): every page redirects to
   `/<locale>/setup`, every API route answers 503 `not-installed`, except `/api/health`. The state is read from
-  `globalThis`, which the middleware shares with the server. **Two traps met while building it**: the `matcher` is a
-  regular expression compiled by Next, and a lost backslash (`.*..*` for `.*\..*`) made the middleware see only `/`
-  (`middleware.test.ts` checks which paths it sees); and a redirect built from a relative `Location`, or from
+  `globalThis`, which the proxy shares with the server. **Two traps met while building it**: the `matcher` is a
+  regular expression compiled by Next, and a lost backslash (`.*..*` for `.*\..*`) made the proxy see only `/`
+  (`proxy.test.ts` checks which paths it sees); and a redirect built from a relative `Location`, or from
   `request.url` (the container's own host name behind Docker), is refused or wrong, so it is cloned from
   `request.nextUrl`, which carries the host the visitor used.
 - **The address step never proposes nor accepts `0.0.0.0`** (see "The public address"): the proposal is
@@ -442,12 +447,12 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
   (static imports of `node:fs`/Prisma there fail the Edge bundle with `UnhandledSchemeError`;
   verified: `next build` emits only `instrumentation.js`). Keep every import in it dynamic and guarded.
 - `bde.config.local.yml` (git-ignored) replaces `bde.config.yml` when present, whole-file, no merge.
-- `src/middleware.ts` runs on the **Node.js runtime** (`export const config = { runtime:
-'nodejs' }`), stable since Next.js 15.5. It doesn't read `bde.config.yml`: the interface
+- `src/proxy.ts` (`middleware.ts` until Next.js 16, which renamed the file convention) runs on the **Node.js
+  runtime**, the only one a proxy has. It doesn't read `bde.config.yml`: the interface
   language comes from the URL (`/fr`, `/en`; the default `"fr"` is hardcoded in `i18n/routing.ts`, which
   client code imports and so cannot read the config). `bde.defaultLocale` is **the language of outgoing
   notifications**, nothing else — wiring it into routing was judged not worth a config read in the
-  middleware for a visitor whose browser language is neither French nor English.
+  proxy for a visitor whose browser language is neither French nor English.
 
 ## Notifications
 
@@ -822,7 +827,9 @@ the transition **never commits**: the old page stays and `history.pushState` is 
 another pathname (sidebar, a card to `/events/<id>`) works, which is why it went unnoticed; timing decides for some pages, the events page always fails. We did not isolate the line that
 holds the commit. It is the family of Next.js 15 client-router bugs reported upstream (vercel/next.js #86151 "`loading.js`
 sometimes causes soft-navigation to get stuck", #90008 on aliased entries; the React side is facebook/react #35821,
-`useDeferredValue` stuck on a stale value), reported fixed in 16.x. A move to Next.js 16 is a pull request of its own.
+`useDeferredValue` stuck on a stale value), reported fixed in 16.x. **Checked again on Next.js 16.4.1: it is still
+there** (an image built without the workaround fails `e2e/events.mjs` four runs out of four, on the list button), so the
+rule below stays.
 
 **Rule.** Every link goes through `Link` from `@/i18n/navigation`, never `next/link` or `next-intl/navigation` directly.
 That `Link` is next-intl's, except that a link to the page you are already on is a plain `<a>` (the page loads again, which is
@@ -878,6 +885,51 @@ the grid, the list and calendar buttons, another date of a series and the menu e
 a phone-sized screen, in French and in English, and waits for the **page to change** (a request leaving proves nothing). It
 fails on the image without the fix (checked) and passes with it. A new button that changes only the query of the page it is
 on belongs in that file.
+
+## A hydration error on a slow connection (Next.js 16 and `e2e/hydration.mjs`)
+
+**Symptom met in the CI**, one run out of three or four, in `e2e/events.mjs` and `e2e/series.mjs`: `Minified React error #418` (args `HTML`: the server's HTML does not match
+what the client drew) followed by up to a dozen `TypeError: Cannot read properties of null (reading 'parentNode')`. Never on
+a developer's computer. First read as "a click that left a page that was still hydrating" (the test's own doing), and
+tolerated for a while by ignoring the errors that came before a navigation. **That reading was wrong**: the stress workflow
+(`.github/workflows/e2e-stress.yml`) caught errors on pages that were never left, `111 ms after the document began`.
+
+**What it is** (the upstream report that matches the symptoms, the versions and the fix we measured; we did not bisect React). A bug of the React that Next.js 15.5 vendors (`19.2.0-canary-0bdb9206-20250818`), in the client's
+time-sliced hydration of a page whose RSC data is still streaming: when a lazy child suspends and its data arrives while
+React yields, React replays the unit of work **without putting the hydration cursor back** (facebook/react issues 35210 and 37584, fixed by pull request 35494 in January 2026, released in react-dom 19.3.0; maintainers do not backport to 19.2). The client then
+finds "different" HTML on an identical tree, throws the server's DOM away and draws the page again; the `$RC` scripts that
+finish the streamed boundaries afterwards find their placeholders gone (`parentNode` of null, once per boundary). The page
+still ends up complete, which is why nobody saw it: a visitor gets a flash and a late page, and the console gets a dozen
+errors. A related open React bug (issue 37321) is hydration starting before the HTML parser has the whole shell.
+
+**Why it comes and goes.** It needs the scripts in the browser's cache (so hydration starts early) and the HTML arriving in
+several pieces (a 200 KB page with its data). A fast local connection never does it; the slower, busier runner of the CI
+did in about one load in twenty; a throttled connection (1.5 Mbps, 20 ms) did it for **17 loads in 120** (events, an event, the
+dashboard, the members) on Next.js 15.5.27. It is also hidden by anything that slows the page down (with the debugger attached, 120 runs of the
+scripts were clean): do not conclude from "it passes on my machine" or "it passes with logging on".
+
+**What we did.** Moved to **Next.js 16.4.1** (React `19.3.0-canary-278794d7-20261002`): **0 errors in 120 loads** of the same
+pages under the same conditions, on the webpack image that we ship (and 0 in 100 on a Turbopack build). The move brought three changes, no more:
+`middleware.ts` became `proxy.ts` (same code, Node.js runtime only), `eslint-config-next` 16 is a flat config of its own
+(`eslint.config.mjs` no longer needs `FlatCompat`), and its React-hooks rules, now stricter, made four effects that set
+state into something the React documentation prescribes (state that follows a prop while rendering, an external value
+read with `useSyncExternalStore`, an event handler that owns a temporary address).
+
+**The guard.** `e2e/hydration.mjs` (run by CI on the real image) loads the events pages, the dashboard and the members page
+40 times each, the first load warming the cache and the others on a 1.5 Mbps, 20 ms connection, and fails on any page error.
+It fails on Next.js 15.5.27 (about one load in seven) and passes on 16.4.1. A framework or React bump that brings the bug back
+is found there. To hunt this kind of error, `HYDRATION_DEBUG=1` makes `e2e/watch-page.mjs` stop the page at the moment React
+throws its internal #519 and write down the components being hydrated and the DOM it was given.
+
+**Browser tests that fail now and then.** Never "retry until green", never "ignore the errors that come before a
+navigation". `.github/workflows/e2e-stress.yml` (Actions → e2e stress → Run workflow; also run on a pull request that
+touches it) plays each script 20 times (the actions script, whose round is ten minutes, 3 times), on three platforms at once, with the browser in a different time zone each round
+(UTC, Auckland, Los Angeles, Kolkata: a page drawn differently by the server and the browser according to the time zone
+would show), and keeps for each failure what `e2e/watch-page.mjs` collected: in which document the error was raised, by
+which script, and the HTML the browser drew against the HTML the server sent. A script is trusted when it holds for all the
+rounds. The races found this way in the scripts themselves: the settings script reloaded before the server had answered a
+confirmed removal (the dialog closes at once), and `e2e/settings.mjs`/`events.mjs` take `LATENCY_MS`, `TIMEZONE` and
+`CPU_THROTTLE` to reproduce a slow server, another time zone and a slow processor.
 
 ## Design system
 

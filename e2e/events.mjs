@@ -17,6 +17,7 @@ import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { encode } from '@auth/core/jwt';
 import puppeteer from 'puppeteer-core';
+import { watchPage } from './watch-page.mjs';
 
 const [base] = process.argv.slice(2);
 const secret = process.env.AUTH_SECRET;
@@ -68,7 +69,13 @@ const WORDS = {
   },
 };
 
-const browser = await puppeteer.launch({ executablePath, headless: true, args: ['--no-sandbox'] });
+const browser = await puppeteer.launch({
+  executablePath,
+  headless: true,
+  args: ['--no-sandbox'],
+  // A busy runner can take longer than the 30 s allowed by default to start the browser.
+  timeout: 120000,
+});
 const fail = (message) => {
   throw new Error(message);
 };
@@ -97,9 +104,12 @@ async function run(screen, lang) {
   await page.setExtraHTTPHeaders({ 'Accept-Language': lang });
   await page.setCookie({ name: COOKIE, value: token, url: base, httpOnly: true });
   page.setDefaultTimeout(15000);
-  const errors = [];
-  page.on('pageerror', (error) => errors.push(error.message));
-
+  // The browser can be set to another time zone than the server's (TIMEZONE) and slowed down (CPU_THROTTLE: 4 = four
+  // times slower), to catch a page that is drawn differently by the server and by the browser, or a click that comes
+  // before the page is ready.
+  if (process.env.TIMEZONE) await page.emulateTimezone(process.env.TIMEZONE);
+  if (process.env.CPU_THROTTLE) await page.emulateCPUThrottling(Number(process.env.CPU_THROTTLE));
+  const watch = await watchPage(page, { label, shots: shots && join(shots, 'errors') });
   const step = (message) => console.log(`✓ [${label}] ${message}`);
   const monthShown = () => page.$eval('h2[aria-live]', (el) => el.textContent?.trim());
   /**
@@ -259,7 +269,9 @@ async function run(screen, lang) {
     step('the menu opens the events page, from itself and from the dashboard');
   }
 
-  if (errors.length > 0) fail(`[${label}] the page raised errors: ${errors.join(' | ')}`);
+  if (watch.errors.length > 0) {
+    fail(`[${label}] the page raised errors: ${(await watch.describe()).join(' | ')}`);
+  }
   await page.close();
 }
 

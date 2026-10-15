@@ -45,7 +45,13 @@ if (shots) mkdirSync(shots, { recursive: true });
 const registered = new URL(platform).origin;
 const CALLBACK = '/api/auth/callback/42-school';
 
-const browser = await puppeteer.launch({ executablePath, headless: true, args: ['--no-sandbox'] });
+const browser = await puppeteer.launch({
+  executablePath,
+  headless: true,
+  args: ['--no-sandbox'],
+  // A busy runner can take longer than the 30 s allowed by default to start the browser.
+  timeout: 120000,
+});
 let count = 0;
 const step = (message) => console.log(`✓ ${message}`);
 const fail = (message) => {
