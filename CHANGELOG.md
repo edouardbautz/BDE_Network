@@ -1,427 +1,401 @@
 # Changelog
 
-Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/),
-versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
+All notable changes to this project are written here, in English. Format based on
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning follows
+[Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
 ### Added
 
-- **Installation dans le navigateur.** `docker compose up`, ouvrir l'adresse, et une page guide pas à pas jusqu'au
-  bout, en français ou en anglais, avec une barre de progression et un bouton Retour : nom, couleur, langue, adresse
-  publique, application OAuth 42 (pas à pas, adresse de redirection à copier, **identifiants vérifiés tout de suite
-  auprès de l'API 42**), **campus choisis dans la liste de 42 avec une recherche**, **propriétaires vérifiés** auprès
-  de 42, module Événements, notifications avec **message de test** (Discord, Slack, e-mail), récapitulatif. Aucun
-  fichier de configuration, aucun `.env`. Les secrets saisis ne reviennent jamais au navigateur et sont chiffrés
-  dans la base.
-- **Protection de l'installateur** : tant que la plateforme n'est pas installée, la page n'ouvre qu'avec un **code à
-  usage unique** (`K7QM-4XPD`) que le serveur écrit dans ses journaux, dans un encadré bien visible du terminal de
-  `docker compose up`. Nouveau à chaque démarrage, verrouillage progressif après 5 essais ratés, session de 2 heures
-  (cookie `HttpOnly`, `SameSite=Strict`). Le reste du site répond « pas installé » et **la page d'installation disparaît
-  définitivement** une fois terminé.
-- **Les réglages de la plateforme vivent dans sa base de données** (`PlatformSettings`), au lieu de deux fichiers
-  lus au démarrage. Au premier démarrage après la mise à jour, `bde.config.yml` et `.env`, s'ils sont complets,
-  sont **copiés dans la base** (aucune action à faire) : les secrets (clé de l'application 42, mot de passe SMTP,
-  webhooks) y sont **chiffrés** (AES-256-GCM) avec une clé qui n'est pas dans la base. À partir de là la base fait
-  foi ; `BDE_REIMPORT=1` remplace les réglages par le contenu des fichiers (déploiements pilotés par fichiers).
-  Première étape vers une installation et des « Paramètres » dans le navigateur.
-- **Volume Docker `secrets`** : la clé des sessions, la clé de chiffrement et le mot de passe de PostgreSQL sont
-  **générés tout seuls** une fois. `docker compose up` **n'a plus besoin de `.env`** (une installation existante
-  garde son `AUTH_SECRET` et son `POSTGRES_PASSWORD`, repris dans le volume). **Il faut le sauvegarder** :
-  `scripts/backup.sh` fait maintenant deux archives (`bde-backup-*` pour la base, `bde-secrets-*` pour les clés, à
-  garder à deux endroits différents) et `scripts/restore.sh --secrets` remet les clés ; sans elles, les secrets d'une
-  base restaurée sur un autre serveur ne sont plus déchiffrables.
-
-- **Page « Paramètres »** (propriétaires uniquement) : tout ce que l'installateur demande (nom, couleur, langue des
-  messages, adresse, application 42, campus, propriétaires, modules, notifications avec message de test) se modifie
-  depuis la plateforme, section par section. Chaque enregistrement est validé, écrit avec son entrée du **journal
-  d'audit** dans une seule transaction, puis appliqué **tout de suite** (ni redémarrage ni reconstruction) ; les
-  secrets ne reviennent jamais au navigateur et le journal dit seulement « modifié ». L'application 42 est vérifiée
-  auprès de 42 **avant** d'être enregistrée. **Les propriétaires se gèrent ici** (confirmation, jamais soi-même,
-  jamais zéro propriétaire, login vérifié sur l'intra) : ils ne viennent plus uniquement de `bde.config.yml`. Les
-  rappels du module Événements démarrent et s'arrêtent avec le module. Un rappel de sauvegarder le volume `secrets`
-  reste visible en haut de la page. Quand 42 refuse l'application, la page de connexion demande de prévenir un
-  propriétaire, et un propriétaire connecté voit un bandeau avec un lien vers la page. `BDE_REIMPORT=settings`
-  remet dans les réglages les seules valeurs de `.env` si plus personne ne peut se connecter.
-- **Logo envoyé depuis Paramètres.** Un propriétaire envoie l'image de son BDE (PNG, JPEG, GIF ou WebP, 2 Mo au
-  plus, de 64 à 4096 pixels ; **pas de SVG**) : le format est lu dans les octets du fichier, jamais d'après son nom.
-  Il est rangé dans un nouveau volume Docker `uploads`, servi par `/api/logo` (public, `nosniff`, politique de contenu
-  qui interdit tout) et utilisé tout de suite dans le menu, sur la page de connexion et dans les messages Discord,
-  Slack et e-mail. Un nouveau logo a une nouvelle adresse : rien n'affiche l'ancien. Un bouton revient au logo fourni.
-  `scripts/backup.sh` et `scripts/restore.sh` sauvegardent et restaurent le logo avec l'archive de la base.
-- **Catégories d'événements et heure du rappel modifiables dans Paramètres** (module Événements activé) : renommer,
-  recolorer, ajouter, retirer. Une catégorie que des événements utilisent encore ne se retire qu'en choisissant celle
-  où les déplacer (fait dans la même transaction, inscrit au journal d'audit avec le nombre d'événements) ; il en reste
-  toujours au moins une. L'heure du rappel s'applique au prochain passage de la boucle, sans redémarrage.
-- **Adresse de contact** (page de confidentialité) : demandée par l'installateur (facultatif) et modifiable dans Paramètres.
-- **Sélecteur de langue FR/EN** dans le menu de la plateforme et sur les pages publiques (connexion, confidentialité,
-  attente, erreur) : la page reste la même et le choix est retenu.
-- **Le démarrage rapide des README (FR et EN) et `docs/installation.md` ne décrivent plus que l'installation dans le
-  navigateur** : installer Docker, cloner, `docker compose up` sans `-d` la première fois, l'encadré avec le code (ou
-  l'onglet Logs de Docker Desktop), les étapes, puis `docker compose up -d`. Les README montrent l'installateur et la
-  page Paramètres ; `docs/deployment.md` est réécrit dans le même sens (plus de `.env` à remplir).
-
-### Fixed
-
-- **« Se connecter avec 42 » échouait après une installation neuve** (`invalid_grant`, « does not match the
-  redirection URI », puis une redirection vers `http://0.0.0.0:3000/...`). Dans l'image de production le serveur écoute
-  sur `0.0.0.0` et Next.js construit alors chaque `request.url` à partir de cette adresse : au retour de 42, Auth.js
-  donnait `http://0.0.0.0:3000/api/auth/callback/42-school` comme `redirect_uri` pour échanger le code, alors que
-  l'autorisation avait été demandée avec `http://localhost:3000/...`. Toutes les adresses que la plateforme envoie
-  (le `redirect_uri` à l'aller **et** au retour, les redirections de la page d'erreur, les liens des notifications
-  et des cartes Discord, Slack et e-mail) viennent maintenant d'**une seule fonction**, qui part de l'adresse
-  enregistrée dans les réglages (`src/lib/public-address.ts`) ; à défaut, de l'adresse que le navigateur a utilisée,
-  jamais de celle d'écoute. `127.0.0.1` est écrit `localhost` partout (Next.js le fait de lui-même : sans cela, aller
-  et retour auraient eu deux orthographes). Test de non-régression : un vrai serveur qui écoute sur `0.0.0.0`, les
-  vrais routeurs NextAuth, et un faux 42 qui refuse un code dont le `redirect_uri` n'est pas celui de l'autorisation ;
-  la CI rejoue en plus la connexion complète dans un navigateur contre l'image.
-- **`0.0.0.0` n'est plus jamais proposé ni accepté comme adresse** : l'installateur et la page Paramètres le refusent
-  avec une explication, l'adresse proposée par défaut vaut `localhost` quand le navigateur est sur `0.0.0.0`, et une
-  adresse `0.0.0.0` déjà enregistrée par une version précédente est ignorée (avertissement au démarrage) au lieu de
-  bloquer la connexion. Le terminal n'affiche plus `Network: http://0.0.0.0:3000` : il indique l'adresse à ouvrir
-  (`http://localhost:3000`, ou le port de `APP_PORT`).
-- **Installation : un avertissement quand l'adresse saisie n'est pas celle du navigateur.** 42 renvoie le visiteur vers
-  l'adresse enregistrée ; depuis un autre nom ou un autre port, la connexion ne peut pas aboutir. Le message ne
-  bloque pas (installer depuis un autre ordinateur est légitime) ; il apparaît aussi dans Paramètres.
-- **Moyen de secours quand l'adresse enregistrée est fausse** (plus personne ne peut se connecter pour la corriger) :
-  `APP_URL=<adresse>` et `BDE_REIMPORT=settings` dans `.env`, puis `docker compose up -d` (voir
-  `docs/installation.md`). L'adresse est maintenant vérifiée comme dans l'installateur, et le journal dit l'ancienne
-  et la nouvelle valeur.
-- **Un problème de démarrage que l'opérateur peut corriger est maintenant affiché dans le navigateur, au lieu
-  d'un redémarrage en boucle silencieux** (`restart: unless-stopped` + une explication seulement dans
-  `docker compose logs`, en partie en anglais). Un petit superviseur (`docker/start.mjs`) remplace la commande
-  `sh -c "migrate && serveur"` : `.env` ou `bde.config.yml` inutilisable, mot de passe de la base refusé
-  (`POSTGRES_PASSWORD` changé après coup), base qui ne répond pas, migration qui échoue. Il reste en vie et sert
-  une **page 503 en français ou en anglais** (selon le navigateur, au style de la plateforme) qui nomme le
-  problème et donne les commandes ; `/api/health` répond 503 (le conteneur apparaît « unhealthy »). Une base
-  absente est attendue et la plateforme démarre toute seule dès qu'elle répond. **Aucun secret n'y apparaît**
-  (phrases fixes, noms de variables, code Prisma ; la sortie de Prisma est expurgée des secrets dans les logs).
-  Un vrai plantage de l'application arrête toujours le conteneur.
-- **Un mot de passe PostgreSQL contenant `@`, `/`, `:`, `?` ou `#` cassait l'adresse de la base** (construite sans
-  encodage par `docker-compose.yml`) et Prisma en affichait des morceaux dans les logs. L'adresse est maintenant
-  construite par le conteneur, encodée.
-- **Une clé secrète 42 expirée ou régénérée n'était visible que par « La connexion a échoué. Merci de réessayer. »**
-  La plateforme interroge 42 (jeton de l'application, sans membre) : la page de connexion explique que l'application
-  est refusée et désactive le bouton, la page d'erreur de connexion aussi, et un avertissement est écrit au
-  démarrage. L'erreur « Configuration » d'Auth.js reçoit un texte clair.
-- **L'application bouclait avec « bde.config.yml est introuvable » alors que le fichier existait**, sur les postes où
-  Docker tourne sans droits administrateur (rootless) ou dont le dossier personnel est sur un partage réseau. La
-  cause : `bde.config.yml` était **monté** dans le conteneur ; ce montage est fait par le démon Docker, qui ne voyait
-  pas le dossier ou dont l'utilisateur du conteneur n'avait pas le droit de lire le fichier (un `chmod 644` n'y
-  changeait rien), et le message répondait « introuvable » dans tous les cas. Le fichier est désormais **copié dans
-  l'image à la construction** (le client Docker l'envoie avec ses propres droits) et plus rien n'est monté :
-  la modification de `bde.config.yml` demande `docker compose up -d --build` au lieu de `restart`.
-- Le message d'erreur distingue maintenant **fichier absent, dossier à la place du fichier, fichier illisible
-  (avec le code d'erreur), fichier vide et fichier invalide**, avec le chemin exact vérifié et la marche à suivre ;
-  une configuration inutilisable fait échouer la **construction** de l'image, au lieu d'un démarrage en boucle.
-- `docs/installation.md` : entrée « Problèmes fréquents » et commande de diagnostic de ce que voit le conteneur.
+- **Browser installation.** `docker compose up`, open the address, and a page guides you step by step to the end, in
+  English or French, with a progress bar and a Back button: name, color, language, public address, 42 OAuth
+  application (step by step, redirect address to copy, **credentials checked right away with the 42 API**),
+  **campuses chosen from the list of 42 with a search**, **owners checked** with 42, Events module, notifications
+  with a **test message** (Discord, Slack, email), summary. No configuration file, no `.env`. The secrets entered
+  never go back to the browser and are encrypted in the database.
+- **Installer protection**: as long as the platform is not installed, the page only opens with a **one-time code**
+  (`K7QM-4XPD`) that the server writes to its logs, in a box that is easy to see in the `docker compose up`
+  terminal. New at every start, a progressive lock after 5 wrong tries, a 2-hour session (`HttpOnly`,
+  `SameSite=Strict` cookie). The rest of the site answers "not installed" and **the installer disappears for good**
+  once finished.
+- **The platform's settings live in its database** (`PlatformSettings`), instead of two files read at start. At
+  the first start after the update, `bde.config.yml` and `.env`, if they are complete, are **copied into the
+  database** (nothing to do): the secrets (the 42 application's key, the SMTP password, webhooks) are **encrypted**
+  there (AES-256-GCM) with a key that is not in the database. From then on the database is the source of truth;
+  `BDE_REIMPORT=1` replaces the settings with the content of the files (files-driven deployments).
+- **`secrets` Docker volume**: the session key, the encryption key and the PostgreSQL password are **generated by
+  themselves** once. `docker compose up` **no longer needs a `.env`** (an existing installation keeps its
+  `AUTH_SECRET` and `POSTGRES_PASSWORD`, taken into the volume). **It must be backed up**: `scripts/backup.sh` now
+  makes two archives (`bde-backup-*` for the database, `bde-secrets-*` for the keys, to keep in two different
+  places) and `scripts/restore.sh --secrets` puts the keys back; without them, the secrets of a database restored
+  on another server can no longer be decrypted.
+- **"Settings" page** (owners only): everything the installer asks (name, color, message language, address, 42
+  application, campuses, owners, modules, notifications with a test message) can be changed from the platform,
+  section by section. Each save is validated, written with its **audit log** entry in a single transaction, then
+  applied **at once** (no restart, no rebuild); secrets never go back to the browser and the log only says
+  "changed". The 42 application is checked with 42 **before** being saved. **Owners are managed here**
+  (confirmation, never oneself, never zero owners, login checked on the intra): they no longer come only from
+  `bde.config.yml`. The Events module's reminders start and stop with the module. A reminder to back up the
+  `secrets` volume stays visible at the top of the page. When 42 refuses the application, the sign-in page asks to
+  warn an owner, and a signed-in owner sees a banner with a link to the page. `BDE_REIMPORT=settings` puts only the
+  values of `.env` back into the settings if nobody can sign in any more.
+- **Logo uploaded from Settings.** An owner uploads the BDE's image (PNG, JPEG, GIF or WebP, 2 MB at most, 64 to
+  4096 pixels; **no SVG**): the format is read from the file's bytes, never from its name. It is kept in a new
+  `uploads` Docker volume, served by `/api/logo` (public, `nosniff`, a content policy that forbids everything) and
+  used at once in the menu, on the sign-in page and in Discord, Slack and email messages. A new logo has a new
+  address: nothing shows the old one. A button goes back to the logo that ships with the platform.
+  `scripts/backup.sh` and `scripts/restore.sh` back up and restore the logo with the database archive.
+- **Event categories and the reminder hour can be edited in Settings** (Events module on): rename, recolor, add,
+  remove. A category that events still use is only removed by choosing the one to move them to (done in the same
+  transaction, written to the audit log with the number of events); at least one always stays. The reminder hour
+  applies at the loop's next pass, with no restart.
+- **Contact address** (privacy page): asked by the installer (optional) and editable in Settings.
+- **FR/EN language switcher** in the platform's menu and on public pages (sign-in, privacy, waiting, error): the page
+  stays the same and the choice is remembered.
+- **Complete, bilingual documentation** in `docs/en/` and `docs/fr/` (the same pages in both languages), with an
+  index by type of reader (non-technical BDE president, person who installs, contributor): a glossary, a FAQ, a
+  troubleshooting page, and an **upgrade guide** (backup, command, checks, rolling back) that was tried for real from
+  version 1.0.0. The contributor guide has Mermaid diagrams of the architecture and of the sign-in. All screenshots
+  were retaken from the real application (production image, demo data, light theme, in both languages, installer and
+  Settings included): `docs/images/{en,fr}/`.
+- **`README.md` / `README.fr.md`, `CONTRIBUTING.md` / `CONTRIBUTING.fr.md` and `CODE_OF_CONDUCT.md` /
+  `CODE_OF_CONDUCT.fr.md`**: in English and in French, linked to each other.
+- **CI for the documentation**: a `docs` job, required on `main` (internal links and anchors, images' alternative
+  text, French and English pages that are twins, markdownlint on top of Prettier), and a weekly check of external
+  links (`.github/workflows/links.yml`, which opens an issue when a link breaks).
+- `scripts/docs-screenshots.mjs` takes the documentation's screenshots again; `SEED_LOCALE=en` writes the demo data
+  in English.
 
 ### Changed
 
-- **Cartes Discord plus aérées et plus lisibles**, les mêmes pour tous les types (confirmation, rappels, demande
-  d'accès, membre approuvé ou retiré) : l'essentiel en grands titres avec une icône devant chacun (📅 quand, 📍 où, la
-  description en citation ; 🪪 login et 🏫 campus pour un membre), des lignes vides entre les blocs, le secondaire en
-  petits champs côte à côte (🏷️ catégorie, 👥 en charge, 🔁 répétition, 🎭 rôle, 🤝 / 🚪 qui a agi), une icône par type
-  dans le titre, le nom et le logo du BDE au-dessus du titre et le logo en vignette des événements (la photo 42
-  pour un membre). Une demande d'accès se termine par un lien « Approuver ou refuser ». Mentions neutralisées,
-  limites de taille, dates Discord et repli sans logo public : inchangés.
-- **Le build ne lit plus `bde.config.yml`** : un fichier absent ou cassé n'empêche plus de reconstruire l'image (il
-  ne sert plus que de modèle à l'import du premier démarrage). La configuration d'Auth.js est construite à chaque
-  requête, pour suivre les réglages.
-- La page « La base de données refuse la connexion » parle maintenant du volume `secrets`.
-- La référence d'architecture et de conventions est maintenant **`docs/architecture.md`** (elle était dans un
-  fichier à la racine du dépôt) ; tous les liens y mènent.
+- **Discord cards that are airier and easier to read**, the same for every type (confirmation, reminders, access
+  request, member approved or removed): the essentials as large headings with an icon in front of each (📅 when, 📍
+  where, the description as a quote; 🪪 login and 🏫 campus for a member), blank lines between blocks, the secondary
+  details as small fields side by side (🏷️ category, 👥 in charge, 🔁 repeats, 🎭 role, 🤝 / 🚪 who acted), an icon
+  per type in the title, the BDE's name and logo above the title and the logo as the thumbnail of events (the 42
+  photo for a member). An access request ends with an "Approve or decline" link. Neutralized mentions, size limits,
+  Discord dates and the fallback without a public logo are unchanged.
+- **The build no longer reads `bde.config.yml`**: a missing or broken file no longer prevents rebuilding the image
+  (it is now only the template for the first start's import). Auth.js's configuration is built at every request, to
+  follow the settings.
+- The "The database refuses the connection" page now talks about the `secrets` volume.
+- The architecture and conventions reference is now **`docs/architecture.md`** (it was in a file at the root of the
+  repository); all links lead there. The documentation moved to `docs/en/` and `docs/fr/`, and
+  `docs/design.md` is now in English.
+- Texts of the interface that still sent owners to `bde.config.yml` (the Members page note, the role error for an
+  owner, the dashboard's empty state) now point to **Settings**, as does the 42 refusal warning of the start-up log.
+
+### Fixed
+
+- **"Sign in with 42" failed after a fresh installation** (`invalid_grant`, "does not match the redirection URI",
+  then a redirection to `http://0.0.0.0:3000/...`). In the production image the server listens on `0.0.0.0` and
+  Next.js then builds every `request.url` from that address: on the way back from 42, Auth.js gave
+  `http://0.0.0.0:3000/api/auth/callback/42-school` as the `redirect_uri` to exchange the code, while the
+  authorization had been asked with `http://localhost:3000/...`. Every address the platform sends (the
+  `redirect_uri` on the way out **and** on the way back, the error page's redirects, the links of notifications and
+  of Discord, Slack and email cards) now comes from **one function**, which starts from the address registered in
+  the settings (`src/lib/public-address.ts`); failing that, from the address the browser used, never the one the
+  server listens on. `127.0.0.1` is written `localhost` everywhere (Next.js does it by itself: without that, the way
+  out and the way back would have had two spellings). Regression test: a real server listening on `0.0.0.0`, the
+  real NextAuth routers, and a fake 42 that refuses a code whose `redirect_uri` is not the authorization's; CI also
+  replays the complete sign-in in a browser against the image.
+- **`0.0.0.0` is never proposed nor accepted as an address any more**: the installer and the Settings page refuse it
+  with an explanation, the default proposed address is `localhost` when the browser is on `0.0.0.0`, and a `0.0.0.0`
+  address already saved by a previous version is ignored (a warning at start) instead of blocking sign-in. The
+  terminal no longer shows `Network: http://0.0.0.0:3000`: it shows the address to open (`http://localhost:3000`,
+  or the port of `APP_PORT`).
+- **Installation: a warning when the address typed is not the browser's.** 42 sends the visitor back to the
+  registered address; from another name or port, signing in cannot succeed. The message does not block
+  (installing from another computer is legitimate); it also shows in Settings.
+- **A rescue when the registered address is wrong** (nobody can sign in to fix it): `APP_URL=<address>` and
+  `BDE_REIMPORT=settings` in `.env`, then `docker compose up -d` (see `docs/en/troubleshooting.md`). The address is now
+  checked as in the installer, and the log says the old and the new value.
+- **`scripts/restore.sh` did not replace the database, it completed it.** A backup only drops what it contains, so
+  restoring a backup made before an update left the tables added since (for example `PlatformSettings`), and the
+  platform then failed to start ("relation already exists"). Found by trying the rollback of the upgrade guide for
+  real. The restore now starts from an empty schema.
+- The demo data (`npm run seed:demo`) read the configuration files even on an installed platform: it now reads the
+  saved settings, so the demo events use the BDE's real categories.
+- **A startup problem the operator can fix is now shown in the browser, instead of a silent restart loop**
+  (`restart: unless-stopped` + an explanation only in `docker compose logs`, partly in English). A small supervisor
+  (`docker/start.mjs`) replaces the `sh -c "migrate && server"` command: unusable `.env` or `bde.config.yml`,
+  refused database password (`POSTGRES_PASSWORD` changed afterwards), a database that does not answer, a failing
+  migration. It stays alive and serves a **503 page in French or English** (according to the browser, in the
+  platform's style) that names the problem and gives the commands; `/api/health` answers 503 (the container shows as
+  "unhealthy"). A database that is not there yet is waited for, and the platform starts by itself as soon as it
+  answers. **No secret appears in it** (fixed sentences, variable names, a Prisma code; Prisma's output is stripped
+  of secrets in the logs). A real crash of the application still stops the container.
+- **A PostgreSQL password containing `@`, `/`, `:`, `?` or `#` broke the database address** (built without encoding
+  by `docker-compose.yml`) and Prisma printed pieces of it in the logs. The address is now built by the container,
+  encoded.
+- **An expired or regenerated 42 secret was only visible as "Sign-in failed. Please try again."** The platform now
+  asks 42 (the application's token, with no member): the sign-in page explains that the application is refused and
+  disables the button, the sign-in error page too, and a warning is written at start. Auth.js's "Configuration"
+  error gets a clear text.
+- **The application looped with "bde.config.yml not found" although the file existed**, on computers where Docker
+  runs without administrator rights (rootless) or whose home folder is on a network share. The cause:
+  `bde.config.yml` was **mounted** into the container; the mount is made by the Docker daemon, which did not see
+  the folder or whose container user was not allowed to read the file (a `chmod 644` changed nothing), and the
+  message said "not found" in every case. The file is now **copied into the image at build time** (the Docker client
+  sends it with its own rights) and nothing is mounted any more: changing `bde.config.yml` takes
+  `docker compose up -d --build` instead of `restart`.
+- The error message now tells apart **missing file, folder in place of the file, unreadable file (with the error
+  code), empty file and invalid file**, with the exact path checked and what to do; an unusable configuration makes
+  the image **build** fail, instead of a start-up loop.
 
 ## [1.0.0] - 2026-10-06
 
-Première version stable de BDE_Network : une plateforme libre et auto-hébergée pour les Bureaux Des
-Étudiants des écoles du réseau 42. Chaque BDE déploie sa propre instance, avec sa base de données, son
-`bde.config.yml` et son application OAuth 42. Cette version apporte le module **Événements** (calendrier,
-récurrence, agenda synchronisé, rappels), des **rôles personnalisés** à l'abri de toute escalade de
-privilèges, des **notifications** soignées sur Discord, Slack et par e-mail, l'installation par Docker avec
-sauvegarde et restauration, et une documentation en français et en anglais. Les modules Finances et Réunions
-viennent ensuite.
+First stable version of BDE_Network: a free, self-hosted platform for the Bureaux Des Étudiants of the 42 network
+schools. Each BDE deploys its own instance, with its own database, its own `bde.config.yml` and its own 42 OAuth
+application. This version brings the **Events** module (calendar, repetition, synced calendar, reminders), **custom
+roles** safe from any privilege escalation, polished **notifications** on Discord, Slack and by email, Docker
+installation with backup and restore, and documentation in French and English. The Finances and Meetings modules
+come next.
 
 ### Added
 
-- **README en anglais (`README.md`) et en français (`README.fr.md`)**, qui décrivent la plateforme
-  telle qu'elle est : module Événements, rôles personnalisés, agenda synchronisé, notifications ;
-  Finances et Réunions seulement dans une courte feuille de route. De **vraies captures d'écran**
-  (tableau de bord, calendrier, événement, rôles, mobile ; thème clair, interface dans la langue du
-  README) prises sur les données de démonstration, en WebP dans `docs/images/{en,fr}/`.
-- **Installation en deux parcours** (`docs/installation.md`) : « Pour le bureau » (ce que le BDE décide
-  et écrit dans `bde.config.yml`, sans notion technique, puis les rôles dans l'interface) et « Pour la
-  personne technique » (serveur, Docker, domaine, HTTPS). Pas à pas de la création de l'application
-  OAuth sur l'intra 42 (URL de redirection exacte, scope `public`, où trouver UID et secret, erreur
-  `redirect_uri_mismatch`, **expiration du secret**) et section « Problèmes fréquents ».
-- **`SECURITY.md`** (signalement privé par GitHub), modèles d'issues (bug, fonctionnalité) et de
-  pull request, contact du Code de conduite (Discord).
-- `APP_PORT` pour publier l'application sur un autre port que 3000.
-
-- **Confirmer un événement** demande confirmation (fenêtre au style normal, non destructif) et dit
-  si les membres seront prévenus : par e-mail, dans le salon Discord/Slack, ou pas du tout si aucune
-  notification n'est configurée — ou qu'ils l'ont déjà été (la notification n'est envoyée qu'une fois).
-- **Un titre par page** (« Membres · BDE Exemple »), un lien d'évitement « Aller au contenu », et la
-  description du site traduite.
-- **Page de confidentialité complétée** : e-mails et notifications (dont Discord/Slack), lien d'agenda
-  personnel, cookies exacts (session, sécurité de connexion, langue). Nouvelle clé facultative
-  `bde.contactEmail` pour afficher une vraie adresse de contact.
-- Avertissement au démarrage quand `modules.enabled` contient un module qui n'existe pas (faute de frappe).
-- `engines` (`node >= 22`) dans `package.json`.
-- Sauvegarde et restauration sous Windows : mode d'emploi (Git Bash, PowerShell, WSL), testé.
-
-- **Fenêtre de confirmation unique** (`ConfirmDialog`) pour toute action destructive ou irréversible :
-  une boîte de dialogue centrée par-dessus la page, avec un titre clair, une phrase d'explication, un
-  bouton d'action en style destructif et **Annuler**. Le focus démarre sur Annuler et reste piégé dans la
-  fenêtre ; Échap et un clic à l'extérieur annulent ; le focus revient sur le bouton d'origine ; pendant
-  l'envoi le bouton est occupé et ne peut pas être pressé deux fois. Elle remplace les blocs dépliés sous
-  l'élément (qu'il fallait faire défiler pour voir) pour : refuser une demande, retirer un membre,
-  supprimer un rôle, supprimer un événement ou toute sa série, annuler une date, régénérer ou désactiver
-  le lien d'agenda du BDE, régénérer son lien personnel. **Changer le rôle d'un membre** demande
-  désormais aussi confirmation (en indiquant l'ancien et le nouveau rôle). Documenté dans
-  `docs/design.md` et `docs/architecture.md` pour les futurs modules.
-
-- **Notifications sur les membres** (`memberPending`, `memberApproved`, `memberRemoved`), qui ne
-  faisaient rien jusqu'ici : une nouvelle demande d'accès prévient les propriétaires et les rôles qui
-  ont « Gérer les membres » (e-mail) ou le salon (Discord / Slack) ; une approbation prévient le
-  membre par e-mail (ou le salon) ; un retrait écrit dans le salon seulement, **jamais d'e-mail à la
-  personne retirée**. Envoyées après l'action : un échec d'envoi est journalisé et ne bloque rien.
-  Un canal non configuré dans `.env` donne un avertissement au démarrage, pas une erreur.
-- **Pages d'erreur en français et en anglais**, dans le style de la plateforme : page introuvable
-  (y compris pour une adresse inconnue), erreur de page avec « Réessayer » et « Retour au tableau de
-  bord » (seule la référence de l'erreur est affichée, jamais son message), et une page de dernier
-  recours si la structure même du site échoue.
-- **Confirmation avant « Refuser »** une demande d'accès, comme pour « Retirer du BDE ».
-
-- **Rôles personnalisés** : chaque BDE crée ses rôles (Président, Trésorier, Secrétaire,
-  Responsable événements…) depuis la nouvelle page **Rôles** et coche les droits exacts de chacun
-  (gérer les membres, gérer les rôles, consulter / gérer chaque module activé, gérer l'agenda
-  partagé). Un membre a **un seul rôle**, choisi dans un menu de la page _Membres_, où l'on choisit
-  aussi le rôle à l'approbation d'une demande. Deux rôles modifiables existent dès l'installation :
-  **Admin** (tous les droits sauf le journal d'audit, y compris ceux des futurs modules) et
-  **Membre**. Le propriétaire (OWNER, défini dans `bde.config.yml`) garde tous les droits ; le
-  journal d'audit reste réservé au propriétaire. Voir [docs/roles.md](docs/roles.md).
-- **Règles anti-escalade de privilèges**, vérifiées côté serveur dans la transaction qui écrit :
-  nul ne donne un droit qu'il n'a pas, ne modifie son propre rôle ni un rôle qui lui est supérieur,
-  ne change le rôle d'un propriétaire ou d'un membre plus puissant que lui ; un rôle encore
-  attribué ou par défaut ne se supprime pas. Chaque création, modification, suppression et
-  attribution de rôle est inscrite au journal d'audit (`role.*`, `member.*`). Les règles sont
-  vérifiées par plus de 130 tests et par mutation.
-- Retrait d'un membre : confirmation avant suppression, et refus clairement expliqués (messages
-  traduits) quand une action est interdite.
-- CI : un job `migrations` rejoue la migration des rôles sur PostgreSQL et vérifie l'absence de
-  dérive avec `schema.prisma`.
-
-- **Vérification du `.env` au démarrage**, avec des messages en français compréhensibles par un
-  non-développeur : `AUTH_SECRET` (32 caractères minimum), identifiants 42, `DATABASE_URL`, et les
-  variables SMTP/webhook des notifications du module Événements réellement utilisées. Un avertissement
-  clair signale le login « votre-login-42 » encore présent dans `auth.owners`, ou une `APP_URL` en
-  `http://` sur une adresse publique.
-- **Page « Service momentanément indisponible »** (FR/EN) quand la base de données ne répond pas :
-  elle rassure, et ramène toute seule à la plateforme dès que le service revient. Nouvelle route
-  `/api/health` et `HEALTHCHECK` Docker.
-- **En-têtes de sécurité HTTP** : Content-Security-Policy, X-Frame-Options, nosniff, Referrer-Policy,
-  Permissions-Policy, HSTS (seulement derrière un proxy HTTPS). `X-Powered-By` n'est plus envoyé.
-- **Sauvegarde et restauration sans Node.js** (`scripts/backup.sh`, `scripts/restore.sh`) : une seule
-  archive avec la base **et les fichiers envoyés**, rotation (`--keep`), restauration avec confirmation
-  explicite, copie de sécurité automatique et retour arrière si la restauration de la base échoue.
-- CI : job « docker image » (construit l'image, la démarre sur PostgreSQL, vérifie la santé et les
-  en-têtes).
+- **README in English (`README.md`) and in French (`README.fr.md`)**, which describe the platform as it is: Events
+  module, custom roles, synced calendar, notifications; Finances and Meetings only in a short roadmap. **Real
+  screenshots** (dashboard, calendar, event, roles, mobile; light theme, interface in the README's language) taken
+  on the demo data, as WebP in `docs/images/{en,fr}/`.
+- **Installation in two paths** (`docs/installation.md`): "For the board" (what the BDE decides and writes in
+  `bde.config.yml`, with no technical notion, then the roles in the interface) and "For the technical person"
+  (server, Docker, domain, HTTPS). A step by step to create the OAuth application on the 42 intra (exact redirect
+  URL, `public` scope, where to find the UID and the secret, the `redirect_uri_mismatch` error, **the secret's
+  expiry**) and a "Common problems" section.
+- **`SECURITY.md`** (private reporting through GitHub), issue templates (bug, feature) and a pull request template,
+  Code of Conduct contact (Discord).
+- `APP_PORT` to publish the application on a port other than 3000.
+- **Confirming an event** asks for confirmation (a dialog in the normal, non-destructive style) and says whether
+  members will be notified: by email, in the Discord or Slack channel, or not at all if no notification is set up —
+  or if they already were (the notification is only sent once).
+- **A title per page** ("Members · BDE Exemple"), a "Skip to the content" link, and the site's description
+  translated.
+- **Completed privacy page**: emails and notifications (Discord and Slack included), personal calendar link, the
+  exact cookies (session, sign-in security, language). A new optional key `bde.contactEmail` shows a real contact
+  address.
+- A warning at start when `modules.enabled` contains a module that does not exist (a typo).
+- `engines` (`node >= 22`) in `package.json`.
+- Backup and restore on Windows: instructions (Git Bash, PowerShell, WSL), tested.
+- **A single confirmation dialog** (`ConfirmDialog`) for every destructive or irreversible action: a dialog centered
+  over the page, with a clear title, a sentence of explanation, an action button in destructive style and
+  **Cancel**. Focus starts on Cancel and stays trapped in the dialog; Escape and a click outside cancel; focus
+  returns to the button it came from; while sending, the button is busy and cannot be pressed twice. It replaces the
+  blocks that unfolded under the element (which you had to scroll to see) for: rejecting a request, removing a
+  member, deleting a role, deleting an event or its whole series, canceling a date, regenerating or turning off the
+  BDE calendar link, regenerating your personal link. **Changing a member's role** now asks for confirmation too
+  (showing the old and the new role). Documented in `docs/design.md` and `docs/architecture.md` for future modules.
+- **Notifications about members** (`memberPending`, `memberApproved`, `memberRemoved`), which did nothing until
+  now: a new access request notifies the owners and the roles that have "Manage members" (email) or the channel
+  (Discord / Slack); an approval notifies the member by email (or the channel); a removal writes in the channel
+  only, **never an email to the removed person**. Sent after the action: a failed send is logged and blocks
+  nothing. A channel not set up in `.env` gives a warning at start, not an error.
+- **Error pages in French and English**, in the platform's style: page not found (including for an unknown address),
+  page error with "Try again" and "Back to the dashboard" (only the error's reference is shown, never its message),
+  and a last-resort page if the site's very structure fails.
+- **Confirmation before "Reject"** on an access request, as for "Remove from BDE".
+- **Custom roles**: each BDE creates its roles (President, Treasurer, Secretary, Events lead…) from the new
+  **Roles** page and ticks the exact rights of each (manage members, manage roles, view / manage each module that is
+  on, manage the shared calendar). A member has **one role**, chosen in a menu of the _Members_ page, where you
+  also choose the role when approving a request. Two editable roles exist from the installation: **Admin** (all
+  rights except the audit log, including those of future modules) and **Membre**. The owner (OWNER, defined in
+  `bde.config.yml`) keeps every right; the audit log stays reserved for the owner. See
+  [docs/en/roles.md](docs/en/roles.md).
+- **Anti privilege-escalation rules**, checked on the server in the transaction that writes: nobody gives a right
+  they do not have, edits their own role or a role above theirs, changes the role of an owner or of a more powerful
+  member; a role that is still given or is the default cannot be deleted. Every creation, edit, deletion and
+  assignment of a role is written to the audit log (`role.*`, `member.*`). The rules are checked by over 130 tests
+  and by mutation.
+- Removing a member: confirmation before deleting, and clearly explained refusals (translated messages) when an
+  action is forbidden.
+- CI: a `migrations` job replays the roles migration on PostgreSQL and checks there is no drift with
+  `schema.prisma`.
+- **`.env` check at start**, with messages in French a non-developer can understand: `AUTH_SECRET` (32 characters at
+  least), 42 credentials, `DATABASE_URL`, and the SMTP / webhook variables of the Events module's notifications that
+  are really used. A clear warning flags the login "votre-login-42" still in `auth.owners`, or an `http://`
+  `APP_URL` on a public address.
+- **"Service temporarily unavailable" page** (FR/EN) when the database does not answer: it reassures, and brings
+  back to the platform by itself as soon as the service is back. A new `/api/health` route and a Docker
+  `HEALTHCHECK`.
+- **HTTP security headers**: Content-Security-Policy, X-Frame-Options, nosniff, Referrer-Policy,
+  Permissions-Policy, HSTS (only behind an HTTPS proxy). `X-Powered-By` is no longer sent.
+- **Backup and restore without Node.js** (`scripts/backup.sh`, `scripts/restore.sh`): a single archive with the
+  database **and the uploaded files**, rotation (`--keep`), restore with an explicit confirmation, an automatic
+  safety copy and a rollback if the database restore fails.
+- CI: a "docker image" job (builds the image, starts it on PostgreSQL, checks health and headers).
 
 ### Changed
 
-- **Notifications Discord en cartes (embeds)** (`docs/notifications.md`) : barre de couleur (celle de la
-  catégorie pour un événement ; ambre / vert / rouge pour une demande / une approbation / un retrait),
-  titre cliquable sans carte d'aperçu en double, champs en colonnes (Quand, Lieu, Catégorie, Membres en
-  charge), dates au format Discord (`<t:…:F>` et `<t:…:R>` : fuseau de chaque lecteur et compte à rebours),
-  expéditeur au nom du BDE avec son logo, photo 42, rôle et **auteur de l'action** (« Approuvé par », « Retiré
-  par ») pour les membres, pied de carte discret. Le rappel dit « aujourd'hui » quand il part le jour même
-  (rattrapage après une panne), « demain » sinon (aussi en Slack et e-mail). Mentions neutralisées dans tous
-  les textes de la carte, limites de taille de Discord respectées (texte coupé avec « … » ; description
-  d'événement limitée à 350 caractères). Slack et e-mail inchangés.
-- **Notifications Slack en cartes (Block Kit)** (`docs/notifications.md`) : barre de couleur (celle de la
-  catégorie ; ambre / vert / rouge pour les membres, comme sur Discord), titre en en-tête, champs en colonnes
-  (Quand, Lieu, Catégorie, Membres en charge, Répétition), bouton « Voir l'événement » / « Valider ou
-  refuser », dates au format Slack (`<!date^…>`, dans le fuseau de chaque lecteur, avec texte de repli), pied
-  avec le logo du BDE (nom seul s'il n'est pas public) et `BDE_Network`, photo 42, rôle et « Approuvé par » /
-  « Retiré par » pour les membres, « aujourd'hui » / « demain » pour les rappels. Le résumé pour les
-  notifications du téléphone est le champ `fallback` de la pièce jointe : le message n'a **pas** de `text` de
-  premier niveau, que Slack afficherait dans le salon au-dessus de la carte (tout serait dit deux fois). Mentions
-  neutralisées partout (`@here`, `@channel`, `@everyone`, `<!channel>`, `<@U…>`, liens), textes coupés
-  proprement aux limites de Slack.
-- **Manifeste d'application Slack et lien pré-rempli** (`docs/slack-app-manifest.yml`) : nom `BDE_Network`,
-  webhooks entrants, aucune autre permission ; un test vérifie que le lien de la documentation est exactement ce
-  manifeste. La documentation indique que Discord reste l'option la plus simple.
-- **E-mails HTML mis en page** (`docs/notifications.md`), avec version texte de secours : logo et nom du BDE,
-  barre et bouton de la couleur de la catégorie, lignes Quand / Répétition / Lieu / Catégorie / Membres en
-  charge, bouton vers la page concernée, texte d'aperçu (preheader), pied discret. Tableaux et styles en ligne
-  (Gmail, Outlook y compris sur Windows avec bouton VML, Apple Mail, mobile), mode sombre. Confirmation
-  d'événement : fichier `.ics` joint (« Ajouter à l'agenda »). Rappel « aujourd'hui » / « demain ». Demande
-  d'accès (avec la photo 42) et approbation, mêmes soins ; FR / EN selon `bde.defaultLocale` ; tout texte saisi
-  par un membre est échappé.
-- Ligne « Répétition » courte (« Chaque semaine, jusqu'au 17 décembre 2026 ») dans les e-mails et les cartes
-  Discord ; en mode sombre, un fin liseré clair entoure le logo des e-mails.
-- **Mailpit dans `docker-compose.dev.yml`**, branché par défaut (`SMTP_HOST=mailpit`) : les e-mails de
-  développement se lisent sur <http://localhost:8025> sans serveur réel (`DEV_SMTP_*` pour en utiliser un).
-- **`public/logo.png`** : logo neutre fourni, utilisé comme avatar Discord quand `bde.logoPath` n'est pas une
-  image PNG/JPEG/GIF/WebP (Discord n'accepte pas le SVG) ; sans adresse publique (`APP_URL`), le message part
-  sans avatar.
-- **La section `notifications` de `bde.config.yml` est facultative** : sans elle, toutes les notifications
-  sont désactivées (les trois notifications de membres étaient obligatoires, ce qui faisait échouer la
-  construction de l'image pour un BDE qui n'avait rien à y mettre). Trouvé en suivant le guide
-  d'installation depuis un clone neuf.
-- **PostgreSQL ne publie plus de port** dans `docker-compose.yml` de production : seule l'application,
-  sur le réseau Docker, peut lui parler (`docker-compose.dev.yml` garde le port pour `npm run dev`).
-- `AUTH_SECRET` se génère avec Docker (`docker run --rm alpine sh -c "head -c 32 /dev/urandom | base64"`),
-  une commande qui marche sous Windows, Linux et macOS sans Node.js : la doc, `.env.example` et le
-  message du démarrage la donnent.
-- Guide utilisateur à jour (barre latérale, rôles, fenêtres de confirmation, déconnexion) et message
-  vide du tableau de bord : le module Événements n'est plus présenté comme « futur ».
-- En-tête des cartes (tableau de bord, membres, profil) : le titre et l'action sont enfin sur une
-  même ligne (la classe `flex` manquait).
-
-- **Moins de requêtes SQL** : la session est résolue **une seule fois par requête** (`React.cache`), au
-  lieu d'une fois par composant qui la demande. Mesuré sur la base : tableau de bord 13 → 7 requêtes,
-  membres 9 → 6, rôles 7 → 4, profil 7 → 4, événements 16 → 13.
-- **E-mails groupés** : une seule connexion SMTP pour tous les destinataires d'un envoi (au lieu d'une
-  par destinataire) ; une adresse refusée n'arrête pas les autres.
-- **Rappel d'événement sans personne en charge** : il part aux propriétaires et aux membres dont le
-  rôle permet de gérer les événements, au lieu de ne partir à personne.
-- **Un même e-mail peut servir à deux comptes** (migration `user_email_not_unique`) : le login est
-  l'identité. Avant, une adresse déjà utilisée par un autre compte empêchait de se connecter. Une
-  double première connexion simultanée ne provoque plus d'erreur.
-- `dashboard` et `profile` vérifient eux-mêmes que le compte est approuvé (`requireApprovedSession`).
-- `bde.defaultLocale` est documentée pour ce qu'elle fait : la langue des messages envoyés.
-- `@types/node` passe à la version 22 (celle du runtime).
-
-- **Cas attendus dans les actions** : supprimer ou changer le statut d'un événement déjà supprimé,
-  annuler une date qui n'existe plus, approuver une demande déjà traitée… ramènent à la liste avec un
-  message clair au lieu d'une erreur 500, et la liste se met à jour.
-- **Les messages Discord et Slack neutralisent les mentions** (`@everyone`, `@here`, `@channel`,
-  `<!channel>`, `<@…>`, liens `<url|texte>`) : un nom ou un titre d'événement ne peut plus notifier
-  tout un serveur. Le webhook Discord envoie `allowed_mentions: { parse: [] }`.
-- Les valeurs par défaut des notifications de membres de `bde.config.yml` et de l'exemple sont
-  `"none"`.
-
-- **Mise à jour depuis une version antérieure** : la migration `custom_roles` convertit les comptes
-  sans perte et sans dépendre de `bde.config.yml` — les ADMIN deviennent le rôle « Admin », les
-  MEMBER le rôle « Membre » (qui reçoit toujours `events.view`), et un membre qui avait la
-  permission d'un module reçoit un rôle « Membre + `module` » ; une entrée `role.migrate` du
-  journal d'audit garde trace de l'ancien état. Un ADMIN a désormais aussi les droits de gestion des
-  événements et du calendrier partagé (rôle « Admin » : tous les droits). En développement
-  (`docker-compose.dev.yml`, `db push`), la base est recréée : relancez `npm run seed:demo`.
-- La simulation de rôle de développement propose « En attente » et chaque rôle du BDE ; les droits
-  simulés s'appliquent aussi aux actions (et le journal d'audit le mentionne).
-
-- **Image Docker de production réduite de 2,15 Go à 465 Mo** : build Next.js `standalone`, Prisma CLI
-  installé à part et allégé, sharp et TypeScript retirés, ni npm ni yarn dans l'image finale.
-- Le port 3000 n'est plus publié que sur `127.0.0.1` par défaut (`APP_BIND` pour l'ouvrir) : seul le
-  reverse proxy HTTPS expose l'application. Le cas sans proxy est documenté.
-- Délai de connexion à la base limité à 3 secondes (au lieu d'attendre indéfiniment).
-- `bde.config.local.yml`, `.audit/` et `.env*` ne sont plus copiés dans l'image Docker.
+- **Discord notifications as cards (embeds)** (`docs/notifications.md`): a color bar (the category's for an event;
+  amber / green / red for a request / an approval / a removal), a clickable title with no duplicate preview card,
+  fields in columns (When, Where, Category, Members in charge), Discord-format dates (`<t:…:F>` and `<t:…:R>`: each
+  reader's time zone and a countdown), a sender under the BDE's name with its logo, 42 photo, role and **author of
+  the action** ("Approved by", "Removed by") for members, a discreet card footer. The reminder says "today" when it
+  goes out on the same day (catching up after an outage), "tomorrow" otherwise (also in Slack and email). Mentions
+  neutralized in every text of the card, Discord's size limits respected (text cut with "…"; an event's description
+  limited to 350 characters). Slack and email unchanged.
+- **Slack notifications as cards (Block Kit)** (`docs/notifications.md`): a color bar (the category's; amber / green
+  / red for members, as on Discord), a header title, fields in columns (When, Where, Category, Members in charge,
+  Repeats), a "View the event" / "Approve or refuse" button, Slack-format dates (`<!date^…>`, in each reader's time
+  zone, with a fallback text), a footer with the BDE's logo (the name alone if it is not public) and
+  `BDE_Network`, 42 photo, role and "Approved by" / "Removed by" for members, "today" / "tomorrow" for reminders. The
+  summary for phone notifications is the attachment's `fallback` field: the message has **no** top-level `text`,
+  which Slack would show in the channel above the card (everything would be said twice). Mentions neutralized
+  everywhere (`@here`, `@channel`, `@everyone`, `<!channel>`, `<@U…>`, links), texts cut cleanly at Slack's limits.
+- **Slack application manifest and pre-filled link** (`docs/slack-app-manifest.yml`): name `BDE_Network`, incoming
+  webhooks, no other permission; a test checks that the documentation's link is exactly this manifest. The
+  documentation says Discord remains the simplest option.
+- **Formatted HTML emails** (`docs/notifications.md`), with a fallback text version: the BDE's logo and name, a bar
+  and a button in the category's color, When / Repeats / Where / Category / Members in charge lines, a button to the
+  page concerned, a preview text (preheader), a discreet footer. Tables and inline styles (Gmail, Outlook including
+  on Windows with a VML button, Apple Mail, mobile), dark mode. Event confirmation: an attached `.ics` file ("Add to
+  calendar"). "Today" / "tomorrow" reminder. Access request (with the 42 photo) and approval, with the same care;
+  FR / EN according to `bde.defaultLocale`; every text typed by a member is escaped.
+- A short "Repeats" line ("Every week, until December 17, 2026") in emails and Discord cards; in dark mode, a thin
+  light outline surrounds the email logo.
+- **Mailpit in `docker-compose.dev.yml`**, wired by default (`SMTP_HOST=mailpit`): development emails are read at
+  <http://localhost:8025> with no real server (`DEV_SMTP_*` to use one).
+- **`public/logo.png`**: a neutral logo is provided, used as the Discord avatar when `bde.logoPath` is not a
+  PNG/JPEG/GIF/WebP image (Discord does not accept SVG); without a public address (`APP_URL`), the message goes
+  out with no avatar.
+- **The `notifications` section of `bde.config.yml` is optional**: without it, every notification is off (the three
+  member notifications were required, which made the image build fail for a BDE that had nothing to put there).
+  Found by following the installation guide from a fresh clone.
+- **PostgreSQL no longer publishes a port** in the production `docker-compose.yml`: only the application, on the
+  Docker network, can talk to it (`docker-compose.dev.yml` keeps the port for `npm run dev`).
+- `AUTH_SECRET` is generated with Docker (`docker run --rm alpine sh -c "head -c 32 /dev/urandom | base64"`), a
+  command that works on Windows, Linux and macOS without Node.js: the docs, `.env.example` and the start-up message
+  give it.
+- User guide up to date (sidebar, roles, confirmation dialogs, sign out) and the dashboard's empty message: the
+  Events module is no longer presented as "future".
+- Card header (dashboard, members, profile): the title and the action are finally on one line (the `flex` class
+  was missing).
+- **Fewer SQL queries**: the session is resolved **once per request** (`React.cache`), instead of once per component
+  that asks for it. Measured on the database: dashboard 13 → 7 queries, members 9 → 6, roles 7 → 4, profile 7 → 4,
+  events 16 → 13.
+- **Grouped emails**: a single SMTP connection for all the recipients of a send (instead of one per recipient); a
+  refused address does not stop the others.
+- **Event reminder with nobody in charge**: it goes to the owners and the members whose role allows managing events,
+  instead of going to nobody.
+- **One email can serve two accounts** (migration `user_email_not_unique`): the login is the identity. Before, an
+  address already used by another account prevented signing in. A simultaneous double first sign-in no longer
+  causes an error.
+- `dashboard` and `profile` check by themselves that the account is approved (`requireApprovedSession`).
+- `bde.defaultLocale` is documented for what it does: the language of the messages sent.
+- `@types/node` moves to version 22 (the runtime's).
+- **Expected cases in actions**: deleting or changing the status of an already deleted event, canceling a date that
+  no longer exists, approving an already handled request… bring back to the list with a clear message instead of a
+  500 error, and the list updates.
+- **Discord and Slack messages neutralize mentions** (`@everyone`, `@here`, `@channel`, `<!channel>`, `<@…>`,
+  `<url|text>` links): a name or an event title can no longer notify a whole server. The Discord webhook sends
+  `allowed_mentions: { parse: [] }`.
+- The default values of the member notifications in `bde.config.yml` and in the example are `"none"`.
+- **Upgrading from a previous version**: the `custom_roles` migration converts the accounts with no loss and without
+  depending on `bde.config.yml` — ADMINs become the "Admin" role, MEMBERs the "Membre" role (which always gets
+  `events.view`), and a member who had a module's permission gets a "Membre + `module`" role; a `role.migrate` audit
+  log entry keeps track of the old state. An ADMIN now also has the rights to manage events and the shared calendar
+  ("Admin" role: all rights). In development (`docker-compose.dev.yml`, `db push`), the database is recreated: run
+  `npm run seed:demo` again.
+- The development role simulation offers "Pending" and each of the BDE's roles; simulated rights also apply to
+  actions (and the audit log says so).
+- **Production Docker image reduced from 2.15 GB to 465 MB**: `standalone` Next.js build, Prisma CLI installed
+  separately and slimmed down, sharp and TypeScript removed, neither npm nor yarn in the final image.
+- Port 3000 is only published on `127.0.0.1` by default (`APP_BIND` to open it): only the HTTPS reverse proxy exposes
+  the application. The no-proxy case is documented.
+- Database connection timeout limited to 3 seconds (instead of waiting indefinitely).
+- `bde.config.local.yml`, `.audit/` and `.env*` are no longer copied into the Docker image.
 
 ### Removed
 
-- **La route publique `/api/files/…` et tout le code de stockage de fichiers** (adaptateur local,
-  volume `uploads`, dossier `storage/`) : rien n'y écrivait, et servir des fichiers sans authentification
-  aurait été une faille dès le premier envoi. `backup.sh` ne sauvegarde plus que la base ; `restore.sh`
-  lit toujours les anciennes archives (leur dossier de fichiers est ignoré). On recréera un stockage
-  avec une vraie fonctionnalité d'envoi.
-- Des doublons : le calcul des initiales (4 copies → 1), les métadonnées de simulation de rôle, le
-  script `db:seed` (identique à `seed:demo`), le namespace de messages `common` et la clé inutilisée
-  `roles.page.membersLink`.
-
-- Le rôle fixe `ADMIN` (remplacé par un rôle personnalisé « Admin ») et la table `ModulePermission`
-  (les droits d'un module sont maintenant portés par les rôles) ; les actions d'audit
-  `permission.grant` / `permission.revoke` sont remplacées par `role.*` et `member.role_change`.
-
-- `npm run db:backup` et `npm run db:restore` (remplacés par `scripts/backup.sh` et
-  `scripts/restore.sh`, qui n'exigent que Docker).
+- **The public `/api/files/…` route and all the file storage code** (local adapter, `uploads` volume, `storage/`
+  folder): nothing wrote to it, and serving files without authentication would have been a flaw as soon as the first
+  upload existed. `backup.sh` only backs up the database; `restore.sh` still reads old archives (their files folder
+  is ignored). Storage will be rebuilt with a real upload feature.
+- Duplicates: the initials computation (4 copies → 1), the role simulation metadata, the `db:seed` script (identical
+  to `seed:demo`), the `common` message namespace and the unused key `roles.page.membersLink`.
+- The fixed `ADMIN` role (replaced by a custom "Admin" role) and the `ModulePermission` table (a module's rights are
+  now carried by roles); the `permission.grant` / `permission.revoke` audit actions are replaced by `role.*` and
+  `member.role_change`.
+- `npm run db:backup` and `npm run db:restore` (replaced by `scripts/backup.sh` and `scripts/restore.sh`, which only
+  need Docker).
 
 ### Fixed
 
-- **L'environnement de développement Docker ne réécrit plus `package-lock.json`** : le conteneur lançait
-  `npm install`, dont le npm reclassait un champ du verrou à chaque démarrage et salissait le dépôt. Il lance
-  maintenant `npm install --no-save`, qui installe ce que dit le verrou sans jamais l'écrire.
-- Un membre retiré du BDE perd immédiatement l'accès : son cookie de session encore valide ne
-  donne plus aucun droit (lecture des brouillons, création ou modification d'événements, export
-  de données). Les contrôles de rôle et de permission refusent désormais tout identifiant ou rôle
-  manquant ou inconnu.
+- **The Docker development environment no longer rewrites `package-lock.json`**: the container ran `npm install`,
+  whose npm reclassified a lockfile field at every start and dirtied the repository. It now runs
+  `npm install --no-save`, which installs what the lockfile says and never writes it.
+- A member removed from the BDE loses access immediately: their still-valid session cookie no longer gives any right
+  (reading drafts, creating or editing events, data export). Role and permission checks now refuse any missing or
+  unknown identifier or role.
 
 ## [0.2.0] - 2026-10-05
 
-Premier module métier : **Événements**.
+First business module: **Events**.
 
 ### Added
 
-- Module **Événements** (`modules.enabled: [events]`, désactivé par défaut) : calendrier interne
-  du bureau pour planifier et organiser les événements du BDE. Voir `docs/events.md`.
-  - Titre, début, fin, lieu, description, catégorie et membres en charge ; **titre, dates, lieu,
-    description et catégorie sont obligatoires** (validation Zod côté serveur et dans le
-    formulaire, messages FR/EN sous chaque champ). Les événements incomplets créés avant cette
-    règle restent affichables et ne sont bloqués qu'à leur prochaine modification.
-  - Catégories et couleurs définies par chaque BDE dans `bde.config.yml` (section `events`).
-  - Statut brouillon (visible uniquement des membres ayant la permission) ou confirmé (visible de
-    tous les membres) ; stockage en UTC, affichage dans le fuseau du BDE ; année scolaire
-    (septembre–août) calculée automatiquement.
-  - Séries récurrentes (chaque semaine, toutes les 2 semaines, chaque mois) avec date de fin
-    obligatoire, modification de toute la série, annulation d'une seule date.
-  - Vue calendrier mensuel (pastilles colorées sur mobile avec détail du jour), vue liste (par
-    défaut sur mobile), page de détail, filtres (catégorie, membre en charge, année scolaire),
-    états vides et squelettes de chargement.
-  - Bloc « Prochains événements » sur le tableau de bord.
-  - Export `.ics` d'un événement et **lien d'abonnement personnel** (jeton secret par membre,
-    régénérable depuis _Mon profil_, visibilité recalculée à chaque requête).
-  - **Lien d'abonnement au niveau du BDE** (`/api/calendar/bde/<jeton>.ics`) : un seul lien à coller
-    dans l'agenda partagé du bureau, événements confirmés uniquement (jamais de brouillon), géré
-    par OWNER/ADMIN (afficher, copier, régénérer, désactiver, tout journalisé sans jamais écrire
-    le jeton), avec une proposition de régénération quand un membre est retiré.
-  - Notification de confirmation (une seule fois par événement) et **rappel la veille** via un
-    planificateur interne (aucun cron, aucun service externe ; Windows, Linux, macOS ; jamais
-    envoyé deux fois, même après redémarrage). Un échec d'envoi ne bloque jamais l'enregistrement
-    ni les autres destinataires.
-  - Journal d'audit (`event.*`, `calendar_feed.*`), données de démonstration, tests (récurrence,
-    fuseaux, `.ics`, droits, rappels, rendu).
-- Attribution de la permission d'un module à un membre depuis le panel _Membres_ (audit
-  `permission.grant` / `permission.revoke`).
-- Page _Mon profil_.
-- Clés de notification `eventConfirmed` et `eventReminder` (optionnelles, `"none"` par défaut) et
-  variable optionnelle `APP_URL` pour les liens dans les notifications.
-- Configuration personnelle non versionnée : `bde.config.local.yml` (ignoré par Git) remplace
-  `bde.config.yml` s'il existe.
-- Barre latérale de navigation (tiroir sur mobile), page de refus de connexion `/auth-error`,
-  et simulation de rôles pour les tests en local (`ENABLE_DEV_IMPERSONATION`, développement
-  uniquement). Spécification du design system dans `docs/design.md`.
+- **Events** module (`modules.enabled: [events]`, off by default): the board's internal calendar to plan and organize
+  the BDE's events. See `docs/events.md`.
+  - Title, start, end, location, description, category and members in charge; **title, dates, location, description
+    and category are required** (Zod validation on the server and in the form, FR/EN messages under each field).
+    Incomplete events created before this rule can still be displayed and are only blocked at their next edit.
+  - Categories and colors defined by each BDE in `bde.config.yml` (`events` section).
+  - Draft status (only visible to members with the permission) or confirmed (visible to every member); storage in
+    UTC, display in the BDE's time zone; school year (September–August) computed automatically.
+  - Repeating series (every week, every 2 weeks, every month) with a required end date, editing of the whole
+    series, canceling a single date.
+  - Monthly calendar view (colored dots on mobile with the day's detail), list view (default on mobile), detail
+    page, filters (category, member in charge, school year), empty states and loading skeletons.
+  - An "Upcoming events" block on the dashboard.
+  - `.ics` export of an event and a **personal subscription link** (a secret token per member, regenerable from _My
+    profile_, visibility recomputed at every request).
+  - **BDE-wide subscription link** (`/api/calendar/bde/<token>.ics`): a single link to paste into the board's shared
+    calendar, confirmed events only (never a draft), managed by OWNER/ADMIN (show, copy, regenerate, turn off, all
+    logged without ever writing the token), with a regeneration offer when a member is removed.
+  - Confirmation notification (once per event) and **day-before reminder** through an internal scheduler (no cron,
+    no external service; Windows, Linux, macOS; never sent twice, even after a restart). A failed send never blocks
+    saving nor the other recipients.
+  - Audit log (`event.*`, `calendar_feed.*`), demo data, tests (recurrence, time zones, `.ics`, rights, reminders,
+    rendering).
+- Granting a module's permission to a member from the _Members_ panel (audit `permission.grant` /
+  `permission.revoke`).
+- _My profile_ page.
+- `eventConfirmed` and `eventReminder` notification keys (optional, `"none"` by default) and the optional `APP_URL`
+  variable for links in notifications.
+- Personal, unversioned configuration: `bde.config.local.yml` (ignored by Git) replaces `bde.config.yml` if it
+  exists.
+- Navigation sidebar (a drawer on mobile), the `/auth-error` sign-in denied page, and role simulation for local
+  testing (`ENABLE_DEV_IMPERSONATION`, development only). Design system specification in `docs/design.md`.
 
 ### Changed
 
-- `auth.allowedCampuses` peut être vide (aucun filtre sur le campus).
-- L'export des données personnelles (RGPD) inclut les événements créés ou dont le membre a la
-  charge (jamais le jeton d'agenda) ; la politique de confidentialité les mentionne.
-- Environnement de développement Docker : le schéma est appliqué avec
-  `prisma db push --accept-data-loss` et les comptes et événements de démo sont créés au démarrage.
-- `Button` déduit `nativeButton` de sa prop `render` (plus d'avertissement Base UI pour un lien).
+- `auth.allowedCampuses` may be empty (no campus filter).
+- The personal data export (GDPR) includes events created or in the member's charge (never the calendar token); the
+  privacy policy mentions them.
+- Docker development environment: the schema is applied with `prisma db push --accept-data-loss` and the demo
+  accounts and events are created at start.
+- `Button` deduces `nativeButton` from its `render` prop (no more Base UI warning for a link).
 
 ## [0.1.0] - 2026-08-05
 
-Version initiale (jamais étiquetée) : socle de la plateforme.
+Initial version (never tagged): the platform's foundation.
 
 ### Added
 
-- Initialisation du projet : Next.js 15, TypeScript strict, Tailwind CSS v4, shadcn/ui, Prisma 7.
-- Authentification OAuth 42 (NextAuth v5), sans mot de passe.
-- Modèle de données : `User`, `Role`, `ModulePermission`, `AuditLog`.
-- Rôles OWNER / ADMIN / MEMBER / PENDING, permissions par module, journal d'audit en lecture
-  seule (OWNER uniquement).
-- Configuration versionnée (`bde.config.yml`, validée avec Zod) et secrets (`.env`) séparés.
-- Internationalisation (next-intl), français par défaut, anglais disponible.
-- Tableau de bord, page de connexion, page d'attente, gestion des membres, journal d'audit,
-  politique de confidentialité, export de ses propres données (RGPD).
-- Abstraction de notifications (email, Discord, Slack) — pas encore branchée à un cas d'usage.
-- Abstraction de stockage de fichiers (adaptateur local, interface prête pour S3).
-- Scripts de sauvegarde/restauration PostgreSQL, seed de démonstration.
-- Docker Compose (production et développement avec rechargement à chaud), Dockerfile.
-- CI GitHub Actions (lint, format, typecheck, build, test) sur ubuntu-latest et windows-latest.
+- Project setup: Next.js 15, strict TypeScript, Tailwind CSS v4, shadcn/ui, Prisma 7.
+- 42 OAuth authentication (NextAuth v5), no password.
+- Data model: `User`, `Role`, `ModulePermission`, `AuditLog`.
+- OWNER / ADMIN / MEMBER / PENDING roles, per-module permissions, a read-only audit log (OWNER only).
+- Versioned configuration (`bde.config.yml`, validated with Zod) and secrets (`.env`) kept apart.
+- Internationalization (next-intl), French by default, English available.
+- Dashboard, sign-in page, waiting page, member management, audit log, privacy policy, export of one's own data
+  (GDPR).
+- A notification abstraction (email, Discord, Slack) — not yet wired to any use case.
+- A file storage abstraction (local adapter, interface ready for S3).
+- PostgreSQL backup / restore scripts, demo seed.
+- Docker Compose (production and development with hot reload), Dockerfile.
+- GitHub Actions CI (lint, format, typecheck, build, test) on ubuntu-latest and windows-latest.
 
 [Unreleased]: https://github.com/edouardbautz/BDE_Network/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/edouardbautz/BDE_Network/compare/v0.2.0...v1.0.0

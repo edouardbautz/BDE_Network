@@ -1,64 +1,53 @@
-# Code de conduite
+🇬🇧 English · [🇫🇷 Français](CODE_OF_CONDUCT.fr.md)
 
-## Notre engagement
+# Code of Conduct
 
-En tant que membres, contributeurs et responsables de ce projet, nous nous engageons à faire de
-la participation à notre communauté une expérience sans harcèlement pour tout le monde, quel que
-soit l'âge, la taille, le handicap visible ou invisible, l'origine ethnique, les caractéristiques
-sexuelles, l'identité et l'expression de genre, le niveau d'expérience, l'éducation, le statut
-socio-économique, la nationalité, l'apparence personnelle, la race, la religion, ou l'identité et
-l'orientation sexuelles.
+## Our pledge
 
-Nous nous engageons à agir et interagir de manière à contribuer à une communauté ouverte,
-accueillante, diverse, inclusive et saine.
+As members, contributors and maintainers of this project, we pledge to make participation in our community a
+harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity,
+sex characteristics, gender identity and expression, level of experience, education, socio-economic status,
+nationality, personal appearance, race, religion, or sexual identity and orientation.
 
-## Nos standards
+We pledge to act and interact in ways that contribute to an open, welcoming, diverse, inclusive and healthy
+community.
 
-Exemples de comportements contribuant à un environnement positif :
+## Our standards
 
-- Faire preuve d'empathie et de bienveillance envers les autres personnes
-- Respecter les opinions, points de vue et expériences différents
-- Donner et accepter avec grâce des retours constructifs
-- Assumer la responsabilité de ses erreurs, s'excuser auprès des personnes affectées, et tirer
-  les leçons de l'expérience
-- Se concentrer sur ce qui est le mieux non seulement pour nous en tant qu'individus, mais pour
-  l'ensemble de la communauté
+Examples of behavior that contributes to a positive environment:
 
-Exemples de comportements inacceptables :
+- Demonstrating empathy and kindness toward other people
+- Being respectful of differing opinions, viewpoints and experiences
+- Giving and gracefully accepting constructive feedback
+- Accepting responsibility, apologizing to those affected by our mistakes, and learning from the experience
+- Focusing on what is best not just for us as individuals, but for the overall community
 
-- L'utilisation de langage ou d'images à caractère sexuel, et toute attention ou avance de
-  nature sexuelle
-- Le trollage, les commentaires insultants ou désobligeants, et les attaques personnelles ou
-  politiques
-- Le harcèlement en public ou en privé
-- La publication d'informations privées d'autrui (adresse physique ou électronique) sans
-  permission explicite
-- Toute autre conduite qui pourrait raisonnablement être considérée comme inappropriée dans un
-  cadre professionnel
+Examples of unacceptable behavior:
 
-## Responsabilités d'application
+- The use of sexualized language or imagery, and sexual attention or advances of any kind
+- Trolling, insulting or derogatory comments, and personal or political attacks
+- Public or private harassment
+- Publishing others' private information, such as a physical or email address, without their explicit permission
+- Other conduct which could reasonably be considered inappropriate in a professional setting
 
-Les propriétaires du projet sont responsables de clarifier et faire respecter nos standards de
-comportement acceptable et prendront des mesures correctives appropriées et justes en réponse à
-tout comportement qu'ils jugent inapproprié, menaçant, offensant ou nuisible.
+## Enforcement responsibilities
 
-## Portée
+The project maintainers are responsible for clarifying and enforcing our standards of acceptable behavior and will
+take appropriate and fair corrective action in response to any behavior that they deem inappropriate, threatening,
+offensive or harmful.
 
-Ce code de conduite s'applique dans tous les espaces communautaires du projet (issues, pull
-requests, discussions), ainsi que lorsqu'une personne représente officiellement le projet dans
-des espaces publics.
+## Scope
 
-## Application
+This Code of Conduct applies within all the project's community spaces (issues, pull requests, discussions), and
+also when an individual is officially representing the project in public spaces.
 
-Les cas de comportement abusif, harcelant ou autrement inacceptable peuvent être signalés aux
-responsables du projet **sur Discord, en message privé à `meteore_1`**. Ne publiez pas le
-signalement dans une issue publique. Toutes les plaintes seront examinées et donneront lieu à une
-réponse jugée nécessaire et adaptée aux circonstances.
+## Enforcement
 
-_In English: to report unacceptable behaviour, send a direct message on Discord to `meteore_1`.
-Please do not post it in a public issue._
+Instances of abusive, harassing or otherwise unacceptable behavior may be reported to the project maintainers **on
+Discord, by direct message to `meteore_1`**. Please do not post the report in a public issue. All complaints will be
+reviewed and will receive a response that is considered necessary and appropriate to the circumstances.
 
 ## Attribution
 
-Ce code de conduite est adapté du [Contributor Covenant](https://www.contributor-covenant.org/fr/version/2/1/code_of_conduct/),
-version 2.1.
+This Code of Conduct is adapted from the
+[Contributor Covenant](https://www.contributor-covenant.org/version/2/1/code_of_conduct/), version 2.1.

@@ -226,7 +226,7 @@ const PROBLEMS = {
       steps: [
         'Ne supprimez rien. Notez le code affiché ci-dessous.',
         'Lisez le détail : `docker compose logs app`.',
-        'Au besoin, restaurez la dernière sauvegarde (voir docs/deployment.md, « Sauvegardes et restauration »).',
+        'Au besoin, restaurez la dernière sauvegarde (voir docs/fr/deployment.md, « Sauvegardes et restauration »).',
       ],
     },
     en: {
@@ -236,7 +236,7 @@ const PROBLEMS = {
       steps: [
         'Do not delete anything. Write down the code shown below.',
         'Read the details: `docker compose logs app`.',
-        'If needed, restore the latest backup (see docs/deployment.md, "Backups and restore").',
+        'If needed, restore the latest backup (see docs/en/deployment.md, "Backups and restore").',
       ],
     },
   },

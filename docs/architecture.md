@@ -2,7 +2,7 @@
 
 Reference document for working on BDE_Network: how the project is organised, the rules that hold it
 together and the pitfalls already met. Read it before making structural changes. The contributor
-guide (`docs/contributing-guide.md`) covers setting up a development environment.
+guide (`docs/en/contributing.md`, in French `docs/fr/contributing.md`) covers setting up a development environment.
 
 ## Context
 
@@ -41,7 +41,7 @@ _using_ the deployed app (BDE members) are not necessarily technical — the UI 
 
 ## Directory structure
 
-```
+```text
 src/
   app/
     [locale]/
@@ -113,9 +113,12 @@ docker/
   startup-problems.mjs      its pure parts: Prisma failure classifier, redaction, database address, the page
 messages/
   fr.json, en.json          next-intl message catalogs
-docs/                        installation (in the browser), configuration, user guide, notifications,
-                             roles, events, contributing, deployment, design; images/{en,fr}/ = README screenshots (WebP)
+docs/en/, docs/fr/           the documentation, the SAME files in both languages (README = index by reader, glossary, faq,
+                             troubleshooting, installation, deployment, upgrading, configuration, user-guide, roles,
+                             events, notifications, contributing); docs/architecture.md and docs/design.md = the technical
+                             references, English only; images/{en,fr}/ = screenshots (WebP); slack-app-manifest.yml
 README.md / README.fr.md     the storefront, in English and French: keep them in step, promise nothing that does not exist
+CONTRIBUTING*.md, CODE_OF_CONDUCT*.md   English at the root, `.fr.md` for French; SECURITY.md is bilingual in one page
 SECURITY.md                  private vulnerability reporting; .github/ has issue forms and the PR template
 ```
 
@@ -338,7 +341,7 @@ button, nothing takes the focus), the same validators (`lib/setup/validate.ts`, 
   a session sees an alert with a link to the settings on the dashboard (`OAuthRejectedAlert`) and on the page itself. A
   visitor is never told more than that (the login page cannot know who is an owner). When nobody can sign in at all,
   `BDE_REIMPORT=settings` copies the values of `.env` (and nothing else) into the settings at the next start. It is also
-  **the rescue for a wrong address** (`APP_URL=…` + `BDE_REIMPORT=settings`, documented in `docs/installation.md`): the
+  **the rescue for a wrong address** (`APP_URL=…` + `BDE_REIMPORT=settings`, documented in `docs/en/troubleshooting.md`, `docs/fr/troubleshooting.md`): the
   address is run through `validateAddress` first (so it is written like the installer writes it, and `0.0.0.0` is
   refused), and the log says `ancienne → nouvelle`. There is deliberately no second mechanism.
 - **The page always reminds to back up the `secrets` volume** (the key is not in the database), with the command, and
@@ -360,7 +363,7 @@ sees the installer.
 - **The only installation path.** A terminal questionnaire (`setup/`, run through its own Docker image and writing
   `.env` and `bde.config.yml`) existed before the installer and was removed with it in place: two ways to do the same
   thing meant two sets of questions, messages and tests to keep equal, and the files it wrote are no longer where the
-  settings live. The quick start of the READMEs and `docs/installation.md` describe only `docker compose up` (without
+  settings live. The quick start of the READMEs and `docs/en/installation.md` describe only `docker compose up` (without
   `-d` the first time, to see the box with the code in the terminal or in the Logs tab of Docker Desktop), then
   `docker compose up -d`. Do not bring a second installer back: extend the one in `src/lib/setup/`, which the settings
   page shares.
@@ -412,7 +415,7 @@ sees the installer.
   secrets in it. Validated with Zod (`src/config/schema.ts`) on every load, cached after first
   read (`src/config/index.ts`). `bde.config.example.yml` is the annotated reference copy.
   An optional git-ignored `bde.config.local.yml` replaces it when present (full file, no merge) so
-  personal values stay out of commits — see `docs/configuration.md`.
+  personal values stay out of commits — see `docs/en/configuration.md`.
 - **`.env`** holds only secrets/machine-specific values (DB credentials, `AUTH_SECRET`, 42 OAuth
   client id/secret, SMTP, webhook URLs) — never committed.
 - **Startup validation, in two places.** `bde.config.yml` is validated in `next.config.ts` (it fails
@@ -458,7 +461,7 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
   also sends `allowed_mentions: { parse: [] }`) — every caller gets it, a new adapter must do the same.
   A member-notification channel that is not set up in `.env` is a **startup warning, not an error**
   (`env.ts`): those keys sat in every config before they sent anything.
-- **Discord cards** (`docs/notifications.md`). On the `discord` channel a notification is an _embed_, built
+- **Discord cards** (`docs/en/notifications.md`). On the `discord` channel a notification is an _embed_, built
   next to what it says (`events/discord-embed.ts`, `members/discord-embed.ts`) on the Discord-specific parts
   in `notifications/discord-embed.ts` (colours, `<t:…>` date markup, `fitEmbed` = every limit of Discord:
   256/4096/1024/25 fields/6000 in total, cut with “…”). **One layout for every card**: the essentials are large
@@ -479,7 +482,7 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
   request shows an image (cached 10 min); otherwise name only, never a broken picture. A new notification
   that should be a card gets a builder + a `withDiscordCard` call; who did an action is passed by the action
   (`ctx.actor.login`), the row being deleted before the message goes out.
-- **Slack cards** (`docs/notifications.md`, Block Kit). Built like the Discord ones (`events/slack-blocks.ts`,
+- **Slack cards** (`docs/en/notifications.md`, Block Kit). Built like the Discord ones (`events/slack-blocks.ts`,
   `members/slack-blocks.ts`, the shared parts in `notifications/slack-blocks.ts`) and chosen with the others by
   `withRichMessage` (`notifications/rich.ts`: only the builder of the event's channel is ever called). **The
   message is `{ attachments: [{ color, fallback, blocks }] }` and has no top-level `text`**: Slack shows a message's
@@ -490,7 +493,7 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
   strict markup (every other `<…>` becomes text), cuts to Slack's limits, drops blocks Slack refuses. The app
   that posts is the BDE_Network Slack app created from `docs/slack-app-manifest.yml` (a test ties the docs link to it):
   name and icon are the app's, a webhook cannot change them per message.
-- **Designed e-mails** (`docs/notifications.md`). On the `email` channel a notification carries an
+- **Designed e-mails** (`docs/en/notifications.md`). On the `email` channel a notification carries an
   `EmailContent` (`html` + `text` + optional `.ics`) next to its plain `subject`/`body`: built by
   `events/email.ts` / `members/email.ts` from the one layout `notifications/email-layout.ts` (`renderEmail`, a
   pure function of a model) and added by `withEmailContent` **only when the event's channel is e-mail**. The
@@ -500,7 +503,7 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
   HTML elsewhere). The logo is `resolveLogoUrl(…, { requirePublic: false })` (a mail client loads it itself).
   A confirmation attaches the `.ics` through nodemailer's `icalEvent` (every occurrence to come, same UIDs as the
   feeds); a reminder does not. `memberRemoved` never sends an e-mail. In development `docker-compose.dev.yml`
-  points `SMTP_*` at Mailpit (http://localhost:8025) unless `DEV_SMTP_*` say otherwise.
+  points `SMTP_*` at Mailpit (<http://localhost:8025>) unless `DEV_SMTP_*` say otherwise.
 - **The one file the platform stores is the BDE's logo** (`src/lib/branding/`, `src/app/api/logo/route.ts`). An
   earlier local-disk adapter with a public `/api/files/[...key]` route was removed because nothing wrote to it and
   it would have been a stored XSS the day something did (no authentication, SVG served without `nosniff`). The logo
@@ -518,7 +521,7 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
 
 ## Events module (`modules.enabled: [events]`)
 
-User guide: `docs/events.md`. The shape worth knowing before touching it:
+User guide: `docs/en/events.md`. The shape worth knowing before touching it:
 
 - **An event is one row.** A recurring event is a single "series master" (`startsAt`,
   `endsAt`, `recurrence`, `recurrenceUntil`); occurrences are **computed**, never stored
@@ -566,7 +569,7 @@ User guide: `docs/events.md`. The shape worth knowing before touching it:
   validated in `src/config/schema.ts` (required only when enabled), one `getXAccess()` gate
   returning null when disabled, `notFound()` on pages, a nav entry in `(app)/layout.tsx` + `NavItem`
   - `NAV_ICONS`, its permissions (`<module>.view`/`.manage` are automatic; extras go in `MODULE_EXTRA_PERMISSIONS` with
-    their `permissions.items.<module>.<name>` messages), audit entries for every mutation, FR/EN messages, `loading.tsx` per route, seed data, a `docs/<module>.md`.
+    their `permissions.items.<module>.<name>` messages), audit entries for every mutation, FR/EN messages, `loading.tsx` per route, seed data, a `docs/en/<module>.md` and its twin `docs/fr/<module>.md`.
 
 ## Production image & hardening
 
@@ -594,7 +597,7 @@ User guide: `docs/events.md`. The shape worth knowing before touching it:
   unreadable file, an empty one and an invalid one apart, with the exact path checked). Reproduced and fixed against
   a rootless Docker-in-Docker (`docker:dind-rootless`, project mounted from a client container so the daemon cannot
   see it). The commands that read what the container sees are under "Problèmes fréquents" in
-  `docs/installation.md`.
+  `docs/en/installation.md`.
 - **docker-compose.yml needs no `.env`.** There is no `env_file`: the variables an installation that predates the
   database needs from `.env` are passed by name (`${VAR:-}`; compose reads `.env` itself when it exists and does not
   mind when it does not, with any Compose v2), to be copied into the database once. A one-shot `secrets` service
@@ -640,7 +643,7 @@ User guide: `docs/events.md`. The shape worth knowing before touching it:
   with 42" only when 42 says so; a visitor who cancelled still gets "try again") and, once at start-up, as a
   warning in the logs. The secret only travels in the body of the request.
 - **docker-compose.yml** publishes the app on `${APP_BIND:-127.0.0.1}:${APP_PORT:-3000}`: only the reverse proxy
-  reaches it unless the operator opts out (`APP_BIND=0.0.0.0`, documented in `docs/deployment.md`). **PostgreSQL
+  reaches it unless the operator opts out (`APP_BIND=0.0.0.0`, documented in `docs/en/deployment.md`). **PostgreSQL
   publishes no port** (only the app, on the compose network, reaches it); `docker-compose.dev.yml` still
   publishes 5432 on 127.0.0.1 for `npm run dev` outside Docker.
 - **Security headers** (`src/lib/security-headers.ts`, wired in `next.config.ts`): CSP (production
@@ -703,8 +706,19 @@ touching layout or adding UI. The short version:
 ## Conventions
 
 - **Conventional Commits**, atomic commits per logical change.
+- **The documentation is part of the product, in two languages, and it is checked.** A user-visible change updates the
+  FR and EN pages together (`docs/fr/`, `docs/en/`: same file names, same headings, same images, each page starting
+  with a link to its twin). Words are the ones of the interface and of the glossary (`docs/*/glossary.md`): one word,
+  one thing. **Every claim is verified against the code** (a doc that lies, even a little, destroys trust: the upgrade
+  guide was tried for real from v1.0.0, and doing so found a real bug in `restore.sh`). Three gates, all in CI: the
+  `docs` job (`npm run docs:check` = `scripts/check-docs.mjs`: internal links, anchors, images' alternative text, FR/EN
+  twins; `npm run lint:md` = markdownlint on top of Prettier), required on `main`; and `.github/workflows/links.yml`,
+  which checks the external links every week (a network error must not stop a pull request). The screenshots are
+  taken from the real production image by `scripts/docs-screenshots.mjs` (demo data, light theme, both languages,
+  installer included); redo them when the interface changes. `docs/architecture.md` and `docs/design.md` are the
+  technical references and stay English only.
 - **Every change goes through a branch and a pull request — never a push to `main`.** `main` is protected
-  (the four checks `ci (ubuntu-latest)`, `ci (windows-latest)`, `docker image` and `migrations` are required,
+  (the five checks `ci (ubuntu-latest)`, `ci (windows-latest)`, `docker image`, `migrations` and `docs` are required,
   no force push, no deletion, and it applies to administrators too). The routine: `git switch -c <type>/<topic>`,
   commit, `git push -u origin <branch>`, `gh pr create`, wait for the checks (`gh pr checks --watch`),
   then merge it once they are green (`gh pr merge --squash --delete-branch`: the author merges their own

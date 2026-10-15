@@ -37,7 +37,7 @@ function formatZodError(error: z.ZodError, filename: string): string {
     ...lines,
     '',
     `Corrigez ces champs dans ${filename}, puis relancez l'application.`,
-    "Besoin d'un exemple ? Voir bde.config.example.yml ou docs/configuration.md.",
+    "Besoin d'un exemple ? Voir bde.config.example.yml ou docs/fr/configuration.md.",
   ].join('\n');
 }
 

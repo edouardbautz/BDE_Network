@@ -28,7 +28,9 @@ function send(response, status, body) {
   response.end(JSON.stringify(body));
 }
 
-export function startMock(port = 4242) {
+/** `extraLogins`: more logins that exist on the intra (the documentation's screenshots need the demo owner). */
+export function startMock(port = 4242, extraLogins = []) {
+  const logins = new Set([...LOGINS, ...extraLogins]);
   const server = createServer((request, response) => {
     const url = new URL(request.url ?? '/', 'http://localhost');
 
@@ -108,7 +110,7 @@ export function startMock(port = 4242) {
     }
     const user = /^\/v2\/users\/([^/]+)$/.exec(url.pathname)?.[1];
     if (user) {
-      return LOGINS.has(decodeURIComponent(user))
+      return logins.has(decodeURIComponent(user))
         ? send(response, 200, { login: decodeURIComponent(user) })
         : send(response, 404, { error: 'not found' });
     }

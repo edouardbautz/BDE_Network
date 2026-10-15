@@ -1,117 +1,98 @@
+🇫🇷 Français · [🇬🇧 English](README.md)
+
 # BDE_Network
 
-[🇬🇧 English](README.md) · 🇫🇷 Français
+[![CI](https://github.com/edouardbautz/BDE_Network/actions/workflows/ci.yml/badge.svg)](https://github.com/edouardbautz/BDE_Network/actions/workflows/ci.yml)
+[![Licence : MIT](https://img.shields.io/github/license/edouardbautz/BDE_Network)](LICENSE)
+[![Version](https://img.shields.io/github/v/release/edouardbautz/BDE_Network)](https://github.com/edouardbautz/BDE_Network/releases)
 
-**Une plateforme open source, auto-hébergée, pour gérer un Bureau Des Étudiants (BDE) d'une école 42.** Les membres se connectent avec leur compte 42, le bureau distribue des rôles sur mesure, et
-les événements de l'association vivent dans un calendrier partagé auquel chacun peut s'abonner
-depuis Google Agenda, Outlook ou Apple Agenda.
-
-Chaque BDE fork ce dépôt et fait tourner **sa propre instance** : sa base de données, sa
-configuration, sa propre application OAuth 42. Rien n'est partagé entre les instances.
+**Une plateforme libre, à héberger soi-même, pour gérer un BDE (_Bureau Des Étudiants_) d'une école 42 : les membres
+se connectent avec leur compte 42, le bureau leur donne des rôles, et le calendrier des événements se synchronise
+avec Google Agenda, Outlook et Apple Calendar.**
 
 ![Le calendrier des événements](docs/images/fr/calendar.webp)
 
-## Ce que la plateforme fait aujourd'hui
+Chaque BDE fait tourner **sa propre instance** : sa base de données, ses réglages, son application 42. Rien n'est
+partagé entre deux instances.
 
-- **Connexion avec 42 uniquement**, aucun mot de passe à gérer. Les nouveaux membres attendent
-  d'être approuvés : le bureau les valide et choisit leur rôle. Possibilité de n'autoriser que
-  certains campus.
-- **Rôles et droits sur mesure.** Chaque BDE crée ses rôles (Président, Trésorier, Responsable
-  événements…) et coche exactement ce que chacun peut faire. Nul ne peut donner un droit qu'il n'a
-  pas, ni modifier son propre rôle : l'escalade de privilèges est bloquée côté serveur et testée
-  ([détails](docs/roles.md)). Les propriétaires se gèrent depuis la page Paramètres et ont
-  tous les droits.
-- **Module Événements** : calendrier (vues mois et liste), catégories colorées, événements
-  récurrents (chaque semaine, toutes les deux semaines, chaque mois), brouillons invisibles tant
-  qu'ils ne sont pas confirmés, personnes en charge, annulation d'une seule date d'une série
-  ([guide](docs/events.md)).
-- **Agenda synchronisé.** Chaque membre a un lien d'abonnement personnel, et le bureau peut publier
-  **un seul lien pour tout le BDE** à coller une fois dans un agenda Google ou Outlook partagé. Les
-  deux se mettent à jour tout seuls.
-- **Notifications** par e-mail, Discord ou Slack, réglées par type d'événement : événement
-  confirmé, rappel la veille, nouvelle demande d'accès, approbation, retrait.
-- **Journal d'audit** des actions sensibles (propriétaires uniquement), **export RGPD** de ses
-  propres données et politique de confidentialité.
-- Interface en **français et en anglais**, thèmes clair et sombre, votre couleur d'accent et votre
-  logo, utilisable sur téléphone.
-- **Simple à exploiter** : un seul `docker compose up`, migrations de base appliquées au
-  démarrage, scripts de sauvegarde et de restauration qui ne demandent que Docker, en-têtes de
-  sécurité, point de contrôle de santé.
+## Ce qu'elle fait
 
-|                                                   |                                                                        |
-| ------------------------------------------------- | ---------------------------------------------------------------------- |
-| ![Tableau de bord](docs/images/fr/dashboard.webp) | ![Un événement et sa série](docs/images/fr/event.webp)                 |
-| ![Gestion des rôles](docs/images/fr/roles.webp)   | <img src="docs/images/fr/mobile.webp" alt="Sur téléphone" width="260"> |
+- **Connexion avec 42 uniquement.** Aucun mot de passe à gérer. Les nouveaux membres attendent une validation : le
+  bureau les approuve et choisit leur rôle. La connexion peut être limitée à certains campus.
+- **Installation dans le navigateur.** Une commande, puis une page vous guide pas à pas et vérifie vos réponses auprès
+  de 42. Aucun fichier à modifier, puis une page **Paramètres** pour les propriétaires.
+- **Rôles et droits personnalisés.** Chaque BDE crée ses rôles (Président, Trésorier…) et coche ce que chacun peut
+  faire. Personne ne peut donner un droit qu'il n'a pas : le serveur l'empêche, et c'est testé.
+- **Événements.** Un calendrier mensuel et une liste, des catégories en couleur, des événements qui se répètent, des
+  brouillons privés jusqu'à leur confirmation, des membres en charge, une date d'une série annulée toute seule.
+- **Synchronisation d'agenda.** Un lien personnel pour chaque membre, et **un lien pour tout le BDE** à coller une
+  fois dans un agenda partagé.
+- **Notifications** par e-mail, Discord ou Slack : un événement confirmé, un rappel la veille, une demande d'accès,
+  une approbation, un retrait. Sur Discord et Slack, des cartes lisibles.
+- **Journal d'audit** des actions sensibles, **export RGPD** de ses propres données, une page de confidentialité.
+- **Français et anglais**, thèmes clair et sombre, votre couleur et votre logo, utilisable sur téléphone.
+- **Simple à exploiter.** Docker seulement, migrations appliquées au démarrage, scripts de sauvegarde et de
+  restauration, une vérification de santé, et un guide de mise à jour.
 
-## Feuille de route
+|                                                      |                                                     |
+| ---------------------------------------------------- | --------------------------------------------------- |
+| ![Le tableau de bord](docs/images/fr/dashboard.webp) | ![L'installateur](docs/images/fr/installer.webp)    |
+| ![La gestion des rôles](docs/images/fr/roles.webp)   | ![La page Paramètres](docs/images/fr/settings.webp) |
 
-Modules métier prévus, **pas encore disponibles** : **Finances** (budget et dépenses)
-et **Réunions** (ordres du jour et comptes rendus). La plateforme est construite pour qu'un module
-apporte ses propres droits sans toucher au cœur ([comment](docs/architecture.md)).
+<img src="docs/images/fr/mobile.webp" alt="Sur un téléphone" width="260">
 
 ## Démarrage rapide
 
-Il vous faut [Docker](https://www.docker.com/products/docker-desktop/) et Git, sous Windows,
-Linux ou macOS. Pas besoin de Node.js.
+Il vous faut [Docker](https://www.docker.com/products/docker-desktop/) et Git, sous Windows, Linux ou macOS. Pas de
+Node.js.
 
-1. **Installez Docker** (et lancez Docker Desktop sous Windows et macOS) et **Git**.
-2. **Clonez** le dépôt : `git clone https://github.com/<votre-fork>/BDE_Network.git`, puis `cd BDE_Network`.
-3. **Démarrez la plateforme** (sans `-d` la première fois, pour que le code d'installation s'affiche dans le terminal) :
+1. **Récupérez le code** : `git clone https://github.com/edouardbautz/BDE_Network.git`, puis `cd BDE_Network`.
+2. **Démarrez la plateforme** :
 
-   ```
+   ```text
    docker compose up
    ```
 
-4. **Ouvrez l'adresse affichée** (`http://localhost:3000`) et entrez le **code d'installation** : le terminal
-   le montre dans un encadré (si vous l'avez fermé, il est dans l'onglet _Logs_ du conteneur `app` de Docker
-   Desktop, ou avec `docker compose logs app`). Suivez ensuite les étapes dans votre navigateur.
-5. **Une fois la plateforme installée**, faites `Ctrl+C` dans le terminal puis lancez `docker compose up -d` :
-   elle tourne alors en arrière-plan, et c'est cette commande qu'on utilise désormais.
+3. **Ouvrez** `http://localhost:3000` et entrez le **code d'installation** affiché dans le terminal. Suivez les étapes
+   dans le navigateur.
+4. **Une fois installée**, appuyez sur `Ctrl+C`, puis lancez `docker compose up -d`. C'est la commande à utiliser
+   désormais.
 
-L'installateur vous guide en huit étapes (nom, adresse, votre application OAuth 42, campus, propriétaires,
-modules, notifications) et vérifie vos réponses auprès de l'API 42 (vos identifiants, les campus, les logins
-des propriétaires). Vous n'ouvrez aucun fichier de configuration, et il n'y a rien à créer avant : pas de
-`.env`. Le code évite que quelqu'un d'autre installe la plateforme à votre place, et l'installateur disparaît
-définitivement une fois la plateforme installée. Les réglages se modifient ensuite dans la page **Paramètres**
-(propriétaires). **Sauvegardez le volume `secrets`** (`./scripts/backup.sh`) : sans lui, les secrets enregistrés
-ne peuvent plus être déchiffrés après une restauration.
-
-|                                                                     |                                                     |
-| ------------------------------------------------------------------- | --------------------------------------------------- |
-| ![L'installateur dans le navigateur](docs/images/fr/installer.webp) | ![La page Paramètres](docs/images/fr/settings.webp) |
-
-Le guide complet, la mise en production avec HTTPS et les sauvegardes sont dans [docs/](docs/).
+Il vous faudra une application 42 (l'installateur explique comment) et, pour un vrai serveur, un nom de domaine et
+HTTPS : voir le [guide de déploiement](docs/fr/deployment.md). **Sauvegardez le volume `secrets`** avec
+`./scripts/backup.sh`.
 
 ## Documentation
 
-|                                                                                    |                                                              |
-| ---------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| [Installation](docs/installation.md)                                               | pas à pas, dans le navigateur (aucune notion technique)      |
-| [Configuration](docs/configuration.md)                                             | la référence de chaque réglage, et la page Paramètres        |
-| [Guide utilisateur](docs/user-guide.md)                                            | pour les membres                                             |
-| [Rôles et droits](docs/roles.md)                                                   | le modèle, les règles de sécurité, un exemple d'organisation |
-| [Module Événements](docs/events.md)                                                | calendrier, synchronisation, rappels, notifications          |
-| [Notifications](docs/notifications.md)                                             | e-mail, Discord (cartes), Slack ; le logo de l'expéditeur    |
-| [Déploiement](docs/deployment.md)                                                  | VPS, Docker Compose, proxy HTTPS, sauvegardes                |
-| [Guide contributeur](docs/contributing-guide.md) · [Design system](docs/design.md) | pour les développeurs                                        |
+La documentation est en français et en anglais, avec les mêmes pages.
 
-## Essayer les rôles chez soi
+| Je veux…                          | Lire                                                                                                               |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Me repérer                        | [Le sommaire de la documentation](docs/fr/README.md), par profil de lecteur                                        |
+| Installer la plateforme           | [Installation](docs/fr/installation.md) · [Déploiement](docs/fr/deployment.md)                                     |
+| Passer à une nouvelle version     | [Mettre à jour](docs/fr/upgrading.md)                                                                              |
+| L'utiliser, en membre du bureau   | [Guide utilisateur](docs/fr/user-guide.md) · [Rôles et droits](docs/fr/roles.md) · [Événements](docs/fr/events.md) |
+| Régler Discord, Slack ou l'e-mail | [Notifications](docs/fr/notifications.md)                                                                          |
+| Modifier un réglage               | [Configuration](docs/fr/configuration.md)                                                                          |
+| Résoudre un problème              | [Problèmes fréquents](docs/fr/troubleshooting.md) · [FAQ](docs/fr/faq.md) · [Glossaire](docs/fr/glossary.md)       |
+| Contribuer                        | [Guide contributeur](docs/fr/contributing.md) · [Architecture](docs/architecture.md) (en anglais)                  |
 
-`docker compose -f docker-compose.dev.yml up` lance l'application avec des comptes et des
-événements de démonstration. Mettez `ENABLE_DEV_IMPERSONATION=true` dans `.env`, connectez-vous en
-propriétaire et utilisez le bandeau en haut de page pour voir la plateforme « en attente » ou avec
-n'importe quel rôle (développement uniquement, jamais en production).
+## Feuille de route
 
-## Stack technique
+Modules métier prévus, pas encore disponibles : **Finances** (budget et dépenses) et **Réunions** (ordres du jour et
+comptes rendus). Un module apporte ses propres droits sans toucher au cœur
+([comment](docs/architecture.md), en anglais).
 
-Next.js 15 (App Router) · TypeScript strict · PostgreSQL · Prisma 7 · Tailwind CSS v4 ·
-shadcn/ui · NextAuth v5 (beta, version épinglée) · next-intl · Docker Compose
+## Construite avec
+
+Next.js 15 (App Router) · TypeScript (strict) · PostgreSQL · Prisma 7 · Tailwind CSS v4 · shadcn/ui · NextAuth v5
+(beta, version épinglée) · next-intl · Docker Compose
 
 ## Contribuer et sécurité
 
-Voir [CONTRIBUTING.md](CONTRIBUTING.md) et le [Code de conduite](CODE_OF_CONDUCT.md). Pour
-signaler une faille, lisez [SECURITY.md](SECURITY.md) — merci de ne pas ouvrir d'issue publique.
-Les changements sont listés dans le [CHANGELOG](CHANGELOG.md).
+Voir [CONTRIBUTING.fr.md](CONTRIBUTING.fr.md) et le [code de conduite](CODE_OF_CONDUCT.fr.md). Pour signaler une
+faille, lisez [SECURITY.md](SECURITY.md) : n'ouvrez pas d'issue publique. Les changements sont listés dans le
+[CHANGELOG](CHANGELOG.md) (en anglais).
 
 ## Licence
 

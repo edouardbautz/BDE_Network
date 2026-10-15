@@ -102,7 +102,7 @@
       "isDefault": "The default role cannot be deleted. Choose another default role first.",
       "roleInUse": "This role is still given to members.",
       "targetIsSelf": "You cannot do this to your own account.",
-      "targetIsOwner": "Owners are defined in bde.config.yml, not here.",
+      "targetIsOwner": "Owners are managed in Settings, not here.",
       "targetNotMember": "This account is not an approved member.",
       "targetNotPending": "This request has already been handled.",
       "noDefaultRole": "No default role is set.",
@@ -167,7 +167,7 @@
     "welcome": "Welcome, {name}.",
     "empty": {
       "title": "No module turned on",
-      "description": "The Events module (club calendar, reminders, calendar subscription) is available but not turned on. An owner can turn it on in the configuration file, key modules.enabled.",
+      "description": "The Events module (club calendar, reminders, calendar subscription) is available but not turned on. An owner can turn it on in Settings, Modules section.",
       "cta": "Manage members"
     }
   },
@@ -197,7 +197,7 @@
     "removed": "{name} was removed from the BDE.",
     "removeWarning": "Their account is deleted permanently. They can ask for access again by signing in.",
     "removeConfirm": "Remove permanently",
-    "ownerNote": "Set in bde.config.yml",
+    "ownerNote": "Managed in Settings",
     "locked": {
       "self": "This is your account.",
       "above": "Their role gives rights you do not have."

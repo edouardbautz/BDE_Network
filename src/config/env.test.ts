@@ -135,7 +135,7 @@ describe('APP_URL', () => {
     expect(report.errors).toEqual([]);
     expect(report.warnings).toHaveLength(1);
     expect(report.warnings[0]).toContain('pas chiffrées');
-    expect(report.warnings[0]).toContain('docs/deployment.md');
+    expect(report.warnings[0]).toContain('docs/fr/deployment.md');
   });
 });
 

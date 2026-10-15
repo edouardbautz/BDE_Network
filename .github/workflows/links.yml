@@ -1,0 +1,43 @@
+name: External links
+
+# The links to other websites in the documentation, checked once a week. A page that moves or disappears is
+# found here, not by a reader; and a network hiccup never blocks a pull request (internal links and anchors are
+# checked on every pull request by the `docs` job of ci.yml).
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  external:
+    name: external links
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the links
+        id: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --config lychee.toml --no-progress './**/*.md'
+          output: lychee-report.md
+          fail: false
+
+      # One open issue at a time: it is updated while the problem lasts, and closed by hand once fixed.
+      - name: Tell the maintainer
+        if: steps.lychee.outputs.exit_code != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create docs-links --color fbca04 --description "A link of the documentation is broken" --force
+          existing="$(gh issue list --label docs-links --state open --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file lychee-report.md
+          else
+            gh issue create --title "Broken links in the documentation" --label docs-links --body-file lychee-report.md
+          fi

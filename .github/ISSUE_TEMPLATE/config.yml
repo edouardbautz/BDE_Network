@@ -3,6 +3,6 @@ contact_links:
   - name: Report a security vulnerability / Signaler une faille
     url: https://github.com/edouardbautz/BDE_Network/security/advisories/new
     about: Please do not open a public issue for a security problem. Use GitHub's private reporting.
-  - name: Documentation (installation, configuration, user guide)
+  - name: Documentation (installation, configuration, user guide, troubleshooting)
     url: https://github.com/edouardbautz/BDE_Network/tree/main/docs
-    about: Most setup questions are answered in docs/installation.md ("Problèmes fréquents"). Written in French.
+    about: Most questions are answered in docs/en/troubleshooting.md and docs/en/faq.md. English and French. / Réponses dans docs/fr/troubleshooting.md et docs/fr/faq.md.

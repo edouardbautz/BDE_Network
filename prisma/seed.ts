@@ -6,6 +6,10 @@ import { seedDemoEvents } from './seed-events';
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
+/** `SEED_LOCALE=en` writes the demo roles and people in English (the default is French). */
+const english = process.env.SEED_LOCALE === 'en';
+const tr = (fr: string, en: string): string => (english ? en : fr);
+
 /**
  * The two roles every install has (the migration creates them too, with the same ids): "Admin"
  * holds every permission, "Membre" is the default role and can see the events. They are only
@@ -31,12 +35,15 @@ const DEFAULT_ROLES = [
   },
 ];
 
-/** Demo roles, to try the permissions and their limits (see docs/roles.md). */
+/** Demo roles, to try the permissions and their limits (see docs/en/roles.md). */
 const DEMO_ROLES = [
   {
     id: 'role-demo-president',
-    name: 'Président',
-    description: 'Gère les membres et les rôles, et tout le module Événements.',
+    name: tr('Président', 'President'),
+    description: tr(
+      'Gère les membres et les rôles, et tout le module Événements.',
+      'Manages members and roles, and the whole Events module.',
+    ),
     permissions: [
       'members.manage',
       'roles.manage',
@@ -47,14 +54,20 @@ const DEMO_ROLES = [
   },
   {
     id: 'role-demo-secretary',
-    name: 'Secrétaire',
-    description: "Valide les demandes d'accès et organise les événements.",
+    name: tr('Secrétaire', 'Secretary'),
+    description: tr(
+      "Valide les demandes d'accès et organise les événements.",
+      'Approves access requests and organises events.',
+    ),
     permissions: ['members.manage', 'events.view', 'events.manage'],
   },
   {
     id: 'role-demo-events',
-    name: 'Resp. événements',
-    description: "Organise les événements et gère l'agenda partagé.",
+    name: tr('Resp. événements', 'Events lead'),
+    description: tr(
+      "Organise les événements et gère l'agenda partagé.",
+      'Organises events and manages the shared calendar.',
+    ),
     permissions: ['events.view', 'events.manage', 'events.shared_calendar'],
   },
 ];
@@ -84,7 +97,7 @@ const DEMO_USERS: DemoUser[] = [
   },
   {
     login: 'demo-president',
-    fullName: 'Paula Présidente',
+    fullName: tr('Paula Présidente', 'Paula President'),
     email: 'demo-president@example.com',
     campus: 'Paris',
     status: 'MEMBER',
@@ -92,7 +105,7 @@ const DEMO_USERS: DemoUser[] = [
   },
   {
     login: 'demo-secretary',
-    fullName: 'Sam Secrétaire',
+    fullName: tr('Sam Secrétaire', 'Sam Secretary'),
     email: 'demo-secretary@example.com',
     campus: 'Paris',
     status: 'MEMBER',

@@ -1,5 +1,9 @@
 # Configuration du BDE — ce fichier est versionné avec le code (contrairement
-# à .env, qui contient les secrets). Copiez-le vers bde.config.yml puis
+# à .env, qui contient les secrets).
+#
+# Une plateforme installée depuis le navigateur n'en a pas besoin : ses réglages sont dans sa base de données et
+# se modifient dans la page Paramètres. Ce fichier ne sert qu'à une installation par fichiers, à l'import du
+# premier démarrage, ou quand BDE_REIMPORT=1 (voir docs/fr/configuration.md). Copiez-le vers bde.config.yml puis
 # adaptez chaque valeur à votre bureau.
 #
 # Le fichier est validé au démarrage de l'application : si une valeur est
@@ -34,7 +38,8 @@ bde:
 auth:
   # Logins 42 des propriétaires (OWNER). Un login listé ici obtient
   # automatiquement le rôle OWNER à sa première connexion, sans validation.
-  # Ce rôle ne peut être changé QUE depuis ce fichier, jamais depuis l'interface.
+  # Une fois la plateforme installée, cette liste se gère dans Paramètres, section Propriétaires (jamais depuis
+  # les pages Membres ou Rôles).
   owners:
     - 'votre-login-42'
 
@@ -70,7 +75,7 @@ notifications:
   # Canal utilisé pour chaque type de notification : "email", "discord",
   # "slack" ou "none". Le canal choisi doit être configuré dans .env
   # (SMTP_*, DISCORD_WEBHOOK_URL ou SLACK_WEBHOOK_URL) pour fonctionner.
-  # Notifications sur les membres (voir docs/configuration.md) :
+  # Notifications sur les membres (voir docs/fr/configuration.md) :
   memberPending: 'none' # une demande d'accès attend : prévient les propriétaires et ceux qui peuvent la valider
   memberApproved: 'none' # une demande est approuvée : e-mail au membre, ou message dans le salon
   memberRemoved: 'none' # un membre est retiré : message dans le salon (discord ou slack), jamais d'e-mail

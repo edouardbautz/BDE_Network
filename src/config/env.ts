@@ -137,13 +137,13 @@ export function validateEnvironment(env: Env, config: BdeConfig): EnvironmentRep
     warnings.push(
       `APP_URL (« ${appUrl} ») n'est pas une adresse de site : 0.0.0.0 est l'adresse sur laquelle le serveur écoute.\n` +
         '    → Elle est ignorée. Corrigez-la dans les réglages (adresse du site) ou, si plus personne ne peut se\n' +
-        '      connecter, voir docs/installation.md, « Problèmes fréquents », « La connexion avec 42 échoue ».',
+        '      connecter, voir docs/fr/troubleshooting.md (« La connexion avec 42 échoue »).',
     );
   } else if (parsedAppUrl?.protocol === 'http:' && !isLocalAddress(parsedAppUrl)) {
     warnings.push(
       'APP_URL commence par http:// : les connexions ne sont pas chiffrées, et la session des membres\n' +
         "    peut être interceptée par n'importe qui sur le réseau. Mettez la plateforme derrière un proxy\n" +
-        '    HTTPS (voir docs/deployment.md, section « Reverse proxy HTTPS »).',
+        '    HTTPS (voir docs/fr/deployment.md, section « Reverse proxy HTTPS »).',
     );
   }
 
@@ -260,6 +260,6 @@ export function formatEnvironmentErrors(errors: string[]): string {
     ...errors.map((error) => `  • ${error}`),
     '',
     "Corrigez le fichier .env, puis relancez l'application (docker compose up -d).",
-    "Besoin d'aide ? Voir .env.example et docs/configuration.md.",
+    "Besoin d'aide ? Voir .env.example et docs/fr/configuration.md.",
   ].join('\n');
 }

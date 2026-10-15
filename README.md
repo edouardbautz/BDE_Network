@@ -1,117 +1,94 @@
-# BDE_Network
-
 🇬🇧 English · [🇫🇷 Français](README.fr.md)
 
-**An open-source, self-hosted platform to run a student association (_Bureau Des Étudiants_, BDE)
-at a 42 school.** Members sign in with their 42 account, the board gives out custom roles, and the
-club's events live in one shared calendar that everyone can subscribe to from Google Calendar,
-Outlook or Apple Calendar.
+# BDE_Network
 
-Each BDE forks this repository and runs **its own instance**: its own database, its own
-configuration, its own 42 OAuth application. Nothing is shared between instances.
+[![CI](https://github.com/edouardbautz/BDE_Network/actions/workflows/ci.yml/badge.svg)](https://github.com/edouardbautz/BDE_Network/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/github/license/edouardbautz/BDE_Network)](LICENSE)
+[![Version](https://img.shields.io/github/v/release/edouardbautz/BDE_Network)](https://github.com/edouardbautz/BDE_Network/releases)
 
-![The calendar of events](docs/images/en/calendar.webp)
+**A free, self-hosted platform to run a student association (_Bureau Des Étudiants_, BDE) at a 42 school: members sign
+in with their 42 account, the board gives out roles, and the events calendar syncs with Google Calendar, Outlook and
+Apple Calendar.**
 
-## What it does today
+![The events calendar](docs/images/en/calendar.webp)
 
-- **Sign in with 42 only**, no password to manage. New members wait for approval; the board
-  approves them and picks a role. Restrict sign-in to some campuses.
-- **Custom roles and permissions.** Each BDE creates its own roles (President, Treasurer, Events
-  lead…) and ticks exactly what each one may do. Nobody can hand out a right they do not hold, or
-  change their own role: escalation is blocked on the server and tested ([details](docs/roles.md)).
-  Owners are managed from the Settings page and hold every right.
-- **Events module**: a calendar (month and list views), categories with colours, recurring events
-  (weekly, every two weeks, monthly), drafts that stay private until confirmed, people in charge,
-  and cancelling a single date of a series ([guide](docs/events.md)).
-- **Calendar sync.** Every member gets a personal subscription link, and the board can publish
-  **one link for the whole BDE** to paste once into a shared Google or Outlook calendar. Both stay up
-  to date by themselves.
-- **Notifications** by email, Discord or Slack, configured per event type: a confirmed event, a
-  reminder the day before, a new access request, an approval, a removal.
-- **Audit log** of sensitive actions (owners only), **GDPR** export of one's own data and a privacy
-  policy.
-- **French and English** interface, light and dark themes, your accent colour and logo, usable on a
-  phone.
-- **Easy to run**: one `docker compose up`, database migrations applied on start, backup and
-  restore scripts that need only Docker, security headers, a health endpoint.
+Each BDE runs **its own instance**: its own database, its own settings, its own 42 application. Nothing is shared
+between instances.
 
-|                                               |                                                                     |
-| --------------------------------------------- | ------------------------------------------------------------------- |
-| ![Dashboard](docs/images/en/dashboard.webp)   | ![An event with a recurring series](docs/images/en/event.webp)      |
-| ![Role management](docs/images/en/roles.webp) | <img src="docs/images/en/mobile.webp" alt="On a phone" width="260"> |
+## What it does
 
-## Roadmap
+- **Sign in with 42 only.** No password to manage. New members wait for approval; the board approves them and picks
+  a role. Sign-in can be limited to some campuses.
+- **Installed in the browser.** One command, then a page guides you step by step and checks your answers with 42. No
+  file to edit, then a **Settings** page for the owners.
+- **Custom roles and rights.** Each BDE creates its own roles (President, Treasurer…) and ticks what each may do.
+  Nobody can give a right they do not hold: the server blocks it, and it is tested.
+- **Events.** A month calendar and a list, colored categories, repeating events, drafts that stay private until
+  confirmed, members in charge, one date of a series canceled on its own.
+- **Calendar sync.** A personal link for each member, and **one link for the whole BDE** to paste once into a shared
+  calendar.
+- **Notifications** by email, Discord or Slack: an event confirmed, a reminder the day before, an access request, an
+  approval, a removal. On Discord and Slack, readable cards.
+- **Audit log** of sensitive actions, **GDPR** export of one's own data, a privacy page.
+- **French and English**, light and dark themes, your color and logo, usable on a phone.
+- **Easy to run.** Docker only, migrations applied at start, backup and restore scripts, a health check, and a guide
+  to upgrade.
 
-Planned business modules, not available yet: **Finances** (budget and expenses) and
-**Meetings** (agendas and minutes). The platform is built so that a module brings its own
-permissions without touching the core ([how](docs/architecture.md)).
+|                                                 |                                                    |
+| ----------------------------------------------- | -------------------------------------------------- |
+| ![The dashboard](docs/images/en/dashboard.webp) | ![The installer](docs/images/en/installer.webp)    |
+| ![Role management](docs/images/en/roles.webp)   | ![The Settings page](docs/images/en/settings.webp) |
+
+<img src="docs/images/en/mobile.webp" alt="On a phone" width="260">
 
 ## Quick start
 
-You need [Docker](https://www.docker.com/products/docker-desktop/) and Git, on Windows, Linux or
-macOS. No Node.js.
+You need [Docker](https://www.docker.com/products/docker-desktop/) and Git, on Windows, Linux or macOS. No Node.js.
 
-1. **Install Docker** (and start Docker Desktop on Windows and macOS) and **Git**.
-2. **Clone** the repository: `git clone https://github.com/<your-fork>/BDE_Network.git`, then `cd BDE_Network`.
-3. **Start the platform** (without `-d` the first time, so that the setup code shows in the terminal):
+1. **Get the code**: `git clone https://github.com/edouardbautz/BDE_Network.git`, then `cd BDE_Network`.
+2. **Start the platform**:
 
-   ```
+   ```text
    docker compose up
    ```
 
-4. **Open the address shown** (`http://localhost:3000`) and enter the **setup code**: the terminal displays it
-   in a box (if you closed it, it is in the _Logs_ tab of the `app` container in Docker Desktop, or with
-   `docker compose logs app`). Then follow the steps in your browser.
-5. **Once the platform is installed**, press `Ctrl+C` in the terminal and run `docker compose up -d`: it then
-   runs in the background, and that is the command to use from now on.
+3. **Open** `http://localhost:3000` and enter the **setup code** shown in the terminal. Follow the steps in the
+   browser.
+4. **Once installed**, press `Ctrl+C`, then run `docker compose up -d`. This is the command to use from now on.
 
-The installer walks you through eight steps (name, address, your 42 OAuth application, campuses, owners,
-modules, notifications) and checks your answers against the 42 API (your credentials, the campuses, the
-owners' logins). You never open a configuration file, and there is nothing to create beforehand: no `.env`.
-The setup code keeps anybody else from installing the platform in your place, and the installer disappears
-for good once the platform is installed. Settings are then changed on the **Settings** page (owners only).
-**Back up the `secrets` volume** (`./scripts/backup.sh`): without it the saved secrets cannot be decrypted
-after a restore.
-
-|                                                                |                                                    |
-| -------------------------------------------------------------- | -------------------------------------------------- |
-| ![The installer in the browser](docs/images/en/installer.webp) | ![The Settings page](docs/images/en/settings.webp) |
-
-The full guide, the production deployment with HTTPS and the backups are in [docs/](docs/) — **currently
-written in French**.
+You will need a 42 application (the installer explains how) and, for a real server, a domain name and HTTPS: see the
+[deployment guide](docs/en/deployment.md). **Back up the `secrets` volume** with `./scripts/backup.sh`.
 
 ## Documentation
 
-All in French for now; the interface and this page are bilingual.
+The documentation is in English and in French, with the same pages.
 
-|                                                                                   |                                                        |
-| --------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| [Installation](docs/installation.md)                                              | step by step, in the browser (no technical knowledge)  |
-| [Configuration](docs/configuration.md)                                            | the reference of every setting, and the Settings page  |
-| [User guide](docs/user-guide.md)                                                  | for the members                                        |
-| [Roles and permissions](docs/roles.md)                                            | the model, the security rules, an example organisation |
-| [Events module](docs/events.md)                                                   | calendar, sync, reminders, notifications               |
-| [Notifications](docs/notifications.md)                                            | email, Discord (cards), Slack; the sender's logo       |
-| [Deployment](docs/deployment.md)                                                  | VPS, Docker Compose, HTTPS reverse proxy, backups      |
-| [Contributor guide](docs/contributing-guide.md) · [Design system](docs/design.md) | for developers                                         |
+| I want to…                     | Read                                                                                                     |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| Find my way                    | [The documentation index](docs/en/README.md), by type of reader                                          |
+| Install the platform           | [Installation](docs/en/installation.md) · [Deployment](docs/en/deployment.md)                            |
+| Upgrade to a new version       | [Upgrading](docs/en/upgrading.md)                                                                        |
+| Use it, as a board member      | [User guide](docs/en/user-guide.md) · [Roles and rights](docs/en/roles.md) · [Events](docs/en/events.md) |
+| Set up Discord, Slack or email | [Notifications](docs/en/notifications.md)                                                                |
+| Change a setting               | [Configuration](docs/en/configuration.md)                                                                |
+| Solve a problem                | [Troubleshooting](docs/en/troubleshooting.md) · [FAQ](docs/en/faq.md) · [Glossary](docs/en/glossary.md)  |
+| Contribute                     | [Contributor guide](docs/en/contributing.md) · [Architecture](docs/architecture.md)                      |
 
-## Try the roles on your machine
+## Roadmap
 
-`docker compose -f docker-compose.dev.yml up` starts the app with demo accounts and demo events.
-Set `ENABLE_DEV_IMPERSONATION=true` in `.env`, sign in as the owner and use the banner at the top
-to see the platform as "waiting for approval" or as any role (development only, never in
-production).
+Planned business modules, not available yet: **Finances** (budget and expenses) and **Meetings** (agendas and
+minutes). A module brings its own rights without touching the core
+([how](docs/architecture.md)).
 
-## Tech stack
+## Built with
 
-Next.js 15 (App Router) · TypeScript (strict) · PostgreSQL · Prisma 7 · Tailwind CSS v4 ·
-shadcn/ui · NextAuth v5 (beta, pinned version) · next-intl · Docker Compose
+Next.js 15 (App Router) · TypeScript (strict) · PostgreSQL · Prisma 7 · Tailwind CSS v4 · shadcn/ui · NextAuth v5
+(beta, pinned version) · next-intl · Docker Compose
 
 ## Contributing and security
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md). To report a
-vulnerability, read [SECURITY.md](SECURITY.md) — please do not open a public issue. Changes are
-listed in the [CHANGELOG](CHANGELOG.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md). To report a vulnerability, read
+[SECURITY.md](SECURITY.md): please do not open a public issue. Changes are listed in the [CHANGELOG](CHANGELOG.md).
 
 ## License
 

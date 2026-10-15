@@ -46,6 +46,35 @@ jobs:
       - name: Test
         run: npm run test
 
+  # The documentation is a product of its own: internal links and anchors, images' alternative text, French and
+  # English pages that are twins (scripts/check-docs.mjs), Markdown style (markdownlint) and layout (Prettier).
+  # Required on `main`. External links are checked every week by links.yml: a network hiccup must not block a
+  # pull request.
+  docs:
+    name: docs
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # No script (no Prisma client to generate): the checks only read Markdown.
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Internal links, anchors, images and FR/EN twins
+        run: npm run docs:check
+
+      - name: Markdown style
+        run: npm run lint:md
+
+      - name: Markdown layout
+        run: npx prettier --check "**/*.md"
+
   # The production image is what operators actually run: build it, start it against a real
   # PostgreSQL and check it comes up (migrations applied, environment accepted, database
   # reachable). Catches a broken Dockerfile or a Prisma update the pruned CLI can no longer run.

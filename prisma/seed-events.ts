@@ -1,7 +1,59 @@
 import type { PrismaClient } from '../src/generated/prisma/client';
 import { getConfig } from '../src/config';
+import { bdeConfigSchema, type BdeConfig } from '../src/config/schema';
 import { allOccurrences } from '../src/lib/events/recurrence';
 import { addDays, fromLocalDateTime, schoolYearOf, toLocalDateTime } from '../src/lib/events/time';
+
+/**
+ * `SEED_LOCALE=en` writes the demo events in English (the default is French). Used to take the screenshots of the
+ * documentation in both languages; see docs/en/contributing.md.
+ */
+const ENGLISH: Record<string, string> = {
+  'Pot de bienvenue': 'Welcome drinks',
+  'Accueil des nouveaux membres du bureau.': 'A warm welcome for the new board members.',
+  Foyer: 'Student lounge',
+  'Soirée jeux de société': 'Board game night',
+  'Jeux de cartes et de plateau. Le bureau apporte les snacks.':
+    'Card games and board games. The board brings the snacks.',
+  'Salle commune': 'Common room',
+  'Rendez-vous partenaire — Café du Coin': 'Partner meeting — Café du Coin',
+  'Négociation de la remise étudiante pour la saison.':
+    'Negotiating the student discount for the season.',
+  'Café du Coin': 'Café du Coin',
+  'Grande soirée de rentrée': 'Big back-to-school party',
+  'DJ set, bar sans alcool et photobooth. Prévoir 4 personnes pour le montage dès 17h.':
+    'DJ set, alcohol-free bar and photo booth. We need 4 people for the set-up from 5 pm.',
+  'Salle des fêtes': 'Party hall',
+  'Tournoi de foot inter-promos': 'Inter-year football tournament',
+  'Huit équipes, élimination directe. Inscriptions des équipes sur place dès 13h30.':
+    'Eight teams, knockout rounds. Teams register on the spot from 1:30 pm.',
+  'Stade municipal': 'Municipal stadium',
+  'Séance de sport hebdomadaire': 'Weekly workout',
+  'Footing ou renforcement musculaire, ouvert à tous. La 3ᵉ séance est annulée (salle indisponible).':
+    'Jogging or strength training, open to all. The 3rd session is cancelled (room unavailable).',
+  Gymnase: 'Gym',
+  'Permanence du bureau': 'Board office hours',
+  'Le bureau reçoit les questions des étudiants et distribue les goodies.':
+    'The board answers students’ questions and hands out goodies.',
+  'Local du BDE': 'BDE office',
+  "Week-end d'intégration (WEI)": 'Integration weekend (WEI)',
+  'Départ du parking à 18h le vendredi, retour le dimanche en fin d’après-midi.':
+    'Departure from the car park at 6 pm on Friday, back on Sunday late afternoon.',
+  'Gîte de la Vallée': 'Valley lodge',
+  'Assemblée mensuelle du bureau': 'Monthly board meeting',
+  'Point sur le budget, les prochains événements et la répartition des tâches.':
+    'Budget review, upcoming events and who does what.',
+  'Gala de fin d’année': 'End-of-year gala',
+  'Brouillon : lieu et traiteur à confirmer avant de prévenir les membres.':
+    'Draft: venue and caterer to confirm before telling the members.',
+  'À définir (salle des fêtes ou péniche)': 'To be decided (party hall or river barge)',
+  'Sortie ski — à confirmer': 'Ski trip — to be confirmed',
+  'Brouillon : en attente du devis du car.': 'Draft: waiting for the coach quote.',
+  'Station à définir, départ du parking du campus':
+    'Resort to be decided, leaving from the campus car park',
+};
+const tr = (text: string): string =>
+  process.env.SEED_LOCALE === 'en' ? (ENGLISH[text] ?? text) : text;
 
 type DemoLogin = 'demo-owner' | 'demo-admin' | 'demo-member1' | 'demo-member2';
 type Recurrence = 'NONE' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY';
@@ -27,6 +79,16 @@ interface DemoEvent {
   author: DemoLogin;
 }
 
+/**
+ * The configuration of the BDE: the one saved in the database once the platform is installed (what the
+ * installer and the Settings page wrote), the configuration files before that (`npm run dev`).
+ */
+async function platformConfig(prisma: PrismaClient): Promise<BdeConfig> {
+  const row = await prisma.platformSettings.findUnique({ where: { id: 'platform' } });
+  const parsed = row ? bdeConfigSchema.safeParse(row.config) : null;
+  return parsed?.success ? parsed.data : getConfig();
+}
+
 /** Offset (in days) to the next occurrence of `weekday` (0 = Sunday), never today. */
 function daysUntilWeekday(weekdayNow: number, weekday: number): number {
   return (weekday - weekdayNow + 7) % 7 || 7;
@@ -43,7 +105,7 @@ export async function seedDemoEvents(
   prisma: PrismaClient,
   users: ReadonlyMap<string, { id: string }>,
 ): Promise<void> {
-  const config = getConfig();
+  const config = await platformConfig(prisma);
   const categories = config.events?.categories;
   if (!config.modules.enabled.includes('events') || !categories || categories.length === 0) {
     console.log('Events module is not enabled in the config: skipping demo events.');
@@ -225,9 +287,9 @@ export async function seedDemoEvents(
         : null;
 
     const data = {
-      title: demo.title,
-      description: demo.description,
-      location: demo.location,
+      title: tr(demo.title),
+      description: tr(demo.description),
+      location: tr(demo.location),
       categoryKey: category.key,
       status: demo.status,
       startsAt,

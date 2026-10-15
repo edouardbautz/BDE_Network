@@ -12,7 +12,7 @@
 - [ ] New text goes through `messages/fr.json` **and** `messages/en.json`
 - [ ] New behaviour has tests; a rule about permissions or roles was broken on purpose to see a test fail
 - [ ] A destructive action asks through `ConfirmDialog`; a new page has `loading.tsx` and a title (`pageTitle`)
-- [ ] Docs and `CHANGELOG.md` (section Unreleased) updated if users are affected
+- [ ] Docs updated in **both languages** (`docs/en/` and `docs/fr/`) and `CHANGELOG.md` (section Unreleased) if users are affected; `npm run docs:check` and `npm run lint:md` pass
 - [ ] Commits follow [Conventional Commits](https://www.conventionalcommits.org/)
 
 <!-- Security problem? Do not describe it here: see SECURITY.md. -->

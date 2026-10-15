@@ -1,0 +1,138 @@
+🇫🇷 Français · [🇬🇧 English](../en/upgrading.md)
+
+# Mettre à jour vers une nouvelle version
+
+Mettre à jour tient en trois gestes : **sauvegarder**, **récupérer le nouveau code**, **relancer**. Les
+migrations de la base de données s'appliquent toutes seules au démarrage. Comptez dix minutes, dont quelques-unes
+d'attente pendant la construction de l'image.
+
+Ce guide a été essayé pour de vrai, en passant d'une plateforme de la **version 1.0.0** (réglages dans `.env` et
+`bde.config.yml`) à la version suivante, avec des membres, des rôles et des événements, puis en revenant en arrière.
+
+## Avant de commencer
+
+1. **Lisez le [CHANGELOG](../../CHANGELOG.md)** : il dit ce qui change et ce qu'il faut savoir.
+2. **Notez la version actuelle**, pour pouvoir y revenir :
+
+   ```text
+   git describe --tags --always
+   ```
+
+3. **Faites une sauvegarde** :
+
+   ```text
+   ./scripts/backup.sh
+   ```
+
+   Sous Windows, lancez-la depuis Git Bash ou WSL (voir [Sauvegardes](deployment.md#sauvegardes-et-restauration)).
+   Copiez les fichiers de `backups/` hors du serveur.
+
+   > Une plateforme de la version 1.0.0 n'a qu'**une** archive (la base). Les clés de la plateforme sont alors dans
+   > son fichier `.env`, que la sauvegarde ne contient pas : **copiez aussi `.env` et `bde.config.yml`** à un endroit
+   > sûr. Après la mise à jour, une nouvelle sauvegarde contiendra tout (voir plus bas).
+
+## 1. Récupérer le nouveau code
+
+**Vous avez cloné le projet sans le modifier :**
+
+```text
+git pull
+```
+
+**Vous avez forké le projet** (vos propres commits, par exemple un `bde.config.yml` modifié) : ajoutez une fois le
+dépôt d'origine, puis fusionnez-le dans votre branche.
+
+```text
+git remote add upstream https://github.com/edouardbautz/BDE_Network.git   # une seule fois
+git fetch upstream
+git merge upstream/main
+```
+
+La fusion se passe sans conflit dans la plupart des cas. Si `bde.config.yml` est en conflit, gardez votre version : les
+réglages sont dans la base de données, ce fichier ne sert plus qu'à l'import du premier démarrage.
+
+## 2. Relancer
+
+```text
+docker compose up --build -d
+```
+
+Docker reconstruit l'image (quelques minutes), puis remplace le conteneur. Au démarrage, la plateforme applique les
+migrations de la base de données avant de répondre.
+
+## 3. Vérifier
+
+1. **Les conteneurs sont en bonne santé** : `docker compose ps` doit afficher `healthy` pour `app` et `postgres`.
+2. **Le journal est propre** : `docker compose logs app` doit contenir `All migrations have been successfully
+applied` (ou `No pending migrations to apply`), puis `Ready`.
+3. **Le site répond** : `curl http://127.0.0.1:3000/api/health` affiche `{"status":"ok"}` (changez le port si vous
+   avez réglé `APP_PORT`).
+4. **Tout est là** : ouvrez la plateforme, connectez-vous, regardez les membres, les rôles et les événements.
+5. **Les réglages se lisent** : en tant que propriétaire, **Paramètres** doit dire « Réglages enregistrés dans la base
+   de données ».
+
+Si la page affiche une erreur 503 au lieu de la plateforme, elle dit ce qui ne va pas : voir
+[Problèmes fréquents](troubleshooting.md#le-site-affiche-une-page-derreur-au-lieu-de-la-plateforme).
+
+Enfin, **faites une nouvelle sauvegarde** : elle contient maintenant la base **et** les clés.
+
+## Si votre plateforme date d'avant l'installateur
+
+C'est le cas d'une plateforme installée avec `.env` et `bde.config.yml` (version 1.0.0). Au **premier démarrage**
+après la mise à jour :
+
+- les migrations ajoutent la table des réglages ;
+- `bde.config.yml` et `.env` sont **copiés dans la base de données**, les secrets chiffrés (le journal le dit :
+  « Les réglages de bde.config.yml et de .env ont été copiés dans la base de données ») ;
+- le volume Docker `secrets` est créé : il reprend le mot de passe de la base et la clé de session de votre
+  `.env`, donc **les sessions restent valables** et la base reste accessible ;
+- la page **Paramètres** devient utilisable.
+
+À partir de là, **la base fait foi** : modifier `.env` ou `bde.config.yml` ne change plus rien. Gardez-en une copie
+jusqu'à avoir vérifié que tout marche, puis changez les réglages dans **Paramètres**.
+
+Si les fichiers étaient incomplets (par exemple le login `votre-login-42` encore dans les propriétaires), la
+plateforme continue de lire les fichiers et la page Paramètres reste en lecture seule. Corrigez les fichiers, puis
+`docker compose up -d --build`. Voir [Configuration](configuration.md#où-sont-les-réglages).
+
+## Revenir en arrière
+
+Si la nouvelle version pose problème, vous pouvez revenir à la précédente avec votre sauvegarde. **Les données
+saisies depuis la sauvegarde sont perdues** : la restauration remet la base dans l'état de la sauvegarde.
+
+1. Restaurez la sauvegarde faite avant la mise à jour (le script de la version actuelle remplace toute la base) :
+
+   ```text
+   ./scripts/restore.sh backups/bde-backup-AAAA-MM-JJ_HH-MM-SS.tar.gz
+   ```
+
+   Le script vous demande de taper `RESTAURER`. Il fait d'abord une copie de sécurité de l'état actuel.
+
+2. Revenez à l'ancienne version du code (celle que vous aviez notée) :
+
+   ```text
+   git checkout <la version notée>
+   ```
+
+3. Reconstruisez :
+
+   ```text
+   docker compose up --build -d
+   ```
+
+Faites-les **dans cet ordre**. Pour reprendre ensuite la dernière version du projet, revenez sur votre branche
+(`git switch main`).
+
+## Historique : des rôles fixes aux rôles personnalisés (0.x → 1.0)
+
+Les versions 0.x avaient les rôles fixes Administrateur et Membre, et des droits accordés membre par membre. La
+migration vers la version 1.0 les convertit toute seule.
+
+| Avant                                                 | Après                                                                                                             |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Propriétaire, en attente                              | inchangés                                                                                                         |
+| Administrateur                                        | le rôle **Admin** (tous les droits)                                                                               |
+| Membre                                                | le rôle **Membre** (consulter les événements)                                                                     |
+| Membre avec un droit de module (gérer les événements) | un rôle « Membre + Événements » créé pour l'occasion. Les membres qui avaient les mêmes droits partagent ce rôle. |
+
+Rien n'est perdu : l'ancien rôle de chaque compte et ses droits sont conservés dans une entrée du journal d'audit.

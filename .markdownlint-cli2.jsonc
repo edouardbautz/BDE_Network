@@ -1,0 +1,22 @@
+// markdownlint, on top of Prettier (which owns the layout: line wrapping, table alignment, list indentation).
+// What it adds is the content rules: heading levels, fenced code languages, links, duplicated headings…
+{
+  "globs": ["**/*.md"],
+  "ignores": ["node_modules/**", "src/generated/**", ".next/**", ".audit/**", "coverage/**"],
+  "config": {
+    "default": true,
+    // Prettier does not wrap prose, and tables and links make long lines unavoidable.
+    "MD013": false,
+    // Each page starts with the link to its other-language twin (checked by scripts/check-docs.mjs), then the title.
+    "MD041": false,
+    // The same heading may appear under two parents (for example "Notifications" in two sections).
+    "MD024": { "siblings_only": true },
+    // The documentation uses a few HTML elements GitHub renders: a sized image, a line break in a table.
+    "MD033": { "allowed_elements": ["img", "br", "details", "summary", "kbd"] },
+    // Italic with underscores, bold with asterisks: what Prettier writes.
+    "MD049": { "style": "underscore" },
+    "MD050": { "style": "asterisk" },
+    // Prettier pads table cells with spaces; it owns the table layout.
+    "MD060": false,
+  },
+}
