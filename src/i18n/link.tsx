@@ -36,7 +36,7 @@ function addressOf(href: Href, locale: string) {
  * calendar, one date of a series, the menu entry of the page you are reading): that one is a plain `<a>`, which
  * loads the page again.
  *
- * Why: in the production build, Next.js 15 answers such a click with the "loading" state it cached for the page
+ * Why: in the production build, Next.js 15 and 16 (checked on 16.4.1) answer such a click with the "loading" state it cached for the page
  * (`loading.tsx`), then fetches the page and never shows it, and the address does not move either. Nothing is logged,
  * the development server does not do it, and only some timings do. A button that does nothing is worse than a page
  * that loads again. See "Navigation" in docs/architecture.md; `e2e/events.mjs` clicks these buttons for real.

@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        script: [events, settings, series, actions]
+        script: [events, settings, series, actions, hydration]
         # Each shard is a platform of its own, played ROUNDS times: a failure that comes one time in twenty is seen
         # three times in sixty.
         shard: [1, 2, 3]
@@ -88,6 +88,8 @@ jobs:
         run: |
           export AUTH_SECRET="$(docker exec installer cat /secrets/auth_secret)"
           export OWNER=alice OWNER_CANDIDATE=bob PGPASSWORD=ci-password PSQL="psql -h 127.0.0.1 -U bde -d bde_install"
+          # (only the hydration script reads these two)
+          export LOADS=15 PAGES=/en/events,/en/dashboard
           zones=(UTC Pacific/Auckland America/Los_Angeles Asia/Kolkata)
           failures=0
           for round in $(seq 1 "$ROUNDS"); do

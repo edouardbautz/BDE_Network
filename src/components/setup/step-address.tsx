@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useState, useSyncExternalStore, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { TriangleAlert } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -26,9 +26,12 @@ export function StepAddress({
   const [accepted, setAccepted] = useState(false);
   const [failure, setFailure] = useState<ActionFailure | null>(null);
   const [pending, start] = useTransition();
-  // The address this browser is on: known after the first render only (the server cannot know it).
-  const [browserOrigin, setBrowserOrigin] = useState<string | null>(null);
-  useEffect(() => setBrowserOrigin(window.location.origin), []);
+  // The address this browser is on: known to the browser only (null while the server draws the page, then the real one).
+  const browserOrigin = useSyncExternalStore(
+    () => () => undefined,
+    () => window.location.origin,
+    () => null,
+  );
 
   // The same check as the server's, to warn at once; the server runs it again.
   const checked = validateAddress(address);

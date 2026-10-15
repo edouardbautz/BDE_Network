@@ -6,8 +6,23 @@ All notable changes to this project are written here, in English. Format based o
 
 ## [Unreleased]
 
+### Changed
+
+- **Next.js 16.4.1** (it was 15.5.27), webpack kept as the bundler. Next.js 15.5 carries a React with a hydration bug:
+  on a slow connection, about one page load in seven (17 in 120 in our measure) made the browser throw the server's HTML
+  away and draw the page again, with a dozen errors in the console; the page still came out complete, after a flash. It
+  is fixed in the React of Next.js 16 (0 in 120 under the same conditions) and will not be fixed in 15.5. The move changes
+  no behavior: `src/middleware.ts` is now `src/proxy.ts` (Next.js 16's name for it), and four effects of the interface
+  were rewritten the way the new React rules ask (the choice of a dialog, the logo's preview, the address the browser is
+  on, the new-version banner).
+
 ### Added
 
+- **`e2e/hydration.mjs`**, run by CI: the pages are loaded 40 times each on a slow connection, and any page error fails.
+  It fails on Next.js 15.5 and passes on 16.
+- **An `e2e stress` workflow** (Actions → e2e stress): each browser script is played 20 times on three platforms, with
+  the browser in a different time zone each round, and the evidence of every failure is kept (in which document the
+  error came, from which script, the HTML the browser drew against the HTML the server sent).
 - **A banner tells the owners when a new version is published.** On the dashboard and on the Settings page, owners (and
   only owners) see the new version, what it is about, a link to its notes and the two commands that update it
   (`git pull`, then `docker compose up -d`), which they can copy; **Hide until the next version** hides it in that
