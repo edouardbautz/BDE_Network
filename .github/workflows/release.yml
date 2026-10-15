@@ -6,7 +6,10 @@ name: release
 #   build    the image, built natively for amd64 and for arm64 (no emulation), then STARTED on a real PostgreSQL
 #            (e2e/safe-update.sh: update, copy, put back, pages); only an image that did that is kept
 #   publish  the two images become one `ghcr.io/edouardbautz/bde_network:X.Y.Z` (and X.Y, and `latest` for a version
-#            without a suffix), with its provenance and its SBOM, and the GitHub release carries the CHANGELOG's notes
+#            without a suffix), with its provenance and its SBOM
+#
+# The GitHub release itself is not made here: the maintainer writes its notes for the people who run a BDE and
+# creates it under their own name once the images are out (docs/architecture.md, "Releases").
 #
 # On a pull request that touches this file or the image, only `check` and `build` run, without pushing anything:
 # the part that cannot be tried on the day (arm64, the smoke test) is tried before.
@@ -167,17 +170,10 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     permissions:
-      contents: write # the GitHub release
       packages: write # the image
       id-token: write # the signature of the attestations
       attestations: write
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
       - uses: actions/download-artifact@v4
         with:
           path: ${{ runner.temp }}/digests
@@ -247,21 +243,3 @@ jobs:
           subject-digest: ${{ steps.image.outputs.digest }}
           sbom-path: bde-network-sbom.spdx.json
           push-to-registry: true
-
-      # The notes are the CHANGELOG's section, as written, followed by the two commands that matter.
-      - name: GitHub release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          version="${GITHUB_REF_NAME#v}"
-          node scripts/release.mjs notes "$GITHUB_REF_NAME" > "$RUNNER_TEMP/notes.md"
-          {
-            echo
-            echo '---'
-            echo
-            echo "Image: \`${IMAGE}:${version}\`. To update: \`git pull\`, then \`docker compose up -d\` ([guide](https://github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_REF_NAME}/docs/en/upgrading.md))."
-          } >> "$RUNNER_TEMP/notes.md"
-          flag=""
-          [ "$(node scripts/release.mjs prerelease "$GITHUB_REF_NAME")" = true ] && flag="--prerelease"
-          gh release create "$GITHUB_REF_NAME" bde-network-sbom.spdx.json \
-            --title "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag $flag

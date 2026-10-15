@@ -3,14 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import {
-  IMAGE,
-  changelogSection,
-  checkRelease,
-  composeVersion,
-  parseTag,
-  releaseNotes,
-} from './release.mjs';
+import { IMAGE, changelogSection, checkRelease, composeVersion, parseTag } from './release.mjs';
 
 const root = join(fileURLToPath(new URL('.', import.meta.url)), '..');
 const read = (file: string) => readFileSync(join(root, file), 'utf8');
@@ -142,17 +135,6 @@ describe('checkRelease', () => {
     expect(
       checkRelease({ tag: 'v1.2.0', packageVersion: '0.0.1', composeText: 'x', changelogText: '' }),
     ).toHaveLength(3);
-  });
-});
-
-describe('releaseNotes', () => {
-  it('is the CHANGELOG section, as written', () => {
-    expect(releaseNotes(CHANGELOG, '1.2.0')).toBe('### Added\n\n- A thing.');
-  });
-
-  it('refuses a version without notes', () => {
-    expect(() => releaseNotes(CHANGELOG, '9.9.9')).toThrow('No notes for 9.9.9');
-    expect(() => releaseNotes(CHANGELOG, 'Unreleased')).toThrow();
   });
 });
 

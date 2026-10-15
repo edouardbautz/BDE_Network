@@ -106,7 +106,7 @@ prisma/
 scripts/
   backup.sh, restore.sh     POSIX sh, need only Docker on the server (no Node): one tar.gz with the database dump
   audit-prod.mjs            CI gate on production dependency advisories (+ audit-allowlist.json)
-  release.mjs               what a release is made of (tag = package.json = compose default = CHANGELOG), and its notes
+  release.mjs               what a release is made of (tag = package.json = compose default = CHANGELOG)
 docker-compose.yml          the published image of one version; docker-compose.build.yml builds it from the folder instead
 e2e/                        browser tests run by CI against the real image (installer, settings page, sign-in) + a stand-in 42 API
 docker/
@@ -655,14 +655,16 @@ User guide: `docs/en/events.md`. The shape worth knowing before touching it:
     main) → `build` (each architecture built **natively**, amd64 on `ubuntu-latest` and arm64 on `ubuntu-24.04-arm`, no
     emulation; pushed **by digest, with no tag**, then `e2e/safe-update.sh` runs against that digest on that
     architecture) → `publish` (only when both passed: `imagetools create` makes `X.Y.Z`, `X.Y` and, without a suffix,
-    `latest`; provenance and SBOM are attached as attestations; the GitHub release carries the CHANGELOG section as its
-    notes, the SBOM, and the two update commands). An image that failed its test is never named. On a pull request that
+    `latest`; provenance and SBOM are attached as attestations). An image that failed its test is never named. On a pull request that
     touches the workflow, the Dockerfile, `docker/` or the test, `check` and `build` run **without pushing**, so
     the part that cannot be tried on the day (arm64, the smoke test) is tried before. A fork skips the workflow.
   - **Preparing one**: a pull request that moves `package.json` (and the lock: `npm version X.Y.Z --no-git-tag-version`,
     then `npx -y npm@10 ci --dry-run`), the compose default, and the CHANGELOG (`## [Unreleased]` becomes
     `## [X.Y.Z] - date`, with the link list at the bottom). Then, once merged, `git tag vX.Y.Z && git push origin
-vX.Y.Z`. The first publication of a package on GHCR is private: make it public once, in the package's settings.
+vX.Y.Z`. **The GitHub release is created by the maintainer, not by the workflow**, once the images are out
+    (`gh release create vX.Y.Z --title vX.Y.Z --notes-file …`): the CHANGELOG is the complete record, the release notes
+    are written for the people who run a BDE (English, with a short French summary, nothing technical) and the release
+    is then published under the maintainer's name. The first publication of a package on GHCR is private: make it public once, in the package's settings.
     Mistakes are fixed forward (a new patch version); an image that is already pulled is never replaced under the same
     tag.
 - **bde.config.yml is never bind-mounted; it is the seed of an import.** `docker-compose.yml` has no volume for
