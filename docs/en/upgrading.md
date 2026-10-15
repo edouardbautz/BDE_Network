@@ -2,8 +2,9 @@
 
 # Upgrading to a new version
 
-Upgrading takes three moves: **back up**, **get the new code**, **restart**. Database migrations apply by themselves
-at start. Allow ten minutes, a few of them waiting while the image builds.
+Upgrading takes three moves: **back up**, **get the new code**, **restart**. The restart is `docker compose up -d`:
+Docker downloads the image of the new version, which `docker-compose.yml` names. Database migrations apply by
+themselves at start, after a copy that the platform makes. Allow ten minutes, a few of them waiting for the download.
 
 This guide was tried for real, going from a platform on **version 1.0.0** (settings in `.env` and `bde.config.yml`)
 to the next version, with members, roles and events, then rolling back.
@@ -11,7 +12,7 @@ to the next version, with members, roles and events, then rolling back.
 ## Before you start
 
 1. **Read the [CHANGELOG](../../CHANGELOG.md)**: it says what changes and what you need to know.
-2. **Note the current version**, to be able to go back to it:
+2. **Note the current version**, to be able to go back to it (it is also at the top of the **Settings** page):
 
    ```text
    git describe --tags --always
@@ -38,8 +39,7 @@ to the next version, with members, roles and events, then rolling back.
 git pull
 ```
 
-**You forked the project** (your own commits, for example an edited `bde.config.yml`): add the original repository
-once, then merge it into your branch.
+**You forked the project** (your own commits): add the original repository once, then merge it into your branch.
 
 ```text
 git remote add upstream https://github.com/edouardbautz/BDE_Network.git   # only once
@@ -48,16 +48,19 @@ git merge upstream/main
 ```
 
 The merge goes without conflict in most cases. If `bde.config.yml` conflicts, keep your version: the settings are in
-the database, and this file is only used by the import at the first start.
+the database, and this file is only used by the import at the first start. If you changed the platform's **code**, you
+also build your own image: [Build the image yourself](deployment.md#build-the-image-yourself), and use that command
+instead of the one below.
 
 ## 2. Restart
 
 ```text
-docker compose up --build -d
+docker compose up -d
 ```
 
-Docker rebuilds the image (a few minutes), then replaces the container. At start, the platform applies the database
-migrations before answering.
+Docker downloads the image of the new version (a minute or two), then replaces the container. At start, the platform
+makes a copy of the database if there are migrations to apply (see
+[Automatic copy before an update](deployment.md#automatic-copy-before-an-update)), applies them, and answers.
 
 ## 3. Check
 
@@ -89,8 +92,20 @@ the upgrade:
 From then on, **the database is the source of truth**: editing `.env` or `bde.config.yml` changes nothing any more.
 Keep a copy until you have checked that everything works, then change settings in **Settings**.
 
+**Build the image once, on the spot.** The published image holds the template, not your `bde.config.yml`: your file only
+enters an image when it is built from your folder. For the first start after the upgrade, run:
+
+```text
+docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+```
+
+Without it, the platform starts, finds a database that has accounts but no saved settings, and does not open the
+installer (it would replace your settings): its page says "Data exists, but no settings are saved". Nothing is lost,
+run the command above. Once the log says the settings were copied, you update like everyone else: `git pull`, then
+`docker compose up -d`.
+
 If the files were incomplete (for example the login `votre-login-42` still among the owners), the platform keeps
-reading the files and the Settings page stays read-only. Fix the files, then `docker compose up -d --build`. See
+reading the files and the Settings page stays read-only. Fix the files, then run the same command again. See
 [Configuration](configuration.md#where-the-settings-are).
 
 ## If the update itself fails
@@ -121,11 +136,13 @@ backup is lost**: the restore puts the database back in the state of the backup.
    git checkout <the version you noted>
    ```
 
-3. Rebuild:
+3. Restart. The image of the version you went back to is downloaded again if it is no longer on the machine:
 
    ```text
-   docker compose up --build -d
+   docker compose up -d
    ```
+
+   Versions before 1.1.0 were not published as images: to go back to 1.0.0, [build the image yourself](deployment.md#build-the-image-yourself).
 
 Do them **in this order**. To take the project's latest version again afterwards, go back to your branch
 (`git switch main`).

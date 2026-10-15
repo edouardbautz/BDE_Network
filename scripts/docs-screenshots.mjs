@@ -61,7 +61,18 @@ const run = (command, args, options = {}) =>
 function compose(project, override, ...args) {
   return run(
     'docker',
-    ['compose', '-p', project, '-f', 'docker-compose.yml', '-f', override, ...args],
+    [
+      'compose',
+      '-p',
+      project,
+      '-f',
+      'docker-compose.yml',
+      '-f',
+      'docker-compose.build.yml',
+      '-f',
+      override,
+      ...args,
+    ],
     {
       env: { ...process.env, APP_PORT: PORT, APP_BIND: '127.0.0.1' },
     },

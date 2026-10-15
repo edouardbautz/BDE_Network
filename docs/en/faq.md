@@ -169,7 +169,7 @@ Owners only, read-only. It can be neither edited nor deleted from the interface.
 
 ### How do I upgrade?
 
-Back up, get the new code, then `docker compose up --build -d`. See [Upgrading](upgrading.md).
+Back up, then two commands: `git pull` and `docker compose up -d`. See [Upgrading](upgrading.md).
 
 ### What if the 42 application's key expires?
 

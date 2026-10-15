@@ -50,7 +50,12 @@ services:
       retries: 10
 
   app:
-    build: .
+    # The image published for each release (.github/workflows/release.yml): the version is written HERE, so a
+    # `git pull` followed by `docker compose up -d` is the whole update, and going back to an older version of this
+    # folder goes back to its image. Never `latest`: what runs must be what this file was written for.
+    # To pin another version, or to build the image from this folder (contributors, a files-driven installation):
+    # docker-compose.build.yml, see docs/en/deployment.md.
+    image: ghcr.io/edouardbautz/bde_network:${BDE_VERSION:-1.1.0}
     restart: unless-stopped
     depends_on:
       postgres:

@@ -91,7 +91,7 @@ describe('getConfig', () => {
       const message = await messageOf();
       expect(message).toContain('est introuvable');
       expect(message).toContain(`Chemin vérifié : ${join(dir, 'bde.config.yml')}`);
-      expect(message).toContain('docker compose up --build -d');
+      expect(message).toContain('docker-compose.build.yml up -d --build');
       expect(message).not.toContain('DOSSIER');
     });
 

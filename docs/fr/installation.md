@@ -58,7 +58,7 @@ docker compose up
 ```
 
 **Sans `-d` la première fois.** Le terminal reste ouvert et montre ce que fait la plateforme : c'est là que
-s'affiche le code d'installation. La première fois, Docker construit l'image, ce qui prend quelques minutes.
+s'affiche le code d'installation. La première fois, Docker télécharge l'image de la plateforme, ce qui prend une ou deux minutes.
 Puis le terminal affiche un encadré :
 
 ```text

@@ -6,6 +6,8 @@ All notable changes to this project are written here, in English. Format based o
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-15
+
 ### Added
 
 - **Browser installation.** `docker compose up`, open the address, and a page guides you step by step to the end, in
@@ -64,6 +66,16 @@ All notable changes to this project are written here, in English. Format based o
 - **CI for the documentation**: a `docs` job, required on `main` (internal links and anchors, images' alternative
   text, French and English pages that are twins, markdownlint on top of Prettier), and a weekly check of external
   links (`.github/workflows/links.yml`, which opens an issue when a link breaks).
+- **Published images, and an update in two commands.** Each version is now published as an image
+  (`ghcr.io/edouardbautz/bde_network:X.Y.Z`, for amd64 and arm64), built and tested by a workflow that starts it on a
+  real PostgreSQL before naming it. `docker-compose.yml` names the image of one version, so installing is
+  `docker compose up` (a download of a minute or two instead of a build of several) and updating is `git pull`, then
+  `docker compose up -d`, the same for everybody. Going back to an older version of the folder goes back to its image.
+  The image carries its provenance and its SBOM, and the GitHub release carries these notes. `BDE_VERSION` in `.env`
+  pins a version.
+- **`docker-compose.build.yml`** builds the image from the folder instead (contributors, a modified fork, and a
+  platform driven by files that has not been copied into its database yet: the published image holds the template
+  `bde.config.yml`, not yours). The messages and pages that told files-driven operators to rebuild name this command.
 - **The platform keeps a copy of its database before applying an update, and puts it back if the update fails.** When a
   new version has migrations to apply, the start-up command first dumps the database to the new `backups` volume
   (`pre-update_<date>_v<version>.sql.gz`: the 5 most recent kept, nothing older than 90 days, the newest never deleted;
@@ -106,6 +118,10 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Changed
 
+- **The upgrading, deployment and troubleshooting guides** (English and French) describe the two-command update, the
+  choice of a version, building the image yourself, and what to do when the image cannot be downloaded (`manifest
+unknown`, `unauthorized`, a firewall). Versions before 1.1.0 were never published as images: going back to 1.0.0
+  means building it.
 - **Discord cards that are airier and easier to read**, the same for every type (confirmation, reminders, access
   request, member approved or removed): the essentials as large headings with an icon in front of each (📅 when, 📍
   where, the description as a quote; 🪪 login and 🏫 campus for a member), blank lines between blocks, the secondary
@@ -452,6 +468,7 @@ Initial version (never tagged): the platform's foundation.
 - Docker Compose (production and development with hot reload), Dockerfile.
 - GitHub Actions CI (lint, format, typecheck, build, test) on ubuntu-latest and windows-latest.
 
-[Unreleased]: https://github.com/edouardbautz/BDE_Network/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/edouardbautz/BDE_Network/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/edouardbautz/BDE_Network/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/edouardbautz/BDE_Network/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/edouardbautz/BDE_Network/releases/tag/v0.2.0

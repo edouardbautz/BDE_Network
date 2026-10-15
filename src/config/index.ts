@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { load as parseYaml } from 'js-yaml';
 import { z } from 'zod';
 import { getRuntimeConfig } from '@/lib/settings/runtime';
+import { REBUILD_COMMAND } from './rebuild';
 import { bdeConfigSchema, type BdeConfig } from './schema';
 
 export class ConfigError extends Error {}
@@ -64,7 +65,7 @@ export function describeReadFailure(filename: string, path: string, cause: unkno
       'partage réseau, Docker sans droits administrateur) : il crée alors un dossier vide du même nom.',
       '',
       `À faire, depuis le dossier du projet : supprimez ce dossier (rmdir ${filename}), recréez le fichier avec`,
-      `${recreate}, puis relancez : docker compose up --build -d`,
+      `${recreate}, puis relancez : ${REBUILD_COMMAND}`,
     ].join('\n');
   }
 
@@ -74,8 +75,8 @@ export function describeReadFailure(filename: string, path: string, cause: unkno
       checked,
       '',
       `À faire, depuis le dossier du projet : créez-le avec ${recreate},`,
-      'puis relancez : docker compose up --build -d',
-      "(avec Docker, le fichier est copié dans l'image pendant le « --build » : il doit exister à ce moment-là).",
+      `puis relancez : ${REBUILD_COMMAND}`,
+      "(avec Docker, le fichier est copié dans l'image pendant la construction : il doit exister à ce moment-là).",
     ].join('\n');
   }
 
@@ -124,7 +125,7 @@ function readConfigFile(filename: string): unknown {
         `  Chemin vérifié : ${path}`,
         '',
         'Remplissez-le (modèle : bde.config.example.yml) ou recopiez ce modèle,',
-        'puis relancez : docker compose up --build -d',
+        `puis relancez : ${REBUILD_COMMAND}`,
       ].join('\n'),
     );
   }

@@ -2,9 +2,10 @@
 
 # Mettre à jour vers une nouvelle version
 
-Mettre à jour tient en trois gestes : **sauvegarder**, **récupérer le nouveau code**, **relancer**. Les
-migrations de la base de données s'appliquent toutes seules au démarrage. Comptez dix minutes, dont quelques-unes
-d'attente pendant la construction de l'image.
+Mettre à jour tient en trois gestes : **sauvegarder**, **récupérer le nouveau code**, **relancer**. Relancer, c'est
+`docker compose up -d` : Docker télécharge l'image de la nouvelle version, que `docker-compose.yml` nomme. Les
+migrations de la base de données s'appliquent toutes seules au démarrage, après une copie que la plateforme fait.
+Comptez dix minutes, dont quelques-unes d'attente pendant le téléchargement.
 
 Ce guide a été essayé pour de vrai, en passant d'une plateforme de la **version 1.0.0** (réglages dans `.env` et
 `bde.config.yml`) à la version suivante, avec des membres, des rôles et des événements, puis en revenant en arrière.
@@ -12,7 +13,7 @@ Ce guide a été essayé pour de vrai, en passant d'une plateforme de la **versi
 ## Avant de commencer
 
 1. **Lisez le [CHANGELOG](../../CHANGELOG.md)** : il dit ce qui change et ce qu'il faut savoir.
-2. **Notez la version actuelle**, pour pouvoir y revenir :
+2. **Notez la version actuelle**, pour pouvoir y revenir (elle est aussi en haut de la page **Paramètres**) :
 
    ```text
    git describe --tags --always
@@ -39,8 +40,8 @@ Ce guide a été essayé pour de vrai, en passant d'une plateforme de la **versi
 git pull
 ```
 
-**Vous avez forké le projet** (vos propres commits, par exemple un `bde.config.yml` modifié) : ajoutez une fois le
-dépôt d'origine, puis fusionnez-le dans votre branche.
+**Vous avez forké le projet** (vos propres commits) : ajoutez une fois le dépôt d'origine, puis fusionnez-le dans votre
+branche.
 
 ```text
 git remote add upstream https://github.com/edouardbautz/BDE_Network.git   # une seule fois
@@ -49,16 +50,19 @@ git merge upstream/main
 ```
 
 La fusion se passe sans conflit dans la plupart des cas. Si `bde.config.yml` est en conflit, gardez votre version : les
-réglages sont dans la base de données, ce fichier ne sert plus qu'à l'import du premier démarrage.
+réglages sont dans la base de données, ce fichier ne sert plus qu'à l'import du premier démarrage. Si vous avez modifié
+le **code** de la plateforme, vous construisez aussi votre propre image : [Construire l'image
+vous-même](deployment.md#construire-limage-vous-même), et utilisez cette commande à la place de celle ci-dessous.
 
 ## 2. Relancer
 
 ```text
-docker compose up --build -d
+docker compose up -d
 ```
 
-Docker reconstruit l'image (quelques minutes), puis remplace le conteneur. Au démarrage, la plateforme applique les
-migrations de la base de données avant de répondre.
+Docker télécharge l'image de la nouvelle version (une ou deux minutes), puis remplace le conteneur. Au démarrage, la
+plateforme fait une copie de la base s'il y a des migrations à appliquer (voir [Copie automatique avant une mise à
+jour](deployment.md#copie-automatique-avant-une-mise-à-jour)), les applique, et répond.
 
 ## 3. Vérifier
 
@@ -91,9 +95,22 @@ après la mise à jour :
 À partir de là, **la base fait foi** : modifier `.env` ou `bde.config.yml` ne change plus rien. Gardez-en une copie
 jusqu'à avoir vérifié que tout marche, puis changez les réglages dans **Paramètres**.
 
+**Construisez l'image une fois, sur place.** L'image publiée contient le modèle, pas votre `bde.config.yml` : votre
+fichier n'entre dans une image que quand elle est construite depuis votre dossier. Pour le premier démarrage après la
+mise à jour, lancez :
+
+```text
+docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+```
+
+Sans cela, la plateforme démarre, trouve une base qui a des comptes mais aucun réglage enregistré, et n'ouvre pas
+l'installateur (il remplacerait vos réglages) : sa page dit « Des données existent, mais aucun réglage n'est
+enregistré ». Rien n'est perdu, lancez la commande ci-dessus. Quand le journal dit que les réglages ont été copiés,
+vous mettez à jour comme tout le monde : `git pull`, puis `docker compose up -d`.
+
 Si les fichiers étaient incomplets (par exemple le login `votre-login-42` encore dans les propriétaires), la
 plateforme continue de lire les fichiers et la page Paramètres reste en lecture seule. Corrigez les fichiers, puis
-`docker compose up -d --build`. Voir [Configuration](configuration.md#où-sont-les-réglages).
+relancez la même commande. Voir [Configuration](configuration.md#où-sont-les-réglages).
 
 ## Si la mise à jour elle-même échoue
 
@@ -124,11 +141,14 @@ saisies depuis la sauvegarde sont perdues** : la restauration remet la base dans
    git checkout <la version notée>
    ```
 
-3. Reconstruisez :
+3. Relancez. L'image de la version à laquelle vous êtes revenu est retéléchargée si elle n'est plus sur la machine :
 
    ```text
-   docker compose up --build -d
+   docker compose up -d
    ```
+
+   Les versions antérieures à la 1.1.0 n'ont pas été publiées comme images : pour revenir à la 1.0.0, [construisez
+   l'image vous-même](deployment.md#construire-limage-vous-même).
 
 Faites-les **dans cet ordre**. Pour reprendre ensuite la dernière version du projet, revenez sur votre branche
 (`git switch main`).

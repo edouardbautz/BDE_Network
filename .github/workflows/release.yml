@@ -1,0 +1,267 @@
+name: release
+
+# Publishing a version = pushing a tag `vX.Y.Z` on a commit of main (docs/architecture.md, "Releases").
+#
+#   check    the tag, package.json, docker-compose.yml and CHANGELOG.md agree (scripts/release.mjs)
+#   build    the image, built natively for amd64 and for arm64 (no emulation), then STARTED on a real PostgreSQL
+#            (e2e/safe-update.sh: update, copy, put back, pages); only an image that did that is kept
+#   publish  the two images become one `ghcr.io/edouardbautz/bde_network:X.Y.Z` (and X.Y, and `latest` for a version
+#            without a suffix), with its provenance and its SBOM, and the GitHub release carries the CHANGELOG's notes
+#
+# On a pull request that touches this file or the image, only `check` and `build` run, without pushing anything:
+# the part that cannot be tried on the day (arm64, the smoke test) is tried before.
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+*']
+  pull_request:
+    paths:
+      - '.github/workflows/release.yml'
+      - 'Dockerfile'
+      - 'docker/**'
+      - 'scripts/release.mjs'
+      - 'e2e/safe-update.sh'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/edouardbautz/bde_network
+
+jobs:
+  check:
+    name: check the release
+    # A fork has its own images (docker-compose.build.yml) and no right to push to this namespace.
+    if: github.repository == 'edouardbautz/BDE_Network'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: The tag, package.json, docker-compose.yml and CHANGELOG.md agree
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            tag="$GITHUB_REF_NAME"
+          else
+            tag="v$(node -p "require('./package.json').version")"
+          fi
+          node scripts/release.mjs check "$tag"
+
+      # Branch protection keeps main clean; this keeps a tag pushed on a side branch from publishing.
+      - name: The tag is on main
+        if: github.ref_type == 'tag'
+        run: |
+          git fetch origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || {
+            echo "The tag $GITHUB_REF_NAME is not on main: nothing is published."
+            exit 1
+          }
+
+  build:
+    name: image (${{ matrix.arch }})
+    needs: check
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - arch: amd64
+            platform: linux/amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Sign in to the registry
+        if: github.ref_type == 'tag'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # The labels tie the package to this repository (that is what lets the workflow push it) and say what it is.
+      - name: Labels
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+
+      # On a tag: pushed by digest, with no tag yet. Nothing can pull it by a name until `publish` has named it,
+      # and `publish` only runs when both architectures passed their test below.
+      - name: Build and push by digest
+        if: github.ref_type == 'tag'
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          provenance: false
+          sbom: false
+
+      - name: Build (not pushed)
+        if: github.ref_type != 'tag'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          load: true
+          tags: bde-network:smoke
+          provenance: false
+          sbom: false
+
+      - name: The image to test
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            echo "ref=${IMAGE}@${{ steps.push.outputs.digest }}" >> "$GITHUB_ENV"
+          else
+            echo "ref=bde-network:smoke" >> "$GITHUB_ENV"
+          fi
+
+      # A published image holds the template, never somebody's real settings: the installer opens on it.
+      - name: It carries the template configuration
+        run: |
+          docker run --rm --entrypoint grep "$ref" -c 'votre-login-42' /app/bde.config.yml
+
+      - name: It starts, updates a database, puts it back when an update fails
+        run: sh ./e2e/safe-update.sh "$ref"
+
+      - name: Keep the digest
+        if: github.ref_type == 'tag'
+        run: |
+          mkdir -p "$RUNNER_TEMP/digests"
+          digest='${{ steps.push.outputs.digest }}'
+          touch "$RUNNER_TEMP/digests/${digest#sha256:}"
+
+      - name: Hand the digest to the next job
+        if: github.ref_type == 'tag'
+        uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: publish
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # the GitHub release
+      packages: write # the image
+      id-token: write # the signature of the attestations
+      attestations: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digest-*
+          merge-multiple: true
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Sign in to the registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # X.Y.Z, X.Y, and `latest` only for a version without a suffix (1.2.0-rc.1 never becomes latest).
+      - name: Names
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+          flavor: |
+            latest=auto
+
+      - name: One image for both architectures
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          test "$(ls | wc -l)" = 2
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf "${IMAGE}@sha256:%s " *)
+
+      - name: What was published
+        id: image
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          docker buildx imagetools inspect "${IMAGE}:${version}"
+          digest="$(docker buildx imagetools inspect "${IMAGE}:${version}" --format '{{json .Manifest}}' | jq -r .digest)"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          # both architectures are really in it
+          docker buildx imagetools inspect "${IMAGE}:${version}" | grep -q 'linux/amd64'
+          docker buildx imagetools inspect "${IMAGE}:${version}" | grep -q 'linux/arm64'
+
+      - name: Provenance (where and how this image was built)
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.image.outputs.digest }}
+          push-to-registry: true
+
+      - name: SBOM (what is in it)
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.IMAGE }}@${{ steps.image.outputs.digest }}
+          format: spdx-json
+          output-file: bde-network-sbom.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Attach the SBOM to the image
+        uses: actions/attest-sbom@v2
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.image.outputs.digest }}
+          sbom-path: bde-network-sbom.spdx.json
+          push-to-registry: true
+
+      # The notes are the CHANGELOG's section, as written, followed by the two commands that matter.
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          node scripts/release.mjs notes "$GITHUB_REF_NAME" > "$RUNNER_TEMP/notes.md"
+          {
+            echo
+            echo '---'
+            echo
+            echo "Image: \`${IMAGE}:${version}\`. To update: \`git pull\`, then \`docker compose up -d\` ([guide](https://github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_REF_NAME}/docs/en/upgrading.md))."
+          } >> "$RUNNER_TEMP/notes.md"
+          flag=""
+          [ "$(node scripts/release.mjs prerelease "$GITHUB_REF_NAME")" = true ] && flag="--prerelease"
+          gh release create "$GITHUB_REF_NAME" bde-network-sbom.spdx.json \
+            --title "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag $flag
