@@ -102,7 +102,7 @@
       "isDefault": "Le rôle par défaut ne peut pas être supprimé. Choisissez d'abord un autre rôle par défaut.",
       "roleInUse": "Ce rôle est encore attribué à des membres.",
       "targetIsSelf": "Vous ne pouvez pas faire cela sur votre propre compte.",
-      "targetIsOwner": "Les propriétaires sont définis dans bde.config.yml, pas ici.",
+      "targetIsOwner": "Les propriétaires se gèrent dans Paramètres, pas ici.",
       "targetNotMember": "Ce compte n'est pas un membre approuvé.",
       "targetNotPending": "Cette demande a déjà été traitée.",
       "noDefaultRole": "Aucun rôle par défaut n'est défini.",
@@ -167,7 +167,7 @@
     "welcome": "Bienvenue, {name}.",
     "empty": {
       "title": "Aucun module activé",
-      "description": "Le module Événements (calendrier du bureau, rappels, abonnement à l'agenda) est disponible mais pas activé. Un propriétaire peut l'activer dans le fichier de configuration, clé modules.enabled.",
+      "description": "Le module Événements (calendrier du bureau, rappels, abonnement à l'agenda) est disponible mais pas activé. Un propriétaire peut l'activer dans Paramètres, section Modules.",
       "cta": "Gérer les membres"
     }
   },
@@ -197,7 +197,7 @@
     "removed": "{name} a été retiré du BDE.",
     "removeWarning": "Son compte est supprimé définitivement. La personne pourra redemander l'accès en se reconnectant.",
     "removeConfirm": "Retirer définitivement",
-    "ownerNote": "Défini dans bde.config.yml",
+    "ownerNote": "Géré dans Paramètres",
     "locked": {
       "self": "C'est votre compte.",
       "above": "Son rôle donne des droits que vous n'avez pas."

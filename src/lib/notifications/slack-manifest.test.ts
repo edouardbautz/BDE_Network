@@ -5,13 +5,12 @@ import { load } from 'js-yaml';
 import { describe, expect, it } from 'vitest';
 
 /**
- * The Slack app that BDEs create with one link (docs/notifications.md): the link must be the very
+ * The Slack app that BDEs create with one link (docs/{en,fr}/notifications.md): the link must be the very
  * manifest of the repository, and that manifest must ask Slack for nothing but incoming webhooks.
  */
 
 const root = process.cwd();
 const manifestText = readFileSync(join(root, 'docs/slack-app-manifest.yml'), 'utf8');
-const docs = readFileSync(join(root, 'docs/notifications.md'), 'utf8');
 
 interface Manifest {
   display_information: { name: string; description: string; background_color?: string };
@@ -50,7 +49,12 @@ describe('the Slack app manifest', () => {
   });
 });
 
-describe('the pre-filled link of docs/notifications.md', () => {
+describe.each([
+  ['en', 'Discord is simpler'],
+  ['fr', 'Discord est plus simple'],
+])('the pre-filled link of docs/%s/notifications.md', (language, simplest) => {
+  const docs = readFileSync(join(root, `docs/${language}/notifications.md`), 'utf8');
+
   // Written as [text](<address>): the address has parentheses (the description), which end an
   // ordinary Markdown link; the angle brackets are what keeps it whole.
   const links = [
@@ -78,7 +82,7 @@ describe('the pre-filled link of docs/notifications.md', () => {
   });
 
   it('says that Discord is the simplest option, and gives the manual way if the link fails', () => {
-    expect(docs).toContain("Discord est l'option la plus simple");
+    expect(docs).toContain(simplest);
     expect(docs).toContain('From a manifest');
   });
 });

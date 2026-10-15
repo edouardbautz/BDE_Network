@@ -22,12 +22,12 @@ wish. Please give us reasonable time to publish a fix before disclosing publicly
 
 Security fixes go to the **latest release** and to `main`. Each BDE runs its own instance from
 its own fork: after a fix, update your fork and redeploy (`git pull`, then
-`docker compose up --build -d`; backups first, see [docs/deployment.md](docs/deployment.md)).
+`docker compose up --build -d`; backups first, see [docs/en/upgrading.md](docs/en/upgrading.md)).
 
 ## What is in scope
 
 The platform itself: authentication and sessions, permissions and role management (privilege
-escalation is taken very seriously: see [docs/roles.md](docs/roles.md)), the calendar feeds, data
+escalation is taken very seriously: see [docs/en/roles.md](docs/en/roles.md)), the calendar feeds, data
 exposure, injection and XSS, the Docker image and its default configuration.
 
 Out of scope: a BDE's own server (operating system, reverse proxy, firewall), a leaked `.env`
@@ -58,4 +58,4 @@ avant toute divulgation publique.
 Les correctifs de sécurité vont dans la **dernière version publiée** et dans `main`. Chaque BDE
 fait tourner sa propre instance depuis son fork : après un correctif, mettez votre fork à jour et
 redéployez (`git pull`, puis `docker compose up --build -d` ; sauvegarde d'abord, voir
-[docs/deployment.md](docs/deployment.md)).
+[docs/fr/upgrading.md](docs/fr/upgrading.md)).

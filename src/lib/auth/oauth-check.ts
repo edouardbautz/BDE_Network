@@ -89,8 +89,9 @@ export function warnIfFortyTwoRejectsTheApplication(): void {
     console.warn(
       "\n⚠️  42 refuse l'identifiant ou la clé secrète de l'application (FORTYTWO_CLIENT_ID / FORTYTWO_CLIENT_SECRET) :\n" +
         '    personne ne pourra se connecter. La clé a peut-être expiré ou été régénérée.\n' +
-        '    → Vérifiez-la sur https://profile.intra.42.fr/oauth/applications, copiez-la dans .env,\n' +
-        '      puis relancez : docker compose up -d\n',
+        '    → Vérifiez-la sur https://profile.intra.42.fr/oauth/applications, puis mettez-la à jour dans\n' +
+        '      Paramètres, section Application 42 (un propriétaire encore connecté). Si plus personne ne peut se\n' +
+        '      connecter : voir docs/fr/troubleshooting.md.\n',
     );
   });
 }

@@ -112,7 +112,8 @@ describe('warnIfFortyTwoRejectsTheApplication', () => {
     await vi.waitFor(() => expect(warn).toHaveBeenCalled());
     const text = String(warn.mock.calls[0]?.[0]);
     expect(text).toContain('FORTYTWO_CLIENT_SECRET');
-    expect(text).toContain('docker compose up -d');
+    expect(text).toContain('Paramètres');
+    expect(text).toContain('docs/fr/troubleshooting.md');
     expect(text).not.toContain('the-secret');
   });
 

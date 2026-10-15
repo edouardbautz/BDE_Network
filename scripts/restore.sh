@@ -169,7 +169,10 @@ fi
 
 echo "4/5 Restauration de la base de données..."
 # Une seule transaction : si quelque chose échoue, la base reste exactement comme avant.
-if ! docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 --single-transaction -q -o /dev/null' <"$WORK/database.sql"; then
+# La base est REMPLACÉE, pas complétée : la sauvegarde ne supprime que ce qu'elle contient, et une table ajoutée
+# par une version plus récente (on restaure une sauvegarde faite avant une mise à jour) resterait, puis ferait
+# échouer la migration suivante (« relation already exists »). On repart donc d'un schéma vide.
+if ! { printf 'DROP SCHEMA public CASCADE;\nCREATE SCHEMA public;\n'; cat "$WORK/database.sql"; } | docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 --single-transaction -q -o /dev/null'; then
   echo "" >&2
   echo "La restauration de la base a échoué : la base n'a PAS été modifiée." >&2
   echo "Relance de l'application..." >&2

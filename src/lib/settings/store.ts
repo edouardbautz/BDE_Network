@@ -106,7 +106,7 @@ async function loadFromRow(
         `  ${first ? `${first.path.join('.') || '(racine)'} : ${first.message}` : 'format inconnu'}`,
         '',
         'Ils ne sont pas modifiables à la main : restaurez la dernière sauvegarde de la base de données',
-        '(docs/deployment.md, « Sauvegardes et restauration »).',
+        '(docs/fr/deployment.md, « Sauvegardes et restauration »).',
       ].join('\n'),
     );
   }
@@ -204,7 +204,7 @@ async function importFromFiles(db: SettingsDb, logger: Logger): Promise<Initiali
   logger.log(
     '\n📦 Les réglages de bde.config.yml et de .env ont été copiés dans la base de données (les secrets y sont\n' +
       '   chiffrés). Désormais la base fait foi : modifier ces deux fichiers ne change plus rien.\n' +
-      '   (Pour les remplacer par le contenu des fichiers : BDE_REIMPORT=1 dans .env, voir docs/configuration.md.)\n',
+      '   (Pour les remplacer par le contenu des fichiers : BDE_REIMPORT=1 dans .env, voir docs/fr/configuration.md.)\n',
   );
   setRuntimeSettings({
     config,

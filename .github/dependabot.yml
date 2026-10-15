@@ -16,7 +16,7 @@ updates:
         update-types: ['version-update:semver-major']
     open-pull-requests-limit: 5
     groups:
-      # These pairs must move together (see "Dependencies" in docs/contributing-guide.md).
+      # These pairs must move together (see "Dependencies" in docs/en/contributing.md).
       next:
         patterns: ['next', 'eslint-config-next']
       next-auth:
