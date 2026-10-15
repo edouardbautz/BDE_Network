@@ -33,7 +33,7 @@ export async function EventRow({
           <Link
             href={{
               pathname: `/events/${occurrence.eventId}`,
-              query: { occ: occurrence.start.getTime() },
+              query: { occ: occurrence.originalStart.getTime() },
             }}
             className="rounded-sm font-medium outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
           >

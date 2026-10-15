@@ -40,7 +40,14 @@ vi.mock('@/i18n/navigation', () => ({
     throw new RedirectSignal(options.href);
   }),
   Link: ({ href, children, ...rest }: { href: Href; children?: ReactNode }) => (
-    <a href={typeof href === 'string' ? href : href.pathname} {...rest}>
+    <a
+      href={
+        typeof href === 'string'
+          ? href
+          : `${href.pathname}${href.query ? `?${new URLSearchParams(Object.entries(href.query).map(([k, v]) => [k, String(v)]))}` : ''}`
+      }
+      {...rest}
+    >
       {children}
     </a>
   ),
@@ -117,6 +124,7 @@ const storedEvent = {
   schoolYear: '2099-2100',
   authorLogin: 'alice',
   confirmationNotifiedAt: null,
+  updatedAt: new Date('2099-01-01T00:00:00Z'),
   assignees: [{ login: 'alice', userId: 'u1', user: { fullName: 'Alice A' } }],
   cancellations: [],
 };
@@ -278,18 +286,98 @@ describe('/events/[id]', () => {
     expect(confirmedHtml).not.toContain('detail.confirm');
   });
 
-  it('lists the occurrences of a series, with cancel buttons for managers only', async () => {
+  it('lists the dates of a series for everybody, and gives managers one delete control for a date or the following', async () => {
     vi.mocked(getVisibleEvent).mockResolvedValue(series as never);
 
     vi.mocked(getEventsAccess).mockResolvedValue(asMember);
     const memberHtml = await detailPage();
     expect(memberHtml).toContain('detail.occurrences.title');
-    expect(memberHtml).not.toContain('detail.occurrences.cancel');
+    expect(memberHtml).not.toContain('scope.delete.button');
 
     vi.mocked(getEventsAccess).mockResolvedValue(asManager);
     const managerHtml = await detailPage();
-    expect(managerHtml).toContain('detail.occurrences.cancel');
+    expect(managerHtml).toContain('scope.delete.button');
+    expect(managerHtml).not.toContain('detail.delete.button');
     expect(managerHtml).toContain('detail.addSeriesToCalendar');
+    // The edit link opens the form on the date that is shown.
+    expect(managerHtml).toMatch(/\/events\/evt1\/edit\?occ=\d+/);
+  });
+
+  it('keeps the single delete button for an event that does not repeat', async () => {
+    vi.mocked(getEventsAccess).mockResolvedValue(asManager);
+    vi.mocked(getVisibleEvent).mockResolvedValue(storedEvent as never);
+    const html = await detailPage();
+    expect(html).toContain('detail.delete.button');
+    expect(html).not.toContain('scope.delete.button');
+    expect(html).not.toMatch(/edit\?occ=/);
+  });
+
+  it('shows the date asked for with what it has of its own, and says so', async () => {
+    vi.mocked(getEventsAccess).mockResolvedValue(asManager);
+    const second = new Date('2099-10-17T18:00:00Z');
+    vi.mocked(getVisibleEvent).mockResolvedValue({
+      ...series,
+      occurrences: [
+        {
+          occurrenceStart: second,
+          title: 'Soirée spéciale',
+          description: null,
+          location: 'Dehors',
+          categoryKey: null,
+          status: null,
+          startsAt: null,
+          endsAt: null,
+          assigneesOverridden: false,
+          confirmationNotifiedAt: null,
+          updatedAt: new Date('2099-01-01T00:00:00Z'),
+          assignees: [],
+        },
+      ],
+    } as never);
+
+    const html = await detailPage({ occ: String(second.getTime()) });
+    expect(html).toContain('Soirée spéciale');
+    expect(html).toContain('Dehors');
+    expect(html).not.toContain('Salle B');
+    expect(html).toContain('detail.occurrenceEdited');
+    // The other dates keep the series' values.
+    const first = await detailPage({ occ: String(new Date('2099-10-10T18:00:00Z').getTime()) });
+    expect(first).toContain('Salle B');
+  });
+
+  it('shows a reader who cannot see drafts only the confirmed dates of a series', async () => {
+    const second = new Date('2099-10-17T18:00:00Z');
+    const draftSeries = {
+      ...series,
+      status: 'DRAFT' as const,
+      occurrences: [
+        {
+          occurrenceStart: second,
+          title: null,
+          description: null,
+          location: null,
+          categoryKey: null,
+          status: 'CONFIRMED' as const,
+          startsAt: null,
+          endsAt: null,
+          assigneesOverridden: false,
+          confirmationNotifiedAt: new Date('2099-01-01T00:00:00Z'),
+          updatedAt: new Date('2099-01-01T00:00:00Z'),
+          assignees: [],
+        },
+      ],
+    };
+    vi.mocked(getVisibleEvent).mockResolvedValue(draftSeries as never);
+
+    vi.mocked(getEventsAccess).mockResolvedValue(asMember);
+    const memberHtml = await detailPage();
+    expect(memberHtml).toContain(`occ=${second.getTime()}`);
+    expect(memberHtml).not.toContain(`occ=${new Date('2099-10-10T18:00:00Z').getTime()}`);
+    expect(memberHtml).not.toContain(`occ=${new Date('2099-10-24T18:00:00Z').getTime()}`);
+
+    vi.mocked(getEventsAccess).mockResolvedValue(asManager);
+    const managerHtml = await detailPage();
+    expect(managerHtml).toContain(`occ=${new Date('2099-10-24T18:00:00Z').getTime()}`);
   });
 
   it('marks a cancelled occurrence and offers to restore it to managers', async () => {
@@ -309,7 +397,12 @@ describe('/events/new and /events/[id]/edit', () => {
     vi.mocked(getEventsAccess).mockResolvedValue(null);
     await expect(renderPage(NewEventPage())).rejects.toThrow(NotFoundSignal);
     await expect(
-      renderPage(EditEventPage({ params: Promise.resolve({ id: 'evt1' }) })),
+      renderPage(
+        EditEventPage({
+          params: Promise.resolve({ id: 'evt1' }),
+          searchParams: Promise.resolve({}),
+        }),
+      ),
     ).rejects.toThrow(NotFoundSignal);
   });
 
@@ -317,7 +410,12 @@ describe('/events/new and /events/[id]/edit', () => {
     vi.mocked(getEventsAccess).mockResolvedValue(asMember);
     await expect(renderPage(NewEventPage())).rejects.toThrow(new RedirectSignal('/events'));
     await expect(
-      renderPage(EditEventPage({ params: Promise.resolve({ id: 'evt1' }) })),
+      renderPage(
+        EditEventPage({
+          params: Promise.resolve({ id: 'evt1' }),
+          searchParams: Promise.resolve({}),
+        }),
+      ),
     ).rejects.toThrow(new RedirectSignal('/events/evt1'));
     expect(getVisibleEvent).not.toHaveBeenCalled();
   });
@@ -335,7 +433,9 @@ describe('/events/new and /events/[id]/edit', () => {
   it('prefill the edit form from the stored event, in the BDE timezone', async () => {
     vi.mocked(getEventsAccess).mockResolvedValue(asManager);
     vi.mocked(getVisibleEvent).mockResolvedValue(storedEvent as never);
-    const html = await renderPage(EditEventPage({ params: Promise.resolve({ id: 'evt1' }) }));
+    const html = await renderPage(
+      EditEventPage({ params: Promise.resolve({ id: 'evt1' }), searchParams: Promise.resolve({}) }),
+    );
     expect(getVisibleEvent).toHaveBeenCalledWith('evt1', true);
     // 18:00Z on 10 Oct 2099 is 20:00 in Paris (UTC+2)
     expect(html).toContain('value="2099-10-10T20:00"');

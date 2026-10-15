@@ -443,21 +443,15 @@
       "occurrences": {
         "title": "Upcoming occurrences",
         "allPast": "All occurrences of this series are in the past.",
-        "cancel": "Cancel this date",
         "restore": "Restore",
         "truncated": "{count, plural, one {# more occurrence not shown} other {# more occurrences not shown}}.",
-        "past": "{count, plural, one {# past occurrence} other {# past occurrences}}.",
-        "cancelTitle": "Cancel this date?",
-        "cancelWarning": "Only the date of {date} is cancelled. The other dates of the series do not change, and you can restore it.",
-        "cancelConfirm": "Cancel this date"
+        "past": "{count, plural, one {# past occurrence} other {# past occurrences}}."
       },
       "delete": {
         "button": "Delete event",
         "warning": "This deletion is permanent.",
-        "warningSeries": "This deletion is permanent and affects the whole series. To remove a single date, use “Cancel this date”.",
         "confirm": "Yes, delete permanently",
-        "title": "Delete this event?",
-        "titleSeries": "Delete the whole series?"
+        "title": "Delete this event?"
       },
       "confirmDialog": {
         "title": "Confirm this event?",
@@ -466,7 +460,9 @@
         "notifyChat": "A message will be posted in the {channel} channel.",
         "alreadyNotified": "Members were already notified about this event: they will not be notified a second time.",
         "confirm": "Confirm the event"
-      }
+      },
+      "occurrenceEdited": "Edited",
+      "restoreDate": "Restore this date"
     },
     "form": {
       "createTitle": "New event",
@@ -485,7 +481,7 @@
       "recurrence": "Repeat",
       "recurrenceUntil": "Repeat until",
       "recurrenceUntilHelp": "This day is included. Required for a series.",
-      "seriesHelp": "Your changes apply to the whole series. To skip a single date, use “Cancel this date” on the event page.",
+      "seriesHelp": "A window will ask whether the change is for this date only, or for this date and the following.",
       "location": "Location",
       "inCharge": "Members in charge",
       "inChargeHelp": "People ticked here receive the day-before reminder.",
@@ -550,7 +546,40 @@
     },
     "notices": {
       "eventGone": "This event no longer exists: someone else probably deleted it.",
-      "occurrenceGone": "This date no longer exists: the series was edited in the meantime. Here is the up-to-date state."
+      "occurrenceGone": "This date no longer exists: the series was edited in the meantime. Here is the up-to-date state.",
+      "seriesBusy": "Somebody else was changing this series at the same moment: nothing was changed. Here is the current state, you can try again."
+    },
+    "scope": {
+      "occurrence": "Only this one",
+      "following": "This one and the following",
+      "followingFirst": "This one and the following (the whole series)",
+      "occurrenceHint": "The other dates do not change.",
+      "followingHint": "{count, plural, =0 {This date, the last of the series.} one {This date and the next one.} other {This date and the # following.}}",
+      "followingFirstHint": "The {count} dates of the series.",
+      "alignedNote": "{count, plural, one {# date edited on its own will be brought in line with what you change.} other {# dates edited on their own will be brought in line with what you change.}}",
+      "edit": {
+        "title": "Edit which dates?",
+        "description": "A repeating event is edited date by date, or from a date on.",
+        "occurrenceHint": "The other dates do not change. The frequency and the end date stay those of the series.",
+        "confirm": "Save"
+      },
+      "draftNote": "{count, plural, one {# date that was left as a draft will be confirmed too.} other {# dates that were left as drafts will be confirmed too.}}",
+      "confirmOccurrence": "This date is confirmed and announced to the members on its own.",
+      "confirmFollowing": "One single message announces the confirmed dates.",
+      "backToDraft": {
+        "title": "Back to draft?",
+        "description": "Members will no longer see these dates until they are confirmed again.",
+        "confirm": "Back to draft"
+      },
+      "delete": {
+        "button": "Delete",
+        "title": "Delete which dates?",
+        "description": "Deleting only this one cancels it: you can restore it. Deleting the following ones is final.",
+        "occurrenceHint": "Canceled: you can restore it.",
+        "followingHint": "{count, plural, =0 {This date, the last of the series. Final.} one {This date and the next one. Final.} other {This date and the # following. Final.}}",
+        "followingFirstHint": "The whole series ({count} dates). Final.",
+        "confirm": "Delete"
+      }
     }
   },
   "profile": {

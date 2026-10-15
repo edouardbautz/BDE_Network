@@ -49,6 +49,9 @@ function occurrence(
   return {
     key: `evt${counter}:${Date.parse(start)}`,
     eventId: `evt${counter}`,
+    seriesKey: `evt${counter}`,
+    originalStart: new Date(start),
+    edited: false,
     title: `Event ${counter}`,
     description: null,
     location: null,

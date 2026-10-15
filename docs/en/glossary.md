@@ -37,7 +37,7 @@ The words of the platform, as they appear in the interface. One word always mean
 | **Draft**                  | An event only visible to those who can manage events.                                                      |
 | **Confirmed**              | An event visible to every member. Confirming it notifies the members.                                      |
 | **Series**                 | An event that repeats (every week, every two weeks, every month) until a date.                             |
-| **Occurrence**             | One date of a series. You can cancel an occurrence without touching the rest.                              |
+| **Occurrence**             | One date of a series. You can edit, confirm, cancel it alone, or act on it and the following dates.        |
 | **Category**               | A type of event, with a name and a color (Party, Sport…). Each BDE has its own.                            |
 | **School year**            | From September to August (`2025-2026`), computed from the start date.                                      |
 | **Personal calendar link** | A member's secret link, to add to Google Calendar, Outlook or Apple Calendar. See **My profile**.          |

@@ -122,7 +122,7 @@ export async function MonthCalendar({
                               <Link
                                 href={{
                                   pathname: `/events/${occurrence.eventId}`,
-                                  query: { occ: occurrence.start.getTime() },
+                                  query: { occ: occurrence.originalStart.getTime() },
                                 }}
                                 title={`${occurrence.title} — ${category.label}`}
                                 style={tint(category.color)}

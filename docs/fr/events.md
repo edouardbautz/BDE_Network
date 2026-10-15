@@ -68,16 +68,71 @@ début. Une série appartient à l'année scolaire de sa première date.
 ## Les événements qui se répètent
 
 Choisissez _Chaque semaine_, _Toutes les 2 semaines_ ou _Chaque mois_, puis une **date de fin** obligatoire (ce jour
-est inclus). Une série compte au plus 200 occurrences.
+est inclus). Une série compte au plus 200 dates (une série coupée en deux, voir plus bas, compte chaque partie
+séparément).
 
-- **Modifier** une série modifie toute la série.
-- **Annuler une seule date** : sur la page de l'événement, bouton **Annuler cette date** dans la liste des
-  occurrences. Le reste de la série n'est pas touché, et la date peut être **rétablie**.
-- **Supprimer** l'événement supprime toute la série.
 - L'heure locale est conservée à travers les changements d'heure : une séance « chaque mardi à 18 h » reste à 18 h
   toute l'année.
 - Pour une série mensuelle, c'est le même jour du mois. Dans un mois plus court, c'est le dernier jour : un
-  événement le 31 tombe le 30 avril, le 28 février…
+  événement le 31 tombe le 30 avril, le 28 février… Une série coupée un de ces jours garde son jour : les dates
+  suivantes retombent le 31.
+
+### Une date, ou cette date et les suivantes
+
+Sur la page d'une série, choisissez une date dans la liste des dates (celle qui est affichée est en gras). Ensuite,
+**chaque action demande quelles dates elle concerne**, dans une fenêtre, avec deux choix :
+
+- **Seulement celui-ci** : cette date change, les autres non. C'est le choix déjà sélectionné.
+- **Celui-ci et les suivants** : cette date et toutes celles qui viennent après. **Sur la première date, c'est toute
+  la série.** La fenêtre dit combien de dates cela représente.
+
+C'est la même fenêtre pour **modifier** (heure, lieu, description, catégorie, membres en charge…), **confirmer**,
+**repasser en brouillon** et **supprimer**. Un événement qui ne se répète pas n'a pas cette question.
+
+![La fenêtre qui demande quelles dates une modification concerne : seulement celle-ci, ou celle-ci et les suivantes](../images/fr/series-dialog.webp)
+
+| Action                    | Seulement celui-ci                                                                                                                                                                                                                       | Celui-ci et les suivants                                                                                                                                                                                          |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Modifier**              | La date reçoit **ses propres valeurs** : seulement ce que vous avez changé, le reste continue de suivre la série. Vous pouvez la déplacer à une autre heure ou un autre jour. La fréquence et la date de fin restent celles de la série. | La série est **coupée en deux** à cette date : les dates d'avant restent comme elles étaient, cette date et les suivantes reçoivent vos changements, et vous pouvez changer aussi la fréquence et la date de fin. |
+| **Confirmer**             | Cette date est confirmée toute seule et annoncée aux membres, une fois.                                                                                                                                                                  | Cette date et les suivantes sont confirmées, **y compris celles qui étaient repassées en brouillon** (la fenêtre dit combien), et annoncées en **un seul message**.                                               |
+| **Repasser en brouillon** | Cette date disparaît pour les membres et du lien d'agenda du BDE. Les autres restent.                                                                                                                                                    | Cette date et les suivantes repassent en brouillon.                                                                                                                                                               |
+| **Supprimer**             | La date est **annulée** : elle reste dans la liste, barrée, et vous pouvez la **rétablir**.                                                                                                                                              | La série **s'arrête à la date d'avant**. C'est définitif : les dates suivantes, avec ce qui avait été modifié dessus, sont supprimées. Sur la première date, tout l'événement est supprimé.                       |
+
+Dans la liste, une date qui a ses propres valeurs porte **Modifiée**, une date en brouillon porte **Brouillon**, une
+date annulée est barrée.
+
+### Ce que deviennent les dates modifiées toutes seules
+
+Vous modifiez « celui-ci et les suivants » alors que certaines des dates suivantes avaient été modifiées seules. La
+règle est celle de Google Agenda : **ce que vous changez remplace ce que ces dates avaient pour ce champ, ce que vous
+ne touchez pas reste.**
+
+- Vous changez le lieu : toutes les dates suivantes prennent le nouveau lieu, même celles qui avaient le leur. Une
+  date qui avait aussi son propre titre garde son titre.
+- Vous confirmez la suite : les dates qui étaient en brouillon sont confirmées aussi.
+- Vous ne changez que l'**heure** : les dates modifiées seules, les dates annulées et les rappels déjà envoyés suivent
+  la nouvelle heure, jour par jour.
+- Vous changez le **jour** ou la **fréquence** (chaque mardi au lieu de chaque lundi, toutes les 2 semaines au lieu de
+  chaque semaine) : les dates ne sont plus les mêmes, donc ce qui avait été modifié dessus, et les dates annulées, ne
+  peuvent pas suivre et sont abandonnés.
+
+La fenêtre indique combien de dates seront remises en accord.
+
+### Une série coupée en deux
+
+« Celui-ci et les suivants » sur une date qui n'est pas la première **coupe la série en deux parties**. La première
+s'arrête à la date d'avant ; la seconde commence à cette date, avec sa propre page. Pour les membres et pour les
+agendas, c'est toujours **une seule série** : chaque date garde son identifiant, donc un agenda qui a déjà les dates
+les met à jour, sans doublon.
+
+La seconde partie garde l'auteur, les membres en charge et le fait que la série a été annoncée (elle n'est pas
+annoncée une seconde fois parce qu'on l'a coupée). Son année scolaire est celle de sa première date.
+
+## Supprimer un événement
+
+Le bouton **Supprimer** d'une page qui n'est pas une série supprime l'événement, définitivement. Pour une série, il
+demande quelles dates (voir plus haut) : supprimer « celui-ci et les suivants » depuis la première date supprime toute
+la série.
 
 ## Les vues
 
@@ -87,12 +142,13 @@ est inclus). Une série compte au plus 200 occurrences.
 - **Sur téléphone**, si vous choisissez la vue **Calendrier**, la grille montre des pastilles de couleur par jour, et
   le jour choisi est détaillé en dessous.
 - **Filtres** : catégorie, membre en charge, année scolaire. Ils sont dans l'adresse de la page, donc partageables.
-- **Page de détail** : toutes les informations, les occurrences d'une série et les actions.
+- **Page de détail** : toutes les informations de la date affichée, les dates d'une série et les actions.
 
 ## Ajouter à son agenda
 
 - **Un événement** : le bouton **Ajouter à mon agenda** de sa page télécharge un fichier `.ics`, lisible par tous les
-  calendriers. Pour une série : l'occurrence affichée, ou toute la série.
+  calendriers. Pour une série : la date affichée, ou toute la série. Une date modifiée ou déplacée reste la même
+  entrée, mise à jour ; une date annulée, ou repassée en brouillon pour le lien du BDE, disparaît.
 - **La synchronisation automatique** : menu de votre nom → **Mon profil** → **Synchroniser avec mon agenda**. Copiez
   le lien personnel et ajoutez-le à Google Agenda, Outlook ou Apple Calendar (voir
   [pas à pas](#ajouter-un-lien-à-son-agenda-pas-à-pas)). Les changements apparaissent ensuite tout seuls, au rythme
@@ -115,7 +171,8 @@ fois** dans l'agenda partagé du bureau. Il se met ensuite à jour tout seul. Le
 
 - **Où** : **Événements** → bouton **Agenda partagé**. Il n'est visible que de ceux qui ont le droit « Gérer l'agenda
   partagé » et des propriétaires, même sans le droit « Gérer les événements ».
-- **Ce qu'il contient** : uniquement les événements **confirmés** et **non annulés**. Jamais de brouillon.
+- **Ce qu'il contient** : uniquement les dates **confirmées** et **non annulées**. Jamais de brouillon : une date
+  repassée en brouillon en disparaît.
 - **Ce que vous pouvez faire** : afficher le lien, le copier, le **régénérer** (l'ancien lien cesse de fonctionner
   immédiatement), le **désactiver**. Chaque action est inscrite au journal d'audit. Le lien lui-même n'y figure
   jamais, ni dans les journaux du serveur.
@@ -187,10 +244,10 @@ Le canal (e-mail, Discord, Slack ou aucun) et ses réglages se choisissent dans 
 **Notifications**, avec un message de test. Pour que les messages contiennent un lien vers l'événement,
 renseignez l'adresse de la plateforme (section **Adresse de la plateforme**) : sans elle, les messages partent sans lien.
 
-| Notification                        | Quand                                                                                             | Qui la reçoit                                                                               |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| **Confirmation** (`eventConfirmed`) | un événement passe de brouillon à **confirmé**, une seule fois                                    | tous les membres approuvés (e-mail : un message par personne), ou le salon Discord ou Slack |
-| **Rappel** (`eventReminder`)        | la veille de chaque occurrence confirmée, à l'**heure du rappel** (18 h par défaut, heure du BDE) | les **membres en charge** (e-mail), sinon ceux qui gèrent les événements ; ou le salon      |
+| Notification                        | Quand                                                                                                                                                         | Qui la reçoit                                                                               |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| **Confirmation** (`eventConfirmed`) | un événement passe de brouillon à **confirmé**, une seule fois ; pour une série, une fois pour la partie confirmée, ou une fois pour une date confirmée seule | tous les membres approuvés (e-mail : un message par personne), ou le salon Discord ou Slack |
+| **Rappel** (`eventReminder`)        | la veille de chaque occurrence confirmée, à l'**heure du rappel** (18 h par défaut, heure du BDE)                                                             | les **membres en charge** (e-mail), sinon ceux qui gèrent les événements ; ou le salon      |
 
 Le rendu sur Discord, Slack et par e-mail est décrit dans [Notifications](notifications.md).
 
@@ -221,13 +278,16 @@ envoie. Conséquences :
 - si le serveur reste éteint toute la journée jusqu'après le début de l'événement, le rappel est perdu : la
   plateforme doit tourner en continu.
 
-Les événements qui se répètent sont rappelés occurrence par occurrence.
+Les événements qui se répètent sont rappelés date par date, **une seule fois par date**, quoi qu'il arrive à la
+série : une date déplacée après l'envoi de son rappel n'est pas rappelée une seconde fois, et une série coupée en deux
+garde les rappels déjà envoyés. Le rappel montre l'heure, le lieu et les membres en charge de cette date.
 
 ## Journal d'audit
 
 Les propriétaires y voient la création, la modification (avec la liste des champs changés), la suppression, le
 changement de statut, l'annulation et le rétablissement d'une date, et les actions sur le lien du BDE (jamais le
-lien lui-même). L'auteur est le compte réel, écrit en texte : il reste lisible même si le membre est retiré ensuite.
+lien lui-même). Pour une série, chaque entrée dit si l'action portait sur **une date** ou sur **cette date et les
+suivantes**, et laquelle (pour la première date : que c'était toute la série). L'auteur est le compte réel, écrit en texte : il reste lisible même si le membre est retiré ensuite.
 
 ## Un problème ?
 

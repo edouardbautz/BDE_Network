@@ -38,7 +38,7 @@ chose dans cette documentation.
 | **Brouillon**               | Un événement visible seulement de ceux qui peuvent gérer les événements.                                     |
 | **Confirmé**                | Un événement visible de tous les membres. Le confirmer prévient les membres.                                 |
 | **Série**                   | Un événement qui se répète (chaque semaine, toutes les 2 semaines, chaque mois) jusqu'à une date.            |
-| **Occurrence**              | Une date d'une série. On peut annuler une occurrence sans toucher au reste.                                  |
+| **Occurrence**              | Une date d'une série. On peut la modifier, la confirmer, l'annuler seule, ou agir sur elle et les suivantes. |
 | **Catégorie**               | Un type d'événement, avec un nom et une couleur (Soirée, Sport…). Chaque BDE a les siennes.                  |
 | **Année scolaire**          | De septembre à août (`2025-2026`), calculée d'après la date de début.                                        |
 | **Lien d'agenda personnel** | Le lien secret d'un membre, à ajouter à Google Agenda, Outlook ou Apple Calendar. Voir **Mon profil**.       |

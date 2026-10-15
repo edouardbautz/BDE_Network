@@ -69,7 +69,7 @@ export async function UpcomingEventsCard({
                 <Link
                   href={{
                     pathname: `/events/${occurrence.eventId}`,
-                    query: { occ: occurrence.start.getTime() },
+                    query: { occ: occurrence.originalStart.getTime() },
                   }}
                   className="min-w-0 flex-1 truncate rounded-sm text-sm font-medium outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
                 >

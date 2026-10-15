@@ -66,6 +66,8 @@ vi.mock('@/i18n/navigation', () => ({
   redirect: vi.fn(() => {
     throw new RedirectSignal();
   }),
+  getPathname: ({ href, locale }: { href: string | { pathname: string }; locale: string }) =>
+    `/${locale}${typeof href === 'string' ? href : href.pathname}`,
 }));
 
 vi.mock('@/lib/prisma', () => {
@@ -93,63 +95,69 @@ vi.mock('@/lib/prisma', () => {
     async ({ where }: { where?: Row }) =>
       rows.filter((row) => matches(row, where)).map((row) => ({ ...row }));
 
-  return {
-    prisma: {
-      user: {
-        findUnique: vi.fn(async (args: { where: Row; include?: Row; select?: Row }) => {
-          requireFilter(args.where);
-          return withRole(
-            db.users.find((row) => matches(row, args.where)),
-            args,
-          );
-        }),
-        findUniqueOrThrow: vi.fn(async (args: { where: Row; include?: Row; select?: Row }) => {
-          requireFilter(args.where);
-          const row = withRole(
-            db.users.find((candidate) => matches(candidate, args.where)),
-            args,
-          );
-          if (!row) throw new Error('PrismaClientKnownRequestError: not found');
-          return row;
-        }),
-        findMany: vi.fn(many(db.users)),
-      },
-      auditLog: {
-        findMany: vi.fn(many(db.audit)),
-        create: vi.fn(async ({ data }: { data: Row }) => {
-          if (typeof data.actorLogin !== 'string') {
-            throw new Error('PrismaClientValidationError: Argument `actorLogin` is missing');
-          }
-          db.audit.push(data);
-          return data;
-        }),
-      },
-      event: {
-        findMany: vi.fn(async ({ where }: { where?: Row }) =>
-          db.events
-            .filter((row) => matches(row, where))
-            .map((row) => ({ ...row, assignees: [], cancellations: [] })),
-        ),
-        findUnique: vi.fn(async ({ where }: { where: Row }) => {
-          requireFilter(where);
-          const row = db.events.find((candidate) => matches(candidate, where));
-          return row ? { ...row, assignees: [], cancellations: [] } : null;
-        }),
-        create: vi.fn(async ({ data }: { data: Row }) => {
-          // The nested `assignees` relation is not a column of the row.
-          const row = { id: 'evt_new', updatedAt: new Date(), ...data, assignees: undefined };
-          db.events.push(row);
-          return row;
-        }),
-        update: vi.fn(async ({ where, data }: { where: Row; data: Row }) => {
-          const row = db.events.find((candidate) => matches(candidate, where));
-          if (!row) throw new Error('PrismaClientKnownRequestError: not found');
-          Object.assign(row, data);
-          return { ...row };
-        }),
-      },
-      eventAssignee: { findMany: vi.fn(async () => []) },
+  const prisma = {
+    user: {
+      findUnique: vi.fn(async (args: { where: Row; include?: Row; select?: Row }) => {
+        requireFilter(args.where);
+        return withRole(
+          db.users.find((row) => matches(row, args.where)),
+          args,
+        );
+      }),
+      findUniqueOrThrow: vi.fn(async (args: { where: Row; include?: Row; select?: Row }) => {
+        requireFilter(args.where);
+        const row = withRole(
+          db.users.find((candidate) => matches(candidate, args.where)),
+          args,
+        );
+        if (!row) throw new Error('PrismaClientKnownRequestError: not found');
+        return row;
+      }),
+      findMany: vi.fn(many(db.users)),
     },
+    auditLog: {
+      findMany: vi.fn(many(db.audit)),
+      create: vi.fn(async ({ data }: { data: Row }) => {
+        if (typeof data.actorLogin !== 'string') {
+          throw new Error('PrismaClientValidationError: Argument `actorLogin` is missing');
+        }
+        db.audit.push(data);
+        return data;
+      }),
+    },
+    event: {
+      findMany: vi.fn(async ({ where }: { where?: Row }) =>
+        db.events
+          .filter((row) => matches(row, where))
+          .map((row) => ({ ...row, assignees: [], cancellations: [], occurrences: [] })),
+      ),
+      findUnique: vi.fn(async ({ where }: { where: Row }) => {
+        requireFilter(where);
+        const row = db.events.find((candidate) => matches(candidate, where));
+        return row ? { ...row, assignees: [], cancellations: [], occurrences: [] } : null;
+      }),
+      create: vi.fn(async ({ data }: { data: Row }) => {
+        // The nested `assignees` relation is not a column of the row.
+        const row = { id: 'evt_new', updatedAt: new Date(), ...data, assignees: undefined };
+        db.events.push(row);
+        return row;
+      }),
+      update: vi.fn(async ({ where, data }: { where: Row; data: Row }) => {
+        const row = db.events.find((candidate) => matches(candidate, where));
+        if (!row) throw new Error('PrismaClientKnownRequestError: not found');
+        Object.assign(row, data);
+        return { ...row };
+      }),
+    },
+    eventAssignee: { findMany: vi.fn(async () => []) },
+    eventCancellation: { findMany: vi.fn(async () => []) },
+    eventReminder: { findMany: vi.fn(async () => []) },
+  };
+  // A series is changed in a transaction: here the same stand-in database is the "transaction".
+  return {
+    prisma: Object.assign(prisma, {
+      $transaction: vi.fn(async (work: (client: unknown) => unknown) => work(prisma)),
+    }),
   };
 });
 

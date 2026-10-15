@@ -9,6 +9,8 @@ export interface RecurringSource {
   endsAt: Date;
   recurrence: EventRecurrence;
   recurrenceUntil: Date | null;
+  /** Day of the month a MONTHLY series sticks to; null/absent = the day of `startsAt`. */
+  monthlyDay?: number | null;
 }
 
 export interface Occurrence {
@@ -24,7 +26,8 @@ function daysInMonth(year: number, month: number): number {
  * Every occurrence of an event, computed on the wall clock of `timeZone` so a
  * "weekly at 20:00" event stays at 20:00 local time across DST changes.
  * Monthly events repeat on the same day of the month; in a shorter month they
- * fall on its last day (31st → 30th/28th). Stops at `recurrenceUntil`
+ * fall on its last day (31st → 30th/28th): a series cut on such a day keeps its day in `monthlyDay`, or the
+ * following ones would stay on the 28th. Stops at `recurrenceUntil`
  * (inclusive) or after MAX_OCCURRENCES, whichever comes first.
  */
 export function allOccurrences(source: RecurringSource, timeZone: string): Occurrence[] {
@@ -43,7 +46,11 @@ export function allOccurrences(source: RecurringSource, timeZone: string): Occur
       const monthIndex = base.month - 1 + index;
       const year = base.year + Math.floor(monthIndex / 12);
       const month = (monthIndex % 12) + 1;
-      date = { year, month, day: Math.min(base.day, daysInMonth(year, month)) };
+      date = {
+        year,
+        month,
+        day: Math.min(source.monthlyDay ?? base.day, daysInMonth(year, month)),
+      };
     } else {
       date = addDays(base, index * (source.recurrence === 'WEEKLY' ? 7 : 14));
     }

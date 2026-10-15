@@ -9,8 +9,9 @@ export const dynamic = 'force-dynamic';
 
 const notFound = () => new Response('Not found', { status: 404 });
 
-/** "Add to my calendar" for one event. With `?occ=<start ms>` it exports that
- * occurrence only; without it, the whole event (every occurrence of a series).
+/** "Add to my calendar" for one event. With `?occ=<start ms>` (the date's key: where the series puts it, see
+ * `OccurrenceView.originalStart`) it exports that occurrence only; without it, the whole event (every
+ * occurrence of a series).
  * Same visibility rule as the pages: a draft is a 404 without the permission. */
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const access = await getEventsAccess();
@@ -35,7 +36,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const occurrences =
     requested === null
       ? all
-      : all.filter((occurrence) => String(occurrence.start.getTime()) === requested);
+      : all.filter((occurrence) => String(occurrence.originalStart.getTime()) === requested);
   if (occurrences.length === 0) {
     return notFound();
   }
@@ -43,7 +44,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   return new Response(buildCalendarIcs(occurrences), {
     headers: {
       'Content-Type': 'text/calendar; charset=utf-8',
-      'Content-Disposition': `attachment; filename="${icsFilename(event.title)}"`,
+      'Content-Disposition': `attachment; filename="${icsFilename(occurrences[0]!.title)}"`,
       'Cache-Control': 'private, no-store',
     },
   });

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => `confirmDialog.${key}`,
@@ -242,5 +242,85 @@ describe('ConfirmDialog — controlled by something that is not a button', () =>
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     await waitFor(() => expect(document.activeElement).toBe(select));
+  });
+});
+
+describe('ConfirmDialog — choices', () => {
+  const choices = [
+    { value: 'occurrence', label: 'Seulement celui-ci', hint: 'Les autres dates ne changent pas.' },
+    { value: 'following', label: 'Celui-ci et les suivants' },
+  ];
+
+  it('offers every choice with the narrowest one selected, and gives the chosen one to the action', async () => {
+    const { onConfirm } = renderDialog({ choices });
+    await openDialog();
+
+    const only = screen.getByRole('radio', { name: /Seulement celui-ci/ }) as HTMLInputElement;
+    const following = screen.getByRole('radio', { name: /Celui-ci et les suivants/ });
+    expect(only.checked).toBe(true);
+    expect(screen.getByText('Les autres dates ne changent pas.')).toBeTruthy();
+
+    fireEvent.click(following);
+    fireEvent.click(screen.getByRole('button', { name: 'Retirer' }));
+    await waitFor(() => expect(onConfirm).toHaveBeenCalledWith('following'));
+  });
+
+  it('starts again from the narrowest choice when it is reopened', async () => {
+    renderDialog({ choices });
+    await openDialog();
+    fireEvent.click(screen.getByRole('radio', { name: /Celui-ci et les suivants/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'confirmDialog.cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+
+    await openDialog();
+    expect(
+      (screen.getByRole('radio', { name: /Seulement celui-ci/ }) as HTMLInputElement).checked,
+    ).toBe(true);
+  });
+
+  it('asks nothing more when there are no choices', async () => {
+    const { onConfirm } = renderDialog();
+    await openDialog();
+    expect(screen.queryByRole('radio')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Retirer' }));
+    await waitFor(() => expect(onConfirm).toHaveBeenCalledWith(''));
+  });
+});
+
+describe('ConfirmDialog — an action that stays on the page', () => {
+  const assign = vi.fn();
+  const { location } = window;
+  beforeEach(() => {
+    assign.mockReset();
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...location, assign },
+    });
+  });
+  afterEach(() => {
+    Object.defineProperty(window, 'location', { configurable: true, value: location });
+  });
+
+  it('loads the address the action answers, and stays busy until the page is replaced', async () => {
+    const { onConfirm } = renderDialog({
+      onConfirm: vi.fn(async () => ({ href: '/fr/events/evt1?occ=1' })),
+    });
+    void onConfirm;
+    await openDialog();
+    fireEvent.click(screen.getByRole('button', { name: 'Retirer' }));
+
+    await waitFor(() => expect(assign).toHaveBeenCalledWith('/fr/events/evt1?occ=1'));
+    const confirmButton = screen.getByRole('button', { name: /Retirer/ });
+    expect(confirmButton.getAttribute('aria-busy')).toBe('true');
+    expect(screen.getByRole('dialog')).toBeTruthy();
+  });
+
+  it('closes as before when the action answers nothing', async () => {
+    renderDialog();
+    await openDialog();
+    fireEvent.click(screen.getByRole('button', { name: 'Retirer' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(assign).not.toHaveBeenCalled();
   });
 });

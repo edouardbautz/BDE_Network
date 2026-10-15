@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  useEffect,
   useRef,
   useState,
   useTransition,
@@ -11,6 +12,7 @@ import {
 import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
+import { isActionTarget } from '@/lib/action-target';
 import {
   Dialog,
   DialogClose,
@@ -24,6 +26,14 @@ import {
 
 type ButtonProps = ComponentProps<typeof Button>;
 
+/** One of the ways the action can apply (for a series of events: this date only, or this date and the following). */
+export interface ConfirmChoice {
+  value: string;
+  label: string;
+  /** What this choice does, in one short sentence under the label. */
+  hint?: ReactNode;
+}
+
 interface ConfirmDialogProps {
   /** A short question or statement: "Retirer ce membre ?". */
   title: string;
@@ -33,7 +43,11 @@ interface ConfirmDialogProps {
   confirmLabel: string;
   /** Runs when the person confirms. The dialog stays open, with the button busy, until it
    * settles (including the navigation of a server action that redirects). */
-  onConfirm: () => unknown | Promise<unknown>;
+  onConfirm: (choice: string) => unknown | Promise<unknown>;
+  /** Asks which way the action applies, with radio buttons between the sentence and the buttons. The first one is
+   * selected each time the dialog opens, so the narrowest choice is the default; `onConfirm` receives its value
+   * (an empty string when there are no choices). */
+  choices?: readonly ConfirmChoice[];
   /** `destructive` (default) for what cannot be undone; `default` for a change that can. */
   tone?: 'destructive' | 'default';
 
@@ -65,6 +79,7 @@ export function ConfirmDialog({
   description,
   confirmLabel,
   onConfirm,
+  choices,
   tone = 'destructive',
   children,
   triggerVariant = 'destructive',
@@ -79,8 +94,18 @@ export function ConfirmDialog({
   const t = useTranslations('confirmDialog');
   const cancelRef = useRef<HTMLButtonElement>(null);
   const [localOpen, setLocalOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [choice, setChoice] = useState(choices?.[0]?.value ?? '');
+  const [isPendingNow, startTransition] = useTransition();
+  // The action answered with an address to load: busy until the browser replaces the page.
+  const [leaving, setLeaving] = useState(false);
+  const isPending = isPendingNow || leaving;
   const open = controlledOpen ?? localOpen;
+  const firstChoice = choices?.[0]?.value ?? '';
+
+  // Each time the dialog opens, by its button or by its parent, the narrowest choice is the selected one.
+  useEffect(() => {
+    if (open) setChoice(firstChoice);
+  }, [open, firstChoice]);
 
   const setOpen = (next: boolean) => {
     setLocalOpen(next);
@@ -94,13 +119,22 @@ export function ConfirmDialog({
   };
 
   const confirm = () => {
-    if (isPending) return;
+    if (isPending || leaving) return;
     startTransition(async () => {
       try {
-        await onConfirm();
-      } finally {
+        const answer = await onConfirm(choice);
+        if (isActionTarget(answer)) {
+          // The action stays on the page it was asked on, and says where to look next: load it (see
+          // lib/action-target.ts). The dialog stays busy until the page is replaced.
+          setLeaving(true);
+          window.location.assign(answer.href);
+          return;
+        }
+      } catch (error) {
         setOpen(false);
+        throw error;
       }
+      setOpen(false);
     });
   };
 
@@ -125,6 +159,32 @@ export function ConfirmDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
+        {choices && choices.length > 0 && (
+          <fieldset className="flex flex-col gap-2" disabled={isPending}>
+            <legend className="sr-only">{title}</legend>
+            {choices.map((option) => (
+              <label
+                key={option.value}
+                className="has-checked:border-primary has-checked:bg-muted flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm"
+              >
+                <input
+                  type="radio"
+                  name="confirm-choice"
+                  value={option.value}
+                  checked={choice === option.value}
+                  onChange={() => setChoice(option.value)}
+                  className="accent-primary mt-0.5 size-4"
+                />
+                <span className="flex flex-col gap-0.5">
+                  <span className="font-medium">{option.label}</span>
+                  {option.hint && (
+                    <span className="text-muted-foreground text-xs">{option.hint}</span>
+                  )}
+                </span>
+              </label>
+            ))}
+          </fieldset>
+        )}
         <DialogFooter>
           <DialogClose render={<Button ref={cancelRef} variant="outline" disabled={isPending} />}>
             {t('cancel')}

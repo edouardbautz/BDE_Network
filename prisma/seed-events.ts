@@ -32,6 +32,8 @@ const ENGLISH: Record<string, string> = {
   'Footing ou renforcement musculaire, ouvert à tous. La 3ᵉ séance est annulée (salle indisponible).':
     'Jogging or strength training, open to all. The 3rd session is cancelled (room unavailable).',
   Gymnase: 'Gym',
+  'Stade de la Plaine': 'Plaine stadium',
+  'Match amical contre les anciens': 'Friendly match against the alumni',
   'Permanence du bureau': 'Board office hours',
   'Le bureau reçoit les questions des étudiants et distribue les goodies.':
     'The board answers students’ questions and hands out goodies.',
@@ -76,6 +78,8 @@ interface DemoEvent {
   assignees: DemoLogin[];
   /** 0-based indexes of occurrences to cancel. */
   cancel?: number[];
+  /** Dates of a series that were edited on their own (what "only this one" stores). */
+  own?: { index: number; title?: string; location?: string; status?: 'DRAFT' | 'CONFIRMED' }[];
   author: DemoLogin;
 }
 
@@ -196,6 +200,11 @@ export async function seedDemoEvents(
       repeatUntilDays: nextTuesday + 7 * 7,
       assignees: ['demo-member2'],
       cancel: [2],
+      // The 5th session has its own title and place; the 7th is still a draft.
+      own: [
+        { index: 4, title: 'Match amical contre les anciens', location: 'Stade de la Plaine' },
+        { index: 6, status: 'DRAFT' },
+      ],
       author: 'demo-member1',
     },
     {
@@ -318,6 +327,27 @@ export async function seedDemoEvents(
         return user ? [{ eventId: demo.id, login, userId: user.id }] : [];
       }),
     });
+
+    await prisma.eventOccurrence.deleteMany({ where: { eventId: demo.id } });
+    if (demo.own && demo.own.length > 0) {
+      const occurrences = allOccurrences(
+        { startsAt, endsAt, recurrence, recurrenceUntil },
+        timeZone,
+      );
+      for (const own of demo.own) {
+        const occurrence = occurrences[own.index];
+        if (!occurrence) continue;
+        await prisma.eventOccurrence.create({
+          data: {
+            eventId: demo.id,
+            occurrenceStart: occurrence.start,
+            title: own.title ? tr(own.title) : null,
+            location: own.location ? tr(own.location) : null,
+            status: own.status ?? null,
+          },
+        });
+      }
+    }
 
     await prisma.eventCancellation.deleteMany({ where: { eventId: demo.id } });
     if (demo.cancel && demo.cancel.length > 0) {

@@ -79,37 +79,42 @@ export function buildEventEmail(
   return { ...rendered, ...(ics && { ics }) };
 }
 
-/** The calendar file attached to a confirmation: every occurrence still to come, under the same
- * identifiers as the subscription feeds, so a client that already has the event updates it instead of
- * adding it twice. */
+/** One date of the calendar file attached to a confirmation. */
+export interface IcsDate {
+  /** Where the series puts the date: with the series' key, its identifier in every calendar file. */
+  originalStart: Date;
+  start: Date;
+  end: Date;
+  title: string;
+  description: string | null;
+  location: string | null;
+  category: string;
+  updatedAt: Date;
+}
+
+/** The calendar file attached to a confirmation: the dates announced, under the same identifiers as the
+ * subscription feeds, so a client that already has the event updates it instead of adding it twice. */
 export function buildEventIcs(
-  event: {
-    id: string;
-    title: string;
-    description: string | null;
-    location: string | null;
-    updatedAt: Date;
-  },
-  occurrences: readonly { start: Date; end: Date }[],
-  category: string,
+  seriesKey: string,
+  dates: readonly IcsDate[],
   calendarName: string,
   now: Date = new Date(),
 ): NonNullable<EmailContent['ics']> {
   return {
-    filename: icsFilename(event.title),
+    filename: icsFilename(dates[0]?.title ?? ''),
     content: buildIcs(
       {
         name: calendarName,
-        events: occurrences.map((occurrence) => ({
-          uid: occurrenceUid(event.id, occurrence.start),
-          start: occurrence.start,
-          end: occurrence.end,
-          summary: event.title,
-          description: event.description,
-          location: event.location,
+        events: dates.map((date) => ({
+          uid: occurrenceUid(seriesKey, date.originalStart),
+          start: date.start,
+          end: date.end,
+          summary: date.title,
+          description: date.description,
+          location: date.location,
           confirmed: true,
-          category,
-          lastModified: event.updatedAt,
+          category: date.category,
+          lastModified: date.updatedAt,
         })),
       },
       now,

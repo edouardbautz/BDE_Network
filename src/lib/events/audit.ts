@@ -11,15 +11,17 @@ export type EventAuditAction =
   | 'event.occurrence_cancel'
   | 'event.occurrence_restore';
 
-/** Records an events-module action under the real acting account. */
+/** Records an events-module action under the real acting account. Pass the transaction (`client`) when the
+ * action is one: the entry is then committed with it, or not at all. */
 export async function auditEventAction(
   access: EventsAccess,
   action: EventAuditAction,
   event: { id: string; title: string },
   metadata: Record<string, Prisma.InputJsonValue> = {},
+  client?: Parameters<typeof logAuditEvent>[1],
 ): Promise<void> {
   const { user } = access.session;
-  await logAuditEvent({
+  const entry = {
     actorLogin: user.login,
     actorId: user.id,
     action,
@@ -27,7 +29,26 @@ export async function auditEventAction(
     targetId: event.id,
     targetLabel: event.title,
     metadata: { ...metadata, ...simulationAuditFields(access.session.simulatedAs) },
-  });
+  };
+  await (client ? logAuditEvent(entry, client) : logAuditEvent(entry));
+}
+
+/** What every audit entry about a series says on top of its own facts: whether the action bore on one date or on
+ * that date and the following (`fromFirst`: the first date, so the whole series), and which date. An event that
+ * does not repeat has none of it. */
+export function seriesAuditFields(
+  event: { recurrence: string; startsAt: Date },
+  scope: 'occurrence' | 'following',
+  occurrenceStart: Date,
+): Record<string, Prisma.InputJsonValue> {
+  if (event.recurrence === 'NONE') return {};
+  return {
+    scope,
+    occurrenceStart: occurrenceStart.toISOString(),
+    ...(scope === 'following' && occurrenceStart.getTime() === event.startsAt.getTime()
+      ? { fromFirst: true }
+      : {}),
+  };
 }
 
 export type CalendarFeedAuditAction =

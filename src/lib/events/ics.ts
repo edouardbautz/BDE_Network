@@ -122,7 +122,9 @@ export function icsFilename(title: string): string {
   return `${slug}.ics`;
 }
 
-/** UID of one occurrence: stable for a given event and original start. */
-export function occurrenceUid(eventId: string, occurrenceStart: Date): string {
-  return `${eventId}-${formatIcsDate(occurrenceStart)}@bde-network`;
+/** UID of one occurrence: stable for a given series and original start, so a date that was edited, moved or
+ * handed to the second row of a cut series is the same entry for a calendar client (updated, never doubled).
+ * `seriesKey` is the id of the first row of the series (`seriesKeyOf`). */
+export function occurrenceUid(seriesKey: string, originalStart: Date): string {
+  return `${seriesKey}-${formatIcsDate(originalStart)}@bde-network`;
 }
