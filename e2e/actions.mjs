@@ -475,6 +475,8 @@ const SCENARIOS = [
           'owner-add',
         );
         if (added !== 'ok') return added;
+        // The dialog of the addition may still be closing: wait for it before opening the next one.
+        await page.waitForFunction(() => !document.querySelector('[role="dialog"]'));
         await page.click(`button[aria-label="Retirer ${login}"]`);
         await page.waitForSelector(dialog);
         await click('Retirer', dialog);
