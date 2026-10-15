@@ -187,13 +187,13 @@ la vérification et le retour arrière, est dans [Mettre à jour](upgrading.md).
 
 ### Quelle version tourne
 
-`docker-compose.yml` nomme l'image d'**une version précise** (`ghcr.io/edouardbautz/bde_network:1.1.1`), jamais
+`docker-compose.yml` nomme l'image d'**une version précise** (`ghcr.io/edouardbautz/bde_network:1.2.0`), jamais
 « latest » : ce qui tourne est ce pour quoi le dossier a été écrit, et revenir à une ancienne version du dossier
 revient à son image. La version s'affiche aussi en haut de la page **Paramètres**. Les versions sont listées sur la
 [page des versions](https://github.com/edouardbautz/BDE_Network/releases) du projet.
 
 Pour rester sur une version pendant que vous récupérez des fichiers plus récents avec `git pull`, ou pour en essayer
-une autre, écrivez `BDE_VERSION=1.1.1` dans `.env`. Retirez la ligne pour suivre de nouveau le dossier. L'image est
+une autre, écrivez `BDE_VERSION=1.2.0` dans `.env`. Retirez la ligne pour suivre de nouveau le dossier. L'image est
 téléchargée depuis `ghcr.io` (le registre de GitHub) : le serveur doit avoir le droit de l'atteindre.
 
 ### Construire l'image vous-même
