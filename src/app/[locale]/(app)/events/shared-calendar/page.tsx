@@ -1,6 +1,7 @@
 import { ArrowLeft, CalendarSync, CircleCheck } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
+import { ActionButton } from '@/components/action-button';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { CopyField } from '@/components/events/copy-field';
 import { EmptyState } from '@/components/events/event-list';
@@ -75,16 +76,15 @@ export default async function SharedCalendarPage({
               title={t('inactive.title')}
               description={t('inactive.description')}
               action={
-                <form
+                <ActionButton
+                  variant="default"
                   action={async () => {
                     'use server';
-                    await enableSharedCalendar();
+                    return enableSharedCalendar();
                   }}
                 >
-                  <Button type="submit" size="sm">
-                    {t('inactive.enable')}
-                  </Button>
-                </form>
+                  {t('inactive.enable')}
+                </ActionButton>
               }
             />
           </CardContent>
@@ -120,7 +120,7 @@ export default async function SharedCalendarPage({
                 confirmLabel={t('regenerate.confirm')}
                 onConfirm={async () => {
                   'use server';
-                  await regenerateSharedCalendar();
+                  return regenerateSharedCalendar();
                 }}
               >
                 {t('regenerate.summary')}
@@ -132,7 +132,7 @@ export default async function SharedCalendarPage({
                 confirmLabel={t('disable.confirm')}
                 onConfirm={async () => {
                   'use server';
-                  await disableSharedCalendar();
+                  return disableSharedCalendar();
                 }}
               >
                 {t('disable.summary')}

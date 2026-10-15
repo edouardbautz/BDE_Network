@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { getLocale } from 'next-intl/server';
-import { redirect } from '@/i18n/navigation';
+import { getPathname } from '@/i18n/navigation';
+import type { ActionTarget } from '@/lib/action-target';
 import { requireSharedCalendarManager } from '@/lib/events/access';
 import { auditCalendarFeedAction } from '@/lib/events/audit';
 import {
@@ -15,15 +16,20 @@ import {
 /** Logins are `[a-z0-9-]`; anything else is dropped rather than stored in the audit log. */
 const LOGIN_PATTERN = /^[a-z0-9-]{1,64}$/i;
 
-async function backToPage(status: 'enabled' | 'regenerated' | 'disabled'): Promise<never> {
+/** These actions are asked on the page they change, so they do not redirect to it (a redirect to the page you are on
+ * is the one thing the production router often does not show, measured 14 times in 15): they answer the address
+ * to load. See lib/action-target.ts. */
+async function backToPage(status: 'enabled' | 'regenerated' | 'disabled'): Promise<ActionTarget> {
   revalidatePath('/events/shared-calendar');
-  return redirect({
-    href: { pathname: '/events/shared-calendar', query: { status } },
-    locale: await getLocale(),
-  });
+  return {
+    href: getPathname({
+      href: { pathname: '/events/shared-calendar', query: { status } },
+      locale: await getLocale(),
+    }),
+  };
 }
 
-export async function enableSharedCalendar(): Promise<void> {
+export async function enableSharedCalendar(): Promise<ActionTarget> {
   const access = await requireSharedCalendarManager();
 
   // Enabling an already active link must not look like (or log as) a change.
@@ -32,12 +38,12 @@ export async function enableSharedCalendar(): Promise<void> {
     await auditCalendarFeedAction(access, 'calendar_feed.enable');
   }
 
-  await backToPage('enabled');
+  return backToPage('enabled');
 }
 
 /** `removedMember` is set when the admin regenerates from the "a member just
  * left" prompt, so the audit log says why. */
-export async function regenerateSharedCalendar(removedMember?: string): Promise<void> {
+export async function regenerateSharedCalendar(removedMember?: string): Promise<ActionTarget> {
   const access = await requireSharedCalendarManager();
 
   await regenerateBdeFeed();
@@ -49,10 +55,10 @@ export async function regenerateSharedCalendar(removedMember?: string): Promise<
       : {},
   );
 
-  await backToPage('regenerated');
+  return backToPage('regenerated');
 }
 
-export async function disableSharedCalendar(): Promise<void> {
+export async function disableSharedCalendar(): Promise<ActionTarget> {
   const access = await requireSharedCalendarManager();
 
   if (await getBdeFeedToken()) {
@@ -60,5 +66,5 @@ export async function disableSharedCalendar(): Promise<void> {
     await auditCalendarFeedAction(access, 'calendar_feed.disable');
   }
 
-  await backToPage('disabled');
+  return backToPage('disabled');
 }

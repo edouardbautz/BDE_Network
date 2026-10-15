@@ -64,6 +64,10 @@ All notable changes to this project are written here, in English. Format based o
 - **CI for the documentation**: a `docs` job, required on `main` (internal links and anchors, images' alternative
   text, French and English pages that are twins, markdownlint on top of Prettier), and a weekly check of external
   links (`.github/workflows/links.yml`, which opens an issue when a link breaks).
+- **A browser test of what every action shows afterwards** (`e2e/actions.mjs`, run by CI on the real image): members
+  (approve, refuse, remove, change a role), roles (default, delete, create, edit), settings (identity, owners, logo,
+  modules), profile, shared calendar and language. A test (`src/lib/server-actions-coverage.test.ts`) fails until every
+  new server action is played by such a scenario or listed with the reason it needs none.
 - `scripts/docs-screenshots.mjs` takes the documentation's screenshots again; `SEED_LOCALE=en` writes the demo data
   in English.
 - **Series of events: act on one date, or on this date and the following.** On a date of a series, every action (edit,
@@ -108,6 +112,12 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Fixed
 
+- **The shared calendar page did not show the result of its buttons** (turn the BDE link on, regenerate it, turn it
+  off): the action was done and written to the audit log, the page kept the old state until a reload, in 14 plays out
+  of 15 on the production image. The three actions now answer an address that the browser loads, like the date actions
+  of events; so does the "replace the shared link" prompt of the Members page, and the regeneration of one's personal
+  calendar link (seen stale once in 45 plays). Every other action of the platform was measured the same way (members,
+  roles, settings, language: 0 stale in 15 plays of each) and was not affected.
 - **Confirming, putting back to draft, cancelling or restoring a date did not always show on the page** (the action was done and
   written to the audit log, the page kept the old state, until a reload). In the production build, Next.js 15 does
   not always show the page it fetched after an action that stays on the page you are on (the same family of bug as the

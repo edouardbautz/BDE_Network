@@ -7,23 +7,19 @@ import { effective, effectiveFor, memberWith, type AccountKind } from '@/test/se
  * against mocked session/config/database.
  */
 
-const { RedirectSignal } = vi.hoisted(() => ({
-  RedirectSignal: class RedirectSignal extends Error {
-    constructor(public href: string) {
-      super(`REDIRECT:${href}`);
-    }
-  },
-}));
-
 vi.mock('@/config', () => ({ getConfig: vi.fn() }));
 vi.mock('@/lib/auth/session', () => ({ getEffectiveSession: vi.fn() }));
 vi.mock('@/lib/audit-log', () => ({ logAuditEvent: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('next-intl/server', () => ({ getLocale: vi.fn(async () => 'fr') }));
 vi.mock('@/i18n/navigation', () => ({
-  redirect: vi.fn((options: { href: { pathname: string; query: { status: string } } }) => {
-    throw new RedirectSignal(`${options.href.pathname}?status=${options.href.query.status}`);
-  }),
+  getPathname: ({
+    href,
+    locale,
+  }: {
+    href: { pathname: string; query: { status: string } };
+    locale: string;
+  }) => `/${locale}${href.pathname}?status=${href.query.status}`,
 }));
 vi.mock('@/lib/events/export', () => ({
   getBdeFeedToken: vi.fn(),
@@ -119,9 +115,9 @@ describe.each<[string, Who]>([
 
   it('enables the link and audits it', async () => {
     vi.mocked(feed.getBdeFeedToken).mockResolvedValue(null);
-    await expect(enableSharedCalendar()).rejects.toThrow(
-      new RedirectSignal('/events/shared-calendar?status=enabled'),
-    );
+    await expect(enableSharedCalendar()).resolves.toEqual({
+      href: '/fr/events/shared-calendar?status=enabled',
+    });
     expect(feed.enableBdeFeed).toHaveBeenCalledTimes(1);
     expect(logAuditEvent).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -134,15 +130,15 @@ describe.each<[string, Who]>([
 
   it('does not touch or log anything when enabling an already active link', async () => {
     vi.mocked(feed.getBdeFeedToken).mockResolvedValue(SECRET);
-    await expect(enableSharedCalendar()).rejects.toThrow(RedirectSignal);
+    await expect(enableSharedCalendar()).resolves.toHaveProperty('href');
     expect(feed.enableBdeFeed).not.toHaveBeenCalled();
     expect(logAuditEvent).not.toHaveBeenCalled();
   });
 
   it('regenerates the link and audits it', async () => {
-    await expect(regenerateSharedCalendar()).rejects.toThrow(
-      new RedirectSignal('/events/shared-calendar?status=regenerated'),
-    );
+    await expect(regenerateSharedCalendar()).resolves.toEqual({
+      href: '/fr/events/shared-calendar?status=regenerated',
+    });
     expect(feed.regenerateBdeFeed).toHaveBeenCalledTimes(1);
     expect(logAuditEvent).toHaveBeenCalledWith(
       expect.objectContaining({ action: 'calendar_feed.regenerate' }),
@@ -150,7 +146,7 @@ describe.each<[string, Who]>([
   });
 
   it('records why when regenerating after a member was removed', async () => {
-    await expect(regenerateSharedCalendar('departed-user')).rejects.toThrow(RedirectSignal);
+    await expect(regenerateSharedCalendar('departed-user')).resolves.toHaveProperty('href');
     expect(logAuditEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         metadata: expect.objectContaining({ reason: 'member_removed', member: 'departed-user' }),
@@ -159,8 +155,8 @@ describe.each<[string, Who]>([
   });
 
   it('drops a removed-member value that is not a plain login instead of storing it', async () => {
-    await expect(regenerateSharedCalendar('<script>alert(1)</script>')).rejects.toThrow(
-      RedirectSignal,
+    await expect(regenerateSharedCalendar('<script>alert(1)</script>')).resolves.toHaveProperty(
+      'href',
     );
     const entry = vi.mocked(logAuditEvent).mock.calls[0]?.[0];
     expect(entry?.metadata).toEqual({});
@@ -168,9 +164,9 @@ describe.each<[string, Who]>([
 
   it('disables the link and audits it', async () => {
     vi.mocked(feed.getBdeFeedToken).mockResolvedValue(SECRET);
-    await expect(disableSharedCalendar()).rejects.toThrow(
-      new RedirectSignal('/events/shared-calendar?status=disabled'),
-    );
+    await expect(disableSharedCalendar()).resolves.toEqual({
+      href: '/fr/events/shared-calendar?status=disabled',
+    });
     expect(feed.disableBdeFeed).toHaveBeenCalledTimes(1);
     expect(logAuditEvent).toHaveBeenCalledWith(
       expect.objectContaining({ action: 'calendar_feed.disable' }),
@@ -179,7 +175,7 @@ describe.each<[string, Who]>([
 
   it('does not log disabling a link that is already off', async () => {
     vi.mocked(feed.getBdeFeedToken).mockResolvedValue(null);
-    await expect(disableSharedCalendar()).rejects.toThrow(RedirectSignal);
+    await expect(disableSharedCalendar()).resolves.toHaveProperty('href');
     expect(feed.disableBdeFeed).not.toHaveBeenCalled();
     expect(logAuditEvent).not.toHaveBeenCalled();
   });
@@ -190,9 +186,9 @@ describe.each<[string, Who]>([
     );
     vi.mocked(feed.getBdeFeedToken).mockResolvedValueOnce(null).mockResolvedValue(SECRET);
 
-    await expect(enableSharedCalendar()).rejects.toThrow(RedirectSignal);
-    await expect(regenerateSharedCalendar('departed-user')).rejects.toThrow(RedirectSignal);
-    await expect(disableSharedCalendar()).rejects.toThrow(RedirectSignal);
+    await expect(enableSharedCalendar()).resolves.toHaveProperty('href');
+    await expect(regenerateSharedCalendar('departed-user')).resolves.toHaveProperty('href');
+    await expect(disableSharedCalendar()).resolves.toHaveProperty('href');
 
     expect(logAuditEvent).toHaveBeenCalledTimes(3);
     expect(JSON.stringify(vi.mocked(logAuditEvent).mock.calls)).not.toContain(SECRET);

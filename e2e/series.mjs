@@ -1,3 +1,5 @@
+// covers: events.updateEvent, events.setEventStatus, events.cancelOccurrence, events.restoreOccurrence
+// covers: events.deleteFollowingDates
 // End-to-end test of the dialogs of a series of events (one date, or this date and the following), in a real
 // browser, against the real image: edit, put back to draft, confirm, cancel, restore and delete, in French and in
 // English. The unit tests run the same operations on an in-memory database; this one proves the buttons, the

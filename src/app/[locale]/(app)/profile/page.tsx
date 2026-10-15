@@ -80,7 +80,7 @@ export default async function ProfilePage() {
                 confirmLabel={t('calendar.regenerate.confirm')}
                 onConfirm={async () => {
                   'use server';
-                  await regenerateMyCalendarToken();
+                  return regenerateMyCalendarToken();
                 }}
               >
                 {t('calendar.regenerate.summary')}
