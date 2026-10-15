@@ -135,7 +135,7 @@ export async function MonthCalendar({
                             date: formatDayHeading(day, locale),
                           })}
                           title={t('calendar.addOnDayShort')}
-                          className="border-input bg-background text-foreground hover:bg-muted focus-visible:ring-ring/50 absolute top-1 right-1 hidden size-6 items-center justify-center rounded-full border opacity-0 shadow-xs transition-opacity outline-none group-focus-within/cell:opacity-100 group-hover/cell:opacity-100 focus-visible:opacity-100 focus-visible:ring-3 pointer-coarse:size-8 pointer-coarse:opacity-100 md:flex"
+                          className="border-input bg-background text-foreground hover:bg-muted focus-visible:ring-ring/50 absolute top-1 right-1 hidden size-6 items-center justify-center rounded-full border opacity-0 shadow-xs transition-opacity outline-none group-focus-within/cell:opacity-100 [td:hover_&]:opacity-100 focus-visible:opacity-100 focus-visible:ring-3 pointer-coarse:size-8 pointer-coarse:opacity-100 md:flex"
                         >
                           <Plus className="size-4" aria-hidden="true" />
                         </Link>

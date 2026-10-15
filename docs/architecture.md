@@ -580,7 +580,7 @@ User guide: `docs/en/events.md`. The shape worth knowing before touching it:
     with `?notice=seriesBusy`; a date that is gone is `occurrenceGone` (`lib/events/notice.ts`).
 - **Quick add from the calendar** (`lib/events/defaults.ts`, `month-calendar.tsx`, `events/new/page.tsx`; scenario "the
   form opens on that day" and the member check of `e2e/events.mjs`). A "+" in each cell (from `md` up: `hidden md:flex`,
-  revealed by `group-hover/cell` and `group-focus-within/cell`, always shown under `pointer-coarse`, right after the day
+  revealed by `[td:hover_&]` (an arbitrary variant, not `group-hover`: Tailwind wraps `hover:` in `@media (hover: hover)`, which a headless Chrome without a pointer, the CI's, does not match) and `group-focus-within/cell`, always shown under `pointer-coarse`, right after the day
   link in the tab order, named "Add an event on" plus the day) and, below `md`, an "add on this day" button in the panel of the
   selected day (`#add-on-selected-day`) both link to `/events/new?date=YYYY-MM-DD`. **Permission**: they are rendered only
   when `access.canManage` (`canCreate`), which is a courtesy; `/events/new` redirects anybody else (with or without the

@@ -236,6 +236,8 @@ async function run(screen, lang) {
   if (screen === 'computer') {
     if ((await opacityOf(addLink)) !== '0')
       fail(`[${label}] the "+" of a day shows without being asked`);
+    // (The Chrome of the CI has no pointing device: `@media (hover: hover)` does not match there, which is where Tailwind
+    // puts its `hover:` variants. The "+" must appear on hover without it: it is how this check found out.)
     await page.hover(dayLink);
     const shown = (selector) => getComputedStyle(document.querySelector(selector)).opacity === '1';
     if (!(await waitFor(shown, addLink)))

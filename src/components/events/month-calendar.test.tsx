@@ -214,7 +214,7 @@ describe('MonthCalendar, adding an event on a day', () => {
     // desktop only (a phone has the button of the panel), revealed by hover and by keyboard focus, always on a touch screen
     expect(cell).toMatch(/class="[^"]*hidden[^"]*md:flex/);
     expect(cell).toContain('opacity-0');
-    expect(cell).toContain('group-hover/cell:opacity-100');
+    expect(cell).toContain('[td:hover_&amp;]:opacity-100');
     expect(cell).toContain('group-focus-within/cell:opacity-100');
     expect(cell).toContain('focus-visible:opacity-100');
     expect(cell).toContain('pointer-coarse:opacity-100');
