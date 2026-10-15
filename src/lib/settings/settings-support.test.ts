@@ -95,6 +95,7 @@ describe('settingsExtras: what only the settings page shows', () => {
     mocks.groupBy.mockResolvedValue([{ categoryKey: 'soiree', _count: { _all: 7 } }]);
     expect(await settingsExtras()).toEqual({
       logo: { path: '/logo.svg', custom: false },
+      updates: { check: true },
       events: {
         categories: [{ key: 'soiree', label: 'Soirée', color: '#db2777' }],
         usage: { soiree: 7 },

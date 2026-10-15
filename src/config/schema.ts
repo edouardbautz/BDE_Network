@@ -101,6 +101,12 @@ const notificationsSection = z.object({
   eventReminder: optionalNotificationChannel('eventReminder'),
 });
 
+const updatesSection = z.object({
+  // Whether the owners are told when a newer version of the platform is published (a request to GitHub that
+  // carries nothing of the BDE: see docs/en/configuration.md). On by default; absent means on.
+  check: z.boolean().default(true),
+});
+
 const categoryKey = z
   .string()
   .trim()
@@ -139,6 +145,7 @@ export const bdeConfigSchema = z
     events: eventsSection.optional(),
     // The whole section is optional too: absent means every notification is off.
     notifications: notificationsSection.prefault({}),
+    updates: updatesSection.prefault({}),
   })
   .superRefine((config, ctx) => {
     if (config.modules.enabled.includes(EVENTS_MODULE_KEY) && !config.events) {

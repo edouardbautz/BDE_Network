@@ -82,3 +82,10 @@ notifications:
   # Module "events" (ignorés si le module n'est pas activé). Optionnels : "none" par défaut.
   eventConfirmed: 'none' # un événement passe de brouillon à confirmé
   eventReminder: 'none' # rappel envoyé la veille d'un événement
+
+
+# Facultatif. Prévenir les propriétaires (bandeau du tableau de bord et de la page Paramètres) quand une nouvelle
+# version de la plateforme est publiée. La plateforme demande alors la dernière version à GitHub, sans rien envoyer
+# de votre BDE (voir docs/fr/configuration.md). Défaut : true. Se règle aussi dans Paramètres.
+# updates:
+#   check: true

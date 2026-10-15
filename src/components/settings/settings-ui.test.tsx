@@ -27,6 +27,7 @@ const mocks = vi.hoisted(() => ({
   saveLogo: vi.fn(),
   removeLogo: vi.fn(),
   saveEvents: vi.fn(),
+  saveUpdates: vi.fn(),
 }));
 
 vi.mock('sonner', () => ({ toast: { success: mocks.toastSuccess, error: mocks.toastError } }));
@@ -46,6 +47,7 @@ vi.mock('@/app/[locale]/(app)/settings/actions', () => ({
   saveLogo: mocks.saveLogo,
   removeLogo: mocks.removeLogo,
   saveEvents: mocks.saveEvents,
+  saveUpdates: mocks.saveUpdates,
 }));
 
 const { SettingsPanels } = await import('./settings-panels');
@@ -77,6 +79,7 @@ const view = (patch: Partial<DraftView> = {}): DraftView => ({
 
 const extras = (patch: Partial<SettingsExtras> = {}): SettingsExtras => ({
   logo: { path: '/logo.svg', custom: false },
+  updates: { check: true },
   events: {
     categories: [{ key: 'soiree', label: 'Soirée', color: '#db2777' }],
     usage: { soiree: 3 },
@@ -103,6 +106,7 @@ beforeEach(() => {
     'saveAddress',
     'saveCampuses',
     'saveModules',
+    'saveUpdates',
     'saveNotifications',
     'removeOwner',
     'addOwner',
@@ -205,10 +209,31 @@ describe('the sections', () => {
 
   it('turn a module off', async () => {
     renderPanels();
-    fireEvent.click(screen.getByRole('switch'));
-    const save = screen.getByRole('switch').closest('form')?.querySelector('button[type="submit"]');
-    fireEvent.click(save as HTMLElement);
+    const events = screen.getByRole('switch', { name: 'Événements' });
+    fireEvent.click(events);
+    fireEvent.click(events.closest('form')?.querySelector('button[type="submit"]') as HTMLElement);
     await waitFor(() => expect(mocks.saveModules).toHaveBeenCalledWith({ events: false }));
+  });
+});
+
+describe('the notice of new versions', () => {
+  it('is on, and turned off from the section', async () => {
+    renderPanels();
+    const toggle = screen.getByRole('switch', { name: 'Me prévenir des nouvelles versions' });
+    expect(toggle).toBeChecked();
+    fireEvent.click(toggle);
+    fireEvent.click(toggle.closest('form')?.querySelector('button[type="submit"]') as HTMLElement);
+    await waitFor(() => expect(mocks.saveUpdates).toHaveBeenCalledWith({ check: false }));
+    await waitFor(() => expect(mocks.toastSuccess).toHaveBeenCalled());
+  });
+
+  it('shows what is saved, and says so when the server refuses', async () => {
+    mocks.saveUpdates.mockResolvedValue({ ok: false, code: 'invalid' });
+    renderPanels({}, { updates: { check: false } });
+    const toggle = screen.getByRole('switch', { name: 'Me prévenir des nouvelles versions' });
+    expect(toggle).not.toBeChecked();
+    fireEvent.click(toggle.closest('form')?.querySelector('button[type="submit"]') as HTMLElement);
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
   });
 });
 

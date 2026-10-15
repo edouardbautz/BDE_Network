@@ -683,6 +683,26 @@ vX.Y.Z`. **The GitHub release is created by the maintainer, not by the workflow*
   a rootless Docker-in-Docker (`docker:dind-rootless`, project mounted from a client container so the daemon cannot
   see it). The commands that read what the container sees are under "Problèmes fréquents" in
   `docs/en/installation.md`.
+- **The notice of a new version** (`src/lib/updates/`, `src/app/api/updates/route.ts`,
+  `src/components/updates/update-banner.tsx`, setting `updates.check`; tests next to them and the scenario "turn the
+  notice of new versions off and on" of `e2e/actions.mjs`). The one thing the platform asks the outside world about
+  itself: GitHub's `releases/latest` of the project, a `GET` carrying nothing but `User-Agent: BDE_Network/<version>`.
+  - **Never on the way of a page.** The banner is a client component that asks the platform's own route **after** the
+    page is shown; the route is owner-only (`getSettingsManager`, a bare 404 for anybody else), answers `no-store`, and
+    reads a cache on the server: a success is kept 6 hours, a failure 30 minutes, simultaneous asks share one request,
+    the timeout is 3 s, and nothing ever throws (`latest-release.ts`). Pages only pass `enabled` (`updates.check`) to it,
+    so turning the setting off removes the banner at the next refresh and nothing is asked any more.
+  - **What GitHub says is not trusted.** Only a published (not draft, not preview) release whose tag is `vX.Y.Z` and
+    whose page is under `github.com/edouardbautz/BDE_Network/releases/` is believed (`readRelease`); the notes are
+    reduced to one plain-text paragraph of 320 characters at most (`summarizeNotes`) and shown as text, never as markup;
+    the link is the validated page. The running version is the one written into the image (`BDE_VERSION`, see
+    `runningVersion`): unknown in development, where nothing is asked.
+  - **No update button, on purpose.** The application has no control over Docker and must not get one (that would be
+    the container being able to replace itself, or a mount of the Docker socket): the banner shows the two commands
+    and the platform's own safe update does the rest. A dismissed banner is remembered per browser, per version
+    (`localStorage`, optional).
+  - `RELEASES_API_URL` replaces `api.github.com` for the end-to-end tests (`e2e/mock-fortytwo.mjs` answers with
+    `MOCK_LATEST_RELEASE`); it is never set in a real installation.
 - **docker-compose.yml needs no `.env`.** There is no `env_file`: the variables an installation that predates the
   database needs from `.env` are passed by name (`${VAR:-}`; compose reads `.env` itself when it exists and does not
   mind when it does not, with any Compose v2), to be copied into the database once. A one-shot `secrets` service

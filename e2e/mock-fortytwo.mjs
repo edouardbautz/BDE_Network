@@ -36,6 +36,21 @@ export function startMock(port = 4242, extraLogins = []) {
 
     if (url.pathname === '/__sign-ins') return send(response, 200, signIns);
 
+    // GitHub's "latest release" of the project (RELEASES_API_URL points the platform here): a newer version than
+    // any real one when MOCK_LATEST_RELEASE is set (e2e/actions.mjs plays the notice of a new version with it),
+    // nothing published otherwise.
+    if (url.pathname === '/repos/edouardbautz/BDE_Network/releases/latest') {
+      const tag = process.env.MOCK_LATEST_RELEASE;
+      if (!tag) return send(response, 404, { message: 'Not Found' });
+      return send(response, 200, {
+        tag_name: tag,
+        html_url: `https://github.com/edouardbautz/BDE_Network/releases/tag/${tag}`,
+        body: 'A new version for the end-to-end test.\n\n- a list',
+        draft: false,
+        prerelease: false,
+      });
+    }
+
     // The way out of a sign-in: the person is sent back to the platform with a code.
     if (url.pathname === '/oauth/authorize') {
       const redirectUri = url.searchParams.get('redirect_uri');

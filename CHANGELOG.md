@@ -6,6 +6,17 @@ All notable changes to this project are written here, in English. Format based o
 
 ## [Unreleased]
 
+### Added
+
+- **A banner tells the owners when a new version is published.** On the dashboard and on the Settings page, owners (and
+  only owners) see the new version, what it is about, a link to its notes and the two commands that update it
+  (`git pull`, then `docker compose up -d`), which they can copy; **Hide until the next version** hides it in that
+  browser. Nothing is updated by itself: the application has no control over Docker. The platform learns it by asking
+  GitHub for the project's latest release (a plain request that carries nothing about the BDE or its members, made
+  after the page is shown, answered from a cache of six hours, never slowing a page down), and only reads a published
+  release of the project. The **New versions** section of Settings (`updates.check` in the configuration, on by
+  default, audited) turns it off, and then the platform asks nobody. The documentation says what leaves the server.
+
 ## [1.1.0] - 2026-10-15
 
 ### Added

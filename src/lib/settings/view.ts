@@ -55,6 +55,8 @@ export interface EventsSettingsView {
 /** What only the settings page shows, besides the forms it shares with the installer. */
 export interface SettingsExtras {
   logo: { path: string; custom: boolean };
+  /** Whether the owners are told about a newer version (`updates.check`). */
+  updates: { check: boolean };
   /** Null while the events module is off: there is nothing to set. */
   events: EventsSettingsView | null;
 }
@@ -62,13 +64,15 @@ export interface SettingsExtras {
 export async function settingsExtras(): Promise<SettingsExtras> {
   const config = getConfig();
   const logo = { path: config.bde.logoPath, custom: logoVersionOf(config.bde.logoPath) !== null };
+  const updates = { check: config.updates.check };
   if (!config.events || !config.modules.enabled.includes(EVENTS_MODULE_KEY)) {
-    return { logo, events: null };
+    return { logo, updates, events: null };
   }
 
   const counts = await prisma.event.groupBy({ by: ['categoryKey'], _count: { _all: true } });
   return {
     logo,
+    updates,
     events: {
       categories: config.events.categories,
       usage: Object.fromEntries(counts.map((row) => [row.categoryKey, row._count._all])),

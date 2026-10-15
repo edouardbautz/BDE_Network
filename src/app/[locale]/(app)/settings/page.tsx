@@ -4,13 +4,16 @@ import { redirect } from '@/i18n/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CopyField } from '@/components/events/copy-field';
 import { OAuthRejectedAlert } from '@/components/settings/oauth-rejected-alert';
+import { UpdateBanner } from '@/components/updates/update-banner';
 import { SettingsPanels } from '@/components/settings/settings-panels';
+import { getConfig } from '@/config';
 import { checkFortyTwoCredentials } from '@/lib/auth/oauth-check';
 import { prisma } from '@/lib/prisma';
 import { pageTitle } from '@/lib/page-title';
 import { getSettingsManager, isSettingsEditable } from '@/lib/settings/access';
 import { getRuntimeSettings } from '@/lib/settings/runtime';
 import { settingsExtras, settingsView } from '@/lib/settings/view';
+import { runningVersion } from '@/lib/updates/version';
 
 export const dynamic = 'force-dynamic';
 export const generateMetadata = pageTitle('settings', 'title');
@@ -28,11 +31,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
   const editable = isSettingsEditable();
   const secretsStatus = getRuntimeSettings()?.secretsStatus ?? 'ok';
   // Written into the image when it is built (docker/start.mjs hands it over); absent in development.
-  const version =
-    /^[0-9A-Za-z.+-]{1,40}$/.test(process.env.BDE_VERSION ?? '') &&
-    process.env.BDE_VERSION !== 'unknown'
-      ? process.env.BDE_VERSION
-      : null;
+  const version = runningVersion();
   const installation = editable
     ? await prisma.platformSettings.findUnique({
         where: { id: 'platform' },
@@ -58,6 +57,8 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
           <p className="text-muted-foreground mt-1 text-xs">{t('version', { version })}</p>
         )}
       </div>
+
+      {editable && <UpdateBanner enabled={getConfig().updates.check} />}
 
       {/* The keys are not in the database: this is the one thing to keep safe, so it is always in view. */}
       <Alert>

@@ -1006,6 +1006,25 @@
       "removeBodyUnused": "{count, plural, one {Aucun événement n'utilise cette catégorie.} other {Aucun événement n'utilise ces catégories.}} Le retrait ne peut pas être annulé.",
       "removeConfirm": "Retirer et enregistrer"
     },
-    "version": "Version de la plateforme : {version}"
+    "version": "Version de la plateforme : {version}",
+    "updates": {
+      "title": "Nouvelles versions",
+      "description": "Les propriétaires peuvent être prévenus, sur le tableau de bord et sur cette page, quand une nouvelle version de la plateforme est publiée.",
+      "checkTitle": "Me prévenir des nouvelles versions",
+      "checkBody": "La plateforme demande à GitHub la dernière version publiée, au plus toutes les quelques heures et seulement quand un propriétaire ouvre le tableau de bord ou cette page. La demande ne transporte rien de votre BDE ni de ses membres. Désactivé, la plateforme ne demande rien à personne."
+    }
+  },
+  "updates": {
+    "banner": {
+      "title": "La version {latest} est disponible",
+      "running": "Cette plateforme tourne en version {current}.",
+      "notes": "Les nouveautés",
+      "guide": "Guide de mise à jour",
+      "howTo": "Pour mettre à jour, lancez ces deux commandes dans le dossier du projet, l'une après l'autre :",
+      "commandPull": "Première commande : récupérer les nouveaux fichiers",
+      "commandUp": "Seconde commande : démarrer la nouvelle version",
+      "backup": "La plateforme fait elle-même une copie de sa base avant de la modifier. Pour être tranquille, vous pouvez aussi lancer ./scripts/backup.sh avant.",
+      "dismiss": "Masquer jusqu'à la prochaine version"
+    }
   }
 }

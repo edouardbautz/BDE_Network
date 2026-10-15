@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { getConfig } from '@/config';
 import { UpcomingEventsCard } from '@/components/events/upcoming-events-card';
 import { OAuthRejectedAlert } from '@/components/settings/oauth-rejected-alert';
+import { UpdateBanner } from '@/components/updates/update-banner';
 import { accountLabel } from '@/lib/account-label';
 import { checkFortyTwoCredentials } from '@/lib/auth/oauth-check';
 import { requireApprovedSession } from '@/lib/auth/require-session';
@@ -51,6 +52,9 @@ export default async function DashboardPage() {
       </div>
 
       {oauthRejected && <OAuthRejectedAlert withLink />}
+
+      {/* Only an owner can update the platform, and only an owner is told (the route says 404 to anybody else). */}
+      {canManageSettings(session.user) && <UpdateBanner enabled={config.updates.check} />}
 
       <Card className="max-w-sm">
         <CardHeader className="flex flex-row items-center gap-3 space-y-0">
