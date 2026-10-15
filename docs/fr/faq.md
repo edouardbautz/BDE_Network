@@ -173,7 +173,7 @@ Voir [Sauvegardes](deployment.md#sauvegardes-et-restauration).
 
 ### Comment mettre à jour ?
 
-Sauvegardez, récupérez le nouveau code, puis `docker compose up --build -d`. Voir [Mettre à jour](upgrading.md).
+Sauvegardez, puis deux commandes : `git pull` et `docker compose up -d`. Voir [Mettre à jour](upgrading.md).
 
 ### Que faire si la clé de l'application 42 expire ?
 

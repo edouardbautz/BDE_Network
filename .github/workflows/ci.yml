@@ -243,6 +243,8 @@ jobs:
           name: installer-screenshots
           path: ${{ runner.temp }}/shots
 
+      # (The two steps below build the image from the folder, through docker-compose.build.yml, because the image of the
+      # release does not exist yet when a pull request is tested. The published image is tried by release.yml.)
       # The real docker-compose.yml, without any .env: the platform makes its own keys (the `secrets`
       # volume), the database starts with a generated password, the migrations apply, and, with nothing decided,
       # it opens the installer: the code is in the logs, the page asks for it, the rest of the site is closed.
@@ -250,6 +252,8 @@ jobs:
         env:
           APP_PORT: '3100'
           COMPOSE_PROJECT_NAME: ci-fresh
+          COMPOSE_FILE: docker-compose.yml:docker-compose.build.yml
+          COMPOSE_PATH_SEPARATOR: ':'
         run: |
           test ! -e .env
           docker compose up -d --build
@@ -273,6 +277,8 @@ jobs:
         env:
           APP_PORT: '3101'
           COMPOSE_PROJECT_NAME: ci-import
+          COMPOSE_FILE: docker-compose.yml:docker-compose.build.yml
+          COMPOSE_PATH_SEPARATOR: ':'
         run: |
           sed -i 's/votre-login-42/ci-owner/' bde.config.yml
           cat > .env <<'EOF'

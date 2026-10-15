@@ -131,7 +131,7 @@ non de la plateforme, s'y écrivent encore si besoin.
 Pour un déploiement piloté par des fichiers, ou pour repartir de `bde.config.yml` et `.env` :
 
 1. Modifiez `bde.config.yml` et `.env` (toutes les valeurs), et ajoutez `BDE_REIMPORT=1` dans `.env`.
-2. Lancez `docker compose up -d --build`. Au démarrage, la plateforme remplace les réglages de la base par ceux des
+2. [Construisez l'image depuis votre dossier](deployment.md#construire-limage-vous-même) (`docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build`) : les fichiers n'entrent dans une image que quand elle est construite. Au démarrage, la plateforme remplace les réglages de la base par ceux des
    fichiers (le journal le dit). Si les fichiers sont incomplets, elle l'ignore et garde la base.
 3. **Retirez `BDE_REIMPORT=1`**, puis `docker compose up -d`. Tant qu'il reste, chaque démarrage écrase ce qui a été
    modifié depuis l'application.

@@ -1,0 +1,11 @@
+# Builds the image from this folder instead of downloading the published one. For contributors, and for a
+# platform driven by files (bde.config.yml and .env, before the installer) that has not been copied into its
+# database yet: the build is what puts bde.config.yml in the image.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+#
+# The image gets its own name, so that it can never be taken for the published one of the same version.
+services:
+  app:
+    build: .
+    image: bde-network:local

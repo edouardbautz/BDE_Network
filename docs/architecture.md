@@ -106,6 +106,8 @@ prisma/
 scripts/
   backup.sh, restore.sh     POSIX sh, need only Docker on the server (no Node): one tar.gz with the database dump
   audit-prod.mjs            CI gate on production dependency advisories (+ audit-allowlist.json)
+  release.mjs               what a release is made of (tag = package.json = compose default = CHANGELOG), and its notes
+docker-compose.yml          the published image of one version; docker-compose.build.yml builds it from the folder instead
 e2e/                        browser tests run by CI against the real image (installer, settings page, sign-in) + a stand-in 42 API
 docker/
   prisma.config.mjs         Prisma config used by the production image to run `migrate deploy`
@@ -637,13 +639,40 @@ User guide: `docs/en/events.md`. The shape worth knowing before touching it:
   If a Prisma bump ever makes `migrate deploy` need a pruned file, the CI `docker` job (build + start
   against Postgres + `/api/health`) fails. `.dockerignore` must keep `.audit`, `.env*` and
   `bde.config.local.yml` out of the image. `HEALTHCHECK` calls `/api/health` (503 when the DB is down).
+- **The published image** (`.github/workflows/release.yml`, `scripts/release.mjs`; tests in `scripts/release.test.ts`).
+  `docker-compose.yml` starts `ghcr.io/edouardbautz/bde_network:${BDE_VERSION:-X.Y.Z}`: the version is **written in the
+  file**, never `latest`, so that `git pull` + `docker compose up -d` is the whole update and an older checkout runs its
+  own image. `BDE_VERSION` is an escape hatch for pinning, not something to set. A test ties the default to
+  `package.json` and to a CHANGELOG section: bumping one without the others fails CI, and so does the release.
+  - **`docker-compose.build.yml`** is the way to build from the folder (`build: .`, image `bde-network:local`, which
+    can never be taken for the published tag). The CI steps that need a freshly built image set `COMPOSE_FILE` to both
+    files; so do `scripts/docs-screenshots.mjs` and a contributor's `.env` (`COMPOSE_FILE` +
+    `COMPOSE_PATH_SEPARATOR=:`, which `backup.sh` / `restore.sh` follow because they call `docker compose`). A platform
+    driven by files needs it too: **the published image holds the template `bde.config.yml`**, not an owner's file, and
+    the `release.yml` build checks it (`votre-login-42` in the image). The messages that tell a files-driven operator
+    to rebuild name that command (`src/config/rebuild.ts`, the pages of `docker/startup-problems.mjs`).
+  - **A release is a tag `vX.Y.Z` on main**, nothing else. `check` (the four places agree, the tag is an ancestor of
+    main) → `build` (each architecture built **natively**, amd64 on `ubuntu-latest` and arm64 on `ubuntu-24.04-arm`, no
+    emulation; pushed **by digest, with no tag**, then `e2e/safe-update.sh` runs against that digest on that
+    architecture) → `publish` (only when both passed: `imagetools create` makes `X.Y.Z`, `X.Y` and, without a suffix,
+    `latest`; provenance and SBOM are attached as attestations; the GitHub release carries the CHANGELOG section as its
+    notes, the SBOM, and the two update commands). An image that failed its test is never named. On a pull request that
+    touches the workflow, the Dockerfile, `docker/` or the test, `check` and `build` run **without pushing**, so
+    the part that cannot be tried on the day (arm64, the smoke test) is tried before. A fork skips the workflow.
+  - **Preparing one**: a pull request that moves `package.json` (and the lock: `npm version X.Y.Z --no-git-tag-version`,
+    then `npx -y npm@10 ci --dry-run`), the compose default, and the CHANGELOG (`## [Unreleased]` becomes
+    `## [X.Y.Z] - date`, with the link list at the bottom). Then, once merged, `git tag vX.Y.Z && git push origin
+vX.Y.Z`. The first publication of a package on GHCR is private: make it public once, in the package's settings.
+    Mistakes are fixed forward (a new patch version); an image that is already pulled is never replaced under the same
+    tag.
 - **bde.config.yml is never bind-mounted; it is the seed of an import.** `docker-compose.yml` has no volume for
   it: a file mount is resolved by the Docker **daemon**, on its side, with the rights of the container's user. On a
   rootless daemon, a remote one, or a home on a network/FUSE share, the file is either not visible (the daemon
   creates an empty directory) or visible but unreadable by the app's uid 1001 (a `chmod 644` changes nothing), and
   the app used to report "introuvable" for every one of those. The file now travels in the **build context**, which
   the docker client sends itself with the user's own rights, through the `builder` stage (`COPY --from=builder`); a
-  missing file is replaced there by `bde.config.example.yml` (the template: "nothing decided"). **The build does not
+  missing file is replaced there by `bde.config.example.yml` (the template: "nothing decided"). Only an image built on
+  the spot (`docker-compose.build.yml`) carries the operator's file; the published one carries the committed template. **The build does not
   read it** (`next.config.ts` no longer validates it: a broken file must not stop a rebuild once the database is the
   source), and **the build output must never depend on the configuration** (the only prerendered page,
   `/_not-found`, holds none: keep it so). At runtime the file is read only by an installation that has not been
@@ -711,8 +740,8 @@ User guide: `docs/en/events.md`. The shape worth knowing before touching it:
     configuration: when it would open the installer (`initialized.source === 'setup'`) **on a database that has
     accounts**, it refuses (`refuseToStart('existing-data')`, exit 78, the page `existing-data`): the installer would
     replace the settings of a platform that was installed before it. (A platform whose image does not hold its
-    `bde.config.yml`, which is what a published image is: rebuild with `--build`, see "If your platform predates the
-    installer" in the upgrading guide.)
+    `bde.config.yml`, which is what a published image is: build once with `docker-compose.build.yml`, see "If your
+    platform predates the installer" in the upgrading guide.)
   - What goes on the pages is fixed sentences, a file name matching `BACKUP_PATTERN`, migration names matching
     `^[0-9]{14}_[A-Za-z0-9_]+$` and a version: nothing read from the database or the environment as it is
     (`renderProblemPage` filters again).

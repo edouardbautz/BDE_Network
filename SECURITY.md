@@ -21,8 +21,8 @@ wish. Please give us reasonable time to publish a fix before disclosing publicly
 ## Supported versions
 
 Security fixes go to the **latest release** and to `main`. Each BDE runs its own instance from
-its own fork: after a fix, update your fork and redeploy (`git pull`, then
-`docker compose up --build -d`; backups first, see [docs/en/upgrading.md](docs/en/upgrading.md)).
+its own clone or fork: after a fix, update it and redeploy (`git pull`, then
+`docker compose up -d`; backups first, see [docs/en/upgrading.md](docs/en/upgrading.md)).
 
 ## What is in scope
 
@@ -56,6 +56,6 @@ avant toute divulgation publique.
 ## Versions prises en charge
 
 Les correctifs de sécurité vont dans la **dernière version publiée** et dans `main`. Chaque BDE
-fait tourner sa propre instance depuis son fork : après un correctif, mettez votre fork à jour et
-redéployez (`git pull`, puis `docker compose up --build -d` ; sauvegarde d'abord, voir
+fait tourner sa propre instance depuis son clone ou son fork : après un correctif, mettez-le à jour et
+redéployez (`git pull`, puis `docker compose up -d` ; sauvegarde d'abord, voir
 [docs/fr/upgrading.md](docs/fr/upgrading.md)).

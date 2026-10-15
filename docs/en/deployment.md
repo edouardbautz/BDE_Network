@@ -37,7 +37,7 @@ docker compose up
 ```
 
 **Without `-d` the first time**: the terminal stays open and the platform writes in it, in a box, the address and the
-**setup code** (also in `docker compose logs app`). The first time, Docker builds the image (a few minutes).
+**setup code** (also in `docker compose logs app`). The first time, Docker downloads the platform's image (a minute or two).
 
 Open the site's address in a browser, enter the code, and follow the eight steps (see
 [Installation](installation.md)). If the server has no proxy yet, open a tunnel from your computer, then go to
@@ -176,8 +176,42 @@ notifications contain a link. Details: [Events module](events.md#how-the-day-bef
 
 ## Upgrading
 
-Make a backup, get the new code, then `docker compose up --build -d`. The complete step by step, with the check and
-the way back, is in [Upgrading](upgrading.md).
+Two commands, once you have made a backup: `git pull`, then `docker compose up -d`. Docker downloads the image of the
+new version, and the platform makes its own copy of the database before changing it. The complete step by step, with
+the check and the way back, is in [Upgrading](upgrading.md).
+
+### Which version runs
+
+`docker-compose.yml` names the image of **one precise version** (`ghcr.io/edouardbautz/bde_network:1.1.0`), never
+"latest": what runs is what the folder was written for, and going back to an older version of the folder goes back to
+its image. The version is also shown at the top of the **Settings** page. The versions are listed on the project's
+[Releases page](https://github.com/edouardbautz/BDE_Network/releases).
+
+To stay on a version while you `git pull` newer files, or to try another one, write `BDE_VERSION=1.1.0` in `.env`.
+Remove the line to follow the folder again. The image is downloaded from `ghcr.io` (GitHub's registry): the server must
+be allowed to reach it.
+
+### Build the image yourself
+
+The published image is the normal way. Building it from the folder is for contributors, for a fork whose code you
+changed, and for a platform driven by files (`bde.config.yml` and `.env`, before the installer) that has not been
+copied into its database yet: only a build puts your `bde.config.yml` in the image. The extra file
+`docker-compose.build.yml` does it:
+
+```text
+docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+```
+
+The image takes a few minutes to build, and is named `bde-network:local`, so that it is never taken for a published
+one. To avoid typing both files in every command (`scripts/backup.sh` and `scripts/restore.sh` run `docker compose`
+too), write these two lines in `.env`:
+
+```text
+COMPOSE_FILE=docker-compose.yml:docker-compose.build.yml
+COMPOSE_PATH_SEPARATOR=:
+```
+
+Then `docker compose up -d --build` is enough.
 
 ## Backups and restore
 
@@ -276,7 +310,7 @@ current state (`backups/bde-backup-…-avant-restauration.tar.gz`), stops the pl
 If the database restore fails, the database stays exactly as before. (`--yes` removes the question, for a script; use
 it knowingly.)
 
-**On a new server**: install Docker, clone the repository, run `docker compose up --build -d` (no `.env` is needed),
+**On a new server**: install Docker, clone the repository, run `docker compose up -d` (no `.env` is needed),
 copy both archives into `backups/`, then restore with `--secrets` as above. If you no longer have the keys archive,
 the platform still starts and says in its logs (`docker compose logs app`) that the secrets cannot be decrypted; you
 then have to enter them again in **Settings**.

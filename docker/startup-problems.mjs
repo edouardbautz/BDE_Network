@@ -142,7 +142,7 @@ const PROBLEMS = {
         "La plateforme ne peut pas démarrer : le fichier bde.config.yml est absent, vide ou invalide. Aucune donnée n'est perdue.",
       steps: [
         'Corrigez le fichier `bde.config.yml` dans le dossier du projet.',
-        'Reconstruisez et relancez : `docker compose up -d --build`.',
+        'Reconstruisez et relancez : `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build`.',
         'La ligne à corriger est donnée par `docker compose logs app`.',
       ],
     },
@@ -152,7 +152,7 @@ const PROBLEMS = {
         'The platform cannot start: the bde.config.yml file is missing, empty or invalid. No data is lost.',
       steps: [
         'Fix the `bde.config.yml` file in the project folder.',
-        'Rebuild and start again: `docker compose up -d --build`.',
+        'Rebuild and start again: `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build`.',
         'The line to fix is given by `docker compose logs app`.',
       ],
     },
@@ -206,7 +206,7 @@ const PROBLEMS = {
       description:
         'La plateforme ne sait pas se connecter à sa base : `DATABASE_URL` est absente ou mal écrite (un `@`, `:`, `/`, `?` ou `#` du mot de passe doit y être encodé).',
       steps: [
-        "Souvent, l'image est plus ancienne que `docker-compose.yml` (après un `git pull`) : reconstruisez-la avec `docker compose up -d --build`.",
+        "Souvent, l'image est plus ancienne que `docker-compose.yml` : téléchargez la bonne avec `docker compose pull`, puis `docker compose up -d` (image construite par vous-même : `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build`).",
         'Avec le `docker-compose.yml` fourni, supprimez `DATABASE_URL` de `.env` : elle est construite à partir de `POSTGRES_USER`, `POSTGRES_PASSWORD` et `POSTGRES_DB`.',
         'Relancez la plateforme : `docker compose up -d`.',
       ],
@@ -216,7 +216,7 @@ const PROBLEMS = {
       description:
         'The platform does not know how to reach its database: `DATABASE_URL` is missing or badly written (an `@`, `:`, `/`, `?` or `#` in the password must be encoded there).',
       steps: [
-        'Often the image is older than `docker-compose.yml` (after a `git pull`): rebuild it with `docker compose up -d --build`.',
+        'Often the image is older than `docker-compose.yml`: download the right one with `docker compose pull`, then `docker compose up -d` (image built by yourself: `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build`).',
         'With the provided `docker-compose.yml`, remove `DATABASE_URL` from `.env`: it is built from `POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_DB`.',
         'Start the platform again: `docker compose up -d`.',
       ],
@@ -250,18 +250,20 @@ const PROBLEMS = {
     fr: {
       title: "L'image est plus ancienne que docker-compose.yml",
       description:
-        "Le docker-compose.yml du dossier est plus récent que l'image qui tourne : l'ancienne image est restée en place (typiquement après un `git pull` suivi d'un `docker compose up -d` sans reconstruction). Aucune donnée n'est touchée.",
+        "Le docker-compose.yml du dossier est plus récent que l'image qui tourne : l'ancienne image est restée en place (typiquement une image construite sur place, qu'un `git pull` ne remplace pas). Aucune donnée n'est touchée.",
       steps: [
-        "Reconstruisez l'image avec le dossier à jour : `docker compose up -d --build`.",
+        "Téléchargez l'image de ce dossier : `docker compose pull`, puis `docker compose up -d`.",
+        "Si vous construisez l'image vous-même : `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build`.",
         'Suivez le guide de mise à jour : il décrit la bonne suite de commandes.',
       ],
     },
     en: {
       title: 'The image is older than docker-compose.yml',
       description:
-        'The docker-compose.yml in the folder is newer than the image that is running: the old image stayed in place (typically after a `git pull` followed by `docker compose up -d` without rebuilding). No data is touched.',
+        'The docker-compose.yml in the folder is newer than the image that is running: the old image stayed in place (typically an image built on the spot, which a `git pull` does not replace). No data is touched.',
       steps: [
-        'Rebuild the image with the up-to-date folder: `docker compose up -d --build`.',
+        'Download the image of this folder: `docker compose pull`, then `docker compose up -d`.',
+        'If you build the image yourself: `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build`.',
         'Follow the upgrading guide: it gives the right sequence of commands.',
       ],
     },
@@ -274,7 +276,7 @@ const PROBLEMS = {
         "La base contient des mises à jour que cette version de la plateforme ne connaît pas : une version plus récente l'a utilisée. La plateforme reste arrêtée plutôt que de risquer d'abîmer vos données, qui sont intactes.",
       steps: [
         "Si vous êtes revenu volontairement à une ancienne version : restaurez d'abord la copie faite avant la mise à jour (`./scripts/restore.sh --pre-update`), sans quoi elle ne peut pas lire la base.",
-        "Sinon, c'est l'image qui est trop ancienne : reprenez la version récente (`git pull`, puis `docker compose up -d --build`).",
+        "Sinon, c'est l'image qui est trop ancienne : reprenez la version récente (`git pull`, puis `docker compose up -d`).",
         'Ne supprimez pas le volume de la base.',
       ],
     },
@@ -284,7 +286,7 @@ const PROBLEMS = {
         'The database holds updates that this version of the platform does not know: a newer version has used it. The platform stays stopped rather than risk damaging your data, which is intact.',
       steps: [
         'If you went back to an older version on purpose: first restore the copy made before the update (`./scripts/restore.sh --pre-update`), otherwise it cannot read the database.',
-        'Otherwise the image is too old: take the recent version again (`git pull`, then `docker compose up -d --build`).',
+        'Otherwise the image is too old: take the recent version again (`git pull`, then `docker compose up -d`).',
         'Do not delete the database volume.',
       ],
     },
@@ -386,20 +388,20 @@ const PROBLEMS = {
     fr: {
       title: "Des données existent, mais aucun réglage n'est enregistré",
       description:
-        "La base contient déjà des comptes, mais ni réglages enregistrés ni fichier de configuration complet n'ont été trouvés (typiquement une plateforme installée avant l'installateur, démarrée avec une image qui ne contient pas votre bde.config.yml). L'installateur n'est pas ouvert : il remplacerait vos réglages. Aucune donnée n'est touchée.",
+        "La base contient déjà des comptes, mais ni réglages enregistrés ni fichier de configuration complet n'ont été trouvés (typiquement une plateforme installée avant l'installateur, démarrée avec l'image publiée, qui ne contient pas votre bde.config.yml). L'installateur n'est pas ouvert : il remplacerait vos réglages. Aucune donnée n'est touchée.",
       steps: [
         "Placez votre `bde.config.yml` et votre `.env` d'origine dans le dossier du projet.",
-        "Reconstruisez l'image : `docker compose up -d --build` : ils sont alors importés dans la base, une seule fois.",
+        "Construisez l'image sur place : `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build` : ils sont alors importés dans la base, une seule fois.",
         "Voir « Si votre plateforme date d'avant l'installateur » dans le guide de mise à jour.",
       ],
     },
     en: {
       title: 'Data exists, but no settings are saved',
       description:
-        'The database already holds accounts, but neither saved settings nor a complete configuration file were found (typically a platform installed before the installer, started with an image that does not contain your bde.config.yml). The installer is not opened: it would replace your settings. No data is touched.',
+        'The database already holds accounts, but neither saved settings nor a complete configuration file were found (typically a platform installed before the installer, started with the published image, which does not contain your bde.config.yml). The installer is not opened: it would replace your settings. No data is touched.',
       steps: [
         'Put your original `bde.config.yml` and `.env` in the project folder.',
-        'Rebuild the image: `docker compose up -d --build`: they are then imported into the database, once.',
+        'Build the image on the spot: `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build`: they are then imported into the database, once.',
         'See "If your platform predates the installer" in the upgrading guide.',
       ],
     },

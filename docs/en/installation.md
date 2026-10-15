@@ -58,7 +58,7 @@ docker compose up
 ```
 
 **Without `-d` the first time.** The terminal stays open and shows what the platform is doing: that is where the
-setup code appears. The first time, Docker builds the image, which takes a few minutes. Then the terminal shows a box:
+setup code appears. The first time, Docker downloads the platform's image, which takes a minute or two. Then the terminal shows a box:
 
 ```text
 ╔════════════════════════════════════════════════════════════════════════════╗

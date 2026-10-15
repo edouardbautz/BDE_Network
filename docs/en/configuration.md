@@ -127,7 +127,7 @@ platform's, are still written there if needed.
 For a files-driven deployment, or to start over from `bde.config.yml` and `.env`:
 
 1. Edit `bde.config.yml` and `.env` (all the values), and add `BDE_REIMPORT=1` to `.env`.
-2. Run `docker compose up -d --build`. At start, the platform replaces the database's settings with those of the
+2. [Build the image from your folder](deployment.md#build-the-image-yourself) (`docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build`): the files only enter an image when it is built. At start, the platform replaces the database's settings with those of the
    files (the log says so). If the files are incomplete, it ignores them and keeps the database.
 3. **Remove `BDE_REIMPORT=1`**, then `docker compose up -d`. As long as it stays, every start overwrites what was
    changed from the application.
