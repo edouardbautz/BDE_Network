@@ -1,11 +1,9 @@
 // What a release is made of, checked before anything is published (.github/workflows/release.yml).
 //
 //   node scripts/release.mjs check v1.1.0        the tag, package.json, docker-compose.yml and CHANGELOG.md agree
-//   node scripts/release.mjs notes v1.1.0        the release notes: the CHANGELOG's section for that version
-//   node scripts/release.mjs prerelease v1.1.0   "true" or "false" (a version with a suffix, like 1.2.0-rc.1)
 //
 // The pure parts are exported and tested (release.test.ts): a release that publishes an image the compose file does
-// not point to, or notes that are not the CHANGELOG's, would be found by the people who update, not by us.
+// not point to would be found by the people who update, not by us.
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -81,30 +79,14 @@ export function checkRelease({ tag, packageVersion, composeText, changelogText }
   return problems;
 }
 
-/** The release notes: the CHANGELOG's section, as written. */
-export function releaseNotes(changelogText, version) {
-  const section = changelogSection(changelogText, version);
-  if (!section) throw new Error(`No notes for ${version} in CHANGELOG.md.`);
-  return section;
-}
-
 function main(argv) {
   const [command, tag] = argv;
   const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-  const parsed = parseTag(tag);
-  if (!parsed || !['check', 'notes', 'prerelease'].includes(command ?? '')) {
-    console.error('Usage: node scripts/release.mjs <check|notes|prerelease> v1.2.3');
+  if (command !== 'check' || !tag) {
+    console.error('Usage: node scripts/release.mjs check v1.2.3');
     return 2;
   }
   const read = (file) => readFileSync(join(root, file), 'utf8');
-  if (command === 'prerelease') {
-    console.log(parsed.prerelease ? 'true' : 'false');
-    return 0;
-  }
-  if (command === 'notes') {
-    console.log(releaseNotes(read('CHANGELOG.md'), parsed.version));
-    return 0;
-  }
   const problems = checkRelease({
     tag,
     packageVersion: JSON.parse(read('package.json')).version,
@@ -117,5 +99,6 @@ function main(argv) {
   return problems.length === 0 ? 0 : 1;
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1])
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   process.exitCode = main(process.argv.slice(2));
+}

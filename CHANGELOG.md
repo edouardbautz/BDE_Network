@@ -71,8 +71,7 @@ All notable changes to this project are written here, in English. Format based o
   real PostgreSQL before naming it. `docker-compose.yml` names the image of one version, so installing is
   `docker compose up` (a download of a minute or two instead of a build of several) and updating is `git pull`, then
   `docker compose up -d`, the same for everybody. Going back to an older version of the folder goes back to its image.
-  The image carries its provenance and its SBOM, and the GitHub release carries these notes. `BDE_VERSION` in `.env`
-  pins a version.
+  The image carries its provenance and its SBOM. `BDE_VERSION` in `.env` pins a version.
 - **`docker-compose.build.yml`** builds the image from the folder instead (contributors, a modified fork, and a
   platform driven by files that has not been copied into its database yet: the published image holds the template
   `bde.config.yml`, not yours). The messages and pages that told files-driven operators to rebuild name this command.
