@@ -923,7 +923,7 @@ throws its internal #519 and write down the components being hydrated and the DO
 
 **Browser tests that fail now and then.** Never "retry until green", never "ignore the errors that come before a
 navigation". `.github/workflows/e2e-stress.yml` (Actions → e2e stress → Run workflow; also run on a pull request that
-touches it) plays each script 20 times, three platforms at once, with the browser in a different time zone each round
+touches it) plays each script 20 times (the actions script, whose round is ten minutes, 3 times), on three platforms at once, with the browser in a different time zone each round
 (UTC, Auckland, Los Angeles, Kolkata: a page drawn differently by the server and the browser according to the time zone
 would show), and keeps for each failure what `e2e/watch-page.mjs` collected: in which document the error was raised, by
 which script, and the HTML the browser drew against the HTML the server sent. A script is trusted when it holds for all the
