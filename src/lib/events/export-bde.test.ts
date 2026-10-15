@@ -80,6 +80,9 @@ function occurrence(title: string, status: 'DRAFT' | 'CONFIRMED'): OccurrenceVie
   return {
     key: `${title}:1`,
     eventId: `id-${title}`,
+    seriesKey: `id-${title}`,
+    originalStart: new Date('2026-10-10T18:00:00Z'),
+    edited: false,
     title,
     description: null,
     location: null,

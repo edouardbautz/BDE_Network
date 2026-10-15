@@ -1,7 +1,16 @@
 'use client';
 
-import { useActionState, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import {
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+  type ComponentProps,
+  type FormEvent,
+  type ReactNode,
+} from 'react';
 import { useTranslations } from 'next-intl';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,6 +39,20 @@ export interface FormMember {
   name: string;
 }
 
+/** What the form knows of the series when it edits one date of it: it asks "this date only, or this date and the
+ * following" before saving. */
+export interface SeriesEditing {
+  /** The date being edited: its key (start in epoch ms, where the series puts it). */
+  occurrence: number;
+  /** The first date of the series: "and the following" is then the whole series. */
+  isFirst: boolean;
+  total: number;
+  /** Dates after this one. */
+  following: number;
+  /** Dates after this one that have values of their own. */
+  edited: number;
+}
+
 interface EventFormProps {
   action: (state: EventFormState, formData: FormData) => Promise<EventFormState>;
   initial: RawEventInput;
@@ -37,9 +60,11 @@ interface EventFormProps {
   members: FormMember[];
   timeZone: string;
   submitLabel: string;
-  cancelHref: string;
-  /** Editing: changes apply to every occurrence of a series. */
+  cancelHref: ComponentProps<typeof Link>['href'];
+  /** Editing an existing event. */
   isEditing: boolean;
+  /** Editing one date of a series (absent for an event that does not repeat). */
+  series?: SeriesEditing;
 }
 
 const RECURRENCES = ['NONE', 'WEEKLY', 'BIWEEKLY', 'MONTHLY'] as const;
@@ -93,6 +118,7 @@ export function EventForm({
   submitLabel,
   cancelHref,
   isEditing,
+  series,
 }: EventFormProps) {
   const t = useTranslations('events');
   const formRef = useRef<HTMLFormElement>(null);
@@ -102,6 +128,10 @@ export function EventForm({
   // Errors found in the browser before sending; null until a first failed attempt.
   const [clientErrors, setClientErrors] = useState<EventFormErrors | null>(null);
   const [attempt, setAttempt] = useState(0);
+  // Editing a date of a series: the dialog that asks which dates the change is for, and the answer sent with it.
+  const [asking, setAsking] = useState(false);
+  const scopeInput = useRef<HTMLInputElement>(null);
+  const scopeChosen = useRef(false);
 
   const validate = (form: HTMLFormElement): EventFormErrors => {
     const result = parseEventInput(readRawInput(form), {
@@ -120,7 +150,18 @@ export function EventForm({
       setAttempt((count) => count + 1);
     } else {
       setClientErrors(null);
+      if (series && !scopeChosen.current) {
+        event.preventDefault();
+        setAsking(true);
+      }
+      scopeChosen.current = false;
     }
+  };
+
+  const saveFor = (scope: string) => {
+    if (scopeInput.current) scopeInput.current.value = scope;
+    scopeChosen.current = true;
+    formRef.current?.requestSubmit();
   };
 
   // After a refused submit, put the cursor on the first field to fix.
@@ -166,6 +207,13 @@ export function EventForm({
       className="flex flex-col gap-6"
       noValidate
     >
+      {series && (
+        <>
+          <input type="hidden" name="occurrence" value={series.occurrence} />
+          <input ref={scopeInput} type="hidden" name="scope" defaultValue="occurrence" />
+        </>
+      )}
+
       {state.formError && (
         <Alert variant="destructive">
           <AlertDescription>{t(`form.formErrors.${state.formError}`)}</AlertDescription>
@@ -356,6 +404,37 @@ export function EventForm({
           {t('form.cancel')}
         </Button>
       </div>
+
+      {series && (
+        <ConfirmDialog
+          tone="default"
+          open={asking}
+          onOpenChange={setAsking}
+          title={t('scope.edit.title')}
+          description={t('scope.edit.description')}
+          confirmLabel={t('scope.edit.confirm')}
+          choices={[
+            {
+              value: 'occurrence',
+              label: t('scope.occurrence'),
+              hint: t('scope.edit.occurrenceHint'),
+            },
+            {
+              value: 'following',
+              label: series.isFirst ? t('scope.followingFirst') : t('scope.following'),
+              hint: [
+                series.isFirst
+                  ? t('scope.followingFirstHint', { count: series.total })
+                  : t('scope.followingHint', { count: series.following }),
+                series.edited > 0 ? t('scope.alignedNote', { count: series.edited }) : null,
+              ]
+                .filter(Boolean)
+                .join(' '),
+            },
+          ]}
+          onConfirm={saveFor}
+        />
+      )}
     </form>
   );
 }

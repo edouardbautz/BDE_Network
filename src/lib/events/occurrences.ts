@@ -1,23 +1,7 @@
-import type { EventRecurrence, EventStatus } from '@/generated/prisma/client';
-import { occurrencesInRange } from './recurrence';
+import type { EventStatus } from '@/generated/prisma/client';
+import { resolveOccurrences, seriesKeyOf, type EventRecord } from './series';
 
-/** What the occurrence layer needs from a stored event (see queries.ts). */
-export interface EventRecord {
-  id: string;
-  title: string;
-  description: string | null;
-  location: string | null;
-  categoryKey: string;
-  status: EventStatus;
-  startsAt: Date;
-  endsAt: Date;
-  recurrence: EventRecurrence;
-  recurrenceUntil: Date | null;
-  schoolYear: string;
-  updatedAt: Date;
-  assignees: { login: string; user: { fullName: string } | null }[];
-  cancellations: { occurrenceStart: Date }[];
-}
+export type { EventRecord } from './series';
 
 export interface EventFilters {
   categoryKey?: string;
@@ -27,9 +11,11 @@ export interface EventFilters {
 
 /** One dated instance of an event — the unit every view displays. */
 export interface OccurrenceView {
-  /** Unique within a response: `${eventId}:${start ms}`. */
+  /** Unique within a response: `${eventId}:${original start ms}`. */
   key: string;
   eventId: string;
+  /** Identifies the date in calendar files whatever row of a cut series holds it (see `seriesKeyOf`). */
+  seriesKey: string;
   title: string;
   description: string | null;
   location: string | null;
@@ -37,26 +23,22 @@ export interface OccurrenceView {
   status: EventStatus;
   start: Date;
   end: Date;
+  /** Where the series puts the date, even if it was moved: what the pages put in `?occ=`. */
+  originalStart: Date;
   isRecurring: boolean;
+  /** The date has values of its own. */
+  edited: boolean;
   schoolYear: string;
   updatedAt: Date;
   assignees: { login: string; name: string }[];
 }
 
-export function matchesFilters(event: EventRecord, filters: EventFilters): boolean {
-  if (filters.categoryKey && event.categoryKey !== filters.categoryKey) return false;
-  if (filters.schoolYear && event.schoolYear !== filters.schoolYear) return false;
-  if (filters.assigneeLogin && !event.assignees.some((a) => a.login === filters.assigneeLogin)) {
-    return false;
-  }
-  return true;
-}
-
 /**
- * Expands stored events into their occurrences overlapping [from, to),
- * dropping drafts unless `includeDrafts` and cancelled occurrences, sorted
- * chronologically. This is the single place visibility is decided for
- * everything built on occurrences (calendar, list, dashboard, .ics feed).
+ * Expands stored events into their occurrences overlapping [from, to), with each date's own values applied,
+ * dropping cancelled dates and the dates that are drafts unless `includeDrafts` (a draft is decided date by
+ * date: a series can be confirmed with one date back to draft, or the other way round), sorted
+ * chronologically. This is the single place visibility is decided for everything built on occurrences
+ * (calendar, list, dashboard, .ics feed, reminders).
  */
 export function expandEvents(
   events: readonly EventRecord[],
@@ -67,30 +49,42 @@ export function expandEvents(
     filters?: EventFilters;
   },
 ): OccurrenceView[] {
+  const { filters = {}, range } = options;
   const views: OccurrenceView[] = [];
 
   for (const event of events) {
-    if (event.status === 'DRAFT' && !options.includeDrafts) continue;
-    if (!matchesFilters(event, options.filters ?? {})) continue;
+    if (filters.schoolYear && event.schoolYear !== filters.schoolYear) continue;
 
-    const cancelled = new Set(event.cancellations.map((c) => c.occurrenceStart.getTime()));
-    const occurrences = occurrencesInRange(event, options.timeZone, options.range, cancelled);
+    for (const occurrence of resolveOccurrences(event, options.timeZone)) {
+      if (occurrence.cancelled) continue;
+      if (occurrence.status === 'DRAFT' && !options.includeDrafts) continue;
+      if (occurrence.end.getTime() <= range.from.getTime()) continue;
+      if (occurrence.start.getTime() >= range.to.getTime()) continue;
+      if (filters.categoryKey && occurrence.categoryKey !== filters.categoryKey) continue;
+      if (
+        filters.assigneeLogin &&
+        !occurrence.assignees.some((a) => a.login === filters.assigneeLogin)
+      ) {
+        continue;
+      }
 
-    for (const occurrence of occurrences) {
       views.push({
-        key: `${event.id}:${occurrence.start.getTime()}`,
+        key: `${event.id}:${occurrence.originalStart.getTime()}`,
         eventId: event.id,
-        title: event.title,
-        description: event.description,
-        location: event.location,
-        categoryKey: event.categoryKey,
-        status: event.status,
+        seriesKey: seriesKeyOf(event),
+        title: occurrence.title,
+        description: occurrence.description,
+        location: occurrence.location,
+        categoryKey: occurrence.categoryKey,
+        status: occurrence.status,
         start: occurrence.start,
         end: occurrence.end,
+        originalStart: occurrence.originalStart,
         isRecurring: event.recurrence !== 'NONE',
+        edited: occurrence.edited,
         schoolYear: event.schoolYear,
-        updatedAt: event.updatedAt,
-        assignees: event.assignees.map((a) => ({
+        updatedAt: occurrence.updatedAt,
+        assignees: occurrence.assignees.map((a) => ({
           login: a.login,
           name: a.user?.fullName ?? a.login,
         })),

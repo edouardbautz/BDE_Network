@@ -13,6 +13,7 @@ import {
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { getConfig } from '@/config';
+import { ActionButton } from '@/components/action-button';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { CategoryBadge } from '@/components/events/category-badge';
 import { EventNoticeAlert } from '@/components/events/event-notice';
@@ -26,9 +27,15 @@ import { resolveCategory } from '@/lib/events/categories';
 import { formatDateTimeRange, formatLongDate, formatTimeRange } from '@/lib/events/format';
 import { readEventNotice } from '@/lib/events/notice';
 import { getVisibleEvent } from '@/lib/events/queries';
-import { allOccurrences } from '@/lib/events/recurrence';
+import { resolveOccurrences, scopeFacts } from '@/lib/events/series';
 import { cn } from '@/lib/utils';
-import { cancelOccurrence, deleteEvent, restoreOccurrence, setEventStatus } from '../actions';
+import {
+  cancelOccurrence,
+  deleteEvent,
+  deleteFollowingDates,
+  restoreOccurrence,
+  setEventStatus,
+} from '../actions';
 import { pageTitle } from '@/lib/page-title';
 
 export const dynamic = 'force-dynamic';
@@ -81,19 +88,18 @@ export default async function EventDetailPage({
   }
 
   const timeZone = getConfig().bde.timezone;
-  const category = resolveCategory(event.categoryKey);
-  const cancelledStarts = new Set(event.cancellations.map((c) => c.occurrenceStart.getTime()));
-  const occurrences = allOccurrences(event, timeZone).map((occurrence) => ({
-    ...occurrence,
-    cancelled: cancelledStarts.has(occurrence.start.getTime()),
-  }));
+  const allDates = resolveOccurrences(event, timeZone);
+  // A reader who cannot see drafts sees the dates that are confirmed, and none of the others.
+  const occurrences = access.canManage
+    ? allDates
+    : allDates.filter((o) => o.status === 'CONFIRMED');
 
   const now = Date.now();
   const isSeries = event.recurrence !== 'NONE';
   const requested = Array.isArray(rawSearch.occ) ? rawSearch.occ[0] : rawSearch.occ;
   const live = occurrences.filter((o) => !o.cancelled);
   const shown =
-    occurrences.find((o) => String(o.start.getTime()) === requested) ??
+    occurrences.find((o) => String(o.originalStart.getTime()) === requested) ??
     live.find((o) => o.end.getTime() >= now) ??
     live[live.length - 1] ??
     occurrences[0];
@@ -102,24 +108,36 @@ export default async function EventDetailPage({
     notFound();
   }
 
+  const category = resolveCategory(shown.categoryKey);
+  const occurrence = shown.originalStart.getTime();
   const upcoming = occurrences.filter((o) => o.end.getTime() >= now);
   const pastCount = occurrences.length - upcoming.length;
-  const notice = confirmationNotice(
-    getConfig().notifications.eventConfirmed,
-    event.confirmationNotifiedAt !== null,
-  );
-  const confirmationText = [
-    t('detail.confirmDialog.body'),
-    notice === 'notifyChat'
-      ? t('detail.confirmDialog.notifyChat', {
-          channel: getConfig().notifications.eventConfirmed === 'slack' ? 'Slack' : 'Discord',
-        })
+  const facts = scopeFacts(allDates, shown.originalStart);
+
+  // What the dialogs of a series say: the same two choices for every action, each with what it does here.
+  const followingLabel = facts.isFirst ? t('scope.followingFirst') : t('scope.following');
+  const followingHint = facts.isFirst
+    ? t('scope.followingFirstHint', { count: facts.total })
+    : t('scope.followingHint', { count: facts.following });
+  const choices = (hints: { occurrence: string; following: string }) => [
+    { value: 'occurrence', label: t('scope.occurrence'), hint: hints.occurrence },
+    { value: 'following', label: followingLabel, hint: hints.following },
+  ];
+
+  const channel = getConfig().notifications.eventConfirmed;
+  const noticeFor = (alreadyNotified: boolean): string | null => {
+    const notice = confirmationNotice(channel, alreadyNotified);
+    return notice === 'notifyChat'
+      ? t('detail.confirmDialog.notifyChat', { channel: channel === 'slack' ? 'Slack' : 'Discord' })
       : notice
         ? t(`detail.confirmDialog.${notice}`)
-        : null,
-  ]
-    .filter(Boolean)
-    .join(' ');
+        : null;
+  };
+  const sentence = (...parts: (string | null)[]) => parts.filter(Boolean).join(' ');
+  const confirmationText = sentence(
+    t('detail.confirmDialog.body'),
+    noticeFor(event.confirmationNotifiedAt !== null),
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -137,12 +155,15 @@ export default async function EventDetailPage({
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-2">
-          <h1 className="text-2xl font-semibold tracking-tight break-words">{event.title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight break-words">{shown.title}</h1>
           <div className="flex flex-wrap items-center gap-3">
             <CategoryBadge category={category} />
-            <Badge variant={event.status === 'DRAFT' ? 'outline' : 'secondary'}>
-              {t(`status.${event.status}`)}
+            <Badge variant={shown.status === 'DRAFT' ? 'outline' : 'secondary'}>
+              {t(`status.${shown.status}`)}
             </Badge>
+            {isSeries && shown.edited && (
+              <Badge variant="outline">{t('detail.occurrenceEdited')}</Badge>
+            )}
             {shown.cancelled && (
               <Badge variant="destructive">{t('detail.occurrenceCancelled')}</Badge>
             )}
@@ -153,9 +174,7 @@ export default async function EventDetailPage({
           <Button
             variant="outline"
             size="sm"
-            render={
-              <a href={`/api/events/${event.id}/ics?occ=${shown.start.getTime()}`} download />
-            }
+            render={<a href={`/api/events/${event.id}/ics?occ=${occurrence}`} download />}
           >
             <CalendarPlus data-icon="inline-start" />
             {t('detail.addToCalendar')}
@@ -165,40 +184,106 @@ export default async function EventDetailPage({
               <Button
                 variant="outline"
                 size="sm"
-                render={<Link href={`/events/${event.id}/edit`} />}
+                render={
+                  <Link
+                    href={
+                      isSeries
+                        ? { pathname: `/events/${event.id}/edit`, query: { occ: occurrence } }
+                        : `/events/${event.id}/edit`
+                    }
+                  />
+                }
               >
                 <Pencil data-icon="inline-start" />
                 {t('detail.edit')}
               </Button>
-              {event.status === 'DRAFT' ? (
-                // Confirming shows the event to every member and may notify them: it asks first,
-                // in the normal style (it is not destructive: going back to draft undoes it).
-                <ConfirmDialog
-                  tone="default"
-                  triggerVariant="default"
-                  title={t('detail.confirmDialog.title')}
-                  description={confirmationText}
-                  confirmLabel={t('detail.confirmDialog.confirm')}
-                  onConfirm={async () => {
-                    'use server';
-                    await setEventStatus(event.id, 'CONFIRMED');
-                  }}
-                >
-                  <CircleCheck data-icon="inline-start" />
-                  {t('detail.confirm')}
-                </ConfirmDialog>
-              ) : (
-                <form
+              {shown.cancelled && (
+                <ActionButton
                   action={async () => {
                     'use server';
-                    await setEventStatus(event.id, 'DRAFT');
+                    return restoreOccurrence(event.id, occurrence);
                   }}
                 >
-                  <Button size="sm" variant="secondary" type="submit">
-                    <Undo2 data-icon="inline-start" />
-                    {t('detail.backToDraft')}
-                  </Button>
-                </form>
+                  {t('detail.restoreDate')}
+                </ActionButton>
+              )}
+              {shown.status === 'DRAFT' ? (
+                // Confirming shows the event to every member and may notify them: it asks first,
+                // in the normal style (it is not destructive: going back to draft undoes it).
+                isSeries ? (
+                  <ConfirmDialog
+                    tone="default"
+                    triggerVariant="default"
+                    title={t('detail.confirmDialog.title')}
+                    description={t('detail.confirmDialog.body')}
+                    confirmLabel={t('detail.confirmDialog.confirm')}
+                    choices={choices({
+                      occurrence: sentence(
+                        t('scope.occurrenceHint'),
+                        t('scope.confirmOccurrence'),
+                        noticeFor(shown.announcedAt !== null),
+                      ),
+                      following: sentence(
+                        followingHint,
+                        facts.drafts > 0 ? t('scope.draftNote', { count: facts.drafts }) : null,
+                        t('scope.confirmFollowing'),
+                        noticeFor(event.confirmationNotifiedAt !== null),
+                      ),
+                    })}
+                    onConfirm={async (scope) => {
+                      'use server';
+                      return setEventStatus(event.id, 'CONFIRMED', occurrence, scope);
+                    }}
+                  >
+                    <CircleCheck data-icon="inline-start" />
+                    {t('detail.confirm')}
+                  </ConfirmDialog>
+                ) : (
+                  <ConfirmDialog
+                    tone="default"
+                    triggerVariant="default"
+                    title={t('detail.confirmDialog.title')}
+                    description={confirmationText}
+                    confirmLabel={t('detail.confirmDialog.confirm')}
+                    onConfirm={async () => {
+                      'use server';
+                      return setEventStatus(event.id, 'CONFIRMED');
+                    }}
+                  >
+                    <CircleCheck data-icon="inline-start" />
+                    {t('detail.confirm')}
+                  </ConfirmDialog>
+                )
+              ) : isSeries ? (
+                <ConfirmDialog
+                  tone="default"
+                  triggerVariant="secondary"
+                  title={t('scope.backToDraft.title')}
+                  description={t('scope.backToDraft.description')}
+                  confirmLabel={t('scope.backToDraft.confirm')}
+                  choices={choices({
+                    occurrence: t('scope.occurrenceHint'),
+                    following: followingHint,
+                  })}
+                  onConfirm={async (scope) => {
+                    'use server';
+                    return setEventStatus(event.id, 'DRAFT', occurrence, scope);
+                  }}
+                >
+                  <Undo2 data-icon="inline-start" />
+                  {t('detail.backToDraft')}
+                </ConfirmDialog>
+              ) : (
+                <ActionButton
+                  variant="secondary"
+                  action={async () => {
+                    'use server';
+                    return setEventStatus(event.id, 'DRAFT');
+                  }}
+                >
+                  <Undo2 data-icon="inline-start" />
+                  {t('detail.backToDraft')}
+                </ActionButton>
               )}
             </>
           )}
@@ -221,21 +306,21 @@ export default async function EventDetailPage({
                 })}
               </DetailRow>
             )}
-            {event.location && (
+            {shown.location && (
               <DetailRow icon={MapPin} label={t('detail.where')}>
-                {event.location}
+                {shown.location}
               </DetailRow>
             )}
             <DetailRow icon={Users} label={t('detail.inCharge')}>
-              {event.assignees.length > 0 ? (
-                event.assignees.map((a) => a.user?.fullName ?? a.login).join(', ')
+              {shown.assignees.length > 0 ? (
+                shown.assignees.map((a) => a.user?.fullName ?? a.login).join(', ')
               ) : (
                 <span className="text-muted-foreground">{t('detail.noneInCharge')}</span>
               )}
             </DetailRow>
-            {event.description && (
+            {shown.description && (
               <DetailRow icon={FileText} label={t('detail.description')}>
-                <span className="whitespace-pre-wrap">{event.description}</span>
+                <span className="whitespace-pre-wrap">{shown.description}</span>
               </DetailRow>
             )}
           </dl>
@@ -255,60 +340,48 @@ export default async function EventDetailPage({
               <p className="text-muted-foreground text-sm">{t('detail.occurrences.allPast')}</p>
             ) : (
               <ul className="divide-y">
-                {upcoming.slice(0, MAX_LISTED_OCCURRENCES).map((occurrence) => {
-                  const startMs = occurrence.start.getTime();
+                {upcoming.slice(0, MAX_LISTED_OCCURRENCES).map((date) => {
+                  const key = date.originalStart.getTime();
                   return (
                     <li
-                      key={startMs}
+                      key={key}
                       className="flex flex-wrap items-center justify-between gap-2 py-2"
                     >
                       <div className="flex min-w-0 flex-wrap items-center gap-2">
                         <Link
-                          href={{ pathname: `/events/${event.id}`, query: { occ: startMs } }}
+                          href={{ pathname: `/events/${event.id}`, query: { occ: key } }}
                           className={cn(
                             'rounded-sm text-sm outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50',
-                            occurrence.cancelled && 'text-muted-foreground line-through',
-                            startMs === shown.start.getTime() && 'font-medium',
+                            date.cancelled && 'text-muted-foreground line-through',
+                            key === occurrence && 'font-medium',
                           )}
                         >
                           <span className="first-letter:uppercase">
-                            {formatLongDate(occurrence.start, locale, timeZone)}
+                            {formatLongDate(date.start, locale, timeZone)}
                           </span>{' '}
-                          · {formatTimeRange(occurrence.start, occurrence.end, locale, timeZone)}
+                          · {formatTimeRange(date.start, date.end, locale, timeZone)}
                         </Link>
-                        {occurrence.cancelled && (
+                        {date.cancelled && (
                           <Badge variant="destructive">{t('detail.occurrenceCancelled')}</Badge>
                         )}
+                        {date.status === 'DRAFT' && (
+                          <Badge variant="outline">{t('status.DRAFT')}</Badge>
+                        )}
+                        {date.edited && (
+                          <Badge variant="outline">{t('detail.occurrenceEdited')}</Badge>
+                        )}
                       </div>
-                      {access.canManage &&
-                        (occurrence.cancelled ? (
-                          <form
-                            action={async () => {
-                              'use server';
-                              await restoreOccurrence(event.id, startMs);
-                            }}
-                          >
-                            <Button size="xs" variant="outline" type="submit">
-                              {t('detail.occurrences.restore')}
-                            </Button>
-                          </form>
-                        ) : (
-                          <ConfirmDialog
-                            triggerSize="xs"
-                            triggerVariant="outline"
-                            title={t('detail.occurrences.cancelTitle')}
-                            description={t('detail.occurrences.cancelWarning', {
-                              date: formatLongDate(occurrence.start, locale, timeZone),
-                            })}
-                            confirmLabel={t('detail.occurrences.cancelConfirm')}
-                            onConfirm={async () => {
-                              'use server';
-                              await cancelOccurrence(event.id, startMs);
-                            }}
-                          >
-                            {t('detail.occurrences.cancel')}
-                          </ConfirmDialog>
-                        ))}
+                      {access.canManage && date.cancelled && (
+                        <ActionButton
+                          size="xs"
+                          action={async () => {
+                            'use server';
+                            return restoreOccurrence(event.id, key);
+                          }}
+                        >
+                          {t('detail.occurrences.restore')}
+                        </ActionButton>
+                      )}
                     </li>
                   );
                 })}
@@ -342,18 +415,45 @@ export default async function EventDetailPage({
 
       {access.canManage && (
         <div>
-          <ConfirmDialog
-            title={isSeries ? t('detail.delete.titleSeries') : t('detail.delete.title')}
-            description={isSeries ? t('detail.delete.warningSeries') : t('detail.delete.warning')}
-            confirmLabel={t('detail.delete.confirm')}
-            onConfirm={async () => {
-              'use server';
-              await deleteEvent(event.id);
-            }}
-          >
-            <Trash2 data-icon="inline-start" />
-            {t('detail.delete.button')}
-          </ConfirmDialog>
+          {isSeries ? (
+            <ConfirmDialog
+              title={t('scope.delete.title')}
+              description={t('scope.delete.description')}
+              confirmLabel={t('scope.delete.confirm')}
+              choices={choices({
+                occurrence: t('scope.delete.occurrenceHint'),
+                following: facts.isFirst
+                  ? t('scope.delete.followingFirstHint', { count: facts.total })
+                  : t('scope.delete.followingHint', { count: facts.following }),
+              })}
+              onConfirm={async (scope) => {
+                'use server';
+                if (scope === 'following') {
+                  return deleteFollowingDates(event.id, occurrence);
+                }
+                if (scope === 'occurrence') {
+                  return cancelOccurrence(event.id, occurrence);
+                }
+                throw new Error('Invalid scope');
+              }}
+            >
+              <Trash2 data-icon="inline-start" />
+              {t('scope.delete.button')}
+            </ConfirmDialog>
+          ) : (
+            <ConfirmDialog
+              title={t('detail.delete.title')}
+              description={t('detail.delete.warning')}
+              confirmLabel={t('detail.delete.confirm')}
+              onConfirm={async () => {
+                'use server';
+                await deleteEvent(event.id);
+              }}
+            >
+              <Trash2 data-icon="inline-start" />
+              {t('detail.delete.button')}
+            </ConfirmDialog>
+          )}
         </div>
       )}
     </div>

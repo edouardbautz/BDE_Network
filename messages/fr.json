@@ -443,21 +443,15 @@
       "occurrences": {
         "title": "Occurrences à venir",
         "allPast": "Toutes les occurrences de cette série sont passées.",
-        "cancel": "Annuler cette date",
         "restore": "Rétablir",
         "truncated": "{count, plural, one {# autre occurrence non affichée} other {# autres occurrences non affichées}}.",
-        "past": "{count, plural, one {# occurrence passée} other {# occurrences passées}}.",
-        "cancelTitle": "Annuler cette date ?",
-        "cancelWarning": "Seule la date du {date} est annulée. Les autres dates de la série ne changent pas, et vous pourrez la rétablir.",
-        "cancelConfirm": "Annuler cette date"
+        "past": "{count, plural, one {# occurrence passée} other {# occurrences passées}}."
       },
       "delete": {
         "button": "Supprimer l'événement",
         "warning": "Cette suppression est définitive.",
-        "warningSeries": "Cette suppression est définitive et concerne toute la série. Pour ne retirer qu'une date, utilisez « Annuler cette date ».",
         "confirm": "Oui, supprimer définitivement",
-        "title": "Supprimer cet événement ?",
-        "titleSeries": "Supprimer toute la série ?"
+        "title": "Supprimer cet événement ?"
       },
       "confirmDialog": {
         "title": "Confirmer cet événement ?",
@@ -466,7 +460,9 @@
         "notifyChat": "Un message sera publié dans le salon {channel}.",
         "alreadyNotified": "Les membres ont déjà été prévenus de cet événement : ils ne le seront pas une seconde fois.",
         "confirm": "Confirmer l'événement"
-      }
+      },
+      "occurrenceEdited": "Modifiée",
+      "restoreDate": "Rétablir cette date"
     },
     "form": {
       "createTitle": "Nouvel événement",
@@ -485,7 +481,7 @@
       "recurrence": "Répétition",
       "recurrenceUntil": "Répéter jusqu'au",
       "recurrenceUntilHelp": "Ce jour est inclus. Obligatoire pour une série.",
-      "seriesHelp": "Vos modifications s'appliquent à toute la série. Pour sauter une seule date, utilisez « Annuler cette date » sur la page de l'événement.",
+      "seriesHelp": "Une fenêtre vous demandera si la modification porte sur cette date seulement, ou sur cette date et les suivantes.",
       "location": "Lieu",
       "inCharge": "Membres en charge",
       "inChargeHelp": "Les personnes cochées reçoivent le rappel de la veille.",
@@ -550,7 +546,40 @@
     },
     "notices": {
       "eventGone": "Cet événement n'existe plus : il a sans doute été supprimé par quelqu'un d'autre.",
-      "occurrenceGone": "Cette date n'existe plus : la série a été modifiée entre-temps. Voici l'état à jour."
+      "occurrenceGone": "Cette date n'existe plus : la série a été modifiée entre-temps. Voici l'état à jour.",
+      "seriesBusy": "Quelqu'un d'autre modifiait cette série au même moment : rien n'a été changé. Voici l'état à jour, vous pouvez recommencer."
+    },
+    "scope": {
+      "occurrence": "Seulement celui-ci",
+      "following": "Celui-ci et les suivants",
+      "followingFirst": "Celui-ci et les suivants (toute la série)",
+      "occurrenceHint": "Les autres dates ne changent pas.",
+      "followingHint": "{count, plural, =0 {Cette date, la dernière de la série.} one {Cette date et la suivante.} other {Cette date et les # suivantes.}}",
+      "followingFirstHint": "Les {count} dates de la série.",
+      "alignedNote": "{count, plural, one {# date modifiée seule sera alignée sur ce que vous changez.} other {# dates modifiées seules seront alignées sur ce que vous changez.}}",
+      "edit": {
+        "title": "Modifier quelles dates ?",
+        "description": "Un événement répété se modifie date par date, ou à partir d'une date.",
+        "occurrenceHint": "Les autres dates ne changent pas. La fréquence et la date de fin restent celles de la série.",
+        "confirm": "Enregistrer"
+      },
+      "draftNote": "{count, plural, one {# date restée en brouillon sera aussi confirmée.} other {# dates restées en brouillon seront aussi confirmées.}}",
+      "confirmOccurrence": "Cette date est confirmée et annoncée seule aux membres.",
+      "confirmFollowing": "Un seul message annonce les dates confirmées.",
+      "backToDraft": {
+        "title": "Repasser en brouillon ?",
+        "description": "Les membres ne verront plus les dates concernées, tant qu'elles ne sont pas confirmées de nouveau.",
+        "confirm": "Repasser en brouillon"
+      },
+      "delete": {
+        "button": "Supprimer",
+        "title": "Supprimer quelles dates ?",
+        "description": "Supprimer seulement celle-ci l'annule : vous pourrez la rétablir. Supprimer la suite est définitif.",
+        "occurrenceHint": "Annulée : vous pourrez la rétablir.",
+        "followingHint": "{count, plural, =0 {Cette date, la dernière de la série. Définitif.} one {Cette date et la suivante. Définitif.} other {Cette date et les # suivantes. Définitif.}}",
+        "followingFirstHint": "Toute la série ({count} dates). Définitif.",
+        "confirm": "Supprimer"
+      }
     }
   },
   "profile": {

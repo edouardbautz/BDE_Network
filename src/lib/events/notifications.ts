@@ -8,7 +8,8 @@ import { APPROVED_STATUSES } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
 import { buildEventEmbed } from './discord-embed';
 import { buildEventEmail, buildEventIcs } from './email';
-import { allOccurrences } from './recurrence';
+import { eventInclude } from './include';
+import { resolveOccurrences, seriesKeyOf, type ResolvedOccurrence } from './series';
 import { buildEventSlack } from './slack-blocks';
 import { buildConfirmationMessage, type NotificationEventData, type Translate } from './messages';
 import { registeredAddress } from '@/lib/public-address';
@@ -28,11 +29,12 @@ export function getTranslate(locale: string): Promise<Translate> {
   return getNotificationTranslate(locale, 'events.notifications');
 }
 
-/** Absolute link to an event page, or null when APP_URL is not set. */
-export function eventUrl(locale: string, eventId: string, occurrenceStart?: Date): string | null {
+/** Absolute link to an event page, or null when APP_URL is not set. `originalStart` is the date's key (see
+ * `ResolvedOccurrence.originalStart`), what the page puts in `?occ=`. */
+export function eventUrl(locale: string, eventId: string, originalStart?: Date): string | null {
   const base = registeredAddress();
   if (!base) return null;
-  const occurrence = occurrenceStart ? `?occ=${occurrenceStart.getTime()}` : '';
+  const occurrence = originalStart ? `?occ=${originalStart.getTime()}` : '';
   return `${base}/${locale}/events/${eventId}${occurrence}`;
 }
 
@@ -55,33 +57,115 @@ interface LoadedEvent {
   assignees: { login: string; user: { fullName: string } | null }[];
 }
 
+/** What a message needs about one date: its time, and the values it has of its own (title, place, members in
+ * charge...) when it was edited alone; the event's otherwise. */
+type DateOfEvent = { start: Date; end: Date; originalStart?: Date } & Partial<
+  Pick<ResolvedOccurrence, 'title' | 'description' | 'location' | 'categoryKey' | 'assignees'>
+>;
+
 export function toNotificationData(
   event: LoadedEvent,
-  occurrence: { start: Date; end: Date },
+  occurrence: DateOfEvent,
   locale: string,
 ): NotificationEventData {
+  const category = categoryOf(occurrence.categoryKey ?? event.categoryKey);
   return {
     eventId: event.id,
-    title: event.title,
-    description: event.description,
-    location: event.location,
-    categoryLabel: categoryOf(event.categoryKey).label,
-    categoryColor: categoryOf(event.categoryKey).color,
-    assigneeNames: event.assignees.map((a) => a.user?.fullName ?? a.login),
+    title: occurrence.title ?? event.title,
+    description: occurrence.description !== undefined ? occurrence.description : event.description,
+    location: occurrence.location !== undefined ? occurrence.location : event.location,
+    categoryLabel: category.label,
+    categoryColor: category.color,
+    assigneeNames: (occurrence.assignees ?? event.assignees).map(
+      (a) => a.user?.fullName ?? a.login,
+    ),
     start: occurrence.start,
     end: occurrence.end,
     recurrence: event.recurrence,
     recurrenceUntil: event.recurrenceUntil,
-    url: eventUrl(locale, event.id, occurrence.start),
+    url: eventUrl(locale, event.id, occurrence.originalStart ?? occurrence.start),
   };
 }
 
+const loadForAnnouncement = (eventId: string) =>
+  prisma.event.findUnique({ where: { id: eventId }, include: eventInclude });
+
 /**
- * Announces a newly confirmed event to every approved member. The
- * `confirmationNotifiedAt` claim makes this fire at most once per event, so
- * toggling DRAFT ↔ CONFIRMED never re-notifies. Never throws and is meant to
- * run after the response (see `after()` in the actions): saving an event can
- * not fail because a notification did.
+ * Announces confirmed dates to every approved member, in ONE message: the card shows the next of them, the
+ * calendar file carries all of those still to come. `onlyThisDate` is for a date confirmed alone, whose card must
+ * not say that the event repeats.
+ */
+async function announce(
+  event: NonNullable<Awaited<ReturnType<typeof loadForAnnouncement>>>,
+  dates: readonly ResolvedOccurrence[],
+  onlyThisDate: boolean,
+): Promise<void> {
+  const config = getConfig();
+  const locale = config.bde.defaultLocale;
+  const timeZone = config.bde.timezone;
+
+  // Show the next date still to come (or the first one if all are past).
+  const now = Date.now();
+  const upcoming = dates.filter((d) => d.end.getTime() > now);
+  const next = upcoming[0] ?? dates[0];
+  if (!next) {
+    return;
+  }
+
+  const data: NotificationEventData = {
+    ...toNotificationData(event, next, locale),
+    ...(onlyThisDate ? { recurrence: 'NONE' as const, recurrenceUntil: null } : {}),
+  };
+  const translate = await getTranslate(locale);
+  // The calendar file carries every date still to come (the next one, for a series that is over).
+  const calendarDates = (upcoming.length > 0 ? upcoming : [next]).map((date) => ({
+    originalStart: date.originalStart,
+    start: date.start,
+    end: date.end,
+    title: date.title,
+    description: date.description,
+    location: date.location,
+    category: categoryOf(date.categoryKey).label,
+    updatedAt: date.updatedAt,
+  }));
+
+  const message = await withRichMessage(
+    'eventConfirmed',
+    buildConfirmationMessage(data, translate, locale, timeZone),
+    {
+      discord: () => buildEventEmbed('confirmed', data, translate, timeZone),
+      email: (brand) =>
+        buildEventEmail(
+          'confirmed',
+          data,
+          translate,
+          locale,
+          timeZone,
+          brand,
+          buildEventIcs(seriesKeyOf(event), calendarDates, config.bde.name),
+        ),
+      slack: (brand) => buildEventSlack('confirmed', data, translate, locale, timeZone, brand),
+    },
+  );
+
+  const members = await prisma.user.findMany({
+    where: { status: { in: [...APPROVED_STATUSES] } },
+    select: { email: true },
+  });
+
+  await deliver(
+    'eventConfirmed',
+    message,
+    members.map((m) => m.email),
+  );
+}
+
+/**
+ * Announces a newly confirmed event (or, for a series, a whole confirmed part of it: "confirm this date and the
+ * following") to every approved member: one message, whatever the number of dates. The `confirmationNotifiedAt`
+ * claim makes this fire at most once per event, so toggling DRAFT ↔ CONFIRMED never re-notifies. Never throws
+ * and is meant to run after the response (see `after()` in the actions): saving an event can not fail because
+ * a notification did.
  */
 export async function notifyEventConfirmed(eventId: string): Promise<void> {
   try {
@@ -93,71 +177,53 @@ export async function notifyEventConfirmed(eventId: string): Promise<void> {
       return;
     }
 
-    const event = await prisma.event.findUnique({
-      where: { id: eventId },
-      include: {
-        assignees: { select: { login: true, user: { select: { fullName: true } } } },
-        cancellations: { select: { occurrenceStart: true } },
-      },
-    });
+    const event = await loadForAnnouncement(eventId);
     if (!event) {
       return;
     }
+    const dates = resolveOccurrences(event, getConfig().bde.timezone).filter(
+      (d) => !d.cancelled && d.status === 'CONFIRMED',
+    );
+    await announce(event, dates, false);
+  } catch (error) {
+    console.error(`${LOG_PREFIX} eventConfirmed: notification failed`, error);
+  }
+}
 
-    const config = getConfig();
-    const locale = config.bde.defaultLocale;
-    const timeZone = config.bde.timezone;
-
-    // Show the next occurrence still to come (or the first one if all are past).
-    const occurrences = allOccurrences(event, timeZone);
-    const now = Date.now();
-    const next = occurrences.find((o) => o.end.getTime() > now) ?? occurrences[0];
-    if (!next) {
+/**
+ * Announces ONE date of a series that was confirmed on its own (the rest of the series is still a draft). Once
+ * per date: the claim lives on the date's own row, which keeps it when the date goes back to draft and is
+ * confirmed again. Same rules as `notifyEventConfirmed`: never throws, meant for `after()`.
+ */
+export async function notifyOccurrenceConfirmed(
+  eventId: string,
+  originalStart: Date,
+): Promise<void> {
+  try {
+    const claim = await prisma.eventOccurrence.updateMany({
+      where: {
+        eventId,
+        occurrenceStart: originalStart,
+        status: 'CONFIRMED',
+        confirmationNotifiedAt: null,
+      },
+      data: { confirmationNotifiedAt: new Date() },
+    });
+    if (claim.count === 0) {
       return;
     }
 
-    const data = toNotificationData(event, next, locale);
-    const translate = await getTranslate(locale);
-    // The calendar file carries every occurrence still to come (the next one, for a series that is over).
-    const cancelled = new Set((event.cancellations ?? []).map((c) => c.occurrenceStart.getTime()));
-    const upcoming = occurrences.filter(
-      (o) => o.end.getTime() > now && !cancelled.has(o.start.getTime()),
+    const event = await loadForAnnouncement(eventId);
+    if (!event) {
+      return;
+    }
+    const date = resolveOccurrences(event, getConfig().bde.timezone).find(
+      (d) => d.originalStart.getTime() === originalStart.getTime(),
     );
-
-    const message = await withRichMessage(
-      'eventConfirmed',
-      buildConfirmationMessage(data, translate, locale, timeZone),
-      {
-        discord: () => buildEventEmbed('confirmed', data, translate, timeZone),
-        email: (brand) =>
-          buildEventEmail(
-            'confirmed',
-            data,
-            translate,
-            locale,
-            timeZone,
-            brand,
-            buildEventIcs(
-              event,
-              upcoming.length > 0 ? upcoming : [next],
-              data.categoryLabel,
-              config.bde.name,
-            ),
-          ),
-        slack: (brand) => buildEventSlack('confirmed', data, translate, locale, timeZone, brand),
-      },
-    );
-
-    const members = await prisma.user.findMany({
-      where: { status: { in: [...APPROVED_STATUSES] } },
-      select: { email: true },
-    });
-
-    await deliver(
-      'eventConfirmed',
-      message,
-      members.map((m) => m.email),
-    );
+    if (!date || date.cancelled || date.status !== 'CONFIRMED') {
+      return;
+    }
+    await announce(event, [date], true);
   } catch (error) {
     console.error(`${LOG_PREFIX} eventConfirmed: notification failed`, error);
   }

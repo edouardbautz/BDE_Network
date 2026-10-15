@@ -24,7 +24,7 @@ between instances.
 - **Custom roles and rights.** Each BDE creates its own roles (President, Treasurer…) and ticks what each may do.
   Nobody can give a right they do not hold: the server blocks it, and it is tested.
 - **Events.** A month calendar and a list, colored categories, repeating events, drafts that stay private until
-  confirmed, members in charge, one date of a series canceled on its own.
+  confirmed, members in charge, one date of a series edited or canceled on its own.
 - **Calendar sync.** A personal link for each member, and **one link for the whole BDE** to paste once into a shared
   calendar.
 - **Notifications** by email, Discord or Slack: an event confirmed, a reminder the day before, an access request, an

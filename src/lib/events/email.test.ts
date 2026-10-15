@@ -193,27 +193,29 @@ describe('buildEventEmail', () => {
 });
 
 describe('buildEventIcs', () => {
-  const row = {
-    id: 'evt1',
+  const date = (start: string, end: string, own: object = {}) => ({
+    originalStart: new Date(start),
+    start: new Date(start),
+    end: new Date(end),
     title: 'Soirée de rentrée',
-    description: 'DJ set',
-    location: 'Foyer',
+    description: 'DJ set' as string | null,
+    location: 'Foyer' as string | null,
+    category: 'Sport',
     updatedAt: new Date('2026-10-06T10:00:00Z'),
-  };
+    ...own,
+  });
   const now = new Date('2026-10-06T12:00:00Z');
-  const occurrences = [
-    { start: new Date('2026-10-15T16:30:00Z'), end: new Date('2026-10-15T18:00:00Z') },
-    { start: new Date('2026-10-22T16:30:00Z'), end: new Date('2026-10-22T18:00:00Z') },
+  const dates = [
+    date('2026-10-15T16:30:00Z', '2026-10-15T18:00:00Z'),
+    date('2026-10-22T16:30:00Z', '2026-10-22T18:00:00Z'),
   ];
 
   it('is named after the event', () => {
-    expect(buildEventIcs(row, occurrences, 'Sport', 'BDE Nice', now).filename).toBe(
-      'soiree-de-rentree.ics',
-    );
+    expect(buildEventIcs('evt1', dates, 'BDE Nice', now).filename).toBe('soiree-de-rentree.ics');
   });
 
-  it('has one event per occurrence, with the identifiers the feeds use', () => {
-    const { content } = buildEventIcs(row, occurrences, 'Sport', 'BDE Nice', now);
+  it('has one event per date, with the identifiers the feeds use', () => {
+    const { content } = buildEventIcs('evt1', dates, 'BDE Nice', now);
 
     expect(content.match(/BEGIN:VEVENT/g)).toHaveLength(2);
     expect(content).toContain('UID:evt1-20261015T163000Z@bde-network');
@@ -222,8 +224,18 @@ describe('buildEventIcs', () => {
     expect(content).toContain('DTEND:20261015T180000Z');
   });
 
-  it('carries the facts of the event, confirmed, and the calendar name', () => {
-    const { content } = buildEventIcs(row, occurrences, 'Sport', 'BDE Nice', now);
+  it('keeps the identifier of a date that was moved: the series key and where the series put it', () => {
+    const moved = date('2026-10-16T09:00:00Z', '2026-10-16T10:00:00Z', {
+      originalStart: new Date('2026-10-15T16:30:00Z'),
+    });
+    const { content } = buildEventIcs('evt1', [moved], 'BDE Nice', now);
+
+    expect(content).toContain('UID:evt1-20261015T163000Z@bde-network');
+    expect(content).toContain('DTSTART:20261016T090000Z');
+  });
+
+  it('carries the facts of each date, confirmed, and the calendar name', () => {
+    const { content } = buildEventIcs('evt1', dates, 'BDE Nice', now);
 
     expect(content).toContain('SUMMARY:Soirée de rentrée');
     expect(content).toContain('DESCRIPTION:DJ set');
@@ -236,11 +248,10 @@ describe('buildEventIcs', () => {
     expect(content).toContain('DTSTAMP:20261006T120000Z');
   });
 
-  it('leaves out the description and the place when the event has none', () => {
+  it('leaves out the description and the place when the date has none', () => {
     const { content } = buildEventIcs(
-      { ...row, description: null, location: null },
-      occurrences,
-      'Sport',
+      'evt1',
+      dates.map((d) => ({ ...d, description: null, location: null })),
       'B',
       now,
     );

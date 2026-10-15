@@ -18,6 +18,9 @@ function occurrence(id: string, start: string, end: string): OccurrenceView {
   return {
     key: id,
     eventId: id,
+    seriesKey: id,
+    originalStart: new Date(start),
+    edited: false,
     title: id,
     description: null,
     location: null,

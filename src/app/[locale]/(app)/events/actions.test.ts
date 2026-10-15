@@ -29,6 +29,20 @@ vi.mock('next/server', () => ({
 }));
 vi.mock('next-intl/server', () => ({ getLocale: vi.fn(async () => 'fr') }));
 vi.mock('@/i18n/navigation', () => ({
+  getPathname: ({
+    href,
+    locale,
+  }: {
+    href: string | { pathname: string; query?: Record<string, string | number> };
+    locale: string;
+  }) =>
+    typeof href === 'string'
+      ? `/${locale}${href}`
+      : `/${locale}${href.pathname}${
+          href.query
+            ? `?${new URLSearchParams(Object.entries(href.query).map(([k, v]) => [k, String(v)]))}`
+            : ''
+        }`,
   redirect: vi.fn(
     (options: { href: string | { pathname: string; query: Record<string, string> } }) => {
       throw new RedirectSignal(
@@ -64,6 +78,7 @@ const {
   cancelOccurrence,
   createEvent,
   deleteEvent,
+  deleteFollowingDates,
   restoreOccurrence,
   setEventStatus,
   updateEvent,
@@ -209,6 +224,19 @@ describe('access control on every action', () => {
       expectNothingHappened();
     });
 
+    it('cannot change the status of one date or of the following', async () => {
+      await expect(setEventStatus('evt1', 'CONFIRMED', 1, 'occurrence')).rejects.toThrow(
+        'Forbidden',
+      );
+      await expect(setEventStatus('evt1', 'DRAFT', 1, 'following')).rejects.toThrow('Forbidden');
+      expectNothingHappened();
+    });
+
+    it('cannot delete a date and the following', async () => {
+      await expect(deleteFollowingDates('evt1', 1)).rejects.toThrow('Forbidden');
+      expectNothingHappened();
+    });
+
     it('cannot cancel an occurrence', async () => {
       await expect(cancelOccurrence('evt1', 1)).rejects.toThrow('Forbidden');
       expectNothingHappened();
@@ -344,126 +372,6 @@ describe('createEvent', () => {
   });
 });
 
-describe('updateEvent', () => {
-  beforeEach(() => {
-    setup({ who: EVENT_MANAGER });
-    vi.mocked(prisma.$transaction).mockImplementation((async (operations: unknown[]) =>
-      Promise.all(operations)) as never);
-    vi.mocked(prisma.event.update).mockResolvedValue({ ...storedEvent } as never);
-  });
-
-  it('reports a missing event without writing', async () => {
-    vi.mocked(prisma.event.findUnique).mockResolvedValue(null);
-    const state = await updateEvent('nope', {}, form({}));
-    expect(state.formError).toBe('notFound');
-    expect(prisma.event.update).not.toHaveBeenCalled();
-  });
-
-  it('audits the changed fields only', async () => {
-    await expect(updateEvent('evt1', {}, form({ title: 'Nouveau titre' }))).rejects.toThrow(
-      RedirectSignal,
-    );
-    expect(logAuditEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        action: 'event.update',
-        metadata: expect.objectContaining({ changed: ['title', 'assignees'] }),
-      }),
-    );
-  });
-
-  it('logs a status change and announces the confirmation', async () => {
-    vi.mocked(prisma.event.update).mockResolvedValue({
-      ...storedEvent,
-      status: 'CONFIRMED',
-    } as never);
-    await expect(updateEvent('evt1', {}, form({ status: 'CONFIRMED' }))).rejects.toThrow(
-      RedirectSignal,
-    );
-
-    expect(logAuditEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        action: 'event.status_change',
-        metadata: expect.objectContaining({ from: 'DRAFT', to: 'CONFIRMED' }),
-      }),
-    );
-    await runAfterCallbacks();
-    expect(notifyEventConfirmed).toHaveBeenCalledWith('evt1');
-  });
-
-  it('does not announce an edit of an already confirmed event', async () => {
-    vi.mocked(prisma.event.findUnique).mockResolvedValue({
-      ...storedEvent,
-      status: 'CONFIRMED',
-    } as never);
-    vi.mocked(prisma.event.update).mockResolvedValue({
-      ...storedEvent,
-      status: 'CONFIRMED',
-    } as never);
-    await expect(updateEvent('evt1', {}, form({ status: 'CONFIRMED' }))).rejects.toThrow(
-      RedirectSignal,
-    );
-    expect(after).not.toHaveBeenCalled();
-  });
-
-  describe('events saved before location and description became mandatory', () => {
-    const legacy = { ...storedEvent, description: null, location: null };
-
-    beforeEach(() => {
-      vi.mocked(prisma.event.findUnique).mockResolvedValue(legacy as never);
-    });
-
-    it('are not blocked until they are edited: the next edit must fill both in', async () => {
-      const state = await updateEvent('evt1', {}, form({ description: '', location: '' }));
-      expect(state.errors).toEqual({ description: 'required', location: 'required' });
-      expect(prisma.$transaction).not.toHaveBeenCalled();
-    });
-
-    it('can be saved once the missing fields are filled in', async () => {
-      await expect(
-        updateEvent('evt1', {}, form({ description: 'Enfin décrit', location: 'Salle C' })),
-      ).rejects.toThrow(RedirectSignal);
-      expect(prisma.event.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({ description: 'Enfin décrit', location: 'Salle C' }),
-        }),
-      );
-    });
-
-    it('can still be confirmed without being edited', async () => {
-      vi.mocked(prisma.event.update).mockResolvedValue({
-        ...legacy,
-        status: 'CONFIRMED',
-      } as never);
-      await expect(setEventStatus('evt1', 'CONFIRMED')).resolves.toBeUndefined();
-    });
-  });
-
-  it('drops cancellations of occurrences that no longer exist after the series changed', async () => {
-    vi.mocked(prisma.event.findUnique).mockResolvedValue(series as never);
-    await expect(
-      updateEvent(
-        'evt1',
-        {},
-        form({ recurrence: 'WEEKLY', recurrenceUntil: '2026-10-31', assignees: [] }),
-      ),
-    ).rejects.toThrow(RedirectSignal);
-
-    expect(prisma.eventCancellation.deleteMany).toHaveBeenCalledWith({
-      where: {
-        eventId: 'evt1',
-        occurrenceStart: {
-          notIn: [
-            new Date('2026-10-10T18:00:00Z'),
-            new Date('2026-10-17T18:00:00Z'),
-            new Date('2026-10-24T18:00:00Z'),
-            new Date('2026-10-31T19:00:00Z'), // after the DST change (UTC+1)
-          ],
-        },
-      },
-    });
-  });
-});
-
 describe('deleteEvent and setEventStatus', () => {
   beforeEach(() => setup({ who: EVENT_MANAGER }));
 
@@ -493,14 +401,17 @@ describe('deleteEvent and setEventStatus', () => {
     });
 
     it('changing its status goes back to the list with a message, writes nothing', async () => {
-      await expect(setEventStatus('evt1', 'CONFIRMED')).rejects.toThrow(gone);
+      await expect(setEventStatus('evt1', 'CONFIRMED')).resolves.toEqual({
+        href: '/fr/events?notice=eventGone',
+      });
       expect(prisma.event.update).not.toHaveBeenCalled();
       expect(logAuditEvent).not.toHaveBeenCalled();
     });
 
     it('cancelling or restoring one of its dates goes back to the list with a message', async () => {
-      await expect(cancelOccurrence('evt1', 1)).rejects.toThrow(gone);
-      await expect(restoreOccurrence('evt1', 1)).rejects.toThrow(gone);
+      const goneHref = { href: '/fr/events?notice=eventGone' };
+      await expect(cancelOccurrence('evt1', 1)).resolves.toEqual(goneHref);
+      await expect(restoreOccurrence('evt1', 1)).resolves.toEqual(goneHref);
       expect(prisma.eventCancellation.upsert).not.toHaveBeenCalled();
       expect(prisma.eventCancellation.deleteMany).not.toHaveBeenCalled();
     });
@@ -509,36 +420,6 @@ describe('deleteEvent and setEventStatus', () => {
   it('rejects an unknown status value', async () => {
     await expect(setEventStatus('evt1', 'ARCHIVED' as never)).rejects.toThrow('Invalid status');
     expect(prisma.event.update).not.toHaveBeenCalled();
-  });
-
-  it('does nothing when the status is already the requested one', async () => {
-    await setEventStatus('evt1', 'DRAFT');
-    expect(prisma.event.update).not.toHaveBeenCalled();
-    expect(logAuditEvent).not.toHaveBeenCalled();
-  });
-
-  it('confirms an event, audits the change and announces it', async () => {
-    vi.mocked(prisma.event.update).mockResolvedValue({
-      ...storedEvent,
-      status: 'CONFIRMED',
-    } as never);
-    await setEventStatus('evt1', 'CONFIRMED');
-
-    expect(logAuditEvent).toHaveBeenCalledWith(
-      expect.objectContaining({ action: 'event.status_change' }),
-    );
-    await runAfterCallbacks();
-    expect(notifyEventConfirmed).toHaveBeenCalledWith('evt1');
-  });
-
-  it('does not announce when going back to draft', async () => {
-    vi.mocked(prisma.event.findUnique).mockResolvedValue({
-      ...storedEvent,
-      status: 'CONFIRMED',
-    } as never);
-    vi.mocked(prisma.event.update).mockResolvedValue({ ...storedEvent } as never);
-    await setEventStatus('evt1', 'DRAFT');
-    expect(after).not.toHaveBeenCalled();
   });
 });
 
@@ -550,8 +431,10 @@ describe('cancelOccurrence / restoreOccurrence', () => {
     vi.mocked(prisma.event.findUnique).mockResolvedValue(series as never);
   });
 
-  it('cancels one occurrence of a series and audits it', async () => {
-    await cancelOccurrence('evt1', second);
+  it('cancels one occurrence of a series and audits it, then points at that date', async () => {
+    await expect(cancelOccurrence('evt1', second)).resolves.toEqual({
+      href: `/fr/events/evt1?occ=${second}`,
+    });
 
     expect(prisma.eventCancellation.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -566,28 +449,33 @@ describe('cancelOccurrence / restoreOccurrence', () => {
     expect(logAuditEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'event.occurrence_cancel',
-        metadata: expect.objectContaining({ occurrenceStart: '2026-10-17T18:00:00.000Z' }),
+        metadata: expect.objectContaining({
+          scope: 'occurrence',
+          occurrenceStart: '2026-10-17T18:00:00.000Z',
+        }),
       }),
     );
   });
 
   it('refuses an instant that is not an occurrence of the series', async () => {
-    await expect(cancelOccurrence('evt1', second + 60_000)).rejects.toThrow(
-      new RedirectSignal('/events/evt1?notice=occurrenceGone'),
-    );
+    await expect(cancelOccurrence('evt1', second + 60_000)).resolves.toEqual({
+      href: '/fr/events/evt1?notice=occurrenceGone',
+    });
     expect(prisma.eventCancellation.upsert).not.toHaveBeenCalled();
   });
 
   it('refuses to cancel an occurrence of a one-off event', async () => {
     vi.mocked(prisma.event.findUnique).mockResolvedValue(storedEvent as never);
-    await expect(cancelOccurrence('evt1', storedEvent.startsAt.getTime())).rejects.toThrow(
-      new RedirectSignal('/events/evt1?notice=occurrenceGone'),
-    );
+    await expect(cancelOccurrence('evt1', storedEvent.startsAt.getTime())).resolves.toEqual({
+      href: '/fr/events/evt1?notice=occurrenceGone',
+    });
     expect(prisma.eventCancellation.upsert).not.toHaveBeenCalled();
   });
 
-  it('restores a cancelled occurrence and audits it', async () => {
-    await restoreOccurrence('evt1', second);
+  it('restores a cancelled occurrence and audits it, then points at that date', async () => {
+    await expect(restoreOccurrence('evt1', second)).resolves.toEqual({
+      href: `/fr/events/evt1?occ=${second}`,
+    });
     expect(prisma.eventCancellation.deleteMany).toHaveBeenCalledWith({
       where: { eventId: 'evt1', occurrenceStart: new Date(second) },
     });

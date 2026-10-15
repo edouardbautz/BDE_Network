@@ -112,8 +112,13 @@ du BDE se régénère depuis **Événements** → **Agenda partagé**.
 
 ### Comment annuler un seul cours d'une série ?
 
-Sur la page de l'événement, **Annuler cette date**. Le reste de la série n'est pas touché, et la date peut être
-rétablie.
+Sur la page de l'événement, choisissez la date dans la liste, puis **Supprimer** et **Seulement celui-ci**. La date est
+annulée, le reste de la série n'est pas touché, et la date peut être rétablie (bouton **Rétablir**).
+
+### Comment modifier un seul cours d'une série, ou tous les suivants ?
+
+Choisissez la date, **Modifier**, changez ce qu'il faut, puis **Enregistrer** : une fenêtre demande **Seulement
+celui-ci** ou **Celui-ci et les suivants**. Voir [Les événements qui se répètent](events.md#les-événements-qui-se-répètent).
 
 ## Les notifications
 

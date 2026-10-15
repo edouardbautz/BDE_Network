@@ -66,6 +66,26 @@ All notable changes to this project are written here, in English. Format based o
   links (`.github/workflows/links.yml`, which opens an issue when a link breaks).
 - `scripts/docs-screenshots.mjs` takes the documentation's screenshots again; `SEED_LOCALE=en` writes the demo data
   in English.
+- **Series of events: act on one date, or on this date and the following.** On a date of a series, every action (edit,
+  confirm, put back to draft, delete) opens a dialog with two choices, **Only this one** (selected first) and **This
+  one and the following** (on the first date: the whole series), and tells how many dates it concerns. **Only this
+  one** gives the date its own values (hour, day, place, description, category, members in charge, status): only what
+  you changed, the rest keeps following the series; deleting it is still the cancellation you can restore. **This one and
+  the following** cuts the series in two at that date: the first part stops before it, the second carries your change
+  (and can change the frequency and the end date). What the following dates had of their own is replaced for the fields
+  you changed and kept for the others; confirming the following also confirms the dates that were drafts, and the
+  dialog counts them. Changing only the hour keeps the dates edited on their own, the cancelled ones and the reminders
+  already sent, day by day (across daylight saving changes); changing the day or the frequency drops them, and the
+  audit log counts them. Existing series are untouched: the migration only adds tables and columns.
+- **Notifications and reminders follow the dates.** Confirming the following sends **one** message for the whole
+  confirmed part (one calendar file with every date to come); confirming one date alone announces that date, once.
+  A reminder is sent once per date, with that date's time, place and members in charge, whatever happens to the series
+  afterwards; a date put back to draft or cancelled is not reminded.
+- **Calendar feeds follow the dates**: a date edited or moved is the same entry for every subscriber, updated and
+  never doubled (even after the series was cut in two, which changes no identifier); a date put back to draft disappears
+  from the BDE feed.
+- The audit log says, for every action on an event that repeats, whether it was for **one date** or for **this date and
+  the following**, which date, and what a cut did to the dates edited on their own.
 
 ### Changed
 
@@ -88,6 +108,11 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Fixed
 
+- **Confirming, putting back to draft, cancelling or restoring a date did not always show on the page** (the action was done and
+  written to the audit log, the page kept the old state, until a reload). In the production build, Next.js 15 does
+  not always show the page it fetched after an action that stays on the page you are on (the same family of bug as the
+  month buttons below), in about half of the clicks measured on the real image. These actions now answer with an address
+  that the browser loads (`src/lib/action-target.ts`), and the CI clicks them for real (`e2e/series.mjs`).
 - **Events page: the previous / next month buttons and, on a computer, the switch from calendar to list did nothing.**
   In the production build, Next.js 15's router accepts a click on a link that only changes the query of the page you
   are on (`/events` → `/events?view=list`), loads the page, then never shows it, with no message; `next dev` does not

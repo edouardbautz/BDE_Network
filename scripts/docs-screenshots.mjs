@@ -314,6 +314,19 @@ async function shootLanguage(browser, lang) {
     await save('event.webp');
     log('event.webp');
 
+    // The window that every action on a date of a series opens (here: saving an edit of the fourth date).
+    const seriesDates = await page.$$eval('li a[href*="occ="]', (links) =>
+      links.map((link) => link.getAttribute('href')),
+    );
+    await page.goto(`${base}${seriesDates[3]}`, { waitUntil: 'networkidle0' });
+    await click(t.events.detail.edit);
+    await page.waitForSelector('#location');
+    await click(t.events.scope.edit.confirm);
+    await page.waitForSelector('[role="dialog"]');
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await save('series-dialog.webp');
+    log('series-dialog.webp');
+
     await page.setViewport({ width: 1280, height: 800 });
     await open('/roles');
     await save('roles.webp');

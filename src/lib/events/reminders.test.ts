@@ -38,7 +38,7 @@ vi.mock('./notifications', () => ({
 
 const { getConfig } = await import('@/config');
 const { prisma } = await import('@/lib/prisma');
-const { deliver } = await import('./notifications');
+const { deliver, toNotificationData } = await import('./notifications');
 const { buildReminderMessage } = await import('./messages');
 const { buildEventEmail } = await import('./email');
 const { buildEventSlack } = await import('./slack-blocks');
@@ -57,8 +57,30 @@ function setConfig(options: { enabled?: boolean; channel?: string } = {}) {
   } as unknown as ReturnType<typeof getConfig>);
 }
 
+interface StoredOccurrence {
+  occurrenceStart: Date;
+  title: string | null;
+  description: string | null;
+  location: string | null;
+  categoryKey: string | null;
+  status: 'DRAFT' | 'CONFIRMED' | null;
+  startsAt: Date | null;
+  endsAt: Date | null;
+  assigneesOverridden: boolean;
+  confirmationNotifiedAt: Date | null;
+  updatedAt: Date;
+  assignees: { login: string; user: { fullName: string; email: string } | null }[];
+}
+
 interface StoredEvent {
   id: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  categoryKey: string;
+  status: 'DRAFT' | 'CONFIRMED';
+  updatedAt: Date;
+  occurrences: StoredOccurrence[];
   startsAt: Date;
   endsAt: Date;
   recurrence: 'NONE' | 'WEEKLY';
@@ -71,6 +93,13 @@ interface StoredEvent {
 function event(overrides: Partial<StoredEvent> = {}): StoredEvent {
   return {
     id: 'evt1',
+    title: 'Soirée',
+    description: null,
+    location: null,
+    categoryKey: 'soiree',
+    status: 'CONFIRMED',
+    updatedAt: new Date('2026-09-01T10:00:00Z'),
+    occurrences: [],
     // Saturday 10 Oct 2026, 20:00 Paris (UTC+2)
     startsAt: new Date('2026-10-10T18:00:00Z'),
     endsAt: new Date('2026-10-10T21:00:00Z'),
@@ -140,12 +169,19 @@ describe('runReminderTick', () => {
     expect(prisma.event.findMany).not.toHaveBeenCalled();
   });
 
-  it('only queries confirmed events', async () => {
+  it('only queries events that have something confirmed: a confirmed event, or a draft with a date confirmed alone', async () => {
     vi.mocked(prisma.event.findMany).mockResolvedValue([]);
     await runReminderTick(new Date('2026-10-09T17:00:00Z'));
-    expect(prisma.event.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ status: 'CONFIRMED' }) }),
-    );
+    const where = JSON.stringify(vi.mocked(prisma.event.findMany).mock.calls[0]?.[0]);
+    expect(where).toContain('"status":"CONFIRMED"');
+    expect(where).toContain('"occurrences":{"some":{"status":"CONFIRMED"}}');
+  });
+
+  it('does not remind a draft event', async () => {
+    vi.mocked(prisma.event.findMany).mockResolvedValue([event({ status: 'DRAFT' })] as never);
+    const result = await runReminderTick(new Date('2026-10-09T16:00:00Z'));
+    expect(result.claimed).toBe(0);
+    expect(deliver).not.toHaveBeenCalled();
   });
 
   it('does not send before the reminder is due', async () => {
@@ -350,5 +386,126 @@ describe('runReminderTick', () => {
       expect(emailsOfHolders).not.toHaveBeenCalled();
       expect(deliver).toHaveBeenCalledWith('eventReminder', expect.anything(), []);
     });
+  });
+});
+
+describe('runReminderTick — a series with dates of their own', () => {
+  const OCT10 = new Date('2026-10-10T18:00:00Z');
+  const OCT17 = new Date('2026-10-17T18:00:00Z');
+
+  const own = (
+    occurrenceStart: Date,
+    values: Partial<StoredOccurrence> = {},
+  ): StoredOccurrence => ({
+    occurrenceStart,
+    title: null,
+    description: null,
+    location: null,
+    categoryKey: null,
+    status: null,
+    startsAt: null,
+    endsAt: null,
+    assigneesOverridden: false,
+    confirmationNotifiedAt: null,
+    updatedAt: new Date('2026-09-02T10:00:00Z'),
+    assignees: [],
+    ...values,
+  });
+  const series = (overrides: Partial<StoredEvent> = {}) =>
+    event({
+      recurrence: 'WEEKLY',
+      recurrenceUntil: new Date('2026-10-31T00:00:00Z'),
+      ...overrides,
+    });
+
+  it('does not remind a date that went back to draft, and still reminds the others', async () => {
+    vi.mocked(prisma.event.findMany).mockResolvedValue([
+      series({ occurrences: [own(OCT10, { status: 'DRAFT' })] }),
+    ] as never);
+
+    await runReminderTick(new Date('2026-10-09T17:00:00Z'));
+    expect(deliver).not.toHaveBeenCalled();
+
+    await runReminderTick(new Date('2026-10-16T17:00:00Z'));
+    expect(deliver).toHaveBeenCalledTimes(1);
+  });
+
+  it('reminds only the dates confirmed on their own when the rest of the series is a draft', async () => {
+    vi.mocked(prisma.event.findMany).mockResolvedValue([
+      series({
+        status: 'DRAFT',
+        occurrences: [
+          own(OCT17, {
+            status: 'CONFIRMED',
+            confirmationNotifiedAt: new Date('2026-09-02T10:00:00Z'),
+          }),
+        ],
+      }),
+    ] as never);
+
+    await runReminderTick(new Date('2026-10-09T17:00:00Z'));
+    expect(deliver).not.toHaveBeenCalled();
+
+    await runReminderTick(new Date('2026-10-16T17:00:00Z'));
+    expect(deliver).toHaveBeenCalledTimes(1);
+    expect(prisma.eventReminder.create).toHaveBeenCalledWith({
+      data: { eventId: 'evt1', occurrenceStart: OCT17 },
+    });
+  });
+
+  it('reminds a moved date the evening before its new day, once, under the date the series gave it', async () => {
+    // The 17th moved to the 20th, same hour.
+    const moved = own(OCT17, {
+      startsAt: new Date('2026-10-20T18:00:00Z'),
+      endsAt: new Date('2026-10-20T21:00:00Z'),
+    });
+    vi.mocked(prisma.event.findMany).mockResolvedValue([series({ occurrences: [moved] })] as never);
+
+    // The evening before the 17th: nothing, the date is no longer there.
+    await runReminderTick(new Date('2026-10-16T17:00:00Z'));
+    expect(prisma.eventReminder.create).not.toHaveBeenCalledWith({
+      data: { eventId: 'evt1', occurrenceStart: OCT17 },
+    });
+
+    // The evening before the 20th: the reminder, claimed under the original start, and never a second time.
+    await runReminderTick(new Date('2026-10-19T17:00:00Z'));
+    await runReminderTick(new Date('2026-10-19T17:05:00Z'));
+    expect(prisma.eventReminder.create).toHaveBeenCalledWith({
+      data: { eventId: 'evt1', occurrenceStart: OCT17 },
+    });
+    expect(deliver).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(toNotificationData).mock.calls.at(-1)?.[1]).toMatchObject({
+      start: new Date('2026-10-20T18:00:00Z'),
+    });
+  });
+
+  it('writes to the members in charge of that date when it has its own', async () => {
+    const bob = { login: 'bob', user: { fullName: 'Bob', email: 'bob@x.fr' } };
+    vi.mocked(prisma.event.findMany).mockResolvedValue([
+      series({ occurrences: [own(OCT10, { assigneesOverridden: true, assignees: [bob] })] }),
+    ] as never);
+
+    await runReminderTick(new Date('2026-10-09T17:00:00Z'));
+    expect(deliver).toHaveBeenCalledWith('eventReminder', expect.anything(), ['bob@x.fr']);
+
+    await runReminderTick(new Date('2026-10-16T17:00:00Z'));
+    expect(deliver).toHaveBeenLastCalledWith('eventReminder', expect.anything(), ['alice@x.fr']);
+  });
+
+  it('does not remind a date confirmed on its own after its reminder was due: members were just told', async () => {
+    vi.mocked(prisma.event.findMany).mockResolvedValue([
+      series({
+        status: 'DRAFT',
+        occurrences: [
+          own(OCT10, {
+            status: 'CONFIRMED',
+            confirmationNotifiedAt: new Date('2026-10-09T17:30:00Z'),
+          }),
+        ],
+      }),
+    ] as never);
+
+    await runReminderTick(new Date('2026-10-09T17:45:00Z'));
+    expect(deliver).not.toHaveBeenCalled();
   });
 });

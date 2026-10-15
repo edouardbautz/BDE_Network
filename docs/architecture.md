@@ -87,8 +87,9 @@ src/
   lib/
     auth/                  NextAuth config + 42 OAuth provider
     notifications/         NotificationAdapter + email/discord/slack/none adapters
-    events/                events module domain: time, recurrence, ics, access, queries, actions
-                           helpers, notifications, reminders, scheduler (see "Events module")
+    events/                events module domain: time, recurrence, series (dates of their own), series-operations
+                           (cutting a series), ics, access, queries, actions helpers, notifications, reminders,
+                           scheduler (see "Events module")
     permissions/           registry (the list of permissions) + resolution and `can()`
     roles/                 escalation rules (guards), input validation, transactional operations, `execute`
     settings/              the platform's settings in the database: runtime cache, sealing (AES-GCM), store + import,
@@ -126,7 +127,8 @@ SECURITY.md                  private vulnerability reporting; .github/ has issue
 ## Data model (Prisma)
 
 `User`, `UserStatus` (enum), `Role`, `AuditLog`, `PlatformSettings` (see "Settings in the database"), plus the events module's `Event`,
-`EventAssignee`, `EventCancellation`, `EventReminder`, `BdeCalendarFeed` (see "Events module"). Finances and
+`EventAssignee`, `EventCancellation`, `EventOccurrence` (+ `EventOccurrenceAssignee`), `EventReminder`,
+`BdeCalendarFeed` (see "Events module"). Finances and
 meetings do not exist yet.
 
 - **`UserStatus`**: `OWNER | MEMBER | PENDING`. OWNER comes only from the list of owners in the platform's
@@ -524,23 +526,61 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
 
 User guide: `docs/en/events.md`. The shape worth knowing before touching it:
 
-- **An event is one row.** A recurring event is a single "series master" (`startsAt`,
-  `endsAt`, `recurrence`, `recurrenceUntil`); occurrences are **computed**, never stored
-  (`allOccurrences` in `src/lib/events/recurrence.ts`), on the wall clock of `bde.timezone` so DST
-  doesn't shift local times. Editing edits the series; the only per-occurrence state is
-  `EventCancellation` (cancelled date) and `EventReminder` (reminder already claimed). All
-  instants are UTC in the database; anything typed or shown goes through `src/lib/events/time.ts`
-  (Intl only, no date library) and `format.ts`.
+- **An event is one row, a series is one row plus what its dates have of their own.** A recurring event is a
+  "series master" (`startsAt`, `endsAt`, `recurrence`, `recurrenceUntil`, `monthlyDay`); its dates are
+  **computed**, never stored (`allOccurrences` in `src/lib/events/recurrence.ts`), on the wall clock of
+  `bde.timezone` so DST doesn't shift local times. What one date has of its own is stored sparsely (see "Dates
+  of a series" below): `EventOccurrence` (the fields that differ from the series), `EventCancellation` (a
+  cancelled date), `EventReminder` (reminder already claimed). All instants are UTC in the database; anything
+  typed or shown goes through `src/lib/events/time.ts` (Intl only, no date library) and `format.ts`.
+- **Dates of a series** (`series.ts`: the pure rules; `series-operations.ts`: what they do to the database;
+  `transaction.ts`: SERIALIZABLE, retried, `null` after the third try; tests `series.test.ts`,
+  `series-operations.test.ts` on `test/fake-events-db.ts`, `actions-series.test.ts`, mutation-checked).
+  Every action on a date of a series asks **"only this one" or "this one and the following"** in one dialog
+  (`ConfirmDialog` with `choices`; the narrowest is selected first); on the first date the second is the whole
+  series, and an event that does not repeat has no scope at all.
+  - **The key of a date is where the series puts it** (`occurrenceStart`, the "original start", like an
+    iCalendar RECURRENCE-ID), whatever the date was moved to: `?occ=`, `EventCancellation`, `EventReminder`,
+    `EventOccurrence`, the UID in calendar files. A moved date has `EventOccurrence.startsAt/endsAt` (both or none:
+    a CHECK the schema cannot express). `resolveOccurrences` puts a date's own values on top of the series'
+    and is the one function every consumer goes through (pages, feeds, reminders, notifications).
+  - **Only this one** (`updateOccurrence`): the fields that changed are written to the date's row, and a field
+    that equals the series' value is not stored (a date never keeps a value that says nothing). A row with
+    nothing left is deleted **unless it carries a claimed notice** (`confirmationNotifiedAt`): confirming
+    again must not announce again.
+  - **This one and the following** (`updateFollowing`): the series is **cut into two `Event` rows** at the
+    date (the first stops at the date before, or becomes an ordinary event when one date is left; the second
+    starts at the date), in one transaction that also moves the dates' rows, cancellations and reminders from
+    that date on, copies the members in charge and **inherits `confirmationNotifiedAt`** (a series is announced
+    once, not again because it was cut), the author and `seriesId` (the first row's id: the base of every UID,
+    so the cut changes no identifier in any calendar). On the first date nothing is cut. A change that changes
+    nothing (compared with the date as it is **inside the transaction**) writes and cuts nothing.
+  - **What the following keep** (Google Calendar's rule): the fields the edit changed are cleared from the
+    dates that had their own (`clearOverride`), the others stay; "confirm the following" is a change of the
+    status field, so it also confirms the drafts (the dialog counts them: `scopeFacts`). Dates, cancellations
+    and reminders are re-keyed by **local calendar day** when only the hour changed (`remapByLocalDay`, DST
+    safe) and dropped when the day or the frequency changed (counted in the audit entry: `alignedDates`,
+    `droppedDates`). A monthly series cut on a day a short month had moved (the 28th of a "31st") keeps its
+    day in `Event.monthlyDay`, reset only when the edit changes the day.
+  - **Deleting**: only this one stays the restorable cancellation; the following (`deleteFollowing`) stops the
+    series at the date before and deletes what was stored from that date on, or the event on the first date.
+  - **Audit**: every entry of an event that repeats says `scope: 'occurrence' | 'following'`, the date
+    (`occurrenceStart`), `fromFirst: true` when it covered the whole series, and for a cut `splitInto`; the entry
+    is written **in the same transaction** as the change (`auditEventAction(..., tx)`).
+  - **A conflict is a notice, not an error**: two people cutting the same series at once is retried, then answered
+    with `?notice=seriesBusy`; a date that is gone is `occurrenceGone` (`lib/events/notice.ts`).
 - **Event input is validated by one pure Zod module** (`src/lib/events/input.ts`): required =
   title, description, location, category, start, end (+ series end date); only the assignees are
   optional. The form imports the very same `parseEventInput` to show errors before sending, and
   the server actions run it again — never trust the browser. `Event.description`/`location` stay
   nullable in Prisma on purpose: rows created before the rule must keep rendering, and are only
   blocked at their next edit through the form (status toggle / cancel-a-date don't go through it).
-- **Visibility is decided in one place.** `expandEvents` (`occurrences.ts`) drops drafts unless
-  `includeDrafts`; the queries also exclude them in SQL. Every consumer (calendar, list,
-  dashboard, `.ics` download, subscription feed) passes `includeDrafts = canManage`. A draft the
-  user can't see is a 404, not a 403.
+- **Visibility is decided in one place, date by date.** `expandEvents` (`occurrences.ts`) drops the dates that are
+  drafts unless `includeDrafts` (a series can be confirmed with one date back to draft, or a draft with one date
+  confirmed alone); the queries also exclude them in SQL (`VISIBLE_WITHOUT_DRAFTS`: a confirmed event, or one with
+  a date confirmed alone; `queries.test.ts`). Every consumer (calendar, list, dashboard, `.ics` download,
+  subscription feed) passes `includeDrafts = canManage`. A draft the user can't see is a 404, not a 403; a draft
+  event with a date confirmed alone shows that date only.
 - **Subscription feed** (`/api/calendar/[token]`): token = 32 random bytes in `User.calendarToken`,
   stored in clear (so the profile can show the link), recomputed per request from the token owner's
   _current_ role/permission, same bare 404 for every failure. Removing a member deletes their row,
@@ -558,14 +598,25 @@ User guide: `docs/en/events.md`. The shape worth knowing before touching it:
   access to a shared Google/Outlook calendar is managed there, not here. Both feed routes share
   `calendarFeedResponse` (`feed-response.ts`).
 - **Notifications are best-effort and after the response.** `after(() => notifyEventConfirmed(id))`
-  in the actions; the once-only guarantee is the atomic `confirmationNotifiedAt` claim.
+  in the actions; the once-only guarantee is the atomic `confirmationNotifiedAt` claim. Confirming the following
+  announces **once for the whole confirmed part** (the row that holds it; one calendar file with every date to
+  come, never one message per date); confirming one date alone announces **that date** once
+  (`notifyOccurrenceConfirmed`, claimed on the date's own row, and only when the date has its own CONFIRMED status:
+  a date simply confirmed again like the rest of its series announces nothing).
 - **Reminders** (`reminders.ts` + `scheduler.ts`): an in-process loop (every 5 min) started from
   `instrumentation.ts`. Exactly-once-or-lost: insert `EventReminder(eventId, occurrenceStart)` (unique)
-  _before_ sending, ignore `P2002`. Due from `reminderHour` the day before; catch-up until the
-  occurrence starts. Tested in `reminders.test.ts` including restart and concurrent callers.
+  _before_ sending, ignore `P2002`. Due from `reminderHour` the day before the date's **effective** start;
+  catch-up until it starts. The claim is keyed by the date's original start, so a date moved after its reminder is
+  not reminded twice, and a cut moves the claims with the dates. The time, place and members in charge are the
+  date's own; a draft or cancelled date is not reminded. Tested in `reminders.test.ts` including restart and
+  concurrent callers.
 - **Tests that must keep passing** when you change access rules: `access.test.ts`,
   `events/actions.test.ts` (every action refused for PENDING / member without permission / a role that
-  only views / module disabled), `events/pages.test.tsx`, `export.test.ts`, `export-bde.test.ts`, `shared-calendar/*.test.ts(x)`.
+  only views / module disabled), `events/pages.test.tsx`, `export.test.ts`, `export-bde.test.ts`, `shared-calendar/*.test.ts(x)`;
+  and, when you change a series rule, `series*.test.ts`, `actions-series.test.ts`, `queries.test.ts`,
+  `series-feed.test.ts` (UIDs, the BDE feed never holds a draft date), `series-notifications.test.ts`,
+  `reminders.test.ts` and `e2e/series.mjs` (the dialogs in a real browser, run by CI). Re-break a rule (the draft
+  filter, the clearing of changed fields, the move of the reminders, the claim kept on a row) and one must fail.
 - **Adding another module** follows the same recipe: a key in `modules.enabled` + a config section
   validated in `src/config/schema.ts` (required only when enabled), one `getXAccess()` gate
   returning null when disabled, `notFound()` on pages, a nav entry in `(app)/layout.tsx` + `NavItem`
@@ -678,8 +729,7 @@ production image in a real browser (and then against a local `next build` + `nex
 it is only used outside development, and it only exists for a route that has a `loading.tsx`, which every `(app)` route has),
 show the "loading" state, then fetch the page. The navigation resolves, the follow-up `server-patch` action is applied, and
 the transition **never commits**: the old page stays and `history.pushState` is never called. The same click on a link to
-another pathname (sidebar, a card to `/events/<id>`), or after a server action (which empties the router's cache), works,
-which is why it went unnoticed; timing decides for some pages, the events page always fails. We did not isolate the line that
+another pathname (sidebar, a card to `/events/<id>`) works, which is why it went unnoticed; timing decides for some pages, the events page always fails. We did not isolate the line that
 holds the commit. It is the family of Next.js 15 client-router bugs reported upstream (vercel/next.js #86151 "`loading.js`
 sometimes causes soft-navigation to get stuck", #90008 on aliased entries; the React side is facebook/react #35821,
 `useDeferredValue` stuck on a stale value), reported fixed in 16.x. A move to Next.js 16 is a pull request of its own.
@@ -688,8 +738,16 @@ sometimes causes soft-navigation to get stuck", #90008 on aliased entries; the R
 That `Link` is next-intl's, except that a link to the page you are already on is a plain `<a>` (the page loads again, which is
 what the server-rendered, JavaScript-free calendar already is; the menu entry of the page you are reading does the same).
 The address is built by next-intl's `getPathname`, so it is the one the real `Link` would write; a link that changes the
-language (`locale` prop) stays the router's. **Do not call `router.push`/`replace` to the pathname you are on.** The only such call, the member removal, runs after a
-server action (which empties the router's cache) and was checked by hand to work; the CI test below does not cover it.
+language (`locale` prop) stays the router's. **Do not call `router.push`/`replace` to the pathname you are on.** The only such call, the member removal, was
+checked by hand; the CI test below does not cover it.
+
+**Actions that stay on the page** (confirm, back to draft, cancel and restore a date, delete the following) have the same
+problem and **do not refresh by themselves**: a server action that calls `revalidatePath` and returns, from a page that has a
+`loading.tsx`, leaves the old state on screen in about half of the clicks of a production build (measured on the real image
+with a real browser: the action is done, the audit entry written, the page not updated; `next dev` never does it). Such an
+action **returns an `ActionTarget`** (`{ href }`, `lib/action-target.ts`, built with `getPathname`) and the browser **loads**
+it: `ConfirmDialog` does it when `onConfirm` answers one, and `ActionButton` for what asks no question. An action that
+leaves for another pathname (the edit form, deleting an event) may still `redirect()`; one that stays must not.
 
 **Tests.** `src/i18n/link.test.tsx` (the choice of the element, the address, no router option on the anchor). The proof that
 the buttons work is `e2e/events.mjs`, run by CI against the real image: it clicks next/previous month and "today", a day of

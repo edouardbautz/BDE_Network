@@ -69,7 +69,7 @@ function categoryLabel(categoryKey: string): string {
 
 export function toIcsEvents(occurrences: readonly OccurrenceView[]): IcsEvent[] {
   return occurrences.map((occurrence) => ({
-    uid: occurrenceUid(occurrence.eventId, occurrence.start),
+    uid: occurrenceUid(occurrence.seriesKey, occurrence.originalStart),
     start: occurrence.start,
     end: occurrence.end,
     summary: occurrence.title,

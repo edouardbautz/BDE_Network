@@ -2,6 +2,7 @@ import { getConfig } from '@/config';
 import type { Prisma } from '@/generated/prisma/client';
 import { APPROVED_STATUSES } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
+import { VISIBLE_WITHOUT_DRAFTS, eventInclude } from './include';
 import {
   expandEvents,
   type EventFilters,
@@ -11,22 +12,28 @@ import {
 
 const DAY_MS = 86_400_000;
 
-const eventInclude = {
-  assignees: { select: { login: true, user: { select: { fullName: true } } } },
-  cancellations: { select: { occurrenceStart: true } },
-} satisfies Prisma.EventInclude;
-
-function baseWhere(options: {
-  includeDrafts: boolean;
-  filters?: EventFilters;
-}): Prisma.EventWhereInput {
-  const { filters } = options;
-  return {
-    ...(options.includeDrafts ? {} : { status: 'CONFIRMED' as const }),
-    ...(filters?.categoryKey ? { categoryKey: filters.categoryKey } : {}),
-    ...(filters?.schoolYear ? { schoolYear: filters.schoolYear } : {}),
-    ...(filters?.assigneeLogin ? { assignees: { some: { login: filters.assigneeLogin } } } : {}),
-  };
+/** The filters of the toolbar that the database can apply. A date can have its own category or members, so
+ * these only keep the events that may match: expandEvents decides date by date. */
+function filterWhere(filters: EventFilters | undefined): Prisma.EventWhereInput[] {
+  const clauses: Prisma.EventWhereInput[] = [];
+  if (filters?.schoolYear) clauses.push({ schoolYear: filters.schoolYear });
+  if (filters?.categoryKey) {
+    clauses.push({
+      OR: [
+        { categoryKey: filters.categoryKey },
+        { occurrences: { some: { categoryKey: filters.categoryKey } } },
+      ],
+    });
+  }
+  if (filters?.assigneeLogin) {
+    clauses.push({
+      OR: [
+        { assignees: { some: { login: filters.assigneeLogin } } },
+        { occurrences: { some: { assignees: { some: { login: filters.assigneeLogin } } } } },
+      ],
+    });
+  }
+  return clauses;
 }
 
 /** Occurrences overlapping [from, to), visible to a user who can (or cannot)
@@ -40,14 +47,21 @@ export async function listOccurrences(options: {
   const { range } = options;
   const events: EventRecord[] = await prisma.event.findMany({
     where: {
-      ...baseWhere(options),
-      startsAt: { lt: range.to },
-      OR: [
-        { recurrence: 'NONE', endsAt: { gt: range.from } },
-        // Slight over-fetch: an occurrence can end after recurrenceUntil.
+      AND: [
+        options.includeDrafts ? {} : VISIBLE_WITHOUT_DRAFTS,
+        ...filterWhere(options.filters),
         {
-          recurrence: { not: 'NONE' },
-          recurrenceUntil: { gte: new Date(range.from.getTime() - DAY_MS) },
+          OR: [
+            { recurrence: 'NONE', startsAt: { lt: range.to }, endsAt: { gt: range.from } },
+            // Slight over-fetch: an occurrence can end after recurrenceUntil.
+            {
+              recurrence: { not: 'NONE' },
+              startsAt: { lt: range.to },
+              recurrenceUntil: { gte: new Date(range.from.getTime() - DAY_MS) },
+            },
+            // A date moved into the window, whatever the series says.
+            { occurrences: { some: { startsAt: { lt: range.to }, endsAt: { gt: range.from } } } },
+          ],
         },
       ],
     },
@@ -79,18 +93,17 @@ export async function listUpcomingOccurrences(options: {
   return occurrences.slice(0, options.limit);
 }
 
-/** A single event with its assignees and cancelled occurrences, or null if it
- * does not exist *or the user may not see it* (a draft without permission is
- * indistinguishable from a missing event). */
+/** A single event with its assignees, cancelled dates and the dates that have values of their own, or null if
+ * it does not exist *or the user may not see it* (a draft without permission is indistinguishable from a
+ * missing event; a draft event with a date confirmed alone is visible, showing only that date). */
 export async function getVisibleEvent(id: string, includeDrafts: boolean) {
-  const event = await prisma.event.findUnique({
-    where: { id },
-    include: {
-      assignees: { select: { login: true, userId: true, user: { select: { fullName: true } } } },
-      cancellations: { select: { occurrenceStart: true } },
-    },
-  });
-  if (!event || (event.status === 'DRAFT' && !includeDrafts)) {
+  const event = await prisma.event.findUnique({ where: { id }, include: eventInclude });
+  if (
+    !event ||
+    (!includeDrafts &&
+      event.status === 'DRAFT' &&
+      !event.occurrences.some((own) => own.status === 'CONFIRMED'))
+  ) {
     return null;
   }
   return event;
@@ -106,7 +119,7 @@ export interface FilterOptions {
 export async function getFilterOptions(includeDrafts: boolean): Promise<FilterOptions> {
   const [years, members] = await Promise.all([
     prisma.event.findMany({
-      where: includeDrafts ? {} : { status: 'CONFIRMED' },
+      where: includeDrafts ? {} : VISIBLE_WITHOUT_DRAFTS,
       select: { schoolYear: true },
       distinct: ['schoolYear'],
       orderBy: { schoolYear: 'desc' },

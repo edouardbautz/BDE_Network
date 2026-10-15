@@ -61,9 +61,10 @@ model User {
   updatedAt   DateTime   @updatedAt
   lastLoginAt DateTime?
 
-  auditLogEntries      AuditLog[]          @relation("AuditLogActor")
-  authoredEvents       Event[]             @relation("EventAuthor")
+  auditLogEntries      AuditLog[]                @relation("AuditLogActor")
+  authoredEvents       Event[]                   @relation("EventAuthor")
   assignedEvents       EventAssignee[]
+  assignedOccurrences  EventOccurrenceAssignee[]
   cancelledOccurrences EventCancellation[]
 
   /// Secret token of this member's personal .ics subscription feed (events
@@ -132,6 +133,12 @@ model Event {
   /// Set once when the "event confirmed" notification went out, so toggling
   /// the status back and forth never notifies twice.
   confirmationNotifiedAt DateTime?
+  /// The first row of the series this row was cut from ("this date and the following" splits a series in two
+  /// rows). null = this row is its own series. It keeps the UID of every date in the calendar feeds stable.
+  seriesId               String?
+  /// Day of the month a MONTHLY series sticks to (31 → the last day of shorter months). null = the day of
+  /// startsAt. Set when a series is cut on a date that a short month had moved (the 28th, for a "31st").
+  monthlyDay             Int?
   authorLogin            String
   authorId               String?
   author                 User?           @relation("EventAuthor", fields: [authorId], references: [id], onDelete: SetNull)
@@ -141,6 +148,7 @@ model Event {
   assignees     EventAssignee[]
   cancellations EventCancellation[]
   reminders     EventReminder[]
+  occurrences   EventOccurrence[]
 
   @@index([startsAt])
   @@index([schoolYear])
@@ -174,6 +182,46 @@ model EventCancellation {
   createdAt        DateTime @default(now())
 
   @@unique([eventId, occurrenceStart])
+}
+
+/// What one date of a series has of its own ("only this one"). A null column inherits the series; only what was
+/// changed is stored, so changing the series later keeps what is specific to this date. occurrenceStart is the
+/// date's ORIGINAL start (UTC) as computed from the series, whatever the date was moved to: it is the key, like an
+/// iCalendar RECURRENCE-ID. The row is deleted when nothing is left of its own and no notice was claimed.
+model EventOccurrence {
+  id                     String                    @id @default(cuid())
+  eventId                String
+  event                  Event                     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  occurrenceStart        DateTime
+  title                  String?
+  description            String?
+  location               String?
+  categoryKey            String?
+  status                 EventStatus?
+  /// A moved date: both or none.
+  startsAt               DateTime?
+  endsAt                 DateTime?
+  /// true: `assignees` replaces the series' members in charge (possibly with nobody).
+  assigneesOverridden    Boolean                   @default(false)
+  /// Set once when this date was announced on its own (confirmed alone), like Event.confirmationNotifiedAt.
+  confirmationNotifiedAt DateTime?
+  updatedAt              DateTime                  @updatedAt
+  assignees              EventOccurrenceAssignee[]
+
+  @@unique([eventId, occurrenceStart])
+}
+
+/// A member in charge of one date, when the date has its own list. login in plain text, like EventAssignee.
+model EventOccurrenceAssignee {
+  id           String          @id @default(cuid())
+  occurrenceId String
+  occurrence   EventOccurrence @relation(fields: [occurrenceId], references: [id], onDelete: Cascade)
+  userId       String?
+  user         User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  login        String
+
+  @@unique([occurrenceId, login])
+  @@index([userId])
 }
 
 /// Claim marker for the day-before reminder. The unique index is the lock:

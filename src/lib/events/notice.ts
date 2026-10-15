@@ -4,7 +4,7 @@
  * was edited). It travels in the URL as `?notice=...`; anything not in this list is ignored,
  * never echoed.
  */
-export const EVENT_NOTICES = ['eventGone', 'occurrenceGone'] as const;
+export const EVENT_NOTICES = ['eventGone', 'occurrenceGone', 'seriesBusy'] as const;
 
 export type EventNotice = (typeof EVENT_NOTICES)[number];
 

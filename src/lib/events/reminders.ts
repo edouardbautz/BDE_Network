@@ -8,7 +8,8 @@ import { buildEventEmbed } from './discord-embed';
 import { buildEventEmail } from './email';
 import { buildReminderMessage } from './messages';
 import { deliver, getTranslate, toNotificationData } from './notifications';
-import { allOccurrences } from './recurrence';
+import { VISIBLE_WITHOUT_DRAFTS } from './include';
+import { resolveOccurrences } from './series';
 import { buildEventSlack } from './slack-blocks';
 import { addDays, fromLocalDateTime, isSameLocalDay, toLocalDateTime } from './time';
 
@@ -59,26 +60,49 @@ export async function runReminderTick(now: Date = new Date()): Promise<ReminderT
   const { reminderHour } = config.events;
   const horizon = new Date(now.getTime() + LOOKAHEAD_MS);
 
+  const assigneeSelect = {
+    login: true,
+    user: { select: { fullName: true, email: true } },
+  } as const;
   const events = await prisma.event.findMany({
     where: {
-      status: 'CONFIRMED',
-      startsAt: { lt: horizon },
-      OR: [{ recurrence: 'NONE', startsAt: { gt: now } }, { recurrence: { not: 'NONE' } }],
+      // A series can be confirmed with some dates back to draft, or a draft with some dates confirmed alone:
+      // which date is reminded is decided date by date below.
+      AND: [
+        VISIBLE_WITHOUT_DRAFTS,
+        {
+          OR: [
+            { startsAt: { lt: horizon } },
+            { occurrences: { some: { startsAt: { lt: horizon } } } },
+          ],
+        },
+        {
+          OR: [
+            { recurrence: { not: 'NONE' } },
+            { startsAt: { gt: now } },
+            { occurrences: { some: { startsAt: { gt: now } } } },
+          ],
+        },
+      ],
     },
     include: {
-      assignees: { select: { login: true, user: { select: { fullName: true, email: true } } } },
+      assignees: { select: assigneeSelect },
       cancellations: { select: { occurrenceStart: true } },
+      occurrences: { include: { assignees: { select: assigneeSelect } } },
     },
   });
 
   const translate = events.length > 0 ? await getTranslate(locale) : null;
 
   for (const event of events) {
-    const cancelled = new Set(event.cancellations.map((c) => c.occurrenceStart.getTime()));
-
-    for (const occurrence of allOccurrences(event, timeZone)) {
+    for (const occurrence of resolveOccurrences(event, timeZone)) {
       const startMs = occurrence.start.getTime();
-      if (startMs <= now.getTime() || startMs > horizon.getTime() || cancelled.has(startMs)) {
+      if (
+        startMs <= now.getTime() ||
+        startMs > horizon.getTime() ||
+        occurrence.cancelled ||
+        occurrence.status !== 'CONFIRMED'
+      ) {
         continue;
       }
 
@@ -87,16 +111,14 @@ export async function runReminderTick(now: Date = new Date()): Promise<ReminderT
         continue;
       }
       // Confirmed after the reminder was due: members were just told about it.
-      if (
-        event.confirmationNotifiedAt &&
-        event.confirmationNotifiedAt.getTime() > dueAt.getTime()
-      ) {
+      if (occurrence.announcedAt && occurrence.announcedAt.getTime() > dueAt.getTime()) {
         continue;
       }
 
       try {
         await prisma.eventReminder.create({
-          data: { eventId: event.id, occurrenceStart: occurrence.start },
+          // The key is where the series puts the date, so a date moved afterwards is still reminded once.
+          data: { eventId: event.id, occurrenceStart: occurrence.originalStart },
         });
       } catch (error) {
         if (isUniqueViolation(error)) {
@@ -121,7 +143,9 @@ export async function runReminderTick(now: Date = new Date()): Promise<ReminderT
           slack: (brand) => buildEventSlack(day, data, translate, locale, timeZone, brand),
         },
       );
-      const assigneeEmails = event.assignees.flatMap((a) => (a.user ? [a.user.email] : []));
+      const assigneeEmails = occurrence.assignees.flatMap((a) =>
+        a.user?.email ? [a.user.email] : [],
+      );
       // Nobody in charge to write to: the people who run the events get it, so a reminder is never
       // sent to no one. (Looked up only when it is an email: a chat channel needs no recipient.)
       const emails =

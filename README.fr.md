@@ -24,7 +24,7 @@ partagé entre deux instances.
 - **Rôles et droits personnalisés.** Chaque BDE crée ses rôles (Président, Trésorier…) et coche ce que chacun peut
   faire. Personne ne peut donner un droit qu'il n'a pas : le serveur l'empêche, et c'est testé.
 - **Événements.** Un calendrier mensuel et une liste, des catégories en couleur, des événements qui se répètent, des
-  brouillons privés jusqu'à leur confirmation, des membres en charge, une date d'une série annulée toute seule.
+  brouillons privés jusqu'à leur confirmation, des membres en charge, une date d'une série modifiée ou annulée toute seule.
 - **Synchronisation d'agenda.** Un lien personnel pour chaque membre, et **un lien pour tout le BDE** à coller une
   fois dans un agenda partagé.
 - **Notifications** par e-mail, Discord ou Slack : un événement confirmé, un rappel la veille, une demande d'accès,

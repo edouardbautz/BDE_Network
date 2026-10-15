@@ -140,6 +140,13 @@ radii outside the scale.
     Component, `onConfirm` is a server action (`async () => { 'use server'; … }`); it may redirect, and the dialog
     stays busy until the navigation. Without a button (a dropdown menu, a shortcut), pass `open`, `onOpenChange` and
     `returnFocusRef`.
+  - **Choices**: when an action can apply in two ways (a series of events: "Only this one" or "This one and the
+    following"), pass `choices` (`{ value, label, hint }`): radio buttons between the sentence and the buttons, the
+    **narrowest** first and selected each time the dialog opens, each with a one-line hint that says what it does
+    _here_ (how many dates). `onConfirm` receives the value of the chosen one.
+  - **An action that stays on the page** answers `{ href }` (`lib/action-target.ts`) and the dialog loads that address,
+    staying busy until the page is replaced; a button that asks nothing is an `ActionButton`. See "Actions that stay on
+    the page" in `docs/architecture.md`: in the production build the router often leaves the old state on screen.
   - These do **not** ask for confirmation: reversible one-click actions (restore a date, set the default role, copy
     a link). A refusal with nothing to confirm (deleting a role that is still given) is explained by a message,
     not by a dialog.

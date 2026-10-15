@@ -67,15 +67,67 @@ A series belongs to the school year of its first date.
 ## Events that repeat
 
 Choose _Every week_, _Every 2 weeks_ or _Every month_, then a required **end date** (that day is included). A series
-has 200 occurrences at most.
+has 200 dates at most (a series that was cut in two, see below, counts each part on its own).
 
-- **Editing** a series edits the whole series.
-- **Cancel a single date**: on the event's page, the **Cancel this date** button in the list of occurrences. The rest
-  of the series is untouched, and the date can be **restored**.
-- **Deleting** the event deletes the whole series.
 - Local time is kept through daylight saving changes: a "every Tuesday at 6 pm" session stays at 6 pm all year.
 - For a monthly series, it is the same day of the month. In a shorter month, it is the last day: an event on the
-  31st falls on April 30, February 28…
+  31st falls on April 30, February 28… A series cut on one of those days keeps its day: the following dates are
+  back on the 31st.
+
+### One date, or this date and the following
+
+On the page of a series, pick a date in the list of dates (the one shown is in bold). Then **every action asks which
+dates it is for**, in a window, with two choices:
+
+- **Only this one**: this date changes, the others do not. It is the choice already selected.
+- **This one and the following**: this date and all those after it. **On the first date, that is the whole
+  series.** The window says how many dates that is.
+
+It is the same window for **editing** (time, place, description, category, members in charge…), **confirming**,
+**putting back to draft** and **deleting**. An event that does not repeat has no such question.
+
+![The window that asks which dates an edit is for: only this one, or this one and the following](../images/en/series-dialog.webp)
+
+| Action            | Only this one                                                                                                                                                                                  | This one and the following                                                                                                                                                             |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Edit**          | The date gets **its own values**: only what you changed, the rest keeps following the series. You can move it to another hour or day. The frequency and the end date stay those of the series. | The series is **cut in two** at this date: the dates before it stay as they were, this date and the following get your changes, and you can change the frequency and the end date too. |
+| **Confirm**       | This date is confirmed on its own and announced to the members, once.                                                                                                                          | This date and the following are confirmed, **including those that had been put back to draft** (the window says how many), and announced in **a single message**.                      |
+| **Back to draft** | This date disappears for the members and from the BDE calendar link. The others stay.                                                                                                          | This date and the following go back to draft.                                                                                                                                          |
+| **Delete**        | The date is **canceled**: it stays in the list, crossed out, and you can **restore** it.                                                                                                       | The series **stops at the date before**. This is final: the following dates, with what had been edited on them, are deleted. On the first date, the whole event is deleted.            |
+
+In the list, a date that has its own values shows **Edited**, a date that is a draft shows **Draft**, a canceled date
+is crossed out.
+
+### What happens to the dates edited on their own
+
+You edit "this one and the following" while some of the following dates had been edited on their own. The rule is the
+one of Google Calendar: **what you change replaces what those dates had for that field, what you do not touch stays.**
+
+- You change the place: every following date takes the new place, even those that had their own. A date that also
+  had its own title keeps its title.
+- You confirm the following: the dates that were draft are confirmed too.
+- You change only the **hour**: the dates edited on their own, canceled dates and reminders already sent follow
+  the new hour, day by day.
+- You change the **day** or the **frequency** (every Tuesday instead of every Monday, every 2 weeks instead of every
+  week): the dates are no longer the same, so what had been edited on them, and the canceled dates, cannot follow and
+  are dropped.
+
+The window shows how many dates will be brought in line.
+
+### A series cut in two
+
+"This one and the following" on a date that is not the first **cuts the series in two parts**. The first part stops
+at the date before; the second starts at this date, with its own page. For the members and for the calendars it is
+still **one series**: every date keeps its identifier, so a calendar that already has the dates updates them,
+without duplicates.
+
+The second part keeps the author, the members in charge and the fact that the series was announced (it is not
+announced a second time because it was cut). Its school year is the one of its first date.
+
+## Deleting an event
+
+The **Delete** button on a page that is not a series deletes the event, for good. For a series, it asks which dates
+(see above): deleting "this one and the following" from the first date deletes the whole series.
 
 ## Views
 
@@ -85,12 +137,13 @@ has 200 occurrences at most.
 - **On a phone**, if you choose the **Calendar** view, the grid shows a colored dot per day, and the chosen day is
   detailed below.
 - **Filters**: category, member in charge, school year. They are in the page's address, so they can be shared.
-- **Detail page**: all the information, the occurrences of a series and the actions.
+- **Detail page**: all the information of the date shown, the dates of a series and the actions.
 
 ## Adding it to your calendar
 
 - **One event**: the **Add to my calendar** button on its page downloads an `.ics` file, which every calendar can
-  read. For a series: the displayed occurrence, or the whole series.
+  read. For a series: the displayed date, or the whole series. A date edited or moved shows up as the
+  same entry, updated; a canceled date, or one put back to draft for the BDE link, disappears.
 - **Automatic sync**: the menu of your name → **My profile** → **Sync with my calendar**. Copy the personal link and
   add it to Google Calendar, Outlook or Apple Calendar (see [step by step](#adding-a-link-to-your-calendar-step-by-step)).
   Changes then show up by themselves, at the refresh rhythm of your calendar app.
@@ -112,7 +165,8 @@ shared calendar. It then updates by itself. Personal links do not change.
 
 - **Where**: **Events** → **Shared calendar** button. It is only visible to those who have the "Manage the shared
   calendar" right and to owners, even without the "Manage events" right.
-- **What it contains**: only **confirmed** and **non-cancelled** events. Never a draft.
+- **What it contains**: only **confirmed** and **non-cancelled** dates. Never a draft: a date put back to draft
+  disappears from it.
 - **What you can do**: show the link, copy it, **regenerate** it (the old link stops working at once), **turn it
   off**. Each action is written to the audit log. The link itself is never in it, nor in the server's logs.
 - **If the link is regenerated or turned off**, the subscribed calendar stops updating: paste the new link and delete
@@ -181,10 +235,10 @@ The channel (email, Discord, Slack or none) and its settings are chosen in **Set
 with a test message. For messages to contain a link to the event, set the address of the platform (**Address of the
 platform** section): without it, messages go out without a link.
 
-| Notification                        | When                                                                                           | Who receives it                                                                        |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| **Confirmation** (`eventConfirmed`) | an event goes from draft to **confirmed**, once                                                | every approved member (email: one message per person), or the Discord or Slack channel |
-| **Reminder** (`eventReminder`)      | the day before each confirmed occurrence, at the **reminder hour** (6 pm by default, BDE time) | the **members in charge** (email), otherwise those who manage events; or the channel   |
+| Notification                        | When                                                                                                                           | Who receives it                                                                        |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| **Confirmation** (`eventConfirmed`) | an event goes from draft to **confirmed**, once; for a series, once for the confirmed part, or once for a date confirmed alone | every approved member (email: one message per person), or the Discord or Slack channel |
+| **Reminder** (`eventReminder`)      | the day before each confirmed occurrence, at the **reminder hour** (6 pm by default, BDE time)                                 | the **members in charge** (email), otherwise those who manage events; or the channel   |
 
 The rendering on Discord, Slack and by email is described in [Notifications](notifications.md).
 
@@ -214,12 +268,16 @@ Consequences:
 - if the server stays off all day until after the event starts, the reminder is lost: the platform must run
   continuously.
 
-Events that repeat are reminded occurrence by occurrence.
+Events that repeat are reminded date by date, **once per date**, whatever happens to the series: a date moved
+after its reminder was sent is not reminded again, and a series cut in two keeps the reminders already sent. The
+reminder shows the time, place and members in charge of that date.
 
 ## Audit log
 
 Owners see there the creation, the edit (with the list of fields changed), the deletion, the status change, the
-cancelation and restoration of a date, and the actions on the BDE link (never the link itself). The author is the
+cancelation and restoration of a date, and the actions on the BDE link (never the link itself). For a series, every
+entry says whether the action was for **one date** or for **this date and the following**, and which date (for
+the first date: that it was the whole series). The author is the
 real account, written as text: it stays readable even if the member is removed afterwards.
 
 ## A problem?

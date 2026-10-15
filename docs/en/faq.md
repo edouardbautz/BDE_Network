@@ -109,7 +109,13 @@ regenerated from **Events** → **Shared calendar**.
 
 ### How do I cancel a single session of a series?
 
-On the event's page, **Cancel this date**. The rest of the series is untouched, and the date can be restored.
+On the event's page, pick the date in the list, then **Delete** and **Only this one**. The date is canceled, the rest
+of the series is untouched, and the date can be restored (**Restore** button).
+
+### How do I change one session of a series only, or all the following ones?
+
+Pick the date, **Edit**, change what you need, then **Save**: a window asks **Only this one** or **This one and the
+following**. See [Events that repeat](events.md#events-that-repeat).
 
 ## Notifications
 
