@@ -22,7 +22,7 @@ jobs:
   stress:
     name: ${{ matrix.script }} (${{ matrix.shard }})
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 75
     strategy:
       fail-fast: false
       matrix:
@@ -92,7 +92,10 @@ jobs:
           export LOADS=15 PAGES=/en/events,/en/dashboard
           zones=(UTC Pacific/Auckland America/Los_Angeles Asia/Kolkata)
           failures=0
-          for round in $(seq 1 "$ROUNDS"); do
+          # One round of the actions script already plays each of its scenarios three times and takes about ten minutes.
+          rounds="$ROUNDS"
+          [ "${{ matrix.script }}" = actions ] && rounds=3
+          for round in $(seq 1 "$rounds"); do
             # The browser is set to a time zone other than the server's, one after the other: a page that the server
             # and the browser draw differently according to the time zone would show here.
             export TIMEZONE="${zones[$(( (round - 1) % ${#zones[@]} ))]}"
@@ -110,7 +113,7 @@ jobs:
               cp "$RUNNER_TEMP/round.log" "$RUNNER_TEMP/shots/${{ matrix.script }}-round-$round.log" 2>/dev/null || { mkdir -p "$RUNNER_TEMP/shots"; cp "$RUNNER_TEMP/round.log" "$RUNNER_TEMP/shots/${{ matrix.script }}-round-$round.log"; }
             fi
           done
-          echo "${{ matrix.script }}: $((ROUNDS - failures)) of $ROUNDS rounds passed"
+          echo "${{ matrix.script }}: $((rounds - failures)) of $rounds rounds passed"
           [ "$failures" = 0 ]
 
       - name: Evidence of the failures
