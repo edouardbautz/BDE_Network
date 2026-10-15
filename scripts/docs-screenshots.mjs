@@ -124,15 +124,15 @@ async function shootLanguage(browser, lang) {
     const waitText = (needle) =>
       page.waitForFunction((value) => document.body.innerText.includes(value), {}, needle);
     const click = async (label) => {
-      const handle = await page.evaluateHandle(
-        (wanted) =>
-          [...document.querySelectorAll('button, a')].find((el) =>
-            el.textContent?.trim().startsWith(wanted),
-          ),
-        label,
-      );
-      if (!handle.asElement())
+      const find = (wanted) =>
+        [...document.querySelectorAll('button, a')].find((el) =>
+          el.textContent?.trim().startsWith(wanted),
+        );
+      // A step's title is also in the progress line, so it shows before the step's own buttons: wait for them.
+      await page.waitForFunction(find, { timeout: 15_000 }, label).catch(async () => {
         throw new Error(`no button "${label}" (${(await text()).slice(0, 200)})`);
+      });
+      const handle = await page.evaluateHandle(find, label);
       await handle.asElement().click();
     };
     const save = (name, options = {}) =>
