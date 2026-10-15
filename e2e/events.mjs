@@ -103,7 +103,7 @@ async function run(screen, lang) {
   // before the page is ready.
   if (process.env.TIMEZONE) await page.emulateTimezone(process.env.TIMEZONE);
   if (process.env.CPU_THROTTLE) await page.emulateCPUThrottling(Number(process.env.CPU_THROTTLE));
-  const watch = watchPage(page, { label, shots: shots && join(shots, 'errors') });
+  const watch = await watchPage(page, { label, shots: shots && join(shots, 'errors') });
   const step = (message) => console.log(`✓ [${label}] ${message}`);
   const monthShown = () => page.$eval('h2[aria-live]', (el) => el.textContent?.trim());
   /**
