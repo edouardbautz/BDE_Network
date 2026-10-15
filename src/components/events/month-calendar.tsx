@@ -1,4 +1,6 @@
+import { Plus } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Link } from '@/i18n/navigation';
 import type { CalendarDay, MonthRef } from '@/lib/events/calendar';
@@ -21,6 +23,11 @@ interface MonthCalendarProps {
   todayKey: string;
   selectedKey: string;
   query: EventsQuery;
+  /**
+   * Whether the person can create events (`events.manage`): the "+" of a day and the "add" button of the day panel are
+   * theirs only. Hiding them is a courtesy; `/events/new` and the action `createEvent` refuse anybody else.
+   */
+  canCreate: boolean;
 }
 
 /** Tint a category colour for a chip background without hardcoding any colour. */
@@ -35,6 +42,10 @@ const tint = (color: string | null) =>
  * chips; below that the cell shrinks to coloured dots and the selected day's
  * events are listed under the grid, which stays readable on a phone instead
  * of squeezing unreadable text into 45px columns.
+ *
+ * Whoever can create events also gets a quick way to add one on a day: a "+" in the corner of each cell (from `md`
+ * up; it shows when the cell is hovered or holds the keyboard focus, and always on a touch screen), and, below `md`, an
+ * "add on this day" button in the panel of the selected day. Both open the form on that day (`/events/new?date=`).
  */
 export async function MonthCalendar({
   grid,
@@ -45,6 +56,7 @@ export async function MonthCalendar({
   todayKey,
   selectedKey,
   query,
+  canCreate,
 }: MonthCalendarProps) {
   const [locale, t] = await Promise.all([getLocale(), getTranslations('events')]);
   const weekdays = weekdayLabels(locale);
@@ -60,6 +72,8 @@ export async function MonthCalendar({
       day: { year: day.year, month: day.month, day: day.day },
     }),
   });
+
+  const addHref = (key: string) => ({ pathname: '/events/new', query: { date: key } });
 
   return (
     <div className="flex flex-col gap-4">
@@ -91,7 +105,7 @@ export async function MonthCalendar({
                   <td
                     key={day.key}
                     className={cn(
-                      'h-14 border align-top md:h-28',
+                      'group/cell relative h-14 border align-top md:h-28',
                       !day.inMonth && 'bg-muted/40',
                       isSelected && 'bg-primary/5 md:bg-transparent',
                     )}
@@ -113,6 +127,19 @@ export async function MonthCalendar({
                       >
                         {day.day}
                       </Link>
+
+                      {canCreate && (
+                        <Link
+                          href={addHref(day.key)}
+                          aria-label={t('calendar.addOnDay', {
+                            date: formatDayHeading(day, locale),
+                          })}
+                          title={t('calendar.addOnDayShort')}
+                          className="border-input bg-background text-foreground hover:bg-muted focus-visible:ring-ring/50 absolute top-1 right-1 hidden size-6 items-center justify-center rounded-full border opacity-0 shadow-xs transition-opacity outline-none group-focus-within/cell:opacity-100 group-hover/cell:opacity-100 focus-visible:opacity-100 focus-visible:ring-3 pointer-coarse:size-8 pointer-coarse:opacity-100 md:flex"
+                        >
+                          <Plus className="size-4" aria-hidden="true" />
+                        </Link>
+                      )}
 
                       <ul className="hidden min-w-0 flex-col gap-0.5 md:flex">
                         {occurrences.slice(0, MAX_CHIPS).map((occurrence) => {
@@ -179,12 +206,24 @@ export async function MonthCalendar({
       </table>
 
       <section className="md:hidden" aria-labelledby="selected-day-heading">
-        <h2
-          id="selected-day-heading"
-          className="text-muted-foreground border-b pb-2 text-sm font-medium first-letter:uppercase"
-        >
-          {selectedDay ? formatDayHeading(selectedDay, locale) : ''}
-        </h2>
+        <div className="flex items-center justify-between gap-3 border-b pb-2">
+          <h2
+            id="selected-day-heading"
+            className="text-muted-foreground text-sm font-medium first-letter:uppercase"
+          >
+            {selectedDay ? formatDayHeading(selectedDay, locale) : ''}
+          </h2>
+          {canCreate && selectedDay && (
+            <Button
+              variant="outline"
+              size="sm"
+              render={<Link href={addHref(selectedDay.key)} id="add-on-selected-day" />}
+            >
+              <Plus data-icon="inline-start" />
+              {t('calendar.addOnSelectedDay')}
+            </Button>
+          )}
+        </div>
         {selectedOccurrences.length === 0 ? (
           <EmptyState title={t('calendar.dayEmpty')} />
         ) : (

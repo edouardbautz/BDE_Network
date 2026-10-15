@@ -403,7 +403,10 @@
       "dayEmpty": "No events on this day.",
       "previous": "Previous month",
       "next": "Next month",
-      "today": "Today"
+      "today": "Today",
+      "addOnDay": "Add an event on {date}",
+      "addOnDayShort": "Add an event",
+      "addOnSelectedDay": "Add on this day"
     },
     "filters": {
       "category": "Category",

@@ -36,7 +36,18 @@ seule protection. Un brouillon auquel vous n'avez pas droit n'est pas « interdi
 
 ## Créer un événement
 
-**Événements** → **Nouvel événement**.
+**Événements** → **Nouvel événement**, ou, plus vite, **depuis le calendrier** :
+
+- **Sur ordinateur**, un **+** apparaît dans le coin d'un jour quand vous le survolez (et quand le clavier l'atteint :
+  Tab, juste après le jour lui-même ; sur un écran tactile, il est toujours là). Il ouvre le formulaire **sur ce
+  jour-là**.
+- **Sur téléphone**, touchez un jour, puis **Ajouter ce jour-là** sous le calendrier.
+
+Le formulaire démarre alors de **18 h à 20 h** ce jour-là (fuseau du BDE), que vous ajustez comme n'importe quelle
+date. Sans jour (le bouton **Nouvel événement**), il démarre de demain, 18 h à 20 h. Un jour passé est accepté, pour
+enregistrer un événement après coup. **Annuler** ramène à ce jour du calendrier. Ces raccourcis n'existent que pour
+ceux qui peuvent gérer les événements : les autres ne les voient pas, et le formulaire leur est refusé s'ils en tapent
+l'adresse.
 
 ![Un événement qui se répète chaque semaine](../images/fr/event.webp)
 

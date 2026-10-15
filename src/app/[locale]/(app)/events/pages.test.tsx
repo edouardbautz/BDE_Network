@@ -136,6 +136,8 @@ const series = {
 };
 
 const renderPage = async (page: Promise<ReactNode>) => renderToHtml(<>{await page}</>);
+const newEventPage = (search: Record<string, string> = {}) =>
+  NewEventPage({ searchParams: Promise.resolve(search) });
 const eventsPage = (search: Record<string, string> = {}) =>
   renderPage(EventsPage({ searchParams: Promise.resolve(search) }));
 const detailPage = (search: Record<string, string> = {}) =>
@@ -166,7 +168,7 @@ describe('/events', () => {
     expect(listUpcomingOccurrences).toHaveBeenCalledWith(
       expect.objectContaining({ includeDrafts: false }),
     );
-    expect(html).not.toContain('href="/events/new"');
+    expect(html).not.toContain('/events/new');
   });
 
   it('asks for drafts and offers the create button to a manager', async () => {
@@ -175,6 +177,18 @@ describe('/events', () => {
 
     expect(listOccurrences).toHaveBeenCalledWith(expect.objectContaining({ includeDrafts: true }));
     expect(html).toContain('href="/events/new"');
+  });
+
+  it('gives a manager, and only a manager, the "+" of each day of the calendar', async () => {
+    vi.mocked(getEventsAccess).mockResolvedValue(asManager);
+    const html = await eventsPage({ view: 'calendar', month: '2026-10' });
+    expect(html).toContain('href="/events/new?date=2026-10-20"');
+    expect(html).toContain('id="add-on-selected-day"');
+
+    vi.mocked(getEventsAccess).mockResolvedValue(asMember);
+    const forMember = await eventsPage({ view: 'calendar', month: '2026-10' });
+    expect(forMember).not.toContain('/events/new');
+    expect(forMember).not.toContain('add-on-selected-day');
   });
 
   it('offers the shared-calendar entry only with its own permission, whatever the events permission', async () => {
@@ -395,7 +409,7 @@ describe('/events/[id]', () => {
 describe('/events/new and /events/[id]/edit', () => {
   it('are 404 without access', async () => {
     vi.mocked(getEventsAccess).mockResolvedValue(null);
-    await expect(renderPage(NewEventPage())).rejects.toThrow(NotFoundSignal);
+    await expect(renderPage(newEventPage())).rejects.toThrow(NotFoundSignal);
     await expect(
       renderPage(
         EditEventPage({
@@ -408,7 +422,11 @@ describe('/events/new and /events/[id]/edit', () => {
 
   it('send a plain member back instead of showing the form', async () => {
     vi.mocked(getEventsAccess).mockResolvedValue(asMember);
-    await expect(renderPage(NewEventPage())).rejects.toThrow(new RedirectSignal('/events'));
+    await expect(renderPage(newEventPage())).rejects.toThrow(new RedirectSignal('/events'));
+    // the day in the address changes nothing for them
+    await expect(renderPage(newEventPage({ date: '2026-10-20' }))).rejects.toThrow(
+      new RedirectSignal('/events'),
+    );
     await expect(
       renderPage(
         EditEventPage({
@@ -422,13 +440,39 @@ describe('/events/new and /events/[id]/edit', () => {
 
   it('show the form to a manager, with the configured categories', async () => {
     vi.mocked(getEventsAccess).mockResolvedValue(asManager);
-    const html = await renderPage(NewEventPage());
+    const html = await renderPage(newEventPage());
     expect(html).toContain('form.createTitle');
     expect(html).toContain('>Soirée<');
     expect(html).toContain('>Sport<');
     expect(html).toContain('type="datetime-local"');
     expect(html).toContain('Alice A');
   });
+
+  it('start the form on the day of the "+", at 18:00–20:00 in the BDE timezone', async () => {
+    vi.mocked(getEventsAccess).mockResolvedValue(asManager);
+    const html = await renderPage(newEventPage({ date: '2026-11-07' }));
+    expect(html).toContain('value="2026-11-07T18:00"');
+    expect(html).toContain('value="2026-11-07T20:00"');
+    // cancelling goes back to that day of the calendar
+    expect(html).toContain('href="/events?view=calendar&amp;month=2026-11&amp;day=2026-11-07"');
+  });
+
+  it('accept a day in the past: an event can be recorded after the fact', async () => {
+    vi.mocked(getEventsAccess).mockResolvedValue(asManager);
+    const html = await renderPage(newEventPage({ date: '2025-01-02' }));
+    expect(html).toContain('value="2025-01-02T18:00"');
+  });
+
+  it.each(['tomorrow', '2026-02-30', '2026-13-01', '1999-01-01', '<script>', ''])(
+    'ignore %j in the address and start from tomorrow, as from the button',
+    async (date) => {
+      vi.mocked(getEventsAccess).mockResolvedValue(asManager);
+      const html = await renderPage(newEventPage({ date }));
+      expect(html).toMatch(/value="\d{4}-\d{2}-\d{2}T18:00"/);
+      expect(html).not.toContain('value="2026-02-30');
+      expect(html).toContain('href="/events"');
+    },
+  );
 
   it('prefill the edit form from the stored event, in the BDE timezone', async () => {
     vi.mocked(getEventsAccess).mockResolvedValue(asManager);
