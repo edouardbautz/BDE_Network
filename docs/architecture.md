@@ -82,7 +82,8 @@ src/
     settings/              the settings page: panels (the installer's forms in "section" mode), owners, 42 refusal alert
     theme-provider.tsx, theme-toggle.tsx, locale-switcher.tsx (FR/EN, in the menu and on the public pages)
   config/                  bde.config.yml loader + Zod schema (src/config/index.ts, schema.ts)
-  i18n/                    next-intl routing/navigation/request config
+  i18n/                    next-intl routing/request config; `navigation.ts` is what code imports (`Link` is ours, `link.tsx`,
+                           see "Navigation"; the rest comes from `intl-navigation.ts`)
   lib/
     auth/                  NextAuth config + 42 OAuth provider
     notifications/         NotificationAdapter + email/discord/slack/none adapters
@@ -664,6 +665,38 @@ User guide: `docs/en/events.md`. The shape worth knowing before touching it:
   logged-out visitor. `(app)/layout.tsx` and the login page therefore call `isDatabaseReachable()`
   (`src/lib/health.ts`) before redirecting to `/` and send to `/unavailable` instead (translated,
   reassuring, polls `/api/health` and brings the visitor back). The pool connect timeout is 3 s.
+
+## Navigation: a link to the page you are on (`src/i18n/link.tsx`)
+
+**Symptom met in production** (reported by a member): on the events page the month buttons, and on a computer the
+calendar/list switch, did nothing. Nothing in the console, nothing in the logs, `next dev` fine. Reproduced against the
+production image in a real browser (and then against a local `next build` + `next start`), with a request that leaves, a
+`200`, and a page that does not move: not even the address.
+
+**What happens.** Clicking a link whose pathname is the one you are on and whose query differs (`/events` →
+`/events?view=list`) makes the production router reuse the entry it cached for that pathname (an _aliased_ prefetch entry:
+it is only used outside development, and it only exists for a route that has a `loading.tsx`, which every `(app)` route has),
+show the "loading" state, then fetch the page. The navigation resolves, the follow-up `server-patch` action is applied, and
+the transition **never commits**: the old page stays and `history.pushState` is never called. The same click on a link to
+another pathname (sidebar, a card to `/events/<id>`), or after a server action (which empties the router's cache), works,
+which is why it went unnoticed; timing decides for some pages, the events page always fails. We did not isolate the line that
+holds the commit. It is the family of Next.js 15 client-router bugs reported upstream (vercel/next.js #86151 "`loading.js`
+sometimes causes soft-navigation to get stuck", #90008 on aliased entries; the React side is facebook/react #35821,
+`useDeferredValue` stuck on a stale value), reported fixed in 16.x. A move to Next.js 16 is a pull request of its own.
+
+**Rule.** Every link goes through `Link` from `@/i18n/navigation`, never `next/link` or `next-intl/navigation` directly.
+That `Link` is next-intl's, except that a link to the page you are already on is a plain `<a>` (the page loads again, which is
+what the server-rendered, JavaScript-free calendar already is; the menu entry of the page you are reading does the same).
+The address is built by next-intl's `getPathname`, so it is the one the real `Link` would write; a link that changes the
+language (`locale` prop) stays the router's. **Do not call `router.push`/`replace` to the pathname you are on.** The only such call, the member removal, runs after a
+server action (which empties the router's cache) and was checked by hand to work; the CI test below does not cover it.
+
+**Tests.** `src/i18n/link.test.tsx` (the choice of the element, the address, no router option on the anchor). The proof that
+the buttons work is `e2e/events.mjs`, run by CI against the real image: it clicks next/previous month and "today", a day of
+the grid, the list and calendar buttons, another date of a series and the menu entry of the page itself, on a computer-sized and
+a phone-sized screen, in French and in English, and waits for the **page to change** (a request leaving proves nothing). It
+fails on the image without the fix (checked) and passes with it. A new button that changes only the query of the page it is
+on belongs in that file.
 
 ## Design system
 

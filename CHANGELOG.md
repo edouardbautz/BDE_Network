@@ -88,6 +88,13 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Fixed
 
+- **Events page: the previous / next month buttons and, on a computer, the switch from calendar to list did nothing.**
+  In the production build, Next.js 15's router accepts a click on a link that only changes the query of the page you
+  are on (`/events` → `/events?view=list`), loads the page, then never shows it, with no message; `next dev` does not
+  do it, which is why it had not been seen. A link to the current page is now a plain link that reloads the page
+  (`src/i18n/link.tsx`), which also fixes choosing a day in the calendar, choosing a date of a series, and the
+  "Events" menu entry when you are already on the page. CI clicks these buttons for real, on a computer-sized and a
+  phone-sized screen, in French and in English (`e2e/events.mjs`).
 - **"Sign in with 42" failed after a fresh installation** (`invalid_grant`, "does not match the redirection URI",
   then a redirection to `http://0.0.0.0:3000/...`). In the production image the server listens on `0.0.0.0` and
   Next.js then builds every `request.url` from that address: on the way back from 42, Auth.js gave
