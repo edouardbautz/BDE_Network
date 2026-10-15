@@ -95,7 +95,23 @@ async function run(lang) {
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   const step = (message) => console.log(`✓ [${lang}] ${message}`);
-  const text = () => page.evaluate(() => document.body.innerText);
+  /** Runs a question to the page again when the page was being replaced while it was asked (a hard load is on its way). */
+  const whenSettled = async (ask) => {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await ask();
+      } catch (error) {
+        if (
+          attempt >= 6 ||
+          !/context was destroyed|Cannot find context|Execution context/.test(error.message)
+        ) {
+          throw error;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
+    }
+  };
+  const text = () => whenSettled(() => page.evaluate(() => document.body.innerText));
 
   /** Waits until `until` is true in the page (which may be replaced while we wait: a failing query is "not yet"). */
   const waitFor = async (until, argument, timeout = 12000) => {
@@ -120,13 +136,15 @@ async function run(lang) {
   };
   /** The dates of the series, as listed on the page: [{ occ, label }] in order. */
   const dates = () =>
-    page.$$eval('a[href*="occ="]:not([href^="/api/"])', (links) =>
-      links
-        .filter((link) => link.closest('li'))
-        .map((link) => ({
-          occ: new URL(link.href).searchParams.get('occ'),
-          label: link.closest('li')?.innerText.replace(/\s+/g, ' ').trim() ?? '',
-        })),
+    whenSettled(() =>
+      page.$$eval('a[href*="occ="]:not([href^="/api/"])', (links) =>
+        links
+          .filter((link) => link.closest('li'))
+          .map((link) => ({
+            occ: new URL(link.href).searchParams.get('occ'),
+            label: link.closest('li')?.innerText.replace(/\s+/g, ' ').trim() ?? '',
+          })),
+      ),
     );
   const goTo = async (path) => {
     await page.goto(`${base}/${lang}${path}`, { waitUntil: 'networkidle0' });
