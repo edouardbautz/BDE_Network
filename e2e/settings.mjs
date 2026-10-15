@@ -79,7 +79,13 @@ function makePng(side) {
 const COOKIE = 'authjs.session-token';
 const sessionFor = async (login) => encode({ token: { login }, secret, salt: COOKIE });
 
-const browser = await puppeteer.launch({ executablePath, headless: true, args: ['--no-sandbox'] });
+const browser = await puppeteer.launch({
+  executablePath,
+  headless: true,
+  args: ['--no-sandbox'],
+  // A busy runner can take longer than the 30 s allowed by default to start the browser.
+  timeout: 120000,
+});
 const page = await browser.newPage();
 await page.setViewport({ width: 1100, height: 1400 });
 await page.setExtraHTTPHeaders({ 'Accept-Language': 'fr' });

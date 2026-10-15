@@ -108,7 +108,13 @@ function makePng(side) {
 const logoFile = join(tmpdir(), 'bde-actions-logo.png');
 writeFileSync(logoFile, makePng(128));
 
-const browser = await puppeteer.launch({ executablePath, headless: true, args: ['--no-sandbox'] });
+const browser = await puppeteer.launch({
+  executablePath,
+  headless: true,
+  args: ['--no-sandbox'],
+  // A busy runner can take longer than the 30 s allowed by default to start the browser.
+  timeout: 120000,
+});
 const page = await browser.newPage();
 await page.setViewport({ width: 1280, height: 1000 });
 page.setDefaultTimeout(15000);

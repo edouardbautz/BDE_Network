@@ -32,6 +32,8 @@ jobs:
         shard: [1, 2, 3]
     env:
       ROUNDS: ${{ inputs.rounds || '20' }}
+      # Stops the page at the moment React finds the HTML does not match and writes down where (e2e/watch-page.mjs).
+      HYDRATION_DEBUG: '1'
 
     services:
       postgres:

@@ -69,8 +69,66 @@ export async function watchPage(page, { label, shots }) {
     });
   });
 
+  // HYDRATION_DEBUG=1: stop the page at the very moment React throws "the server's HTML does not match" and write down
+  // what it was hydrating (the components above it, what the browser was given there). It slows the page down: only
+  // for hunting a hydration error, never in the CI proper.
+  const hydration = [];
+  if (process.env.HYDRATION_DEBUG) {
+    await session.send('Debugger.enable');
+    await session.send('Debugger.setPauseOnExceptions', { state: 'all' });
+    session.on('Debugger.paused', async ({ callFrames, data }) => {
+      try {
+        // React throws #519 (a "this is not a real error" signal) at the place where the HTML stops matching; the #418
+        // that is reported comes later, from somewhere else.
+        if (!String(data?.description ?? '').includes('#519')) return;
+        const found = [];
+        for (const frame of callFrames.slice(0, 6)) {
+          const { result } = await session.send('Debugger.evaluateOnCallFrame', {
+            callFrameId: frame.callFrameId,
+            returnByValue: true,
+            expression: `(() => {
+              try {
+                const fiber = Array.from(arguments).find((a) => a && typeof a === 'object' && 'tag' in a && 'return' in a);
+                if (!fiber) return null;
+                const name = (f) => typeof f.type === 'string' ? f.type : (f.type && (f.type.displayName || f.type.name)) || '(tag ' + f.tag + ')';
+                const chain = [];
+                let f = fiber;
+                let dom = null;
+                for (let i = 0; f && i < 30; i++, f = f.return) {
+                  const props = f.pendingProps && typeof f.pendingProps === 'object' ? f.pendingProps : null;
+                  chain.push({
+                    name: name(f),
+                    text: typeof f.pendingProps === 'string' ? f.pendingProps.slice(0, 80) : undefined,
+                    className: props && typeof props.className === 'string' ? props.className.slice(0, 60) : undefined,
+                    id: props && typeof props.id === 'string' ? props.id : undefined,
+                    href: props && typeof props.href === 'string' ? props.href : undefined,
+                  });
+                  if (!dom && f.stateNode instanceof Element) dom = f.stateNode;
+                }
+                return {
+                  chain,
+                  parentTag: dom && dom.tagName,
+                  parentChildren: dom && Array.from(dom.childNodes).slice(0, 40).map((n) => n.nodeType === 1 ? n.tagName + (n.id ? '#' + n.id : '') + (n.className ? '.' + String(n.className).slice(0, 40) : '') : n.nodeType === 3 ? '"' + n.textContent.slice(0, 40) + '"' : '#' + n.nodeType),
+                  parentHtml: dom && dom.outerHTML.slice(0, 1200),
+                };
+              } catch (e) { return { error: String(e) }; }
+            })()`,
+          });
+          if (result.value) {
+            found.push(result.value);
+            break;
+          }
+        }
+        hydration.push({ at: Date.now(), found });
+      } finally {
+        await session.send('Debugger.resume').catch(() => undefined);
+      }
+    });
+  }
+
   return {
     errors,
+    hydration,
     /** One line per error; and, with `shots`, the HTML the browser drew and the HTML the server sent, side by side. */
     async describe() {
       const lines = [];
@@ -103,6 +161,7 @@ export async function watchPage(page, { label, shots }) {
                 readyState: seen?.readyState,
                 browserTimeZone: seen?.timezone,
                 sinceStart: error.at - started,
+                hydration,
                 documents: documents.map((d, i) => ({
                   i,
                   url: d.url,
