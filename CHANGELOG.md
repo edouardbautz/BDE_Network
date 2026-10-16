@@ -72,15 +72,15 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Fixed
 
+- **An address whose percent-encoding is malformed (`%ff`, a lone `%`, and `%25` followed by something that is no longer valid
+  once decoded, like `/fr/x%25y`) is answered with a 400** instead of a 500 and an error in the logs: Next.js fails while it
+  reads the parameters of the route, for a request that is simply wrong (a page is decoded twice, an API route once).
+  Found by the attacks of the quality campaign; nothing was ever disclosed.
 - **The logo is served with the strict policy its route writes** (`default-src 'none'; sandbox`). The policy of the pages,
   set for every address by `next.config.ts`, replaced it, so the logo (a file anybody can open, whose bytes were uploaded)
   was sent with a policy that lets scripts run. Nothing could be exploited (the type is the image's, and `nosniff` keeps a
   browser from taking it for a page), but the second line of defence that was written did not exist. The policy of the pages
   now leaves `/api/logo` out. Found by the attacks of the quality campaign.
-- **An address whose percent-encoding is malformed (`%ff`, a lone `%`, and `%25` followed by something that is no longer valid
-  once decoded, like `/fr/x%25y`) is answered with a 400** instead of a 500 and an error in the logs: Next.js fails while it
-  reads the parameters of the route, for a request that is simply wrong (a page is decoded twice, an API route once).
-  Found by the attacks of the quality campaign; nothing was ever disclosed.
 
 ### Security
 
