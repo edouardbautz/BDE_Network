@@ -270,7 +270,8 @@ async function announceReview(
   const key = REVIEW_NOTIFICATION[kind];
   try {
     const config = getConfig();
-    if (config.notifications[key] === 'none') return;
+    const channel = config.notifications[key];
+    if (channel === 'none') return;
 
     const event = await prisma.event.findUnique({
       where: { id: eventId },
@@ -317,14 +318,14 @@ async function announceReview(
       },
     );
 
-    // The author is told by e-mail, unless they are the one who acted (a validator who edits their own proposal).
-    const author = event.author && event.author.email && event.authorLogin !== actorLogin;
-    const recipients =
-      kind === 'proposed'
-        ? await emailsOfHolders(EVENTS_VALIDATE)
-        : author
-          ? [event.author!.email]
-          : [];
+    // Only an e-mail has recipients (a chat channel is one message for the team). The validators are told of a
+    // proposal; the author of an answer, unless they gave it themselves (a validator who answers their own event).
+    let recipients: string[] = [];
+    if (channel === 'email') {
+      const authorEmail =
+        event.author?.email && event.authorLogin !== actorLogin ? [event.author.email] : [];
+      recipients = kind === 'proposed' ? await emailsOfHolders(EVENTS_VALIDATE) : authorEmail;
+    }
     await deliver(key, message, recipients);
   } catch (error) {
     console.error(`${LOG_PREFIX} ${key}: notification failed`, error);

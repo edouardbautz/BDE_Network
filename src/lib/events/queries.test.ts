@@ -38,6 +38,26 @@ describe('listOccurrences', () => {
     );
   });
 
+  it('also asks somebody who only proposes for their own events, whatever their status', async () => {
+    await listOccurrences({ range: RANGE, includeDrafts: false, ownLogin: 'dave' });
+
+    expect(whereOf(0)).toContain(
+      JSON.stringify({
+        OR: [{ OR: [{ status: 'CONFIRMED' }, CONFIRMED_ALONE] }, { authorLogin: 'dave' }],
+      }),
+    );
+  });
+
+  it('asks nobody but a proposer for the events of an author', async () => {
+    await listOccurrences({ range: RANGE, includeDrafts: false });
+    expect(whereOf(0)).not.toContain('authorLogin');
+
+    vi.clearAllMocks();
+    vi.mocked(prisma.event.findMany).mockResolvedValue([]);
+    await listOccurrences({ range: RANGE, includeDrafts: true, ownLogin: 'dave' });
+    expect(whereOf(0)).not.toContain('authorLogin');
+  });
+
   it('puts no such condition for somebody who manages the events', async () => {
     await listOccurrences({ range: RANGE, includeDrafts: true });
 
@@ -142,5 +162,11 @@ describe('getFilterOptions', () => {
     vi.mocked(prisma.user.findMany).mockResolvedValue([]);
     await getFilterOptions({ includeDrafts: true });
     expect(whereOf(0)).toBe('{}');
+
+    vi.clearAllMocks();
+    vi.mocked(prisma.event.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.user.findMany).mockResolvedValue([]);
+    await getFilterOptions({ includeDrafts: false, ownLogin: 'dave' });
+    expect(whereOf(0)).toContain('"authorLogin":"dave"');
   });
 });
