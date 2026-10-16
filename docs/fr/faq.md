@@ -127,6 +127,13 @@ annulée, le reste de la série n'est pas touché, et la date peut être rétabl
 Choisissez la date, **Modifier**, changez ce qu'il faut, puis **Enregistrer** : une fenêtre demande **Seulement
 celui-ci** ou **Celui-ci et les suivants**. Voir [Les événements qui se répètent](events.md#les-événements-qui-se-répètent).
 
+### Comment faire un événement qui se répète toutes les 2 semaines, le lundi et le mercredi ?
+
+Dans le formulaire, choisissez **Personnalisée…** dans **Répétition**, puis _toutes les 2 semaines_, cochez **lundi** et
+**mercredi**, et dites comment elle se termine : à une date, ou après un nombre de fois. L'aperçu sous les champs dit la
+règle en une phrase et liste les prochaines dates avant tout enregistrement. Voir
+[Les événements qui se répètent](events.md#les-événements-qui-se-répètent).
+
 ## Les notifications
 
 ### Faut-il Discord ou Slack ?

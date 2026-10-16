@@ -31,6 +31,9 @@ import {
   notifyOccurrenceConfirmed,
 } from '@/lib/events/notifications';
 import { isOccurrenceStart } from '@/lib/events/recurrence';
+import { isRepeating, readRepeatRule } from '@/lib/events/repeat';
+import { repeatColumn } from '@/lib/events/repeat-column';
+import { NO_REPEAT } from '@/lib/events/repeat-input';
 import {
   canChangeStatus,
   canCreateWithStatus,
@@ -70,9 +73,16 @@ function readRawInput(formData: FormData): RawEventInput {
     categoryKey: text('categoryKey'),
     startsAt: text('startsAt'),
     endsAt: text('endsAt'),
-    recurrence: text('recurrence'),
-    recurrenceUntil: text('recurrenceUntil'),
     status: text('status'),
+    repeat: text('repeat'),
+    repeatFreq: text('repeatFreq'),
+    repeatInterval: text('repeatInterval'),
+    repeatWeekdays: formData.getAll('repeatWeekdays').map(String),
+    repeatMonthly: text('repeatMonthly'),
+    repeatMonthDay: text('repeatMonthDay'),
+    repeatEnd: text('repeatEnd'),
+    recurrenceUntil: text('recurrenceUntil'),
+    repeatCount: text('repeatCount'),
     assigneeLogins: formData.getAll('assignees').map(String),
   };
 }
@@ -249,6 +259,7 @@ export async function createEvent(
     const created = await tx.event.create({
       data: {
         ...data,
+        repeat: repeatColumn(data.repeat),
         authorLogin: user.login,
         authorId: user.id,
         ...(data.status === 'PROPOSED' ? { proposedAt: new Date() } : {}),
@@ -259,7 +270,7 @@ export async function createEvent(
       access,
       'event.create',
       created,
-      { status: created.status, recurrence: created.recurrence },
+      { status: created.status, recurrence: readRepeatRule(created.repeat)?.freq ?? 'NONE' },
       tx,
     );
     if (created.status === 'PROPOSED') {
@@ -362,7 +373,7 @@ export async function updateEvent(
 
   // An event that does not repeat is edited as a whole, which is what "this date and the following" does on
   // the first date of a series. So does a proposer: they never edit one date of a series.
-  const isSeries = existing.recurrence !== 'NONE';
+  const isSeries = isRepeating(existing);
   const wholeEvent = !isSeries || !actor.canValidate;
   const scope = wholeEvent ? 'following' : requireScope(formData.get('scope'));
   const occurrenceStart = wholeEvent
@@ -371,7 +382,7 @@ export async function updateEvent(
 
   // One date has no frequency of its own: only the date's own fields are read from the form.
   const parsed = parseEventInput(
-    scope === 'occurrence' ? { ...raw, recurrence: 'NONE', recurrenceUntil: '' } : raw,
+    scope === 'occurrence' ? { ...raw, ...NO_REPEAT } : raw,
     formConfig(),
   );
   if (!parsed.ok) {
@@ -410,10 +421,7 @@ export async function updateEvent(
         ? await updateOccurrence(tx, eventId, occurrenceStart, change)
         : await updateFollowing(tx, eventId, occurrenceStart, {
             ...change,
-            recurrence: {
-              recurrence: data.recurrence,
-              recurrenceUntil: data.recurrenceUntil,
-            },
+            repeat: { rule: data.repeat, until: data.recurrenceUntil },
           });
 
     const changed: string[] = done.changed.filter((key) => key !== 'status');
@@ -573,7 +581,7 @@ export async function setEventStatus(
   if (!canEditEvent(actor, reviewedView(existing))) {
     throw new Error('Forbidden');
   }
-  const isSeries = existing.recurrence !== 'NONE';
+  const isSeries = isRepeating(existing);
   const wholeEvent = !isSeries || !actor.canValidate;
   const chosenScope = wholeEvent ? 'following' : requireScope(scope);
   const occurrenceStart = wholeEvent
@@ -709,7 +717,7 @@ async function findSeriesOccurrence(eventId: string, occurrenceStart: number) {
     return { ok: false as const, notice: 'eventGone' as const };
   }
   const start = new Date(occurrenceStart);
-  if (event.recurrence === 'NONE' || !isOccurrenceStart(event, getConfig().bde.timezone, start)) {
+  if (!isRepeating(event) || !isOccurrenceStart(event, getConfig().bde.timezone, start)) {
     // The series was edited since the page was drawn: that date is no longer one of its dates.
     return { ok: false as const, notice: 'occurrenceGone' as const };
   }

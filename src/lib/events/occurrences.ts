@@ -1,4 +1,5 @@
 import type { EventStatus } from '@/generated/prisma/client';
+import { isRepeating } from './repeat';
 import { resolveOccurrences, seriesKeyOf, type EventRecord } from './series';
 
 export type { EventRecord } from './series';
@@ -87,7 +88,7 @@ export function expandEvents(
         start: occurrence.start,
         end: occurrence.end,
         originalStart: occurrence.originalStart,
-        isRecurring: event.recurrence !== 'NONE',
+        isRecurring: isRepeating(event),
         edited: occurrence.edited,
         schoolYear: event.schoolYear,
         updatedAt: occurrence.updatedAt,

@@ -25,8 +25,8 @@ export interface NotificationEventData {
   assigneeNames: string[];
   start: Date;
   end: Date;
-  recurrence: 'NONE' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY';
-  recurrenceUntil: Date | null;
+  /** The sentence that says how the event repeats ("Every week on Monday, until…"); null when it does not. */
+  repeat: string | null;
   /** Absolute link to the event, when APP_URL is configured. */
   url: string | null;
   /** Only in the messages of the proposal circuit. */
@@ -74,14 +74,7 @@ function detailLines(
 ): string[] {
   const lines = [whenLine(data, locale, timeZone)];
 
-  if (data.recurrence !== 'NONE' && data.recurrenceUntil) {
-    lines.push(
-      t('recurring', {
-        frequency: t(`frequency.${data.recurrence}`),
-        until: formatDate(data.recurrenceUntil, locale, timeZone),
-      }),
-    );
-  }
+  if (data.repeat) lines.push(data.repeat);
   if (data.location) lines.push(`${t('location')} : ${data.location}`);
   lines.push(`${t('category')} : ${data.categoryLabel}`);
   if (data.assigneeNames.length > 0) {

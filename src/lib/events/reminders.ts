@@ -6,7 +6,7 @@ import { withRichMessage } from '@/lib/notifications/rich';
 import { buildEventEmbed } from './discord-embed';
 import { buildEventEmail } from './email';
 import { buildReminderMessage } from './messages';
-import { deliver, getTranslate, toNotificationData } from './notifications';
+import { deliver, getTranslate, repeatSummaryFor, toNotificationData } from './notifications';
 import { VISIBLE_WITHOUT_DRAFTS } from './include';
 import { resolveOccurrences } from './series';
 import { buildEventSlack } from './slack-blocks';
@@ -77,7 +77,7 @@ export async function runReminderTick(now: Date = new Date()): Promise<ReminderT
         },
         {
           OR: [
-            { recurrence: { not: 'NONE' } },
+            { recurrenceUntil: { not: null } },
             { startsAt: { gt: now } },
             { occurrences: { some: { startsAt: { gt: now } } } },
           ],
@@ -94,6 +94,8 @@ export async function runReminderTick(now: Date = new Date()): Promise<ReminderT
   const translate = events.length > 0 ? await getTranslate(locale) : null;
 
   for (const event of events) {
+    // The same for every date of the event: worked out once.
+    const repeat = await repeatSummaryFor(event, locale);
     for (const occurrence of resolveOccurrences(event, timeZone)) {
       const startMs = occurrence.start.getTime();
       if (
@@ -132,7 +134,7 @@ export async function runReminderTick(now: Date = new Date()): Promise<ReminderT
       if (!translate) continue;
       // Normally tomorrow's; today's when the server was down at the usual time and this goes out late.
       const day = isSameLocalDay(occurrence.start, now, timeZone) ? 'today' : 'tomorrow';
-      const data = toNotificationData(event, occurrence, locale);
+      const data = toNotificationData(event, occurrence, locale, repeat);
       const message = await withRichMessage(
         'eventReminder',
         buildReminderMessage(data, translate, locale, timeZone, day),

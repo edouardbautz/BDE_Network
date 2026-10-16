@@ -69,7 +69,7 @@ refusé s'ils en tapent l'adresse.
 ### Les champs obligatoires
 
 Six champs sont obligatoires, repérés par un `*` : **titre, début, fin, lieu, description et catégorie**. Pour une
-série, la **date de fin de la série** l'est aussi. Seuls les membres en charge sont facultatifs. Un texte fait
+série, la **fin** (une date de fin, ou un nombre de dates) l'est aussi. Seuls les membres en charge sont facultatifs. Un texte fait
 uniquement d'espaces compte comme vide.
 
 La vérification se fait deux fois, avec les mêmes règles : dans le formulaire (le message s'affiche sous le champ
@@ -130,15 +130,69 @@ peut plus le modifier non plus.
 
 ## Les événements qui se répètent
 
-Choisissez _Chaque semaine_, _Toutes les 2 semaines_ ou _Chaque mois_, puis une **date de fin** obligatoire (ce jour
-est inclus). Une série compte au plus 200 dates (une série coupée en deux, voir plus bas, compte chaque partie
-séparément).
+Dans le formulaire, **Répétition** propose les choix usuels, **formulés d'après la date de début** saisie. Pour un
+événement qui commence le samedi 10 octobre :
 
-- L'heure locale est conservée à travers les changements d'heure : une séance « chaque mardi à 18 h » reste à 18 h
-  toute l'année.
-- Pour une série mensuelle, c'est le même jour du mois. Dans un mois plus court, c'est le dernier jour : un
-  événement le 31 tombe le 30 avril, le 28 février… Une série coupée un de ces jours garde son jour : les dates
+- _Ne se répète pas_ (par défaut)
+- _Tous les jours_
+- _Tous les jours de la semaine (du lundi au vendredi)_
+- _Toutes les semaines le samedi_
+- _Tous les mois le 10_
+- _Tous les mois le 2ᵉ samedi_ (quand la date de début est un cinquième samedi, que tous les mois n'ont pas, il est
+  écrit _le dernier samedi_)
+- _Tous les ans le 10 octobre_
+- _Personnalisée…_
+
+Changez la date de début et les formulations suivent. Tout le reste est **Personnalisée**.
+
+### La répétition personnalisée
+
+_Personnalisée…_ ouvre un panneau : **Répéter tous les** un nombre (de 1 à 99) de jours, de semaines, de mois ou d'ans.
+
+- Pour les **semaines**, cochez les **jours de la semaine** : _toutes les 2 semaines le lundi et le mercredi_. Il en
+  faut au moins un. Le panneau part du jour de la semaine de la date de début.
+- Pour les **mois** et les **ans**, choisissez **quel jour** : le jour du mois (_le 10_), le même jour de la semaine
+  du mois (_le 2ᵉ samedi_, non proposé quand la date de début est un cinquième), le dernier de ces jours (_le dernier
+  samedi_), ou _le dernier jour du mois_. Une série annuelle tombe dans le mois de la date de début.
+
+### La fin d'une série
+
+Sous _Fin de la répétition_, choisissez l'une des deux façons :
+
+- **Le** une date : ce jour est inclus, une date qui commence ce jour-là compte encore.
+- **Après** un nombre d'occurrences (de 1 à 400) : _toutes les 2 semaines le lundi et le mercredi, 10 fois_.
+
+### L'aperçu
+
+Dès qu'une répétition est choisie, le formulaire montre, sous les champs, **ce qu'elle va faire** avant tout
+enregistrement : la règle en une phrase (_Toutes les 2 semaines le lundi et le mercredi, 10 fois_), les **trois
+prochaines dates** et le **nombre de dates** au total. La même phrase figure sur la page de l'événement, dans les
+propositions à valider et dans les notifications. Si quelque chose ne va pas (une fin avant la première date, aucun
+jour coché…), l'aperçu dit quoi, avec les mêmes mots que le message sous le champ.
+
+### Les règles à connaître
+
+- **La première date avance jusqu'à la première qui correspond.** Un événement saisi un samedi et répété _le lundi
+  et le mercredi_ commence un lundi : l'aperçu le dit (_La première date devient…_) et l'événement est enregistré avec
+  cette date.
+- **Les semaines commencent le lundi.** Avec _toutes les 2 semaines_, la semaine de la première date est la première
+  d'entre elles. Une série saisie le samedi 10 octobre et répétée toutes les 2 semaines le lundi et le mercredi
+  commence le lundi 19 octobre : la semaine du 5 octobre compte, mais son lundi et son mercredi sont avant le début,
+  et la semaine du 12 octobre est sautée.
+- **Un jour que le mois n'a pas devient son dernier jour.** Un événement le 31 tombe le 30 avril, le 28 février… et le
+  29 février il tombe le 28 les années qui n'en ont pas. Une série coupée un de ces jours garde son jour : les dates
   suivantes retombent le 31.
+- **L'heure locale est conservée à travers les changements d'heure** : une séance « chaque mardi à 18 h » reste à
+  18 h toute l'année. Quand une date tombe à une heure qui n'existe pas (2 h 30 la nuit du passage à l'heure d'été),
+  elle s'affiche une heure plus tard, comme dans tous les agendas ; si la série est coupée exactement à cette date,
+  les dates suivantes gardent cette heure.
+- **Un événement compte 400 dates au plus**, et le formulaire le dit (_Au plus 400 dates pour un événement : au-delà,
+  coupez la série en deux_). Une série coupée en deux, voir plus bas, compte chaque partie séparément.
+- **Une série qui se termine après un nombre de dates** s'arrête là où commence sa dernière date.
+
+Les séries créées avant les règles de répétition n'ont pas été touchées : chaque _Chaque semaine_, _Toutes les 2
+semaines_ et _Chaque mois_ est devenu la règle équivalente, et **aucune date n'a bougé** : les agendas qui les ont
+déjà ne voient aucun changement.
 
 ### Une date, ou cette date et les suivantes
 
@@ -187,6 +241,10 @@ La fenêtre indique combien de dates seront remises en accord.
 s'arrête à la date d'avant ; la seconde commence à cette date, avec sa propre page. Pour les membres et pour les
 agendas, c'est toujours **une seule série** : chaque date garde son identifiant, donc un agenda qui a déjà les dates
 les met à jour, sans doublon.
+
+Une série qui se termine après un nombre de dates **les partage** : _10 fois_ coupée à la 5ᵉ date donne 4 dates à la
+première partie et 6 à la seconde. Pour cette raison, le formulaire d'une date plus tardive indique **combien de dates
+restent** (ici 6), et non le nombre total.
 
 La seconde partie garde l'auteur, les membres en charge et le fait que la série a été annoncée (elle n'est pas
 annoncée une seconde fois parce qu'on l'a coupée). Son année scolaire est celle de sa première date.

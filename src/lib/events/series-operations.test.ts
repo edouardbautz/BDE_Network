@@ -33,7 +33,7 @@ function addSeries(overrides: Record<string, unknown> = {}) {
     status: 'CONFIRMED',
     startsAt: OCT5,
     endsAt: new Date(OCT5.getTime() + hours(2)),
-    recurrence: 'WEEKLY',
+    repeat: { freq: 'WEEKLY', interval: 1 },
     recurrenceUntil: new Date('2026-11-09T22:00:00Z'),
     schoolYear: '2026-2027',
     authorLogin: 'alice',
@@ -217,7 +217,7 @@ describe('updateFollowing ("this one and the following")', () => {
     addSeries();
     await run((t) => updateFollowing(t, 'evt', OCT12, { values: { location: 'Pool' } }));
 
-    expect(db.event('evt')).toMatchObject({ recurrence: 'NONE', recurrenceUntil: null });
+    expect(db.event('evt')).toMatchObject({ repeat: null, recurrenceUntil: null });
   });
 
   it('replaces what the change decides in the dates that had their own, and keeps the rest', async () => {
@@ -271,18 +271,104 @@ describe('updateFollowing ("this one and the following")', () => {
     expect(db.event(eventId)?.confirmationNotifiedAt).toEqual(claimed);
   });
 
-  it('can change the frequency and the end of the following dates', async () => {
+  describe('a series that ends after some dates', () => {
+    const NOV2_END = NOV2;
+    const counted = () =>
+      addSeries({ repeat: { freq: 'WEEKLY', interval: 1, count: 4 }, recurrenceUntil: OCT26 });
+
+    it('is cut with the form of the rest of the series: the dates from the cut on are what it describes', async () => {
+      counted();
+      // From the 3rd date, the form says what is left: 2 dates, ending where the series ends
+      const result = await run((t) =>
+        updateFollowing(t, 'evt', OCT19, {
+          values: { location: 'Pool' },
+          repeat: { rule: { freq: 'WEEKLY', interval: 1, count: 2 }, until: OCT26 },
+        }),
+      );
+
+      expect(result).toMatchObject({ split: true, ruleChanged: false, changed: ['location'] });
+      expect(db.event('evt')).toMatchObject({
+        repeat: { freq: 'WEEKLY', interval: 1, count: 2 },
+        recurrenceUntil: OCT12,
+      });
+      expect(db.event(result.eventId)).toMatchObject({
+        repeat: { freq: 'WEEKLY', interval: 1, count: 2 },
+        recurrenceUntil: OCT26,
+      });
+    });
+
+    it('can change the number of dates that are left, and only those', async () => {
+      counted();
+      const result = await run((t) =>
+        updateFollowing(t, 'evt', OCT19, {
+          values: {},
+          repeat: { rule: { freq: 'WEEKLY', interval: 1, count: 3 }, until: NOV2_END },
+        }),
+      );
+
+      expect(result).toMatchObject({ split: true, ruleChanged: true });
+      expect(db.event('evt')).toMatchObject({
+        repeat: { freq: 'WEEKLY', interval: 1, count: 2 },
+        recurrenceUntil: OCT12,
+      });
+      expect(db.event(result.eventId)).toMatchObject({
+        repeat: { freq: 'WEEKLY', interval: 1, count: 3 },
+        recurrenceUntil: NOV2_END,
+      });
+    });
+  });
+
+  it('can change only the end of the following dates: that is a change too, and the rule stays', async () => {
     addSeries();
     const result = await run((t) =>
       updateFollowing(t, 'evt', OCT19, {
         values: {},
-        recurrence: { recurrence: 'BIWEEKLY', recurrenceUntil: new Date('2026-11-30T22:00:00Z') },
+        repeat: {
+          rule: { freq: 'WEEKLY', interval: 1 },
+          until: new Date('2026-12-14T22:00:00Z'),
+        },
       }),
     );
 
     expect(result).toMatchObject({ split: true, ruleChanged: true });
     expect(db.event(result.eventId)).toMatchObject({
-      recurrence: 'BIWEEKLY',
+      repeat: { freq: 'WEEKLY', interval: 1 },
+      recurrenceUntil: new Date('2026-12-14T22:00:00Z'),
+    });
+  });
+
+  it('does not cut a series when the form gives the rule and the end it already has, written another way', async () => {
+    addSeries();
+    const result = await run((t) =>
+      updateFollowing(t, 'evt', OCT19, {
+        values: {},
+        repeat: {
+          // the weekday of the first date, written out: the same dates
+          rule: { freq: 'WEEKLY', interval: 1, weekdays: ['MO'] },
+          until: new Date('2026-11-09T22:59:00Z'),
+        },
+      }),
+    );
+
+    expect(result).toMatchObject({ split: false, ruleChanged: false, changed: [] });
+    expect(db.table('event')).toHaveLength(1);
+  });
+
+  it('can change the frequency and the end of the following dates', async () => {
+    addSeries();
+    const result = await run((t) =>
+      updateFollowing(t, 'evt', OCT19, {
+        values: {},
+        repeat: {
+          rule: { freq: 'WEEKLY', interval: 2 },
+          until: new Date('2026-11-30T22:00:00Z'),
+        },
+      }),
+    );
+
+    expect(result).toMatchObject({ split: true, ruleChanged: true });
+    expect(db.event(result.eventId)).toMatchObject({
+      repeat: { freq: 'WEEKLY', interval: 2 },
       recurrenceUntil: new Date('2026-11-30T22:00:00Z'),
     });
   });
@@ -369,7 +455,7 @@ describe('updateFollowing ("this one and the following")', () => {
     const JAN31 = new Date('2027-01-31T17:00:00Z'); // 18:00 in Paris
     const monthly = () =>
       addSeries({
-        recurrence: 'MONTHLY',
+        repeat: { freq: 'MONTHLY', interval: 1 },
         startsAt: JAN31,
         endsAt: new Date(JAN31.getTime() + hours(2)),
         recurrenceUntil: new Date('2027-06-30T22:00:00Z'),
@@ -383,7 +469,11 @@ describe('updateFollowing ("this one and the following")', () => {
         updateFollowing(t, 'evt', FEB28, { values: { location: 'Pool' } }),
       );
 
-      expect(db.event(eventId)).toMatchObject({ startsAt: FEB28, monthlyDay: 31 });
+      // the rule says the day it left out, which is no longer the one of the first date
+      expect(db.event(eventId)).toMatchObject({
+        startsAt: FEB28,
+        repeat: { freq: 'MONTHLY', interval: 1, monthly: { kind: 'day', day: 31 } },
+      });
       const { allOccurrences } = await import('./recurrence');
       const starts = allOccurrences(db.event(eventId) as never, 'Europe/Paris').map((o) =>
         o.start.toISOString(),
@@ -395,7 +485,7 @@ describe('updateFollowing ("this one and the following")', () => {
       ]);
     });
 
-    it('keeps the anchor when only the hour changes, and moves it when the day changes', async () => {
+    it('keeps the day when only the hour changes, and follows the first date when the form asks for a rule without one', async () => {
       monthly();
       const sameDay = new Date('2027-02-28T19:00:00Z');
       const { eventId } = await run((t) =>
@@ -403,21 +493,30 @@ describe('updateFollowing ("this one and the following")', () => {
           values: { start: sameDay, end: new Date(sameDay.getTime() + hours(1)) },
         }),
       );
-      expect(db.event(eventId)).toMatchObject({ monthlyDay: 31, startsAt: sameDay });
+      expect(db.event(eventId)).toMatchObject({
+        repeat: { freq: 'MONTHLY', interval: 1, monthly: { kind: 'day', day: 31 } },
+        startsAt: sameDay,
+      });
 
+      // "Every month" (no day written) from another day: it is on that day now
       const otherDay = new Date('2027-02-27T19:00:00Z');
       await run((t) =>
         updateFollowing(t, eventId, sameDay, {
           values: { start: otherDay, end: new Date(otherDay.getTime() + hours(1)) },
+          repeat: {
+            rule: { freq: 'MONTHLY', interval: 1 },
+            until: new Date('2027-06-30T22:00:00Z'),
+          },
         }),
       );
-      expect(db.event(eventId)).toMatchObject({ monthlyDay: null, startsAt: otherDay });
+      expect(db.event(eventId)).toMatchObject({ startsAt: otherDay });
+      expect(db.event(eventId)?.repeat).toEqual({ freq: 'MONTHLY', interval: 1 });
     });
 
     it('a leap year: the 29th of February, then the 31st again', async () => {
       const jan31 = new Date('2028-01-31T17:00:00Z');
       addSeries({
-        recurrence: 'MONTHLY',
+        repeat: { freq: 'MONTHLY', interval: 1 },
         startsAt: jan31,
         endsAt: new Date(jan31.getTime() + hours(2)),
         recurrenceUntil: new Date('2028-04-30T22:00:00Z'),
@@ -461,7 +560,10 @@ describe('deleteFollowing', () => {
     const result = await run((t) => deleteFollowing(t, 'evt', OCT19));
 
     expect(result).toEqual({ deletedEvent: false, removed: 4 });
-    expect(db.event('evt')).toMatchObject({ recurrenceUntil: OCT12, recurrence: 'WEEKLY' });
+    expect(db.event('evt')).toMatchObject({
+      recurrenceUntil: OCT12,
+      repeat: { freq: 'WEEKLY', interval: 1 },
+    });
     expect(db.table('eventOccurrence')).toMatchObject([{ title: 'Kept' }]);
     expect(db.table('eventCancellation')).toEqual([]);
     expect(db.table('eventReminder')).toEqual([]);
@@ -483,7 +585,7 @@ describe('deleteFollowing', () => {
   it('from the second date leaves one date: an ordinary event', async () => {
     addSeries();
     await run((t) => deleteFollowing(t, 'evt', OCT12));
-    expect(db.event('evt')).toMatchObject({ recurrence: 'NONE', recurrenceUntil: null });
+    expect(db.event('evt')).toMatchObject({ repeat: null, recurrenceUntil: null });
   });
 
   it('refuses a date that is not one of the series', async () => {

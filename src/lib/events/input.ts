@@ -1,18 +1,19 @@
 import { z } from 'zod';
-import type { EventRecurrence, EventStatus } from '@/generated/prisma/client';
-import { MAX_OCCURRENCES, allOccurrences } from './recurrence';
-import { fromLocalDateTime, parseLocalDateInput, parseLocalInput, schoolYearOf } from './time';
+import type { EventStatus } from '@/generated/prisma/client';
+import type { RepeatRule } from './repeat';
+import {
+  parseRepeatInput,
+  planRepeat,
+  type RawRepeat,
+  type RepeatErrorCode,
+  type RepeatField,
+} from './repeat-input';
+import { fromLocalDateTime, parseLocalInput, schoolYearOf } from './time';
 
 // This module is pure (no server-only imports): the event form runs it in the
 // browser to show errors before submitting, and the server actions run the very
 // same code again — the browser is never trusted.
 
-export const EVENT_RECURRENCES: readonly EventRecurrence[] = [
-  'NONE',
-  'WEEKLY',
-  'BIWEEKLY',
-  'MONTHLY',
-];
 export const EVENT_STATUSES: readonly EventStatus[] = ['DRAFT', 'PROPOSED', 'CONFIRMED'];
 
 export const TITLE_MAX_LENGTH = 120;
@@ -26,32 +27,23 @@ export type EventFormField =
   | 'categoryKey'
   | 'startsAt'
   | 'endsAt'
-  | 'recurrence'
-  | 'recurrenceUntil'
+  | RepeatField
   | 'status';
 
 /** Keys of `events.form.errors.*` in the message catalogs. */
 export type EventFormErrorCode =
-  | 'required'
-  | 'tooLong'
-  | 'invalid'
-  | 'endBeforeStart'
-  | 'untilRequired'
-  | 'untilBeforeStart'
-  | 'tooManyOccurrences';
+  'required' | 'tooLong' | 'invalid' | 'endBeforeStart' | RepeatErrorCode;
 
 export type EventFormErrors = Partial<Record<EventFormField, EventFormErrorCode>>;
 
 /** Raw values as submitted by the form (all strings, wall-clock dates). */
-export interface RawEventInput {
+export interface RawEventInput extends RawRepeat {
   title: string;
   description: string;
   location: string;
   categoryKey: string;
   startsAt: string;
   endsAt: string;
-  recurrence: string;
-  recurrenceUntil: string;
   status: string;
   assigneeLogins: string[];
 }
@@ -64,7 +56,9 @@ export interface EventData {
   status: EventStatus;
   startsAt: Date;
   endsAt: Date;
-  recurrence: EventRecurrence;
+  /** null: the event does not repeat. */
+  repeat: RepeatRule | null;
+  /** When the series ends (see `Event.recurrenceUntil`); null exactly when `repeat` is. */
   recurrenceUntil: Date | null;
   schoolYear: string;
   assigneeLogins: string[];
@@ -103,7 +97,6 @@ function fieldSchema(categoryKeys: readonly string[]) {
       .refine((value) => categoryKeys.includes(value), 'invalid'),
     startsAt: requiredLocalDateTime,
     endsAt: requiredLocalDateTime,
-    recurrence: z.string().refine((value) => isOneOf(EVENT_RECURRENCES, value), 'invalid'),
     status: z.string().refine((value) => isOneOf(EVENT_STATUSES, value), 'invalid'),
   });
 }
@@ -137,42 +130,16 @@ export function parseEventInput(
     errors.endsAt = 'endBeforeStart';
   }
 
-  const recurrence = isOneOf(EVENT_RECURRENCES, raw.recurrence) ? raw.recurrence : 'NONE';
-  let recurrenceUntil: Date | null = null;
+  const parsedRepeat = parseRepeatInput(raw, startLocal);
+  if (!parsedRepeat.ok) Object.assign(errors, parsedRepeat.errors);
 
-  if (recurrence !== 'NONE') {
-    const untilLocal = raw.recurrenceUntil ? parseLocalDateInput(raw.recurrenceUntil) : null;
-    if (!raw.recurrenceUntil) {
-      errors.recurrenceUntil = 'untilRequired';
-    } else if (!untilLocal) {
-      errors.recurrenceUntil = 'invalid';
-    } else {
-      // The chosen day is inclusive: an occurrence starting that day still counts.
-      recurrenceUntil = fromLocalDateTime(
-        { ...untilLocal, hour: 23, minute: 59 },
-        options.timeZone,
-      );
-      if (startsAt && recurrenceUntil.getTime() < startsAt.getTime()) {
-        errors.recurrenceUntil = 'untilBeforeStart';
-      }
-    }
-  }
-
-  if (Object.keys(errors).length > 0 || !startsAt || !endsAt) {
+  if (Object.keys(errors).length > 0 || !startsAt || !endsAt || !startLocal) {
     return { ok: false, errors };
   }
 
   // Reported only when everything else is fine, so it never sits next to an unrelated error.
-  if (recurrence !== 'NONE' && recurrenceUntil) {
-    const occurrences = allOccurrences(
-      { startsAt, endsAt, recurrence, recurrenceUntil },
-      options.timeZone,
-    );
-    // allOccurrences stops at the cap, so reaching it means the series was cut short.
-    if (occurrences.length >= MAX_OCCURRENCES) {
-      return { ok: false, errors: { recurrenceUntil: 'tooManyOccurrences' } };
-    }
-  }
+  const plan = planRepeat(raw, { startsAt, endsAt, startLocal }, options.timeZone);
+  if (!plan.ok) return { ok: false, errors: plan.errors };
 
   return {
     ok: true,
@@ -182,11 +149,12 @@ export function parseEventInput(
       location: raw.location.trim(),
       categoryKey: raw.categoryKey,
       status: raw.status as EventStatus,
-      startsAt,
-      endsAt,
-      recurrence,
-      recurrenceUntil,
-      schoolYear: schoolYearOf(startsAt, options.timeZone),
+      // The first date is the one typed, or the first that fits the rule (a Tuesday, with "Monday and Wednesday").
+      startsAt: plan.startsAt,
+      endsAt: plan.endsAt,
+      repeat: plan.rule,
+      recurrenceUntil: plan.recurrenceUntil,
+      schoolYear: schoolYearOf(plan.startsAt, options.timeZone),
       assigneeLogins: [...new Set(raw.assigneeLogins.map((login) => login.trim()).filter(Boolean))],
     },
   };
@@ -202,7 +170,7 @@ export function toEventRow(data: EventData): Omit<EventData, 'assigneeLogins'> {
     status: data.status,
     startsAt: data.startsAt,
     endsAt: data.endsAt,
-    recurrence: data.recurrence,
+    repeat: data.repeat,
     recurrenceUntil: data.recurrenceUntil,
     schoolYear: data.schoolYear,
   };

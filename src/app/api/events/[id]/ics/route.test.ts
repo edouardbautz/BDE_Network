@@ -25,7 +25,7 @@ const stored = {
   status: 'CONFIRMED' as const,
   startsAt: new Date('2026-10-10T18:00:00Z'),
   endsAt: new Date('2026-10-10T20:00:00Z'),
-  recurrence: 'WEEKLY' as const,
+  repeat: { freq: 'WEEKLY', interval: 1 },
   recurrenceUntil: new Date('2026-10-31T00:00:00Z'),
   schoolYear: '2026-2027',
   updatedAt: new Date('2026-09-01T00:00:00Z'),

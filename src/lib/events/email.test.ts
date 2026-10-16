@@ -28,8 +28,7 @@ const data: NotificationEventData = {
   assigneeNames: ['Paula', 'Sam'],
   start: new Date('2026-10-10T18:00:00Z'),
   end: new Date('2026-10-10T21:30:00Z'),
-  recurrence: 'NONE',
-  recurrenceUntil: null,
+  repeat: null,
   url: 'https://bde.example.fr/fr/events/evt1?occ=1',
 };
 
@@ -74,23 +73,15 @@ describe('buildEventEmail', () => {
     expect(text).toContain('Catégorie : Soirée');
   });
 
-  it('says how a series repeats, in the short form', () => {
-    const weekly = mail({
-      recurrence: 'WEEKLY',
-      recurrenceUntil: new Date('2026-12-17T16:30:00Z'),
-    });
-    expect(weekly.text).toContain("Répétition : Chaque semaine, jusqu'au 17 décembre 2026");
-    expect(
-      mail({ recurrence: 'BIWEEKLY', recurrenceUntil: new Date('2026-12-17T16:30:00Z') }).text,
-    ).toContain("Toutes les 2 semaines, jusqu'au 17 décembre 2026");
-    expect(
-      mail({ recurrence: 'MONTHLY', recurrenceUntil: new Date('2026-12-17T16:30:00Z') }).text,
-    ).toContain("Chaque mois, jusqu'au 17 décembre 2026");
+  it('says how a series repeats, in the sentence of the platform', () => {
+    const weekly = mail({ repeat: "Toutes les semaines le samedi, jusqu'au 17 décembre 2026" });
+    expect(weekly.text).toContain(
+      "Répétition : Toutes les semaines le samedi, jusqu'au 17 décembre 2026",
+    );
   });
 
-  it('says nothing of repetition for a one-off event, or a series with no end date', () => {
+  it('says nothing of repetition for an event that does not repeat', () => {
     expect(mail().text).not.toContain('Répétition');
-    expect(mail({ recurrence: 'WEEKLY', recurrenceUntil: null }).text).not.toContain('Répétition');
   });
 
   it('shows the description as the lead, cut at 600 characters with an ellipsis', () => {
@@ -163,7 +154,7 @@ describe('buildEventEmail', () => {
     };
     const out = buildEventEmail(
       'today',
-      { ...data, recurrence: 'WEEKLY', recurrenceUntil: new Date('2026-12-17T16:30:00Z') },
+      { ...data, repeat: 'Every week on Saturday, until December 17, 2026' },
       tEn,
       'en',
       PARIS,
@@ -173,7 +164,7 @@ describe('buildEventEmail', () => {
     expect(out.html).toContain('<html lang="en"');
     expect(out.text).toContain('REMINDER · TODAY');
     expect(out.text).toContain('When : Saturday, October 10, 2026');
-    expect(out.text).toContain('Repeats : Every week, until December 17, 2026');
+    expect(out.text).toContain('Repeats : Every week on Saturday, until December 17, 2026');
     expect(out.text).toContain('View the event');
   });
 

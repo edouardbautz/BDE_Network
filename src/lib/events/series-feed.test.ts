@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { RepeatRule } from './repeat';
 import type { EventRecord, OverrideRecord } from './series';
 
 /**
@@ -29,6 +30,8 @@ vi.mock('@/lib/prisma', () => ({
 
 const { buildBdeSubscriptionFeed, buildCalendarIcs } = await import('./export');
 const { expandEvents } = await import('./occurrences');
+const { cutRule, endOfCountedRule, expandRepeat } = await import('./repeat');
+const { toLocalDateTime } = await import('./time');
 
 const hours = (n: number) => n * 3_600_000;
 const OCT5 = new Date('2026-10-05T16:00:00Z');
@@ -48,7 +51,7 @@ function weekly(overrides: Partial<EventRecord> = {}): EventRecord {
     status: 'CONFIRMED',
     startsAt: OCT5,
     endsAt: new Date(OCT5.getTime() + hours(2)),
-    recurrence: 'WEEKLY',
+    repeat: { freq: 'WEEKLY', interval: 1 },
     recurrenceUntil: new Date('2026-10-31T22:00:00Z'),
     schoolYear: '2026-2027',
     updatedAt: new Date('2026-09-01T00:00:00Z'),
@@ -241,5 +244,128 @@ describe('visibility of dates in the pages', () => {
       includeDrafts: true,
     });
     expect(october).toEqual([]);
+  });
+});
+
+describe('the identifiers of a series, whatever its rule', () => {
+  const ZONE = 'Europe/Paris';
+
+  /** The row of a series as the form saves it: a counted rule ends where its last date starts. */
+  function series(
+    rule: RepeatRule,
+    startsAt: Date,
+    until: Date | null = null,
+    overrides: Partial<EventRecord> = {},
+  ): EventRecord {
+    const endsAt = new Date(startsAt.getTime() + hours(2));
+    return weekly({
+      startsAt,
+      endsAt,
+      repeat: rule,
+      recurrenceUntil: until ?? endOfCountedRule(rule, startsAt, endsAt, ZONE),
+      ...overrides,
+    });
+  }
+
+  /** Cuts a series at its date number `index` the way `splitSeries` does, row by row. */
+  function cut(whole: EventRecord, index: number): [EventRecord, EventRecord] {
+    const dates = expandRepeat(whole, ZONE).occurrences;
+    const rule = whole.repeat as RepeatRule;
+    const { head, tail } = cutRule(rule, toLocalDateTime(whole.startsAt, ZONE), index);
+    const at = dates[index]!;
+    return [
+      {
+        ...whole,
+        repeat: head,
+        recurrenceUntil:
+          head.count !== undefined ? dates[index - 1]!.start : dates[index - 1]!.start,
+      },
+      {
+        ...whole,
+        id: 'tail',
+        seriesId: whole.id,
+        startsAt: at.start,
+        endsAt: at.end,
+        repeat: tail,
+      },
+    ];
+  }
+
+  const WIDE = { from: new Date('2026-01-01T00:00:00Z'), to: new Date('2040-01-01T00:00:00Z') };
+  const uidsOf = (events: EventRecord[]) =>
+    uids(
+      buildCalendarIcs(
+        expandEvents(events, { timeZone: ZONE, range: WIDE, includeDrafts: true }),
+        NOW,
+      ),
+    );
+
+  const rules: [string, RepeatRule, Date][] = [
+    [
+      'every 2 weeks on Monday and Wednesday, 10 times',
+      { freq: 'WEEKLY', interval: 2, weekdays: ['MO', 'WE'], count: 10 },
+      OCT5,
+    ],
+    [
+      'the 2nd Tuesday of the month, 6 times',
+      { freq: 'MONTHLY', interval: 1, monthly: { kind: 'nth', nth: 2, weekday: 'TU' }, count: 6 },
+      new Date('2026-10-13T16:00:00Z'),
+    ],
+    [
+      'the 31st of every month, over a short month',
+      { freq: 'MONTHLY', interval: 1, count: 6 },
+      new Date('2027-01-31T17:00:00Z'),
+    ],
+    [
+      'the last day of the month, every 2 months',
+      { freq: 'MONTHLY', interval: 2, monthly: { kind: 'lastDay' }, count: 5 },
+      new Date('2026-10-31T17:00:00Z'),
+    ],
+    [
+      'every day, across the change of hour',
+      { freq: 'DAILY', interval: 1, count: 12 },
+      new Date('2026-10-20T16:00:00Z'),
+    ],
+    [
+      'every year on the 29th of February',
+      { freq: 'YEARLY', interval: 1, count: 4 },
+      new Date('2028-02-29T17:00:00Z'),
+    ],
+  ];
+
+  it.each(rules)('a cut at any date changes no identifier: %s', (_name, rule, startsAt) => {
+    const whole = series(rule, startsAt);
+    const before = uidsOf([whole]);
+    expect(before.length).toBeGreaterThan(2);
+    expect(new Set(before).size).toBe(before.length);
+
+    for (let index = 1; index < before.length; index += 1) {
+      expect(uidsOf(cut(whole, index)), `cut at ${index}`).toEqual(before);
+    }
+  });
+
+  it('shortening or lengthening a series keeps the identifier of every date that stays', () => {
+    const rule: RepeatRule = { freq: 'WEEKLY', interval: 1, weekdays: ['MO', 'WE'] };
+    const ten = uidsOf([series({ ...rule, count: 10 }, OCT5)]);
+    const six = uidsOf([series({ ...rule, count: 6 }, OCT5)]);
+    const fourteen = uidsOf([series({ ...rule, count: 14 }, OCT5)]);
+
+    expect(six).toEqual(ten.slice(0, 6));
+    expect(fourteen.slice(0, 10)).toEqual(ten);
+  });
+
+  it('a date that no longer exists after a change of rule is gone, and no other date takes its identifier', () => {
+    const everyWeek = uidsOf([series({ freq: 'WEEKLY', interval: 1, count: 8 }, OCT5)]);
+    const everyTwo = uidsOf([series({ freq: 'WEEKLY', interval: 2, count: 4 }, OCT5)]);
+
+    expect(everyTwo).toEqual([everyWeek[0], everyWeek[2], everyWeek[4], everyWeek[6]]);
+  });
+
+  it('an identifier is the series and the date, not the rule: two rules that give a date give it the same one', () => {
+    const named = uidsOf([
+      series({ freq: 'WEEKLY', interval: 1, weekdays: ['MO'], count: 3 }, OCT5),
+    ]);
+    const implicit = uidsOf([series({ freq: 'WEEKLY', interval: 1, count: 3 }, OCT5)]);
+    expect(named).toEqual(implicit);
   });
 });

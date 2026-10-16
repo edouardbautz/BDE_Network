@@ -65,7 +65,7 @@ address.
 ### Required fields
 
 Six fields are required, marked with a `*`: **title, start, end, location, description and category**. For a series,
-the **end date of the series** is required too. Only the members in charge are optional. A text made only of spaces
+how it **ends** (an end date, or a number of dates) is required too. Only the members in charge are optional. A text made only of spaces
 counts as empty.
 
 The check is done twice, with the same rules: in the form (the message appears under the field concerned), then on
@@ -125,13 +125,66 @@ edit it either.
 
 ## Events that repeat
 
-Choose _Every week_, _Every 2 weeks_ or _Every month_, then a required **end date** (that day is included). A series
-has 200 dates at most (a series that was cut in two, see below, counts each part on its own).
+In the form, **Repeat** offers the usual choices, **worded from the start date** you typed. For an event that starts on
+Saturday, October 10:
 
-- Local time is kept through daylight saving changes: a "every Tuesday at 6 pm" session stays at 6 pm all year.
-- For a monthly series, it is the same day of the month. In a shorter month, it is the last day: an event on the
-  31st falls on April 30, February 28… A series cut on one of those days keeps its day: the following dates are
-  back on the 31st.
+- _Does not repeat_ (the default)
+- _Every day_
+- _Every weekday (Monday to Friday)_
+- _Every week on Saturday_
+- _Every month on the 10th_
+- _Every month on the 2nd Saturday_ (when the start date is a fifth Saturday, which not every month has, it says
+  _on the last Saturday_)
+- _Every year on October 10th_
+- _Custom…_
+
+Change the start date and the wording follows. Anything else is **Custom**.
+
+### Custom repetition
+
+_Custom…_ opens a panel: **Repeat every** a number (1 to 99) of days, weeks, months or years.
+
+- For **weeks**, tick the **days of the week**: _every 2 weeks on Monday and Wednesday_. At least one is needed. The
+  panel starts from the weekday of the start date.
+- For **months** and **years**, choose **which day**: the day of the month (_the 10th_), the same weekday of the month
+  (_the 2nd Saturday_, not offered when the start date is a fifth one), the last such weekday (_the last Saturday_), or
+  _the last day of the month_. A yearly series falls in the month of the start date.
+
+### How a series ends
+
+Under _End of the repetition_, choose one of two ways:
+
+- **On** a date: that day is included, a date starting that day still counts.
+- **After** a number of occurrences (1 to 400): _every 2 weeks on Monday and Wednesday, 10 times_.
+
+### The preview
+
+As soon as a repetition is chosen, the form shows, under the fields, **what it will do** before anything is saved: the
+rule in a sentence (_Every 2 weeks on Monday and Wednesday, 10 times_), the **next three dates** and the **number of
+dates** in total. The same sentence is on the page of the event, in the proposals to validate and in the
+notifications. If something is wrong (an end before the first date, no day ticked…), the preview says what, in the
+same words as the message under the field.
+
+### Rules worth knowing
+
+- **The first date moves to the first one that fits.** An event typed on a Saturday and repeated _on Monday and
+  Wednesday_ starts on a Monday: the preview says so (_The first date becomes…_) and the event is saved with that
+  date.
+- **Weeks start on Monday.** With _every 2 weeks_, the week of the first date is the first of them. A series typed on
+  Saturday, October 10 and repeated every 2 weeks on Monday and Wednesday starts on Monday, October 19: the week of
+  October 5 counts, but its Monday and Wednesday are before the start, and the week of October 12 is skipped.
+- **A day the month does not have is its last day.** An event on the 31st falls on April 30, February 28… and on the
+  29th of February it falls on the 28th the years that have none. A series cut on one of those days keeps its day:
+  the following dates are back on the 31st.
+- **Local time is kept through daylight saving changes**: a "every Tuesday at 6 pm" session stays at 6 pm all year.
+  When a date falls on an hour that does not exist (2:30 the night the clocks go forward), that date is shown an hour
+  later, like in every calendar; if the series is cut exactly on that date, the dates that follow keep that hour.
+- **An event holds 400 dates at most**, and the form says so (_At most 400 dates for one event: beyond that, cut the
+  series in two_). A series that was cut in two, see below, counts each part on its own.
+- **A series that ends after some dates** ends where its last date starts.
+
+Series created before the repeat rules were not touched: every _Every week_, _Every 2 weeks_ and _Every month_ became
+the equivalent rule, and **no date moved**: the calendars that already have them do not see any change.
 
 ### One date, or this date and the following
 
@@ -147,12 +200,12 @@ It is the same window for **editing** (time, place, description, category, membe
 
 ![The window that asks which dates an edit is for: only this one, or this one and the following](../images/en/series-dialog.webp)
 
-| Action            | Only this one                                                                                                                                                                                  | This one and the following                                                                                                                                                             |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Edit**          | The date gets **its own values**: only what you changed, the rest keeps following the series. You can move it to another hour or day. The frequency and the end date stay those of the series. | The series is **cut in two** at this date: the dates before it stay as they were, this date and the following get your changes, and you can change the frequency and the end date too. |
-| **Confirm**       | This date is confirmed on its own and announced to the members, once.                                                                                                                          | This date and the following are confirmed, **including those that had been put back to draft** (the window says how many), and announced in **a single message**.                      |
-| **Back to draft** | This date disappears for the members and from the BDE calendar link. The others stay.                                                                                                          | This date and the following go back to draft.                                                                                                                                          |
-| **Delete**        | The date is **canceled**: it stays in the list, crossed out, and you can **restore** it.                                                                                                       | The series **stops at the date before**. This is final: the following dates, with what had been edited on them, are deleted. On the first date, the whole event is deleted.            |
+| Action            | Only this one                                                                                                                                                                                  | This one and the following                                                                                                                                                         |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Edit**          | The date gets **its own values**: only what you changed, the rest keeps following the series. You can move it to another hour or day. The frequency and the end date stay those of the series. | The series is **cut in two** at this date: the dates before it stay as they were, this date and the following get your changes, and you can change the repetition and its end too. |
+| **Confirm**       | This date is confirmed on its own and announced to the members, once.                                                                                                                          | This date and the following are confirmed, **including those that had been put back to draft** (the window says how many), and announced in **a single message**.                  |
+| **Back to draft** | This date disappears for the members and from the BDE calendar link. The others stay.                                                                                                          | This date and the following go back to draft.                                                                                                                                      |
+| **Delete**        | The date is **canceled**: it stays in the list, crossed out, and you can **restore** it.                                                                                                       | The series **stops at the date before**. This is final: the following dates, with what had been edited on them, are deleted. On the first date, the whole event is deleted.        |
 
 In the list, a date that has its own values shows **Edited**, a date that is a draft shows **Draft**, a canceled date
 is crossed out.
@@ -179,6 +232,10 @@ The window shows how many dates will be brought in line.
 at the date before; the second starts at this date, with its own page. For the members and for the calendars it is
 still **one series**: every date keeps its identifier, so a calendar that already has the dates updates them,
 without duplicates.
+
+A series that ends after some dates **shares them**: _10 times_ cut on the 5th date gives 4 dates to the first part
+and 6 to the second. For that reason, the form of a later date says **how many dates are left** (here 6), not the
+whole number again.
 
 The second part keeps the author, the members in charge and the fact that the series was announced (it is not
 announced a second time because it was cut). Its school year is the one of its first date.

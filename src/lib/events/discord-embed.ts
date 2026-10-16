@@ -92,13 +92,8 @@ export function buildEventEmbed(
       inline: true,
     });
   }
-  if (data.recurrence !== 'NONE' && data.recurrenceUntil) {
-    fields.push({
-      name: `${ICON.repeats}  ${t('embed.fields.repeats')}`,
-      value: t(`embed.repeatsValue.${data.recurrence}`, {
-        until: discordTime(data.recurrenceUntil, 'D'),
-      }),
-    });
+  if (data.repeat) {
+    fields.push({ name: `${ICON.repeats}  ${t('embed.fields.repeats')}`, value: data.repeat });
   }
 
   const lines = [kindLine(t(KIND_LABEL_KEY[kind])), BLANK_LINE];

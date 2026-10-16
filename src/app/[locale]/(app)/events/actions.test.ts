@@ -134,7 +134,7 @@ function form(values: Record<string, string | string[]>): FormData {
     categoryKey: 'soiree',
     startsAt: '2026-10-10T20:00',
     endsAt: '2026-10-11T02:00',
-    recurrence: 'NONE',
+    repeat: 'NONE',
     recurrenceUntil: '',
     status: 'DRAFT',
     assignees: [],
@@ -154,7 +154,7 @@ const storedEvent = {
   status: 'DRAFT' as const,
   startsAt: new Date('2026-10-10T18:00:00Z'),
   endsAt: new Date('2026-10-11T00:00:00Z'),
-  recurrence: 'NONE' as const,
+  repeat: null,
   recurrenceUntil: null,
   schoolYear: '2026-2027',
   confirmationNotifiedAt: null,
@@ -167,7 +167,7 @@ const storedEvent = {
 
 const series = {
   ...storedEvent,
-  recurrence: 'WEEKLY' as const,
+  repeat: { freq: 'WEEKLY', interval: 1 },
   recurrenceUntil: new Date('2026-10-31T21:00:00Z'),
 };
 
@@ -657,6 +657,50 @@ describe('proposing an event', () => {
     await expect(createEvent({}, form({ status: 'PROPOSED' }))).rejects.toThrow(RedirectSignal);
     expect(prisma.event.create).toHaveBeenCalledTimes(1);
     await expect(runAfterCallbacks()).resolves.toBeUndefined();
+  });
+
+  it('proposes a series with its rule and its end', async () => {
+    await expect(
+      createEvent(
+        {},
+        form({
+          status: 'PROPOSED',
+          repeat: 'CUSTOM',
+          repeatFreq: 'WEEKLY',
+          repeatInterval: '2',
+          repeatWeekdays: ['MO', 'WE'],
+          repeatEnd: 'count',
+          repeatCount: '10',
+        }),
+      ),
+    ).rejects.toThrow(RedirectSignal);
+
+    const { data } = vi.mocked(prisma.event.create).mock.calls[0]![0] as {
+      data: { repeat: unknown; recurrenceUntil: Date; startsAt: Date; status: string };
+    };
+    expect(data).toMatchObject({
+      status: 'PROPOSED',
+      repeat: { freq: 'WEEKLY', interval: 2, weekdays: ['MO', 'WE'], count: 10 },
+    });
+    // the first date typed (a Saturday) moved to the first that fits (the Monday of the next week that counts);
+    // the series ends where its tenth date starts
+    expect(data.startsAt).toEqual(new Date('2026-10-19T18:00:00Z'));
+    expect(data.recurrenceUntil).toEqual(new Date('2026-12-16T19:00:00Z'));
+  });
+
+  it('refuses to propose a series with more dates than an event holds: nothing is stored', async () => {
+    const result = await createEvent(
+      {},
+      form({
+        status: 'PROPOSED',
+        repeat: 'DAILY',
+        repeatEnd: 'until',
+        recurrenceUntil: '2040-01-01',
+      }),
+    );
+    expect(result.errors).toEqual({ recurrenceUntil: 'tooManyOccurrences' });
+    expect(prisma.event.create).not.toHaveBeenCalled();
+    expect(after).not.toHaveBeenCalled();
   });
 
   it('keeps a draft private: nothing is proposed, nobody is told', async () => {

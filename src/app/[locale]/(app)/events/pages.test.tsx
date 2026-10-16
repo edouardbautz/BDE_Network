@@ -34,6 +34,7 @@ vi.mock('next-intl/server', () => ({
 }));
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
+  useLocale: () => 'fr',
 }));
 vi.mock('@/i18n/navigation', () => ({
   redirect: vi.fn((options: { href: string }) => {
@@ -128,7 +129,7 @@ const storedEvent = {
   status: 'CONFIRMED' as const,
   startsAt: new Date('2099-10-10T18:00:00Z'),
   endsAt: new Date('2099-10-10T20:00:00Z'),
-  recurrence: 'NONE' as const,
+  repeat: null,
   recurrenceUntil: null,
   schoolYear: '2099-2100',
   authorLogin: 'alice',
@@ -141,7 +142,7 @@ const storedEvent = {
 
 const series = {
   ...storedEvent,
-  recurrence: 'WEEKLY' as const,
+  repeat: { freq: 'WEEKLY', interval: 1 },
   recurrenceUntil: new Date('2099-10-31T00:00:00Z'),
 };
 
@@ -515,6 +516,37 @@ describe('/events/new and /events/[id]/edit', () => {
   });
 });
 
+describe('/events/[id]/edit on a series that ends after some dates', () => {
+  const counted = {
+    ...storedEvent,
+    repeat: { freq: 'WEEKLY', interval: 1, count: 4 },
+    // 4 Saturdays from 10 October 2099
+    recurrenceUntil: new Date('2099-10-31T19:00:00Z'),
+  };
+  const countOf = async (occ?: number) => {
+    vi.mocked(getEventsAccess).mockResolvedValue(asValidator);
+    vi.mocked(getVisibleEvent).mockResolvedValue(counted as never);
+    const html = await renderPage(
+      EditEventPage({
+        params: Promise.resolve({ id: 'evt1' }),
+        searchParams: Promise.resolve(occ === undefined ? {} : { occ: String(occ) }),
+      }),
+    );
+    return /<input[^>]*id="repeatCount"[^>]*>/.exec(html)?.[0];
+  };
+
+  it('says the number of dates of the series from its first date', async () => {
+    expect(await countOf()).toContain('value="4"');
+  });
+
+  it('says how many are left from a later date, not the total again', async () => {
+    // the 3rd Saturday: it and the next one are left
+    expect(await countOf(new Date('2099-10-24T18:00:00Z').getTime())).toContain('value="2"');
+    // (the event is at 20:00 in Paris: the clocks went back on 25 October, so it is 19:00Z)
+    expect(await countOf(new Date('2099-10-31T19:00:00Z').getTime())).toContain('value="1"');
+  });
+});
+
 describe('/events/[id] in the proposal circuit', () => {
   const refused = {
     refusalComment: 'Pas ce jour-là, la salle est prise.',
@@ -699,7 +731,8 @@ describe('/events/review', () => {
     const html = await reviewPage();
 
     expect(html).toMatch(/href="\/events\/p3\?occ=\d+"/);
-    expect(html).toContain('detail.repeatsValue');
+    // the sentence of the platform (the translator of the test only echoes the keys of the sentence)
+    expect(html).toContain('weekly');
     // The author's account is gone: the login is what is left.
     expect(html).toContain('alice');
   });

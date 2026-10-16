@@ -1,68 +1,14 @@
-import type { EventRecurrence } from '@/generated/prisma/client';
-import { addDays, fromLocalDateTime, toLocalDateTime, type LocalDate } from './time';
+import { expandRepeat, type Occurrence, type RecurringSource } from './repeat';
 
-/** Safety cap on a single series (a weekly event over ~4 years). */
-export const MAX_OCCURRENCES = 200;
-
-export interface RecurringSource {
-  startsAt: Date;
-  endsAt: Date;
-  recurrence: EventRecurrence;
-  recurrenceUntil: Date | null;
-  /** Day of the month a MONTHLY series sticks to; null/absent = the day of `startsAt`. */
-  monthlyDay?: number | null;
-}
-
-export interface Occurrence {
-  start: Date;
-  end: Date;
-}
-
-function daysInMonth(year: number, month: number): number {
-  return new Date(Date.UTC(year, month, 0)).getUTCDate();
-}
+export { MAX_OCCURRENCES } from './repeat';
+export type { Occurrence, RecurringSource } from './repeat';
 
 /**
- * Every occurrence of an event, computed on the wall clock of `timeZone` so a
- * "weekly at 20:00" event stays at 20:00 local time across DST changes.
- * Monthly events repeat on the same day of the month; in a shorter month they
- * fall on its last day (31st → 30th/28th): a series cut on such a day keeps its day in `monthlyDay`, or the
- * following ones would stay on the 28th. Stops at `recurrenceUntil`
- * (inclusive) or after MAX_OCCURRENCES, whichever comes first.
+ * Every date of an event, computed on the wall clock of `timeZone` (see `expandRepeat` and "Repeat rules" in
+ * docs/architecture.md): an event that does not repeat has one.
  */
 export function allOccurrences(source: RecurringSource, timeZone: string): Occurrence[] {
-  if (source.recurrence === 'NONE' || !source.recurrenceUntil) {
-    return [{ start: source.startsAt, end: source.endsAt }];
-  }
-
-  const durationMs = source.endsAt.getTime() - source.startsAt.getTime();
-  const base = toLocalDateTime(source.startsAt, timeZone);
-  const occurrences: Occurrence[] = [];
-
-  for (let index = 0; index < MAX_OCCURRENCES; index += 1) {
-    let date: LocalDate;
-
-    if (source.recurrence === 'MONTHLY') {
-      const monthIndex = base.month - 1 + index;
-      const year = base.year + Math.floor(monthIndex / 12);
-      const month = (monthIndex % 12) + 1;
-      date = {
-        year,
-        month,
-        day: Math.min(source.monthlyDay ?? base.day, daysInMonth(year, month)),
-      };
-    } else {
-      date = addDays(base, index * (source.recurrence === 'WEEKLY' ? 7 : 14));
-    }
-
-    const start = fromLocalDateTime({ ...date, hour: base.hour, minute: base.minute }, timeZone);
-    if (start.getTime() > source.recurrenceUntil.getTime()) {
-      break;
-    }
-    occurrences.push({ start, end: new Date(start.getTime() + durationMs) });
-  }
-
-  return occurrences;
+  return expandRepeat(source, timeZone).occurrences;
 }
 
 /** Occurrences overlapping [from, to), with cancelled ones removed. */

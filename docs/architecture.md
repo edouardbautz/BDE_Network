@@ -92,7 +92,7 @@ src/
   lib/
     auth/                  NextAuth config + 42 OAuth provider
     notifications/         NotificationAdapter + email/discord/slack/none adapters
-    events/                events module domain: time, recurrence, series (dates of their own), series-operations
+    events/                events module domain: time, repeat rules (`repeat*.ts`, see "Repeat rules"), recurrence, series (dates of their own), series-operations
                            (cutting a series), ics, access, review (the rules of the proposal circuit), queries, actions
                            helpers, notifications, reminders, scheduler (see "Events module")
     permissions/           registry (the list of permissions) + resolution and `can()`
@@ -541,12 +541,64 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
 User guide: `docs/en/events.md`. The shape worth knowing before touching it:
 
 - **An event is one row, a series is one row plus what its dates have of their own.** A recurring event is a
-  "series master" (`startsAt`, `endsAt`, `recurrence`, `recurrenceUntil`, `monthlyDay`); its dates are
-  **computed**, never stored (`allOccurrences` in `src/lib/events/recurrence.ts`), on the wall clock of
+  "series master" (`startsAt`, `endsAt`, `repeat`, `recurrenceUntil`); its dates are
+  **computed**, never stored (`allOccurrences` in `src/lib/events/recurrence.ts`, which asks `repeat.ts`), on the wall clock of
   `bde.timezone` so DST doesn't shift local times. What one date has of its own is stored sparsely (see "Dates
   of a series" below): `EventOccurrence` (the fields that differ from the series), `EventCancellation` (a
   cancelled date), `EventReminder` (reminder already claimed). All instants are UTC in the database; anything
   typed or shown goes through `src/lib/events/time.ts` (Intl only, no date library) and `format.ts`.
+- **Repeat rules** (`src/lib/events/repeat*.ts`; user guide: `docs/en/events.md`). A series is **a rule**, not one of four shapes.
+  - **Model.** `Event.repeat` is a JSON column (`RepeatRule`, `repeat.ts`, validated by `repeatRuleSchema`, strict):
+    `freq` (`DAILY | WEEKLY | MONTHLY | YEARLY`), `interval` (1 to 99), optional `weekdays`, `monthly`
+    (`{ kind: 'day', day }`, `{ kind: 'lastDay' }` or `{ kind: 'nth', nth: 1..4 | -1, weekday }`) and `count`. **What a
+    rule leaves out means "like the first date"** (the weekday, the day of the month, the month of a year), which is why
+    moving the first date moves a series that left it out, and why `resolveRule` / `sameRepeat` always work from a first
+    date. `readRepeatRule` never trusts what is stored: a value that is not a rule is an event that does not repeat, not a
+    crash. The end stays in `recurrenceUntil`: the end date typed (23:59 local of that day), or, for a rule that ends
+    after `count` dates, **the start of its last date** (`endOfCountedRule`, worked out from the dates themselves), so that
+    the database can keep filtering on it (`queries.ts`, `reminders.ts`). The invariant is **`repeat IS NULL ⇔
+recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`) that Prisma cannot express; an event
+    that repeats is recognised by `isRepeating`, never by one column alone.
+  - **One engine, in a pure module** (`expandRepeat`): the calendar days of the rule (`calendarDays`) at the wall clock of
+    the first date in `bde.timezone` (so the hour does not move at a change of clock), stopped by `recurrenceUntil`
+    (inclusive), `count` or **`MAX_OCCURRENCES` = 400** (`truncated`: the form and the server refuse it, `planRepeat`).
+    Choices that are decisions, not accidents: a day a month lacks is its last day (the 29th of February is the 28th);
+    weeks start on Monday and the interval counts weeks from the one of the first date (RFC 5545 with `WKST=MO`: a Saturday
+    start with "every 2 weeks on Monday and Wednesday" starts on the Monday two weeks later); a first date that does not fit
+    the rule **moves to the first that does** (`alignStart`, announced by the preview); a yearly rule has one month, the
+    one of the first date. Known limit: a row holds one instant for its first date, so when a series is **cut exactly on a
+    date that falls in the hour a clock change skips** (02:30 the night the clocks go forward), the second row starts an
+    hour later and keeps it (`repeat-cut.test.ts` pins it).
+  - **The form and the server are the same code** (`repeat-input.ts`, pure, imported by both): the raw fields
+    (`RawRepeat`: `repeat`, `repeatFreq`, `repeatInterval`, `repeatWeekdays`, `repeatMonthly`, `repeatMonthDay`,
+    `repeatEnd`, `recurrenceUntil`, `repeatCount`), the choices of the list (`presetRule`, worded from the first date by
+    `describeRepeat`; a fifth weekday offers "the last"), `presetOf` / `rawRepeatOf` (a stored rule back into the form),
+    `parseRepeatInput` and `planRepeat` (the rule, the first date and the end, or the errors, each on its field). `parseEventInput`
+    calls `planRepeat`, so **the first date saved can differ from the one typed**; the server runs it again, the browser is not trusted.
+    The preview of `components/events/repeat-fields.tsx` (sentence, three next dates, total, "first date becomes…") is
+    computed by those same functions, never by a second implementation.
+  - **One sentence** (`repeat-summary.ts`, messages `events.repeat.summary.*`): the form, the page of an event, the page
+    of proposals and every notification say a rule with `summarizeRepeat`, so they never say it differently
+    (`NotificationEventData.repeat` is that sentence, or null). The names of days and months come from Intl; French elides
+    "de" before a vowel (`elide`, picked by the message).
+  - **Cutting** (`cutRule`): the first row keeps the dates before the cut, the second those from it on. What the rule left
+    out is "like the first date", which is no longer the same date for the second row, so `cutRule` **writes the day of the
+    month** into the second row; a series that ends after N dates **shares them** (`index` for the first row, the rest for
+    the second). **The form describes the dates from the one it was opened on** (`edit/page.tsx` prefills the rest of
+    the series, so a counted series says how many dates are left), and `updateFollowing` compares it with that same rest,
+    never with the whole rule: otherwise "10 times" counted again from the 5th date would grow the series.
+  - **Identifiers do not depend on the rule**: a UID is the series key and the date's original start, so a change of rule
+    keeps the identifier of every date that stays, and a cut changes none (`series-feed.test.ts`).
+  - **Migration** (`20261017100000_event_repeat_rules`): every old series becomes the rule that gives exactly its dates
+    (weekly, every 2 weeks, monthly, monthly on `monthlyDay`), `monthlyDay` and the `EventRecurrence` enum are dropped.
+    Tested on legacy series to the millisecond (`repeat.test.ts`: 1500 random series against the old algorithm kept in the
+    test) and on a real PostgreSQL in CI (`test/migrations/event-repeat-rules.test.ts`; `e2e/safe-update.sh` looks for
+    the new column in the pre-update copy).
+  - **Tests, mutation-checked** (re-break a rule and one must fail): `repeat.test.ts` (cases, an oracle that looks at
+    every day on 1000 random rules, DST in four zones), `repeat-cut.test.ts` (dates before + dates after = the dates of the
+    series, at every cut of random series), `repeat-input.test.ts`, `input.test.ts`, `repeat-summary.test.ts` (the real
+    French and English messages), `repeat-fields.test.tsx` (the form), `series-operations.test.ts`, `pages.test.tsx`, and
+    `e2e/repeat.mjs` in a real browser (run by CI, and by the stress workflow).
 - **Dates of a series** (`series.ts`: the pure rules; `series-operations.ts`: what they do to the database;
   `transaction.ts`: SERIALIZABLE, retried, `null` after the third try; tests `series.test.ts`,
   `series-operations.test.ts` on `test/fake-events-db.ts`, `actions-series.test.ts`, mutation-checked).
@@ -575,7 +627,7 @@ User guide: `docs/en/events.md`. The shape worth knowing before touching it:
     and reminders are re-keyed by **local calendar day** when only the hour changed (`remapByLocalDay`, DST
     safe) and dropped when the day or the frequency changed (counted in the audit entry: `alignedDates`,
     `droppedDates`). A monthly series cut on a day a short month had moved (the 28th of a "31st") keeps its
-    day in `Event.monthlyDay`, reset only when the edit changes the day.
+    day: the rule of the second row says it (`cutRule`, see "Repeat rules").
   - **Deleting**: only this one stays the restorable cancellation; the following (`deleteFollowing`) stops the
     series at the date before and deletes what was stored from that date on, or the event on the first date.
   - **Audit**: every entry of an event that repeats says `scope: 'occurrence' | 'following'`, the date
@@ -595,7 +647,7 @@ User guide: `docs/en/events.md`. The shape worth knowing before touching it:
   `bde.timezone` (`defaultEventTimes`, the same wall-clock helpers as the form: DST days stay 18:00 local; the browser's
   time zone plays no part). Cancel returns to that day of the calendar (`cancelHrefFor`).
 - **Event input is validated by one pure Zod module** (`src/lib/events/input.ts`): required =
-  title, description, location, category, start, end (+ series end date); only the assignees are
+  title, description, location, category, start, end (+ how a series ends); only the assignees are
   optional. The form imports the very same `parseEventInput` to show errors before sending, and
   the server actions run it again — never trust the browser. `Event.description`/`location` stay
   nullable in Prisma on purpose: rows created before the rule must keep rendering, and are only
@@ -694,9 +746,9 @@ User guide: `docs/en/events.md`. The shape worth knowing before touching it:
 - **Tests that must keep passing** when you change access rules: `access.test.ts`, `review.test.ts`,
   `events/actions.test.ts` (every action refused for PENDING / member without permission / a role that
   only views / module disabled; a proposer's limits), `events/pages.test.tsx`, `export.test.ts`, `export-bde.test.ts`, `shared-calendar/*.test.ts(x)`;
-  and, when you change a series rule, `series*.test.ts`, `actions-series.test.ts`, `queries.test.ts`,
+  and, when you change a series rule, `repeat*.test.ts`, `series*.test.ts`, `actions-series.test.ts`, `queries.test.ts`,
   `series-feed.test.ts` (UIDs, the BDE feed never holds a draft date), `series-notifications.test.ts`,
-  `reminders.test.ts` and `e2e/series.mjs` (the dialogs in a real browser, run by CI). Re-break a rule (the draft
+  `reminders.test.ts`, `e2e/series.mjs` (the dialogs in a real browser, run by CI) and `e2e/repeat.mjs`. Re-break a rule (the draft
   filter, the clearing of changed fields, the move of the reminders, the claim kept on a row) and one must fail.
 - **Adding another module** follows the same recipe: a key in `modules.enabled` + a config section
   validated in `src/config/schema.ts` (required only when enabled), one `getXAccess()` gate

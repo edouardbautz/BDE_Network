@@ -11,6 +11,7 @@ import { buildEventEmbed } from './discord-embed';
 import { buildEventEmail, buildEventIcs } from './email';
 import { eventInclude } from './include';
 import { resolveOccurrences, seriesKeyOf, type ResolvedOccurrence } from './series';
+import { summarizeRepeat, summaryInputOf } from './repeat-summary';
 import { buildEventSlack } from './slack-blocks';
 import {
   buildConfirmationMessage,
@@ -38,6 +39,21 @@ export function getTranslate(locale: string): Promise<Translate> {
   return getNotificationTranslate(locale, 'events.notifications');
 }
 
+/** The sentence that says how an event repeats, in the BDE's language ("Every 2 weeks on Monday and Wednesday, 10
+ * times"), or null when it does not repeat. The same one as on the pages. */
+export async function repeatSummaryFor(
+  event: { repeat?: unknown; startsAt: Date; recurrenceUntil: Date | null },
+  locale: string,
+): Promise<string | null> {
+  const input = summaryInputOf(event, getConfig().bde.timezone);
+  if (!input) return null;
+  return summarizeRepeat(
+    input,
+    await getNotificationTranslate(locale, 'events.repeat.summary'),
+    locale,
+  );
+}
+
 /** Absolute link to an event page, or null when APP_URL is not set. `originalStart` is the date's key (see
  * `ResolvedOccurrence.originalStart`), what the page puts in `?occ=`. */
 export function eventUrl(locale: string, eventId: string, originalStart?: Date): string | null {
@@ -61,7 +77,7 @@ interface LoadedEvent {
   categoryKey: string;
   startsAt: Date;
   endsAt: Date;
-  recurrence: NotificationEventData['recurrence'];
+  repeat?: unknown;
   recurrenceUntil: Date | null;
   assignees: { login: string; user: { fullName: string } | null }[];
 }
@@ -76,6 +92,8 @@ export function toNotificationData(
   event: LoadedEvent,
   occurrence: DateOfEvent,
   locale: string,
+  /** How the event repeats, as `repeatSummaryFor` says it (null: it does not, or the date is told on its own). */
+  repeat: string | null,
 ): NotificationEventData {
   const category = categoryOf(occurrence.categoryKey ?? event.categoryKey);
   return {
@@ -90,8 +108,7 @@ export function toNotificationData(
     ),
     start: occurrence.start,
     end: occurrence.end,
-    recurrence: event.recurrence,
-    recurrenceUntil: event.recurrenceUntil,
+    repeat,
     url: eventUrl(locale, event.id, occurrence.originalStart ?? occurrence.start),
   };
 }
@@ -121,10 +138,9 @@ async function announce(
     return;
   }
 
-  const data: NotificationEventData = {
-    ...toNotificationData(event, next, locale),
-    ...(onlyThisDate ? { recurrence: 'NONE' as const, recurrenceUntil: null } : {}),
-  };
+  // A date confirmed alone is told as one date: its card does not say that the event repeats.
+  const repeat = onlyThisDate ? null : await repeatSummaryFor(event, locale);
+  const data = toNotificationData(event, next, locale, repeat);
   const translate = await getTranslate(locale);
   // The calendar file carries every date still to come (the next one, for a series that is over).
   const calendarDates = (upcoming.length > 0 ? upcoming : [next]).map((date) => ({
@@ -296,7 +312,7 @@ async function announceReview(
 
     const locale = config.bde.defaultLocale;
     const data: NotificationEventData = {
-      ...toNotificationData(event, next, locale),
+      ...toNotificationData(event, next, locale, await repeatSummaryFor(event, locale)),
       review: {
         authorName: event.author?.fullName ?? event.authorLogin,
         reviewerName: kind === 'proposed' || !actorLogin ? null : await nameOf(actorLogin),

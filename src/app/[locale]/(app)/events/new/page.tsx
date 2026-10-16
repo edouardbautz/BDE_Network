@@ -6,6 +6,7 @@ import { redirect } from '@/i18n/navigation';
 import { getEventsAccess } from '@/lib/events/access';
 import { getCategories } from '@/lib/events/categories';
 import { listAssignableMembers } from '@/lib/events/queries';
+import { NO_REPEAT } from '@/lib/events/repeat-input';
 import { reviewActorOf, statusChoices } from '@/lib/events/review';
 import { cancelHrefFor, defaultEventTimes, requestedEventDay } from '@/lib/events/defaults';
 import type { RawSearchParams } from '@/lib/events/search-params';
@@ -53,8 +54,7 @@ export default async function NewEventPage({
           location: '',
           categoryKey: categories[0]?.key ?? '',
           ...defaultEventTimes(new Date(), timeZone, day),
-          recurrence: 'NONE',
-          recurrenceUntil: '',
+          ...NO_REPEAT,
           status,
           assigneeLogins: [],
         }}

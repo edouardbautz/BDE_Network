@@ -29,8 +29,7 @@ const data: NotificationEventData = {
   assigneeNames: ['Paula', 'Sam'],
   start: new Date('2026-10-10T18:00:00Z'),
   end: new Date('2026-10-10T21:30:00Z'),
-  recurrence: 'NONE',
-  recurrenceUntil: null,
+  repeat: null,
   url: 'https://bde.example.fr/fr/events/evt1?occ=1',
 };
 
@@ -148,25 +147,24 @@ describe('buildEventSlack', () => {
     ]);
   });
 
-  it('says how a series repeats, in the short form, with its end date as Slack markup', () => {
-    const until = new Date('2026-12-17T16:30:00Z');
-    const weekly = fieldTexts(build({ recurrence: 'WEEKLY', recurrenceUntil: until }).blocks);
-    expect(weekly.at(-1)).toBe(
-      "*Répétition*\nChaque semaine, jusqu'au <!date^1797525000^{date_long}|17 décembre 2026>",
+  it('says how a series repeats, in the sentence of the platform', () => {
+    const weekly = fieldTexts(
+      build({ repeat: "Toutes les semaines le samedi, jusqu'au 17 décembre 2026" }).blocks,
     );
-    expect(
-      fieldTexts(build({ recurrence: 'BIWEEKLY', recurrenceUntil: until }).blocks).at(-1),
-    ).toContain('Toutes les 2 semaines');
-    expect(
-      fieldTexts(build({ recurrence: 'MONTHLY', recurrenceUntil: until }).blocks).at(-1),
-    ).toContain('Chaque mois');
+    expect(weekly.at(-1)).toBe(
+      "*Répétition*\nToutes les semaines le samedi, jusqu'au 17 décembre 2026",
+    );
   });
 
-  it('says nothing of repetition for a one-off event, or a series with no end date', () => {
+  it('keeps what the sentence holds from becoming a mention', () => {
+    const [field] = fieldTexts(build({ repeat: 'Toutes les semaines <!channel>' }).blocks).slice(
+      -1,
+    );
+    expect(field).not.toContain('<!channel>');
+  });
+
+  it('says nothing of repetition for an event that does not repeat', () => {
     expect(fieldTexts(build().blocks).join()).not.toContain('Répétition');
-    expect(
-      fieldTexts(build({ recurrence: 'WEEKLY', recurrenceUntil: null }).blocks).join(),
-    ).not.toContain('Répétition');
   });
 
   it('has a button to the event, and none without APP_URL', () => {
@@ -233,7 +231,7 @@ describe('buildEventSlack', () => {
     };
     const out = buildEventSlack(
       'today',
-      { ...data, recurrence: 'WEEKLY', recurrenceUntil: new Date('2026-12-17T16:30:00Z') },
+      { ...data, repeat: 'Every week on Saturday, until December 17, 2026' },
       tEn,
       'en',
       PARIS,
@@ -242,9 +240,7 @@ describe('buildEventSlack', () => {
 
     expect(allText(out.blocks)).toContain('Reminder · today');
     expect(allText(out.blocks)).toContain('*When*');
-    expect(allText(out.blocks)).toContain(
-      'Every week, until <!date^1797525000^{date_long}|December 17, 2026>',
-    );
+    expect(allText(out.blocks)).toContain('Every week on Saturday, until December 17, 2026');
     expect(allText(out.blocks)).toContain('View the event');
   });
 });

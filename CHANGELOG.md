@@ -8,6 +8,20 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **Repeat rules, like a calendar's.** An event can now repeat **every day, every weekday, every week, every month or
+  every year**, and the **Custom…** choice builds the rest: every N days, weeks, months or years, on the days of the week
+  you tick (_every 2 weeks on Monday and Wednesday_), on a day of the month (_the 10th_, _the 2nd Saturday_, _the last
+  Friday_, _the last day of the month_). A series ends **on a date** or **after a number of times** (up to 400 dates for
+  one event). The usual choices are worded from the start date typed, and under the fields a **preview** says the rule in
+  one sentence, lists the next three dates and counts them before anything is saved; if the first date does not fit the
+  rule (a Saturday, repeated on Mondays), it moves to the first one that does, and the preview says so. A day a month
+  lacks is its last day, the hour does not move at a change of clock, and weeks start on Monday. The same sentence is on the
+  page of the event, in the proposals to validate and in the notifications. Cutting a series ("this one and the following")
+  shares a series that ends after N dates between its two parts, and the form of a later date says how many are left. See
+  the [events guide](docs/en/events.md#events-that-repeat).
+- **`e2e/repeat.mjs`**, run by CI and by the stress workflow: a usual choice, a custom rule (every 2 weeks on Monday and
+  Wednesday, 10 times), the preview, a first date that moves, the limit of an event, a series cut in two and the rule of a
+  series edited, in both languages.
 - **Proposing and validating events.** Some roles (an "Events team") can now **propose** events without being able to
   publish them; other roles **validate**. A proposal is an event with a new status, **Awaiting validation**, which only
   its author and those who validate can see. Validators get a **To validate** page, counted in the menu, where they
@@ -33,6 +47,16 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Changed
 
+- **A series is a rule, stored in one column (`Event.repeat`)** instead of one of three words and a day kept apart
+  (`recurrence`, `monthlyDay`, which are dropped with their type). The update converts every series by itself, and
+  **no date moves**: the identifier of every date in the calendar files stays the same (checked to the millisecond on
+  thousands of series, and on a real PostgreSQL), the update makes its safety copy first like any update that changes the
+  database. **An event now holds 400 dates at most** (it was 200: a series that long is cut in two). A fork that reads
+  `Event.recurrence` or `Event.monthlyDay` in its own code must read `Event.repeat`.
+- The **Repeats** line of the e-mails, the Discord and Slack cards and the reminders now says the whole rule (_Every 2
+  weeks on Monday and Wednesday, 10 times_) instead of a frequency and an end date.
+- The demo data has two series that use the new rules: a basketball training (every 2 weeks on Monday and Wednesday, 10
+  times) and a monthly café (the 2nd Tuesday, 6 times).
 - **The right to manage events is split in two: `events.propose` and `events.validate`** (`events.manage` no longer
   exists). The update converts the roles by itself: every role that could manage events can now validate them, which
   includes proposing and viewing, so nobody loses anything. The converted roles are listed in an audit log entry

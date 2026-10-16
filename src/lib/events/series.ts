@@ -1,4 +1,4 @@
-import type { EventRecurrence, EventStatus } from '@/generated/prisma/client';
+import type { EventStatus } from '@/generated/prisma/client';
 import { allOccurrences } from './recurrence';
 import { toLocalDateTime } from './time';
 
@@ -46,9 +46,9 @@ export interface EventRecord {
   status: EventStatus;
   startsAt: Date;
   endsAt: Date;
-  recurrence: EventRecurrence;
+  /** The value of `Event.repeat` (the rule; null: the event does not repeat), read with `readRepeatRule`. */
+  repeat?: unknown;
   recurrenceUntil: Date | null;
-  monthlyDay?: number | null;
   /** The first row of the series this one was cut from; null = its own series. */
   seriesId?: string | null;
   confirmationNotifiedAt?: Date | null;

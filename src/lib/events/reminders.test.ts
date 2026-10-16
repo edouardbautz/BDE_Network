@@ -33,6 +33,7 @@ vi.mock('./messages', () => ({
 vi.mock('./notifications', () => ({
   deliver: vi.fn(async () => ({ sent: 1, failed: 0 })),
   getTranslate: vi.fn(async () => (key: string) => key),
+  repeatSummaryFor: vi.fn(async () => null),
   toNotificationData: vi.fn(() => ({})),
 }));
 
@@ -83,7 +84,7 @@ interface StoredEvent {
   occurrences: StoredOccurrence[];
   startsAt: Date;
   endsAt: Date;
-  recurrence: 'NONE' | 'WEEKLY';
+  repeat: unknown;
   recurrenceUntil: Date | null;
   confirmationNotifiedAt: Date | null;
   assignees: { login: string; user: { fullName: string; email: string } | null }[];
@@ -103,7 +104,7 @@ function event(overrides: Partial<StoredEvent> = {}): StoredEvent {
     // Saturday 10 Oct 2026, 20:00 Paris (UTC+2)
     startsAt: new Date('2026-10-10T18:00:00Z'),
     endsAt: new Date('2026-10-10T21:00:00Z'),
-    recurrence: 'NONE',
+    repeat: null,
     recurrenceUntil: null,
     confirmationNotifiedAt: new Date('2026-09-01T10:00:00Z'),
     assignees: [{ login: 'alice', user: { fullName: 'Alice', email: 'alice@x.fr' } }],
@@ -175,6 +176,15 @@ describe('runReminderTick', () => {
     const where = JSON.stringify(vi.mocked(prisma.event.findMany).mock.calls[0]?.[0]);
     expect(where).toContain('"status":"CONFIRMED"');
     expect(where).toContain('"occurrences":{"some":{"status":"CONFIRMED"}}');
+  });
+
+  it('keeps looking at a series until its end, and at an event that has not happened yet', async () => {
+    vi.mocked(prisma.event.findMany).mockResolvedValue([]);
+    await runReminderTick(new Date('2026-10-09T17:00:00Z'));
+    const where = JSON.stringify(vi.mocked(prisma.event.findMany).mock.calls[0]?.[0]);
+    // a series (it has an end) can have a date to come whatever its first date was; the others only if they are to come
+    expect(where).toContain('{"recurrenceUntil":{"not":null}}');
+    expect(where).toContain('"startsAt":{"gt":');
   });
 
   it('does not remind a draft event', async () => {
@@ -299,7 +309,7 @@ describe('runReminderTick', () => {
 
   it('does not remind a cancelled occurrence but still reminds the next one', async () => {
     const series = event({
-      recurrence: 'WEEKLY',
+      repeat: { freq: 'WEEKLY', interval: 1 },
       recurrenceUntil: new Date('2026-10-31T00:00:00Z'),
       cancellations: [{ occurrenceStart: new Date('2026-10-10T18:00:00Z') }],
     });
@@ -314,7 +324,7 @@ describe('runReminderTick', () => {
 
   it('reminds each occurrence of a series separately', async () => {
     const series = event({
-      recurrence: 'WEEKLY',
+      repeat: { freq: 'WEEKLY', interval: 1 },
       recurrenceUntil: new Date('2026-10-31T00:00:00Z'),
     });
     vi.mocked(prisma.event.findMany).mockResolvedValue([series] as never);
@@ -413,7 +423,7 @@ describe('runReminderTick — a series with dates of their own', () => {
   });
   const series = (overrides: Partial<StoredEvent> = {}) =>
     event({
-      recurrence: 'WEEKLY',
+      repeat: { freq: 'WEEKLY', interval: 1 },
       recurrenceUntil: new Date('2026-10-31T00:00:00Z'),
       ...overrides,
     });

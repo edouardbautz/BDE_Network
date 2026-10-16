@@ -64,6 +64,26 @@ describe('listOccurrences', () => {
     expect(whereOf(0)).not.toContain('"status":"CONFIRMED"');
   });
 
+  it('asks for an event that does not repeat by its own dates, and for a series by its end', async () => {
+    await listOccurrences({ range: RANGE, includeDrafts: true });
+
+    // no rule, no end: the dates of the event itself
+    expect(whereOf(0)).toContain(
+      JSON.stringify({
+        recurrenceUntil: null,
+        startsAt: { lt: RANGE.to },
+        endsAt: { gt: RANGE.from },
+      }),
+    );
+    // a series still running in the window (a day of margin: a date can end after the day the series ends)
+    expect(whereOf(0)).toContain(
+      JSON.stringify({
+        startsAt: { lt: RANGE.to },
+        recurrenceUntil: { gte: new Date(RANGE.from.getTime() - 86_400_000) },
+      }),
+    );
+  });
+
   it('also fetches the events that have a date moved into the window', async () => {
     await listOccurrences({ range: RANGE, includeDrafts: true });
 

@@ -15,6 +15,8 @@ import { formatDateTimeRange, formatLongDate } from '@/lib/events/format';
 import { readEventNotice } from '@/lib/events/notice';
 import { listProposals } from '@/lib/events/queries';
 import { REFUSAL_COMMENT_MAX_LENGTH } from '@/lib/events/review';
+import { isRepeating } from '@/lib/events/repeat';
+import { summarizeRepeat, summaryInputOf, type RepeatTranslate } from '@/lib/events/repeat-summary';
 import { resolveOccurrences } from '@/lib/events/series';
 import { pageTitle } from '@/lib/page-title';
 import { refuseEvent, setEventStatus } from '../actions';
@@ -37,12 +39,14 @@ export default async function ReviewPage({
     notFound();
   }
 
-  const [t, locale, raw, proposals] = await Promise.all([
+  const [t, tRepeatSummary, locale, raw, proposals] = await Promise.all([
     getTranslations('events'),
+    getTranslations('events.repeat.summary'),
     getLocale(),
     searchParams,
     listProposals(),
   ]);
+  const tRepeat = tRepeatSummary as unknown as RepeatTranslate;
   const config = getConfig();
   const timeZone = config.bde.timezone;
   const channel = config.notifications.eventConfirmed;
@@ -67,7 +71,8 @@ export default async function ReviewPage({
           <CardContent>
             <ul className="divide-y">
               {proposals.map((event) => {
-                const isSeries = event.recurrence !== 'NONE';
+                const isSeries = isRepeating(event);
+                const repeatSummary = summaryInputOf(event, timeZone);
                 const dates = resolveOccurrences(event, timeZone).filter((d) => !d.cancelled);
                 const first = dates[0];
                 const notice = confirmationNotice(channel, event.confirmationNotifiedAt !== null);
@@ -108,13 +113,10 @@ export default async function ReviewPage({
                             </span>
                           </span>
                         )}
-                        {isSeries && event.recurrenceUntil && (
+                        {repeatSummary && (
                           <span className="inline-flex items-center gap-1">
                             <Repeat className="size-3.5" aria-hidden />
-                            {t('detail.repeatsValue', {
-                              frequency: t(`recurrence.${event.recurrence}`),
-                              until: formatLongDate(event.recurrenceUntil, locale, timeZone),
-                            })}
+                            {summarizeRepeat(repeatSummary, tRepeat, locale)}
                           </span>
                         )}
                       </div>

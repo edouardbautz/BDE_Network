@@ -337,12 +337,6 @@
         "subject": "Rappel : {title} a lieu demain",
         "intro": "Rappel : cet événement a lieu demain."
       },
-      "frequency": {
-        "WEEKLY": "chaque semaine",
-        "BIWEEKLY": "toutes les 2 semaines",
-        "MONTHLY": "chaque mois"
-      },
-      "recurring": "Se répète {frequency} jusqu'au {until}.",
       "location": "Lieu",
       "category": "Catégorie",
       "inCharge": "En charge",
@@ -370,11 +364,6 @@
           "approvedBy": "Approuvé par",
           "refusedBy": "Refusé par",
           "reason": "Motif"
-        },
-        "repeatsValue": {
-          "WEEKLY": "Chaque semaine, jusqu'au {until}",
-          "BIWEEKLY": "Toutes les 2 semaines, jusqu'au {until}",
-          "MONTHLY": "Chaque mois, jusqu'au {until}"
         }
       },
       "email": {
@@ -408,12 +397,6 @@
       "DRAFT": "Brouillon",
       "CONFIRMED": "Confirmé",
       "PROPOSED": "En attente de validation"
-    },
-    "recurrence": {
-      "NONE": "Ne se répète pas",
-      "WEEKLY": "Chaque semaine",
-      "BIWEEKLY": "Toutes les 2 semaines",
-      "MONTHLY": "Chaque mois"
     },
     "views": {
       "label": "Affichage",
@@ -461,7 +444,6 @@
       "backToDraft": "Repasser en brouillon",
       "when": "Quand",
       "repeats": "Répétition",
-      "repeatsValue": "{frequency}, jusqu'au {until}",
       "where": "Lieu",
       "inCharge": "En charge",
       "noneInCharge": "Personne n'est assigné pour l'instant",
@@ -531,9 +513,6 @@
       "startsAt": "Début",
       "endsAt": "Fin",
       "timeZoneHelp": "Heures dans le fuseau du BDE ({timeZone}).",
-      "recurrence": "Répétition",
-      "recurrenceUntil": "Répéter jusqu'au",
-      "recurrenceUntilHelp": "Ce jour est inclus. Obligatoire pour une série.",
       "seriesHelp": "Une fenêtre vous demandera si la modification porte sur cette date seulement, ou sur cette date et les suivantes.",
       "location": "Lieu",
       "inCharge": "Membres en charge",
@@ -546,7 +525,11 @@
         "endBeforeStart": "La fin doit être après le début.",
         "untilRequired": "Indiquez la date de fin de la série.",
         "untilBeforeStart": "La fin de la série doit être après la première date.",
-        "tooManyOccurrences": "Cette série contient trop d'occurrences (200 maximum). Raccourcissez-la."
+        "tooManyOccurrences": "Cette série contient trop de dates (400 au maximum). Raccourcissez-la.",
+        "intervalInvalid": "L'intervalle doit être un nombre entier de 1 à 99.",
+        "weekdaysRequired": "Choisissez au moins un jour de la semaine.",
+        "countInvalid": "Indiquez un nombre d'occurrences entre 1 et 400.",
+        "monthlyUnavailable": "Ce choix n'existe pas pour cette date."
       },
       "formErrors": {
         "invalidAssignee": "Un des membres en charge n'existe pas ou n'est pas encore validé.",
@@ -642,6 +625,58 @@
       "emptyTitle": "Rien à valider",
       "emptyDescription": "Les événements proposés apparaîtront ici dès qu'un membre en propose un.",
       "proposedBy": "Proposé par {author} le {date}"
+    },
+    "repeat": {
+      "summary": {
+        "daily": "Tous les jours",
+        "dailyEvery": "Tous les {count} jours",
+        "weekdays": "Tous les jours de la semaine (du lundi au vendredi)",
+        "weekly": "Toutes les semaines {days}",
+        "weeklyEvery": "Toutes les {count} semaines {days}",
+        "onWeekday": "le {day}",
+        "monthly": "Tous les mois {on}",
+        "monthlyEvery": "Tous les {count} mois {on}",
+        "yearly": "Tous les ans {on}",
+        "yearlyEvery": "Tous les {count} ans {on}",
+        "onDay": "le {day, selectordinal, one {#er} other {#}}",
+        "onLastDay": "le dernier jour du mois",
+        "onNth": "le {nth, select, 1 {1er} 2 {2ᵉ} 3 {3ᵉ} 4 {4ᵉ} other {{nth}}} {weekday}",
+        "onLast": "le dernier {weekday}",
+        "onDayOfMonth": "le {day, selectordinal, one {#er} other {#}} {month}",
+        "onLastDayOfMonth": "le dernier jour {elide, select, yes {d’} other {de }}{month}",
+        "onNthOfMonth": "le {nth, select, 1 {1er} 2 {2ᵉ} 3 {3ᵉ} 4 {4ᵉ} other {{nth}}} {weekday} {elide, select, yes {d’} other {de }}{month}",
+        "onLastOfMonth": "le dernier {weekday} {elide, select, yes {d’} other {de }}{month}",
+        "until": ", jusqu'au {date}",
+        "times": ", {count} fois"
+      },
+      "form": {
+        "label": "Répétition",
+        "none": "Ne se répète pas",
+        "custom": "Personnalisée…",
+        "endLegend": "Fin de la répétition",
+        "endUntil": "Le",
+        "endCount": "Après",
+        "untilLabel": "Date de fin (ce jour est inclus)",
+        "countLabel": "Nombre d'occurrences",
+        "countUnit": "{count, plural, one {occurrence} other {occurrences}}",
+        "limit": "Au plus {max} dates pour un événement : au-delà, coupez la série en deux.",
+        "customLegend": "Répétition personnalisée",
+        "every": "Répéter tous les",
+        "intervalLabel": "Intervalle",
+        "unitLabel": "Unité",
+        "units": {
+          "DAILY": "{count, plural, one {jour} other {jours}}",
+          "WEEKLY": "{count, plural, one {semaine} other {semaines}}",
+          "MONTHLY": "{count, plural, one {mois} other {mois}}",
+          "YEARLY": "{count, plural, one {an} other {ans}}"
+        },
+        "weekdaysLegend": "Les jours de la semaine",
+        "monthlyLegend": "Quel jour",
+        "previewTitle": "Aperçu",
+        "previewMoved": "La première date devient le {date}, premier jour qui correspond à cette répétition.",
+        "previewNext": "Prochaines dates : {dates}",
+        "previewTotal": "{count, plural, one {# date au total} other {# dates au total}}"
+      }
     }
   },
   "profile": {
