@@ -8,7 +8,10 @@ export async function GET() {
   // only returns an account that really exists, so there is always an id here.
   const session = await getEffectiveSession();
   if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401, headers: { 'Cache-Control': 'private, no-store' } },
+    );
   }
 
   const userId = session.user.id;
@@ -68,6 +71,8 @@ export async function GET() {
   return new NextResponse(body, {
     headers: {
       'Content-Type': 'application/json',
+      // All a member's personal data: not for a cache, shared or not (a proxy in front of the platform, a browser shared with others).
+      'Cache-Control': 'private, no-store',
       'Content-Disposition': `attachment; filename="donnees-${profile.login}.json"`,
     },
   });
