@@ -63,6 +63,16 @@ export const SQL_PAYLOADS: readonly string[] = [
   "'||(SELECT pg_sleep(5))||'",
 ];
 
+/** The host an address leads to ('' for a path of the page itself: what a link to the platform is). */
+function hostOf(address: string): string {
+  try {
+    const url = new URL(address, 'http://this-page.invalid');
+    return url.hostname === 'this-page.invalid' ? '' : url.hostname;
+  } catch {
+    return '';
+  }
+}
+
 const ADDRESS_ATTRIBUTES = new Set([
   'href',
   'src',
@@ -93,14 +103,15 @@ export function violations(html: string): string[] {
       const value = element.getAttribute(attribute) ?? '';
       if (/^\s*javascript:/i.test(value))
         found.push(`<${element.localName} ${attribute}="javascript:…">`);
-      if (/evil\.example/.test(value))
+      if (hostOf(value).includes('evil.example'))
         found.push(`<${element.localName} ${attribute}> points to evil.example`);
     }
   }
   for (const name of ['iframe', 'base', 'embed', 'object', 'form']) {
     for (const element of document.querySelectorAll(name)) {
       // The platform's own forms (sign-in, sign-out, the actions) have an action on its own address or none.
-      if (name === 'form' && !/evil/.test(element.getAttribute('action') ?? '')) continue;
+      if (name === 'form' && !hostOf(element.getAttribute('action') ?? '').includes('evil'))
+        continue;
       found.push(`<${name}> that the text built`);
     }
   }
@@ -437,6 +448,67 @@ export async function checkInjection(platform: Platform, report: Report): Promis
           );
         }
       }
+      // The same, as the browser really does it: a POST with the token of the sign-in form, which is what a sign-out and
+      // the start of a sign-in are. Where the answer leads, and what 42 is told to send the visitor back to.
+      const csrf = await fetch(`${platform.base}/api/auth/csrf`);
+      const { csrfToken } = (await csrf.json()) as { csrfToken: string };
+      const csrfCookie = csrf.headers
+        .getSetCookie()
+        .map((cookie) => cookie.split(';')[0])
+        .join('; ');
+      const form = (fields: Record<string, string>) =>
+        new URLSearchParams({ csrfToken, ...fields }).toString();
+      for (const target of [
+        'https://evil.example',
+        '//evil.example',
+        '/\\evil.example',
+        'javascript:alert(1)',
+      ]) {
+        const out = await send(platform, '/api/auth/signout', {
+          method: 'POST',
+          cookie: csrfCookie,
+          headers: { 'content-type': 'application/x-www-form-urlencoded' },
+          body: form({ callbackUrl: target }),
+        });
+        const location = out.headers.get('location');
+        report.check(
+          'injection',
+          `a sign-out asked to go to ${target} stays on the platform`,
+          out.status < 500 &&
+            (!location || PLATFORM_HOSTS.has(new URL(location, platform.base).hostname)),
+          `${out.status} ${location ?? ''}`,
+        );
+      }
+      for (const [name, headers] of [
+        ['as usual', {}],
+        ['with a forged Host', { host: evil }],
+        ['with a forged X-Forwarded-Host', { 'x-forwarded-host': evil }],
+        ['with a forged Forwarded', { forwarded: `host=${evil}` }],
+      ] as const) {
+        const start = await send(platform, '/api/auth/signin/42-school', {
+          method: 'POST',
+          cookie: csrfCookie,
+          headers: { 'content-type': 'application/x-www-form-urlencoded', ...headers },
+          body: form({ callbackUrl: 'https://evil.example/after' }),
+        });
+        const location = start.headers.get('location') ?? '';
+        const redirectUri = (() => {
+          try {
+            return new URL(location).searchParams.get('redirect_uri') ?? '';
+          } catch {
+            return '';
+          }
+        })();
+        report.check(
+          'injection',
+          `the start of a sign-in ${name} tells 42 to come back to the platform's address, and nowhere else`,
+          start.status === 302 &&
+            PLATFORM_HOSTS.has(new URL(redirectUri || 'http://none.invalid').hostname) &&
+            !location.includes(evil),
+          `${start.status} redirect_uri=${redirectUri}`,
+        );
+      }
+
       for (const path of [
         '//evil.example',
         '/\\evil.example',
