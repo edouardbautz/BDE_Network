@@ -12,6 +12,12 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 host() { if command -v cygpath >/dev/null 2>&1; then cygpath -w "$1"; else printf '%s' "$1"; fi; }
 work="$(mktemp -d)"
 
+# The fake secrets are written in halves: a scanner (this one, or Trivy's) must not take this very file for a leak.
+fake_key_a='abcdEFGH1234ijkl'
+fake_key_b='MNOP5678qrstUVWX'
+fake_token_a='ghp'
+fake_token_b='Zk3RwQ9vXb2LmN7pTc5HsY8dFg1JaE4uVo6W'
+
 scan() {
   docker run --rm -v "$(host "$work"):/scan" -v "$(host "$root/.gitleaks.toml"):/config.toml:ro" "$IMAGE" \
     detect --no-git --source /scan --config /config.toml --no-banner >/dev/null 2>&1
@@ -20,17 +26,17 @@ scan() {
 fail() { echo "✗ $1" >&2; rm -rf "$work"; exit 1; }
 
 # a fake client secret in a test file: relaxed
-printf "const clientSecret = 'abcdEFGH1234ijklMNOP5678qrstUVWX';\n" >"$work/example.test.ts"
+printf "const clientSecret = '%s%s';\n" "$fake_key_a" "$fake_key_b" >"$work/example.test.ts"
 scan || fail "a fake secret in a test file must not be reported"
 
 # a token of a known service in a test file: still found
 rm "$work/example.test.ts"
-printf "const token = 'ghp_Zk3RwQ9vXb2LmN7pTc5HsY8dFg1JaE4uVo6W';\n" >"$work/example.test.ts"
+printf "const token = '%s_%s';\n" "$fake_token_a" "$fake_token_b" >"$work/example.test.ts"
 if scan; then fail "a GitHub token in a test file must be reported"; fi
 
 # the same fake secret outside a test file: found
 rm "$work/example.test.ts"
-printf "const clientSecret = 'abcdEFGH1234ijklMNOP5678qrstUVWX';\n" >"$work/example.ts"
+printf "const clientSecret = '%s%s';\n" "$fake_key_a" "$fake_key_b" >"$work/example.ts"
 if scan; then fail "a secret outside a test file must be reported"; fi
 
 rm -rf "$work"

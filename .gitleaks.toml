@@ -10,3 +10,9 @@ useDefault = true
 description = "Fake secrets written by the tests"
 targetRules = ["generic-api-key"]
 paths = ['''.*\.test\.tsx?$''']
+
+# The self-test of this very configuration writes fake secrets (a first version wrote them whole, and that commit is in the
+# history); it now builds them at run time. Only this file, and only for what it writes on purpose.
+[[allowlists]]
+description = "The self-test of the gitleaks configuration"
+paths = ['''qa-rules/gitleaks-selftest\.sh''']
