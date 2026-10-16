@@ -90,11 +90,12 @@ APPLIED_AFTER="$(sql -c 'SELECT count(*) FROM _prisma_migrations')"
 docker logs bdeupd-app 2>&1 | grep -q "copie de sécurité" || fail "the log does not say a copy was made"
 ok "migrations pending: a copy was made first ($COPIES), they were applied, the data is there"
 
-# the copy really is a copy of the database as it was (loadable, with the old data and without the new tables)
+# the copy really is a copy of the database as it was (loadable, with the old data and without what the newest migration
+# adds: a column of Event today, to change when a newer migration comes)
 docker run --rm -v bdeupd-backups:/backups --entrypoint sh "$IMAGE" -c "gzip -dc /backups/$COPIES" >/tmp/bdeupd-copy.sql
 grep -q "PostgreSQL database dump complete" /tmp/bdeupd-copy.sql || fail "the copy is incomplete"
 grep -q 'Roleone' /tmp/bdeupd-copy.sql || fail "the copy does not hold the data"
-! grep -q 'EventOccurrence' /tmp/bdeupd-copy.sql || fail "the copy already holds what the update adds"
+! grep -q 'refusalComment' /tmp/bdeupd-copy.sql || fail "the copy already holds what the update adds"
 rm -f /tmp/bdeupd-copy.sql
 ok "the copy is complete, holds the data, and none of what the update added"
 
