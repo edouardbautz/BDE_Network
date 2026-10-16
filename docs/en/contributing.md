@@ -122,8 +122,8 @@ URL is `http://localhost:3000/api/auth/callback/42-school`. After that, editing 
 ### The demo accounts
 
 `npm run seed:demo` creates fictional roles and accounts (`demo-owner`, `demo-admin`, `demo-president`,
-`demo-secretary`, `demo-member1`, `demo-member2`, `demo-member3`, `demo-pending`) and, if the module is on, about ten events relative
-to today's date (past, this week, series, a multi-day weekend, drafts, and two events proposed by `demo-member3`, who
+`demo-secretary`, `demo-member1`, `demo-member2`, `demo-member3`, `demo-pending`) and, if the module is on, about fifteen events relative
+to today's date (past, this week, series with different repeat rules, a multi-day weekend, drafts, and two events proposed by `demo-member3`, who
 only proposes: one waits for validation, one was refused). Running it again rewrites the data with no
 duplicates. `SEED_LOCALE=en` writes them in English.
 

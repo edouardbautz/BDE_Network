@@ -126,7 +126,7 @@ neuve avec `docker compose -f docker-compose.dev.yml down -v`. Voir [Configurati
 
 `npm run seed:demo` crée des rôles et des comptes fictifs (`demo-owner`, `demo-admin`, `demo-president`,
 `demo-secretary`, `demo-member1`, `demo-member2`, `demo-member3`, `demo-pending`) et, si le module est activé, une
-dizaine d'événements relatifs à la date du jour (passé, semaine en cours, séries, week-end sur plusieurs jours,
+quinzaine d'événements relatifs à la date du jour (passé, semaine en cours, séries aux règles de répétition variées, week-end sur plusieurs jours,
 brouillons, et deux événements proposés par `demo-member3`, qui ne fait que proposer : l'un attend sa validation,
 l'autre a été refusé).
 Le relancer réécrit les données sans doublon. `SEED_LOCALE=en` les écrit en anglais.
