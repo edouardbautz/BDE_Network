@@ -96,3 +96,37 @@ jobs:
       - name: Stop the platform
         if: always()
         run: sh qa/platform.sh down
+
+  # The production image, scanned every night: a vulnerability published since the last pull request (in Alpine, in Node,
+  # in a package of the application) shows here before anybody ships it. The same scan, with the same rules, is in the
+  # `docker image` job of ci.yml; this one also lists what nobody can fix yet, for information.
+  image-scan:
+    name: image scan (known vulnerabilities)
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-qa')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build the production image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: bde-network
+          cache-from: type=gha,scope=qa-image
+          cache-to: type=gha,mode=max,scope=qa-image
+
+      - name: What nobody can fix yet (for information)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.76.0 image --quiet \
+            --scanners vuln --severity HIGH,CRITICAL bde-network | tee "$RUNNER_TEMP/trivy-all.txt" | tail -40 || true
+          { echo '### Known vulnerabilities in the image'; echo; echo '```'; tail -60 "$RUNNER_TEMP/trivy-all.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: No vulnerability that has a fix
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/.trivyignore:/.trivyignore:ro" \
+            aquasec/trivy:0.76.0 image --quiet --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed \
+            --ignorefile /.trivyignore --exit-code 1 bde-network
