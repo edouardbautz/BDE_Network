@@ -4,6 +4,8 @@ import { Report } from './core';
 import { checkCsrf } from './csrf';
 import { checkFeeds } from './feeds';
 import { checkInjection } from './injection';
+import { checkLimits } from './limits';
+import { checkLogs } from './logs';
 import { checkUploads } from './uploads';
 import { checkHeaders } from './headers';
 import { checkSessions } from './sessions';
@@ -24,6 +26,8 @@ export const SUITES: Record<string, (platform: Platform, report: Report) => Prom
   feeds: checkFeeds,
   uploads: checkUploads,
   injection: checkInjection,
+  limits: checkLimits,
+  logs: checkLogs,
 };
 
 const flag = (name: string): string | undefined => {

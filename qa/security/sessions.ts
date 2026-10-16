@@ -25,6 +25,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export async function checkSessions(platform: Platform, report: Report): Promise<void> {
   const owner = OWNER.login as string;
   const valid = await forgeSessionCookie(owner, platform.secret);
+  report.watch('an owner’s session cookie', valid);
   const otherSecret = await forgeSessionCookie(owner, `${platform.secret}-not-the-secret`);
   const unknown = await forgeSessionCookie('nobody-at-all', platform.secret);
   const otherSalt = await encode({

@@ -50,6 +50,8 @@ export async function checkFeeds(platform: Platform, report: Report): Promise<vo
     const validatorToken = await tokenOf(db, persona('validator').login as string);
     const feed = (token: string) => send(platform, `/api/calendar/${token}`);
 
+    report.watch('a member’s calendar link', memberToken);
+    report.watch('a validator’s calendar link', validatorToken);
     const own = await feed(memberToken);
     if (own.status === 404) {
       // The module is switched off: a feed that is there would be the bug.
@@ -185,6 +187,8 @@ export async function checkFeeds(platform: Platform, report: Report): Promise<vo
 
     // Two kinds of link, two secrets: neither opens the other's door.
     const bdeToken = randomBytes(32).toString('base64url');
+    report.watch('the BDE calendar link', bdeToken);
+    report.watch('a regenerated calendar link', current);
     await db.query(
       `INSERT INTO "BdeCalendarFeed" ("id","token","updatedAt") VALUES ('bde',$1,now())
        ON CONFLICT ("id") DO UPDATE SET "token" = EXCLUDED."token"`,

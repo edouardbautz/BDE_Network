@@ -16,6 +16,13 @@ export interface Check {
 
 export class Report {
   readonly checks: Check[] = [];
+  /** Secrets met during the run (label → value), for the suite that reads the logs: none of them may be in there. */
+  readonly secrets = new Map<string, string>();
+
+  /** Notes a secret the run has seen, to look for it in the logs at the end. */
+  watch(label: string, value: string): void {
+    if (value.length >= 8) this.secrets.set(label, value);
+  }
 
   /** Records a check; `detail` says what was seen (always, so that a pass is as readable as a failure). */
   check(area: string, name: string, ok: boolean, detail = ''): boolean {
