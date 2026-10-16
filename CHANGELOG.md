@@ -8,6 +8,12 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **Static security checks on every pull request**: the rules of the project as code (a setting read from the environment,
+  an unsafe call, a link that does not go through the i18n link, a cookie that is not HttpOnly, a secret in a log…:
+  Semgrep), the whole history read for secrets (gitleaks), known vulnerabilities of the lockfile and the Dockerfile
+  (Trivy), what a pull request adds to the dependencies (dependency review), and CodeQL on the code and on the
+  workflows, whose serious alerts stop the pull request. The production image is also scanned every night. Nothing
+  changes for a platform that runs.
 - **An exhaustive access matrix**, played against the real image every night: every page, API route and server action
   (all 73 entry points of the image) as each of nine profiles (visitor, account waiting for approval, member, proposer,
   validator, custom role, Admin, owner, removed member whose cookie is still valid), with the events module on and off:
@@ -71,6 +77,10 @@ All notable changes to this project are written here, in English. Format based o
   was sent with a policy that lets scripts run. Nothing could be exploited (the type is the image's, and `nosniff` keeps a
   browser from taking it for a page), but the second line of defence that was written did not exist. The policy of the pages
   now leaves `/api/logo` out. Found by the attacks of the quality campaign.
+- **An address whose percent-encoding is malformed (`%ff`, a lone `%`, and `%25` followed by something that is no longer valid
+  once decoded, like `/fr/x%25y`) is answered with a 400** instead of a 500 and an error in the logs: Next.js fails while it
+  reads the parameters of the route, for a request that is simply wrong (a page is decoded twice, an API route once).
+  Found by the attacks of the quality campaign; nothing was ever disclosed.
 
 ### Security
 
