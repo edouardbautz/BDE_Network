@@ -39,7 +39,7 @@ chose dans cette documentation.
 | **Proposition**             | Un événement proposé par quelqu'un qui ne peut pas le publier, **en attente de validation** jusqu'à la réponse d'un validateur. |
 | **Validateur**              | Quelqu'un dont le rôle a le droit de valider les événements : il approuve ou refuse les propositions.                           |
 | **Confirmé**                | Un événement visible de tous les membres. Le confirmer prévient les membres.                                                    |
-| **Série**                   | Un événement qui se répète (chaque semaine, toutes les 2 semaines, chaque mois) jusqu'à une date.                               |
+| **Série**                   | Un événement qui se répète (chaque jour, semaine, mois ou année, aux jours choisis) jusqu'à une date ou un nombre de fois.      |
 | **Occurrence**              | Une date d'une série. On peut la modifier, la confirmer, l'annuler seule, ou agir sur elle et les suivantes.                    |
 | **Catégorie**               | Un type d'événement, avec un nom et une couleur (Soirée, Sport…). Chaque BDE a les siennes.                                     |
 | **Année scolaire**          | De septembre à août (`2025-2026`), calculée d'après la date de début.                                                           |

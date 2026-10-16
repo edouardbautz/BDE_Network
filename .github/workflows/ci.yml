@@ -226,6 +226,10 @@ jobs:
           # The proposal circuit, in both languages: somebody whose role only proposes creates an event, a validator finds it
           # counted in the menu and approves it or refuses it with a comment, and what a proposer or a member may not see or do.
           AUTH_SECRET="$(docker exec installer cat /secrets/auth_secret)" OWNER=alice MEMBER=carol PGPASSWORD=ci-password PSQL="psql -h 127.0.0.1 -U bde -d bde_install" SHOTS="$RUNNER_TEMP/shots/review" node e2e/review.mjs http://127.0.0.1:3003
+          # The repeat rules, in both languages: a usual choice and a custom rule (every 2 weeks on Monday and Wednesday, 10 times)
+          # worded and previewed by the form before they are saved, a first date that moves to the first one that fits, the limit of
+          # an event, a series cut in two (the number of dates is shared) and the rule of a series edited.
+          AUTH_SECRET="$(docker exec installer cat /secrets/auth_secret)" OWNER=alice PGPASSWORD=ci-password PSQL="psql -h 127.0.0.1 -U bde -d bde_install" SHOTS="$RUNNER_TEMP/shots/repeat" node e2e/repeat.mjs http://127.0.0.1:3003
           # What every action of the platform shows afterwards (members, roles, settings, profile, shared calendar, language), 3
           # plays of each, with no reload: see "Actions that stay on the page" in docs/architecture.md.
           AUTH_SECRET="$(docker exec installer cat /secrets/auth_secret)" OWNER=alice OWNER_CANDIDATE=bob PGPASSWORD=ci-password PSQL="psql -h 127.0.0.1 -U bde -d bde_install" SHOTS="$RUNNER_TEMP/shots/actions" node e2e/actions.mjs http://127.0.0.1:3003

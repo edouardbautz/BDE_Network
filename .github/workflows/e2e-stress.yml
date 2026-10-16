@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        script: [events, settings, series, actions, review, hydration]
+        script: [events, settings, series, actions, review, repeat, hydration]
         # Each shard is a platform of its own, played ROUNDS times: a failure that comes one time in twenty is seen
         # three times in sixty.
         shard: [1, 2, 3]

@@ -124,6 +124,12 @@ of the series is untouched, and the date can be restored (**Restore** button).
 Pick the date, **Edit**, change what you need, then **Save**: a window asks **Only this one** or **This one and the
 following**. See [Events that repeat](events.md#events-that-repeat).
 
+### How do I make an event that repeats every 2 weeks, on Monday and Wednesday?
+
+In the form, choose **Custom…** in **Repeat**, then _every 2 weeks_, tick **Monday** and **Wednesday**, and say how it
+ends: on a date, or after a number of times. The preview under the fields says the rule in a sentence and lists the
+next dates before anything is saved. See [Events that repeat](events.md#events-that-repeat).
+
 ## Notifications
 
 ### Do I need Discord or Slack?

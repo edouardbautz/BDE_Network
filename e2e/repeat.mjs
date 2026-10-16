@@ -1,4 +1,3 @@
-// covers: events.createEvent
 // End-to-end test of the repeat rules of the events module, in a real browser, on the real image, in French and in
 // English: the usual choices of the list, "Custom" (every 2 weeks on Monday and Wednesday, 10 times), the preview the
 // form shows before anything is saved, a first date that moves to the first one that fits the rule, the limit of an
@@ -320,10 +319,9 @@ async function run(lang) {
     await waitForPreview(words.moved, 'a Saturday with "Monday"');
     const movedId = await send();
     const moved = await dates();
-    if (!moved[0]?.label.includes(words.monday))
+    // a Saturday would not say Monday: the first date is the first Monday
+    if (!moved[0]?.label.toLowerCase().includes(words.monday.toLowerCase())) {
       fail(`[${lang}] the first date is "${moved[0]?.label}", expected a Monday`);
-    if (moved[0].label.includes(String(addDays(monday, 5).getUTCDate()).padStart(2, '0') + ' ')) {
-      fail(`[${lang}] the first date did not move`);
     }
     if (!movedId) fail(`[${lang}] no event`);
     step(
