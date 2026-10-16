@@ -57,6 +57,14 @@ All notable changes to this project are written here, in English. Format based o
   again on the server. The new browser test clicks them on a computer-sized and a phone-sized screen, in both languages,
   and checks that a member is offered nothing.
 
+### Security
+
+- **The image applies the security updates of its operating system when it is built** (`apk upgrade`), and CI scans the image
+  for known vulnerabilities (Trivy: HIGH and CRITICAL with a fix available fail the build; the two that are accepted, in
+  development tools of Prisma that the platform never runs, are in `.trivyignore` with their reason). The scan found that the
+  image shipped OpenSSL 3.5.7 of Alpine, which has a fix for CVE-2026-14456 (a denial of service of a QUIC server, which
+  nothing in the platform runs: no member could reach it, but a fix that exists must be in the image).
+
 ### Changed
 
 - **A series is a rule, stored in one column (`Event.repeat`)** instead of one of three words and a day kept apart

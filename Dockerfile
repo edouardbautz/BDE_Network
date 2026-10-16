@@ -43,7 +43,9 @@ ENV NODE_ENV=production \
     UPLOADS_DIR=/uploads
 # `psql` and `pg_dump` (the same major version as the bundled PostgreSQL): the start-up command keeps a copy of the database
 # before applying migrations and puts it back if they fail (docker/database-tools.mjs).
-RUN apk add --no-cache postgresql17-client
+# The operating system of the base image is updated first: a security fix of a library (OpenSSL, for the tools above) is
+# published for Alpine before it reaches the next Node image, and the scan of the image (CI) fails on a fix that is there.
+RUN apk upgrade --no-cache && apk add --no-cache postgresql17-client
 # Nothing here needs npm or yarn: the server is started with `node`.
 RUN rm -rf /usr/local/lib/node_modules /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /opt/yarn-* /usr/local/bin/yarn /usr/local/bin/yarnpkg \
  && addgroup --system --gid 1001 nodejs \
