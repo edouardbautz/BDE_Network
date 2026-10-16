@@ -37,13 +37,24 @@ export const RIGHTS: Record<PersonaKey, readonly Right[]> = {
 };
 
 /** Accounts the platform knows and has approved: the only ones that reach the pages of the application. */
-export const APPROVED: readonly PersonaKey[] = ['member', 'proposer', 'validator', 'custom', 'admin', 'owner'];
+export const APPROVED: readonly PersonaKey[] = [
+  'member',
+  'proposer',
+  'validator',
+  'custom',
+  'admin',
+  'owner',
+];
 
 export const isApproved = (who: PersonaKey): boolean => APPROVED.includes(who);
 export const isOwner = (who: PersonaKey): boolean => who === 'owner';
 
 /** Whether a persona holds a right on a platform run in this way (the rights of a module that is off are ignored). */
-export function can(who: PersonaKey, right: Right, variant: PlatformVariant = 'events-enabled'): boolean {
+export function can(
+  who: PersonaKey,
+  right: Right,
+  variant: PlatformVariant = 'events-enabled',
+): boolean {
   if (!isApproved(who)) return false;
   if (right.startsWith('events.') && variant === 'events-disabled') return false;
   return RIGHTS[who].includes(right);

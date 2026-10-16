@@ -54,7 +54,9 @@ export function discoverExportedActions(root = process.cwd()): string[] {
       if (!USE_SERVER_AT_TOP.test(source)) return [];
       const file = basename(path).replace(/\.tsx?$/, '');
       const owner = file === 'actions' ? basename(dirname(path)) : file.replace(/-actions$/, '');
-      return [...source.matchAll(/^export async function (\w+)/gm)].map((match) => `${owner}.${match[1]}`);
+      return [...source.matchAll(/^export async function (\w+)/gm)].map(
+        (match) => `${owner}.${match[1]}`,
+      );
     })
     .sort();
 }

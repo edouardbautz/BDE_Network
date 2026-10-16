@@ -42,7 +42,7 @@ export interface Persona {
   hasCookie: boolean;
 }
 
-const BUILTIN_MEMBER: PersonaRole = {
+export const BUILTIN_MEMBER: PersonaRole = {
   id: 'role-member',
   name: 'Membre',
   description: 'The default role of every platform.',
@@ -51,7 +51,7 @@ const BUILTIN_MEMBER: PersonaRole = {
   builtin: true,
 };
 
-const BUILTIN_ADMIN: PersonaRole = {
+export const BUILTIN_ADMIN: PersonaRole = {
   id: 'role-admin',
   name: 'Admin',
   description: 'Every right of every module.',
