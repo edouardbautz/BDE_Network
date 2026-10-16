@@ -16,7 +16,39 @@ describe('securityHeaders', () => {
   });
 
   it('applies to every path', () => {
-    expect(securityHeaders('production').every((rule) => rule.source === '/:path*')).toBe(true);
+    expect(
+      securityHeaders('production')
+        .filter((rule) => !rule.headers.some((header) => header.key === 'Content-Security-Policy'))
+        .every((rule) => rule.source === '/:path*'),
+    ).toBe(true);
+  });
+
+  describe('the policy of the pages', () => {
+    const rule = () =>
+      securityHeaders('production').find((candidate) =>
+        candidate.headers.some((header) => header.key === 'Content-Security-Policy'),
+      );
+    // Next.js compiles a source with path-to-regexp: a parenthesis is a regular expression, anchored.
+    const covers = (path: string) => new RegExp(`^${rule()?.source}$`).test(path);
+
+    it.each([
+      '/',
+      '/fr',
+      '/fr/dashboard',
+      '/api/health',
+      '/api/logos',
+      '/api/logo-x',
+      '/api/me/export',
+    ])('covers %s', (path) => {
+      expect(covers(path)).toBe(true);
+    });
+
+    it.each(['/api/logo', '/api/logo/'])(
+      'leaves %s to its own policy (a header here would replace the route’s)',
+      (path) => {
+        expect(covers(path)).toBe(false);
+      },
+    );
   });
 
   it('sends the CSP in production only (React dev tooling needs eval)', () => {

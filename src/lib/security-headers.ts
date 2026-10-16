@@ -13,6 +13,14 @@
  * https and fail to load.
  */
 
+/**
+ * The one answer that sets a policy of its own: the logo (`src/app/api/logo/route.ts`) sends `default-src 'none'; sandbox`,
+ * the strictest there is, because it is a file anybody can open and its bytes were uploaded. A header of `next.config.ts`
+ * replaces the one a route sets, so the policy of the pages must leave this address out, or the logo ends up with a policy
+ * that lets scripts run (found by the attacks of the quality campaign: the route's header never reached the browser).
+ */
+export const OWN_POLICY_PATH = '/api/logo';
+
 export interface HeaderRule {
   source: string;
   has?: { type: 'header'; key: string; value: string }[];
@@ -52,15 +60,15 @@ export function securityHeaders(mode: 'development' | 'production'): HeaderRule[
     { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },
   ];
 
-  const rules: HeaderRule[] = [
-    {
-      source: '/:path*',
-      headers:
-        mode === 'production'
-          ? [...common, { key: 'Content-Security-Policy', value: contentSecurityPolicy() }]
-          : common,
-    },
-  ];
+  const rules: HeaderRule[] = [{ source: '/:path*', headers: common }];
+
+  if (mode === 'production') {
+    rules.push({
+      // Every path but the one that has a policy of its own (a negative lookahead, in the syntax of next.config.ts).
+      source: `/((?!${OWN_POLICY_PATH.slice(1)}(?:/|$)).*)`,
+      headers: [{ key: 'Content-Security-Policy', value: contentSecurityPolicy() }],
+    });
+  }
 
   // Only when the request reached us over HTTPS (behind the proxy, which sets
   // X-Forwarded-Proto): browsers ignore HSTS on plain http anyway, and a BDE that
