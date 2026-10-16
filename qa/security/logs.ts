@@ -16,7 +16,19 @@ const KNOWN_SECRETS: [string, string][] = [
 
 /** Lines that say something went wrong in the platform itself. */
 const ERROR_LINE =
-  /⨯|\[auth\]\[error\]|Unhandled|TypeError|ReferenceError|RangeError|SyntaxError|PrismaClient|ECONNRESET|Invalid Server Actions request|InvalidCallbackUrl/;
+  /⨯|\[auth\]\[error\]|Unhandled|TypeError|ReferenceError|RangeError|SyntaxError|PrismaClient|ECONNRESET/;
+
+/**
+ * What the attacks make the framework write on purpose, because it is the refusal being logged: Next.js refusing an
+ * action called from another origin (and the address it could not read in that origin, which the attack made up), an
+ * action that throws `Forbidden` for a request a page could not have made, and a body over the limit.
+ */
+const REFUSALS = [
+  /Invalid Server Actions request/,
+  /^⨯ TypeError: Invalid URL$/,
+  /^⨯ Error: Forbidden$/,
+  /Body exceeded \d+mb limit/,
+];
 
 /** What the container wrote, both streams (`docker logs` hands the container's stderr back on its own stderr). */
 export function readLogs(container: string): string {
@@ -63,7 +75,10 @@ export async function checkLogs(platform: Platform, report: Report): Promise<voi
     !/set-cookie|authjs\.session-token=ey|Bearer\s+[A-Za-z0-9._-]{20,}/i.test(logs),
   );
 
-  const errors = logs.split('\n').filter((line) => ERROR_LINE.test(line));
+  const errors = logs
+    .split('\n')
+    .map((line) => line.replace(/\x1b\[[0-9;]*m/g, ''))
+    .filter((line) => ERROR_LINE.test(line) && !REFUSALS.some((refusal) => refusal.test(line)));
   report.check(
     'logs',
     'none of the attacks made the platform write an error',

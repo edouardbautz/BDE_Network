@@ -238,7 +238,6 @@ export async function checkFeeds(platform: Platform, report: Report): Promise<vo
       );
     const published = `${tag}-published`;
     const draft = `${tag}-draft`;
-    const hostile = `${tag}-hostile`;
     const hostileTitle = `Soirée ${tag}\r\nBEGIN:VEVENT\r\nSUMMARY:injected-${tag}`;
     const hostileDescription = `line one\nATTENDEE;CN=attacker:mailto:attacker@evil.example\r\nURL:https://evil.example/${tag}\\n, ; \\`;
     const hostileLocation = `Salle ${tag}; DESCRIPTION:x\nEND:VEVENT`;

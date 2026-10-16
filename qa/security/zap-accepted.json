@@ -1,0 +1,12 @@
+[
+  {
+    "plugin": "10055",
+    "path": ".*",
+    "reason": "CSP with 'unsafe-inline' for scripts and styles: Next.js hydrates the page with inline scripts, next-themes sets the theme with one and the accent colour is an inline style. A nonce would need every page rendered per request. The rest of the policy (no framing, no plugins, same-origin connections, a fixed list of image hosts and form targets) is what protects the interface; see src/lib/security-headers.ts."
+  },
+  {
+    "plugin": "10202",
+    "path": ".*",
+    "reason": "A form that is a server action carries no CSRF token: Next.js refuses an action called from another origin and a form cannot set the header an action needs. The csrf suite of qa/security plays this against the real image (another site, a plain form on another site, null origin) and checks that nothing changes."
+  }
+]

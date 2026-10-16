@@ -20,8 +20,6 @@ interface Forged {
   headers?: Record<string, string>;
 }
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 export async function checkSessions(platform: Platform, report: Report): Promise<void> {
   const owner = OWNER.login as string;
   const valid = await forgeSessionCookie(owner, platform.secret);
