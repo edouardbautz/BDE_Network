@@ -4,6 +4,7 @@ import { buildCalendarIcs } from '@/lib/events/export';
 import { icsFilename } from '@/lib/events/ics';
 import { expandEvents } from '@/lib/events/occurrences';
 import { getVisibleEvent } from '@/lib/events/queries';
+import { draftVisibility } from '@/lib/events/review';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +13,7 @@ const notFound = () => new Response('Not found', { status: 404 });
 /** "Add to my calendar" for one event. With `?occ=<start ms>` (the date's key: where the series puts it, see
  * `OccurrenceView.originalStart`) it exports that occurrence only; without it, the whole event (every
  * occurrence of a series).
- * Same visibility rule as the pages: a draft is a 404 without the permission. */
+ * Same visibility rule as the pages: a draft or a proposal is a 404 for whoever may not see it. */
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const access = await getEventsAccess();
   if (!access) {
@@ -20,7 +21,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 
   const { id } = await params;
-  const event = await getVisibleEvent(id, access.canManage);
+  const visibility = draftVisibility(access);
+  const event = await getVisibleEvent(id, visibility);
   if (!event) {
     return notFound();
   }
@@ -29,7 +31,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const all = expandEvents([event], {
     timeZone,
     range: { from: new Date(0), to: new Date('2100-01-01T00:00:00Z') },
-    includeDrafts: access.canManage,
+    ...visibility,
   });
 
   const requested = new URL(request.url).searchParams.get('occ');

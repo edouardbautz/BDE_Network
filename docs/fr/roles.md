@@ -64,10 +64,19 @@ Et, **pour chaque module activé** :
 | **Consulter** le module | Voir son contenu.                                                  |
 | **Gérer** le module     | Créer, modifier et supprimer dans le module. Inclut « consulter ». |
 
-Le module **Événements** a en plus **Gérer l'agenda partagé** : créer, renouveler ou désactiver le lien d'agenda
-commun du BDE.
+Le module **Événements** a ses propres droits, à la place de « Gérer » :
 
-Cocher « gérer » coche « consulter ». Un droit d'un module **désactivé** reste dans le rôle sans effet, et reprend
+| Droit                       | Ce qu'il permet                                                                                                                                                   |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Proposer des événements** | Créer des événements qui attendent un validateur, et modifier ou supprimer les siens tant qu'ils ne sont pas publiés. Inclut « consulter ».                       |
+| **Valider les événements**  | Approuver ou refuser les propositions, créer, modifier, confirmer et supprimer tous les événements, et voir les brouillons. Inclut « proposer » et « consulter ». |
+| **Gérer l'agenda partagé**  | Créer, renouveler ou désactiver le lien d'agenda commun du BDE. Inclut « consulter ».                                                                             |
+
+Une équipe qui organise des événements sans avoir le droit de les publier reçoit **Proposer des événements** ; le
+bureau, qui décide, reçoit **Valider les événements**. Voir
+[Module Événements](events.md#proposer-et-valider-des-événements).
+
+Cocher « gérer », « valider » ou « proposer » coche ce que ce droit inclut. Un droit d'un module **désactivé** reste dans le rôle sans effet, et reprend
 effet si vous réactivez le module.
 
 ## Les règles de sécurité
@@ -103,12 +112,15 @@ réservé aux propriétaires.
 | Rôle                   | Droits                                                         |
 | ---------------------- | -------------------------------------------------------------- |
 | Président              | Gérer les membres, gérer les rôles, tous les droits Événements |
-| Secrétaire             | Gérer les membres, gérer les événements                        |
-| Responsable événements | Gérer les événements et l'agenda partagé                       |
+| Secrétaire             | Gérer les membres, valider les événements                      |
+| Responsable événements | Valider les événements et gérer l'agenda partagé               |
+| Pôle Events            | Proposer des événements                                        |
 | Membre                 | Consulter les événements                                       |
 
 Avec ces règles, le secrétaire peut approuver une demande et lui donner « Membre », mais pas « Responsable
-événements » : il n'a pas le droit de gérer l'agenda partagé, et on ne peut donner que ce que l'on a.
+événements » : il n'a pas le droit de gérer l'agenda partagé, et on ne peut donner que ce que l'on a. De la même façon,
+le responsable événements peut donner « Pôle Events », qu'il a, mais un membre du pôle Events ne pourra jamais donner le
+droit de valider.
 
 ## Tester les droits d'un rôle
 
@@ -119,5 +131,5 @@ réel, avec le rôle simulé. Cette fonction n'existe pas en production.
 
 ## Pour les développeurs
 
-La liste des droits est dans le code, pas dans la base : un rôle garde de simples clés (`events.manage`). Pour
+La liste des droits est dans le code, pas dans la base : un rôle garde de simples clés (`events.validate`). Pour
 ajouter les droits d'un module, voir l'[architecture](../architecture.md).

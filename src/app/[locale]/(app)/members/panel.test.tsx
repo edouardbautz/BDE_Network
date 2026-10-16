@@ -62,7 +62,7 @@ const roles = [
     id: 'role-secretary',
     name: 'Secrétaire',
     description: null,
-    permissions: ['events.manage', 'members.manage'],
+    permissions: ['events.validate', 'members.manage'],
     allPermissions: false,
     isDefault: false,
   },
@@ -147,14 +147,14 @@ beforeEach(() => vi.clearAllMocks());
 
 describe('members panel — what each viewer is offered', () => {
   // A secretary: manages members and events, holds neither roles.manage nor "all".
-  const secretary = () => memberWith(['members.manage', 'events.manage'], 'sec-1', 'sec-1');
+  const secretary = () => memberWith(['members.manage', 'events.validate'], 'sec-1', 'sec-1');
 
   it('greys out the roles the viewer does not fully hold, in every menu', async () => {
     const page = await renderAs(secretary());
 
     for (const login of ['mem-1', 'new-1']) {
       const row = rowOf(page, login);
-      // Membre (events.view) is covered by events.manage; Trésorier and Admin are not.
+      // Membre (events.view) is covered by events.validate; Trésorier and Admin are not.
       expect(optionOf(row, 'role-member')?.disabled).toBe(false);
       expect(optionOf(row, 'role-treasurer')?.disabled).toBe(true);
       expect(optionOf(row, 'role-admin')?.disabled).toBe(true);
@@ -195,7 +195,7 @@ describe('members panel — what each viewer is offered', () => {
 
   it('keeps Admin ("all rights") out of reach of anyone who does not hold all of them', async () => {
     const page = await renderAs(
-      memberWith(['members.manage', 'roles.manage', 'events.manage', 'events.shared_calendar']),
+      memberWith(['members.manage', 'roles.manage', 'events.validate', 'events.shared_calendar']),
     );
 
     expect(optionOf(rowOf(page, 'mem-1'), 'role-admin')?.disabled).toBe(true);

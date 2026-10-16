@@ -166,7 +166,7 @@ describe('buildSubscriptionFeed — which events it exposes', () => {
   });
 
   it('includes drafts for a member whose role manages events', async () => {
-    owner({ permissions: ['events.view', 'events.manage'] });
+    owner({ permissions: ['events.view', 'events.validate'] });
     await buildSubscriptionFeed(TOKEN, NOW);
     expect(listOccurrences).toHaveBeenCalledWith(expect.objectContaining({ includeDrafts: true }));
   });
@@ -184,7 +184,7 @@ describe('buildSubscriptionFeed — which events it exposes', () => {
   });
 
   it('re-evaluates the permission on every request (revocation is immediate)', async () => {
-    owner({ permissions: ['events.view', 'events.manage'] });
+    owner({ permissions: ['events.view', 'events.validate'] });
     await buildSubscriptionFeed(TOKEN, NOW);
     owner('MEMBER');
     await buildSubscriptionFeed(TOKEN, NOW);

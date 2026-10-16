@@ -53,11 +53,20 @@ const ENGLISH: Record<string, string> = {
   'Brouillon : en attente du devis du car.': 'Draft: waiting for the coach quote.',
   'Station à définir, départ du parking du campus':
     'Resort to be decided, leaving from the campus car park',
+  'Tournoi de jeux vidéo': 'Video game tournament',
+  'Proposition du pôle Events : quatre jeux, huit équipes, finale en public.':
+    'Proposed by the events team: four games, eight teams, a public final.',
+  'Salle informatique': 'Computer room',
+  'Soirée karaoké': 'Karaoke night',
+  'Proposition du pôle Events : une soirée karaoké au foyer.':
+    'Proposed by the events team: a karaoke night in the lounge.',
+  'Date trop proche de la soirée de rentrée : propose plutôt le mois suivant.':
+    'Too close to the back-to-school party: please suggest the following month.',
 };
 const tr = (text: string): string =>
   process.env.SEED_LOCALE === 'en' ? (ENGLISH[text] ?? text) : text;
 
-type DemoLogin = 'demo-owner' | 'demo-admin' | 'demo-member1' | 'demo-member2';
+type DemoLogin = 'demo-owner' | 'demo-admin' | 'demo-member1' | 'demo-member2' | 'demo-member3';
 type Recurrence = 'NONE' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY';
 
 interface DemoEvent {
@@ -68,7 +77,9 @@ interface DemoEvent {
   location: string;
   /** Index into the BDE's configured categories (wraps around). */
   category: number;
-  status: 'DRAFT' | 'CONFIRMED';
+  status: 'DRAFT' | 'PROPOSED' | 'CONFIRMED';
+  /** A proposal a validator refused: the comment its author reads (the event is then a draft). */
+  refusal?: string;
   /** [days from today, hour, minute] on the BDE wall clock. */
   start: [number, number, number];
   end: [number, number, number];
@@ -101,8 +112,8 @@ function daysUntilWeekday(weekdayNow: number, weekday: number): number {
 /**
  * Demo events, all relative to the day the seed runs so the calendar always
  * looks alive: one past event, some this week, a weekly series with a
- * cancelled date, a biweekly and a monthly series, a multi-day weekend, and
- * two drafts. Re-running the seed rewrites them (stable ids) instead of
+ * cancelled date, a biweekly and a monthly series, a multi-day weekend, two
+ * drafts, and two events the events team proposed (one waits, one was refused). Re-running the seed rewrites them (stable ids) instead of
  * duplicating.
  */
 export async function seedDemoEvents(
@@ -271,6 +282,31 @@ export async function seedDemoEvents(
       assignees: ['demo-member1'],
       author: 'demo-member1',
     },
+    {
+      id: 'demo-event-tournoi',
+      title: 'Tournoi de jeux vidéo',
+      description: 'Proposition du pôle Events : quatre jeux, huit équipes, finale en public.',
+      location: 'Salle informatique',
+      category: 0,
+      status: 'PROPOSED',
+      start: [21, 18, 0],
+      end: [21, 23, 0],
+      assignees: ['demo-member3'],
+      author: 'demo-member3',
+    },
+    {
+      id: 'demo-event-karaoke',
+      title: 'Soirée karaoké',
+      description: 'Proposition du pôle Events : une soirée karaoké au foyer.',
+      location: 'Foyer',
+      category: 0,
+      status: 'DRAFT',
+      refusal: 'Date trop proche de la soirée de rentrée : propose plutôt le mois suivant.',
+      start: [9, 20, 0],
+      end: [9, 23, 30],
+      assignees: ['demo-member3'],
+      author: 'demo-member3',
+    },
   ];
 
   const at = (offset: [number, number, number]) =>
@@ -310,6 +346,11 @@ export async function seedDemoEvents(
       // reminder is eligible for the ones starting tomorrow.
       confirmationNotifiedAt:
         demo.status === 'CONFIRMED' ? new Date(now.getTime() - 3 * 86_400_000) : null,
+      // A proposal waits since two days; a refused one carries its comment (and never both).
+      proposedAt: demo.status === 'PROPOSED' ? new Date(now.getTime() - 2 * 86_400_000) : null,
+      refusalComment: demo.refusal ? tr(demo.refusal) : null,
+      refusedByLogin: demo.refusal ? 'demo-member1' : null,
+      refusedAt: demo.refusal ? new Date(now.getTime() - 86_400_000) : null,
       authorLogin: demo.author,
       authorId: author.id,
     };

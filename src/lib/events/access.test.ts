@@ -7,11 +7,13 @@ vi.mock('@/lib/auth/session', () => ({ getEffectiveSession: vi.fn() }));
 const { getConfig } = await import('@/config');
 const { getEffectiveSession } = await import('@/lib/auth/session');
 const {
-  canManageEvents,
   canManageSharedCalendar,
+  canProposeEvents,
+  canValidateEvents,
   canViewEvents,
   getEventsAccess,
-  requireEventsManager,
+  requireEventsProposer,
+  requireEventsValidator,
   requireSharedCalendarManager,
 } = await import('./access');
 
@@ -45,24 +47,36 @@ describe('pure permission helpers', () => {
   it('views events with events.view, not without', () => {
     expect(canViewEvents(holder(['events.view']))).toBe(true);
     expect(canViewEvents(holder([]))).toBe(false);
-    expect(canViewEvents(holder(['events.manage']))).toBe(false);
+    expect(canViewEvents(holder(['events.validate']))).toBe(false);
   });
 
-  it('manages events with events.manage only', () => {
-    expect(canManageEvents(holder(['events.manage']))).toBe(true);
-    expect(canManageEvents(holder(['events.view']))).toBe(false);
-    expect(canManageEvents(holder(['finance.manage']))).toBe(false);
+  it('proposes events with events.propose only', () => {
+    expect(canProposeEvents(holder(['events.propose']))).toBe(true);
+    expect(canProposeEvents(holder(['events.view']))).toBe(false);
+    expect(canProposeEvents(holder(['events.validate']))).toBe(false);
+    expect(canProposeEvents(holder(['finance.manage']))).toBe(false);
   });
 
-  it('manages the shared calendar with its own permission, not with events.manage', () => {
+  it('validates events with events.validate only, never with propose', () => {
+    expect(canValidateEvents(holder(['events.validate']))).toBe(true);
+    expect(canValidateEvents(holder(['events.propose', 'events.view']))).toBe(false);
+    expect(canValidateEvents(holder(['events.view']))).toBe(false);
+    expect(canValidateEvents(holder(['finance.manage']))).toBe(false);
+  });
+
+  it('manages the shared calendar with its own permission, not with events.validate', () => {
     expect(canManageSharedCalendar(holder(['events.shared_calendar']))).toBe(true);
-    expect(canManageSharedCalendar(holder(['events.manage', 'events.view']))).toBe(false);
+    expect(canManageSharedCalendar(holder(['events.validate', 'events.view']))).toBe(false);
   });
 
   it('never lets a PENDING account do any of it, even with permissions attached by mistake', () => {
-    const pending = holder(['events.view', 'events.manage', 'events.shared_calendar'], 'PENDING');
+    const pending = holder(
+      ['events.view', 'events.propose', 'events.validate', 'events.shared_calendar'],
+      'PENDING',
+    );
     expect(canViewEvents(pending)).toBe(false);
-    expect(canManageEvents(pending)).toBe(false);
+    expect(canProposeEvents(pending)).toBe(false);
+    expect(canValidateEvents(pending)).toBe(false);
     expect(canManageSharedCalendar(pending)).toBe(false);
   });
 });
@@ -91,28 +105,49 @@ describe('getEventsAccess', () => {
 
   it('gives the default member read-only access', async () => {
     setup({ enabled: true, who: 'MEMBER' });
-    await expect(getEventsAccess()).resolves.toMatchObject({ canManage: false });
+    await expect(getEventsAccess()).resolves.toMatchObject({
+      canPropose: false,
+      canValidate: false,
+      canCreate: false,
+    });
   });
 
-  it('gives a member whose role manages events management access', async () => {
-    setup({ enabled: true, who: { permissions: ['events.view', 'events.manage'] } });
-    await expect(getEventsAccess()).resolves.toMatchObject({ canManage: true });
+  it('gives a role that proposes the right to create, and not to validate', async () => {
+    setup({ enabled: true, who: { permissions: ['events.propose'] } });
+    await expect(getEventsAccess()).resolves.toMatchObject({
+      canPropose: true,
+      canValidate: false,
+      canCreate: true,
+    });
+  });
+
+  it('gives a role that validates everything, proposing included', async () => {
+    setup({ enabled: true, who: { permissions: ['events.validate'] } });
+    await expect(getEventsAccess()).resolves.toMatchObject({
+      canPropose: true,
+      canValidate: true,
+      canCreate: true,
+    });
   });
 
   it('does not treat another module permission as events access', async () => {
     setup({ enabled: true, who: { permissions: ['events.view', 'finance.manage'] } });
-    await expect(getEventsAccess()).resolves.toMatchObject({ canManage: false });
+    await expect(getEventsAccess()).resolves.toMatchObject({
+      canPropose: false,
+      canValidate: false,
+      canCreate: false,
+    });
   });
 
-  it('gives owners and admins (all permissions) management access', async () => {
+  it('gives owners and admins (all permissions) both rights', async () => {
     setup({ enabled: true, who: 'OWNER' });
-    await expect(getEventsAccess()).resolves.toMatchObject({ canManage: true });
+    await expect(getEventsAccess()).resolves.toMatchObject({ canValidate: true, canCreate: true });
     setup({ enabled: true, who: 'ADMIN' });
-    await expect(getEventsAccess()).resolves.toMatchObject({ canManage: true });
+    await expect(getEventsAccess()).resolves.toMatchObject({ canValidate: true, canCreate: true });
   });
 });
 
-describe('requireEventsManager', () => {
+describe('requireEventsProposer', () => {
   it.each<[string, Parameters<typeof setup>[0]]>([
     ['module disabled', { enabled: false, who: 'OWNER' }],
     ['no session', { enabled: true, who: null }],
@@ -125,14 +160,41 @@ describe('requireEventsManager', () => {
     ],
   ])('throws Forbidden: %s', async (_label, options) => {
     setup(options);
-    await expect(requireEventsManager()).rejects.toThrow('Forbidden');
+    await expect(requireEventsProposer()).rejects.toThrow('Forbidden');
   });
 
-  it('allows a role that manages events, and the owner', async () => {
-    setup({ enabled: true, who: { permissions: ['events.view', 'events.manage'] } });
-    await expect(requireEventsManager()).resolves.toMatchObject({ canManage: true });
+  it('allows a role that proposes, a role that validates, and the owner', async () => {
+    setup({ enabled: true, who: { permissions: ['events.propose'] } });
+    await expect(requireEventsProposer()).resolves.toMatchObject({ canCreate: true });
+    setup({ enabled: true, who: { permissions: ['events.validate'] } });
+    await expect(requireEventsProposer()).resolves.toMatchObject({ canCreate: true });
     setup({ enabled: true, who: 'OWNER' });
-    await expect(requireEventsManager()).resolves.toMatchObject({ canManage: true });
+    await expect(requireEventsProposer()).resolves.toMatchObject({ canCreate: true });
+  });
+});
+
+describe('requireEventsValidator', () => {
+  it.each<[string, Parameters<typeof setup>[0]]>([
+    ['module disabled', { enabled: false, who: 'OWNER' }],
+    ['no session', { enabled: true, who: null }],
+    ['PENDING', { enabled: true, who: 'PENDING' }],
+    ['default member', { enabled: true, who: 'MEMBER' }],
+    ['role that only views', { enabled: true, who: { permissions: ['events.view'] } }],
+    ['role that only proposes', { enabled: true, who: { permissions: ['events.propose'] } }],
+    [
+      'role that only manages the shared calendar',
+      { enabled: true, who: { permissions: ['events.shared_calendar'] } },
+    ],
+  ])('throws Forbidden: %s', async (_label, options) => {
+    setup(options);
+    await expect(requireEventsValidator()).rejects.toThrow('Forbidden');
+  });
+
+  it('allows a role that validates, and the owner', async () => {
+    setup({ enabled: true, who: { permissions: ['events.validate'] } });
+    await expect(requireEventsValidator()).resolves.toMatchObject({ canValidate: true });
+    setup({ enabled: true, who: 'OWNER' });
+    await expect(requireEventsValidator()).resolves.toMatchObject({ canValidate: true });
   });
 });
 
@@ -143,16 +205,16 @@ describe('requireSharedCalendarManager', () => {
     ['PENDING', { enabled: true, who: 'PENDING' }],
     ['default member', { enabled: true, who: 'MEMBER' }],
     [
-      'a role that manages events but not the shared calendar',
-      { enabled: true, who: { permissions: ['events.view', 'events.manage'] } },
+      'a role that validates events but not the shared calendar',
+      { enabled: true, who: { permissions: ['events.view', 'events.validate'] } },
     ],
   ])('throws Forbidden: %s', async (_label, options) => {
     setup(options);
     await expect(requireSharedCalendarManager()).rejects.toThrow('Forbidden');
   });
 
-  it('allows a role with the shared-calendar permission, even without events.manage', async () => {
+  it('allows a role with the shared-calendar permission, even without events.validate', async () => {
     setup({ enabled: true, who: { permissions: ['events.view', 'events.shared_calendar'] } });
-    await expect(requireSharedCalendarManager()).resolves.toMatchObject({ canManage: false });
+    await expect(requireSharedCalendarManager()).resolves.toMatchObject({ canValidate: false });
   });
 });

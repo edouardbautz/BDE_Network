@@ -128,8 +128,8 @@ rappel. Chaque section a son bouton **Enregistrer** et s'applique tout de suite.
 
 Si le module est activé, **Événements** montre le calendrier du bureau, en vue calendrier ou en liste, avec des
 filtres. Vous pouvez ajouter un événement à votre agenda ou vous abonner à un flux qui se met à jour tout seul. Si
-votre rôle permet de gérer les événements, vous les créez et les modifiez ici. Voir
-[Module Événements](events.md).
+votre rôle permet de proposer ou de valider des événements, vous les créez et les modifiez ici (une proposition attend
+un validateur). Voir [Module Événements](events.md).
 
 ![Le calendrier des événements](../images/fr/calendar.webp)
 

@@ -3,7 +3,7 @@ import { getConfig } from '@/config';
 import { prisma } from '@/lib/prisma';
 import { accessFor } from '@/lib/auth/access';
 import { isApproved } from '@/lib/permissions';
-import { canManageEvents, canViewEvents, isEventsModuleEnabled } from './access';
+import { canValidateEvents, canViewEvents, isEventsModuleEnabled } from './access';
 import { buildIcs, occurrenceUid, type IcsEvent } from './ics';
 import type { OccurrenceView } from './occurrences';
 import { listOccurrences } from './queries';
@@ -114,7 +114,7 @@ export async function buildSubscriptionFeed(
   if (!canViewEvents(access)) {
     return null;
   }
-  const includeDrafts = canManageEvents(access);
+  const includeDrafts = canValidateEvents(access);
   const occurrences = await listOccurrences({
     range: {
       from: new Date(now.getTime() - FEED_PAST_DAYS * DAY_MS),

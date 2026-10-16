@@ -8,6 +8,7 @@ import { accountLabel } from '@/lib/account-label';
 import { checkFortyTwoCredentials } from '@/lib/auth/oauth-check';
 import { requireApprovedSession } from '@/lib/auth/require-session';
 import { getEventsAccess } from '@/lib/events/access';
+import { draftVisibility } from '@/lib/events/review';
 import { getCategories } from '@/lib/events/categories';
 import { listUpcomingOccurrences } from '@/lib/events/queries';
 import { can, canManageSettings, MEMBERS_MANAGE } from '@/lib/permissions';
@@ -33,7 +34,7 @@ export default async function DashboardPage() {
     ? await listUpcomingOccurrences({
         now: new Date(),
         limit: 5,
-        includeDrafts: eventsAccess.canManage,
+        ...draftVisibility(eventsAccess),
       })
     : [];
 
@@ -79,7 +80,7 @@ export default async function DashboardPage() {
           occurrences={upcomingEvents}
           categories={getCategories()}
           timeZone={config.bde.timezone}
-          canManage={eventsAccess.canManage}
+          canCreate={eventsAccess.canCreate}
         />
       )}
 

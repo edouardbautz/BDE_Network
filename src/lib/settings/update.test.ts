@@ -531,6 +531,9 @@ describe('the sections', () => {
         memberRemoved: 'discord',
         eventConfirmed: 'discord',
         eventReminder: 'discord',
+        eventProposed: 'discord',
+        eventApproved: 'discord',
+        eventRefused: 'discord',
       });
       expect(setting('DISCORD_WEBHOOK_URL')).toBe(discord);
       expect(state.audit[0]?.metadata).toEqual({

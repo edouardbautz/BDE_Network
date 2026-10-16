@@ -7,6 +7,7 @@ import { getEventsAccess } from '@/lib/events/access';
 import { getCategories } from '@/lib/events/categories';
 import { formatLongDate } from '@/lib/events/format';
 import { getVisibleEvent, listAssignableMembers } from '@/lib/events/queries';
+import { canEditEvent, draftVisibility, reviewActorOf, statusChoices } from '@/lib/events/review';
 import { resolveOccurrences, scopeFacts } from '@/lib/events/series';
 import { formatLocalDateInput, formatLocalInput } from '@/lib/events/time';
 import { updateEvent } from '../../actions';
@@ -28,13 +29,24 @@ export default async function EditEventPage({
   }
 
   const [{ id }, rawSearch] = await Promise.all([params, searchParams]);
-  if (!access.canManage) {
+  if (!access.canCreate) {
+    // A member who only reads edits nothing: no need to look at the event.
     redirect({ href: `/events/${id}`, locale: await getLocale() });
   }
-
-  const event = await getVisibleEvent(id, true);
+  const event = await getVisibleEvent(id, draftVisibility(access));
   if (!event) {
     notFound();
+  }
+  // Whoever may not edit this event (a member, or a proposer looking at a published event or another's) is
+  // sent to its page, which says why.
+  const actor = reviewActorOf(access);
+  const reviewed = {
+    status: event.status,
+    authorLogin: event.authorLogin,
+    dateStatuses: event.occurrences.map((own) => own.status),
+  };
+  if (!canEditEvent(actor, reviewed)) {
+    redirect({ href: `/events/${id}`, locale: await getLocale() });
   }
 
   const [t, locale] = await Promise.all([getTranslations('events'), getLocale()]);
@@ -49,6 +61,8 @@ export default async function EditEventPage({
     notFound();
   }
   const isSeries = event.recurrence !== 'NONE';
+  // A proposer edits the event as a whole, never one date of a series: no choice of scope to ask.
+  const askScope = isSeries && actor.canValidate;
   const facts = scopeFacts(dates, date.originalStart);
   const back = isSeries
     ? { pathname: `/events/${event.id}`, query: { occ: date.originalStart.getTime() } }
@@ -60,7 +74,7 @@ export default async function EditEventPage({
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold tracking-tight">{t('form.editTitle')}</h1>
-      {isSeries && (
+      {askScope && (
         <p className="text-muted-foreground text-sm first-letter:uppercase">
           {formatLongDate(date.start, locale, timeZone)}
         </p>
@@ -90,8 +104,9 @@ export default async function EditEventPage({
         submitLabel={t('form.save')}
         cancelHref={back}
         isEditing
+        statusChoices={statusChoices(actor, date.status)}
         series={
-          isSeries
+          askScope
             ? {
                 occurrence: date.originalStart.getTime(),
                 isFirst: facts.isFirst,

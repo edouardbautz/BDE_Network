@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EventFormState } from '@/app/[locale]/(app)/events/actions';
@@ -45,7 +45,10 @@ const complete: RawEventInput = {
 
 const action = vi.fn(async (): Promise<EventFormState> => ({}));
 
-function renderForm(initial: RawEventInput) {
+function renderForm(
+  initial: RawEventInput,
+  statusChoices: ComponentProps<typeof EventForm>['statusChoices'] = ['DRAFT', 'CONFIRMED'],
+) {
   const view = render(
     <EventForm
       action={action}
@@ -55,6 +58,7 @@ function renderForm(initial: RawEventInput) {
       timeZone="Europe/Paris"
       submitLabel="Créer"
       cancelHref="/events"
+      statusChoices={statusChoices}
       isEditing={false}
     />,
   );
@@ -167,5 +171,24 @@ describe('EventForm — validation before sending', () => {
     const { form } = renderForm({ ...complete, assigneeLogins: [] });
     fireEvent.submit(form);
     expect(action).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('EventForm — the statuses a person may choose', () => {
+  const options = () =>
+    [...screen.getByLabelText(/form.status/).querySelectorAll('option')].map((o) => o.value);
+
+  it('offers a validator draft and confirmed, with the help that says confirming notifies', () => {
+    renderForm(complete);
+    expect(options()).toEqual(['DRAFT', 'CONFIRMED']);
+    expect(screen.getByText('form.statusHelp')).toBeTruthy();
+  });
+
+  it('offers somebody who only proposes draft and proposed, never confirmed, with its own help', () => {
+    renderForm({ ...complete, status: 'PROPOSED' }, ['DRAFT', 'PROPOSED']);
+    expect(options()).toEqual(['DRAFT', 'PROPOSED']);
+    expect((screen.getByLabelText(/form.status/) as HTMLSelectElement).value).toBe('PROPOSED');
+    expect(screen.getByText('form.statusHelpProposer')).toBeTruthy();
+    expect(screen.queryByText('form.statusHelp')).toBeNull();
   });
 });

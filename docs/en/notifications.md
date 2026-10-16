@@ -8,13 +8,16 @@ all. **Discord is the easiest to set up.**
 The channel and its settings (webhook address, mail server) are chosen in **Settings**, **Notifications** section,
 with a test message. They apply at once.
 
-| Notification                           | When                             | Who is notified                                                                             |
-| -------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------- |
-| **Access request** (`memberPending`)   | a new member asks for access     | Email: the owners and those with the "Manage members" right. Discord or Slack: the channel. |
-| **Member approved** (`memberApproved`) | a request is approved            | Email: the approved member (their role, a sign-in link). Discord or Slack: the channel.     |
-| **Member removed** (`memberRemoved`)   | a member is removed from the BDE | Discord or Slack: the channel. **Never an email**: the removed person receives nothing.     |
-| **Event confirmed** (`eventConfirmed`) | an event is confirmed            | Every approved member (email: one message per person), or the channel.                      |
-| **Reminder** (`eventReminder`)         | the day before an event          | The members in charge (email), otherwise those who manage events; or the channel.           |
+| Notification                            | When                             | Who is notified                                                                              |
+| --------------------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------- |
+| **Access request** (`memberPending`)    | a new member asks for access     | Email: the owners and those with the "Manage members" right. Discord or Slack: the channel.  |
+| **Member approved** (`memberApproved`)  | a request is approved            | Email: the approved member (their role, a sign-in link). Discord or Slack: the channel.      |
+| **Member removed** (`memberRemoved`)    | a member is removed from the BDE | Discord or Slack: the channel. **Never an email**: the removed person receives nothing.      |
+| **Event confirmed** (`eventConfirmed`)  | an event is confirmed            | Every approved member (email: one message per person), or the channel.                       |
+| **Reminder** (`eventReminder`)          | the day before an event          | The members in charge (email), otherwise those who validate events; or the channel.          |
+| **Event proposed** (`eventProposed`)    | an event is proposed             | Email: the owners and those with the "Validate events" right. Discord or Slack: the channel. |
+| **Proposal approved** (`eventApproved`) | a proposal is approved           | Email: its author. Discord or Slack: the channel.                                            |
+| **Proposal refused** (`eventRefused`)   | a proposal is refused            | Email: its author, with the validator's comment. Discord or Slack: the channel.              |
 
 In Settings, **a single channel** serves every notification. To have one channel per type of notification, see
 [Configuration](configuration.md#replace-the-settings-with-files).
@@ -55,6 +58,7 @@ reader's theme._
 - **The secondary details, as fields side by side**: 🏷️ _Category_ and 👥 _Members in charge_ (a series adds a 🔁
   _Repeats_ line). For an approved or removed member: 🎭 _Role_ and **who** did the action (🤝 "Approved by…", 🚪
   "Removed by…").
+- **The proposal cards** (📝 event proposed, ✅ approved, ⛔ refused) say **who proposed** the event and, for an answer, **who gave it**; a refusal opens with 💬 the validator's **comment**, as a quote. A channel is read by the whole team: write the comment knowing so.
 - **An icon in the title** by type: 🎉 event confirmed, ⏰ reminder for tomorrow, 🔔 reminder for today, 🙋 access
   request, ✅ member approved, 👋 member removed.
 - **A color bar**: the category's for an event; amber, green or red for a request, an approval, a removal. These

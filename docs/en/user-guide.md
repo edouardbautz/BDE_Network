@@ -123,8 +123,8 @@ section has its own **Save** button and applies at once. See [Configuration](con
 ## Events
 
 If the module is on, **Events** shows the board's calendar, as a calendar or a list, with filters. You can add an
-event to your calendar or subscribe to a feed that updates by itself. If your role allows managing events, you create
-and edit them here. See [Events module](events.md).
+event to your calendar or subscribe to a feed that updates by itself. If your role allows proposing or validating
+events, you create and edit them here (a proposal waits for a validator). See [Events module](events.md).
 
 ![The events calendar](../images/en/calendar.webp)
 

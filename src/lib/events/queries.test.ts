@@ -38,6 +38,26 @@ describe('listOccurrences', () => {
     );
   });
 
+  it('also asks somebody who only proposes for their own events, whatever their status', async () => {
+    await listOccurrences({ range: RANGE, includeDrafts: false, ownLogin: 'dave' });
+
+    expect(whereOf(0)).toContain(
+      JSON.stringify({
+        OR: [{ OR: [{ status: 'CONFIRMED' }, CONFIRMED_ALONE] }, { authorLogin: 'dave' }],
+      }),
+    );
+  });
+
+  it('asks nobody but a proposer for the events of an author', async () => {
+    await listOccurrences({ range: RANGE, includeDrafts: false });
+    expect(whereOf(0)).not.toContain('authorLogin');
+
+    vi.clearAllMocks();
+    vi.mocked(prisma.event.findMany).mockResolvedValue([]);
+    await listOccurrences({ range: RANGE, includeDrafts: true, ownLogin: 'dave' });
+    expect(whereOf(0)).not.toContain('authorLogin');
+  });
+
   it('puts no such condition for somebody who manages the events', async () => {
     await listOccurrences({ range: RANGE, includeDrafts: true });
 
@@ -74,47 +94,79 @@ describe('listOccurrences', () => {
 
 describe('getVisibleEvent', () => {
   const event = (
-    status: 'DRAFT' | 'CONFIRMED',
-    own: { status: 'DRAFT' | 'CONFIRMED' | null }[] = [],
-  ) => ({ id: 'evt1', status, occurrences: own }) as never;
+    status: 'DRAFT' | 'PROPOSED' | 'CONFIRMED',
+    own: { status: 'DRAFT' | 'PROPOSED' | 'CONFIRMED' | null }[] = [],
+    authorLogin = 'pol',
+  ) => ({ id: 'evt1', status, authorLogin, occurrences: own }) as never;
 
   it('is null for an event that does not exist', async () => {
     vi.mocked(prisma.event.findUnique).mockResolvedValue(null);
-    expect(await getVisibleEvent('evt1', true)).toBeNull();
+    expect(await getVisibleEvent('evt1', { includeDrafts: true })).toBeNull();
   });
 
   it('is null for a draft, for a reader who cannot see drafts: as if it did not exist', async () => {
     vi.mocked(prisma.event.findUnique).mockResolvedValue(event('DRAFT'));
-    expect(await getVisibleEvent('evt1', false)).toBeNull();
+    expect(await getVisibleEvent('evt1', { includeDrafts: false })).toBeNull();
     // A date back to draft or a date with other values of its own does not make it visible.
     vi.mocked(prisma.event.findUnique).mockResolvedValue(
       event('DRAFT', [{ status: 'DRAFT' }, { status: null }]),
     );
-    expect(await getVisibleEvent('evt1', false)).toBeNull();
+    expect(await getVisibleEvent('evt1', { includeDrafts: false })).toBeNull();
   });
 
   it('is the event for a draft that has a date confirmed on its own (the page shows that date only)', async () => {
     vi.mocked(prisma.event.findUnique).mockResolvedValue(event('DRAFT', [{ status: 'CONFIRMED' }]));
-    expect(await getVisibleEvent('evt1', false)).toMatchObject({ id: 'evt1' });
+    expect(await getVisibleEvent('evt1', { includeDrafts: false })).toMatchObject({ id: 'evt1' });
   });
 
-  it('is the event, drafts included, for somebody who manages events; and a confirmed event for everybody', async () => {
+  it('is the event, drafts and proposals included, for a validator; and a confirmed event for everybody', async () => {
     vi.mocked(prisma.event.findUnique).mockResolvedValue(event('DRAFT'));
-    expect(await getVisibleEvent('evt1', true)).toMatchObject({ id: 'evt1' });
+    expect(await getVisibleEvent('evt1', { includeDrafts: true })).toMatchObject({ id: 'evt1' });
+    vi.mocked(prisma.event.findUnique).mockResolvedValue(event('PROPOSED'));
+    expect(await getVisibleEvent('evt1', { includeDrafts: true })).toMatchObject({ id: 'evt1' });
     vi.mocked(prisma.event.findUnique).mockResolvedValue(event('CONFIRMED'));
-    expect(await getVisibleEvent('evt1', false)).toMatchObject({ id: 'evt1' });
+    expect(await getVisibleEvent('evt1', { includeDrafts: false })).toMatchObject({ id: 'evt1' });
+  });
+
+  it('is null for a proposal, for a reader who cannot see what is not published', async () => {
+    vi.mocked(prisma.event.findUnique).mockResolvedValue(event('PROPOSED'));
+    expect(await getVisibleEvent('evt1', { includeDrafts: false })).toBeNull();
+  });
+
+  it('is the event, whatever its status, for its own author who only proposes', async () => {
+    const viewer = { includeDrafts: false, ownLogin: 'pol' };
+    for (const status of ['DRAFT', 'PROPOSED', 'CONFIRMED'] as const) {
+      vi.mocked(prisma.event.findUnique).mockResolvedValue(event(status));
+      expect(await getVisibleEvent('evt1', viewer)).toMatchObject({ id: 'evt1' });
+    }
+  });
+
+  it("is null for somebody else's draft or proposal, for a proposer", async () => {
+    const viewer = { includeDrafts: false, ownLogin: 'other' };
+    vi.mocked(prisma.event.findUnique).mockResolvedValue(event('DRAFT'));
+    expect(await getVisibleEvent('evt1', viewer)).toBeNull();
+    vi.mocked(prisma.event.findUnique).mockResolvedValue(event('PROPOSED'));
+    expect(await getVisibleEvent('evt1', viewer)).toBeNull();
+    vi.mocked(prisma.event.findUnique).mockResolvedValue(event('CONFIRMED'));
+    expect(await getVisibleEvent('evt1', viewer)).toMatchObject({ id: 'evt1' });
   });
 });
 
 describe('getFilterOptions', () => {
   it('offers a reader who cannot see drafts the school years of what they can see', async () => {
-    await getFilterOptions(false);
+    await getFilterOptions({ includeDrafts: false });
     expect(whereOf(0)).toBe(JSON.stringify({ OR: [{ status: 'CONFIRMED' }, CONFIRMED_ALONE] }));
 
     vi.clearAllMocks();
     vi.mocked(prisma.event.findMany).mockResolvedValue([]);
     vi.mocked(prisma.user.findMany).mockResolvedValue([]);
-    await getFilterOptions(true);
+    await getFilterOptions({ includeDrafts: true });
     expect(whereOf(0)).toBe('{}');
+
+    vi.clearAllMocks();
+    vi.mocked(prisma.event.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.user.findMany).mockResolvedValue([]);
+    await getFilterOptions({ includeDrafts: false, ownLogin: 'dave' });
+    expect(whereOf(0)).toContain('"authorLogin":"dave"');
   });
 });

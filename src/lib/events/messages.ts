@@ -3,6 +3,17 @@ import { toLocalDateTime } from './time';
 
 export type { Translate };
 
+/** What a message of the proposal circuit says besides the event: who proposed it, who reviewed it and the
+ * reason of a refusal. */
+export interface ReviewFacts {
+  /** The author of the proposal, by name. */
+  authorName: string;
+  /** The validator who approved or refused, by name; null for a proposal that nobody reviewed yet. */
+  reviewerName: string | null;
+  /** The comment of a refusal. */
+  comment: string | null;
+}
+
 export interface NotificationEventData {
   eventId: string;
   title: string;
@@ -18,6 +29,8 @@ export interface NotificationEventData {
   recurrenceUntil: Date | null;
   /** Absolute link to the event, when APP_URL is configured. */
   url: string | null;
+  /** Only in the messages of the proposal circuit. */
+  review?: ReviewFacts;
 }
 
 export interface BuiltMessage {
@@ -89,6 +102,28 @@ export function buildConfirmationMessage(
     subject: t('confirmed.subject', { title: data.title }),
     body: [t('confirmed.intro'), '', ...detailLines(data, t, locale, timeZone)].join('\n'),
   };
+}
+
+/** The three messages of the proposal circuit: an event proposed (to the validators), approved or refused (to its
+ * author). A refusal carries the validator's comment. */
+export function buildReviewMessage(
+  kind: 'proposed' | 'approved' | 'refused',
+  data: NotificationEventData,
+  t: Translate,
+  locale: string,
+  timeZone: string,
+): BuiltMessage {
+  const review = data.review;
+  const intro = t(`${kind}.intro`, {
+    author: review?.authorName ?? '',
+    reviewer: review?.reviewerName ?? '',
+  });
+  const lines = [intro, ''];
+  if (kind === 'refused' && review?.comment) {
+    lines.push(`${t('embed.fields.reason')} :`, review.comment, '');
+  }
+  lines.push(...detailLines(data, t, locale, timeZone));
+  return { subject: t(`${kind}.subject`, { title: data.title }), body: lines.join('\n') };
 }
 
 /** Which day a reminder talks about: the day after it is sent, or the same day when the server was

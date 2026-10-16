@@ -2,9 +2,10 @@ import { getConfig } from '@/config';
 import type { Prisma } from '@/generated/prisma/client';
 import { APPROVED_STATUSES } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
-import { VISIBLE_WITHOUT_DRAFTS, eventInclude } from './include';
+import { eventInclude, visibleTo } from './include';
 import {
   expandEvents,
+  type DraftVisibility,
   type EventFilters,
   type EventRecord,
   type OccurrenceView,
@@ -36,19 +37,20 @@ function filterWhere(filters: EventFilters | undefined): Prisma.EventWhereInput[
   return clauses;
 }
 
-/** Occurrences overlapping [from, to), visible to a user who can (or cannot)
- * see drafts. Drafts are excluded by the database query *and* again by
- * expandEvents, so a mistake in one layer cannot leak a draft. */
-export async function listOccurrences(options: {
-  range: { from: Date; to: Date };
-  includeDrafts: boolean;
-  filters?: EventFilters;
-}): Promise<OccurrenceView[]> {
+/** Occurrences overlapping [from, to), visible to a user who can (or cannot) see what is not published.
+ * Drafts and proposals are excluded by the database query *and* again by expandEvents, so a mistake in one
+ * layer cannot leak one. */
+export async function listOccurrences(
+  options: {
+    range: { from: Date; to: Date };
+    filters?: EventFilters;
+  } & DraftVisibility,
+): Promise<OccurrenceView[]> {
   const { range } = options;
   const events: EventRecord[] = await prisma.event.findMany({
     where: {
       AND: [
-        options.includeDrafts ? {} : VISIBLE_WITHOUT_DRAFTS,
+        visibleTo(options),
         ...filterWhere(options.filters),
         {
           OR: [
@@ -72,22 +74,25 @@ export async function listOccurrences(options: {
     timeZone: getConfig().bde.timezone,
     range,
     includeDrafts: options.includeDrafts,
+    ownLogin: options.ownLogin,
     filters: options.filters,
   });
 }
 
 /** The next occurrences starting at or after `now` (or still in progress). */
-export async function listUpcomingOccurrences(options: {
-  now: Date;
-  limit: number;
-  includeDrafts: boolean;
-  filters?: EventFilters;
-}): Promise<OccurrenceView[]> {
+export async function listUpcomingOccurrences(
+  options: {
+    now: Date;
+    limit: number;
+    filters?: EventFilters;
+  } & DraftVisibility,
+): Promise<OccurrenceView[]> {
   // A series is bounded (see MAX_OCCURRENCES), so a generous horizon is enough.
   const to = new Date(options.now.getTime() + 800 * DAY_MS);
   const occurrences = await listOccurrences({
     range: { from: options.now, to },
     includeDrafts: options.includeDrafts,
+    ownLogin: options.ownLogin,
     filters: options.filters,
   });
   return occurrences.slice(0, options.limit);
@@ -96,17 +101,33 @@ export async function listUpcomingOccurrences(options: {
 /** A single event with its assignees, cancelled dates and the dates that have values of their own, or null if
  * it does not exist *or the user may not see it* (a draft without permission is indistinguishable from a
  * missing event; a draft event with a date confirmed alone is visible, showing only that date). */
-export async function getVisibleEvent(id: string, includeDrafts: boolean) {
+export async function getVisibleEvent(id: string, viewer: DraftVisibility) {
   const event = await prisma.event.findUnique({ where: { id }, include: eventInclude });
   if (
     !event ||
-    (!includeDrafts &&
-      event.status === 'DRAFT' &&
+    (!viewer.includeDrafts &&
+      !(viewer.ownLogin !== undefined && event.authorLogin === viewer.ownLogin) &&
+      event.status !== 'CONFIRMED' &&
       !event.occurrences.some((own) => own.status === 'CONFIRMED'))
   ) {
     return null;
   }
   return event;
+}
+
+/** The proposals waiting for a validator, the oldest first: the events whose own status is PROPOSED (a proposal is
+ * always the whole event, never one date of it). Only for somebody who can validate. */
+export async function listProposals() {
+  return prisma.event.findMany({
+    where: { status: 'PROPOSED' },
+    include: { ...eventInclude, author: { select: { fullName: true } } },
+    orderBy: [{ proposedAt: 'asc' }, { startsAt: 'asc' }],
+  });
+}
+
+/** How many proposals wait: the counter of the menu. */
+export function countProposals(): Promise<number> {
+  return prisma.event.count({ where: { status: 'PROPOSED' } });
 }
 
 export interface FilterOptions {
@@ -116,10 +137,10 @@ export interface FilterOptions {
 
 /** Values offered by the filter bar: school years that have events visible
  * to this user, and every approved member (anyone can be put in charge). */
-export async function getFilterOptions(includeDrafts: boolean): Promise<FilterOptions> {
+export async function getFilterOptions(viewer: DraftVisibility): Promise<FilterOptions> {
   const [years, members] = await Promise.all([
     prisma.event.findMany({
-      where: includeDrafts ? {} : VISIBLE_WITHOUT_DRAFTS,
+      where: visibleTo(viewer),
       select: { schoolYear: true },
       distinct: ['schoolYear'],
       orderBy: { schoolYear: 'desc' },

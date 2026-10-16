@@ -3,6 +3,13 @@ import { resolveOccurrences, seriesKeyOf, type EventRecord } from './series';
 
 export type { EventRecord } from './series';
 
+/** What a reader sees of the events that are not published: everything (a validator), their own (somebody who
+ * only proposes: `ownLogin`), nothing. */
+export interface DraftVisibility {
+  includeDrafts: boolean;
+  ownLogin?: string;
+}
+
 export interface EventFilters {
   categoryKey?: string;
   assigneeLogin?: string;
@@ -35,9 +42,9 @@ export interface OccurrenceView {
 
 /**
  * Expands stored events into their occurrences overlapping [from, to), with each date's own values applied,
- * dropping cancelled dates and the dates that are drafts unless `includeDrafts` (a draft is decided date by
- * date: a series can be confirmed with one date back to draft, or the other way round), sorted
- * chronologically. This is the single place visibility is decided for everything built on occurrences
+ * dropping cancelled dates and the dates that are not published (a draft or a proposal) unless `includeDrafts`, or
+ * unless they are the reader's own (`ownLogin` is the author of the event). It is decided date by date: a
+ * series can be confirmed with one date back to draft, or the other way round. Sorted chronologically. This is the single place visibility is decided for everything built on occurrences
  * (calendar, list, dashboard, .ics feed, reminders).
  */
 export function expandEvents(
@@ -45,19 +52,19 @@ export function expandEvents(
   options: {
     timeZone: string;
     range: { from: Date; to: Date };
-    includeDrafts: boolean;
     filters?: EventFilters;
-  },
+  } & DraftVisibility,
 ): OccurrenceView[] {
   const { filters = {}, range } = options;
   const views: OccurrenceView[] = [];
 
   for (const event of events) {
     if (filters.schoolYear && event.schoolYear !== filters.schoolYear) continue;
+    const isOwn = options.ownLogin !== undefined && event.authorLogin === options.ownLogin;
 
     for (const occurrence of resolveOccurrences(event, options.timeZone)) {
       if (occurrence.cancelled) continue;
-      if (occurrence.status === 'DRAFT' && !options.includeDrafts) continue;
+      if (occurrence.status !== 'CONFIRMED' && !options.includeDrafts && !isOwn) continue;
       if (occurrence.end.getTime() <= range.from.getTime()) continue;
       if (occurrence.start.getTime() >= range.to.getTime()) continue;
       if (filters.categoryKey && occurrence.categoryKey !== filters.categoryKey) continue;

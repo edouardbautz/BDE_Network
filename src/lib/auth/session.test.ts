@@ -30,7 +30,7 @@ const mockAuth = vi.mocked(auth as () => Promise<Session | null>);
 const treasurer = {
   id: 'role-treasurer',
   name: 'Trésorier',
-  permissions: ['events.view', 'events.manage'],
+  permissions: ['events.view', 'events.validate'],
   allPermissions: false,
 };
 
@@ -126,7 +126,7 @@ describe('getEffectiveSession', () => {
       roleName: 'Trésorier',
       holdsAll: false,
     });
-    expect(result?.user.permissions).toEqual(['events.manage', 'events.view']);
+    expect(result?.user.permissions).toEqual(['events.propose', 'events.validate', 'events.view']);
     expect(result?.isImpersonating).toBe(true);
     expect(result?.simulatedAs).toBe('Trésorier');
     expect(result?.realStatus).toBe('OWNER');

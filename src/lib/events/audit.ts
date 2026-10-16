@@ -8,6 +8,10 @@ export type EventAuditAction =
   | 'event.update'
   | 'event.delete'
   | 'event.status_change'
+  | 'event.propose'
+  | 'event.withdraw'
+  | 'event.approve'
+  | 'event.refuse'
   | 'event.occurrence_cancel'
   | 'event.occurrence_restore';
 

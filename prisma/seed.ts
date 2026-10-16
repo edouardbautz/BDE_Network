@@ -48,7 +48,8 @@ const DEMO_ROLES = [
       'members.manage',
       'roles.manage',
       'events.view',
-      'events.manage',
+      'events.propose',
+      'events.validate',
       'events.shared_calendar',
     ],
   },
@@ -59,7 +60,7 @@ const DEMO_ROLES = [
       "Valide les demandes d'accès et organise les événements.",
       'Approves access requests and organises events.',
     ),
-    permissions: ['members.manage', 'events.view', 'events.manage'],
+    permissions: ['members.manage', 'events.view', 'events.propose', 'events.validate'],
   },
   {
     id: 'role-demo-events',
@@ -68,7 +69,16 @@ const DEMO_ROLES = [
       "Organise les événements et gère l'agenda partagé.",
       'Organises events and manages the shared calendar.',
     ),
-    permissions: ['events.view', 'events.manage', 'events.shared_calendar'],
+    permissions: ['events.view', 'events.propose', 'events.validate', 'events.shared_calendar'],
+  },
+  {
+    id: 'role-demo-pole',
+    name: tr('Pôle Events', 'Events team'),
+    description: tr(
+      'Propose des événements, que le bureau valide ou refuse.',
+      'Proposes events, which the board approves or refuses.',
+    ),
+    permissions: ['events.view', 'events.propose'],
   },
 ];
 
@@ -126,6 +136,14 @@ const DEMO_USERS: DemoUser[] = [
     campus: 'Lyon',
     status: 'MEMBER',
     roleId: 'role-member',
+  },
+  {
+    login: 'demo-member3',
+    fullName: 'Pia Pôle',
+    email: 'demo-member3@example.com',
+    campus: 'Paris',
+    status: 'MEMBER',
+    roleId: 'role-demo-pole',
   },
   {
     login: 'demo-pending',

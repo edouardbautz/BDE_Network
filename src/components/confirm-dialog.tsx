@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  useId,
   useRef,
   useState,
   useTransition,
@@ -10,7 +11,9 @@ import {
 } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Textarea } from '@/components/events/field-styles';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { isActionTarget } from '@/lib/action-target';
 import {
   Dialog,
@@ -33,6 +36,16 @@ export interface ConfirmChoice {
   hint?: ReactNode;
 }
 
+/** A text the person writes before confirming (the reason of a refusal). */
+export interface ConfirmField {
+  label: string;
+  /** What to write, in one short sentence under the label. */
+  hint?: ReactNode;
+  maxLength: number;
+  /** The confirm button stays disabled until something other than spaces is written. */
+  required?: boolean;
+}
+
 interface ConfirmDialogProps {
   /** A short question or statement: "Retirer ce membre ?". */
   title: string;
@@ -41,8 +54,11 @@ interface ConfirmDialogProps {
   /** The action button: a verb ("Retirer", "Supprimer définitivement"), never "OK". */
   confirmLabel: string;
   /** Runs when the person confirms. The dialog stays open, with the button busy, until it
-   * settles (including the navigation of a server action that redirects). */
-  onConfirm: (choice: string) => unknown | Promise<unknown>;
+   * settles (including the navigation of a server action that redirects). `text` is what was written in the
+   * `field` (an empty string when there is none). */
+  onConfirm: (choice: string, text: string) => unknown | Promise<unknown>;
+  /** Asks for a text between the sentence and the buttons, empty each time the dialog opens. */
+  field?: ConfirmField;
   /** Asks which way the action applies, with radio buttons between the sentence and the buttons. The first one is
    * selected each time the dialog opens, so the narrowest choice is the default; `onConfirm` receives its value
    * (an empty string when there are no choices). */
@@ -79,6 +95,7 @@ export function ConfirmDialog({
   confirmLabel,
   onConfirm,
   choices,
+  field,
   tone = 'destructive',
   children,
   triggerVariant = 'destructive',
@@ -94,6 +111,8 @@ export function ConfirmDialog({
   const cancelRef = useRef<HTMLButtonElement>(null);
   const [localOpen, setLocalOpen] = useState(false);
   const [choice, setChoice] = useState(choices?.[0]?.value ?? '');
+  const [text, setText] = useState('');
+  const fieldId = useId();
   const [isPendingNow, startTransition] = useTransition();
   // The action answered with an address to load: busy until the browser replaces the page.
   const [leaving, setLeaving] = useState(false);
@@ -107,7 +126,10 @@ export function ConfirmDialog({
   const [seenKey, setSeenKey] = useState(resetKey);
   if (seenKey !== resetKey) {
     setSeenKey(resetKey);
-    if (open) setChoice(firstChoice);
+    if (open) {
+      setChoice(firstChoice);
+      setText('');
+    }
   }
 
   const setOpen = (next: boolean) => {
@@ -121,11 +143,13 @@ export function ConfirmDialog({
     setOpen(next);
   };
 
+  const missingText = !!field?.required && text.trim() === '';
+
   const confirm = () => {
-    if (isPending || leaving) return;
+    if (isPending || leaving || missingText) return;
     startTransition(async () => {
       try {
-        const answer = await onConfirm(choice);
+        const answer = await onConfirm(choice, text);
         if (isActionTarget(answer)) {
           // The action stays on the page it was asked on, and says where to look next: load it (see
           // lib/action-target.ts). The dialog stays busy until the page is replaced.
@@ -188,6 +212,21 @@ export function ConfirmDialog({
             ))}
           </fieldset>
         )}
+        {field && (
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor={fieldId}>{field.label}</Label>
+            {field.hint && <p className="text-muted-foreground text-xs">{field.hint}</p>}
+            <Textarea
+              id={fieldId}
+              value={text}
+              onChange={(event) => setText(event.target.value)}
+              maxLength={field.maxLength}
+              required={field.required}
+              disabled={isPending}
+              rows={4}
+            />
+          </div>
+        )}
         <DialogFooter>
           <DialogClose render={<Button ref={cancelRef} variant="outline" disabled={isPending} />}>
             {t('cancel')}
@@ -195,7 +234,7 @@ export function ConfirmDialog({
           <Button
             variant={tone === 'destructive' ? 'destructive' : 'default'}
             onClick={confirm}
-            disabled={isPending}
+            disabled={isPending || missingText}
             focusableWhenDisabled
             aria-busy={isPending || undefined}
           >

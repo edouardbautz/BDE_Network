@@ -30,11 +30,21 @@ describe('the permission registry', () => {
   });
 
   it('gives every enabled module view and manage, plus what the module declares', () => {
+    expect(activePermissionKeys(['finance'])).toEqual([
+      'members.manage',
+      'roles.manage',
+      'finance.view',
+      'finance.manage',
+    ]);
+  });
+
+  it('gives the events module propose and validate instead of manage', () => {
     expect(activePermissionKeys(['events'])).toEqual([
       'members.manage',
       'roles.manage',
       'events.view',
-      'events.manage',
+      'events.propose',
+      'events.validate',
       'events.shared_calendar',
     ]);
   });
@@ -62,8 +72,15 @@ describe('the permission registry', () => {
   });
 
   it('says managing a module includes viewing it', () => {
-    const manage = permissionDefinitions(['events']).find((d) => d.key === 'events.manage');
-    expect(manage?.implies).toEqual(['events.view']);
+    const manage = permissionDefinitions(['finance']).find((d) => d.key === 'finance.manage');
+    expect(manage?.implies).toEqual(['finance.view']);
+  });
+
+  it('says proposing events includes viewing them, and validating includes both', () => {
+    const find = (key: string) => permissionDefinitions(['events']).find((d) => d.key === key);
+    expect(find('events.propose')?.implies).toEqual(['events.view']);
+    expect(find('events.validate')?.implies).toEqual(['events.propose', 'events.view']);
+    expect(find('events.shared_calendar')?.implies).toEqual(['events.view']);
   });
 });
 
@@ -72,8 +89,8 @@ describe('normalizePermissions', () => {
 
   it('adds what a permission implies, removes duplicates and sorts', () => {
     expect(
-      normalizePermissions(['events.manage', 'members.manage', 'events.manage'], definitions),
-    ).toEqual(['events.manage', 'events.view', 'members.manage']);
+      normalizePermissions(['events.validate', 'members.manage', 'events.validate'], definitions),
+    ).toEqual(['events.propose', 'events.validate', 'events.view', 'members.manage']);
   });
 
   it('drops keys that do not exist (typos, a disabled module)', () => {
@@ -102,23 +119,23 @@ describe('resolvePermissionSet', () => {
   it('gives a member what their role grants, with what it implies', () => {
     const member = resolvePermissionSet(
       'MEMBER',
-      { permissions: ['events.manage'], allPermissions: false },
+      { permissions: ['events.validate'], allPermissions: false },
       modules,
     );
     expect(member.all).toBe(false);
-    expect([...member.keys].sort()).toEqual(['events.manage', 'events.view']);
+    expect([...member.keys].sort()).toEqual(['events.propose', 'events.validate', 'events.view']);
   });
 
   it('gives a role with all permissions every active permission, including a later module', () => {
     const role = { permissions: [], allPermissions: true };
-    expect(resolvePermissionSet('MEMBER', role, ['events']).keys.has('events.manage')).toBe(true);
+    expect(resolvePermissionSet('MEMBER', role, ['events']).keys.has('events.validate')).toBe(true);
     const later = resolvePermissionSet('MEMBER', role, ['events', 'finance']);
     expect(later.all).toBe(true);
     expect(later.keys.has('finance.manage')).toBe(true);
   });
 
   it('ignores the permissions of a module that is not enabled, but they are not lost', () => {
-    const role = { permissions: ['events.manage', 'finance.manage'], allPermissions: false };
+    const role = { permissions: ['events.validate', 'finance.manage'], allPermissions: false };
     expect(resolvePermissionSet('MEMBER', role, ['events']).keys.has('finance.manage')).toBe(false);
     expect(
       resolvePermissionSet('MEMBER', role, ['events', 'finance']).keys.has('finance.manage'),
@@ -169,7 +186,7 @@ describe('can', () => {
 
   it('is true only for a permission held', () => {
     expect(can(member, 'events.view')).toBe(true);
-    expect(can(member, 'events.manage')).toBe(false);
+    expect(can(member, 'events.validate')).toBe(false);
     expect(can(member, 'nope')).toBe(false);
   });
 

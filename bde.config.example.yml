@@ -82,6 +82,9 @@ notifications:
   # Module "events" (ignorés si le module n'est pas activé). Optionnels : "none" par défaut.
   eventConfirmed: 'none' # un événement passe de brouillon à confirmé
   eventReminder: 'none' # rappel envoyé la veille d'un événement
+  eventProposed: 'none' # un événement est proposé : prévient ceux qui peuvent le valider
+  eventApproved: 'none' # une proposition est approuvée : e-mail à son auteur, ou message dans le salon
+  eventRefused: 'none' # une proposition est refusée, avec le commentaire : e-mail à son auteur, ou message dans le salon
 
 
 # Facultatif. Prévenir les propriétaires (bandeau du tableau de bord et de la page Paramètres) quand une nouvelle

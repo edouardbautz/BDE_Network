@@ -94,8 +94,15 @@ No. The module is the board's **internal** calendar. Students' registrations sta
 
 ### What is the difference between a draft and a confirmed event?
 
-A **draft** is only visible to those who can manage events. A **confirmed** event is visible to every member, and
-confirming it notifies them. See [Events module](events.md).
+A **draft** is only visible to its author and to those who can validate events. A **proposal** is a draft sent to the
+validators, who approve or refuse it. A **confirmed** event is visible to every member, and confirming it notifies
+them. See [Events module](events.md).
+
+### Why can I no longer edit my event?
+
+Once an event is **published**, only a validator can change it, even if you created it: a published event never leaves
+the calendar without a validator doing it. Ask one of them, they edit freely. See
+[Events module](events.md#proposing-and-validating-events).
 
 ### Why does Google Calendar take hours to show an event?
 

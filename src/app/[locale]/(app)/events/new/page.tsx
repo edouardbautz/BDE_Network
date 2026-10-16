@@ -6,6 +6,7 @@ import { redirect } from '@/i18n/navigation';
 import { getEventsAccess } from '@/lib/events/access';
 import { getCategories } from '@/lib/events/categories';
 import { listAssignableMembers } from '@/lib/events/queries';
+import { reviewActorOf, statusChoices } from '@/lib/events/review';
 import { cancelHrefFor, defaultEventTimes, requestedEventDay } from '@/lib/events/defaults';
 import type { RawSearchParams } from '@/lib/events/search-params';
 import { createEvent } from '../actions';
@@ -28,7 +29,7 @@ export default async function NewEventPage({
   if (!access) {
     notFound();
   }
-  if (!access.canManage) {
+  if (!access.canCreate) {
     // Members can read events but not create them: send them back to the list.
     redirect({ href: '/events', locale: await getLocale() });
   }
@@ -37,6 +38,9 @@ export default async function NewEventPage({
   const day = requestedEventDay(raw.date);
   const timeZone = getConfig().bde.timezone;
   const categories = getCategories();
+  // A validator starts a draft; somebody who can only propose starts a proposal, which is what they come to do.
+  const choices = statusChoices(reviewActorOf(access), null);
+  const status = access.canValidate ? 'DRAFT' : 'PROPOSED';
 
   return (
     <div className="flex flex-col gap-6">
@@ -51,9 +55,10 @@ export default async function NewEventPage({
           ...defaultEventTimes(new Date(), timeZone, day),
           recurrence: 'NONE',
           recurrenceUntil: '',
-          status: 'DRAFT',
+          status,
           assigneeLogins: [],
         }}
+        statusChoices={choices}
         categories={categories.map(({ key, label }) => ({ key, label }))}
         members={await listAssignableMembers()}
         timeZone={timeZone}

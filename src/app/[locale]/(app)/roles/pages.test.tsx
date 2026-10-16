@@ -78,7 +78,7 @@ const stored = (id: string, name: string, permissions: string[], extra = {}) => 
 
 const roles = [
   stored('role-member', 'Membre', ['events.view'], { isDefault: true }),
-  stored('role-secretary', 'Secrétaire', ['events.manage', 'members.manage']),
+  stored('role-secretary', 'Secrétaire', ['events.validate', 'members.manage']),
   stored('role-treasurer', 'Trésorier', ['roles.manage']),
   stored('role-admin', 'Admin', [], { allPermissions: true }),
 ];
@@ -133,7 +133,7 @@ describe('roles pages — direct URL access control', () => {
     );
 
     it('turns away a member who manages members but not roles', async () => {
-      as(memberWith(['members.manage', 'events.manage']));
+      as(memberWith(['members.manage', 'events.validate']));
       await expect(open()).rejects.toThrow(RedirectSignal);
     });
 

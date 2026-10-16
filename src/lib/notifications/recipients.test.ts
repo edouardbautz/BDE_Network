@@ -11,7 +11,7 @@ describe('emailsOfHolders', () => {
   it('asks for the owners, the roles with every permission, and the roles that list the permission', async () => {
     vi.mocked(prisma.user.findMany).mockResolvedValue([] as never);
 
-    await emailsOfHolders('events.manage');
+    await emailsOfHolders('events.validate');
 
     expect(prisma.user.findMany).toHaveBeenCalledExactlyOnceWith({
       where: {
@@ -19,7 +19,7 @@ describe('emailsOfHolders', () => {
           { status: 'OWNER' },
           {
             status: 'MEMBER',
-            role: { OR: [{ allPermissions: true }, { permissions: { has: 'events.manage' } }] },
+            role: { OR: [{ allPermissions: true }, { permissions: { has: 'events.validate' } }] },
           },
         ],
       },

@@ -17,8 +17,24 @@ import { toLocalDateTime } from './time';
 const DESCRIPTION_PREVIEW = 350;
 
 /** One icon in front of the title of each kind of card, and of each line of facts. */
-const KIND_ICON: Record<EventCardKind, string> = { confirmed: '🎉', tomorrow: '⏰', today: '🔔' };
-const ICON = { when: '📅', where: '📍', category: '🏷️', inCharge: '👥', repeats: '🔁' } as const;
+const KIND_ICON: Record<EventCardKind, string> = {
+  confirmed: '🎉',
+  tomorrow: '⏰',
+  today: '🔔',
+  proposed: '📝',
+  approved: '✅',
+  refused: '⛔',
+};
+const ICON = {
+  when: '📅',
+  where: '📍',
+  category: '🏷️',
+  inCharge: '👥',
+  repeats: '🔁',
+  author: '👤',
+  reviewer: '🛡️',
+  reason: '💬',
+} as const;
 
 /** "15:00 → 18:00 · in 2 days", the end as a full date when the event ends another day. */
 function timeLine(data: NotificationEventData, timeZone: string): string {
@@ -54,6 +70,21 @@ export function buildEventEmbed(
       inline: true,
     },
   ];
+  // A chat channel reaches the whole team, not only the person concerned: the card says who it is about.
+  if (data.review) {
+    fields.push({
+      name: `${ICON.author}  ${t('embed.fields.proposedBy')}`,
+      value: data.review.authorName,
+      inline: true,
+    });
+    if (data.review.reviewerName) {
+      fields.push({
+        name: `${ICON.reviewer}  ${t(kind === 'approved' ? 'embed.fields.approvedBy' : 'embed.fields.refusedBy')}`,
+        value: data.review.reviewerName,
+        inline: true,
+      });
+    }
+  }
   if (data.assigneeNames.length > 0) {
     fields.push({
       name: `${ICON.inCharge}  ${t('embed.fields.inCharge')}`,
@@ -70,12 +101,16 @@ export function buildEventEmbed(
     });
   }
 
-  const lines = [
-    kindLine(t(KIND_LABEL_KEY[kind])),
-    BLANK_LINE,
-    headingLine(ICON.when, discordTime(data.start, 'F')),
-    timeLine(data, timeZone),
-  ];
+  const lines = [kindLine(t(KIND_LABEL_KEY[kind])), BLANK_LINE];
+  // The reason of a refusal comes first: it is what the author opens the card for.
+  if (kind === 'refused' && data.review?.comment) {
+    lines.push(
+      headingLine(ICON.reason, t('embed.fields.reason')),
+      quoteBlock(data.review.comment),
+      BLANK_LINE,
+    );
+  }
+  lines.push(headingLine(ICON.when, discordTime(data.start, 'F')), timeLine(data, timeZone));
   if (data.location) lines.push(BLANK_LINE, headingLine(ICON.where, data.location));
   if (description) lines.push(BLANK_LINE, quoteBlock(truncate(description, DESCRIPTION_PREVIEW)));
   lines.push(BLANK_LINE); // air between the text and the fields

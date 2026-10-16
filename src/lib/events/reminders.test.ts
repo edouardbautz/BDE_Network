@@ -351,7 +351,7 @@ describe('runReminderTick', () => {
 
       await runReminderTick(now);
 
-      expect(emailsOfHolders).toHaveBeenCalledExactlyOnceWith('events.manage');
+      expect(emailsOfHolders).toHaveBeenCalledExactlyOnceWith('events.validate');
       expect(deliver).toHaveBeenCalledWith('eventReminder', expect.anything(), [
         'owner@x.fr',
         'resp@x.fr',

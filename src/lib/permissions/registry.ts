@@ -10,7 +10,9 @@ import { EVENTS_MODULE_KEY } from '@/config/schema';
  *   (managing includes viewing), whatever its key, so a fork's own module works
  *   without registering anything.
  * - A module that needs more declares them in `MODULE_EXTRA_PERMISSIONS` below.
- *   That one entry is all a new module (Finance, Meetings...) adds here.
+ *   That one entry is all a new module (Finance, Meetings...) adds here. A module whose
+ *   rights are not "manage" at all (events: propose, validate) also lists itself in
+ *   `MODULES_WITHOUT_MANAGE`.
  *
  * The audit log is not a permission: it is reserved for OWNER, always.
  */
@@ -20,10 +22,29 @@ export const CORE_SECTION = 'core';
 export const MEMBERS_MANAGE = 'members.manage';
 export const ROLES_MANAGE = 'roles.manage';
 
-/** Permissions a module declares beyond view/manage: `{ moduleKey: ['name', ...] }` gives `moduleKey.name`. */
-export const MODULE_EXTRA_PERMISSIONS: Readonly<Record<string, readonly string[]>> = {
-  [EVENTS_MODULE_KEY]: ['shared_calendar'],
+/** The events module's own rights (see MODULE_EXTRA_PERMISSIONS), named once for the code that checks them. */
+export const EVENTS_PROPOSE = `${EVENTS_MODULE_KEY}.propose`;
+export const EVENTS_VALIDATE = `${EVENTS_MODULE_KEY}.validate`;
+
+/** A permission a module declares beyond view/manage. `implies` names (within the module) what holding it
+ * includes; it defaults to `view`, and must list everything: an implication is not followed transitively. */
+export interface ExtraPermission {
+  name: string;
+  implies?: readonly string[];
+}
+
+/** Permissions a module declares beyond view/manage: `{ moduleKey: [{ name }, ...] }` gives `moduleKey.name`. */
+export const MODULE_EXTRA_PERMISSIONS: Readonly<Record<string, readonly ExtraPermission[]>> = {
+  [EVENTS_MODULE_KEY]: [
+    { name: 'propose' },
+    { name: 'validate', implies: ['propose', 'view'] },
+    { name: 'shared_calendar' },
+  ],
 };
+
+/** Modules that replace the generic `manage` with permissions of their own (see MODULE_EXTRA_PERMISSIONS):
+ * they get `view` and their extras, and no `manage`. */
+export const MODULES_WITHOUT_MANAGE: ReadonlySet<string> = new Set([EVENTS_MODULE_KEY]);
 
 export interface PermissionDefinition {
   /** e.g. "events.manage". */
@@ -55,19 +76,19 @@ export function permissionDefinitions(enabledModules: readonly string[]): Permis
   for (const moduleKey of new Set(enabledModules)) {
     if (!MODULE_KEY.test(moduleKey)) continue;
 
-    definitions.push(
-      { key: viewPermission(moduleKey), section: moduleKey, implies: [] },
-      {
+    definitions.push({ key: viewPermission(moduleKey), section: moduleKey, implies: [] });
+    if (!MODULES_WITHOUT_MANAGE.has(moduleKey)) {
+      definitions.push({
         key: managePermission(moduleKey),
         section: moduleKey,
         implies: [viewPermission(moduleKey)],
-      },
-    );
+      });
+    }
     for (const extra of MODULE_EXTRA_PERMISSIONS[moduleKey] ?? []) {
       definitions.push({
-        key: `${moduleKey}.${extra}`,
+        key: `${moduleKey}.${extra.name}`,
         section: moduleKey,
-        implies: [viewPermission(moduleKey)],
+        implies: (extra.implies ?? ['view']).map((name) => `${moduleKey}.${name}`),
       });
     }
   }

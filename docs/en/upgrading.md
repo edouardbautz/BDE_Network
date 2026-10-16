@@ -150,6 +150,20 @@ backup is lost**: the restore puts the database back in the state of the backup.
 Do them **in this order**. To take the project's latest version again afterwards, go back to your branch
 (`git switch main`).
 
+## History: the events right is split in two
+
+The "Manage events" right became two rights: **Propose events** and **Validate events** (see
+[Roles and rights](roles.md#the-rights)). The update converts the roles by itself, and nobody loses anything:
+validating includes everything managing did.
+
+| Before                                            | After                                                                                  |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| A role with the right to **manage events**        | the same role, with **Validate events** (which includes **Propose events** and "View") |
+| A role with only **View**, or with **All rights** | unchanged                                                                              |
+
+The roles converted are listed in an audit log entry (`role.migrate`), with their rights as they were. The update
+makes its safety copy first, like any update that changes the database.
+
 ## History: from fixed roles to custom roles (0.x → 1.0)
 
 Versions 0.x had the fixed roles Administrator and Member, and rights granted member by member. The migration to

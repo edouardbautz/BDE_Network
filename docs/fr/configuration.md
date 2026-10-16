@@ -224,13 +224,16 @@ disparu s'affiche quand même, sans couleur.
 Section **facultative** : une clé absente vaut `"none"` (désactivée). Chaque type de notification a son canal :
 `"email"`, `"discord"`, `"slack"` ou `"none"`.
 
-| Notification     | Quand                             | Qui est prévenu                                                                                              |
-| ---------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `memberPending`  | un nouveau membre demande l'accès | E-mail : les propriétaires et les rôles qui ont le droit « Gérer les membres ». Discord ou Slack : le salon. |
-| `memberApproved` | une demande est approuvée         | E-mail : **le membre approuvé** (son rôle, un lien de connexion). Discord ou Slack : le salon.               |
-| `memberRemoved`  | un membre est retiré              | Discord ou Slack : le salon. **Jamais d'e-mail** : la personne retirée ne reçoit rien.                       |
-| `eventConfirmed` | un événement est confirmé         | Voir [Événements](events.md#notifications).                                                                  |
-| `eventReminder`  | la veille d'un événement          | Voir [Événements](events.md#notifications).                                                                  |
+| Notification     | Quand                             | Qui est prévenu                                                                                                   |
+| ---------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `memberPending`  | un nouveau membre demande l'accès | E-mail : les propriétaires et les rôles qui ont le droit « Gérer les membres ». Discord ou Slack : le salon.      |
+| `memberApproved` | une demande est approuvée         | E-mail : **le membre approuvé** (son rôle, un lien de connexion). Discord ou Slack : le salon.                    |
+| `memberRemoved`  | un membre est retiré              | Discord ou Slack : le salon. **Jamais d'e-mail** : la personne retirée ne reçoit rien.                            |
+| `eventConfirmed` | un événement est confirmé         | Voir [Événements](events.md#notifications).                                                                       |
+| `eventReminder`  | la veille d'un événement          | Voir [Événements](events.md#notifications).                                                                       |
+| `eventProposed`  | un événement est proposé          | E-mail : les propriétaires et les rôles qui ont le droit « Valider les événements ». Discord ou Slack : le salon. |
+| `eventApproved`  | une proposition est approuvée     | E-mail : **son auteur**. Discord ou Slack : le salon.                                                             |
+| `eventRefused`   | une proposition est refusée       | E-mail : **son auteur**, avec le commentaire. Discord ou Slack : le salon.                                        |
 
 Les messages sont envoyés **après** l'action. Un envoi qui échoue (webhook indisponible, serveur SMTP en panne)
 est écrit dans les journaux et ne bloque jamais l'approbation ni le retrait. Si le canal choisi n'est pas

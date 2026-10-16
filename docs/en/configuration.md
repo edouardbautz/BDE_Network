@@ -219,13 +219,16 @@ with no color.
 An **optional** section: a missing key means `"none"` (off). Each type of notification has its channel: `"email"`,
 `"discord"`, `"slack"` or `"none"`.
 
-| Notification     | When                         | Who is notified                                                                                 |
-| ---------------- | ---------------------------- | ----------------------------------------------------------------------------------------------- |
-| `memberPending`  | a new member asks for access | Email: the owners and the roles with the "Manage members" right. Discord or Slack: the channel. |
-| `memberApproved` | a request is approved        | Email: **the approved member** (their role, a sign-in link). Discord or Slack: the channel.     |
-| `memberRemoved`  | a member is removed          | Discord or Slack: the channel. **Never an email**: the removed person receives nothing.         |
-| `eventConfirmed` | an event is confirmed        | See [Events](events.md#notifications).                                                          |
-| `eventReminder`  | the day before an event      | See [Events](events.md#notifications).                                                          |
+| Notification     | When                         | Who is notified                                                                                  |
+| ---------------- | ---------------------------- | ------------------------------------------------------------------------------------------------ |
+| `memberPending`  | a new member asks for access | Email: the owners and the roles with the "Manage members" right. Discord or Slack: the channel.  |
+| `memberApproved` | a request is approved        | Email: **the approved member** (their role, a sign-in link). Discord or Slack: the channel.      |
+| `memberRemoved`  | a member is removed          | Discord or Slack: the channel. **Never an email**: the removed person receives nothing.          |
+| `eventConfirmed` | an event is confirmed        | See [Events](events.md#notifications).                                                           |
+| `eventReminder`  | the day before an event      | See [Events](events.md#notifications).                                                           |
+| `eventProposed`  | an event is proposed         | Email: the owners and the roles with the "Validate events" right. Discord or Slack: the channel. |
+| `eventApproved`  | a proposal is approved       | Email: **its author**. Discord or Slack: the channel.                                            |
+| `eventRefused`   | a proposal is refused        | Email: **its author**, with the comment. Discord or Slack: the channel.                          |
 
 Messages are sent **after** the action. A send that fails (webhook unavailable, mail server down) is written to the
 logs and never blocks the approval or the removal. If the chosen channel is not set up (for example `email` without

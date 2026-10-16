@@ -45,7 +45,7 @@ const groups = [
     options: [
       { key: 'events.view', label: 'Voir', description: 'd3', implies: [], locked: false },
       {
-        key: 'events.manage',
+        key: 'events.validate',
         label: 'Gérer',
         description: 'd4',
         implies: ['events.view'],
@@ -82,23 +82,23 @@ afterEach(cleanup);
 describe('RoleForm — permission checkboxes', () => {
   it('ticking "manage" also ticks "view"', () => {
     renderForm();
-    fireEvent.click(box('events.manage'));
+    fireEvent.click(box('events.validate'));
 
-    expect(box('events.manage').checked).toBe(true);
+    expect(box('events.validate').checked).toBe(true);
     expect(box('events.view').checked).toBe(true);
   });
 
   it('unticking "view" also unticks "manage"', () => {
-    renderForm({ ...empty, permissions: ['events.view', 'events.manage'] });
+    renderForm({ ...empty, permissions: ['events.view', 'events.validate'] });
     fireEvent.click(box('events.view'));
 
     expect(box('events.view').checked).toBe(false);
-    expect(box('events.manage').checked).toBe(false);
+    expect(box('events.validate').checked).toBe(false);
   });
 
   it('unticking "manage" keeps "view"', () => {
-    renderForm({ ...empty, permissions: ['events.view', 'events.manage'] });
-    fireEvent.click(box('events.manage'));
+    renderForm({ ...empty, permissions: ['events.view', 'events.validate'] });
+    fireEvent.click(box('events.validate'));
 
     expect(box('events.view').checked).toBe(true);
   });

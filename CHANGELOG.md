@@ -8,12 +8,40 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **Proposing and validating events.** Some roles (an "Events team") can now **propose** events without being able to
+  publish them; other roles **validate**. A proposal is an event with a new status, **Awaiting validation**, which only
+  its author and those who validate can see. Validators get a **To validate** page, counted in the menu, where they
+  **approve** (the event is published and the members are notified, as when confirming) or **refuse** with a required
+  **comment**; the author reads the comment on the event and proposes it again after editing it. A proposer edits and
+  deletes only their own events that are **not published**, and never a published one: the page explains why instead of
+  offering **Edit**, so a published event never leaves the calendar without a validator doing it. Three notifications
+  (`eventProposed`, `eventApproved`, `eventRefused`, off by default, with the same cards on Discord and Slack and the
+  same designed e-mail as the others) tell the validators of a proposal and the author of the answer, with the comment of
+  a refusal. Every proposal, withdrawal, approval and refusal is in the audit log. The rights of roles follow the usual
+  escalation rules: somebody who only proposes cannot hand out the right to validate. See the
+  [events guide](docs/en/events.md#proposing-and-validating-events).
+- **`e2e/review.mjs`**, run by CI and by the stress workflow: a proposer proposes, a validator finds the proposal counted
+  in the menu, approves one and refuses another with a comment that its author reads, in both languages, and what a
+  proposer and a member cannot see or do.
+- **`ConfirmDialog` can ask for a text** (the comment of a refusal), and a menu entry can show a counter.
 - **Create an event from the calendar.** On a computer, a **+** appears in the corner of a day when it is hovered or
   reached with the keyboard (always shown on a touch screen); on a phone, tapping a day shows its events as before, with
   an **Add on this day** button. Both open the creation form on that day, from 6 pm to 8 pm in the BDE's time zone
-  (**Cancel** comes back to that day). Only those who can manage events see them, and the form and the action check it
+  (**Cancel** comes back to that day). Only those who can create events see them, and the form and the action check it
   again on the server. The new browser test clicks them on a computer-sized and a phone-sized screen, in both languages,
   and checks that a member is offered nothing.
+
+### Changed
+
+- **The right to manage events is split in two: `events.propose` and `events.validate`** (`events.manage` no longer
+  exists). The update converts the roles by itself: every role that could manage events can now validate them, which
+  includes proposing and viewing, so nobody loses anything. The converted roles are listed in an audit log entry
+  (`role.migrate`), and the update makes its safety copy first like any update that changes the database. A role that
+  only had to view events is unchanged. A fork that checks `events.manage` in its own code must check `events.validate`.
+- The day-before reminder falls back, when nobody is in charge, on the owners and the members who can **validate** events
+  (it was those who could manage them).
+- The demo data has an **Events team** role, an account that only proposes (`demo-member3`), and two events it proposed:
+  one waits for validation, one was refused.
 
 ## [1.2.0] - 2026-10-15
 
