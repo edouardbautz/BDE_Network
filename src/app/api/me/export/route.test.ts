@@ -42,6 +42,14 @@ describe('GET /api/me/export', () => {
     expect(prisma.auditLog.findMany).not.toHaveBeenCalled();
   });
 
+  it('is never kept by a cache, whether it answers or refuses', async () => {
+    mockSession.mockResolvedValue(null);
+    expect((await GET()).headers.get('cache-control')).toBe('private, no-store');
+
+    mockSession.mockResolvedValue(effectiveFor('MEMBER', 'alice', 'u1'));
+    expect((await GET()).headers.get('cache-control')).toBe('private, no-store');
+  });
+
   it("includes the member's events data but never the secret calendar token", async () => {
     const response = await GET();
     const text = await response.text();

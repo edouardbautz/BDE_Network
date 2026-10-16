@@ -933,7 +933,10 @@ vX.Y.Z`. **The GitHub release is created by the maintainer, not by the workflow*
   only; `'unsafe-inline'` is needed by Next hydration and next-themes; no `upgrade-insecure-requests`
   so an instance without an HTTPS proxy still works; profile pictures from `cdn.intra.42.fr`),
   nosniff, X-Frame-Options, Referrer-Policy, Permissions-Policy, and HSTS only when the request came
-  with `X-Forwarded-Proto: https`. A new external image/script host must be added to the CSP.
+  with `X-Forwarded-Proto: https`. A new external image/script host must be added to the CSP. **A header set in
+  `next.config.ts` replaces the one a route sets for the same name** (the unit test of the route sees only the route, so it
+  cannot tell): an address that needs a policy of its own, like the logo (`OWN_POLICY_PATH`), is left out of the rule of the
+  pages. The attacks of the quality campaign (`qa/security/`) read the headers of the running image.
 - **Error pages**: `[locale]/not-found.tsx` + `[locale]/[...rest]/page.tsx` (unknown URLs, a catch-all so
   the localized 404 renders instead of Next's English one), `[locale]/(app)/not-found.tsx` (inside the
   shell), `error.tsx` at both levels (`components/layout/error-view.tsx`: apology, retry, back to the
