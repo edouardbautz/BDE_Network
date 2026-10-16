@@ -1,0 +1,124 @@
+# The rules of docs/architecture.md that a reviewer would otherwise have to remember, as code that fails the CI.
+# Each one is tested (`semgrep --test .semgrep`: bde-typescript.ts holds a case that must be found, `ruleid:`, and a
+# case that must not, `ok:`). Run by .github/workflows/security.yml.
+rules:
+  - id: bde-managed-setting-read-from-env
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      A setting that lives in the database once the platform is installed must be read with `setting()` (and the
+      configuration with `getConfig()`), never from `process.env`: a stale variable of `.env` is ignored on purpose
+      ("Settings in the database" in docs/architecture.md).
+    patterns:
+      - pattern: process.env.$VAR
+      - metavariable-regex:
+          metavariable: $VAR
+          regex: ^(APP_URL|FORTYTWO_CLIENT_ID|FORTYTWO_CLIENT_SECRET|SMTP_HOST|SMTP_PORT|SMTP_USER|SMTP_FROM|SMTP_PASSWORD|DISCORD_WEBHOOK_URL|SLACK_WEBHOOK_URL)$
+    paths:
+      include: [src/]
+      exclude: ['src/lib/settings/', '**/*.test.ts', '**/*.test.tsx']
+
+  - id: bde-computed-process-env
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      `process.env[...]` with a name that is not written out can read any managed setting: only
+      `src/lib/settings/runtime.ts` does it, on purpose.
+    pattern: process.env[$NAME]
+    paths:
+      include: [src/]
+      exclude: ['src/lib/settings/runtime.ts', '**/*.test.ts', '**/*.test.tsx']
+
+  - id: bde-no-eval
+    languages: [typescript]
+    severity: ERROR
+    message: Nothing in the application evaluates a string as code.
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: new Function(...)
+    paths:
+      include: [src/]
+
+  - id: bde-no-child-process
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      The application never starts a process: the container has no tool for it, and what a member types must never
+      get near a shell. (The scripts of `scripts/`, `docker/` and `qa/` are not the application.)
+    pattern-either:
+      - pattern: import $X from 'child_process'
+      - pattern: import $X from 'node:child_process'
+      - pattern: import {...} from 'child_process'
+      - pattern: import {...} from 'node:child_process'
+      - pattern: require('child_process')
+      - pattern: require('node:child_process')
+    paths:
+      include: [src/]
+
+  - id: bde-no-math-random
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      `Math.random()` is predictable. A token, a code or an identifier that must not be guessed comes from `node:crypto`
+      (`randomBytes`, `randomInt`, `randomUUID`).
+    pattern: Math.random()
+    paths:
+      include: [src/]
+      exclude: ['**/*.test.ts', '**/*.test.tsx']
+
+  - id: bde-no-unsafe-raw-sql
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      `$queryRawUnsafe` and `$executeRawUnsafe` build SQL from a string. Use the tagged template (`$queryRaw`), which
+      sends the values apart from the query.
+    pattern-either:
+      - pattern: $DB.$queryRawUnsafe(...)
+      - pattern: $DB.$executeRawUnsafe(...)
+    paths:
+      include: [src/, prisma/]
+      exclude: ['src/generated/']
+
+  - id: bde-link-through-the-i18n-link
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      Every link goes through `Link` from `@/i18n/navigation`, never `next/link` or `next-intl/navigation` directly: the
+      production router can swallow a click on a link to the page you are on ("Navigation" in docs/architecture.md).
+    pattern-either:
+      - pattern: import $X from 'next/link'
+      - pattern: import {...} from 'next/link'
+      - pattern: import {...} from 'next-intl/navigation'
+      - pattern: import $X from 'next-intl/navigation'
+    paths:
+      include: [src/]
+      # The error pages that have no layout, locale or provider to rely on, and the module that builds the link itself.
+      exclude: ['src/i18n/', 'src/app/not-found.tsx', 'src/app/global-error.tsx', '**/*.test.ts', '**/*.test.tsx']
+
+  - id: bde-cookie-must-be-http-only
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      A cookie that the platform sets carries a session or a choice that no script of the page has any reason to read:
+      `httpOnly: true` (and a `sameSite`).
+    patterns:
+      - pattern: $STORE.set($NAME, $VALUE, {...})
+      - pattern-not: '$STORE.set($NAME, $VALUE, {..., httpOnly: true, ...})'
+    paths:
+      include: [src/]
+      exclude: ['**/*.test.ts', '**/*.test.tsx']
+
+  - id: bde-no-secret-in-a-log
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      A secret, a password, a token or a webhook address never goes to a log (the logs of a container are read by whoever
+      administers it, and copied into issues).
+    patterns:
+      - pattern: console.$METHOD(..., $VALUE, ...)
+      - metavariable-regex:
+          metavariable: $VALUE
+          regex: (?i)^(\w*(secret|password|passwd|token|webhook|authorization|apikey)\w*)$
+    paths:
+      include: [src/]
+      exclude: ['**/*.test.ts', '**/*.test.tsx']

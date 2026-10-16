@@ -122,10 +122,11 @@ async function main() {
       (cell) =>
         `✗ ${cell.persona} ${cell.route} [${cell.probe}]: expected ${cell.expected}, got ${cell.observed}`,
     );
+  const cellFailures = failures.length;
   if (changed.length > 0) failures.push(`✗ reading changed the database: ${changed.join(', ')}`);
   if (cells.length > 0) {
     console.log(
-      `${cells.length - failures.length} cells of ${cells.length} as expected (${variant}), ${PERSONAS.length} personas`,
+      `${cells.length - cellFailures} cells of ${cells.length} as expected (${variant}), ${PERSONAS.length} personas`,
     );
   }
 

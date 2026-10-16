@@ -1108,7 +1108,7 @@ start from the same three things, so that what one finds the others can replay.
   matrix: (1) **"denied" is any answer that shows no content** (not found, or sent elsewhere), where the platform's
   rule is precise (a visitor goes to the login page, a pending account to the waiting page) the expectation says so;
   (2) **a refusal never carries somebody's data** (the addresses of the members, a feed link: looked for in the body);
-  (3) **reading changes nothing** (a fingerprint of every table before and after the whole run); (4) a page that Next.js
+  (3) **reading changes nothing** (a fingerprint of every table before and after the whole run; the reminder loop's claims, `EventReminder`, are left out: the platform writes them by itself when a date becomes due, and the first nightly run found it out); (4) a page that Next.js
   has already started to stream answers 200 and says the rest inside it (the not-found page marks itself `noindex` and
   `NEXT_HTTP_ERROR_FALLBACK`, a redirect is a `__next-page-redirect` meta refresh): the runner reads that, not the status.
   **Server actions** are called over HTTP the way a browser does (the id of the action in `Next-Action`, the arguments

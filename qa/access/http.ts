@@ -138,10 +138,19 @@ export async function snapshot(db: {
   return result;
 }
 
+/**
+ * What the platform writes by itself while it runs, whoever asks for what: the reminder loop (`scheduler.ts`) claims the
+ * reminder of a date that has become due, which is right and has nothing to do with a request. (Found by the nightly run:
+ * the platform's clock moves while the dataset's "today" does not, so some night an event is due tomorrow.) Everything
+ * else must be written by a request, and only by an allowed one.
+ */
+export const BACKGROUND_WRITES: readonly string[] = ['EventReminder'];
+
 export const changedTables = (
   before: Record<string, string>,
   after: Record<string, string>,
-): string[] => TABLES.filter((table) => before[table] !== after[table]);
+): string[] =>
+  TABLES.filter((table) => !BACKGROUND_WRITES.includes(table) && before[table] !== after[table]);
 
 export async function withDatabase<T>(
   platform: Platform,
