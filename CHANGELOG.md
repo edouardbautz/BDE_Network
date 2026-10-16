@@ -64,6 +64,13 @@ All notable changes to this project are written here, in English. Format based o
   again on the server. The new browser test clicks them on a computer-sized and a phone-sized screen, in both languages,
   and checks that a member is offered nothing.
 
+### Fixed
+
+- **A sign-in address with a `callbackUrl` that Auth.js cannot read (`javascript:…`) is no longer a server error.** On
+  `/api/auth/callback/42-school` it answered a 500 and logged an error for a request that is simply wrong; the unreadable
+  value is now dropped, as if the visitor had not given one. Where a readable one leads is unchanged (Auth.js only follows an
+  address of the platform). Found by the attacks of the quality campaign.
+
 ### Security
 
 - **The image applies the security updates of its operating system when it is built** (`apk upgrade`), and CI scans the image
