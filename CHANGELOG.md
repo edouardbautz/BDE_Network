@@ -64,6 +64,12 @@ All notable changes to this project are written here, in English. Format based o
   again on the server. The new browser test clicks them on a computer-sized and a phone-sized screen, in both languages,
   and checks that a member is offered nothing.
 
+### Fixed
+
+- **An address whose percent-encoding is malformed (`%ff`, a lone `%`) is answered with a 400** instead of a 500 and an error in
+  the logs: Next.js fails while it reads the parameters of the route, for a request that is simply wrong. Found by the
+  attacks of the quality campaign; nothing was ever disclosed.
+
 ### Security
 
 - **The image applies the security updates of its operating system when it is built** (`apk upgrade`), and CI scans the image
