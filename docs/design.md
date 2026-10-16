@@ -144,6 +144,11 @@ radii outside the scale.
     following"), pass `choices` (`{ value, label, hint }`): radio buttons between the sentence and the buttons, the
     **narrowest** first and selected each time the dialog opens, each with a one-line hint that says what it does
     _here_ (how many dates). `onConfirm` receives the value of the chosen one.
+  - **A text to write**: when the person must say something before confirming (the reason of a refusal), pass `field`
+    (`{ label, hint, maxLength, required }`): a labelled textarea between the sentence and the buttons, empty each
+    time the dialog opens, and, when `required`, a confirm button that stays disabled (still focusable, so it is
+    announced) until something other than spaces is written. `onConfirm` receives it as its second argument; the
+    server action checks it again.
   - **An action that stays on the page** answers `{ href }` (`lib/action-target.ts`) and the dialog loads that address,
     staying busy until the page is replaced; a button that asks nothing is an `ActionButton`. See "Actions that stay on
     the page" in `docs/architecture.md`: in the production build the router often leaves the old state on screen.
@@ -162,6 +167,11 @@ container changes.
   the contrast note above), a `text-primary` icon, and a 2px vertical accent bar on the left (`before:bg-primary`).
 - Each item maps an `id` (`NavItem['id']`) to a Lucide icon through `NAV_ICONS` in `app-shell.tsx` — a new module
   that adds a top-level nav entry extends that type and that table, it does not hardcode an icon in the JSX.
+- An item can carry a **counter** (`badge`, shown only above 0): a small pill at the end of the entry, in `foreground` on
+  `background` (neutral and high-contrast: the accent stays for primary actions and the active state), with the number
+  hidden from screen readers and replaced by a sentence (`badgeLabel`: "3 proposals to validate"). When an entry is a
+  sub-page of another (`/events/review` under `/events`), the **longest matching address** is the active one, so only one
+  entry is marked.
 - The user menu, the language switcher and the theme toggle live at the bottom of the nav (desktop and mobile),
   never in the page content.
 
