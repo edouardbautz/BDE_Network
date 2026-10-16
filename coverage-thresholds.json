@@ -1,0 +1,20 @@
+{
+  "_": "Minimum coverage, in percent, that `npm run test:coverage` enforces. A RATCHET: a number goes up when the tests do (scripts/coverage-report.mjs says which ones have room), and is lowered only by a pull request that says why. See \"Quality campaign\" in docs/architecture.md.",
+  "global": { "statements": 93, "branches": 89, "functions": 89, "lines": 94 },
+  "areas": {
+    "src/lib/auth/**": { "statements": 96, "branches": 90, "functions": 98, "lines": 96 },
+    "src/lib/permissions/**": { "statements": 100, "branches": 100, "functions": 100, "lines": 100 },
+    "src/lib/roles/**": { "statements": 99, "branches": 95, "functions": 100, "lines": 99 },
+    "src/lib/settings/**": { "statements": 95, "branches": 87, "functions": 97, "lines": 98 },
+    "src/lib/setup/**": { "statements": 95, "branches": 91, "functions": 87, "lines": 97 },
+    "src/lib/events/**": { "statements": 96, "branches": 93, "functions": 97, "lines": 97 },
+    "src/lib/notifications/**": { "statements": 99, "branches": 96, "functions": 99, "lines": 99 },
+    "src/lib/members/**": { "statements": 99, "branches": 96, "functions": 99, "lines": 99 },
+    "src/lib/branding/**": { "statements": 97, "branches": 84, "functions": 99, "lines": 96 },
+    "src/lib/updates/**": { "statements": 97, "branches": 95, "functions": 99, "lines": 99 },
+    "src/config/**": { "statements": 98, "branches": 94, "functions": 95, "lines": 98 },
+    "src/app/api/**": { "statements": 99, "branches": 95, "functions": 99, "lines": 99 },
+    "docker/**": { "statements": 91, "branches": 83, "functions": 87, "lines": 92 },
+    "scripts/**": { "statements": 70, "branches": 72, "functions": 74, "lines": 72 }
+  }
+}
