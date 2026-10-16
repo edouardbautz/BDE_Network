@@ -8,6 +8,12 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **Test coverage is measured, and its floors are enforced** in CI (`npm run test:coverage`): 94 % of the statements and 90 %
+  of the branches today, with a floor of its own for every area that decides who may do what or what is written to the
+  database, and a report in the summary of the job. Tests were added for what had none (the choice of the channel of a
+  notification, the installation of the platform, the privacy policy and the waiting page, the arguments of a crafted
+  request to the members' actions, the reminder loop when a tick is slow or fails, and the inspector of the logo on
+  hostile files). Nothing changes for a platform that runs.
 - **A quality harness (`qa/`)** for the campaign that checks the platform before real BDEs rely on it: nine personas (visitor,
   pending account, member, proposer, validator, custom role, Admin, owner, removed member), a deterministic dataset of two
   school years (about 300 members, 600 events), the invariants every database must satisfy (tested against corruption), a

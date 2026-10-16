@@ -32,9 +32,9 @@ describe('measure', () => {
 
   it('reads Windows paths, and counts an area with no file as covered (nothing to miss)', () => {
     const win = { 'C:\\repo\\src\\lib\\auth\\a.ts': file(5, 10) };
-    expect(measure(win, 'C:\\repo', (path: string) => path.startsWith('src/lib/auth/')).statements).toBe(
-      50,
-    );
+    expect(
+      measure(win, 'C:\\repo', (path: string) => path.startsWith('src/lib/auth/')).statements,
+    ).toBe(50);
     expect(measure(SUMMARY, '/repo', () => false).statements).toBe(100);
   });
 });

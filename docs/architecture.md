@@ -1099,6 +1099,16 @@ start from the same three things, so that what one finds the others can replay.
   `npx tsx qa/smoke.ts`, `sh qa/platform.sh down`. Docker is the only requirement besides Node. A suite that needs a
   database without the image uses `qa/test-database.ts` (a migrated database, thrown away), like the tests of the
   data migrations, and runs only when `MIGRATION_TEST_DATABASE_URL` is set (the `migrations` job of CI sets it).
+- **Coverage** (`npm run test:coverage`, `coverage-thresholds.json`, `scripts/coverage-report.mjs`,
+  `scripts/coverage-gaps.mjs`, `qa/coverage-plan.md`). The ubuntu job of `ci.yml` runs the unit tests through V8 coverage
+  and **fails below a floor**: one for the whole project and one for each area that decides who may do what or what is
+  written to the database (`lib/auth`, `permissions`, `roles`, `settings`, `setup`, `events`, `notifications`, `members`,
+  `branding`, `updates`, `config`, `app/api`, `docker`), so a drop in one cannot hide behind the others. The floors are
+  a **ratchet**: they go up when the tests do (the report in the job summary marks the ones with 2.5 points of room) and
+  come down only in a pull request that says why. The measure covers `src/`, `docker/` and `scripts/`, not the
+  generated shadcn components, the tools CI runs by itself, or the harness. A line count says what ran, not what was
+  checked: the access rules, the series and the roles are also held by mutation checks (see "Conventions"), and
+  `qa/coverage-plan.md` lists what the unit tests do not reach and which phase of the campaign does.
 - **What a campaign finds** goes through the usual rules: a bug has its own pull request and a test that would have caught
   it; a suite that exposes a bug waits for that pull request or lists the case as an expected failure with its reason,
   never as a silent skip.

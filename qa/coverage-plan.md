@@ -6,8 +6,8 @@ floor in `coverage-thresholds.json`).
 
 ## Where we are
 
-The V8 coverage of the unit tests, over `src/`, `docker/`, `scripts/` (the gates that CI runs by themselves are left
-out: `check-docs`, `audit-prod`, `docs-screenshots`) and the harness:
+The V8 coverage of the unit tests, over `src/`, `docker/`, `scripts/` (the gates that CI runs by themselves, the generated components and the harness are left
+out: `check-docs`, `audit-prod`, `docs-screenshots`):
 
 |            | before the campaign | now    | floor (CI fails below) |
 | ---------- | ------------------- | ------ | ---------------------- |

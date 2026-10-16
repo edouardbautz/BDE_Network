@@ -19,7 +19,7 @@ export default defineConfig({
     server: { deps: { inline: ['next-auth', 'next-intl'] } },
     coverage: {
       provider: 'v8',
-      include: ['src/**/*.{ts,tsx}', 'docker/**/*.mjs', 'scripts/**/*.mjs', 'qa/**/*.ts'],
+      include: ['src/**/*.{ts,tsx}', 'docker/**/*.mjs', 'scripts/**/*.mjs'],
       exclude: [
         '**/*.test.{ts,tsx}',
         '**/*.d.ts',
@@ -27,15 +27,12 @@ export default defineConfig({
         // shadcn/ui: generated code, never hand-edited (see docs/architecture.md)
         'src/components/ui/**',
         'src/test/**',
-        'qa/cli.ts',
         // gates and tools that CI runs by themselves (a failure shows there), not product code
         'scripts/docs-screenshots.mjs',
         'scripts/check-docs.mjs',
         'scripts/audit-prod.mjs',
         'scripts/coverage-gaps.mjs',
         'scripts/coverage-report.mjs',
-        'qa/smoke.ts',
-        'qa/test-database.ts',
       ],
       reporter: ['text-summary', 'json-summary', 'json', 'lcov'],
       reportsDirectory: 'coverage',
