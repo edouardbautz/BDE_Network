@@ -31,6 +31,7 @@ export default defineConfig({
         'scripts/docs-screenshots.mjs',
         'scripts/check-docs.mjs',
         'scripts/audit-prod.mjs',
+        'scripts/sarif-gate.mjs',
         'scripts/coverage-gaps.mjs',
         'scripts/coverage-report.mjs',
       ],

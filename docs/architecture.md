@@ -233,6 +233,11 @@ point at a user (see `EventAssignee`).
   `events/export.ts`). The regression test is `src/lib/auth/removed-account.test.ts` (real NextAuth config +
   forged cookie; its fake database reproduces Prisma's `undefined` behaviour).
 
+- **What Auth.js logs** (`src/lib/auth/logger.ts`). A request refused because of what the visitor sent (a cookie that cannot be
+  read, a missing CSRF token, an unreadable callback address or state, an unknown action: `REFUSED_REQUEST_ERRORS`) is
+  a one-line warning with no trace and no echo of the value; every other error keeps Auth.js's complete report. A new
+  kind of refusal that floods the logs is added to that list; an error that matters never is. The attacks of the quality
+  campaign read the logs at the end (`qa/security/logs.ts`).
 - **Route guards live in Server Components**, not middleware (`(app)/layout.tsx` redirects
   unauthenticated users to `/`, `PENDING` users to `/pending`; `members/page.tsx` and
   `roles/`, `audit-log/page.tsx` and `settings/` additionally check `can(user, 'members.manage' | 'roles.manage')` /
@@ -1129,6 +1134,23 @@ start from the same three things, so that what one finds the others can replay.
   exported action (never a query of its own). **A new page, route or action fails the CI of the pull request that adds it
   until it is in the matrix** (`coverage.test.ts` runs with the unit tests; the HTTP run is the `qa` workflow's, ~1 minute
   per variant). `npx tsx qa/access/run.ts --variant events-enabled` plays it on a platform made by `qa/platform.sh`.
+- **Static security** (`.github/workflows/security.yml`, `codeql.yml`, the image scan of `ci.yml` and `qa.yml`; `qa-rules/`,
+  `.gitleaks.toml`, `.trivyignore`, `scripts/sarif-gate.mjs`). Every pull request is read by: (1) **Semgrep with the rules of
+  the project** (`qa-rules/`: a managed setting read from `process.env`, `eval`, a process started by the application,
+  `Math.random()`, raw SQL built from a string, a link that does not go through the i18n `Link`, a cookie that is not
+  `httpOnly`, a secret in a log, `dangerouslySetInnerHTML`, a `target="_blank"` without `rel`): the rules of this document
+  that a reviewer would otherwise have to remember, each with a case it must find and a case it must leave alone
+  (`semgrep --test qa-rules`; the cases are not formatted by Prettier, a comment applies to the line under it); (2) **gitleaks
+  over the whole history** (the generic "looks like a key" rule is relaxed in test files, which write fake secrets, and
+  only there: `qa-rules/gitleaks-selftest.sh` checks that a token of a known service is still found in a test file); (3) **Trivy**
+  on the lockfile (production dependencies), on files (secrets) and on the Dockerfile; (4) the **dependency review** of
+  what the pull request adds (a known vulnerability, a license outside the list of what the production dependencies have
+  today); and (5) **CodeQL** on the code and on the workflows (`security-extended`), whose HIGH and CRITICAL alerts (and
+  anything of level `error`) fail the job through `scripts/sarif-gate.mjs` instead of waiting in the Security tab; a false
+  positive is dismissed there, by a person, with the reason. The **production image** is scanned for known vulnerabilities
+  in the `docker image` job (a HIGH or CRITICAL one that has a fix fails) and every night in `qa.yml`. Every scanner runs from a
+  pinned Docker image, so a new version never changes a result by itself (Dependabot proposes it). What is accepted is in
+  `.trivyignore`, with the same reasons as `scripts/audit-allowlist.json`.
 - **Coverage** (`npm run test:coverage`, `coverage-thresholds.json`, `scripts/coverage-report.mjs`,
   `scripts/coverage-gaps.mjs`, `qa/coverage-plan.md`). The ubuntu job of `ci.yml` runs the unit tests through V8 coverage
   and **fails below a floor**: one for the whole project and one for each area that decides who may do what or what is

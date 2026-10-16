@@ -1,0 +1,96 @@
+name: security
+
+# The static side of the security phase of the quality campaign (see "Quality campaign" in docs/architecture.md): rules
+# of the project that a reviewer would otherwise have to remember, secrets in the history, known vulnerabilities in the
+# lockfile and the configuration, and what a pull request adds to the dependencies. Each job is a few minutes at most and
+# none needs a secret. The scan of the PRODUCTION IMAGE is in ci.yml (`docker image`) and, every night, in qa.yml; the
+# analysis of the code itself is codeql.yml.
+#
+# Every tool runs from a pinned Docker image, so a new version of a scanner never changes a result by itself (Dependabot
+# proposes the update).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # A new advisory can make yesterday's lockfile a failure: once a week is enough to hear of it without a pull request.
+    - cron: '41 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # The rules of docs/architecture.md written as code (qa-rules/): a setting read from the environment, an unsafe call, a
+  # link that does not go through the i18n Link, a cookie that is not HttpOnly... Each rule has a case it must find and
+  # a case it must leave alone (`semgrep --test`).
+  semgrep:
+    name: semgrep (the rules of the project)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: The rules find what they should, and only that
+        run: docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:1.180.0 semgrep --test qa-rules
+
+      - name: The source breaks none of them
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:1.180.0 \
+            semgrep scan --config qa-rules --metrics off --error --exclude qa-rules src docker scripts qa
+
+  # A secret that was pushed stays in the history: the whole history is read, not only the last commit. The rule that
+  # looks for "anything that resembles a key" is relaxed in test files (they write fake ones) and nowhere else; the
+  # self-test checks that.
+  secrets:
+    name: secrets (the whole history)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: The configuration relaxes the generic rule in tests, and nothing else
+        run: sh qa-rules/gitleaks-selftest.sh
+
+      - name: No secret in the history
+        run: |
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.30.1 \
+            detect --source /repo --config /repo/.gitleaks.toml --redact --no-banner --verbose
+
+  # Known vulnerabilities of the lockfile (production dependencies), secrets in files, and misconfigurations of the
+  # Dockerfile. A vulnerability that has no fix yet stops nobody; the few that are accepted are in .trivyignore with their
+  # reason, in the same words as scripts/audit-allowlist.json.
+  vulnerabilities:
+    name: vulnerabilities (lockfile, files, Dockerfile)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Trivy
+        run: |
+          docker run --rm -v "$PWD:/project" aquasec/trivy:0.76.0 fs --quiet \
+            --scanners vuln,secret,misconfig --severity HIGH,CRITICAL --ignore-unfixed \
+            --ignorefile /project/.trivyignore --exit-code 1 /project
+
+  # What a pull request adds to the dependencies: a package with a known vulnerability, or a change of license that the
+  # project cannot take (it is open source, and forks must be able to use everything it ships).
+  dependency-review:
+    name: dependency review (what this pull request adds)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          # The licenses the production dependencies have today (the LGPL ones are the optional image libraries of sharp, which the
+          # production image leaves out); anything else is looked at by a person.
+          allow-licenses: MIT, MIT-0, ISC, BSD-2-Clause, BSD-3-Clause, Apache-2.0, 0BSD, Unlicense, CC0-1.0, CC-BY-4.0, Python-2.0, BlueOak-1.0.0, MPL-2.0, LGPL-3.0-or-later, EPL-2.0
