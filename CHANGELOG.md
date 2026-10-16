@@ -84,6 +84,10 @@ All notable changes to this project are written here, in English. Format based o
   was sent with a policy that lets scripts run. Nothing could be exploited (the type is the image's, and `nosniff` keeps a
   browser from taking it for a page), but the second line of defence that was written did not exist. The policy of the pages
   now leaves `/api/logo` out. Found by the attacks of the quality campaign.
+- **A sign-in address with a `callbackUrl` that Auth.js cannot read (`javascript:…`) is no longer a server error.** On
+  `/api/auth/callback/42-school` it answered a 500 and logged an error for a request that is simply wrong; the unreadable
+  value is now dropped, as if the visitor had not given one. Where a readable one leads is unchanged (Auth.js only follows an
+  address of the platform). Found by the attacks of the quality campaign.
 
 ### Security
 
