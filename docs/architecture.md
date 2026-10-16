@@ -63,8 +63,8 @@ src/
         audit-log/page.tsx + loading.tsx               OWNER-only
         settings/              page + actions.ts + loading.tsx: the platform's settings, OWNER-only (see "Settings in the database")
         events/                events module (404 unless enabled): page, new/, [id]/, [id]/edit/,
-                               shared-calendar/ (events.shared_calendar: BDE link), actions.ts (server actions),
-                               loading.tsx for each route
+                               review/ (the proposals to validate: events.validate), shared-calendar/ (events.shared_calendar:
+                               BDE link), actions.ts (server actions), loading.tsx for each route
         profile/                page + actions.ts: account info, personal calendar feed link
     api/
       auth/[...nextauth]/route.ts
@@ -93,8 +93,8 @@ src/
     auth/                  NextAuth config + 42 OAuth provider
     notifications/         NotificationAdapter + email/discord/slack/none adapters
     events/                events module domain: time, recurrence, series (dates of their own), series-operations
-                           (cutting a series), ics, access, queries, actions helpers, notifications, reminders,
-                           scheduler (see "Events module")
+                           (cutting a series), ics, access, review (the rules of the proposal circuit), queries, actions
+                           helpers, notifications, reminders, scheduler (see "Events module")
     permissions/           registry (the list of permissions) + resolution and `can()`
     roles/                 escalation rules (guards), input validation, transactional operations, `execute`
     settings/              the platform's settings in the database: runtime cache, sealing (AES-GCM), store + import,
@@ -242,13 +242,17 @@ point at a user (see `EventAssignee`).
   misleading `●` SSG marker, but the explicit export makes it a guarantee, not an accident).
 - **Permissions** (`src/lib/permissions/`): the list lives in code (`registry.ts`): core `members.manage`,
   `roles.manage`, plus `<module>.view` / `<module>.manage` for **every enabled module** (managing implies
-  viewing) and the extras a module declares in `MODULE_EXTRA_PERMISSIONS` (events: `shared_calendar`). Check
+  viewing) and the extras a module declares in `MODULE_EXTRA_PERMISSIONS`, each with what it implies (an implication
+  is not followed transitively: list everything). The events module is the one that has **no `manage`**
+  (`MODULES_WITHOUT_MANAGE`): it has `events.propose` (implies view), `events.validate` (implies propose and view) and
+  `events.shared_calendar` (see "The proposal circuit"). Check
   with `can(session.user, key)`; server actions and pages re-check themselves — never rely solely on a hidden
   button. The audit log and the settings are **not** permissions: `canViewAuditLog` and `canManageSettings` are OWNER-only
   (a permission a role could hold would let its holder make themselves an owner). Always build on
   `getEffectiveSession`, never `auth()` directly. A module's pages/actions get their access through one
-  function (for events: `getEventsAccess` / `requireEventsManager` in `src/lib/events/access.ts`) that returns
-  null when the module is disabled — pages treat null as `notFound()`, actions throw `Forbidden`.
+  function (for events: `getEventsAccess` / `requireEventsProposer` / `requireEventsValidator` in
+  `src/lib/events/access.ts`) that returns null when the module is disabled — pages treat null as `notFound()`,
+  actions throw `Forbidden`.
 - **Roles and privilege escalation** (`src/lib/roles/`, **non-negotiable**). One idea: you can only hand out,
   edit or take away what you hold. `guards.ts` has the pure rules (a role is _covered_ by the actor when they
   hold every permission it grants; a role with `allPermissions` is covered only by someone who holds all): no
@@ -459,7 +463,8 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
 - `src/lib/notifications/`: `NotificationAdapter` interface, adapters for email (nodemailer/SMTP),
   Discord webhook, Slack webhook, and a no-op `none`. `notify(event, message)` picks the adapter
   from the channel configured per event in `bde.config.yml`'s `notifications` section. The events
-  module sends `eventConfirmed` / `eventReminder`; `src/lib/members/notifications.ts` sends
+  module sends `eventConfirmed` / `eventReminder` and, for the proposal circuit, `eventProposed` / `eventApproved` /
+  `eventRefused`; `src/lib/members/notifications.ts` sends
   `memberPending` (new account created in the `signIn` callback → owners and holders of
   `members.manage` by email, or the chat channel), `memberApproved` (email goes to the member, chat
   gets a team message) and `memberRemoved` (**chat only, never an email to the removed member**: the
@@ -583,8 +588,8 @@ User guide: `docs/en/events.md`. The shape worth knowing before touching it:
   revealed by `[td:hover_&]` (an arbitrary variant, not `group-hover`: Tailwind wraps `hover:` in `@media (hover: hover)`, which a headless Chrome without a pointer, the CI's, does not match) and `group-focus-within/cell`, always shown under `pointer-coarse`, right after the day
   link in the tab order, named "Add an event on" plus the day) and, below `md`, an "add on this day" button in the panel of the
   selected day (`#add-on-selected-day`) both link to `/events/new?date=YYYY-MM-DD`. **Permission**: they are rendered only
-  when `access.canManage` (`canCreate`), which is a courtesy; `/events/new` redirects anybody else (with or without the
-  date) and `createEvent` calls `requireEventsManager()`: the day in the address grants nothing. The date is read
+  when `access.canCreate` (propose or validate), which is a courtesy; `/events/new` redirects anybody else (with or without
+  the date) and `createEvent` calls `requireEventsProposer()`: the day in the address grants nothing. The date is read
   defensively (`requestedEventDay`: a real day of 2000–2100, anything else is ignored and the form starts from tomorrow as
   from the button; a past day is kept, events are recorded after the fact). **Default time**: 18:00–20:00 on that day in
   `bde.timezone` (`defaultEventTimes`, the same wall-clock helpers as the form: DST days stay 18:00 local; the browser's
@@ -595,12 +600,68 @@ User guide: `docs/en/events.md`. The shape worth knowing before touching it:
   the server actions run it again — never trust the browser. `Event.description`/`location` stay
   nullable in Prisma on purpose: rows created before the rule must keep rendering, and are only
   blocked at their next edit through the form (status toggle / cancel-a-date don't go through it).
-- **Visibility is decided in one place, date by date.** `expandEvents` (`occurrences.ts`) drops the dates that are
-  drafts unless `includeDrafts` (a series can be confirmed with one date back to draft, or a draft with one date
-  confirmed alone); the queries also exclude them in SQL (`VISIBLE_WITHOUT_DRAFTS`: a confirmed event, or one with
-  a date confirmed alone; `queries.test.ts`). Every consumer (calendar, list, dashboard, `.ics` download,
-  subscription feed) passes `includeDrafts = canManage`. A draft the user can't see is a 404, not a 403; a draft
-  event with a date confirmed alone shows that date only.
+- **Visibility is decided in one place, date by date.** `expandEvents` (`occurrences.ts`) drops the dates that are not
+  published (a draft or a proposal) unless `includeDrafts`, or unless the event is the reader's own (`ownLogin`; a series
+  can be confirmed with one date back to draft, or a draft with one date confirmed alone); the queries also exclude them in
+  SQL (`visibleTo` in `include.ts`: `VISIBLE_WITHOUT_DRAFTS` = a confirmed event, or one with a date confirmed alone, plus
+  `authorLogin = ownLogin` for a proposer; `queries.test.ts`). Every consumer (calendar, list, dashboard, `.ics` download)
+  passes `draftVisibility(access)` (`review.ts`): everything for a validator, one's own for somebody who only proposes,
+  nothing for the others. The subscription feeds are stricter: only a validator's personal feed holds drafts and proposals.
+  An unpublished event the user can't see is a 404, not a 403; a draft event with a date confirmed alone shows that date only.
+- **The proposal circuit** (`src/lib/events/review.ts`, **non-negotiable**; user guide: `docs/en/events.md`). Two rights
+  replace `events.manage`: **`events.propose`** (create events that wait, edit one's own until they are published) and
+  **`events.validate`** (approve, refuse, edit and delete anything, publish directly; it includes propose and view). A
+  migration (`20261016120000_event_proposals`) turns every `events.manage` of a role into `events.validate` plus what it
+  includes, with a `role.migrate` audit entry listing the roles as they were: the server refuses a permission it does not
+  know, so a role must never keep the old key. A role that held `manage` loses nothing.
+  - **The rules are one pure module** (`review.ts`, like `roles/guards.ts`), asked by every page and action and by nothing
+    else: `editRefusal` / `canEditEvent` / `canDeleteEvent` (a validator anything; a proposer **their own events that are not
+    published**, and `isPublished` counts a date confirmed alone), `canCreateWithStatus`, `canChangeStatus` (a proposer moves
+    between draft and proposed and **never to confirmed**; a validator publishes, unpublishes and keeps a proposal, **never
+    makes one and never sends one back to draft: that is a refusal, which has a comment**), `statusChoices` (what the form
+    offers: only what `canChangeStatus` accepts), `statusMove` (what a change is called in the audit log),
+    `parseRefusalComment` (1 to 1000 characters, spaces ignored), `draftVisibility`.
+  - **Statuses.** `EventStatus` is `DRAFT | PROPOSED | CONFIRMED`. A refusal is a `DRAFT` that carries `refusalComment`,
+    `refusedByLogin`, `refusedAt` (set together: a CHECK of the migration), cleared when it is proposed or confirmed;
+    `proposedAt` orders the list of proposals. A proposal is **the whole event, never one date of a series**: a proposer
+    edits and moves a series as a whole (`updateEvent` and `setEventStatus` force the scope `following` from the first date,
+    whatever the request says), so no date of a series is ever proposed on its own and the cut of a series needs no rule.
+    A date confirmed alone by a validator makes the event partly published: its proposer can no longer touch it.
+  - **A published event is never touched by a proposer**, not even their own (the page shows an explanation where the Edit
+    button would be, `/edit` redirects to the event), so it never leaves the calendar without a validator's action. There is
+    no "pending changes" copy of a published event, on purpose.
+  - **Every action asks twice.** `requireEventsProposer()` / `requireEventsValidator()` (the right), then the rules of
+    `review.ts` against the event as read (`canEditEvent`, `canChangeStatus`, `canCreateWithStatus`: a request that breaks one
+    is crafted and throws `Forbidden`), then **again inside the transaction** (`assertMayEdit`: a validator may have published
+    the event since the page was drawn). Validator-only: `refuseEvent`, `cancelOccurrence`, `restoreOccurrence`,
+    `deleteFollowingDates`. `createEvent` now writes the event and its audit entries in one transaction.
+  - **Approving is a status change** (`setEventStatus(…, 'CONFIRMED')` or the form), recognised by `statusMove` (`PROPOSED` →
+    `CONFIRMED`) and audited `event.approve`; proposing is `event.propose` (from the form, a button, or the creation, which
+    writes `event.create` and `event.propose`), withdrawing `event.withdraw`, refusing `event.refuse` (with the comment and
+    the author). `refuseEvent` answers a notice, not an error, when somebody answered first (`?notice=alreadyReviewed`).
+  - **Notifications** (`eventProposed` → the owners and holders of `events.validate` by e-mail, or the chat channel;
+    `eventApproved` and `eventRefused` → the author by e-mail, or the chat channel, never the person who gave the answer).
+    They are `optional` and `none` by default, take the channel the installer or the settings page chose, and count in
+    `env.ts` like the other events notifications. `announceReview` (`notifications.ts`) re-reads the event and **sends nothing when
+    the notice is stale** (a proposal withdrawn or answered meanwhile): unlike the confirmation there is no once-only claim,
+    because a proposal can be made again after a refusal, so the transition itself (in the transaction) is what triggers
+    exactly one `after()`. The cards are the existing builders with three more kinds (`EventCardKind`: `proposed`,
+    `approved`, `refused`; `data.review` carries the author, the validator and the comment); the comment is a quote that
+    keeps every line, first in the card, and is neutralized by the adapters like any text a member typed.
+  - **The "To validate" page** (`events/review`, a 404 for anybody who cannot validate) lists `listProposals()` (the oldest
+    first) with approve and refuse. The entry of the menu (`NavItem.badge`, counted by `countProposals()` in `(app)/layout.tsx`
+    only for validators) shows the count, with the number for a screen reader (`badgeLabel`) and in a neutral colour (the accent
+    stays for primary actions); the longest matching address is the active entry, so `/events/review` does not light up
+    "Events" too. Refusing asks for the comment in a `ConfirmDialog` with a `field`.
+  - **Navigation.** Every action of the circuit that stays on its page answers an `ActionTarget` (rule 2 of "Navigation"):
+    the browser loads the page, so the counter, the list and the banners are always the real ones. `setEventStatus` and
+    `refuseEvent` take a `returnTo` from a closed list (`event`, `review`), never an address.
+  - **Tests, mutation-checked** (re-break a rule and one must fail): `review.test.ts` (every row of the tables),
+    `access.test.ts`, `events/actions.test.ts` (what a proposer can never do, what a validator can never do to a proposal),
+    `actions-series.test.ts` (the circuit end to end on the in-memory database), `pages.test.tsx`, `occurrences.test.ts` and
+    `queries.test.ts` (who sees what), `review-notifications.test.ts`, `escalation.test.ts` (somebody who only proposes cannot
+    hand out the right to validate: the generic rules of `roles/` apply unchanged), `layout.test.ts`, `app-shell.test.tsx`, and
+    `e2e/review.mjs` in a real browser (run by CI, and by the stress workflow).
 - **Subscription feed** (`/api/calendar/[token]`): token = 32 random bytes in `User.calendarToken`,
   stored in clear (so the profile can show the link), recomputed per request from the token owner's
   _current_ role/permission, same bare 404 for every failure. Removing a member deletes their row,
@@ -609,7 +670,7 @@ User guide: `docs/en/events.md`. The shape worth knowing before touching it:
   `token` null = disabled): a second, independent secret from the per-member tokens. It has no owner,
   so it can never widen: `buildBdeSubscriptionFeed` asks for `includeDrafts: false` _and_ re-filters
   to `CONFIRMED`. Managed only with the `events.shared_calendar` permission (`canManageSharedCalendar` /
-  `requireSharedCalendarManager` — _not_ `events.manage`) from
+  `requireSharedCalendarManager` — _not_ `events.validate`) from
   `events/shared-calendar`. Enable is idempotent; regenerate/disable overwrite the single column, so the
   old link 404s at once. Audit actions `calendar_feed.enable|regenerate|disable` with targetType
   `CalendarFeed` and **never the token** (nor in logs). Removing a member does not touch it: the members
@@ -630,9 +691,9 @@ User guide: `docs/en/events.md`. The shape worth knowing before touching it:
   not reminded twice, and a cut moves the claims with the dates. The time, place and members in charge are the
   date's own; a draft or cancelled date is not reminded. Tested in `reminders.test.ts` including restart and
   concurrent callers.
-- **Tests that must keep passing** when you change access rules: `access.test.ts`,
+- **Tests that must keep passing** when you change access rules: `access.test.ts`, `review.test.ts`,
   `events/actions.test.ts` (every action refused for PENDING / member without permission / a role that
-  only views / module disabled), `events/pages.test.tsx`, `export.test.ts`, `export-bde.test.ts`, `shared-calendar/*.test.ts(x)`;
+  only views / module disabled; a proposer's limits), `events/pages.test.tsx`, `export.test.ts`, `export-bde.test.ts`, `shared-calendar/*.test.ts(x)`;
   and, when you change a series rule, `series*.test.ts`, `actions-series.test.ts`, `queries.test.ts`,
   `series-feed.test.ts` (UIDs, the BDE feed never holds a draft date), `series-notifications.test.ts`,
   `reminders.test.ts` and `e2e/series.mjs` (the dialogs in a real browser, run by CI). Re-break a rule (the draft

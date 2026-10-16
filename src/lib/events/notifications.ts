@@ -10,7 +10,6 @@ import { prisma } from '@/lib/prisma';
 import { buildEventEmbed } from './discord-embed';
 import { buildEventEmail, buildEventIcs } from './email';
 import { eventInclude } from './include';
-import { isPublished } from './review';
 import { resolveOccurrences, seriesKeyOf, type ResolvedOccurrence } from './series';
 import { buildEventSlack } from './slack-blocks';
 import {
@@ -281,12 +280,9 @@ async function announceReview(
     const stillTrue =
       kind === 'proposed'
         ? event.status === 'PROPOSED'
-        : kind === 'approved'
-          ? isPublished({
-              status: event.status,
-              dateStatuses: event.occurrences.map((o) => o.status),
-            })
-          : event.status === 'DRAFT' && event.refusalComment !== null;
+        : kind === 'refused'
+          ? event.status === 'DRAFT' && event.refusalComment !== null
+          : true; // an approval is stale when no date is published any more: see `dates` below
     if (!stillTrue) return;
 
     const timeZone = config.bde.timezone;
