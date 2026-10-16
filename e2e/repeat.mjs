@@ -400,6 +400,12 @@ async function run(lang) {
     await waitForPreview(words.total(2), 'two dates');
     await clickText(words.save, 'form');
     await page.waitForSelector('[role="dialog"]');
+    // on the first date, "this one and the following" is the whole series: the only choice that changes a rule
+    await page.evaluate((wanted) => {
+      [...document.querySelectorAll('[role="dialog"] label')]
+        .find((el) => el.textContent?.trim().startsWith(wanted))
+        ?.click();
+    }, words.following);
     await Promise.all([
       page.waitForNavigation({ waitUntil: 'networkidle0' }).catch(() => undefined),
       clickText(words.save, '[role="dialog"]'),
