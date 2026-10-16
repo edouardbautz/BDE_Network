@@ -3,7 +3,7 @@ import type { EmailModel } from '@/lib/notifications/email-layout';
 import type { EmailContent } from '@/lib/notifications/types';
 import { truncate } from '@/lib/notifications/text';
 import { formatDate, whenLine, type NotificationEventData, type Translate } from './messages';
-import { KIND_LABEL_KEY, type EventCardKind } from './card-kind';
+import { KIND_LABEL_KEY, actionLabelKey, type EventCardKind } from './card-kind';
 import { buildIcs, icsFilename, occurrenceUid } from './ics';
 
 /** How much of the description an e-mail shows: a notice, the page has the rest. */
@@ -37,6 +37,14 @@ export function buildEventEmail(
   ics?: EmailContent['ics'],
 ): EmailContent {
   const description = data.description?.trim();
+  // The reason of a refusal is what the author reads the e-mail for: it takes the place of the description.
+  const lead =
+    kind === 'refused' && data.review?.comment
+      ? `${t('embed.fields.reason')} :
+${data.review.comment}`
+      : description
+        ? truncate(description, DESCRIPTION_PREVIEW)
+        : undefined;
 
   const fields: EmailModel['fields'] = [
     { label: t('embed.fields.when'), value: whenLine(data, locale, timeZone) },
@@ -58,6 +66,15 @@ export function buildEventEmail(
   if (data.assigneeNames.length > 0) {
     fields.push({ label: t('embed.fields.inCharge'), value: data.assigneeNames.join(', ') });
   }
+  if (data.review) {
+    fields.push({ label: t('embed.fields.proposedBy'), value: data.review.authorName });
+    if (data.review.reviewerName) {
+      fields.push({
+        label: t(kind === 'approved' ? 'embed.fields.approvedBy' : 'embed.fields.refusedBy'),
+        value: data.review.reviewerName,
+      });
+    }
+  }
 
   const eyebrow = t(KIND_LABEL_KEY[kind]);
   const rendered = renderEmail({
@@ -69,9 +86,9 @@ export function buildEventEmail(
     accent: data.categoryColor ?? '',
     eyebrow,
     heading: data.title,
-    ...(description && { lead: truncate(description, DESCRIPTION_PREVIEW) }),
+    ...(lead && { lead }),
     fields,
-    ...(data.url && { action: { label: t('email.action'), url: data.url } }),
+    ...(data.url && { action: { label: t(actionLabelKey(kind, 'email')), url: data.url } }),
     ...(ics && { note: t('email.calendarNote') }),
     footer: t('email.footer', { bde: brand.name }),
   });

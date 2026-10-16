@@ -160,7 +160,9 @@
     "events": "Events",
     "profile": "My profile",
     "skipToContent": "Skip to the content",
-    "settings": "Settings"
+    "settings": "Settings",
+    "eventsReview": "To validate",
+    "eventsReviewCount": "{count, plural, one {# proposal to validate} other {# proposals to validate}}"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -353,14 +355,21 @@
         "kind": {
           "confirmed": "New event confirmed",
           "reminderTomorrow": "Reminder · tomorrow",
-          "reminderToday": "Reminder · today"
+          "reminderToday": "Reminder · today",
+          "proposed": "Event proposed",
+          "approved": "Proposal approved",
+          "refused": "Proposal refused"
         },
         "fields": {
           "when": "When",
           "where": "Where",
           "category": "Category",
           "inCharge": "Members in charge",
-          "repeats": "Repeats"
+          "repeats": "Repeats",
+          "proposedBy": "Proposed by",
+          "approvedBy": "Approved by",
+          "refusedBy": "Refused by",
+          "reason": "Reason"
         },
         "repeatsValue": {
           "WEEKLY": "Every week, until {until}",
@@ -371,10 +380,24 @@
       "email": {
         "action": "View the event",
         "calendarNote": "The attached file adds the event to your calendar.",
-        "footer": "You are receiving this message because you are a member of {bde}."
+        "footer": "You are receiving this message because you are a member of {bde}.",
+        "reviewAction": "Review the proposal"
       },
       "slack": {
-        "action": "View the event"
+        "action": "View the event",
+        "reviewAction": "Review the proposal"
+      },
+      "proposed": {
+        "subject": "Event proposed: {title}",
+        "intro": "{author} proposes an event: a validator has to approve or refuse it."
+      },
+      "approved": {
+        "subject": "Proposal approved: {title}",
+        "intro": "{author}'s proposal was approved by {reviewer}: the event is published."
+      },
+      "refused": {
+        "subject": "Proposal refused: {title}",
+        "intro": "{author}'s proposal was refused by {reviewer}. It can be edited and proposed again."
       }
     },
     "title": "Events",
@@ -383,7 +406,8 @@
     "recurring": "Recurring event",
     "status": {
       "DRAFT": "Draft",
-      "CONFIRMED": "Confirmed"
+      "CONFIRMED": "Confirmed",
+      "PROPOSED": "Awaiting validation"
     },
     "recurrence": {
       "NONE": "Does not repeat",
@@ -465,7 +489,33 @@
         "confirm": "Confirm the event"
       },
       "occurrenceEdited": "Edited",
-      "restoreDate": "Restore this date"
+      "restoreDate": "Restore this date",
+      "review": {
+        "propose": "Propose for validation",
+        "withdraw": "Withdraw the proposal",
+        "approve": "Approve",
+        "refuse": "Refuse",
+        "proposedTitle": "Awaiting validation",
+        "proposedAuthor": "You proposed this event: a validator will approve or refuse it. You can still edit it, or withdraw your proposal.",
+        "proposedValidator": "{author} proposes this event. Approve it to publish it, or refuse it with a comment.",
+        "proposedOn": "Proposed on {date}.",
+        "refusedTitle": "Refused by {reviewer} on {date}",
+        "refusedHintAuthor": "Edit the event to take this comment into account, then propose it again.",
+        "refusedHintValidator": "{author} can edit it and propose it again.",
+        "lockedTitle": "This event is published",
+        "lockedBody": "Only a validator can change a published event. To correct something, ask one of them.",
+        "approveDialog": {
+          "title": "Approve this proposal?",
+          "confirm": "Approve"
+        },
+        "refuseDialog": {
+          "title": "Refuse this proposal?",
+          "body": "The event goes back to draft, with your comment for its author to read. A series is refused as a whole.",
+          "comment": "Comment for the author",
+          "commentHint": "Required. Say what needs to change: the author reads it on the event, and receives it as a notification if it is turned on.",
+          "confirm": "Refuse the proposal"
+        }
+      }
     },
     "form": {
       "createTitle": "New event",
@@ -503,7 +553,8 @@
         "notFound": "This event no longer exists."
       },
       "requiredLegend": "* Required field",
-      "optional": "optional"
+      "optional": "optional",
+      "statusHelpProposer": "A draft is only visible to you and the validators. A proposal is sent to the validators, who publish it or refuse it with a comment."
     },
     "dashboard": {
       "title": "Upcoming events",
@@ -550,7 +601,8 @@
     "notices": {
       "eventGone": "This event no longer exists: someone else probably deleted it.",
       "occurrenceGone": "This date no longer exists: the series was edited in the meantime. Here is the up-to-date state.",
-      "seriesBusy": "Somebody else was changing this series at the same moment: nothing was changed. Here is the current state, you can try again."
+      "seriesBusy": "Somebody else was changing this series at the same moment: nothing was changed. Here is the current state, you can try again.",
+      "alreadyReviewed": "Somebody else already answered this proposal. Here is its current state."
     },
     "scope": {
       "occurrence": "Only this one",
@@ -583,6 +635,13 @@
         "followingFirstHint": "The whole series ({count} dates). Final.",
         "confirm": "Delete"
       }
+    },
+    "review": {
+      "title": "To validate",
+      "subtitle": "Events proposed by members, waiting for a validator.",
+      "emptyTitle": "Nothing to validate",
+      "emptyDescription": "Proposed events will show up here as soon as a member proposes one.",
+      "proposedBy": "Proposed by {author} on {date}"
     }
   },
   "profile": {
@@ -629,13 +688,17 @@
           "label": "View events",
           "description": "See the calendar of confirmed events and subscribe to it."
         },
-        "manage": {
-          "label": "Manage events",
-          "description": "Create, edit, confirm and delete events, and see drafts."
-        },
         "shared_calendar": {
           "label": "Manage the shared calendar",
           "description": "Create, renew or turn off the BDE's common calendar link."
+        },
+        "propose": {
+          "label": "Propose events",
+          "description": "Create events that wait for a validator, and edit your own until they are published."
+        },
+        "validate": {
+          "label": "Validate events",
+          "description": "Approve or refuse proposals, create, edit, confirm and delete any event, and see drafts."
         }
       }
     },

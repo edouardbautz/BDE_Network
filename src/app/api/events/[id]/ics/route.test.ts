@@ -6,7 +6,10 @@ vi.mock('@/config', () => ({
     events: { categories: [{ key: 'soiree', label: 'Soirée', color: '#db2777' }] },
   })),
 }));
-vi.mock('@/lib/events/access', () => ({ getEventsAccess: vi.fn() }));
+vi.mock('@/lib/events/access', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/events/access')>()),
+  getEventsAccess: vi.fn(),
+}));
 vi.mock('@/lib/events/queries', () => ({ getVisibleEvent: vi.fn() }));
 
 const { getEventsAccess } = await import('@/lib/events/access');
@@ -35,8 +38,13 @@ const call = (query = '') =>
     params: Promise.resolve({ id: 'evt1' }),
   });
 
-function access(canManage: boolean) {
-  vi.mocked(getEventsAccess).mockResolvedValue({ canManage } as never);
+/** What a person sees of the events that are not published: all (a validator), their own, or none. */
+function access(who: 'validator' | 'proposer' | 'member') {
+  vi.mocked(getEventsAccess).mockResolvedValue({
+    session: { user: { login: 'pol' } },
+    canValidate: who === 'validator',
+    canPropose: who !== 'member',
+  } as never);
 }
 
 beforeEach(() => {
@@ -52,14 +60,26 @@ describe('GET /api/events/[id]/ics', () => {
   });
 
   it('is a 404 when the event is not visible to the user (e.g. a draft)', async () => {
-    access(false);
+    access('member');
     vi.mocked(getVisibleEvent).mockResolvedValue(null);
     expect((await call()).status).toBe(404);
-    expect(getVisibleEvent).toHaveBeenCalledWith('evt1', false);
+    expect(getVisibleEvent).toHaveBeenCalledWith('evt1', { includeDrafts: false });
+  });
+
+  it('asks for what each person may see of the events that are not published', async () => {
+    access('validator');
+    await call();
+    expect(getVisibleEvent).toHaveBeenLastCalledWith('evt1', { includeDrafts: true });
+    access('proposer');
+    await call();
+    expect(getVisibleEvent).toHaveBeenLastCalledWith('evt1', {
+      includeDrafts: false,
+      ownLogin: 'pol',
+    });
   });
 
   it('exports every non-cancelled occurrence of a series as a download', async () => {
-    access(false);
+    access('member');
     const response = await call();
     const body = await response.text();
 
@@ -73,7 +93,7 @@ describe('GET /api/events/[id]/ics', () => {
   });
 
   it('exports a single occurrence with ?occ=', async () => {
-    access(false);
+    access('member');
     const second = new Date('2026-10-24T18:00:00Z').getTime();
     const body = await (await call(`?occ=${second}`)).text();
     expect(body.match(/BEGIN:VEVENT/g)).toHaveLength(1);
@@ -81,7 +101,7 @@ describe('GET /api/events/[id]/ics', () => {
   });
 
   it('is a 404 for an occurrence that does not exist or was cancelled', async () => {
-    access(false);
+    access('member');
     expect((await call(`?occ=${new Date('2026-10-17T18:00:00Z').getTime()}`)).status).toBe(404);
     expect((await call('?occ=12345')).status).toBe(404);
   });

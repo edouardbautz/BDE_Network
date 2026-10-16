@@ -39,7 +39,9 @@ export async function EventRow({
           >
             {occurrence.title}
           </Link>
-          {occurrence.status === 'DRAFT' && <Badge variant="outline">{t('status.DRAFT')}</Badge>}
+          {occurrence.status !== 'CONFIRMED' && (
+            <Badge variant="outline">{t(`status.${occurrence.status}`)}</Badge>
+          )}
           {occurrence.isRecurring && (
             <Repeat className="text-muted-foreground size-3.5" aria-label={t('recurring')} />
           )}

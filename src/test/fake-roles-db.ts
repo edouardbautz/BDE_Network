@@ -303,8 +303,9 @@ export type FakeRolesDb = ReturnType<typeof createFakeRolesDb>;
  *
  *   Admin            all permissions                         adm
  *   Président        members + roles + all of events         pres
- *   Secrétaire       members.manage + events view/manage     sec, sec2 (two colleagues)
- *   Resp. événements events view/manage/shared calendar      evt
+ *   Secrétaire       members.manage + events validate        sec, sec2 (two colleagues)
+ *   Resp. événements events validate/shared calendar         evt
+ *   Pôle Events      events.propose                          prop
  *   Gestion rôles    roles.manage + events.view              rolesadmin
  *   Membre (default) events.view                             mem, mem2
  *   (owner: all, from the config) owner     (pending request) pend
@@ -318,19 +319,25 @@ export function seedClub(db: FakeRolesDb): void {
       'members.manage',
       'roles.manage',
       'events.view',
-      'events.manage',
+      'events.propose',
+      'events.validate',
       'events.shared_calendar',
     ],
   });
   db.addRole({
     id: 'role-secretary',
     name: 'Secrétaire',
-    permissions: ['members.manage', 'events.view', 'events.manage'],
+    permissions: ['members.manage', 'events.view', 'events.propose', 'events.validate'],
   });
   db.addRole({
     id: 'role-events',
     name: 'Resp. événements',
-    permissions: ['events.view', 'events.manage', 'events.shared_calendar'],
+    permissions: ['events.view', 'events.propose', 'events.validate', 'events.shared_calendar'],
+  });
+  db.addRole({
+    id: 'role-proposer',
+    name: 'Pôle Events',
+    permissions: ['events.view', 'events.propose'],
   });
   db.addRole({
     id: 'role-rolesadmin',
@@ -345,6 +352,7 @@ export function seedClub(db: FakeRolesDb): void {
   db.addUser({ login: 'sec', roleId: 'role-secretary' });
   db.addUser({ login: 'sec2', roleId: 'role-secretary' });
   db.addUser({ login: 'evt', roleId: 'role-events' });
+  db.addUser({ login: 'prop', roleId: 'role-proposer' });
   db.addUser({ login: 'rolesadmin', roleId: 'role-rolesadmin' });
   db.addUser({ login: 'mem', roleId: 'role-member' });
   db.addUser({ login: 'mem2', roleId: 'role-member' });

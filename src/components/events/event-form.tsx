@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Link } from '@/i18n/navigation';
 import type { EventFormState } from '@/app/[locale]/(app)/events/actions';
+import type { EventStatus } from '@/generated/prisma/client';
 import {
   DESCRIPTION_MAX_LENGTH,
   LOCATION_MAX_LENGTH,
@@ -61,6 +62,8 @@ interface EventFormProps {
   timeZone: string;
   submitLabel: string;
   cancelHref: ComponentProps<typeof Link>['href'];
+  /** The statuses this person may give the event (see lib/events/review.ts): the select offers no other. */
+  statusChoices: readonly EventStatus[];
   /** Editing an existing event. */
   isEditing: boolean;
   /** Editing one date of a series (absent for an event that does not repeat). */
@@ -117,6 +120,7 @@ export function EventForm({
   timeZone,
   submitLabel,
   cancelHref,
+  statusChoices,
   isEditing,
   series,
 }: EventFormProps) {
@@ -265,10 +269,17 @@ export function EventForm({
               defaultValue={values.status}
               {...field('status')}
             >
-              <option value="DRAFT">{t('status.DRAFT')}</option>
-              <option value="CONFIRMED">{t('status.CONFIRMED')}</option>
+              {statusChoices.map((status) => (
+                <option key={status} value={status}>
+                  {t(`status.${status}`)}
+                </option>
+              ))}
             </NativeSelect>
-            <p className="text-muted-foreground text-xs">{t('form.statusHelp')}</p>
+            <p className="text-muted-foreground text-xs">
+              {statusChoices.includes('CONFIRMED')
+                ? t('form.statusHelp')
+                : t('form.statusHelpProposer')}
+            </p>
             {fieldError('status')}
           </div>
 

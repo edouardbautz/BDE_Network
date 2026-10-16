@@ -63,7 +63,7 @@ const FORBIDDEN: [string, Scenario][] = [
   ['the default member', { who: 'MEMBER' }],
   [
     'a member whose role manages events but not the shared calendar',
-    { who: { permissions: ['events.view', 'events.manage'] } },
+    { who: { permissions: ['events.view', 'events.validate'] } },
   ],
   ['an admin when the module is disabled', { who: 'ADMIN', enabled: false }],
   ['the OWNER when the module is disabled', { who: 'OWNER', enabled: false }],

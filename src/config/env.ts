@@ -27,7 +27,13 @@ const MIN_SECRET_LENGTH = 32;
 const OAUTH_APPS_URL = 'https://profile.intra.42.fr/oauth/applications';
 
 /** Notification events of the events module: a channel left unconfigured is an error. */
-const EVENTS_NOTIFICATIONS = ['eventConfirmed', 'eventReminder'] as const;
+const EVENTS_NOTIFICATIONS = [
+  'eventConfirmed',
+  'eventReminder',
+  'eventProposed',
+  'eventApproved',
+  'eventRefused',
+] as const;
 
 /**
  * Notifications about members. Their channels were already in every config before they sent

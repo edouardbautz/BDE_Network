@@ -98,6 +98,8 @@ model AuditLog {
 
 enum EventStatus {
   DRAFT
+  /// Submitted for validation by somebody who may propose events but not publish them.
+  PROPOSED
   CONFIRMED
 }
 
@@ -139,6 +141,14 @@ model Event {
   /// Day of the month a MONTHLY series sticks to (31 → the last day of shorter months). null = the day of
   /// startsAt. Set when a series is cut on a date that a short month had moved (the 28th, for a "31st").
   monthlyDay             Int?
+  /// When the event was last submitted for validation (status PROPOSED), to list the oldest first.
+  proposedAt             DateTime?
+  /// A validator refused the proposal: the comment the author reads, who wrote it and when. The event is a DRAFT
+  /// again; the three are set together (a CHECK the schema cannot express) and cleared when it is proposed or
+  /// confirmed. Reasons are kept in the audit log.
+  refusalComment         String?
+  refusedByLogin         String?
+  refusedAt              DateTime?
   authorLogin            String
   authorId               String?
   author                 User?           @relation("EventAuthor", fields: [authorId], references: [id], onDelete: SetNull)

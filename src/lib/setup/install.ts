@@ -21,6 +21,9 @@ export function notificationChannels(channel: Channel) {
     memberRemoved: channel === 'email' ? ('none' as const) : channel,
     eventConfirmed: channel,
     eventReminder: channel,
+    eventProposed: channel,
+    eventApproved: channel,
+    eventRefused: channel,
   };
 }
 

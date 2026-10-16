@@ -3,7 +3,7 @@ import { effective, effectiveFor, memberWith, type AccountKind } from '@/test/se
 
 /**
  * Every mutating action is its own HTTP entry point, so each must re-check
- * the "events" permission itself. These tests run the real access rules
+ * the "events" permissions itself (who may propose, who may validate). These tests run the real access rules
  * (src/lib/events/access.ts) against mocked session/config/database and
  * prove that a refused caller produces no write, no audit entry and no
  * notification.
@@ -53,7 +53,13 @@ vi.mock('@/i18n/navigation', () => ({
     },
   ),
 }));
-vi.mock('@/lib/events/notifications', () => ({ notifyEventConfirmed: vi.fn() }));
+vi.mock('@/lib/events/notifications', () => ({
+  notifyEventApproved: vi.fn(),
+  notifyEventConfirmed: vi.fn(),
+  notifyEventProposed: vi.fn(),
+  notifyEventRefused: vi.fn(),
+  notifyOccurrenceConfirmed: vi.fn(),
+}));
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     user: { findMany: vi.fn() },
@@ -73,7 +79,7 @@ const { getEffectiveSession } = await import('@/lib/auth/session');
 const { logAuditEvent } = await import('@/lib/audit-log');
 const { after } = await import('next/server');
 const { prisma } = await import('@/lib/prisma');
-const { notifyEventConfirmed } = await import('@/lib/events/notifications');
+const { notifyEventConfirmed, notifyEventProposed } = await import('@/lib/events/notifications');
 const {
   cancelOccurrence,
   createEvent,
@@ -86,8 +92,11 @@ const {
 
 type Who = AccountKind | { permissions: string[] } | null;
 
-/** A member whose role manages events. */
-const EVENT_MANAGER: Who = { permissions: ['events.view', 'events.manage'] };
+/** A member whose role validates events (and so proposes them too). */
+const EVENT_VALIDATOR: Who = { permissions: ['events.view', 'events.validate'] };
+
+/** A member whose role only proposes events. */
+const EVENT_PROPOSER: Who = { permissions: ['events.view', 'events.propose'] };
 
 interface Scenario {
   enabled?: boolean;
@@ -152,6 +161,8 @@ const storedEvent = {
   authorLogin: 'someone',
   authorId: null,
   assignees: [{ login: 'alice' }],
+  cancellations: [],
+  occurrences: [],
 };
 
 const series = {
@@ -197,6 +208,9 @@ beforeEach(() => {
   vi.spyOn(console, 'error').mockImplementation(() => undefined);
   vi.mocked(prisma.event.findUnique).mockResolvedValue(storedEvent as never);
   vi.mocked(prisma.user.findMany).mockResolvedValue([]);
+  // A transaction runs its work against the same mocks.
+  vi.mocked(prisma.$transaction).mockImplementation((async (work: (tx: unknown) => unknown) =>
+    work(prisma)) as never);
 });
 
 describe('access control on every action', () => {
@@ -251,7 +265,7 @@ describe('access control on every action', () => {
 
 describe('createEvent', () => {
   beforeEach(() => {
-    setup({ who: EVENT_MANAGER });
+    setup({ who: EVENT_VALIDATOR });
     vi.mocked(prisma.event.create).mockResolvedValue({ ...storedEvent } as never);
   });
 
@@ -276,6 +290,7 @@ describe('createEvent', () => {
         targetType: 'Event',
         targetId: 'evt1',
       }),
+      prisma,
     );
   });
 
@@ -365,7 +380,10 @@ describe('createEvent', () => {
       new RedirectSignal('/events/evt1'),
     );
     expect(prisma.event.create).toHaveBeenCalledTimes(1);
-    expect(logAuditEvent).toHaveBeenCalledWith(expect.objectContaining({ action: 'event.create' }));
+    expect(logAuditEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'event.create' }),
+      prisma,
+    );
 
     // Running the deferred work later must not throw either.
     await expect(runAfterCallbacks()).resolves.toBeUndefined();
@@ -373,7 +391,7 @@ describe('createEvent', () => {
 });
 
 describe('deleteEvent and setEventStatus', () => {
-  beforeEach(() => setup({ who: EVENT_MANAGER }));
+  beforeEach(() => setup({ who: EVENT_VALIDATOR }));
 
   it('deletes the event, audits it with its title, and returns to the list', async () => {
     await expect(deleteEvent('evt1')).rejects.toThrow(new RedirectSignal('/events'));
@@ -384,6 +402,7 @@ describe('deleteEvent and setEventStatus', () => {
         targetLabel: 'Soirée de rentrée',
         actorLogin: 'real-actor',
       }),
+      prisma,
     );
   });
 
@@ -427,7 +446,7 @@ describe('cancelOccurrence / restoreOccurrence', () => {
   const second = new Date('2026-10-17T18:00:00Z').getTime();
 
   beforeEach(() => {
-    setup({ who: EVENT_MANAGER });
+    setup({ who: EVENT_VALIDATOR });
     vi.mocked(prisma.event.findUnique).mockResolvedValue(series as never);
   });
 
@@ -482,5 +501,205 @@ describe('cancelOccurrence / restoreOccurrence', () => {
     expect(logAuditEvent).toHaveBeenCalledWith(
       expect.objectContaining({ action: 'event.occurrence_restore' }),
     );
+  });
+});
+
+// ---- the proposal circuit ---------------------------------------------------------------------------------------
+
+/** An event written by the person acting (the mocked actor is "real-actor"). */
+const own = (extra: Record<string, unknown> = {}) =>
+  ({ ...storedEvent, authorLogin: 'real-actor', ...extra }) as never;
+
+describe('what somebody who only proposes can never do', () => {
+  beforeEach(() => setup({ who: EVENT_PROPOSER }));
+
+  // Cancelling a date, restoring it and cutting a series are a validator's: nothing is written, nothing is audited.
+  it('cannot delete a date and the following', async () => {
+    await expect(deleteFollowingDates('evt1', 1)).rejects.toThrow('Forbidden');
+    expectNothingHappened();
+  });
+
+  it('cannot cancel or restore an occurrence', async () => {
+    await expect(cancelOccurrence('evt1', 1)).rejects.toThrow('Forbidden');
+    await expect(restoreOccurrence('evt1', 1)).rejects.toThrow('Forbidden');
+    expectNothingHappened();
+  });
+
+  it('cannot create a confirmed event, even by crafting the request', async () => {
+    await expect(createEvent({}, form({ status: 'CONFIRMED' }))).rejects.toThrow('Forbidden');
+    expectNothingHappened();
+  });
+
+  it('cannot confirm an event, not even their own draft', async () => {
+    vi.mocked(prisma.event.findUnique).mockResolvedValue(own());
+    await expect(setEventStatus('evt1', 'CONFIRMED')).rejects.toThrow('Forbidden');
+    expectNothingHappened();
+  });
+
+  it('cannot confirm a proposal of their own: approving is for a validator', async () => {
+    vi.mocked(prisma.event.findUnique).mockResolvedValue(own({ status: 'PROPOSED' }));
+    await expect(setEventStatus('evt1', 'CONFIRMED')).rejects.toThrow('Forbidden');
+    expectNothingHappened();
+  });
+
+  it("cannot touch somebody else's draft or proposal", async () => {
+    for (const status of ['DRAFT', 'PROPOSED'] as const) {
+      vi.mocked(prisma.event.findUnique).mockResolvedValue({ ...storedEvent, status } as never);
+      await expect(setEventStatus('evt1', 'PROPOSED')).rejects.toThrow('Forbidden');
+      await expect(setEventStatus('evt1', 'DRAFT')).rejects.toThrow('Forbidden');
+      await expect(updateEvent('evt1', {}, form({}))).rejects.toThrow('Forbidden');
+      await expect(deleteEvent('evt1')).rejects.toThrow('Forbidden');
+    }
+    expectNothingHappened();
+  });
+
+  it('cannot edit, change the status of or delete a published event, even their own', async () => {
+    vi.mocked(prisma.event.findUnique).mockResolvedValue(own({ status: 'CONFIRMED' }));
+    await expect(updateEvent('evt1', {}, form({}))).rejects.toThrow('Forbidden');
+    await expect(setEventStatus('evt1', 'DRAFT')).rejects.toThrow('Forbidden');
+    await expect(setEventStatus('evt1', 'PROPOSED')).rejects.toThrow('Forbidden');
+    await expect(deleteEvent('evt1')).rejects.toThrow('Forbidden');
+    expectNothingHappened();
+  });
+
+  it('cannot touch an unpublished event of which one date was confirmed alone: it is published', async () => {
+    vi.mocked(prisma.event.findUnique).mockResolvedValue(
+      own({ occurrences: [{ status: 'CONFIRMED' }] }),
+    );
+    await expect(updateEvent('evt1', {}, form({}))).rejects.toThrow('Forbidden');
+    await expect(deleteEvent('evt1')).rejects.toThrow('Forbidden');
+    expectNothingHappened();
+  });
+
+  it('cannot refuse a proposal', async () => {
+    const { refuseEvent } = await import('./actions');
+    await expect(refuseEvent('evt1', 'Non.')).rejects.toThrow('Forbidden');
+    expectNothingHappened();
+  });
+});
+
+describe('what a validator can never do to a proposal', () => {
+  beforeEach(() => setup({ who: EVENT_VALIDATOR }));
+
+  it('cannot make a proposal of their own: they have nobody to propose to', async () => {
+    await expect(createEvent({}, form({ status: 'PROPOSED' }))).rejects.toThrow('Forbidden');
+    vi.mocked(prisma.event.findUnique).mockResolvedValue(storedEvent as never);
+    await expect(setEventStatus('evt1', 'PROPOSED')).rejects.toThrow('Forbidden');
+    expectNothingHappened();
+  });
+
+  it('cannot send a proposal back to draft without a comment: that is refusing it', async () => {
+    vi.mocked(prisma.event.findUnique).mockResolvedValue({
+      ...storedEvent,
+      status: 'PROPOSED',
+    } as never);
+    await expect(setEventStatus('evt1', 'DRAFT')).rejects.toThrow('Forbidden');
+    expectNothingHappened();
+  });
+
+  it('refuses an answer that goes nowhere the application knows', async () => {
+    const { refuseEvent } = await import('./actions');
+    await expect(refuseEvent('evt1', 'Non.', 'https://elsewhere.example')).rejects.toThrow(
+      'Invalid target',
+    );
+    await expect(setEventStatus('evt1', 'CONFIRMED', undefined, undefined, '//x')).rejects.toThrow(
+      'Invalid target',
+    );
+    expectNothingHappened();
+  });
+});
+
+describe('proposing an event', () => {
+  beforeEach(() => {
+    setup({ who: EVENT_PROPOSER });
+    vi.mocked(prisma.event.create).mockResolvedValue({
+      ...storedEvent,
+      status: 'PROPOSED',
+      authorLogin: 'real-actor',
+    } as never);
+  });
+
+  it('stores a proposal under the real author, audits the creation and the proposal in one transaction', async () => {
+    await expect(createEvent({}, form({ status: 'PROPOSED' }))).rejects.toThrow(
+      new RedirectSignal('/events/evt1'),
+    );
+
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(prisma.event.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        status: 'PROPOSED',
+        proposedAt: expect.any(Date),
+        authorLogin: 'real-actor',
+        authorId: 'actor-1',
+      }),
+    });
+    const actions = vi.mocked(logAuditEvent).mock.calls.map(([entry]) => entry.action);
+    expect(actions).toEqual(['event.create', 'event.propose']);
+    expect(vi.mocked(logAuditEvent).mock.calls[1]?.[0]).toMatchObject({
+      actorLogin: 'real-actor',
+      targetId: 'evt1',
+      metadata: { created: true },
+    });
+  });
+
+  it('tells the validators after the response, and does not announce it to the members', async () => {
+    await expect(createEvent({}, form({ status: 'PROPOSED' }))).rejects.toThrow(RedirectSignal);
+
+    expect(after).toHaveBeenCalledTimes(1);
+    expect(notifyEventProposed).not.toHaveBeenCalled();
+    await runAfterCallbacks();
+    expect(notifyEventProposed).toHaveBeenCalledWith('evt1');
+    expect(notifyEventConfirmed).not.toHaveBeenCalled();
+  });
+
+  it('still saves the proposal when the notification fails', async () => {
+    vi.mocked(notifyEventProposed).mockRejectedValue(new Error('Discord down'));
+    await expect(createEvent({}, form({ status: 'PROPOSED' }))).rejects.toThrow(RedirectSignal);
+    expect(prisma.event.create).toHaveBeenCalledTimes(1);
+    await expect(runAfterCallbacks()).resolves.toBeUndefined();
+  });
+
+  it('keeps a draft private: nothing is proposed, nobody is told', async () => {
+    vi.mocked(prisma.event.create).mockResolvedValue(own());
+    await expect(createEvent({}, form({ status: 'DRAFT' }))).rejects.toThrow(RedirectSignal);
+    expect(prisma.event.create).toHaveBeenCalledWith({
+      data: expect.not.objectContaining({ proposedAt: expect.anything() }),
+    });
+    expect(vi.mocked(logAuditEvent).mock.calls.map(([entry]) => entry.action)).toEqual([
+      'event.create',
+    ]);
+    expect(after).not.toHaveBeenCalled();
+  });
+});
+
+describe('deleting an event', () => {
+  it('lets a proposer withdraw their own draft or proposal', async () => {
+    setup({ who: EVENT_PROPOSER });
+    for (const status of ['DRAFT', 'PROPOSED'] as const) {
+      vi.mocked(prisma.event.delete).mockClear();
+      vi.mocked(prisma.event.findUnique).mockResolvedValue(own({ status }));
+      await expect(deleteEvent('evt1')).rejects.toThrow(new RedirectSignal('/events'));
+      expect(prisma.event.delete).toHaveBeenCalledWith({ where: { id: 'evt1' } });
+    }
+  });
+
+  it('checks again, inside the transaction, that nobody published the event meanwhile', async () => {
+    setup({ who: EVENT_PROPOSER });
+    vi.mocked(prisma.event.findUnique)
+      .mockResolvedValueOnce(own({ status: 'PROPOSED' })) // what the page showed
+      .mockResolvedValueOnce(own({ status: 'CONFIRMED' })); // what a validator did meanwhile
+    await expect(deleteEvent('evt1')).rejects.toThrow('Forbidden');
+    expect(prisma.event.delete).not.toHaveBeenCalled();
+    expect(logAuditEvent).not.toHaveBeenCalled();
+  });
+
+  it('lets a validator delete any event, published or not, whoever wrote it', async () => {
+    setup({ who: EVENT_VALIDATOR });
+    for (const status of ['DRAFT', 'PROPOSED', 'CONFIRMED'] as const) {
+      vi.mocked(prisma.event.delete).mockClear();
+      vi.mocked(prisma.event.findUnique).mockResolvedValue({ ...storedEvent, status } as never);
+      await expect(deleteEvent('evt1')).rejects.toThrow(new RedirectSignal('/events'));
+      expect(prisma.event.delete).toHaveBeenCalledTimes(1);
+    }
   });
 });

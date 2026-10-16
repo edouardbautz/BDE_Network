@@ -97,8 +97,15 @@ Non. Le module est le calendrier **interne** du bureau. Les inscriptions des ét
 
 ### Quelle différence entre un brouillon et un événement confirmé ?
 
-Un **brouillon** n'est visible que de ceux qui peuvent gérer les événements. Un événement **confirmé** est visible de
+Un **brouillon** n'est visible que de son auteur et de ceux qui peuvent valider les événements. Une **proposition**
+est un brouillon envoyé aux validateurs, qui l'approuvent ou la refusent. Un événement **confirmé** est visible de
 tous les membres, et le confirmer les prévient. Voir [Module Événements](events.md).
+
+### Pourquoi ne puis-je plus modifier mon événement ?
+
+Une fois un événement **publié**, seul un validateur peut le modifier, même si vous l'avez créé : un événement publié
+ne disparaît jamais du calendrier sans l'action d'un validateur. Demandez à l'un d'eux, il modifie librement. Voir
+[Module Événements](events.md#proposer-et-valider-des-événements).
 
 ### Pourquoi Google Agenda met-il des heures à afficher un événement ?
 

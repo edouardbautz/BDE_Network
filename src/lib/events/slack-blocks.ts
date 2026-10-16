@@ -9,7 +9,7 @@ import {
   type SlackPayload,
 } from '@/lib/notifications/slack-blocks';
 import { truncate } from '@/lib/notifications/text';
-import { KIND_LABEL_KEY, type EventCardKind } from './card-kind';
+import { KIND_LABEL_KEY, actionLabelKey, type EventCardKind } from './card-kind';
 import {
   formatDate,
   formatDateTime,
@@ -21,6 +21,9 @@ import { isSameLocalDay } from './time';
 
 /** How much of the event's description a message shows: it is a notice, the page has the rest. */
 const DESCRIPTION_PREVIEW = 350;
+
+/** A refusal's comment is the point of its message: it is shown nearly whole (the validator wrote at most 1000). */
+const REASON_PREVIEW = 1000;
 
 /** A member's text for a `mrkdwn` field, cut first and then escaped (never cut in the middle of an
  * escape), so `<!channel>` and `<@U123>` come out as text. */
@@ -68,6 +71,20 @@ export function buildEventSlack(
   const columns = [
     ...(data.location ? [column(t('embed.fields.where'), text(data.location, 400))] : []),
     column(t('embed.fields.category'), text(data.categoryLabel, 400)),
+    // The whole team reads a channel: the message says who it is about.
+    ...(data.review
+      ? [
+          column(t('embed.fields.proposedBy'), text(data.review.authorName, 400)),
+          ...(data.review.reviewerName
+            ? [
+                column(
+                  t(kind === 'approved' ? 'embed.fields.approvedBy' : 'embed.fields.refusedBy'),
+                  text(data.review.reviewerName, 400),
+                ),
+              ]
+            : []),
+        ]
+      : []),
     ...(data.assigneeNames.length > 0
       ? [column(t('embed.fields.inCharge'), text(data.assigneeNames.join(', '), 400))]
       : []),
@@ -90,6 +107,15 @@ export function buildEventSlack(
   const blocks: SlackBlock[] = [
     { type: 'context', elements: [{ type: 'mrkdwn', text: `*${kindLabel}*` }] },
     { type: 'header', text: { type: 'plain_text', text: data.title } },
+    // The reason of a refusal comes first: it is what the author opens the message for.
+    ...(kind === 'refused' && data.review?.comment
+      ? [
+          {
+            type: 'section' as const,
+            text: column(t('embed.fields.reason'), text(data.review.comment, REASON_PREVIEW)),
+          },
+        ]
+      : []),
     ...(description
       ? [
           {
@@ -100,7 +126,7 @@ export function buildEventSlack(
       : []),
     { type: 'section', text: column(t('embed.fields.when'), whenValue(data, locale, timeZone)) },
     { type: 'section', fields: columns },
-    ...(data.url ? [slackButton(t('slack.action'), data.url)] : []),
+    ...(data.url ? [slackButton(t(actionLabelKey(kind, 'slack')), data.url)] : []),
     slackFooter(brand),
   ];
 

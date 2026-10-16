@@ -49,7 +49,8 @@ describe('describePermission', () => {
     const events = permissionDefinitions(['events']).filter((d) => d.section === 'events');
     expect(events.map((d) => d.key)).toEqual([
       'events.view',
-      'events.manage',
+      'events.propose',
+      'events.validate',
       'events.shared_calendar',
     ]);
     for (const definition of events) {
@@ -79,8 +80,8 @@ describe('buildPermissionGroups', () => {
     expect(groups.map((group) => group.section)).toEqual(['core', 'events']);
     const events = groups.find((group) => group.section === 'events');
     expect(events?.title).toBe('Événements');
-    const manage = events?.options.find((option) => option.key === 'events.manage');
-    expect(manage?.implies).toEqual(['events.view']);
+    const validate = events?.options.find((option) => option.key === 'events.validate');
+    expect(validate?.implies).toEqual(['events.propose', 'events.view']);
   });
 
   it('locks what the person editing does not hold, and nothing for someone who holds all', () => {
@@ -92,7 +93,12 @@ describe('buildPermissionGroups', () => {
     const lockedKeys = limited.flatMap((group) =>
       group.options.filter((o) => o.locked).map((o) => o.key),
     );
-    expect(lockedKeys).toEqual(['roles.manage', 'events.manage', 'events.shared_calendar']);
+    expect(lockedKeys).toEqual([
+      'roles.manage',
+      'events.propose',
+      'events.validate',
+      'events.shared_calendar',
+    ]);
 
     const nothing = buildPermissionGroups(t, definitions, NO_PERMISSIONS);
     expect(nothing.flatMap((group) => group.options).every((option) => option.locked)).toBe(true);

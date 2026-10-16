@@ -123,6 +123,9 @@ describe('buildInstallation', () => {
         memberRemoved: 'discord',
         eventConfirmed: 'discord',
         eventReminder: 'discord',
+        eventProposed: 'discord',
+        eventApproved: 'discord',
+        eventRefused: 'discord',
       });
     });
 

@@ -2,10 +2,13 @@ import {
   ArrowLeft,
   CalendarPlus,
   CircleCheck,
+  CircleX,
+  Clock,
   FileText,
   MapPin,
   Pencil,
   Repeat,
+  Send,
   Trash2,
   Undo2,
   Users,
@@ -17,6 +20,7 @@ import { ActionButton } from '@/components/action-button';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { CategoryBadge } from '@/components/events/category-badge';
 import { EventNoticeAlert } from '@/components/events/event-notice';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,12 +31,20 @@ import { resolveCategory } from '@/lib/events/categories';
 import { formatDateTimeRange, formatLongDate, formatTimeRange } from '@/lib/events/format';
 import { readEventNotice } from '@/lib/events/notice';
 import { getVisibleEvent } from '@/lib/events/queries';
+import {
+  REFUSAL_COMMENT_MAX_LENGTH,
+  canDeleteEvent,
+  draftVisibility,
+  editRefusal,
+  reviewActorOf,
+} from '@/lib/events/review';
 import { resolveOccurrences, scopeFacts } from '@/lib/events/series';
 import { cn } from '@/lib/utils';
 import {
   cancelOccurrence,
   deleteEvent,
   deleteFollowingDates,
+  refuseEvent,
   restoreOccurrence,
   setEventStatus,
 } from '../actions';
@@ -82,17 +94,33 @@ export default async function EventDetailPage({
     getLocale(),
   ]);
 
-  const event = await getVisibleEvent(id, access.canManage);
+  const visibility = draftVisibility(access);
+  const event = await getVisibleEvent(id, visibility);
   if (!event) {
     notFound();
   }
 
   const timeZone = getConfig().bde.timezone;
   const allDates = resolveOccurrences(event, timeZone);
-  // A reader who cannot see drafts sees the dates that are confirmed, and none of the others.
-  const occurrences = access.canManage
-    ? allDates
-    : allDates.filter((o) => o.status === 'CONFIRMED');
+  // A reader who cannot see what is not published (a draft, a proposal) sees the dates that are confirmed, and
+  // none of the others; a validator sees all, and an author their own event.
+  const seesUnpublished =
+    visibility.includeDrafts ||
+    (visibility.ownLogin !== undefined && visibility.ownLogin === event.authorLogin);
+  const occurrences = seesUnpublished ? allDates : allDates.filter((o) => o.status === 'CONFIRMED');
+
+  // What this person may do to the event, decided by the rules of the circuit (lib/events/review.ts).
+  const actor = reviewActorOf(access);
+  const reviewed = {
+    status: event.status,
+    authorLogin: event.authorLogin,
+    dateStatuses: event.occurrences.map((own) => own.status),
+  };
+  const lockedBecause = editRefusal(actor, reviewed);
+  const mayEdit = lockedBecause === null;
+  const mayDelete = canDeleteEvent(actor, reviewed);
+  const isValidator = access.canValidate;
+  const isProposerOnly = !isValidator && access.canPropose;
 
   const now = Date.now();
   const isSeries = event.recurrence !== 'NONE';
@@ -158,7 +186,8 @@ export default async function EventDetailPage({
           <h1 className="text-2xl font-semibold tracking-tight break-words">{shown.title}</h1>
           <div className="flex flex-wrap items-center gap-3">
             <CategoryBadge category={category} />
-            <Badge variant={shown.status === 'DRAFT' ? 'outline' : 'secondary'}>
+            <Badge variant={shown.status === 'CONFIRMED' ? 'secondary' : 'outline'}>
+              {shown.status === 'PROPOSED' && <Clock data-icon="inline-start" aria-hidden />}
               {t(`status.${shown.status}`)}
             </Badge>
             {isSeries && shown.edited && (
@@ -179,24 +208,50 @@ export default async function EventDetailPage({
             <CalendarPlus data-icon="inline-start" />
             {t('detail.addToCalendar')}
           </Button>
-          {access.canManage && (
+          {mayEdit && (
+            <Button
+              variant="outline"
+              size="sm"
+              render={
+                <Link
+                  href={
+                    isSeries && isValidator
+                      ? { pathname: `/events/${event.id}/edit`, query: { occ: occurrence } }
+                      : `/events/${event.id}/edit`
+                  }
+                />
+              }
+            >
+              <Pencil data-icon="inline-start" />
+              {t('detail.edit')}
+            </Button>
+          )}
+          {isProposerOnly && mayEdit && shown.status === 'DRAFT' && (
+            <ActionButton
+              variant="default"
+              action={async () => {
+                'use server';
+                return setEventStatus(event.id, 'PROPOSED');
+              }}
+            >
+              <Send data-icon="inline-start" />
+              {t('detail.review.propose')}
+            </ActionButton>
+          )}
+          {isProposerOnly && mayEdit && shown.status === 'PROPOSED' && (
+            <ActionButton
+              variant="secondary"
+              action={async () => {
+                'use server';
+                return setEventStatus(event.id, 'DRAFT');
+              }}
+            >
+              <Undo2 data-icon="inline-start" />
+              {t('detail.review.withdraw')}
+            </ActionButton>
+          )}
+          {isValidator && (
             <>
-              <Button
-                variant="outline"
-                size="sm"
-                render={
-                  <Link
-                    href={
-                      isSeries
-                        ? { pathname: `/events/${event.id}/edit`, query: { occ: occurrence } }
-                        : `/events/${event.id}/edit`
-                    }
-                  />
-                }
-              >
-                <Pencil data-icon="inline-start" />
-                {t('detail.edit')}
-              </Button>
               {shown.cancelled && (
                 <ActionButton
                   action={async () => {
@@ -207,16 +262,47 @@ export default async function EventDetailPage({
                   {t('detail.restoreDate')}
                 </ActionButton>
               )}
-              {shown.status === 'DRAFT' ? (
+              {shown.status === 'PROPOSED' && (
+                // A proposal is answered, not toggled: approving publishes it, refusing says why (the whole event).
+                <ConfirmDialog
+                  tone="destructive"
+                  triggerVariant="outline"
+                  title={t('detail.review.refuseDialog.title')}
+                  description={t('detail.review.refuseDialog.body')}
+                  confirmLabel={t('detail.review.refuseDialog.confirm')}
+                  field={{
+                    label: t('detail.review.refuseDialog.comment'),
+                    hint: t('detail.review.refuseDialog.commentHint'),
+                    maxLength: REFUSAL_COMMENT_MAX_LENGTH,
+                    required: true,
+                  }}
+                  onConfirm={async (_choice, comment) => {
+                    'use server';
+                    return refuseEvent(event.id, comment);
+                  }}
+                >
+                  <CircleX data-icon="inline-start" />
+                  {t('detail.review.refuse')}
+                </ConfirmDialog>
+              )}
+              {shown.status !== 'CONFIRMED' ? (
                 // Confirming shows the event to every member and may notify them: it asks first,
                 // in the normal style (it is not destructive: going back to draft undoes it).
                 isSeries ? (
                   <ConfirmDialog
                     tone="default"
                     triggerVariant="default"
-                    title={t('detail.confirmDialog.title')}
+                    title={
+                      shown.status === 'PROPOSED'
+                        ? t('detail.review.approveDialog.title')
+                        : t('detail.confirmDialog.title')
+                    }
                     description={t('detail.confirmDialog.body')}
-                    confirmLabel={t('detail.confirmDialog.confirm')}
+                    confirmLabel={
+                      shown.status === 'PROPOSED'
+                        ? t('detail.review.approveDialog.confirm')
+                        : t('detail.confirmDialog.confirm')
+                    }
                     choices={choices({
                       occurrence: sentence(
                         t('scope.occurrenceHint'),
@@ -236,22 +322,30 @@ export default async function EventDetailPage({
                     }}
                   >
                     <CircleCheck data-icon="inline-start" />
-                    {t('detail.confirm')}
+                    {shown.status === 'PROPOSED' ? t('detail.review.approve') : t('detail.confirm')}
                   </ConfirmDialog>
                 ) : (
                   <ConfirmDialog
                     tone="default"
                     triggerVariant="default"
-                    title={t('detail.confirmDialog.title')}
+                    title={
+                      shown.status === 'PROPOSED'
+                        ? t('detail.review.approveDialog.title')
+                        : t('detail.confirmDialog.title')
+                    }
                     description={confirmationText}
-                    confirmLabel={t('detail.confirmDialog.confirm')}
+                    confirmLabel={
+                      shown.status === 'PROPOSED'
+                        ? t('detail.review.approveDialog.confirm')
+                        : t('detail.confirmDialog.confirm')
+                    }
                     onConfirm={async () => {
                       'use server';
                       return setEventStatus(event.id, 'CONFIRMED');
                     }}
                   >
                     <CircleCheck data-icon="inline-start" />
-                    {t('detail.confirm')}
+                    {shown.status === 'PROPOSED' ? t('detail.review.approve') : t('detail.confirm')}
                   </ConfirmDialog>
                 )
               ) : isSeries ? (
@@ -289,6 +383,46 @@ export default async function EventDetailPage({
           )}
         </div>
       </div>
+
+      {event.status === 'PROPOSED' && (
+        <Alert>
+          <Clock />
+          <AlertTitle>{t('detail.review.proposedTitle')}</AlertTitle>
+          <AlertDescription>
+            {actor.login === event.authorLogin && !isValidator
+              ? t('detail.review.proposedAuthor')
+              : t('detail.review.proposedValidator', { author: event.authorLogin })}
+            {event.proposedAt &&
+              ` ${t('detail.review.proposedOn', { date: formatLongDate(event.proposedAt, locale, timeZone) })}`}
+          </AlertDescription>
+        </Alert>
+      )}
+      {event.status === 'DRAFT' && event.refusalComment && (
+        <Alert variant="destructive">
+          <CircleX />
+          <AlertTitle>
+            {t('detail.review.refusedTitle', {
+              reviewer: event.refusedByLogin ?? '',
+              date: event.refusedAt ? formatLongDate(event.refusedAt, locale, timeZone) : '',
+            })}
+          </AlertTitle>
+          <AlertDescription>
+            <p className="whitespace-pre-wrap">{event.refusalComment}</p>
+            <p>
+              {isValidator
+                ? t('detail.review.refusedHintValidator', { author: event.authorLogin })
+                : t('detail.review.refusedHintAuthor')}
+            </p>
+          </AlertDescription>
+        </Alert>
+      )}
+      {lockedBecause === 'published' && (
+        <Alert>
+          <CircleCheck />
+          <AlertTitle>{t('detail.review.lockedTitle')}</AlertTitle>
+          <AlertDescription>{t('detail.review.lockedBody')}</AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardContent>
@@ -364,14 +498,14 @@ export default async function EventDetailPage({
                         {date.cancelled && (
                           <Badge variant="destructive">{t('detail.occurrenceCancelled')}</Badge>
                         )}
-                        {date.status === 'DRAFT' && (
-                          <Badge variant="outline">{t('status.DRAFT')}</Badge>
+                        {date.status !== 'CONFIRMED' && (
+                          <Badge variant="outline">{t(`status.${date.status}`)}</Badge>
                         )}
                         {date.edited && (
                           <Badge variant="outline">{t('detail.occurrenceEdited')}</Badge>
                         )}
                       </div>
-                      {access.canManage && date.cancelled && (
+                      {isValidator && date.cancelled && (
                         <ActionButton
                           size="xs"
                           action={async () => {
@@ -413,9 +547,9 @@ export default async function EventDetailPage({
         </Card>
       )}
 
-      {access.canManage && (
+      {mayDelete && (
         <div>
-          {isSeries ? (
+          {isSeries && isValidator ? (
             <ConfirmDialog
               title={t('scope.delete.title')}
               description={t('scope.delete.description')}

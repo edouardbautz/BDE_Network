@@ -61,10 +61,18 @@ And, **for each module that is on**:
 | **View** the module   | See its content.                                        |
 | **Manage** the module | Create, edit and delete in the module. Includes "view". |
 
-The **Events** module also has **Manage the shared calendar**: create, renew or turn off the BDE's common calendar
-link.
+The **Events** module has rights of its own, instead of "Manage":
 
-Ticking "manage" ticks "view". A right of a module that is **off** stays in the role with no effect, and takes
+| Right                          | What it allows                                                                                                           |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| **Propose events**             | Create events that wait for a validator, and edit or delete your own as long as they are not published. Includes "view". |
+| **Validate events**            | Approve or refuse proposals, create, edit, confirm and delete any event, and see drafts. Includes "propose" and "view".  |
+| **Manage the shared calendar** | Create, renew or turn off the BDE's common calendar link. Includes "view".                                               |
+
+A team that organizes events without being allowed to publish them gets **Propose events**; the board, which decides,
+gets **Validate events**. See [Events module](events.md#proposing-and-validating-events).
+
+Ticking "manage", "validate" or "propose" ticks what it includes. A right of a module that is **off** stays in the role with no effect, and takes
 effect again if you turn the module back on.
 
 ## The security rules
@@ -98,12 +106,14 @@ Every creation, edit, deletion or assignment of a role is **logged** in the audi
 | Role        | Rights                                           |
 | ----------- | ------------------------------------------------ |
 | President   | Manage members, manage roles, every Events right |
-| Secretary   | Manage members, manage events                    |
-| Events lead | Manage events and the shared calendar            |
+| Secretary   | Manage members, validate events                  |
+| Events lead | Validate events and manage the shared calendar   |
+| Events team | Propose events                                   |
 | Membre      | View events                                      |
 
 With these rules, the secretary can approve a request and give it "Membre", but not "Events lead": they do not have
-the right to manage the shared calendar, and you can only give what you have.
+the right to manage the shared calendar, and you can only give what you have. In the same way, the events lead can give
+"Events team", which they hold, but a member of the events team can never give the right to validate.
 
 ## Testing what a role can do
 
@@ -114,5 +124,5 @@ simulated role. This feature does not exist in production.
 
 ## For developers
 
-The list of rights lives in the code, not in the database: a role keeps plain keys (`events.manage`). To add the
+The list of rights lives in the code, not in the database: a role keeps plain keys (`events.validate`). To add the
 rights of a module, see the [architecture](../architecture.md).

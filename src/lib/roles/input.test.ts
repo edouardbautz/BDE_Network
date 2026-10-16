@@ -40,10 +40,10 @@ describe('parseRoleInput', () => {
   });
 
   it('adds what a permission implies, sorted, without duplicates', () => {
-    const result = parse({ permissions: ['events.manage', 'members.manage', 'events.manage'] });
+    const result = parse({ permissions: ['events.validate', 'members.manage', 'events.validate'] });
     expect(result).toMatchObject({
       ok: true,
-      data: { permissions: ['events.manage', 'events.view', 'members.manage'] },
+      data: { permissions: ['events.propose', 'events.validate', 'events.view', 'members.manage'] },
     });
   });
 

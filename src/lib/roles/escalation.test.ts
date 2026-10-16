@@ -113,7 +113,7 @@ describe('assigning a role to a member', () => {
     db.addRole({
       id: 'role-helper',
       name: 'Aide événements',
-      permissions: ['events.view', 'events.manage'],
+      permissions: ['events.view', 'events.propose', 'events.validate'],
     });
     actAs('sec');
 
@@ -402,17 +402,21 @@ describe('creating a role', () => {
 
   it('stores what a permission implies, and nothing else', async () => {
     actAs('pres');
-    await expect(create({ name: 'Orga', permissions: ['events.manage'] })).rejects.toBeInstanceOf(
+    await expect(create({ name: 'Orga', permissions: ['events.validate'] })).rejects.toBeInstanceOf(
       RedirectSignal,
     );
-    expect(db.roleByName('Orga')?.permissions).toEqual(['events.manage', 'events.view']);
+    expect(db.roleByName('Orga')?.permissions).toEqual([
+      'events.propose',
+      'events.validate',
+      'events.view',
+    ]);
   });
 
   it.each([
     [
-      'a permission the creator lacks (events.manage)',
+      'a permission the creator lacks (events.validate)',
       'rolesadmin',
-      { permissions: ['events.view', 'events.manage'] },
+      { permissions: ['events.view', 'events.validate'] },
     ],
     ['members.manage, which the creator lacks', 'rolesadmin', { permissions: ['members.manage'] }],
     [
@@ -448,13 +452,83 @@ describe('creating a role', () => {
 
   it('refuses a permission that does not exist, whoever asks (a tampered request)', async () => {
     actAs('owner');
-    for (const key of ['audit.view', 'owner', '*', 'finance.manage', 'members.manage ']) {
+    // "events.manage" is one of them: it was replaced by propose and validate (a migration converted the roles).
+    for (const key of [
+      'audit.view',
+      'owner',
+      '*',
+      'finance.manage',
+      'members.manage ',
+      'events.manage',
+    ]) {
       await expectUntouched(async () => {
         await expect(create({ name: 'Piège', permissions: [key] })).resolves.toMatchObject({
           fieldErrors: { permissions: 'unknown' },
         });
       });
     }
+  });
+
+  describe('proposing and validating events', () => {
+    const update = (id: string, values: Parameters<typeof roleForm>[0]) =>
+      rolePages.updateRole(id, {}, roleForm(values));
+
+    beforeEach(() => {
+      // Somebody who runs the roles and may propose events, but not validate them.
+      db.addRole({
+        id: 'role-pole',
+        name: 'Resp. pôle',
+        permissions: ['roles.manage', 'events.view', 'events.propose'],
+      });
+      db.addUser({ login: 'pole', roleId: 'role-pole' });
+    });
+
+    it('does not let somebody who only proposes hand out the right to validate', async () => {
+      actAs('pole');
+      await expectUntouched(async () => {
+        await expect(
+          create({ name: 'Valideurs', permissions: ['events.validate'] }),
+        ).resolves.toMatchObject({
+          error: 'cannotGrant',
+        });
+      });
+      expect(db.roleByName('Valideurs')).toBeUndefined();
+    });
+
+    it('does not let them add it to a role that exists either', async () => {
+      actAs('pole');
+      await expectUntouched(async () => {
+        await expect(
+          update('role-proposer', {
+            name: 'Pôle Events',
+            permissions: ['events.view', 'events.propose', 'events.validate'],
+          }),
+        ).resolves.toMatchObject({ error: 'cannotGrant' });
+      });
+    });
+
+    it('lets them hand out the right to propose, which they hold', async () => {
+      actAs('pole');
+      await expect(
+        create({ name: 'Pôle soirées', permissions: ['events.propose'] }),
+      ).rejects.toBeInstanceOf(RedirectSignal);
+      expect(db.roleByName('Pôle soirées')?.permissions).toEqual(['events.propose', 'events.view']);
+    });
+
+    it('lets somebody who validates hand out both, since validating includes proposing', async () => {
+      actAs('pres');
+      await expect(
+        create({ name: 'Valideurs', permissions: ['events.validate'] }),
+      ).rejects.toBeInstanceOf(RedirectSignal);
+      expect(db.roleByName('Valideurs')?.permissions).toEqual([
+        'events.propose',
+        'events.validate',
+        'events.view',
+      ]);
+      await expect(
+        create({ name: 'Proposeurs', permissions: ['events.propose'] }),
+      ).rejects.toBeInstanceOf(RedirectSignal);
+    });
   });
 
   it('keeps names unique, whatever their case', async () => {
@@ -472,7 +546,7 @@ describe('creating a role', () => {
       fieldErrors: { name: 'required', description: 'tooLong' },
       values: { description: 'x'.repeat(201) },
     });
-    expect(db.state.roles).toHaveLength(6);
+    expect(db.state.roles).toHaveLength(7);
   });
 
   it('stops anyone without roles.manage', async () => {
@@ -506,7 +580,7 @@ describe('editing a role', () => {
       metadata: {
         changes: {
           name: { from: 'Resp. événements', to: 'Resp. soirées' },
-          permissionsRemoved: ['events.manage', 'events.shared_calendar'],
+          permissionsRemoved: ['events.propose', 'events.shared_calendar', 'events.validate'],
         },
       },
     });
@@ -539,7 +613,7 @@ describe('editing a role', () => {
           permissions: [
             'members.manage',
             'roles.manage',
-            'events.manage',
+            'events.validate',
             'events.shared_calendar',
           ],
         },
@@ -556,7 +630,10 @@ describe('editing a role', () => {
         'a role with rights they lack, even to rename it',
         'rolesadmin',
         'role-events',
-        { name: 'Resp.', permissions: ['events.view', 'events.manage', 'events.shared_calendar'] },
+        {
+          name: 'Resp.',
+          permissions: ['events.view', 'events.validate', 'events.shared_calendar'],
+        },
         'cannotManageRole',
       ],
       [
@@ -573,11 +650,14 @@ describe('editing a role', () => {
       });
     });
 
-    it('smuggling a permission into a lower role: adding events.manage without holding it', async () => {
+    it('smuggling a permission into a lower role: adding events.validate without holding it', async () => {
       actAs('rolesadmin');
       await expectUntouched(async () => {
         await expect(
-          update('role-member', { name: 'Membre', permissions: ['events.view', 'events.manage'] }),
+          update('role-member', {
+            name: 'Membre',
+            permissions: ['events.view', 'events.validate'],
+          }),
         ).resolves.toMatchObject({ error: 'cannotGrant' });
       });
     });
@@ -652,11 +732,12 @@ describe('editing a role', () => {
       await expect(
         update('role-finance', {
           name: 'Trésorier',
-          permissions: ['events.view', 'events.manage'],
+          permissions: ['events.view', 'events.validate'],
         }),
       ).rejects.toBeInstanceOf(RedirectSignal);
       expect(db.role('role-finance')?.permissions).toEqual([
-        'events.manage',
+        'events.propose',
+        'events.validate',
         'events.view',
         'finance.manage',
         'finance.view',
@@ -787,7 +868,7 @@ describe('the default role', () => {
 describe('rights are read again from the database, not from the session', () => {
   it('refuses a secretary whose role lost members.manage after the page was drawn', async () => {
     actAs('sec'); // the session still says "members.manage"
-    db.role('role-secretary')!.permissions = ['events.view', 'events.manage'];
+    db.role('role-secretary')!.permissions = ['events.view', 'events.propose', 'events.validate'];
 
     await expectUntouched(async () => {
       await expect(members.changeMemberRole('u_mem', 'role-events')).rejects.toThrow('Forbidden');
@@ -796,7 +877,7 @@ describe('rights are read again from the database, not from the session', () => 
 
   it('applies the actor’s current rights to what they may give', async () => {
     actAs('sec');
-    db.role('role-secretary')!.permissions = ['members.manage', 'events.view']; // lost events.manage
+    db.role('role-secretary')!.permissions = ['members.manage', 'events.view']; // lost events.validate
 
     await expectUntouched(async () => {
       await expect(members.changeMemberRole('u_mem', 'role-events')).resolves.toEqual({

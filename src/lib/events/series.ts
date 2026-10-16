@@ -52,6 +52,8 @@ export interface EventRecord {
   /** The first row of the series this one was cut from; null = its own series. */
   seriesId?: string | null;
   confirmationNotifiedAt?: Date | null;
+  /** Who created the event: a proposer sees their own unpublished events (see `expandEvents`). */
+  authorLogin?: string;
   schoolYear: string;
   updatedAt: Date;
   assignees: AssigneeRef[];

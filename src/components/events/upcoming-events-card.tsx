@@ -13,7 +13,7 @@ interface UpcomingEventsCardProps {
   occurrences: readonly OccurrenceView[];
   categories: readonly CategoryView[];
   timeZone: string;
-  canManage: boolean;
+  canCreate: boolean;
 }
 
 /** Dashboard block: the next few events. Rendered only when the module is enabled. */
@@ -21,7 +21,7 @@ export async function UpcomingEventsCard({
   occurrences,
   categories,
   timeZone,
-  canManage,
+  canCreate,
 }: UpcomingEventsCardProps) {
   const [locale, t] = await Promise.all([getLocale(), getTranslations('events')]);
   const dateFormat = new Intl.DateTimeFormat(locale, {
@@ -48,7 +48,7 @@ export async function UpcomingEventsCard({
             title={t('dashboard.emptyTitle')}
             description={t('dashboard.emptyDescription')}
             action={
-              canManage ? (
+              canCreate ? (
                 <Button size="sm" render={<Link href="/events/new" />}>
                   {t('new')}
                 </Button>

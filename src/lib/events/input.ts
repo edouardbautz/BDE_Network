@@ -13,7 +13,7 @@ export const EVENT_RECURRENCES: readonly EventRecurrence[] = [
   'BIWEEKLY',
   'MONTHLY',
 ];
-export const EVENT_STATUSES: readonly EventStatus[] = ['DRAFT', 'CONFIRMED'];
+export const EVENT_STATUSES: readonly EventStatus[] = ['DRAFT', 'PROPOSED', 'CONFIRMED'];
 
 export const TITLE_MAX_LENGTH = 120;
 export const LOCATION_MAX_LENGTH = 200;

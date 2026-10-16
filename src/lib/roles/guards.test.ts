@@ -24,7 +24,7 @@ const EVERYTHING = [
   'members.manage',
   'roles.manage',
   'events.view',
-  'events.manage',
+  'events.validate',
   'events.shared_calendar',
 ];
 
@@ -55,7 +55,7 @@ const admin = actor(EVERYTHING, { roleId: 'role-admin', set: set(EVERYTHING, tru
 
 describe('ruleGrant — nobody grants a permission they do not hold', () => {
   it('accepts a permission set the actor holds, or a subset', () => {
-    expect(ruleGrant(actor(['events.view', 'events.manage']), set(['events.view']))).toBeNull();
+    expect(ruleGrant(actor(['events.view', 'events.validate']), set(['events.view']))).toBeNull();
     expect(ruleGrant(actor(['events.view']), set(['events.view']))).toBeNull();
     expect(ruleGrant(actor(['events.view']), set([]))).toBeNull();
   });
@@ -107,16 +107,16 @@ describe('ruleUpdateRole', () => {
   it('allows editing a lower role within the actor’s permissions', () => {
     expect(
       ruleUpdateRole(
-        actor(['events.view', 'events.manage']),
+        actor(['events.view', 'events.validate']),
         lower,
-        set(['events.view', 'events.manage']),
+        set(['events.view', 'events.validate']),
       ),
     ).toBeNull();
   });
 
   it('refuses to add a permission the actor lacks to a role they may edit', () => {
     expect(
-      ruleUpdateRole(actor(['events.view']), lower, set(['events.view', 'events.manage'])),
+      ruleUpdateRole(actor(['events.view']), lower, set(['events.view', 'events.validate'])),
     ).toBe('cannotGrant');
   });
 
@@ -161,11 +161,11 @@ describe('ruleSetDefaultRole', () => {
 });
 
 describe('ruleAssignRole — giving a member another role', () => {
-  const secretary = actor(['members.manage', 'events.view', 'events.manage'], {
+  const secretary = actor(['members.manage', 'events.view', 'events.validate'], {
     roleId: 'role-secretary',
   });
   const memberRole = role('role-member', ['events.view']);
-  const eventsRole = role('role-events', ['events.view', 'events.manage']);
+  const eventsRole = role('role-events', ['events.view', 'events.validate']);
   const presidentRole = role('role-president', EVERYTHING);
 
   it('moves a member between roles the actor covers', () => {
@@ -197,7 +197,11 @@ describe('ruleAssignRole — giving a member another role', () => {
   });
 
   it("allows moving a colleague who holds exactly the actor's rights", () => {
-    const colleague = role('role-secretary-2', ['members.manage', 'events.view', 'events.manage']);
+    const colleague = role('role-secretary-2', [
+      'members.manage',
+      'events.view',
+      'events.validate',
+    ]);
     expect(ruleAssignRole(secretary, member(colleague), memberRole)).toBeNull();
   });
 
@@ -246,7 +250,7 @@ describe('ruleApprove', () => {
 });
 
 describe('ruleRemove — refusing a request or removing a member', () => {
-  const secretary = actor(['members.manage', 'events.view', 'events.manage']);
+  const secretary = actor(['members.manage', 'events.view', 'events.validate']);
 
   it('removes a member whose role the actor covers, and a pending request', () => {
     expect(ruleRemove(secretary, member(role('r', ['events.view'])))).toBeNull();

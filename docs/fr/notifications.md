@@ -8,13 +8,16 @@ tout. **Discord est le plus simple à mettre en place.**
 Le canal et ses réglages (adresse du webhook, serveur e-mail) se choisissent dans **Paramètres**, section
 **Notifications**, avec un message de test. Ils s'appliquent tout de suite.
 
-| Notification                              | Quand                             | Qui est prévenu                                                                                         |
-| ----------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| **Demande d'accès** (`memberPending`)     | un nouveau membre demande l'accès | E-mail : les propriétaires et ceux qui ont le droit « Gérer les membres ». Discord ou Slack : le salon. |
-| **Membre approuvé** (`memberApproved`)    | une demande est approuvée         | E-mail : le membre approuvé (son rôle, un lien de connexion). Discord ou Slack : le salon.              |
-| **Membre retiré** (`memberRemoved`)       | un membre est retiré du BDE       | Discord ou Slack : le salon. **Jamais d'e-mail** : la personne retirée ne reçoit rien.                  |
-| **Événement confirmé** (`eventConfirmed`) | un événement est confirmé         | Tous les membres approuvés (e-mail : un message par personne), ou le salon.                             |
-| **Rappel** (`eventReminder`)              | la veille d'un événement          | Les membres en charge (e-mail), sinon ceux qui gèrent les événements ; ou le salon.                     |
+| Notification                                | Quand                             | Qui est prévenu                                                                                              |
+| ------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Demande d'accès** (`memberPending`)       | un nouveau membre demande l'accès | E-mail : les propriétaires et ceux qui ont le droit « Gérer les membres ». Discord ou Slack : le salon.      |
+| **Membre approuvé** (`memberApproved`)      | une demande est approuvée         | E-mail : le membre approuvé (son rôle, un lien de connexion). Discord ou Slack : le salon.                   |
+| **Membre retiré** (`memberRemoved`)         | un membre est retiré du BDE       | Discord ou Slack : le salon. **Jamais d'e-mail** : la personne retirée ne reçoit rien.                       |
+| **Événement confirmé** (`eventConfirmed`)   | un événement est confirmé         | Tous les membres approuvés (e-mail : un message par personne), ou le salon.                                  |
+| **Rappel** (`eventReminder`)                | la veille d'un événement          | Les membres en charge (e-mail), sinon ceux qui valident les événements ; ou le salon.                        |
+| **Événement proposé** (`eventProposed`)     | un événement est proposé          | E-mail : les propriétaires et ceux qui ont le droit « Valider les événements ». Discord ou Slack : le salon. |
+| **Proposition approuvée** (`eventApproved`) | une proposition est approuvée     | E-mail : son auteur. Discord ou Slack : le salon.                                                            |
+| **Proposition refusée** (`eventRefused`)    | une proposition est refusée       | E-mail : son auteur, avec le commentaire du validateur. Discord ou Slack : le salon.                         |
 
 Dans Paramètres, **un seul canal** sert pour toutes les notifications. Pour un canal par type de notification, voir
 [Configuration](configuration.md#remplacer-les-réglages-par-les-fichiers).
@@ -55,6 +58,7 @@ police, selon le thème de chaque lecteur._
 - **Le secondaire, en champs côte à côte** : 🏷️ _Catégorie_ et 👥 _Membres en charge_ (une série ajoute une ligne
   🔁 _Répétition_). Pour un membre approuvé ou retiré : 🎭 _Rôle_ et **qui** a fait l'action (🤝 « Approuvé par … »,
   🚪 « Retiré par … »).
+- **Les cartes de proposition** (📝 événement proposé, ✅ approuvée, ⛔ refusée) disent **qui a proposé** l'événement et, pour une réponse, **qui l'a donnée** ; un refus s'ouvre sur 💬 le **commentaire** du validateur, en citation. Un salon est lu par toute l'équipe : écrivez le commentaire en le sachant.
 - **Une icône dans le titre** selon le type : 🎉 événement confirmé, ⏰ rappel de demain, 🔔 rappel du jour, 🙋 demande
   d'accès, ✅ membre approuvé, 👋 membre retiré.
 - **Une barre de couleur** : celle de la catégorie pour un événement ; ambre, vert ou rouge pour une demande, une

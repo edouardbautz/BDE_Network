@@ -160,7 +160,9 @@
     "events": "Événements",
     "profile": "Mon profil",
     "skipToContent": "Aller au contenu",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "eventsReview": "À valider",
+    "eventsReviewCount": "{count, plural, one {# proposition à valider} other {# propositions à valider}}"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -353,14 +355,21 @@
         "kind": {
           "confirmed": "Nouvel événement confirmé",
           "reminderTomorrow": "Rappel · demain",
-          "reminderToday": "Rappel · aujourd'hui"
+          "reminderToday": "Rappel · aujourd'hui",
+          "proposed": "Événement proposé",
+          "approved": "Proposition approuvée",
+          "refused": "Proposition refusée"
         },
         "fields": {
           "when": "Quand",
           "where": "Lieu",
           "category": "Catégorie",
           "inCharge": "Membres en charge",
-          "repeats": "Répétition"
+          "repeats": "Répétition",
+          "proposedBy": "Proposé par",
+          "approvedBy": "Approuvé par",
+          "refusedBy": "Refusé par",
+          "reason": "Motif"
         },
         "repeatsValue": {
           "WEEKLY": "Chaque semaine, jusqu'au {until}",
@@ -371,10 +380,24 @@
       "email": {
         "action": "Voir l'événement",
         "calendarNote": "Le fichier joint ajoute l'événement à votre agenda.",
-        "footer": "Vous recevez ce message parce que vous êtes membre de {bde}."
+        "footer": "Vous recevez ce message parce que vous êtes membre de {bde}.",
+        "reviewAction": "Examiner la proposition"
       },
       "slack": {
-        "action": "Voir l'événement"
+        "action": "Voir l'événement",
+        "reviewAction": "Examiner la proposition"
+      },
+      "proposed": {
+        "subject": "Événement proposé : {title}",
+        "intro": "{author} propose un événement : un validateur doit l'approuver ou le refuser."
+      },
+      "approved": {
+        "subject": "Proposition approuvée : {title}",
+        "intro": "La proposition de {author} a été approuvée par {reviewer} : l'événement est publié."
+      },
+      "refused": {
+        "subject": "Proposition refusée : {title}",
+        "intro": "La proposition de {author} a été refusée par {reviewer}. Elle peut être modifiée puis proposée de nouveau."
       }
     },
     "title": "Événements",
@@ -383,7 +406,8 @@
     "recurring": "Événement récurrent",
     "status": {
       "DRAFT": "Brouillon",
-      "CONFIRMED": "Confirmé"
+      "CONFIRMED": "Confirmé",
+      "PROPOSED": "En attente de validation"
     },
     "recurrence": {
       "NONE": "Ne se répète pas",
@@ -465,7 +489,33 @@
         "confirm": "Confirmer l'événement"
       },
       "occurrenceEdited": "Modifiée",
-      "restoreDate": "Rétablir cette date"
+      "restoreDate": "Rétablir cette date",
+      "review": {
+        "propose": "Proposer à la validation",
+        "withdraw": "Retirer la proposition",
+        "approve": "Approuver",
+        "refuse": "Refuser",
+        "proposedTitle": "En attente de validation",
+        "proposedAuthor": "Vous avez proposé cet événement : un validateur va l'approuver ou le refuser. Vous pouvez encore le modifier ou retirer votre proposition.",
+        "proposedValidator": "{author} propose cet événement. Approuvez-le pour le publier, ou refusez-le avec un commentaire.",
+        "proposedOn": "Proposé le {date}.",
+        "refusedTitle": "Refusé par {reviewer} le {date}",
+        "refusedHintAuthor": "Modifiez l'événement pour tenir compte de ce commentaire, puis proposez-le de nouveau.",
+        "refusedHintValidator": "{author} peut le modifier et le proposer de nouveau.",
+        "lockedTitle": "Cet événement est publié",
+        "lockedBody": "Seul un validateur peut modifier un événement publié. Pour corriger quelque chose, demandez à l'un d'eux.",
+        "approveDialog": {
+          "title": "Approuver cette proposition ?",
+          "confirm": "Approuver"
+        },
+        "refuseDialog": {
+          "title": "Refuser cette proposition ?",
+          "body": "L'événement repasse en brouillon, avec votre commentaire que son auteur pourra lire. Une série est refusée en entier.",
+          "comment": "Commentaire pour l'auteur",
+          "commentHint": "Obligatoire. Dites ce qu'il faut changer : l'auteur le lit sur l'événement, et le reçoit en notification si elle est activée.",
+          "confirm": "Refuser la proposition"
+        }
+      }
     },
     "form": {
       "createTitle": "Nouvel événement",
@@ -503,7 +553,8 @@
         "notFound": "Cet événement n'existe plus."
       },
       "requiredLegend": "* Champ obligatoire",
-      "optional": "facultatif"
+      "optional": "facultatif",
+      "statusHelpProposer": "Un brouillon n'est visible que de vous et des validateurs. Une proposition est envoyée aux validateurs, qui la publient ou la refusent avec un commentaire."
     },
     "dashboard": {
       "title": "Prochains événements",
@@ -550,7 +601,8 @@
     "notices": {
       "eventGone": "Cet événement n'existe plus : il a sans doute été supprimé par quelqu'un d'autre.",
       "occurrenceGone": "Cette date n'existe plus : la série a été modifiée entre-temps. Voici l'état à jour.",
-      "seriesBusy": "Quelqu'un d'autre modifiait cette série au même moment : rien n'a été changé. Voici l'état à jour, vous pouvez recommencer."
+      "seriesBusy": "Quelqu'un d'autre modifiait cette série au même moment : rien n'a été changé. Voici l'état à jour, vous pouvez recommencer.",
+      "alreadyReviewed": "Quelqu'un d'autre a déjà répondu à cette proposition. Voici son état actuel."
     },
     "scope": {
       "occurrence": "Seulement celui-ci",
@@ -583,6 +635,13 @@
         "followingFirstHint": "Toute la série ({count} dates). Définitif.",
         "confirm": "Supprimer"
       }
+    },
+    "review": {
+      "title": "À valider",
+      "subtitle": "Événements proposés par des membres, en attente d'un validateur.",
+      "emptyTitle": "Rien à valider",
+      "emptyDescription": "Les événements proposés apparaîtront ici dès qu'un membre en propose un.",
+      "proposedBy": "Proposé par {author} le {date}"
     }
   },
   "profile": {
@@ -629,13 +688,17 @@
           "label": "Consulter les événements",
           "description": "Voir le calendrier des événements confirmés et s'y abonner."
         },
-        "manage": {
-          "label": "Gérer les événements",
-          "description": "Créer, modifier, confirmer et supprimer des événements, et voir les brouillons."
-        },
         "shared_calendar": {
           "label": "Gérer l'agenda partagé",
           "description": "Créer, renouveler ou désactiver le lien d'agenda commun du BDE."
+        },
+        "propose": {
+          "label": "Proposer des événements",
+          "description": "Créer des événements qui attendent la validation d'un validateur, et modifier les siens tant qu'ils ne sont pas publiés."
+        },
+        "validate": {
+          "label": "Valider les événements",
+          "description": "Approuver ou refuser les propositions, créer, modifier, confirmer et supprimer tous les événements, et voir les brouillons."
         }
       }
     },

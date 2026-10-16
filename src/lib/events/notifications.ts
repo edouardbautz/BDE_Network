@@ -1,24 +1,34 @@
 import { getConfig } from '@/config';
 import type { NotificationEvent } from '@/config/schema';
 import { deliver as deliverNotification, type DeliveryResult } from '@/lib/notifications/deliver';
+import { emailsOfHolders } from '@/lib/notifications/recipients';
 import { withRichMessage } from '@/lib/notifications/rich';
 import type { NotificationMessage } from '@/lib/notifications/types';
 import { getNotificationTranslate } from '@/lib/notifications/translate';
-import { APPROVED_STATUSES } from '@/lib/permissions';
+import { APPROVED_STATUSES, EVENTS_VALIDATE } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
 import { buildEventEmbed } from './discord-embed';
 import { buildEventEmail, buildEventIcs } from './email';
 import { eventInclude } from './include';
+import { isPublished } from './review';
 import { resolveOccurrences, seriesKeyOf, type ResolvedOccurrence } from './series';
 import { buildEventSlack } from './slack-blocks';
-import { buildConfirmationMessage, type NotificationEventData, type Translate } from './messages';
+import {
+  buildConfirmationMessage,
+  buildReviewMessage,
+  type NotificationEventData,
+  type Translate,
+} from './messages';
 import { registeredAddress } from '@/lib/public-address';
 
 const LOG_PREFIX = '[events]';
 
 /** Sends an events notification (see lib/notifications/deliver.ts). Never throws. */
 export function deliver(
-  event: Extract<NotificationEvent, 'eventConfirmed' | 'eventReminder'>,
+  event: Extract<
+    NotificationEvent,
+    'eventConfirmed' | 'eventReminder' | 'eventProposed' | 'eventApproved' | 'eventRefused'
+  >,
   message: Omit<NotificationMessage, 'to'>,
   emailRecipients: readonly string[],
 ): Promise<DeliveryResult> {
@@ -228,3 +238,106 @@ export async function notifyOccurrenceConfirmed(
     console.error(`${LOG_PREFIX} eventConfirmed: notification failed`, error);
   }
 }
+
+// ---- the proposal circuit ----------------------------------------------------------------------------------------
+
+type ReviewKind = 'proposed' | 'approved' | 'refused';
+
+const REVIEW_NOTIFICATION = {
+  proposed: 'eventProposed',
+  approved: 'eventApproved',
+  refused: 'eventRefused',
+} as const;
+
+/** A member by name, the login when the account is gone. */
+async function nameOf(login: string): Promise<string> {
+  const user = await prisma.user.findUnique({ where: { login }, select: { fullName: true } });
+  return user?.fullName ?? login;
+}
+
+/**
+ * Tells about a step of the proposal circuit, in ONE message whatever the number of dates: the validators that an
+ * event waits for them (`proposed`), the author that it was approved or refused (with the comment). The message
+ * says what the event is *now*: if somebody acted again since (the proposal withdrawn, a second review), the
+ * notice is stale and nothing is sent. A chat channel gets one team message, an e-mail goes to the people
+ * concerned. Never throws and is meant to run after the response, like every notification.
+ */
+async function announceReview(
+  kind: ReviewKind,
+  eventId: string,
+  actorLogin: string | null,
+): Promise<void> {
+  const key = REVIEW_NOTIFICATION[kind];
+  try {
+    const config = getConfig();
+    if (config.notifications[key] === 'none') return;
+
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      include: { ...eventInclude, author: { select: { fullName: true, email: true } } },
+    });
+    if (!event) return;
+    const stillTrue =
+      kind === 'proposed'
+        ? event.status === 'PROPOSED'
+        : kind === 'approved'
+          ? isPublished({
+              status: event.status,
+              dateStatuses: event.occurrences.map((o) => o.status),
+            })
+          : event.status === 'DRAFT' && event.refusalComment !== null;
+    if (!stillTrue) return;
+
+    const timeZone = config.bde.timezone;
+    // An approval may be of one date alone: the card shows a date that was approved.
+    const dates = resolveOccurrences(event, timeZone).filter(
+      (d) => !d.cancelled && (kind !== 'approved' || d.status === 'CONFIRMED'),
+    );
+    const now = Date.now();
+    const next = dates.find((d) => d.end.getTime() > now) ?? dates[0];
+    if (!next) return;
+
+    const locale = config.bde.defaultLocale;
+    const data: NotificationEventData = {
+      ...toNotificationData(event, next, locale),
+      review: {
+        authorName: event.author?.fullName ?? event.authorLogin,
+        reviewerName: kind === 'proposed' || !actorLogin ? null : await nameOf(actorLogin),
+        comment: kind === 'refused' ? event.refusalComment : null,
+      },
+    };
+    const translate = await getTranslate(locale);
+    const message = await withRichMessage(
+      key,
+      buildReviewMessage(kind, data, translate, locale, timeZone),
+      {
+        discord: () => buildEventEmbed(kind, data, translate, timeZone),
+        email: (brand) => buildEventEmail(kind, data, translate, locale, timeZone, brand),
+        slack: (brand) => buildEventSlack(kind, data, translate, locale, timeZone, brand),
+      },
+    );
+
+    // The author is told by e-mail, unless they are the one who acted (a validator who edits their own proposal).
+    const author = event.author && event.author.email && event.authorLogin !== actorLogin;
+    const recipients =
+      kind === 'proposed'
+        ? await emailsOfHolders(EVENTS_VALIDATE)
+        : author
+          ? [event.author!.email]
+          : [];
+    await deliver(key, message, recipients);
+  } catch (error) {
+    console.error(`${LOG_PREFIX} ${key}: notification failed`, error);
+  }
+}
+
+/** An event was proposed (or proposed again after a refusal): tells whoever can validate it. */
+export const notifyEventProposed = (eventId: string) => announceReview('proposed', eventId, null);
+
+/** A proposal was approved: tells its author (and, on a chat channel, the team). */
+export const notifyEventApproved = (eventId: string, actorLogin: string) =>
+  announceReview('approved', eventId, actorLogin);
+
+/** A proposal was refused, with a comment: tells its author (and, on a chat channel, the team). */
+export const notifyEventRefused = (eventId: string, actorLogin: string) =>
+  announceReview('refused', eventId, actorLogin);

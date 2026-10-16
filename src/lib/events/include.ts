@@ -14,7 +14,20 @@ export const eventInclude = {
 } satisfies Prisma.EventInclude;
 
 /** A reader who cannot see drafts still sees a draft event's dates that were confirmed alone, and none of a
- * confirmed event's dates that went back to draft (told apart date by date in expandEvents). */
+ * confirmed event's dates that went back to draft (told apart date by date in expandEvents). A proposal is an
+ * unpublished event like a draft. */
 export const VISIBLE_WITHOUT_DRAFTS: Prisma.EventWhereInput = {
   OR: [{ status: 'CONFIRMED' }, { occurrences: { some: { status: 'CONFIRMED' } } }],
 };
+
+/** The events a reader may see at all: everything for a validator, what is published plus their own events for
+ * somebody who only proposes (expandEvents then decides date by date), what is published for the others. */
+export function visibleTo(viewer: {
+  includeDrafts: boolean;
+  ownLogin?: string;
+}): Prisma.EventWhereInput {
+  if (viewer.includeDrafts) return {};
+  return viewer.ownLogin
+    ? { OR: [VISIBLE_WITHOUT_DRAFTS, { authorLogin: viewer.ownLogin }] }
+    : VISIBLE_WITHOUT_DRAFTS;
+}

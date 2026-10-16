@@ -254,7 +254,7 @@ beforeEach(() => {
     {
       id: 'role-events',
       name: 'Resp. événements',
-      permissions: ['events.view', 'events.manage'],
+      permissions: ['events.view', 'events.validate'],
       allPermissions: false,
     },
   );

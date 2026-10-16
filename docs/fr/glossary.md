@@ -31,18 +31,20 @@ chose dans cette documentation.
 
 ## Les événements
 
-| Mot                         | Sens                                                                                                         |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| **Module**                  | Une fonction que l'on active : pour l'instant, le module **Événements**.                                     |
-| **Événement**               | Une activité du BDE, avec un titre, un début, une fin, un lieu, une description et une catégorie.            |
-| **Brouillon**               | Un événement visible seulement de ceux qui peuvent gérer les événements.                                     |
-| **Confirmé**                | Un événement visible de tous les membres. Le confirmer prévient les membres.                                 |
-| **Série**                   | Un événement qui se répète (chaque semaine, toutes les 2 semaines, chaque mois) jusqu'à une date.            |
-| **Occurrence**              | Une date d'une série. On peut la modifier, la confirmer, l'annuler seule, ou agir sur elle et les suivantes. |
-| **Catégorie**               | Un type d'événement, avec un nom et une couleur (Soirée, Sport…). Chaque BDE a les siennes.                  |
-| **Année scolaire**          | De septembre à août (`2025-2026`), calculée d'après la date de début.                                        |
-| **Lien d'agenda personnel** | Le lien secret d'un membre, à ajouter à Google Agenda, Outlook ou Apple Calendar. Voir **Mon profil**.       |
-| **Lien d'agenda du BDE**    | Un seul lien pour tout le BDE, à coller une fois dans un agenda partagé. Il se gère dans **Agenda partagé**. |
+| Mot                         | Sens                                                                                                                            |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **Module**                  | Une fonction que l'on active : pour l'instant, le module **Événements**.                                                        |
+| **Événement**               | Une activité du BDE, avec un titre, un début, une fin, un lieu, une description et une catégorie.                               |
+| **Brouillon**               | Un événement pas encore publié : seuls son auteur et ceux qui valident les événements le voient.                                |
+| **Proposition**             | Un événement proposé par quelqu'un qui ne peut pas le publier, **en attente de validation** jusqu'à la réponse d'un validateur. |
+| **Validateur**              | Quelqu'un dont le rôle a le droit de valider les événements : il approuve ou refuse les propositions.                           |
+| **Confirmé**                | Un événement visible de tous les membres. Le confirmer prévient les membres.                                                    |
+| **Série**                   | Un événement qui se répète (chaque semaine, toutes les 2 semaines, chaque mois) jusqu'à une date.                               |
+| **Occurrence**              | Une date d'une série. On peut la modifier, la confirmer, l'annuler seule, ou agir sur elle et les suivantes.                    |
+| **Catégorie**               | Un type d'événement, avec un nom et une couleur (Soirée, Sport…). Chaque BDE a les siennes.                                     |
+| **Année scolaire**          | De septembre à août (`2025-2026`), calculée d'après la date de début.                                                           |
+| **Lien d'agenda personnel** | Le lien secret d'un membre, à ajouter à Google Agenda, Outlook ou Apple Calendar. Voir **Mon profil**.                          |
+| **Lien d'agenda du BDE**    | Un seul lien pour tout le BDE, à coller une fois dans un agenda partagé. Il se gère dans **Agenda partagé**.                    |
 
 ## Les messages
 

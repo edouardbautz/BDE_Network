@@ -262,7 +262,7 @@ describe('ConfirmDialog — choices', () => {
 
     fireEvent.click(following);
     fireEvent.click(screen.getByRole('button', { name: 'Retirer' }));
-    await waitFor(() => expect(onConfirm).toHaveBeenCalledWith('following'));
+    await waitFor(() => expect(onConfirm).toHaveBeenCalledWith('following', ''));
   });
 
   it('starts again from the narrowest choice when it is reopened', async () => {
@@ -283,7 +283,59 @@ describe('ConfirmDialog — choices', () => {
     await openDialog();
     expect(screen.queryByRole('radio')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Retirer' }));
-    await waitFor(() => expect(onConfirm).toHaveBeenCalledWith(''));
+    await waitFor(() => expect(onConfirm).toHaveBeenCalledWith('', ''));
+  });
+});
+
+describe('ConfirmDialog — a text to write', () => {
+  const field = { label: 'Commentaire', hint: 'Dites pourquoi.', maxLength: 20, required: true };
+
+  it('gives what was written to the action, trimmed by the caller if it wishes', async () => {
+    const { onConfirm } = renderDialog({ field });
+    await openDialog();
+    expect(screen.getByText('Dites pourquoi.')).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText('Commentaire'), { target: { value: 'Trop tôt' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Retirer' }));
+    await waitFor(() => expect(onConfirm).toHaveBeenCalledWith('', 'Trop tôt'));
+  });
+
+  it('keeps the confirm button disabled until something is written, spaces not counting', async () => {
+    const { onConfirm } = renderDialog({ field });
+    await openDialog();
+    const confirm = screen.getByRole('button', { name: 'Retirer' });
+    // The button stays focusable while it is disabled, so it is announced as such rather than removed.
+    const disabled = () =>
+      confirm.hasAttribute('disabled') || confirm.getAttribute('aria-disabled') === 'true';
+    expect(disabled()).toBe(true);
+
+    fireEvent.change(screen.getByLabelText('Commentaire'), { target: { value: '    ' } });
+    expect(disabled()).toBe(true);
+    fireEvent.click(confirm);
+    expect(onConfirm).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText('Commentaire'), { target: { value: 'ok' } });
+    expect(disabled()).toBe(false);
+  });
+
+  it('limits what can be written, and is empty again when the dialog is reopened', async () => {
+    renderDialog({ field });
+    await openDialog();
+    const text = screen.getByLabelText('Commentaire') as HTMLTextAreaElement;
+    expect(text.maxLength).toBe(20);
+
+    fireEvent.change(text, { target: { value: 'un brouillon' } });
+    fireEvent.click(screen.getByRole('button', { name: 'confirmDialog.cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+
+    await openDialog();
+    expect((screen.getByLabelText('Commentaire') as HTMLTextAreaElement).value).toBe('');
+  });
+
+  it('does not ask for a text when there is no field', async () => {
+    renderDialog();
+    await openDialog();
+    expect(screen.queryByRole('textbox')).toBeNull();
   });
 });
 

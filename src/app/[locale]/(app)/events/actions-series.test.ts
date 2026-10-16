@@ -54,7 +54,10 @@ vi.mock('@/i18n/navigation', () => ({
   ),
 }));
 vi.mock('@/lib/events/notifications', () => ({
+  notifyEventApproved: vi.fn(),
   notifyEventConfirmed: vi.fn(),
+  notifyEventProposed: vi.fn(),
+  notifyEventRefused: vi.fn(),
   notifyOccurrenceConfirmed: vi.fn(),
 }));
 vi.mock('@/lib/prisma', async () => {
@@ -65,12 +68,18 @@ vi.mock('@/lib/prisma', async () => {
 
 const { getConfig } = await import('@/config');
 const { getEffectiveSession } = await import('@/lib/auth/session');
-const { notifyEventConfirmed, notifyOccurrenceConfirmed } =
-  await import('@/lib/events/notifications');
+const {
+  notifyEventApproved,
+  notifyEventConfirmed,
+  notifyEventProposed,
+  notifyEventRefused,
+  notifyOccurrenceConfirmed,
+} = await import('@/lib/events/notifications');
 const { db } = (await import('@/lib/prisma')) as unknown as {
   db: import('@/test/fake-events-db').FakeEventsDb;
 };
-const { deleteFollowingDates, setEventStatus, updateEvent } = await import('./actions');
+const { deleteFollowingDates, refuseEvent, setEventStatus, updateEvent } =
+  await import('./actions');
 
 /** Mondays at 18:00 in Paris: summer time until Oct 25 (16:00Z), then winter time (17:00Z). */
 const OCT5 = new Date('2026-10-05T16:00:00Z');
@@ -163,7 +172,7 @@ beforeEach(() => {
     },
   } as unknown as ReturnType<typeof getConfig>);
   vi.mocked(getEffectiveSession).mockResolvedValue(
-    effective(memberWith(['events.view', 'events.manage'], 'real-actor')),
+    effective(memberWith(['events.view', 'events.validate'], 'real-actor')),
   );
   db.add('user', { id: 'u-bob', login: 'bob', fullName: 'Bob', status: 'MEMBER' });
 });
@@ -630,5 +639,345 @@ describe('deleting a date and the following', () => {
     });
     expect(db.table('event')).toHaveLength(1);
     expect(audit()).toEqual([]);
+  });
+});
+
+// ---- the proposal circuit ---------------------------------------------------------------------------------------
+
+describe('the proposal circuit', () => {
+  /** Who acts: somebody who only proposes (the author of the events by default), or a validator. */
+  const asProposer = (login = 'alice') =>
+    vi
+      .mocked(getEffectiveSession)
+      .mockResolvedValue(effective(memberWith(['events.view', 'events.propose'], login)));
+  const asValidator = () =>
+    vi
+      .mocked(getEffectiveSession)
+      .mockResolvedValue(effective(memberWith(['events.view', 'events.validate'], 'real-actor')));
+
+  /** An event that does not repeat, in the state given. */
+  const addOneOff = (overrides: Record<string, unknown> = {}) =>
+    addEvent({
+      recurrence: 'NONE',
+      recurrenceUntil: null,
+      status: 'DRAFT',
+      confirmationNotifiedAt: null,
+      ...overrides,
+    });
+  const oneOff = (values: Record<string, string | string[]> = {}) =>
+    form({ recurrence: 'NONE', recurrenceUntil: '', status: 'DRAFT', ...values });
+
+  const REFUSED = {
+    refusalComment: 'Pas ce jour-là',
+    refusedByLogin: 'bob',
+    refusedAt: new Date('2026-09-20T10:00:00Z'),
+  };
+
+  describe('a proposer', () => {
+    beforeEach(() => asProposer());
+
+    it('edits their draft and proposes it through the form: audited, and the validators are told', async () => {
+      addOneOff();
+      const href = await redirectOf(
+        updateEvent('evt', {}, oneOff({ title: 'Nouveau titre', status: 'PROPOSED' })),
+      );
+
+      expect(href).toBe('/events/evt');
+      expect(db.event('evt')).toMatchObject({
+        title: 'Nouveau titre',
+        status: 'PROPOSED',
+        proposedAt: expect.any(Date),
+      });
+      expect(audit()).toEqual([
+        { action: 'event.update', changed: ['title'] },
+        { action: 'event.propose', from: 'DRAFT', to: 'PROPOSED' },
+      ]);
+      expect(notifyEventProposed).not.toHaveBeenCalled();
+      await runAfterCallbacks();
+      expect(notifyEventProposed).toHaveBeenCalledWith('evt');
+      expect(notifyEventConfirmed).not.toHaveBeenCalled();
+    });
+
+    it('proposes a draft with one click: audited, the validators are told, nobody else', async () => {
+      addOneOff();
+      await expect(setEventStatus('evt', 'PROPOSED')).resolves.toEqual({ href: '/fr/events/evt' });
+
+      expect(db.event('evt')).toMatchObject({ status: 'PROPOSED', proposedAt: expect.any(Date) });
+      expect(audit()).toEqual([{ action: 'event.propose', from: 'DRAFT', to: 'PROPOSED' }]);
+      await runAfterCallbacks();
+      expect(notifyEventProposed).toHaveBeenCalledWith('evt');
+      expect(notifyEventApproved).not.toHaveBeenCalled();
+      expect(notifyEventConfirmed).not.toHaveBeenCalled();
+    });
+
+    it('withdraws a proposal: back to draft, audited as a withdrawal, nobody is told', async () => {
+      addOneOff({ status: 'PROPOSED', proposedAt: new Date('2026-09-20T10:00:00Z') });
+      await setEventStatus('evt', 'DRAFT');
+
+      expect(db.event('evt')).toMatchObject({ status: 'DRAFT' });
+      expect(audit()).toEqual([{ action: 'event.withdraw', from: 'PROPOSED', to: 'DRAFT' }]);
+      expect(afterCallbacks).toHaveLength(0);
+    });
+
+    it('proposes a refused event again: the refusal is over, and the validators are told again', async () => {
+      addOneOff(REFUSED);
+      await setEventStatus('evt', 'PROPOSED');
+
+      expect(db.event('evt')).toMatchObject({
+        status: 'PROPOSED',
+        refusalComment: null,
+        refusedByLogin: null,
+        refusedAt: null,
+      });
+      await runAfterCallbacks();
+      expect(notifyEventProposed).toHaveBeenCalledWith('evt');
+    });
+
+    it('edits a refused event and keeps it a draft: the comment stays to be read', async () => {
+      addOneOff(REFUSED);
+      await redirectOf(updateEvent('evt', {}, oneOff({ location: 'Salle C' })));
+
+      expect(db.event('evt')).toMatchObject({
+        status: 'DRAFT',
+        location: 'Salle C',
+        refusalComment: 'Pas ce jour-là',
+      });
+      expect(afterCallbacks).toHaveLength(0);
+    });
+
+    it('saving a proposal again without changing anything writes nothing and tells nobody', async () => {
+      addOneOff({ status: 'PROPOSED' });
+      await redirectOf(updateEvent('evt', {}, oneOff({ status: 'PROPOSED' })));
+
+      expect(audit()).toEqual([]);
+      expect(afterCallbacks).toHaveLength(0);
+    });
+
+    it('edits a series as a whole, whatever scope the request claims: never one date of it', async () => {
+      addEvent({ status: 'DRAFT', confirmationNotifiedAt: null });
+      const data = withScope(
+        formAt('2026-10-12', { title: 'Autre', status: 'DRAFT' }),
+        'occurrence',
+        OCT12,
+      );
+      await redirectOf(updateEvent('evt', {}, data));
+
+      expect(db.event('evt')).toMatchObject({ title: 'Autre' });
+      expect(db.table('eventOccurrence')).toEqual([]);
+      expect(db.table('event')).toHaveLength(1);
+    });
+
+    it('proposes a whole series from any of its dates, without cutting it', async () => {
+      addEvent({ status: 'DRAFT', confirmationNotifiedAt: null });
+      await setEventStatus('evt', 'PROPOSED', OCT19.getTime(), 'occurrence');
+
+      expect(db.table('event')).toHaveLength(1);
+      expect(db.table('eventOccurrence')).toEqual([]);
+      expect(db.event('evt')).toMatchObject({ status: 'PROPOSED' });
+      expect(audit()).toEqual([
+        {
+          action: 'event.propose',
+          scope: 'following',
+          occurrenceStart: OCT5.toISOString(),
+          fromFirst: true,
+          from: 'DRAFT',
+          to: 'PROPOSED',
+        },
+      ]);
+    });
+
+    it('cannot write the status of a published event, through the form either', async () => {
+      addOneOff({ status: 'CONFIRMED' });
+      await expect(updateEvent('evt', {}, oneOff({ status: 'DRAFT' }))).rejects.toThrow(
+        'Forbidden',
+      );
+      await expect(updateEvent('evt', {}, oneOff({ title: 'Autre' }))).rejects.toThrow('Forbidden');
+      expect(audit()).toEqual([]);
+      expect(db.event('evt')).toMatchObject({ status: 'CONFIRMED', title: 'Training' });
+    });
+
+    it('cannot confirm their own proposal through the form', async () => {
+      addOneOff({ status: 'PROPOSED' });
+      await expect(updateEvent('evt', {}, oneOff({ status: 'CONFIRMED' }))).rejects.toThrow(
+        'Forbidden',
+      );
+      expect(db.event('evt')).toMatchObject({ status: 'PROPOSED' });
+      expect(audit()).toEqual([]);
+    });
+
+    it("cannot edit somebody else's event", async () => {
+      addOneOff({ authorLogin: 'carol' });
+      await expect(updateEvent('evt', {}, oneOff({ title: 'Autre' }))).rejects.toThrow('Forbidden');
+      expect(db.event('evt')).toMatchObject({ title: 'Training' });
+    });
+  });
+
+  describe('a validator', () => {
+    beforeEach(() => asValidator());
+
+    it('approves a proposal: published, audited as an approval, the author and the members are told', async () => {
+      addOneOff({ status: 'PROPOSED', proposedAt: new Date('2026-09-20T10:00:00Z') });
+      await expect(setEventStatus('evt', 'CONFIRMED')).resolves.toEqual({ href: '/fr/events/evt' });
+
+      expect(db.event('evt')).toMatchObject({ status: 'CONFIRMED' });
+      expect(audit()).toEqual([{ action: 'event.approve', from: 'PROPOSED', to: 'CONFIRMED' }]);
+      await runAfterCallbacks();
+      expect(notifyEventApproved).toHaveBeenCalledWith('evt', 'real-actor');
+      expect(notifyEventConfirmed).toHaveBeenCalledWith('evt');
+    });
+
+    it('approves through the form as well: the same audit entry and notices', async () => {
+      addOneOff({ status: 'PROPOSED' });
+      await redirectOf(updateEvent('evt', {}, oneOff({ status: 'CONFIRMED' })));
+
+      expect(audit()).toEqual([{ action: 'event.approve', from: 'PROPOSED', to: 'CONFIRMED' }]);
+      await runAfterCallbacks();
+      expect(notifyEventApproved).toHaveBeenCalledWith('evt', 'real-actor');
+    });
+
+    it('goes back to the list of proposals after an approval made from it', async () => {
+      addOneOff({ status: 'PROPOSED' });
+      await expect(
+        setEventStatus('evt', 'CONFIRMED', undefined, undefined, 'review'),
+      ).resolves.toEqual({ href: '/fr/events/review' });
+    });
+
+    it('approves a whole series from the list of proposals, from its first date', async () => {
+      addEvent({ status: 'PROPOSED', confirmationNotifiedAt: null });
+      await setEventStatus('evt', 'CONFIRMED', OCT5.getTime(), 'following', 'review');
+
+      expect(db.event('evt')).toMatchObject({ status: 'CONFIRMED' });
+      expect(audit()).toMatchObject([
+        { action: 'event.approve', scope: 'following', fromFirst: true },
+      ]);
+      await runAfterCallbacks();
+      expect(notifyEventConfirmed).toHaveBeenCalledWith('evt');
+    });
+
+    it('confirming a draft is not an approval: nobody is told that a proposal was approved', async () => {
+      addOneOff();
+      await setEventStatus('evt', 'CONFIRMED');
+
+      expect(audit()).toEqual([{ action: 'event.status_change', from: 'DRAFT', to: 'CONFIRMED' }]);
+      await runAfterCallbacks();
+      expect(notifyEventApproved).not.toHaveBeenCalled();
+      expect(notifyEventConfirmed).toHaveBeenCalledWith('evt');
+    });
+
+    it('clears a refusal when confirming the event that carried it', async () => {
+      addOneOff(REFUSED);
+      await setEventStatus('evt', 'CONFIRMED');
+      expect(db.event('evt')).toMatchObject({
+        status: 'CONFIRMED',
+        refusalComment: null,
+        refusedByLogin: null,
+        refusedAt: null,
+      });
+    });
+
+    it("edits a proposer's proposal and leaves it proposed: no new notice", async () => {
+      addOneOff({ status: 'PROPOSED' });
+      await redirectOf(updateEvent('evt', {}, oneOff({ status: 'PROPOSED', title: 'Corrigé' })));
+
+      expect(db.event('evt')).toMatchObject({ status: 'PROPOSED', title: 'Corrigé' });
+      expect(audit()).toEqual([{ action: 'event.update', changed: ['title'] }]);
+      expect(afterCallbacks).toHaveLength(0);
+    });
+
+    it('edits a published event freely, whoever wrote it: it stays published, nobody is told', async () => {
+      addOneOff({ status: 'CONFIRMED', authorLogin: 'carol' });
+      await redirectOf(updateEvent('evt', {}, oneOff({ status: 'CONFIRMED', title: 'Corrigé' })));
+
+      expect(db.event('evt')).toMatchObject({ status: 'CONFIRMED', title: 'Corrigé' });
+      expect(audit()).toEqual([{ action: 'event.update', changed: ['title'] }]);
+      expect(afterCallbacks).toHaveLength(0);
+    });
+  });
+
+  describe('refusing a proposal', () => {
+    beforeEach(() => asValidator());
+
+    it('sends it back to draft with the comment, audited, and tells the author after the response', async () => {
+      addOneOff({ status: 'PROPOSED' });
+      await expect(refuseEvent('evt', '  Pas ce jour-là, la salle est prise.  ')).resolves.toEqual({
+        href: '/fr/events/evt',
+      });
+
+      expect(db.event('evt')).toMatchObject({
+        status: 'DRAFT',
+        refusalComment: 'Pas ce jour-là, la salle est prise.',
+        refusedByLogin: 'real-actor',
+        refusedAt: expect.any(Date),
+      });
+      expect(audit()).toEqual([
+        {
+          action: 'event.refuse',
+          comment: 'Pas ce jour-là, la salle est prise.',
+          authorLogin: 'alice',
+        },
+      ]);
+      expect(notifyEventRefused).not.toHaveBeenCalled();
+      await runAfterCallbacks();
+      expect(notifyEventRefused).toHaveBeenCalledWith('evt', 'real-actor');
+      expect(notifyEventApproved).not.toHaveBeenCalled();
+    });
+
+    it('goes back to the list of proposals when it was answered from there', async () => {
+      addOneOff({ status: 'PROPOSED' });
+      await expect(refuseEvent('evt', 'Non.', 'review')).resolves.toEqual({
+        href: '/fr/events/review',
+      });
+    });
+
+    it('refuses a whole series, from its first date, and says so in the audit entry', async () => {
+      addEvent({ status: 'PROPOSED', confirmationNotifiedAt: null });
+      await refuseEvent('evt', 'Trop de dates.');
+
+      expect(db.event('evt')).toMatchObject({ status: 'DRAFT', refusalComment: 'Trop de dates.' });
+      expect(audit()).toEqual([
+        {
+          action: 'event.refuse',
+          comment: 'Trop de dates.',
+          authorLogin: 'alice',
+          scope: 'following',
+          occurrenceStart: OCT5.toISOString(),
+          fromFirst: true,
+        },
+      ]);
+    });
+
+    it.each([
+      ['nothing', ''],
+      ['spaces only', '   \n '],
+      ['more than 1000 characters', 'x'.repeat(1001)],
+    ])('is not possible with a comment of %s', async (_label, comment) => {
+      addOneOff({ status: 'PROPOSED' });
+      await expect(refuseEvent('evt', comment)).rejects.toThrow('Invalid comment');
+      expect(db.event('evt')).toMatchObject({ status: 'PROPOSED' });
+      expect(db.event('evt')?.refusalComment ?? null).toBeNull();
+      expect(audit()).toEqual([]);
+      expect(afterCallbacks).toHaveLength(0);
+    });
+
+    it.each(['DRAFT', 'CONFIRMED'])(
+      'is a notice, not an error, when somebody else already answered (the event is %s): nothing is written',
+      async (status) => {
+        addOneOff({ status });
+        await expect(refuseEvent('evt', 'Trop tard.')).resolves.toEqual({
+          href: '/fr/events/evt?notice=alreadyReviewed',
+        });
+        expect(db.event('evt')).toMatchObject({ status });
+        expect(db.event('evt')?.refusalComment ?? null).toBeNull();
+        expect(audit()).toEqual([]);
+        expect(afterCallbacks).toHaveLength(0);
+      },
+    );
+
+    it('is a notice when the event is gone', async () => {
+      await expect(refuseEvent('nope', 'Non.')).resolves.toEqual({
+        href: '/fr/events?notice=eventGone',
+      });
+      expect(afterCallbacks).toHaveLength(0);
+    });
   });
 });

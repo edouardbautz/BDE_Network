@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import {
   CalendarDays,
+  ClipboardCheck,
   LayoutDashboard,
   Menu,
   ScrollText,
@@ -26,14 +27,19 @@ import { LocaleSwitcher } from '@/components/locale-switcher';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 export interface NavItem {
-  id: 'dashboard' | 'events' | 'members' | 'roles' | 'auditLog' | 'settings';
+  id: 'dashboard' | 'events' | 'eventsReview' | 'members' | 'roles' | 'auditLog' | 'settings';
   href: string;
   label: string;
+  /** A counter shown at the end of the entry (the proposals waiting for a validator); nothing when 0 or absent. */
+  badge?: number;
+  /** What a screen reader says for the counter ("3 proposals to validate"), since the number alone is not enough. */
+  badgeLabel?: string;
 }
 
 const NAV_ICONS: Record<NavItem['id'], typeof LayoutDashboard> = {
   dashboard: LayoutDashboard,
   events: CalendarDays,
+  eventsReview: ClipboardCheck,
   members: Users,
   roles: ShieldCheck,
   auditLog: ScrollText,
@@ -77,13 +83,18 @@ function NavList({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
+  // A section stays active on its sub-pages (/events/abc, /events/new), but an entry that is itself a sub-page of
+  // another (/events/review) takes the highlight from it: the longest address that matches is the active one.
+  const activeHref = items
+    .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
+    .map((item) => item.href)
+    .sort((a, b) => b.length - a.length)[0];
 
   return (
     <nav className="flex flex-col gap-0.5" aria-label={label}>
       {items.map((item) => {
         const Icon = NAV_ICONS[item.id];
-        // A section stays active on its sub-pages (/events/abc, /events/new).
-        const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+        const isActive = item.href === activeHref;
         return (
           <Link
             key={item.href}
@@ -100,6 +111,17 @@ function NavList({
           >
             <Icon className={cn('size-4 shrink-0', isActive && 'text-primary')} />
             <span className="truncate">{item.label}</span>
+            {item.badge !== undefined && item.badge > 0 && (
+              <>
+                <span
+                  aria-hidden
+                  className="bg-foreground text-background ml-auto min-w-5 shrink-0 rounded-full px-1.5 text-center text-xs leading-5 font-semibold tabular-nums"
+                >
+                  {item.badge}
+                </span>
+                <span className="sr-only">{item.badgeLabel}</span>
+              </>
+            )}
           </Link>
         );
       })}

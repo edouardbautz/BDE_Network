@@ -63,6 +63,9 @@ describe('bdeConfigSchema', () => {
         memberRemoved: 'none',
         eventConfirmed: 'none',
         eventReminder: 'none',
+        eventProposed: 'none',
+        eventApproved: 'none',
+        eventRefused: 'none',
       });
     }
   });
@@ -138,6 +141,10 @@ describe('bdeConfigSchema', () => {
         expect(result.data.events?.reminderHour).toBe(18);
         expect(result.data.notifications.eventConfirmed).toBe('none');
         expect(result.data.notifications.eventReminder).toBe('none');
+        // The proposal circuit's notifications came later: an older file keeps validating, with them off.
+        expect(result.data.notifications.eventProposed).toBe('none');
+        expect(result.data.notifications.eventApproved).toBe('none');
+        expect(result.data.notifications.eventRefused).toBe('none');
       }
     });
 

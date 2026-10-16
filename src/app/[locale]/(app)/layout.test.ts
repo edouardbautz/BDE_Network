@@ -25,13 +25,19 @@ vi.mock('@/i18n/navigation', () => ({
   }),
 }));
 vi.mock('next-intl/server', () => ({
-  getTranslations: vi.fn(async () => (key: string) => key),
+  getTranslations: vi.fn(
+    async () => (key: string, values?: { count?: number }) =>
+      values?.count === undefined ? key : `${key}:${values.count}`,
+  ),
 }));
+vi.mock('@/lib/events/queries', () => ({ countProposals: vi.fn(async () => 0) }));
 
 const { auth } = await import('@/lib/auth');
 const { redirect } = await import('@/i18n/navigation');
 const { isDatabaseReachable } = await import('@/lib/health');
+const { countProposals } = await import('@/lib/events/queries');
 const { default: AppLayout } = await import('./layout');
+const { memberWith } = await import('@/test/session-fixtures');
 
 // NextAuth's `auth` export is overloaded (plain call / middleware / route
 // wrapper) — pin it to the plain-call signature so `vi.mocked` doesn't
@@ -100,5 +106,43 @@ describe('(app) layout — the menu entry of the settings', () => {
   it.each<AccountKind>(['ADMIN', 'MEMBER'])('is not offered to a %s', async (kind) => {
     mockAuth.mockResolvedValue(sessionFor(kind));
     expect(await navIds()).not.toContain('settings');
+  });
+});
+
+describe('(app) layout — the entry that counts the proposals to validate', () => {
+  const entry = async () => {
+    const shell = (await callLayout()) as {
+      props: { navItems: { id: string; badge?: number; badgeLabel?: string }[] };
+    };
+    return shell.props.navItems.find((item) => item.id === 'eventsReview');
+  };
+
+  it('is offered to somebody who can validate events, with how many wait', async () => {
+    vi.mocked(countProposals).mockResolvedValue(3);
+    mockAuth.mockResolvedValue(memberWith(['events.validate']));
+    expect(await entry()).toMatchObject({
+      href: '/events/review',
+      badge: 3,
+      badgeLabel: 'eventsReviewCount:3',
+    });
+  });
+
+  it('is offered to an admin and an owner, who hold every permission', async () => {
+    for (const kind of ['ADMIN', 'OWNER'] as const) {
+      mockAuth.mockResolvedValue(sessionFor(kind));
+      expect(await entry()).toBeDefined();
+    }
+  });
+
+  // Somebody who only proposes cannot answer: no entry, and no query for a count they will not see.
+  it.each<[string, string[]]>([
+    ['who only proposes', ['events.propose']],
+    ['who only views', ['events.view']],
+    ['of another module', ['members.manage']],
+  ])('is not offered to a member %s, and nothing is counted', async (_label, permissions) => {
+    mockAuth.mockResolvedValue(memberWith(permissions));
+    vi.mocked(countProposals).mockClear();
+    expect(await entry()).toBeUndefined();
+    expect(countProposals).not.toHaveBeenCalled();
   });
 });

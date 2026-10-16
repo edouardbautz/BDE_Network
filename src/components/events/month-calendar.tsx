@@ -24,7 +24,7 @@ interface MonthCalendarProps {
   selectedKey: string;
   query: EventsQuery;
   /**
-   * Whether the person can create events (`events.manage`): the "+" of a day and the "add" button of the day panel are
+   * Whether the person can create events (`events.propose` or `events.validate`): the "+" of a day and the "add" button of the day panel are
    * theirs only. Hiding them is a courtesy; `/events/new` and the action `createEvent` refuse anybody else.
    */
   canCreate: boolean;
@@ -151,12 +151,16 @@ export async function MonthCalendar({
                                   pathname: `/events/${occurrence.eventId}`,
                                   query: { occ: occurrence.originalStart.getTime() },
                                 }}
-                                title={`${occurrence.title} — ${category.label}`}
+                                title={`${occurrence.title} — ${category.label}${
+                                  occurrence.status === 'CONFIRMED'
+                                    ? ''
+                                    : ` — ${t(`status.${occurrence.status}`)}`
+                                }`}
                                 style={tint(category.color)}
                                 className={cn(
                                   'hover:bg-muted flex min-w-0 items-center gap-1 rounded-sm border-l-2 px-1.5 py-0.5 text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
                                   !category.color && 'border-muted-foreground/40 bg-muted/50',
-                                  occurrence.status === 'DRAFT' &&
+                                  occurrence.status !== 'CONFIRMED' &&
                                     'border-dashed italic opacity-80',
                                 )}
                               >

@@ -223,6 +223,9 @@ jobs:
           # for real, in both languages: a series is cut in two rows, and the page after the action must be the one that holds
           # the date. The page must also CHANGE after an action that stays on it (see "Navigation" in docs/architecture.md).
           AUTH_SECRET="$(docker exec installer cat /secrets/auth_secret)" SHOTS="$RUNNER_TEMP/shots/series" node e2e/series.mjs http://127.0.0.1:3003
+          # The proposal circuit, in both languages: somebody whose role only proposes creates an event, a validator finds it
+          # counted in the menu and approves it or refuses it with a comment, and what a proposer or a member may not see or do.
+          AUTH_SECRET="$(docker exec installer cat /secrets/auth_secret)" OWNER=alice MEMBER=carol PGPASSWORD=ci-password PSQL="psql -h 127.0.0.1 -U bde -d bde_install" SHOTS="$RUNNER_TEMP/shots/review" node e2e/review.mjs http://127.0.0.1:3003
           # What every action of the platform shows afterwards (members, roles, settings, profile, shared calendar, language), 3
           # plays of each, with no reload: see "Actions that stay on the page" in docs/architecture.md.
           AUTH_SECRET="$(docker exec installer cat /secrets/auth_secret)" OWNER=alice OWNER_CANDIDATE=bob PGPASSWORD=ci-password PSQL="psql -h 127.0.0.1 -U bde -d bde_install" SHOTS="$RUNNER_TEMP/shots/actions" node e2e/actions.mjs http://127.0.0.1:3003

@@ -20,6 +20,7 @@ import {
 import { getCategories } from '@/lib/events/categories';
 import { readEventNotice } from '@/lib/events/notice';
 import { getFilterOptions, listOccurrences, listUpcomingOccurrences } from '@/lib/events/queries';
+import { draftVisibility } from '@/lib/events/review';
 import { parseEventsQuery, type RawSearchParams } from '@/lib/events/search-params';
 import { fromLocalDateTime } from '@/lib/events/time';
 import { pageTitle } from '@/lib/page-title';
@@ -43,7 +44,8 @@ export default async function EventsPage({
   const timeZone = getConfig().bde.timezone;
   const categories = getCategories();
   const now = new Date();
-  const options = await getFilterOptions(access.canManage);
+  const visibility = draftVisibility(access);
+  const options = await getFilterOptions(visibility);
 
   const query = parseEventsQuery(raw, {
     now,
@@ -59,7 +61,7 @@ export default async function EventsPage({
   const today = todayOf(now, timeZone);
   const todayKey = dayKey(today);
 
-  const createButton = access.canManage ? (
+  const createButton = access.canCreate ? (
     <Button size="sm" render={<Link href="/events/new" />}>
       <Plus data-icon="inline-start" />
       {t('new')}
@@ -71,7 +73,7 @@ export default async function EventsPage({
   const calendarOccurrences = showCalendar
     ? await listOccurrences({
         range: gridRange(grid, timeZone),
-        includeDrafts: access.canManage,
+        ...visibility,
         filters: query.filters,
       })
     : [];
@@ -88,12 +90,12 @@ export default async function EventsPage({
     ? await listUpcomingOccurrences({
         now: fromLocalDateTime({ ...today, hour: 0, minute: 0 }, timeZone),
         limit: LIST_LIMIT,
-        includeDrafts: access.canManage,
+        ...visibility,
         filters: query.filters,
       })
     : [];
 
-  // The BDE-wide calendar link needs its own permission (events.shared_calendar), not events.manage.
+  // The BDE-wide calendar link needs its own permission (events.shared_calendar), not events.validate.
   const sharedCalendarButton = canManageSharedCalendar(access.session.user) ? (
     <Button variant="outline" size="sm" render={<Link href="/events/shared-calendar" />}>
       <CalendarSync data-icon="inline-start" />
@@ -135,7 +137,7 @@ export default async function EventsPage({
             todayKey={todayKey}
             selectedKey={selectedKey}
             query={query}
-            canCreate={access.canManage}
+            canCreate={access.canCreate}
           />
           {!monthHasEvents && (
             <Card className="mt-4 border-dashed">
@@ -162,7 +164,7 @@ export default async function EventsPage({
                   description={
                     hasFilters
                       ? t('empty.filteredDescription')
-                      : access.canManage
+                      : access.canCreate
                         ? t('empty.descriptionManager')
                         : t('empty.description')
                   }

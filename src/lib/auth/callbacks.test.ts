@@ -100,7 +100,7 @@ describe('sessionCallback', () => {
       holdsAll: true,
     });
     expect(result.user.permissions).toContain('members.manage');
-    expect(result.user.permissions).toContain('events.manage');
+    expect(result.user.permissions).toContain('events.validate');
   });
 
   it('gives a pending account nothing', async () => {

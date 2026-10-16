@@ -14,7 +14,7 @@ export function sectionTitle(t: Translate, section: string): string {
 
 /**
  * The label and one-sentence description of a permission. Every permission written for a
- * module has its own messages (`items.events.manage.label`); the generic view/manage of a
+ * module has its own messages (`items.events.validate.label`); the generic view/manage of a
  * module nobody translated yet get a sentence built from the module's name.
  */
 export function describePermission(

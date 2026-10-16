@@ -17,21 +17,24 @@ While the module is off, it does not exist: no page, no link in the menu, no blo
 
 ## Who can do what
 
-Rights come from the member's **role** (see [Roles and rights](roles.md)). Three rights concern this module.
+Rights come from the member's **role** (see [Roles and rights](roles.md)). Four rights concern this module.
 
-| Action                                               | View | Manage | Manage the shared calendar | Owner |
-| ---------------------------------------------------- | :--: | :----: | :------------------------: | :---: |
-| See **confirmed** events                             | yes  |  yes   |            yes             |  yes  |
-| See **drafts**                                       |  no  |  yes   |             no             |  yes  |
-| Create, edit, delete, confirm, cancel a date         |  no  |  yes   |             no             |  yes  |
-| Add an event to your calendar, subscribe to the feed | yes  |  yes   |            yes             |  yes  |
-| Manage the **BDE** calendar link                     |  no  |   no   |            yes             |  yes  |
+| Action                                               | View |               Propose                |          Validate           | Manage the shared calendar | Owner |
+| ---------------------------------------------------- | :--: | :----------------------------------: | :-------------------------: | :------------------------: | :---: |
+| See **confirmed** events                             | yes  |                 yes                  |             yes             |            yes             |  yes  |
+| See **drafts** and **proposals**                     |  no  |          **their own** only          |         all of them         |             no             |  yes  |
+| Create an event                                      |  no  |        yes, as a **proposal**        | yes, draft or **published** |             no             |  yes  |
+| Edit or delete an event                              |  no  | **their own**, until it is published |             any             |             no             |  yes  |
+| Approve or refuse a proposal                         |  no  |                  no                  |             yes             |             no             |  yes  |
+| Confirm, put back to draft, cancel a date            |  no  |                  no                  |             yes             |             no             |  yes  |
+| Add an event to your calendar, subscribe to the feed | yes  |                 yes                  |             yes             |            yes             |  yes  |
+| Manage the **BDE** calendar link                     |  no  |                  no                  |             no              |            yes             |  yes  |
 
-"Manage" includes "View". The owner always has access to everything. Every creation, edit or assignment of a role is
-written to the audit log.
+"Propose" includes "View"; "Validate" includes "Propose" and "View". The owner always has access to everything.
+Every creation, edit or assignment of a role is written to the audit log.
 
 These rules are checked **on the server**, on every page and every action: hiding a button is never the only
-protection. A draft you have no right to is not "forbidden": it is not found.
+protection. A draft or a proposal you have no right to is not "forbidden": it is not found.
 
 ## Creating an event
 
@@ -44,7 +47,8 @@ protection. A draft you have no right to is not "forbidden": it is not found.
 The form then starts from **6 pm to 8 pm** on that day (BDE time zone), which you adjust like any other date. Without
 a day (the **New event** button), it starts from tomorrow, 6 pm to 8 pm. A day in the past is accepted, to record an
 event after the fact. **Cancel** brings you back to that day of the calendar. These shortcuts only exist for those who
-can manage events: the others do not see them, and the form refuses them if they type its address.
+can create events (propose or validate): the others do not see them, and the form refuses them if they type its
+address.
 
 ![An event that repeats every week](../images/en/event.webp)
 
@@ -52,10 +56,11 @@ can manage events: the others do not see them, and the form refuses them if they
   browser's.
 - **Category**: one of those the BDE defined in Settings.
 - **Members in charge**: one or more members, **optional**. They are the ones who receive the day-before reminder by
-  email. With nobody in charge, the reminder goes to the **owners and the members whose role allows managing
+  email. With nobody in charge, the reminder goes to the **owners and the members whose role allows validating
   events**: it is never sent to nobody.
-- **Status**: a **draft** is only visible to those who can manage events. **Confirming** the event makes it visible to
-  every member and triggers the confirmation notification.
+- **Status**: a **draft** is only visible to its author and to those who can validate events. **Confirming** the event
+  makes it visible to every member and triggers the confirmation notification. Those who can only propose choose
+  between a draft and **awaiting validation**, see [below](#proposing-and-validating-events).
 
 ### Required fields
 
@@ -72,6 +77,51 @@ draft and canceling a date remain possible.
 
 The **school year** (for example `2025-2026`) is computed by itself: from September to August, from the start date.
 A series belongs to the school year of its first date.
+
+## Proposing and validating events
+
+Some roles (an "Events team", for example) can **propose** events without being able to publish them; other roles
+**validate**: they approve or refuse what is proposed. You choose who is who in [Roles and rights](roles.md): the
+**Propose events** right and the **Validate events** right.
+
+An event goes through three statuses:
+
+| Status                  | What it means                                    | Who sees it                       |
+| ----------------------- | ------------------------------------------------ | --------------------------------- |
+| **Draft**               | Work in progress, or a proposal that was refused | Its author and those who validate |
+| **Awaiting validation** | Proposed: a validator has to answer              | Its author and those who validate |
+| **Confirmed**           | Published                                        | Every member                      |
+
+### Proposing
+
+- In the form of somebody who can only propose, the status is **Awaiting validation** (preselected) or **Draft**. There
+  is no way to confirm: the server refuses it even if the request is forged.
+- On the page of a draft, **Propose for validation**. On the page of a proposal, **Withdraw the proposal** (it goes
+  back to draft).
+- A proposer edits and deletes **their own events as long as they are not published**: a draft, a proposal, a refused
+  event. For a series, always the series as a whole: there is no choice of dates.
+- **Once an event is published, its proposer can no longer change it**, not even their own: instead of the **Edit**
+  button, the page says so. A published event therefore never leaves the calendar without a validator doing it. To
+  correct something, ask a validator: they edit freely, and the event stays published.
+
+### Validating
+
+- The **To validate** entry of the menu (only for those who validate) says how many proposals are waiting. The page
+  lists them, the oldest first, each with **Approve** and **Refuse**.
+- **Approve** publishes the event, as confirming it would: the members are notified once. The author is told too, if
+  the `eventApproved` notification is on.
+- **Refuse** asks for a **comment** (required, 1000 characters at most). The event goes back to draft; its author reads
+  the comment on the event itself and receives it by notification (`eventRefused`). They edit the event, then propose it
+  again: the refusal disappears. A series is refused as a whole.
+- From the page of the event you can do the same. A proposal is not sent back to draft without a comment: you refuse
+  it. If two validators answer the same proposal, the second is told that somebody else already did.
+- A validator edits any event freely, drafts and proposals of others included.
+
+### Series and drafts
+
+A proposal is **the whole event**, a series included. Once it is approved, the dates of a series are handled as
+usual (see below). A date of a series confirmed on its own makes the event partly published: its proposer can no longer
+edit it either.
 
 ## Events that repeat
 
@@ -140,7 +190,8 @@ The **Delete** button on a page that is not a series deletes the event, for good
 
 ## Views
 
-- **Monthly calendar**: the default view on a computer. Each event is colored by its category, drafts are dashed.
+- **Monthly calendar**: the default view on a computer. Each event is colored by its category, drafts and
+  proposals are dashed.
   Click a day to select it, an event to open it.
 - **List**: the default view on a phone. Upcoming events, in order.
 - **On a phone**, if you choose the **Calendar** view, the grid shows a colored dot per day, and the chosen day is
@@ -173,7 +224,7 @@ calendar** right (or an owner) can create **a single link for the whole BDE**, t
 shared calendar. It then updates by itself. Personal links do not change.
 
 - **Where**: **Events** → **Shared calendar** button. It is only visible to those who have the "Manage the shared
-  calendar" right and to owners, even without the "Manage events" right.
+  calendar" right and to owners, even without the right to validate events.
 - **What it contains**: only **confirmed** and **non-cancelled** dates. Never a draft: a date put back to draft
   disappears from it.
 - **What you can do**: show the link, copy it, **regenerate** it (the old link stops working at once), **turn it
@@ -247,9 +298,13 @@ platform** section): without it, messages go out without a link.
 | Notification                        | When                                                                                                                           | Who receives it                                                                        |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
 | **Confirmation** (`eventConfirmed`) | an event goes from draft to **confirmed**, once; for a series, once for the confirmed part, or once for a date confirmed alone | every approved member (email: one message per person), or the Discord or Slack channel |
-| **Reminder** (`eventReminder`)      | the day before each confirmed occurrence, at the **reminder hour** (6 pm by default, BDE time)                                 | the **members in charge** (email), otherwise those who manage events; or the channel   |
+| **Reminder** (`eventReminder`)      | the day before each confirmed occurrence, at the **reminder hour** (6 pm by default, BDE time)                                 | the **members in charge** (email), otherwise those who validate events; or the channel |
+| **Proposal** (`eventProposed`)      | an event is proposed (or proposed again after a refusal)                                                                       | the owners and those who validate events (email), or the channel                       |
+| **Approval** (`eventApproved`)      | a validator approves a proposal                                                                                                | its author (email), or the channel                                                     |
+| **Refusal** (`eventRefused`)        | a validator refuses a proposal                                                                                                 | its author, with the comment (email), or the channel                                   |
 
-The rendering on Discord, Slack and by email is described in [Notifications](notifications.md).
+The rendering on Discord, Slack and by email is described in [Notifications](notifications.md). On a Discord or Slack
+channel the card is read by the whole team: the refusal comment is in it, and the card names the author.
 
 Sending happens **after** the response: a failed send never prevents saving an event. By email, a failure for one
 recipient does not prevent sending to the others. It is written in the server's logs (`[events] …`).
@@ -284,6 +339,7 @@ reminder shows the time, place and members in charge of that date.
 ## Audit log
 
 Owners see there the creation, the edit (with the list of fields changed), the deletion, the status change, the
+**proposal** (`event.propose`), its **withdrawal**, its **approval** and its **refusal** (with the comment), the
 cancelation and restoration of a date, and the actions on the BDE link (never the link itself). For a series, every
 entry says whether the action was for **one date** or for **this date and the following**, and which date (for
 the first date: that it was the whole series). The author is the

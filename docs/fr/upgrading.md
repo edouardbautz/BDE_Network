@@ -156,6 +156,20 @@ saisies depuis la sauvegarde sont perdues** : la restauration remet la base dans
 Faites-les **dans cet ordre**. Pour reprendre ensuite la dernière version du projet, revenez sur votre branche
 (`git switch main`).
 
+## Historique : le droit sur les événements se divise en deux
+
+Le droit « Gérer les événements » est devenu deux droits : **Proposer des événements** et **Valider les événements**
+(voir [Rôles et droits](roles.md#les-droits-disponibles)). La mise à jour convertit les rôles toute seule, et personne
+ne perd rien : valider inclut tout ce que gérer permettait.
+
+| Avant                                                        | Après                                                                                                   |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| Un rôle avec le droit de **gérer les événements**            | le même rôle, avec **Valider les événements** (qui inclut **Proposer des événements** et « Consulter ») |
+| Un rôle avec seulement **Consulter**, ou **Tous les droits** | inchangé                                                                                                |
+
+Les rôles convertis sont listés dans une entrée du journal d'audit (`role.migrate`), avec leurs droits d'avant. La mise
+à jour fait d'abord sa copie de sécurité, comme toute mise à jour qui modifie la base.
+
 ## Historique : des rôles fixes aux rôles personnalisés (0.x → 1.0)
 
 Les versions 0.x avaient les rôles fixes Administrateur et Membre, et des droits accordés membre par membre. La

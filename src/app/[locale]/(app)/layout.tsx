@@ -1,7 +1,8 @@
 import { getTranslations } from 'next-intl/server';
 import { getEffectiveSession } from '@/lib/auth/session';
 import { getConfig } from '@/config';
-import { canViewEvents } from '@/lib/events/access';
+import { canValidateEvents, canViewEvents } from '@/lib/events/access';
+import { countProposals } from '@/lib/events/queries';
 import { isDatabaseReachable } from '@/lib/health';
 import {
   can,
@@ -50,6 +51,18 @@ export default async function AppLayout({
   const navItems: NavItem[] = [{ id: 'dashboard', href: '/dashboard', label: t('dashboard') }];
   if (canViewEvents(session.user)) {
     navItems.push({ id: 'events', href: '/events', label: t('events') });
+  }
+  // Whoever can validate sees what waits for them, counted, in the menu. The permission exists only while the
+  // events module is enabled.
+  if (canValidateEvents(session.user)) {
+    const waiting = await countProposals();
+    navItems.push({
+      id: 'eventsReview',
+      href: '/events/review',
+      label: t('eventsReview'),
+      badge: waiting,
+      badgeLabel: t('eventsReviewCount', { count: waiting }),
+    });
   }
   if (can(session.user, MEMBERS_MANAGE)) {
     navItems.push({ id: 'members', href: '/members', label: t('members') });

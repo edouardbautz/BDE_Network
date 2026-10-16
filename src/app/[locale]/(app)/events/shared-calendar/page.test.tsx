@@ -85,7 +85,7 @@ describe('/events/shared-calendar', () => {
     ['the default member', 'MEMBER'],
     [
       'a role that manages events but not the shared calendar',
-      { permissions: ['events.view', 'events.manage'] },
+      { permissions: ['events.view', 'events.validate'] },
     ],
   ])('sends %s back to the events without ever reading the token', async (_label, who) => {
     access(who);

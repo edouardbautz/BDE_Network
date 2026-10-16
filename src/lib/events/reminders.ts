@@ -1,7 +1,6 @@
 import { getConfig } from '@/config';
-import { EVENTS_MODULE_KEY } from '@/config/schema';
 import { emailsOfHolders } from '@/lib/notifications/recipients';
-import { managePermission } from '@/lib/permissions';
+import { EVENTS_VALIDATE } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
 import { withRichMessage } from '@/lib/notifications/rich';
 import { buildEventEmbed } from './discord-embed';
@@ -150,7 +149,7 @@ export async function runReminderTick(now: Date = new Date()): Promise<ReminderT
       // sent to no one. (Looked up only when it is an email: a chat channel needs no recipient.)
       const emails =
         assigneeEmails.length === 0 && config.notifications.eventReminder === 'email'
-          ? await emailsOfHolders(managePermission(EVENTS_MODULE_KEY))
+          ? await emailsOfHolders(EVENTS_VALIDATE)
           : assigneeEmails;
       await deliver('eventReminder', message, emails);
     }

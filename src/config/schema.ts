@@ -14,6 +14,9 @@ export const NOTIFICATION_EVENTS = [
   'memberRemoved',
   'eventConfirmed',
   'eventReminder',
+  'eventProposed',
+  'eventApproved',
+  'eventRefused',
 ] as const;
 
 /** Module keys that ship with the platform. `modules.enabled` is free-form on
@@ -99,6 +102,9 @@ const notificationsSection = z.object({
   memberRemoved: optionalNotificationChannel('memberRemoved'),
   eventConfirmed: optionalNotificationChannel('eventConfirmed'),
   eventReminder: optionalNotificationChannel('eventReminder'),
+  eventProposed: optionalNotificationChannel('eventProposed'),
+  eventApproved: optionalNotificationChannel('eventApproved'),
+  eventRefused: optionalNotificationChannel('eventRefused'),
 });
 
 const updatesSection = z.object({
