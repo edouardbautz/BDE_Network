@@ -90,6 +90,8 @@ export interface Call {
   status: number;
   /** An action that throws (a refusal is one) answers 500 and says nothing else. */
   threw: boolean;
+  /** What the platform answered (the payload of the action, for the suites that read it). */
+  text: string;
 }
 
 export async function callAction(
@@ -115,8 +117,8 @@ export async function callAction(
     },
     body,
   });
-  await response.text();
-  return { status: response.status, threw: response.status >= 500 };
+  const text = await response.text();
+  return { status: response.status, threw: response.status >= 500, text };
 }
 
 export interface ActionCell {

@@ -2,6 +2,8 @@ import { appendFileSync, writeFileSync } from 'node:fs';
 import { platformFromEnvironment, type Platform } from '../access/http';
 import { Report } from './core';
 import { checkCsrf } from './csrf';
+import { checkFeeds } from './feeds';
+import { checkUploads } from './uploads';
 import { checkHeaders } from './headers';
 import { checkSessions } from './sessions';
 
@@ -18,6 +20,8 @@ export const SUITES: Record<string, (platform: Platform, report: Report) => Prom
   headers: checkHeaders,
   sessions: checkSessions,
   csrf: checkCsrf,
+  feeds: checkFeeds,
+  uploads: checkUploads,
 };
 
 const flag = (name: string): string | undefined => {

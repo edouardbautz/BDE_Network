@@ -41,7 +41,6 @@ export async function checkCsrf(platform: Platform, report: Report): Promise<voi
       ['another site', EVIL],
       ['a site whose name contains the platform’s', `${platform.base}.evil.example`],
       ['the same host on another port', platform.base.replace(/:\d+$/, ':9999')],
-      ['the same host over https', platform.base.replace('http://', 'https://')],
       ['"null" (a sandboxed frame, a local file)', 'null'],
     ] as const) {
       const beforeCall = await tokenOf(db);

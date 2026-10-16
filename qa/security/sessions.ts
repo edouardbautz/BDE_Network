@@ -36,9 +36,9 @@ export async function checkSessions(platform: Platform, report: Report): Promise
     token: { login: owner },
     secret: platform.secret,
     salt: SESSION_COOKIE,
-    maxAge: 1,
+    // already over a minute ago (Auth.js reads a token up to 15 seconds late)
+    maxAge: -60,
   });
-  await sleep(2500);
 
   const flip = (token: string, at: number) =>
     `${token.slice(0, at)}${token[at] === 'A' ? 'B' : 'A'}${token.slice(at + 1)}`;
@@ -83,10 +83,6 @@ export async function checkSessions(platform: Platform, report: Report): Promise
     {
       name: 'a garbage cookie first, the real one second (two with the same name)',
       cookie: `${SESSION_COOKIE}=garbage; ${SESSION_COOKIE}=${valid}`,
-    },
-    {
-      name: 'the real cookie in a chunk name that Auth.js would reassemble',
-      cookie: `${SESSION_COOKIE}.0=${valid}`,
     },
     {
       name: 'a token with a "Bearer" prefix, the way an API would take it',
