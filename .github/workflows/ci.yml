@@ -362,6 +362,11 @@ jobs:
       - name: Test the data migrations on legacy accounts
         run: npx vitest run src/test/migrations
 
+      # The QA dataset and its invariants (qa/), against this same real PostgreSQL: every constraint of the migrations
+      # must accept the dataset, and every invariant must see the corruption it is meant to see.
+      - name: Test the QA dataset and the invariants on a real database
+        run: npx vitest run qa
+
       - name: Apply every migration to an empty database
         run: npx prisma migrate deploy
 
