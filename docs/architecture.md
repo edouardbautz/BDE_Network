@@ -1181,7 +1181,9 @@ touching layout or adding UI. The short version:
   afterwards, never in the folder being worked in, and **never restores a file with `git checkout` or `git restore`**:
   those throw away every uncommitted change of the file, not only the mutation (it happened: a script that put a file back
   after each mutation also put back two fixes that were not committed yet). In the worktree the mutation is written,
-  the tests run, and the worktree is removed or reset as a whole.
+  the tests run, and the worktree is removed or reset as a whole. `node qa/mutate.mjs qa/mutations/<list>.json` does exactly
+  that (a list is `[name, file, text to break, replacement, [test files]]`; **commit first**: the worktree is made from
+  `HEAD`), and the lists of the campaign are kept in `qa/mutations/` so that a "mutation-checked" claim can be played again.
 - **No `any`** (`@typescript-eslint/no-explicit-any` is an error, not a warning).
 - Cross-platform: no `&&`/`||`/`$VAR`/`rm -rf`/`cp` in npm scripts — use `cross-env`, `rimraf`,
   or plain Node. LF line endings are enforced by `.gitattributes`. The exception is the server-side
