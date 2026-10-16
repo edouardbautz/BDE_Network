@@ -178,6 +178,15 @@ describe('runReminderTick', () => {
     expect(where).toContain('"occurrences":{"some":{"status":"CONFIRMED"}}');
   });
 
+  it('keeps looking at a series until its end, and at an event that has not happened yet', async () => {
+    vi.mocked(prisma.event.findMany).mockResolvedValue([]);
+    await runReminderTick(new Date('2026-10-09T17:00:00Z'));
+    const where = JSON.stringify(vi.mocked(prisma.event.findMany).mock.calls[0]?.[0]);
+    // a series (it has an end) can have a date to come whatever its first date was; the others only if they are to come
+    expect(where).toContain('{"recurrenceUntil":{"not":null}}');
+    expect(where).toContain('"startsAt":{"gt":');
+  });
+
   it('does not remind a draft event', async () => {
     vi.mocked(prisma.event.findMany).mockResolvedValue([event({ status: 'DRAFT' })] as never);
     const result = await runReminderTick(new Date('2026-10-09T16:00:00Z'));

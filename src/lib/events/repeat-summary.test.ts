@@ -56,6 +56,12 @@ describe('summarizeRepeat', () => {
       'Every weekday (Monday to Friday), until December 19, 2026',
     ],
     [
+      'every 2 weeks, Monday to Friday is not "every weekday"',
+      { freq: 'WEEKLY', interval: 2, weekdays: ['MO', 'TU', 'WE', 'TH', 'FR'] },
+      "Toutes les 2 semaines le lundi, le mardi, le mercredi, le jeudi et le vendredi, jusqu'au 19 décembre 2026",
+      'Every 2 weeks on Monday, Tuesday, Wednesday, Thursday, and Friday, until December 19, 2026',
+    ],
+    [
       'every week, on the weekday of the first date',
       { freq: 'WEEKLY', interval: 1 },
       "Toutes les semaines le samedi, jusqu'au 19 décembre 2026",

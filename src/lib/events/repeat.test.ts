@@ -5,9 +5,11 @@ import {
   alignStart,
   endOfCountedRule,
   expandRepeat,
+  isRepeating,
   normalizeRule,
   readRepeatRule,
   resolveRule,
+  sameRepeat,
   weekdayOf,
   type MonthlyPattern,
   type RepeatRule,
@@ -752,5 +754,69 @@ describe('the series that existed before the rules', () => {
         label,
       ).toEqual(before.slice(0, MAX_OCCURRENCES).map((d) => d.getTime()));
     }
+  });
+});
+
+describe('sameRepeat', () => {
+  const first = { year: 2026, month: 10, day: 10 }; // a Saturday, the 10th
+
+  it('is true for rules that give the same dates, whatever they leave out', () => {
+    expect(sameRepeat(null, null, first)).toBe(true);
+    expect(
+      sameRepeat(
+        { freq: 'WEEKLY', interval: 1 },
+        { freq: 'WEEKLY', interval: 1, weekdays: ['SA'] },
+        first,
+      ),
+    ).toBe(true);
+    expect(
+      sameRepeat(
+        { freq: 'MONTHLY', interval: 1 },
+        { freq: 'MONTHLY', interval: 1, monthly: { kind: 'day', day: 10 } },
+        first,
+      ),
+    ).toBe(true);
+  });
+
+  it('is false as soon as one date would differ', () => {
+    const base: RepeatRule = { freq: 'WEEKLY', interval: 2, weekdays: ['MO', 'WE'], count: 10 };
+    expect(sameRepeat(base, { ...base }, first)).toBe(true);
+    expect(sameRepeat(base, { ...base, count: 8 }, first)).toBe(false);
+    expect(sameRepeat(base, { ...base, count: undefined }, first)).toBe(false);
+    expect(sameRepeat(base, { ...base, interval: 1 }, first)).toBe(false);
+    expect(sameRepeat(base, { ...base, weekdays: ['MO'] }, first)).toBe(false);
+    expect(sameRepeat(base, { ...base, freq: 'DAILY' }, first)).toBe(false);
+    expect(sameRepeat(base, null, first)).toBe(false);
+    expect(sameRepeat(null, base, first)).toBe(false);
+    expect(
+      sameRepeat(
+        { freq: 'MONTHLY', interval: 1 },
+        { freq: 'MONTHLY', interval: 1, monthly: { kind: 'lastDay' } },
+        first,
+      ),
+    ).toBe(false);
+  });
+
+  it('does not depend on the order in which the days are written', () => {
+    expect(
+      sameRepeat(
+        { freq: 'WEEKLY', interval: 1, weekdays: ['WE', 'MO'] },
+        { freq: 'WEEKLY', interval: 1, weekdays: ['MO', 'WE'] },
+        first,
+      ),
+    ).toBe(true);
+  });
+});
+
+describe('isRepeating', () => {
+  const rule = { freq: 'WEEKLY', interval: 1 };
+  const until = new Date('2026-12-01T00:00:00Z');
+
+  it('needs a rule it can read and an end: a series has both', () => {
+    expect(isRepeating({ repeat: rule, recurrenceUntil: until })).toBe(true);
+    expect(isRepeating({ repeat: rule, recurrenceUntil: null })).toBe(false);
+    expect(isRepeating({ repeat: null, recurrenceUntil: until })).toBe(false);
+    expect(isRepeating({ recurrenceUntil: until })).toBe(false);
+    expect(isRepeating({ repeat: { freq: 'HOURLY' }, recurrenceUntil: until })).toBe(false);
   });
 });

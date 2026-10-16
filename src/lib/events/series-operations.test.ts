@@ -271,6 +271,42 @@ describe('updateFollowing ("this one and the following")', () => {
     expect(db.event(eventId)?.confirmationNotifiedAt).toEqual(claimed);
   });
 
+  it('can change only the end of the following dates: that is a change too, and the rule stays', async () => {
+    addSeries();
+    const result = await run((t) =>
+      updateFollowing(t, 'evt', OCT19, {
+        values: {},
+        repeat: {
+          rule: { freq: 'WEEKLY', interval: 1 },
+          until: new Date('2026-12-14T22:00:00Z'),
+        },
+      }),
+    );
+
+    expect(result).toMatchObject({ split: true, ruleChanged: true });
+    expect(db.event(result.eventId)).toMatchObject({
+      repeat: { freq: 'WEEKLY', interval: 1 },
+      recurrenceUntil: new Date('2026-12-14T22:00:00Z'),
+    });
+  });
+
+  it('does not cut a series when the form gives the rule and the end it already has, written another way', async () => {
+    addSeries();
+    const result = await run((t) =>
+      updateFollowing(t, 'evt', OCT19, {
+        values: {},
+        repeat: {
+          // the weekday of the first date, written out: the same dates
+          rule: { freq: 'WEEKLY', interval: 1, weekdays: ['MO'] },
+          until: new Date('2026-11-09T22:59:00Z'),
+        },
+      }),
+    );
+
+    expect(result).toMatchObject({ split: false, ruleChanged: false, changed: [] });
+    expect(db.table('event')).toHaveLength(1);
+  });
+
   it('can change the frequency and the end of the following dates', async () => {
     addSeries();
     const result = await run((t) =>
