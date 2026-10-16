@@ -64,6 +64,14 @@ All notable changes to this project are written here, in English. Format based o
   again on the server. The new browser test clicks them on a computer-sized and a phone-sized screen, in both languages,
   and checks that a member is offered nothing.
 
+### Fixed
+
+- **The logo is served with the strict policy its route writes** (`default-src 'none'; sandbox`). The policy of the pages,
+  set for every address by `next.config.ts`, replaced it, so the logo (a file anybody can open, whose bytes were uploaded)
+  was sent with a policy that lets scripts run. Nothing could be exploited (the type is the image's, and `nosniff` keeps a
+  browser from taking it for a page), but the second line of defence that was written did not exist. The policy of the pages
+  now leaves `/api/logo` out. Found by the attacks of the quality campaign.
+
 ### Security
 
 - **The image applies the security updates of its operating system when it is built** (`apk upgrade`), and CI scans the image
