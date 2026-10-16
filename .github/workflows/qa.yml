@@ -25,7 +25,7 @@ jobs:
   # Is a platform made by qa/platform.sh up, does it tell the personas apart, does its database hold the invariants.
   # Every later suite starts from this platform.
   baseline:
-    name: baseline (${{ matrix.variant }})
+    name: baseline and access matrix (${{ matrix.variant }})
     # A pull request runs it only when it carries the label.
     if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-qa')
     runs-on: ubuntu-latest
@@ -65,6 +65,21 @@ jobs:
         run: |
           eval "$(sh qa/platform.sh env)"
           npx tsx qa/smoke.ts
+
+      # Every page, API route and server action, as every persona (visitor, pending, member, proposer, validator, custom
+      # role, Admin, owner, removed member), with the events module on and off: see "Access matrix" in docs/architecture.md.
+      - name: Access matrix
+        run: |
+          eval "$(sh qa/platform.sh env)"
+          npx tsx qa/access/run.ts --variant "${{ matrix.variant }}" --report "$RUNNER_TEMP/access-report.json"
+
+      - name: Keep the report of the access matrix
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: access-matrix-${{ matrix.variant }}
+          path: ${{ runner.temp }}/access-report.json
+          if-no-files-found: ignore
 
       - name: Logs of the platform
         if: always()

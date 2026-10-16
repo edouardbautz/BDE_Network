@@ -1104,6 +1104,31 @@ start from the same three things, so that what one finds the others can replay.
   `npx tsx qa/smoke.ts`, `sh qa/platform.sh down`. Docker is the only requirement besides Node. A suite that needs a
   database without the image uses `qa/test-database.ts` (a migrated database, thrown away), like the tests of the
   data migrations, and runs only when `MIGRATION_TEST_DATABASE_URL` is set (the `migrations` job of CI sets it).
+- **The access matrix** (`qa/access/`; `matrix.ts`, `actions.ts`, `discover.ts`, `run.ts`, `actions-run.ts`,
+  `coverage.test.ts`). Who may open what, written down on its own (`model.ts` does not import `lib/permissions`: it is the
+  expectation, so when it disagrees with the code one of the two is wrong and finding which is the point), and played
+  against the real image: **every page and API route** (`PAGES`, `API`: several probes for the routes that take an
+  id, a token or a state: a published event, a draft, the proposal of somebody else, one's own, one that does not exist…)
+  and **every server action** (`CASES`), as each of the nine personas, with the events module on and off. Rules of the
+  matrix: (1) **"denied" is any answer that shows no content** (not found, or sent elsewhere), where the platform's
+  rule is precise (a visitor goes to the login page, a pending account to the waiting page) the expectation says so;
+  (2) **a refusal never carries somebody's data** (the addresses of the members, a feed link: looked for in the body);
+  (3) **reading changes nothing** (a fingerprint of every table before and after the whole run; the reminder loop's claims, `EventReminder`, are left out: the platform writes them by itself when a date becomes due, and the first nightly run found it out); (4) a page that Next.js
+  has already started to stream answers 200 and says the rest inside it (the not-found page marks itself `noindex` and
+  `NEXT_HTTP_ERROR_FALLBACK`, a redirect is a `__next-page-redirect` meta refresh): the runner reads that, not the status.
+  **Server actions** are called over HTTP the way a browser does (the id of the action in `Next-Action`, the arguments
+  encoded by Next's own `encodeReply`), the ids and the list of what exists coming from the image's
+  `server-reference-manifest.json` (73 entry points: 51 exported actions and 22 written inside components). Each case has
+  the persona who is allowed, the arguments (a crafted request sends anything: valid ones, so that a missing gate would
+  change something), and, for what is allowed, **the tables that must change** (the audit log among them): (a) every
+  persona that must be refused changes nothing in the database (and, where the gate is the first thing the action does,
+  `strictThrow`, it throws); (b) the least privileged persona that is allowed, and the owner, get through and change
+  exactly what the case says (a gate that refuses everybody, or arguments that are wrong, would otherwise pass as
+  "secure"). The database goes back to the dataset between cases (`qa/reset.ts`). An action written inside a component is
+  an entry point of its own: `coverage.test.ts` fails unless each is declared (`INLINE_ACTIONS`) and only hands over to an
+  exported action (never a query of its own). **A new page, route or action fails the CI of the pull request that adds it
+  until it is in the matrix** (`coverage.test.ts` runs with the unit tests; the HTTP run is the `qa` workflow's, ~1 minute
+  per variant). `npx tsx qa/access/run.ts --variant events-enabled` plays it on a platform made by `qa/platform.sh`.
 - **Coverage** (`npm run test:coverage`, `coverage-thresholds.json`, `scripts/coverage-report.mjs`,
   `scripts/coverage-gaps.mjs`, `qa/coverage-plan.md`). The ubuntu job of `ci.yml` runs the unit tests through V8 coverage
   and **fails below a floor**: one for the whole project and one for each area that decides who may do what or what is

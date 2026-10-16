@@ -8,6 +8,13 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **An exhaustive access matrix**, played against the real image every night: every page, API route and server action
+  (all 73 entry points of the image) as each of nine profiles (visitor, account waiting for approval, member, proposer,
+  validator, custom role, Admin, owner, removed member whose cookie is still valid), with the events module on and off:
+  about 1,100 cells per variant. A refusal must show no content and carry no data of anybody, a refused action must change
+  nothing in the database, and what is allowed must go through and change exactly what it should (the audit log
+  included). A new page, route or action fails the tests until it is in the matrix. It changes nothing for a platform
+  that runs.
 - **Test coverage is measured, and its floors are enforced** in CI (`npm run test:coverage`): 94 % of the statements and 90 %
   of the branches today, with a floor of its own for every area that decides who may do what or what is written to the
   database, and a report in the summary of the job. Tests were added for what had none (the choice of the channel of a

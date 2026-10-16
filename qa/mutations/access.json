@@ -1,0 +1,62 @@
+[
+  [
+    "settings: anybody signed in is the owner",
+    "src/lib/settings/access.ts",
+    "return session && canManageSettings(session.user) ? session : null;",
+    "return session ?? null;"
+  ],
+  [
+    "events: a proposer validates",
+    "src/lib/events/access.ts",
+    "if (!access?.canValidate) {",
+    "if (!access) {"
+  ],
+  [
+    "events: a member proposes",
+    "src/lib/events/access.ts",
+    "if (!access?.canCreate) {",
+    "if (!access) {"
+  ],
+  [
+    "updates: anybody reads the notice of a new version",
+    "src/app/api/updates/route.ts",
+    "if (!(await getSettingsManager())) {",
+    "if (false) {"
+  ],
+  [
+    "development tools in production",
+    "src/lib/dev-impersonation-actions.ts",
+    "if (!isDevImpersonationEnabled()) {\n    throw new Error('Dev impersonation is disabled');\n  }",
+    ""
+  ],
+  [
+    "members page: anybody signed in manages the members",
+    "src/app/[locale]/(app)/members/page.tsx",
+    "if (!session?.user || !can(session.user, MEMBERS_MANAGE)) {",
+    "if (!session?.user) {"
+  ],
+  [
+    "layout: a pending account enters the application",
+    "src/app/[locale]/(app)/layout.tsx",
+    "if (session.user.status === 'PENDING') {\n    redirect({ href: '/pending', locale });",
+    "if (false) {\n    redirect({ href: '/pending', locale });"
+  ],
+  [
+    "events: a proposer sees the drafts of others",
+    "src/lib/events/review.ts",
+    "if (access.canPropose) return { includeDrafts: false, ownLogin: access.session.user.login };",
+    "if (access.canPropose) return { includeDrafts: true };"
+  ],
+  [
+    "roles: nobody is stopped from granting what they lack",
+    "src/lib/roles/guards.ts",
+    "return covers(actor, wanted) ? null : 'cannotGrant';",
+    "return null;"
+  ],
+  [
+    "events: a draft leaks through the calendar file",
+    "src/app/api/events/[id]/ics/route.ts",
+    "const visibility = draftVisibility(access);",
+    "const visibility = { includeDrafts: true };"
+  ]
+]
