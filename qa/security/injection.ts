@@ -259,12 +259,17 @@ export async function checkInjection(platform: Platform, report: Report): Promis
       );
 
       // The calendar download of an event.
+      const modules = (
+        await db.query(`SELECT config->'modules'->'enabled' AS enabled FROM "PlatformSettings"`)
+      ).rows[0]?.enabled as string[] | undefined;
       const download = await send(platform, `/api/events/${tag}-e4/ics`, { as: 'owner' });
       report.check(
         'injection',
         'stored: the calendar file of an event is typed as one, and nothing in it is a page',
-        /^text\/calendar/.test(download.headers.get('content-type') ?? '') &&
-          download.headers.get('x-content-type-options')?.toLowerCase() === 'nosniff',
+        // (with the events module off there is no such file: a 404, and nothing else)
+        (!modules?.includes('events') && download.status === 404) ||
+          (/^text\/calendar/.test(download.headers.get('content-type') ?? '') &&
+            download.headers.get('x-content-type-options')?.toLowerCase() === 'nosniff'),
         `${download.status} ${download.headers.get('content-type')}`,
       );
 
