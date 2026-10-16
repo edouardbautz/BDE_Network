@@ -3,6 +3,7 @@ import { platformFromEnvironment, type Platform } from '../access/http';
 import { Report } from './core';
 import { checkCsrf } from './csrf';
 import { checkFeeds } from './feeds';
+import { checkInjection } from './injection';
 import { checkUploads } from './uploads';
 import { checkHeaders } from './headers';
 import { checkSessions } from './sessions';
@@ -22,6 +23,7 @@ export const SUITES: Record<string, (platform: Platform, report: Report) => Prom
   csrf: checkCsrf,
   feeds: checkFeeds,
   uploads: checkUploads,
+  injection: checkInjection,
 };
 
 const flag = (name: string): string | undefined => {
