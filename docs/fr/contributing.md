@@ -182,6 +182,24 @@ npm run build
 Si vous touchez à la documentation, lancez aussi `npm run lint:md` et `npm run docs:check`. La CI lance tout cela
 (`.github/workflows/ci.yml`), sur Ubuntu et sur Windows.
 
+## La campagne qualité
+
+Au-delà des tests unitaires, `qa/` contient le socle des suites de qualité : neuf **profils** (visiteur, compte en attente,
+membre, proposeur, validateur, rôle personnalisé, Admin, propriétaire, membre retiré), un **jeu de données** déterministe de
+deux années scolaires (environ 300 membres et 600 événements), les **invariants** que toute base de données doit respecter,
+et un script qui démarre l'image de production avec tout cela. Avec Docker et Node, depuis le dossier du projet :
+
+```text
+docker build -t bde-network .
+sh qa/platform.sh up
+eval "$(sh qa/platform.sh env)"
+npx tsx qa/smoke.ts
+sh qa/platform.sh down
+```
+
+Les suites lourdes tournent toutes les nuits et à la demande (**Actions → qa**), pas à chaque pull request ; une pull request
+peut les demander avec l'étiquette `full-qa`. Le détail est dans l'[architecture](../architecture.md#quality-campaign-qa-githubworkflowsqayml).
+
 ## Conventions de code
 
 Voir [l'architecture](../architecture.md). En résumé :

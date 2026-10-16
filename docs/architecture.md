@@ -114,6 +114,8 @@ scripts/
   release.mjs               what a release is made of (tag = package.json = compose default = CHANGELOG)
 docker-compose.yml          the published image of one version; docker-compose.build.yml builds it from the folder instead
 e2e/                        browser tests run by CI against the real image (installer, settings page, sign-in) + a stand-in 42 API
+qa/                         the quality campaign: personas, dataset, invariants, the platform script, and the suites built on them
+                            (see "Quality campaign")
 docker/
   prisma.config.mjs         Prisma config used by the production image to run `migrate deploy`
   master-secrets.mjs        the keys of the `secrets` volume (session secret, settings key), created once
@@ -1054,6 +1056,52 @@ which script, and the HTML the browser drew against the HTML the server sent. A 
 rounds. The races found this way in the scripts themselves: the settings script reloaded before the server had answered a
 confirmed removal (the dialog closes at once), and `e2e/settings.mjs`/`events.mjs` take `LATENCY_MS`, `TIMEZONE` and
 `CPU_THROTTLE` to reproduce a slow server, another time zone and a slow processor.
+
+## Quality campaign (`qa/`, `.github/workflows/qa.yml`)
+
+The platform is checked well beyond its unit tests before real BDEs rely on it. The campaign is a set of suites that all
+start from the same three things, so that what one finds the others can replay.
+
+- **Three levels of CI.** (1) Every pull request: `ci.yml`, fast and deterministic, what makes a change safe to merge.
+  (2) `qa.yml`, every night and on demand (Actions → qa → Run workflow), and on a pull request that carries the label
+  `full-qa`: the heavy suites, on the real image, a real PostgreSQL and the QA dataset. (3) A release: the last run of
+  `qa.yml` on the commit to tag must be green. A suite goes in the level its duration allows: the budget of a pull request
+  is a few minutes more, the rest is nightly. Never "retry until green" (see "Browser tests that fail now and then").
+- **The personas** (`qa/personas.ts`): the nine profiles every suite plays — visitor, account waiting for approval,
+  member, member who proposes, member who validates, member with a custom role, member with the Admin role, owner, and
+  a removed member whose cookie is still valid. "Module disabled" is not somebody but a way of running the platform
+  (`PLATFORM_VARIANTS`). `cookieHeaderFor` forges the session cookie of a persona with the platform's own secret, exactly
+  as Auth.js writes it (the same technique as the `e2e/` scripts: nobody signs in through 42 in a test). A new suite uses
+  these, it does not invent accounts.
+- **The dataset** (`qa/dataset.ts`): about 300 members, 600 events over two school years — single events, series of
+  every frequency, series cut in two, drafts, proposals, refusals, dates that were cancelled, edited, moved or reminded
+  — and the audit trail of all of it, as SQL. **Deterministic** (a seeded generator: the same options give the same SQL, a
+  failure can be replayed) and built with the real series engine (`repeat.ts`), so it is what the application would have
+  written. `npx tsx qa/cli.ts load --database <url>` writes it, `sql` prints it. Only the persona `qa-owner` is an OWNER
+  (the others would be demoted at the next start, `reconcileOwnerAccounts`).
+- **The invariants** (`qa/invariants.sql`, `qa/invariants.ts`): what must be true of the database after any scenario —
+  one default role, a member has a role and nobody else does, a rule is a rule, a series and its end come together, the
+  school year is the one of the start, a refusal is a draft with its three fields, a cut series' first row exists, every
+  date a cancellation, a date of its own or a reminder refers to is a date of its series (checked with the engine), no
+  webhook address or key in the audit trail… An empty result is a healthy database. `npx tsx qa/cli.ts check` runs them. They
+  are tested against corruption (`qa/dataset.test.ts`: each is broken on purpose and must be seen), and a suite that
+  changes data (resilience, updates, long time) ends by running them. **When an invariant fails, the invariant is
+  not the first suspect: a violation is a bug, or a wrong reading of the contract, and the second needs a note here**
+  (example: `proposedAt` is never cleared, so "only a proposal has one" was wrong, "a proposal has one" is the rule).
+- **The platform** (`qa/platform.sh`): `up` starts the production image against a PostgreSQL 17 container and installs
+  a BDE by importing the settings from a configuration file (no browser needed), then loads the dataset; `down` removes
+  everything; `env` prints `QA_BASE_URL`, `QA_AUTH_SECRET`, `QA_DATABASE_URL` for the suites. It takes about 10 seconds with the
+  image built. The 42 API and the release API are pointed at an address that answers nothing: the platform must work
+  without them. `--variant events-disabled` runs it without the module. POSIX `sh`, like the scripts of `scripts/`.
+- **The smoke test** (`qa/smoke.ts`): is the platform up, does it tell the personas apart, do the invariants hold. It is the
+  first step of every run of `qa.yml`.
+- **Run it by hand**: `docker build -t bde-network .`, then `sh qa/platform.sh up`, `eval "$(sh qa/platform.sh env)"`,
+  `npx tsx qa/smoke.ts`, `sh qa/platform.sh down`. Docker is the only requirement besides Node. A suite that needs a
+  database without the image uses `qa/test-database.ts` (a migrated database, thrown away), like the tests of the
+  data migrations, and runs only when `MIGRATION_TEST_DATABASE_URL` is set (the `migrations` job of CI sets it).
+- **What a campaign finds** goes through the usual rules: a bug has its own pull request and a test that would have caught
+  it; a suite that exposes a bug waits for that pull request or lists the case as an expected failure with its reason,
+  never as a silent skip.
 
 ## Design system
 

@@ -26,7 +26,8 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "seed:demo": "tsx prisma/seed.ts"
+    "seed:demo": "tsx prisma/seed.ts",
+    "qa": "tsx qa/cli.ts"
   },
   "dependencies": {
     "@auth/core": "0.41.3",
