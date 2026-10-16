@@ -17,6 +17,46 @@ beforeEach(() => {
   mocks.intl.mockReturnValue(new NextResponse('intl'));
 });
 
+describe('an address that cannot be read', () => {
+  it.each([
+    '/fr/events/%ff',
+    '/api/calendar/%ff',
+    '/api/events/%/ics',
+    '/fr/%c0%af',
+    '/fr/%E0%A4%A',
+    '/%',
+    // a page is read twice: what the first reading leaves (`x%y`) is not valid either
+    '/fr/%25',
+    '/fr/x%25y',
+    '/fr/events/%25',
+    '/en/%252',
+  ])('is a 400, whatever it asks for: %s', (path) => {
+    const response = proxy(request(path));
+    expect(response.status).toBe(400);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(mocks.intl).not.toHaveBeenCalled();
+  });
+
+  it('is a 400 while the platform is being installed too: before anything else', () => {
+    mocks.setup = true;
+    expect(proxy(request('/fr/%ff')).status).toBe(400);
+    expect(proxy(request('/api/calendar/%ff')).status).toBe(400);
+  });
+
+  it.each([
+    '/fr/events/abc',
+    '/fr/events/%C3%A9t%C3%A9',
+    '/api/calendar/AbC-_123',
+    '/fr/%E2%82%AC',
+    '/fr/a%2520b',
+    // an API route is read once: a literal percent sign is a wrong token, not a wrong address
+    '/api/calendar/%25',
+    '/api/logo/%25x',
+  ])('leaves an address that can be read alone: %s', (path) => {
+    expect(proxy(request(path)).status).not.toBe(400);
+  });
+});
+
 describe('which requests the proxy sees', () => {
   // The matcher is compiled by Next.js as a regular expression: a lost backslash once made it see only "/".
   const sees = (path: string) => new RegExp(`^${config.matcher[0]}$`).test(path);
