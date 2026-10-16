@@ -43,8 +43,28 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Windows runs the tests as they are; Ubuntu runs them once more through V8 coverage, which enforces the floors of
+      # coverage-thresholds.json (a ratchet: see "Quality campaign" in docs/architecture.md).
       - name: Test
+        if: matrix.os != 'ubuntu-latest'
         run: npm run test
+
+      - name: Test, with the coverage floors
+        if: matrix.os == 'ubuntu-latest'
+        run: npm run test:coverage
+
+      - name: Coverage report
+        if: always() && matrix.os == 'ubuntu-latest' && hashFiles('coverage/coverage-summary.json') != ''
+        run: node scripts/coverage-report.mjs >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the coverage report
+        if: always() && matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/lcov.info
+          if-no-files-found: ignore
+          retention-days: 14
 
   # The documentation is a product of its own: internal links and anchors, images' alternative text, French and
   # English pages that are twins (scripts/check-docs.mjs), Markdown style (markdownlint) and layout (Prettier).

@@ -11,7 +11,14 @@ const METRICS = ['statements', 'branches', 'functions', 'lines'];
 /** A floor this many points under the measure is a floor that could be higher. */
 export const ROOM = 2.5;
 
-const toPattern = (glob) => new RegExp(`^${glob.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*\*/g, '\u0000').replace(/\*/g, '[^/]*').replace(/\u0000/g, '.*')}$`);
+const toPattern = (glob) =>
+  new RegExp(
+    `^${glob
+      .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+      .replace(/\*\*/g, '\u0000')
+      .replace(/\*/g, '[^/]*')
+      .replace(/\u0000/g, '.*')}$`,
+  );
 
 /** { statements, branches, functions, lines } in percent, for the files whose path matches `matches`. */
 export function measure(summary, root, matches) {
@@ -26,21 +33,38 @@ export function measure(summary, root, matches) {
     }
   }
   return Object.fromEntries(
-    METRICS.map((metric) => [metric, total[metric][1] === 0 ? 100 : Math.round((total[metric][0] / total[metric][1]) * 1000) / 10]),
+    METRICS.map((metric) => [
+      metric,
+      total[metric][1] === 0 ? 100 : Math.round((total[metric][0] / total[metric][1]) * 1000) / 10,
+    ]),
   );
 }
 
 /** One row per area (the whole project first): what is measured, the floor, and whether it clears it. */
 export function buildRows(summary, thresholds, root) {
-  const rows = [{ name: 'everything', measured: summary.total ? Object.fromEntries(METRICS.map((m) => [m, summary.total[m].pct])) : null, floor: thresholds.global }];
+  const rows = [
+    {
+      name: 'everything',
+      measured: summary.total
+        ? Object.fromEntries(METRICS.map((m) => [m, summary.total[m].pct]))
+        : null,
+      floor: thresholds.global,
+    },
+  ];
   for (const [glob, floor] of Object.entries(thresholds.areas)) {
     const pattern = toPattern(glob);
-    rows.push({ name: glob.replace(/\/\*\*$/, ''), measured: measure(summary, root, (file) => pattern.test(file)), floor });
+    rows.push({
+      name: glob.replace(/\/\*\*$/, ''),
+      measured: measure(summary, root, (file) => pattern.test(file)),
+      floor,
+    });
   }
   return rows.map((row) => ({
     ...row,
     below: METRICS.filter((metric) => row.measured && row.measured[metric] < row.floor[metric]),
-    room: METRICS.filter((metric) => row.measured && row.measured[metric] - row.floor[metric] >= ROOM),
+    room: METRICS.filter(
+      (metric) => row.measured && row.measured[metric] - row.floor[metric] >= ROOM,
+    ),
   }));
 }
 
@@ -55,18 +79,21 @@ export function toMarkdown(rows) {
     '',
     '| area | statements | branches | functions | lines |',
     '|---|---|---|---|---|',
-    ...rows.map((row) => `| ${row.name} | ${METRICS.map((metric) => cell(row, metric)).join(' | ')} |`),
+    ...rows.map(
+      (row) => `| ${row.name} | ${METRICS.map((metric) => cell(row, metric)).join(' | ')} |`,
+    ),
     '',
     '❌ below its floor. ⬆️ the floor is at least 2.5 points under the measure: raise it in `coverage-thresholds.json`.',
     '',
   ].join('\n');
 }
 
-if (import.meta.url === `file://${process.argv[1]?.replaceAll('\\', '/')}` || process.argv[1]?.endsWith('coverage-report.mjs')) {
+if (process.argv[1]?.endsWith('coverage-report.mjs')) {
   const root = process.cwd();
   const summary = JSON.parse(readFileSync(resolve(root, 'coverage/coverage-summary.json'), 'utf8'));
   const thresholds = JSON.parse(readFileSync(resolve(root, 'coverage-thresholds.json'), 'utf8'));
   const rows = buildRows(summary, thresholds, root);
   process.stdout.write(toMarkdown(rows));
-  if (process.argv.includes('--check') && rows.some((row) => row.below.length > 0)) process.exitCode = 1;
+  if (process.argv.includes('--check') && rows.some((row) => row.below.length > 0))
+    process.exitCode = 1;
 }

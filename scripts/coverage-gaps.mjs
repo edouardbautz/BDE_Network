@@ -14,8 +14,14 @@ const asJson = flags.includes('--json');
 
 /** The areas whose failure is the most expensive, first match wins. */
 export const RISKS = [
-  ['critical', /^src\/(lib\/(auth|permissions|roles|settings|setup)|proxy\.ts|app\/api|config)\b|actions\.ts$|^docker\//],
-  ['high', /^src\/lib\/(events|notifications|members|branding|updates|public-address|audit-log|health)/],
+  [
+    'critical',
+    /^src\/(lib\/(auth|permissions|roles|settings|setup)|proxy\.ts|app\/api|config)\b|actions\.ts$|^docker\//,
+  ],
+  [
+    'high',
+    /^src\/lib\/(events|notifications|members|branding|updates|public-address|audit-log|health)/,
+  ],
   ['medium', /^src\/(app|components)\//],
 ];
 export const riskOf = (file) => RISKS.find(([, pattern]) => pattern.test(file))?.[0] ?? 'low';
@@ -58,8 +64,8 @@ const gaps = files
   .filter((item) => item.uncovered >= minUncovered || item.uncoveredBranches >= minUncovered * 2)
   .sort(
     (a, b) =>
-      ['critical', 'high', 'medium', 'low'].indexOf(a.risk) - ['critical', 'high', 'medium', 'low'].indexOf(b.risk) ||
-      b.uncovered - a.uncovered,
+      ['critical', 'high', 'medium', 'low'].indexOf(a.risk) -
+        ['critical', 'high', 'medium', 'low'].indexOf(b.risk) || b.uncovered - a.uncovered,
   );
 
 if (asJson) {
@@ -67,7 +73,9 @@ if (asJson) {
 } else {
   const total = files.reduce((sum, item) => sum + item.statements, 0);
   const missed = files.reduce((sum, item) => sum + item.uncovered, 0);
-  console.log(`statements: ${percent(total - missed, total)}% (${missed} uncovered of ${total}), files with a gap: ${gaps.length}\n`);
+  console.log(
+    `statements: ${percent(total - missed, total)}% (${missed} uncovered of ${total}), files with a gap: ${gaps.length}\n`,
+  );
   let current = '';
   for (const item of gaps) {
     if (item.risk !== current) {
