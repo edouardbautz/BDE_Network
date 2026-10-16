@@ -68,6 +68,8 @@ export function patternText(
   const { monthly } = resolveRule({ ...rule, interval: 1 }, first);
   const yearly = rule.freq === 'YEARLY';
   const month = yearly ? monthName(first.month, locale) : '';
+  // French says "d'octobre", "de mars": the message picks, the other languages ignore it
+  const elide = /^[aeiouyhàâéèêëîïôùû]/i.test(month) ? 'yes' : 'no';
   const suffix = yearly ? 'OfMonth' : '';
 
   if (monthly.kind === 'day') {
@@ -75,12 +77,12 @@ export function patternText(
       ? t('onDayOfMonth', { day: monthly.day, month })
       : t('onDay', { day: monthly.day });
   }
-  if (monthly.kind === 'lastDay') return t(`onLastDay${suffix}`, { month });
+  if (monthly.kind === 'lastDay') return t(`onLastDay${suffix}`, { month, elide });
 
   const weekday = weekdayName(monthly.weekday, locale);
   return monthly.nth === -1
-    ? t(`onLast${suffix}`, { weekday, month })
-    : t(`onNth${suffix}`, { nth: String(monthly.nth), weekday, month });
+    ? t(`onLast${suffix}`, { weekday, month, elide })
+    : t(`onNth${suffix}`, { nth: String(monthly.nth), weekday, month, elide });
 }
 
 /** The rule, in a sentence, with how it ends. */

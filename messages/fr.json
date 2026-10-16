@@ -643,9 +643,9 @@
         "onNth": "le {nth, select, 1 {1er} 2 {2ᵉ} 3 {3ᵉ} 4 {4ᵉ} other {{nth}}} {weekday}",
         "onLast": "le dernier {weekday}",
         "onDayOfMonth": "le {day, selectordinal, one {#er} other {#}} {month}",
-        "onLastDayOfMonth": "le dernier jour du mois de {month}",
-        "onNthOfMonth": "le {nth, select, 1 {1er} 2 {2ᵉ} 3 {3ᵉ} 4 {4ᵉ} other {{nth}}} {weekday} du mois de {month}",
-        "onLastOfMonth": "le dernier {weekday} du mois de {month}",
+        "onLastDayOfMonth": "le dernier jour {elide, select, yes {d’} other {de }}{month}",
+        "onNthOfMonth": "le {nth, select, 1 {1er} 2 {2ᵉ} 3 {3ᵉ} 4 {4ᵉ} other {{nth}}} {weekday} {elide, select, yes {d’} other {de }}{month}",
+        "onLastOfMonth": "le dernier {weekday} {elide, select, yes {d’} other {de }}{month}",
         "until": ", jusqu'au {date}",
         "times": ", {count} fois"
       },
