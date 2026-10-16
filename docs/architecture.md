@@ -1110,11 +1110,20 @@ touching layout or adding UI. The short version:
 - **Every change goes through a branch and a pull request — never a push to `main`.** `main` is protected
   (the five checks `ci (ubuntu-latest)`, `ci (windows-latest)`, `docker image`, `migrations` and `docs` are required,
   no force push, no deletion, and it applies to administrators too). The routine: `git switch -c <type>/<topic>`,
-  commit, `git push -u origin <branch>`, `gh pr create`, wait for the checks (`gh pr checks --watch`),
-  then merge it once they are green (`gh pr merge --squash --delete-branch`: the author merges their own
+  commit, `git push -u origin <branch>`, `gh pr create`, wait for the checks (`gh pr checks --watch`, **without**
+  `--required`), then merge it once they are green (`gh pr merge --squash --delete-branch`: the author merges their own
   pull request) and bring the local `main` up to date (`git switch main && git pull`). Never `--force`,
-  never `--admin`, never bypass a red check: fix it on the branch. Dependabot proposes minor and patch updates only (`ignore` in `.github/dependabot.yml`); a major
+  never `--admin`, never bypass a red check: fix it on the branch. **Wait for every job the pull request started, required or not**
+  (the stress workflow `e2e-stress.yml` runs on a pull request that touches it, and its failures are real ones: a flaky
+  browser script is found there, see "Browser tests that fail now and then"). "The required checks passed" is not "the pull
+  request is green": `gh pr checks` must show nothing pending and nothing failed. Dependabot proposes minor and patch updates only (`ignore` in `.github/dependabot.yml`); a major
   version is a pull request of its own.
+- **Mutation checks never touch the working tree.** Breaking a rule on purpose to see a test fail (what the "mutation-checked"
+  tests of this document mean) runs in a **dedicated `git worktree`** (or a copy of the project) that is thrown away
+  afterwards, never in the folder being worked in, and **never restores a file with `git checkout` or `git restore`**:
+  those throw away every uncommitted change of the file, not only the mutation (it happened: a script that put a file back
+  after each mutation also put back two fixes that were not committed yet). In the worktree the mutation is written,
+  the tests run, and the worktree is removed or reset as a whole.
 - **No `any`** (`@typescript-eslint/no-explicit-any` is an error, not a warning).
 - Cross-platform: no `&&`/`||`/`$VAR`/`rm -rf`/`cp` in npm scripts — use `cross-env`, `rimraf`,
   or plain Node. LF line endings are enforced by `.gitattributes`. The exception is the server-side
