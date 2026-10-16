@@ -18,6 +18,9 @@ import { Report, redirectOf, send, type Response2 } from './core';
  * the text ended early.
  */
 
+/** The platform answers on its public address (localhost); the suites reach it by its other name. */
+const PLATFORM_HOSTS = new Set(['localhost', '127.0.0.1']);
+
 const tag = `sec${randomBytes(3).toString('hex')}`;
 
 /** Text that a page must show as text. Each has the part a browser would act on. */
@@ -60,6 +63,21 @@ export const SQL_PAYLOADS: readonly string[] = [
   "'||(SELECT pg_sleep(5))||'",
 ];
 
+const ADDRESS_ATTRIBUTES = new Set([
+  'href',
+  'src',
+  'action',
+  'formaction',
+  'data',
+  'srcdoc',
+  'poster',
+  'xlink:href',
+  'background',
+  'ping',
+  'cite',
+  'srcset',
+]);
+
 /** What a page that shows hostile text must not contain, found by building the page like a browser. */
 export function violations(html: string): string[] {
   const found: string[] = [];
@@ -69,6 +87,9 @@ export function violations(html: string): string[] {
   for (const element of document.querySelectorAll('*')) {
     for (const attribute of element.getAttributeNames()) {
       if (/^on/i.test(attribute)) found.push(`<${element.localName} ${attribute}>`);
+      // An attribute that is an address: where the browser goes or what it loads. (A label or a title only says the
+      // text, as text.)
+      if (!ADDRESS_ATTRIBUTES.has(attribute.toLowerCase())) continue;
       const value = element.getAttribute(attribute) ?? '';
       if (/^\s*javascript:/i.test(value))
         found.push(`<${element.localName} ${attribute}="javascript:…">`);
@@ -94,9 +115,9 @@ export function violations(html: string): string[] {
   return found;
 }
 
-/** The payloads whose dangerous part (an angle bracket) is in the body as it was typed. */
+/** The payloads with a tag in them that are in the body as they were typed (a comment, `<!-- -->`, is React's own). */
 export function unescaped(body: string, payloads: readonly string[]): string[] {
-  return payloads.filter((payload) => payload.includes('<') && body.includes(payload));
+  return payloads.filter((payload) => /<[a-z/?]/i.test(payload) && body.includes(payload));
 }
 
 const verdict = (
@@ -409,8 +430,9 @@ export async function checkInjection(platform: Platform, report: Report): Promis
             'injection',
             `callbackUrl=${target} on ${path.split('?')[0]} stays on the platform`,
             response.status < 500 &&
-              (goes === null || goes === new URL(platform.base).host) &&
-              !response.body.includes(evil),
+              (goes === null ||
+                (PLATFORM_HOSTS.has(new URL(`http://${goes}`).hostname) && !goes.includes(evil))) &&
+              violations(response.body).length === 0,
             `${response.status} ${location ?? ''}`,
           );
         }
@@ -429,7 +451,7 @@ export async function checkInjection(platform: Platform, report: Report): Promis
           'injection',
           `the address ${path} does not redirect to another host`,
           response.status < 500 &&
-            (!location || new URL(location, platform.base).host === new URL(platform.base).host),
+            (!location || PLATFORM_HOSTS.has(new URL(location, platform.base).hostname)),
           `${response.status} ${location ?? ''}`,
         );
       }
