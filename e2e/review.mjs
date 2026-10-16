@@ -74,6 +74,7 @@ const WORDS = {
     withdraw: 'Retirer la proposition',
     remove: "Supprimer l'événement",
     refused: 'Refusé par',
+    notFound: 'Page introuvable',
   },
   en: {
     create: 'Create event',
@@ -88,6 +89,7 @@ const WORDS = {
     withdraw: 'Withdraw the proposal',
     remove: 'Delete event',
     refused: 'Refused by',
+    notFound: 'Page not found',
   },
 };
 
@@ -259,17 +261,20 @@ async function round(lang) {
     step('a proposer creates a proposal, and is told it waits for a validator');
 
     // ---- nobody else can see it ---------------------------------------------------------------------------------
-    const hidden = await carol.open(`/events/${id}`);
-    if (hidden.status() !== 404)
-      fail(`[${label}] a member got ${hidden.status()} on a proposal: expected 404`);
+    // (The response is streamed before the page knows: it answers 200 with its "not found" content.)
+    const missing = async (who, path, what) => {
+      await who.open(path);
+      const text = await who.text();
+      if (!text.includes(words.notFound) || text.includes(title)) {
+        fail(`[${label}] ${what}: expected the page not found, got ${text.slice(0, 120)}`);
+      }
+    };
+    await missing(carol, `/events/${id}`, 'a member opened a proposal');
     await carol.open('/events?view=list');
     if ((await carol.text()).includes(title))
       fail(`[${label}] a member sees a proposal in the list`);
-    const review = await carol.open('/events/review');
-    if (review.status() !== 404)
-      fail(`[${label}] a member reached the list to validate (${review.status()})`);
-    const proposerReview = await dave.open('/events/review');
-    if (proposerReview.status() !== 404) fail(`[${label}] a proposer reached the list to validate`);
+    await missing(carol, '/events/review', 'a member reached the list to validate');
+    await missing(dave, '/events/review', 'a proposer reached the list to validate');
     step(
       'a member sees neither the proposal nor the list to validate; the proposer does not reach it',
     );
