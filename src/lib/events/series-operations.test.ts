@@ -271,6 +271,53 @@ describe('updateFollowing ("this one and the following")', () => {
     expect(db.event(eventId)?.confirmationNotifiedAt).toEqual(claimed);
   });
 
+  describe('a series that ends after some dates', () => {
+    const NOV2_END = NOV2;
+    const counted = () =>
+      addSeries({ repeat: { freq: 'WEEKLY', interval: 1, count: 4 }, recurrenceUntil: OCT26 });
+
+    it('is cut with the form of the rest of the series: the dates from the cut on are what it describes', async () => {
+      counted();
+      // From the 3rd date, the form says what is left: 2 dates, ending where the series ends
+      const result = await run((t) =>
+        updateFollowing(t, 'evt', OCT19, {
+          values: { location: 'Pool' },
+          repeat: { rule: { freq: 'WEEKLY', interval: 1, count: 2 }, until: OCT26 },
+        }),
+      );
+
+      expect(result).toMatchObject({ split: true, ruleChanged: false, changed: ['location'] });
+      expect(db.event('evt')).toMatchObject({
+        repeat: { freq: 'WEEKLY', interval: 1, count: 2 },
+        recurrenceUntil: OCT12,
+      });
+      expect(db.event(result.eventId)).toMatchObject({
+        repeat: { freq: 'WEEKLY', interval: 1, count: 2 },
+        recurrenceUntil: OCT26,
+      });
+    });
+
+    it('can change the number of dates that are left, and only those', async () => {
+      counted();
+      const result = await run((t) =>
+        updateFollowing(t, 'evt', OCT19, {
+          values: {},
+          repeat: { rule: { freq: 'WEEKLY', interval: 1, count: 3 }, until: NOV2_END },
+        }),
+      );
+
+      expect(result).toMatchObject({ split: true, ruleChanged: true });
+      expect(db.event('evt')).toMatchObject({
+        repeat: { freq: 'WEEKLY', interval: 1, count: 2 },
+        recurrenceUntil: OCT12,
+      });
+      expect(db.event(result.eventId)).toMatchObject({
+        repeat: { freq: 'WEEKLY', interval: 1, count: 3 },
+        recurrenceUntil: NOV2_END,
+      });
+    });
+  });
+
   it('can change only the end of the following dates: that is a change too, and the rule stays', async () => {
     addSeries();
     const result = await run((t) =>

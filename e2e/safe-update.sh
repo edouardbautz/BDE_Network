@@ -95,7 +95,7 @@ ok "migrations pending: a copy was made first ($COPIES), they were applied, the 
 docker run --rm -v bdeupd-backups:/backups --entrypoint sh "$IMAGE" -c "gzip -dc /backups/$COPIES" >/tmp/bdeupd-copy.sql
 grep -q "PostgreSQL database dump complete" /tmp/bdeupd-copy.sql || fail "the copy is incomplete"
 grep -q 'Roleone' /tmp/bdeupd-copy.sql || fail "the copy does not hold the data"
-! grep -q 'refusalComment' /tmp/bdeupd-copy.sql || fail "the copy already holds what the update adds"
+! grep -q '"repeat" jsonb' /tmp/bdeupd-copy.sql || fail "the copy already holds what the update adds"
 rm -f /tmp/bdeupd-copy.sql
 ok "the copy is complete, holds the data, and none of what the update added"
 

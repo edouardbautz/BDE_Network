@@ -261,12 +261,19 @@ export async function updateFollowing(
   const zone = timeZone();
   const { event, starts, index } = await locate(tx, eventId, occurrenceStart);
   const { current: before, wanted, keys } = compare(event, occurrenceStart, change);
-  // The rule as the form asks it against the one stored, both read from the first date the form gives (what a rule
-  // leaves out follows it). A rule that gives the same dates is not a change, however it is written.
+  // The form describes the dates from this one on (a series that ends after N dates says how many are left), so it is
+  // compared with what the series gives from here: its own rule on the first date, the second part of a cut after it.
+  // Both are read from the first date the form gives (what a rule leaves out follows it). A rule that gives the same
+  // dates is not a change, however it is written.
+  const stored = readRepeatRule(event.repeat);
+  const rest =
+    stored && index > 0
+      ? cutRule(stored, toLocalDateTime(event.startsAt, zone), index).tail
+      : stored;
   const wantedFirst = toLocalDateTime(wanted.start, zone);
   const ruleChanged =
     !!change.repeat &&
-    (!sameRepeat(change.repeat.rule, readRepeatRule(event.repeat), wantedFirst) ||
+    (!sameRepeat(change.repeat.rule, rest, wantedFirst) ||
       sameDay(change.repeat.until, event.recurrenceUntil, zone) === false);
   if (keys.length === 0 && !ruleChanged) {
     // Nothing to change: not worth cutting the series.

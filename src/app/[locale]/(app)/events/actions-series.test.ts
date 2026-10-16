@@ -403,6 +403,39 @@ describe('editing a date and the following', () => {
     ]);
   });
 
+  it('cuts a series that ends after some dates with the number that is left, and changes no rule', async () => {
+    db.reset();
+    addEvent({
+      repeat: { freq: 'WEEKLY', interval: 1, count: 4 },
+      recurrenceUntil: OCT26,
+    });
+    // the edit form of the 3rd date says what is left (2 dates), as the page prefills it
+    const data = withScope(
+      formAt('2026-10-19', {
+        location: 'Pool',
+        repeatEnd: 'count',
+        repeatCount: '2',
+        recurrenceUntil: '',
+      }),
+      'following',
+      OCT19,
+    );
+    await redirectOf(updateEvent('evt', {}, data));
+
+    const [head, tail] = db.table('event');
+    expect(head).toMatchObject({
+      repeat: { freq: 'WEEKLY', interval: 1, count: 2 },
+      recurrenceUntil: OCT12,
+    });
+    expect(tail).toMatchObject({
+      location: 'Pool',
+      repeat: { freq: 'WEEKLY', interval: 1, count: 2 },
+      recurrenceUntil: OCT26,
+    });
+    // the rule did not change: only the place did
+    expect(audit()[0]).toMatchObject({ changed: ['location'] });
+  });
+
   it('on the first date changes the whole series: no cut, and the audit log says so', async () => {
     const data = withScope(formAt('2026-10-05', { location: 'Pool' }), 'following', OCT5);
     await redirectOf(updateEvent('evt', {}, data));

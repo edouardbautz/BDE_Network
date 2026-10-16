@@ -9,7 +9,8 @@ import { formatLongDate } from '@/lib/events/format';
 import { getVisibleEvent, listAssignableMembers } from '@/lib/events/queries';
 import { canEditEvent, draftVisibility, reviewActorOf, statusChoices } from '@/lib/events/review';
 import { resolveOccurrences, scopeFacts } from '@/lib/events/series';
-import { isRepeating, readRepeatRule } from '@/lib/events/repeat';
+import { cutRule, isRepeating, readRepeatRule } from '@/lib/events/repeat';
+import { allOccurrences } from '@/lib/events/recurrence';
 import { rawRepeatOf } from '@/lib/events/repeat-input';
 import { formatLocalDateInput, formatLocalInput, toLocalDateTime } from '@/lib/events/time';
 import { updateEvent } from '../../actions';
@@ -66,6 +67,15 @@ export default async function EditEventPage({
   // A proposer edits the event as a whole, never one date of a series: no choice of scope to ask.
   const askScope = isSeries && actor.canValidate;
   const facts = scopeFacts(dates, date.originalStart);
+  // What the form says about the repetition is what the series does from this date on ("this one and the following"):
+  // from a later date a series that ends after N dates says how many are left, not N again.
+  const rule = readRepeatRule(event.repeat);
+  const index = allOccurrences(event, timeZone).findIndex(
+    (occurrence) => occurrence.start.getTime() === date.originalStart.getTime(),
+  );
+  const first = toLocalDateTime(date.originalStart, timeZone);
+  const rest =
+    rule && index > 0 ? cutRule(rule, toLocalDateTime(event.startsAt, timeZone), index).tail : rule;
   const back = isSeries
     ? { pathname: `/events/${event.id}`, query: { occ: date.originalStart.getTime() } }
     : `/events/${event.id}`;
@@ -90,10 +100,9 @@ export default async function EditEventPage({
           categoryKey: date.categoryKey,
           startsAt: formatLocalInput(date.start, timeZone),
           endsAt: formatLocalInput(date.end, timeZone),
-          // What it repeats on is read from the first date of the row, which its rule leaves out parts from.
           ...rawRepeatOf(
-            readRepeatRule(event.repeat),
-            toLocalDateTime(event.startsAt, timeZone),
+            rest,
+            first,
             event.recurrenceUntil ? formatLocalDateInput(event.recurrenceUntil, timeZone) : '',
           ),
           status: date.status,

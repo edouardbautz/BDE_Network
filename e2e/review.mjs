@@ -116,10 +116,10 @@ const setUp = () => {
 /** A proposal the proposer made, without going through the form. */
 const insertProposal = (id, title) =>
   sql(`
-    INSERT INTO "Event" (id, title, description, location, "categoryKey", status, "startsAt", "endsAt", recurrence,
+    INSERT INTO "Event" (id, title, description, location, "categoryKey", status, "startsAt", "endsAt",
       "schoolYear", "authorLogin", "proposedAt", "updatedAt")
     VALUES (${quote(id)}, ${quote(title)}, 'Proposed in a test', 'Room', 'soiree', 'PROPOSED', now() + interval '12 days',
-      now() + interval '12 days 2 hours', 'NONE', '2026-2027', ${quote(PROPOSER)}, now(), now())
+      now() + interval '12 days 2 hours', '2026-2027', ${quote(PROPOSER)}, now(), now())
   `);
 const eventRow = (id) =>
   sql(
