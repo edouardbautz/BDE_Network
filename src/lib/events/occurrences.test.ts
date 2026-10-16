@@ -51,6 +51,68 @@ describe('expandEvents — draft visibility', () => {
   });
 });
 
+describe('expandEvents — proposals and the events of their own author', () => {
+  const published = record({ id: 'a', title: 'Publié', authorLogin: 'carol' });
+  const proposal = record({
+    id: 'b',
+    title: 'Proposition',
+    status: 'PROPOSED',
+    authorLogin: 'dave',
+  });
+  const draft = record({ id: 'c', title: 'Brouillon', status: 'DRAFT', authorLogin: 'dave' });
+  const others = record({ id: 'd', title: 'Autre', status: 'PROPOSED', authorLogin: 'erin' });
+  const all = [published, proposal, draft, others];
+  const titles = (visibility: { includeDrafts: boolean; ownLogin?: string }) =>
+    expandEvents(all, { timeZone: PARIS, range: RANGE, filters: {}, ...visibility })
+      .map((o) => o.title)
+      .sort();
+
+  it('hides a proposal like a draft from somebody who can see neither', () => {
+    expect(titles({ includeDrafts: false })).toEqual(['Publié']);
+  });
+
+  it('shows a validator every draft and every proposal', () => {
+    expect(titles({ includeDrafts: true })).toEqual([
+      'Autre',
+      'Brouillon',
+      'Proposition',
+      'Publié',
+    ]);
+  });
+
+  it('shows somebody who only proposes the published events and their own, whatever their status', () => {
+    expect(titles({ includeDrafts: false, ownLogin: 'dave' })).toEqual([
+      'Brouillon',
+      'Proposition',
+      'Publié',
+    ]);
+  });
+
+  it('shows nothing unpublished to somebody who has written nothing', () => {
+    expect(titles({ includeDrafts: false, ownLogin: 'nobody' })).toEqual(['Publié']);
+  });
+
+  it('does not take an event without an author for the event of somebody without a login', () => {
+    const orphan = record({ id: 'e', title: 'Sans auteur', status: 'DRAFT' });
+    const result = expandEvents([orphan], {
+      timeZone: PARIS,
+      range: RANGE,
+      includeDrafts: false,
+      ownLogin: '',
+    });
+    expect(result).toEqual([]);
+  });
+
+  it('carries the status of a date, so a page can say a date is a proposal', () => {
+    const [view] = expandEvents([proposal], {
+      timeZone: PARIS,
+      range: RANGE,
+      includeDrafts: true,
+    });
+    expect(view?.status).toBe('PROPOSED');
+  });
+});
+
 describe('expandEvents — series and cancellations', () => {
   const series = record({
     recurrence: 'WEEKLY',
