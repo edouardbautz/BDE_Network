@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   MAX_OCCURRENCES,
   WEEKDAYS,
@@ -16,6 +16,9 @@ import {
   type Weekday,
 } from './repeat';
 import { addDays, formatLocalInput, fromLocalDateTime, toLocalDateTime } from './time';
+
+// A few tests play thousands of random series: a slow runner (Windows in CI) needs more than 5 seconds.
+vi.setConfig({ testTimeout: 60_000 });
 
 const PARIS = 'Europe/Paris';
 

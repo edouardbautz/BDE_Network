@@ -89,6 +89,13 @@ const cleanUp = () =>
   sql(
     `DELETE FROM "Event" WHERE title LIKE ${quote(`${PREFIX}%`)} OR "seriesId" IN (SELECT id FROM "Event" WHERE title LIKE ${quote(`${PREFIX}%`)})`,
   );
+/** PostgreSQL's jsonb does not keep the order of the keys: rules are compared by their content. */
+const canonical = (value) =>
+  JSON.stringify(value, (_key, item) =>
+    item && typeof item === 'object' && !Array.isArray(item)
+      ? Object.fromEntries(Object.entries(item).sort(([a], [b]) => a.localeCompare(b)))
+      : item,
+  );
 const repeatOf = (id) => JSON.parse(sql(`SELECT repeat FROM "Event" WHERE id = ${quote(id)}`));
 const endOf = (id) =>
   sql(
@@ -258,7 +265,7 @@ async function run(lang) {
     const weeklyId = await send();
     const weekly = await dates();
     if (weekly.length !== 4) fail(`[${lang}] the series lists ${weekly.length} dates, expected 4`);
-    if (JSON.stringify(repeatOf(weeklyId)) !== JSON.stringify({ freq: 'WEEKLY', interval: 1 })) {
+    if (canonical(repeatOf(weeklyId)) !== canonical({ freq: 'WEEKLY', interval: 1 })) {
       fail(`[${lang}] the rule stored is ${JSON.stringify(repeatOf(weeklyId))}`);
     }
     if (
@@ -297,8 +304,8 @@ async function run(lang) {
       fail(`[${lang}] the series lists ${customDates.length} dates, expected 10`);
     const customRule = repeatOf(customId);
     if (
-      JSON.stringify(customRule) !==
-      JSON.stringify({ freq: 'WEEKLY', interval: 2, weekdays: ['MO', 'WE'], count: 10 })
+      canonical(customRule) !==
+      canonical({ freq: 'WEEKLY', interval: 2, weekdays: ['MO', 'WE'], count: 10 })
     ) {
       fail(`[${lang}] the rule stored is ${JSON.stringify(customRule)}`);
     }
