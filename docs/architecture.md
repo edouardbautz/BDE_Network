@@ -1154,6 +1154,40 @@ start from the same three things, so that what one finds the others can replay.
   in the `docker image` job (a HIGH or CRITICAL one that has a fix fails) and every night in `qa.yml`. Every scanner runs from a
   pinned Docker image, so a new version never changes a result by itself (Dependabot proposes it). What is accepted is in
   `.trivyignore`, with the same reasons as `scripts/audit-allowlist.json`.
+- **Attacks** (`qa/security/`, the `Attacks` step and the `zap` job of `qa.yml`; `npx tsx qa/security/run.ts [--only suite,…]`
+  on a platform made by `qa/platform.sh`). What somebody who is not a member, or is and wants more, can try against the real
+  image; each suite says, check by check, what it saw (`Report`: one line per failure, and a table by suite in the job
+  summary). `headers`: every kind of answer against what a hardened interface sends (the policy is **written down in the
+  suite**, not read from `security-headers.ts`: when the two disagree, one is wrong), what a cache may keep, no trace of
+  the code in an error, HSTS only behind HTTPS, no CORS, the cookies of the sign-in. `sessions`: a cookie nobody issued
+  (wrong secret, expired, cut, another salt, a login that does not exist, two with the same name, 8 kB of garbage) is a
+  visitor and nothing more, with exactly the answer of the visitor with no cookie, on a page and on an API route. `csrf`: an
+  action called from another site, from a sandbox (`null`), or through a plain form of another site, changes nothing,
+  and the same call from the platform's own origin works (so that a refusal means something). `feeds`: 300 random links
+  give one and the same bare 404; near misses and injections in the link too; a new link revokes the old one at once;
+  neither kind of link opens the other's door; a draft never leaves through a feed that must not hold one; text typed
+  into an event cannot add a line, a property or an event to the calendar file (every line must be a property the platform
+  writes). `uploads`: what the logo accepts and refuses on its bytes (a script as SVG, a page named `.png`, a bomb that
+  claims 100000 × 100000 pixels, a file just over 2 MB, a body of 4 MB), who may change it, and what the public route sends
+  back for a polyglot (the type of the image, `nosniff`, a policy that forbids everything, no path built from the
+  request). `injection`: one corpus of hostile text, stored in every field a page shows (events, roles, names, the audit
+  log), put in the address of every page that reads one, and, for the database, in every address; the answers are read
+  **as a browser would build them** (jsdom): no handler, no `javascript:` address, no frame or form that the text made,
+  no tag as it was typed; nothing changes in the database; a forged `Host` or `X-Forwarded-Host` moves no link and no
+  redirect; `callbackUrl` and addresses like `//evil.example` never leave the platform. `limits`: 300 requests at a time of
+  each wrong kind, bodies of 1 and 20 MB, headers far too large: no server error, and the platform answers a member
+  afterwards; **there is no rate limit** outside the installer (the reverse proxy of the BDE is the place, see
+  `docs/en/deployment.md`) and the suite writes down what it accepted. `logs`, last: none of the secrets met during the
+  run (the signing secret, the 42 secret, the database password, every calendar link and cookie) is in the logs, and no
+  error is there that an attack should not have caused (the framework's own refusals are listed in `REFUSALS`). The
+  detectors have unit tests (`detectors.test.ts`: what each must catch and what it must leave alone): a check that cannot
+  fail proves nothing. **ZAP** (`zap.sh`, `zap-gate.mjs`, a pinned `ghcr.io/zaproxy/zaproxy`): every night the baseline then
+  the active scan, on a pull request with the label the baseline only, signed in as the owner by a cookie the harness forges;
+  an alert of medium level or above fails unless it is in `zap-accepted.json` **with its reason** (the unsafe-inline policy,
+  documented above, and the forms of server actions, which the `csrf` suite plays), and an accepted entry that no longer
+  shows up is reported. The first run of these suites found five defects, each fixed in its own pull request (a malformed
+  address, the export's cache header, the logo's policy replaced by the pages', an unreadable `callbackUrl`, a log that
+  shouted): see the CHANGELOG.
 - **Coverage** (`npm run test:coverage`, `coverage-thresholds.json`, `scripts/coverage-report.mjs`,
   `scripts/coverage-gaps.mjs`, `qa/coverage-plan.md`). The ubuntu job of `ci.yml` runs the unit tests through V8 coverage
   and **fails below a floor**: one for the whole project and one for each area that decides who may do what or what is

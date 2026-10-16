@@ -8,6 +8,14 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **Attacks on the real image, every night**: headers and policy of every kind of answer, forged and expired cookies, actions
+  called from another site, calendar links (300 guesses, near misses, injections, revocation), trapped logo uploads (a script as
+  SVG, a bomb that claims 100000 × 100000 pixels, a polyglot), a corpus of hostile text in every field and every address (read
+  as a browser would build the page), forged `Host` headers and open redirects, floods and oversized bodies, and the logs
+  afterwards (no secret, no error an attack should not cause); then OWASP ZAP signed in as the owner, baseline and active scan.
+  What it found has its own entries under _Fixed_ and _Changed_; the platform has no rate limit of its own outside the installer
+  (the reverse proxy is the place), which the suite writes down. Run it with `sh qa/platform.sh up` then
+  `npx tsx qa/security/run.ts`.
 - **Static security checks on every pull request**: the rules of the project as code (a setting read from the environment,
   an unsafe call, a link that does not go through the i18n link, a cookie that is not HttpOnly, a secret in a log…:
   Semgrep), the whole history read for secrets (gitleaks), known vulnerabilities of the lockfile and the Dockerfile
