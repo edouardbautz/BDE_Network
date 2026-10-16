@@ -27,7 +27,8 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "seed:demo": "tsx prisma/seed.ts",
-    "qa": "tsx qa/cli.ts"
+    "qa": "tsx qa/cli.ts",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@auth/core": "0.41.3",
@@ -63,6 +64,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "@vitest/coverage-v8": "^4.1.11",
     "cross-env": "^10.1.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "16.4.1",

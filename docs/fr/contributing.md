@@ -179,7 +179,9 @@ npm run test
 npm run build
 ```
 
-Si vous touchez à la documentation, lancez aussi `npm run lint:md` et `npm run docs:check`. La CI lance tout cela
+Si vous touchez à la documentation, lancez aussi `npm run lint:md` et `npm run docs:check`. `npm run test:coverage` lance les
+tests avec leur couverture : la CI échoue sous les seuils de `coverage-thresholds.json`, donc une nouvelle fonctionnalité
+arrive avec ses tests. La CI lance tout cela
 (`.github/workflows/ci.yml`), sur Ubuntu et sur Windows.
 
 ## La campagne qualité

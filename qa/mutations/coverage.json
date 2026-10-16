@@ -1,0 +1,191 @@
+[
+  [
+    "jpeg: a table is not a frame",
+    "src/lib/branding/image.ts",
+    "![0xc4, 0xc8, 0xcc].includes(marker)",
+    "true",
+    ["src/lib/branding/image.test.ts"]
+  ],
+  [
+    "jpeg: padding bytes",
+    "src/lib/branding/image.ts",
+    "if (marker === 0xff) {\n      i += 1; // padding\n      continue;\n    }",
+    "",
+    ["src/lib/branding/image.test.ts"]
+  ],
+  [
+    "webp: the lossy start code",
+    "src/lib/branding/image.ts",
+    "if (b[23] !== 0x9d || b[24] !== 0x01 || b[25] !== 0x2a) return null;",
+    "",
+    ["src/lib/branding/image.test.ts"]
+  ],
+  [
+    "webp: the lossless signature",
+    "src/lib/branding/image.ts",
+    "if (b[20] !== 0x2f) return null;",
+    "",
+    ["src/lib/branding/image.test.ts"]
+  ],
+  [
+    "png: the header chunk",
+    "src/lib/branding/image.ts",
+    "ascii(b, 12, 4) !== 'IHDR'",
+    "false",
+    ["src/lib/branding/image.test.ts"]
+  ],
+  [
+    "a size of zero",
+    "src/lib/branding/image.ts",
+    "if (width < 1 || height < 1) return null;",
+    "",
+    ["src/lib/branding/image.test.ts"]
+  ],
+  [
+    "members: an id is a string",
+    "src/app/[locale]/(app)/members/actions.ts",
+    "typeof value === 'string' && value.length > 0",
+    "value.length > 0",
+    ["src/app/[locale]/(app)/members/actions-crafted.test.ts"]
+  ],
+  [
+    "members: an id is not empty",
+    "src/app/[locale]/(app)/members/actions.ts",
+    "value.length > 0 && value.length <= 64",
+    "value.length <= 64",
+    ["src/app/[locale]/(app)/members/actions-crafted.test.ts"]
+  ],
+  [
+    "members: an id is short",
+    "src/app/[locale]/(app)/members/actions.ts",
+    "value.length <= 64",
+    "value.length <= 6400",
+    ["src/app/[locale]/(app)/members/actions-crafted.test.ts"]
+  ],
+  [
+    "channel: slack",
+    "src/lib/notifications/index.ts",
+    "case 'slack':\n      return new SlackAdapter();",
+    "case 'slack':\n      return new DiscordAdapter();",
+    ["src/lib/notifications/channels.test.ts"]
+  ],
+  [
+    "channel: unknown is nothing",
+    "src/lib/notifications/index.ts",
+    "default:\n      return new NoneAdapter();",
+    "default:\n      return new EmailAdapter();",
+    ["src/lib/notifications/channels.test.ts"]
+  ],
+  [
+    "many: one connection",
+    "src/lib/notifications/index.ts",
+    "if (adapter.sendMany) {",
+    "if (false) {",
+    ["src/lib/notifications/channels.test.ts"]
+  ],
+  [
+    "scheduler: no overlap",
+    "src/lib/events/scheduler.ts",
+    "if (running) return;",
+    "",
+    ["src/lib/events/scheduler.test.ts"]
+  ],
+  [
+    "scheduler: a failing tick is logged",
+    "src/lib/events/scheduler.ts",
+    "console.error('[events] reminder tick failed', error);",
+    "",
+    ["src/lib/events/scheduler.test.ts"]
+  ],
+  [
+    "scheduler: a failing tick frees the next",
+    "src/lib/events/scheduler.ts",
+    "    } finally {\n      running = false;\n    }",
+    "    } finally {\n    }",
+    ["src/lib/events/scheduler.test.ts"]
+  ],
+  [
+    "scheduler: a bad configuration is not scheduled",
+    "src/lib/events/scheduler.ts",
+    "    console.error('[events] reminder scheduler not started: cannot read the configuration', error);\n    return;",
+    "    console.error('[events] reminder scheduler not started: cannot read the configuration', error);",
+    ["src/lib/events/scheduler.test.ts"]
+  ],
+  [
+    "install: the loser changes nothing",
+    "src/lib/settings/store.ts",
+    "if (isUniqueViolation(error)) return 'already-installed';",
+    "",
+    ["src/lib/settings/store.test.ts"]
+  ],
+  [
+    "install: no sealed text without secret",
+    "src/lib/settings/store.ts",
+    "secrets: Object.keys(secrets).length > 0 ? seal(secrets, settingsKey()) : null,\n        source: 'installer',",
+    "secrets: seal(secrets, settingsKey()),\n        source: 'installer',",
+    ["src/lib/settings/store.test.ts"]
+  ],
+  [
+    "install: runs on it at once",
+    "src/lib/settings/store.ts",
+    "  setRuntimeSettings({\n    config: input.config,\n    values: managed({ ...environment, ...secrets }),\n    source: 'database',\n  });\n  return 'installed';",
+    "  return 'installed';",
+    ["src/lib/settings/store.test.ts"]
+  ],
+  [
+    "proposals: only proposed",
+    "src/lib/events/queries.ts",
+    "where: { status: 'PROPOSED' },\n    include",
+    "where: { status: 'DRAFT' },\n    include",
+    ["src/lib/events/queries.test.ts"]
+  ],
+  [
+    "proposals: oldest first",
+    "src/lib/events/queries.ts",
+    "orderBy: [{ proposedAt: 'asc' }, { startsAt: 'asc' }]",
+    "orderBy: [{ proposedAt: 'desc' }, { startsAt: 'asc' }]",
+    ["src/lib/events/queries.test.ts"]
+  ],
+  [
+    "the count of proposals",
+    "src/lib/events/queries.ts",
+    "prisma.event.count({ where: { status: 'PROPOSED' } })",
+    "prisma.event.count({ where: {} })",
+    ["src/lib/events/queries.test.ts"]
+  ],
+  [
+    "members in charge: approved only",
+    "src/lib/events/queries.ts",
+    "where: { status: { in: [...APPROVED_STATUSES] } },\n    select: { login: true, fullName: true },",
+    "select: { login: true, fullName: true },",
+    ["src/lib/events/queries.test.ts"]
+  ],
+  [
+    "upcoming: the horizon",
+    "src/lib/events/queries.ts",
+    "800 * DAY_MS",
+    "8 * DAY_MS",
+    ["src/lib/events/queries.test.ts"]
+  ],
+  [
+    "pending page: only for pending",
+    "src/app/[locale]/pending/page.tsx",
+    "session.user.status !== 'PENDING'",
+    "session.user.status === 'PENDING'",
+    ["src/app/[locale]/secondary-pages.test.tsx"]
+  ],
+  [
+    "privacy: export only when signed in",
+    "src/app/[locale]/privacy/page.tsx",
+    "{session && (",
+    "{true && (",
+    ["src/app/[locale]/secondary-pages.test.tsx"]
+  ],
+  [
+    "privacy: the contact address",
+    "src/app/[locale]/privacy/page.tsx",
+    "{contactEmail ? (",
+    "{false ? (",
+    ["src/app/[locale]/secondary-pages.test.tsx"]
+  ]
+]

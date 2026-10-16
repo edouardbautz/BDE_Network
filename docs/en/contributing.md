@@ -172,7 +172,8 @@ npm run test
 npm run build
 ```
 
-If you touch the documentation, also run `npm run lint:md` and `npm run docs:check`. CI runs all of this
+If you touch the documentation, also run `npm run lint:md` and `npm run docs:check`. `npm run test:coverage` runs the tests
+with their coverage: CI fails below the floors of `coverage-thresholds.json`, so a new feature comes with its tests. CI runs all of this
 (`.github/workflows/ci.yml`), on Ubuntu and on Windows.
 
 ## The quality campaign

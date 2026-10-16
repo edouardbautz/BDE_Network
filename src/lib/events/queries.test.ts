@@ -9,7 +9,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('@/config', () => ({ getConfig: vi.fn(() => ({ bde: { timezone: 'Europe/Paris' } })) }));
 vi.mock('@/lib/prisma', () => ({
   prisma: {
-    event: { findMany: vi.fn(), findUnique: vi.fn() },
+    event: { findMany: vi.fn(), findUnique: vi.fn(), count: vi.fn() },
     user: { findMany: vi.fn() },
   },
 }));
@@ -188,5 +188,69 @@ describe('getFilterOptions', () => {
     vi.mocked(prisma.user.findMany).mockResolvedValue([]);
     await getFilterOptions({ includeDrafts: false, ownLogin: 'dave' });
     expect(whereOf(0)).toContain('"authorLogin":"dave"');
+  });
+});
+
+describe('the proposals waiting for a validator', () => {
+  it('are the events whose own status is PROPOSED, the oldest first', async () => {
+    const { listProposals } = await import('./queries');
+    await listProposals();
+
+    const call = vi.mocked(prisma.event.findMany).mock.calls[0]?.[0];
+    expect(call?.where).toEqual({ status: 'PROPOSED' });
+    expect(call?.orderBy).toEqual([{ proposedAt: 'asc' }, { startsAt: 'asc' }]);
+    // the author's name is shown in the list
+    expect(JSON.stringify(call?.include)).toContain('"author":{"select":{"fullName":true}}');
+  });
+
+  it('are counted for the menu by the same rule', async () => {
+    const { countProposals } = await import('./queries');
+    vi.mocked(prisma.event.count).mockResolvedValue(3);
+    expect(await countProposals()).toBe(3);
+    expect(vi.mocked(prisma.event.count).mock.calls[0]?.[0]).toEqual({
+      where: { status: 'PROPOSED' },
+    });
+  });
+});
+
+describe('the members who can be put in charge', () => {
+  it('are the approved accounts, by name, as login and name', async () => {
+    const { listAssignableMembers } = await import('./queries');
+    vi.mocked(prisma.user.findMany).mockResolvedValue([
+      { login: 'alice', fullName: 'Alice A' },
+      { login: 'bob', fullName: 'Bob B' },
+    ] as never);
+
+    expect(await listAssignableMembers()).toEqual([
+      { login: 'alice', name: 'Alice A' },
+      { login: 'bob', name: 'Bob B' },
+    ]);
+    const call = vi.mocked(prisma.user.findMany).mock.calls[0]?.[0];
+    // an allow-list: somebody who waits for approval is never offered
+    expect(Object.keys(call?.where ?? {})).toEqual(['status']);
+    expect(new Set((call?.where as { status: { in: string[] } }).status.in)).toEqual(
+      new Set(['OWNER', 'MEMBER']),
+    );
+    expect(call?.orderBy).toEqual({ fullName: 'asc' });
+  });
+});
+
+describe('the next dates', () => {
+  it('look 800 days ahead, keep the first ones asked for, and respect who may see drafts', async () => {
+    const { listUpcomingOccurrences } = await import('./queries');
+    const now = new Date('2026-10-16T12:00:00Z');
+    vi.mocked(prisma.event.findMany).mockResolvedValue([]);
+
+    const dates = await listUpcomingOccurrences({
+      now,
+      limit: 3,
+      includeDrafts: false,
+      ownLogin: 'dave',
+    });
+
+    expect(dates).toEqual([]);
+    const where = JSON.stringify(vi.mocked(prisma.event.findMany).mock.calls[0]?.[0]?.where);
+    expect(where).toContain(new Date(now.getTime() + 800 * 86_400_000).toISOString());
+    expect(where).toContain('"authorLogin":"dave"');
   });
 });

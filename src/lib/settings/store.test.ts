@@ -465,3 +465,81 @@ describe('the settings store', () => {
     });
   });
 });
+
+const { installPlatform } = await import('./store');
+
+describe('installing the platform from the installer', () => {
+  const saved = { ...process.env };
+
+  beforeEach(() => {
+    setRuntimeSettings(undefined);
+    Object.assign(process.env, COMPLETE_ENV);
+    delete process.env.SETTINGS_KEY;
+  });
+  afterEach(() => {
+    setRuntimeSettings(undefined);
+    process.env = { ...saved };
+  });
+
+  const values = {
+    APP_URL: 'https://bde.example.fr',
+    FORTYTWO_CLIENT_ID: 'u-s4t2ud-abc',
+    FORTYTWO_CLIENT_SECRET: 'the-42-secret-value',
+    SMTP_PASSWORD: 'the-smtp-password',
+  };
+
+  it('writes the settings with the secrets sealed apart, then runs on them at once', async () => {
+    const { db, platformSettings, current } = fakeDb();
+    const config = configWith(['alice']);
+
+    expect(await installPlatform({ config, values }, db)).toBe('installed');
+
+    const row = current() as Row;
+    expect(row).toMatchObject({ id: 'platform', source: 'installer' });
+    expect(row.config).toEqual(JSON.parse(JSON.stringify(config)));
+    // what is not secret is readable, what is secret is not there in clear anywhere in the row
+    expect(row.environment).toEqual({
+      APP_URL: 'https://bde.example.fr',
+      FORTYTWO_CLIENT_ID: 'u-s4t2ud-abc',
+    });
+    expect(row.secrets).toMatch(/^v1\./);
+    expect(JSON.stringify(platformSettings.create.mock.calls)).not.toContain('the-42-secret-value');
+    expect(JSON.stringify(platformSettings.create.mock.calls)).not.toContain('the-smtp-password');
+    // and the platform is in use without a restart
+    expect(getRuntimeConfig()?.auth.owners).toEqual(['alice']);
+    expect(setting('FORTYTWO_CLIENT_SECRET')).toBe('the-42-secret-value');
+    expect(setting('APP_URL')).toBe('https://bde.example.fr');
+  });
+
+  it('keeps no sealed text when there is no secret', async () => {
+    const { db, current } = fakeDb();
+    await installPlatform(
+      { config: configWith(['alice']), values: { APP_URL: 'https://bde.example.fr' } },
+      db,
+    );
+    expect((current() as Row).secrets).toBeNull();
+  });
+
+  it('says it is over when somebody installed first, and changes nothing', async () => {
+    const first = fakeDb();
+    await installPlatform({ config: configWith(['alice']), values }, first.db);
+    const winner = first.current() as Row;
+
+    setRuntimeSettings(undefined);
+    expect(await installPlatform({ config: configWith(['mallory']), values }, first.db)).toBe(
+      'already-installed',
+    );
+    expect(first.current()).toEqual(winner);
+    // the loser does not run on what it wanted to write
+    expect(getRuntimeConfig()).toBeUndefined();
+  });
+
+  it('lets any other failure of the database come out', async () => {
+    const { db, platformSettings } = fakeDb();
+    platformSettings.create.mockRejectedValue(new Error('connection lost'));
+    await expect(installPlatform({ config: configWith(['alice']), values }, db)).rejects.toThrow(
+      'connection lost',
+    );
+    expect(getRuntimeConfig()).toBeUndefined();
+  });
+});

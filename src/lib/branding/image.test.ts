@@ -101,3 +101,141 @@ describe('checkLogo', () => {
     expect(checkLogo(big)).toEqual({ ok: false, code: 'logoTooBig' });
   });
 });
+
+describe('inspectImage, on files that are not quite what they say', () => {
+  /** A JPEG made of the given segments after the start marker. */
+  const jpegOf = (...segments: number[][]) =>
+    Uint8Array.from([0xff, 0xd8, ...segments.flat(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  const sof = (marker: number, w: number, h: number) => [
+    0xff,
+    marker,
+    0x00,
+    0x11,
+    0x08,
+    h >> 8,
+    h & 255,
+    w >> 8,
+    w & 255,
+    3,
+    1,
+    0x22,
+    0,
+    2,
+    0x11,
+    1,
+    3,
+    0x11,
+    1,
+  ];
+
+  it('finds the size of a progressive JPEG, whose frame marker is not the usual one', () => {
+    expect(inspectImage(jpegOf(sof(0xc2, 640, 480)))).toMatchObject({
+      mime: 'image/jpeg',
+      width: 640,
+      height: 480,
+    });
+  });
+
+  it('does not take a table for the frame: the markers that sit in the same range are skipped', () => {
+    // DHT (c4), DAC (cc) and JPG (c8) come first, with a length of 4: two bytes of content
+    const table = (marker: number) => [0xff, marker, 0x00, 0x04, 0xaa, 0xbb];
+    for (const marker of [0xc4, 0xc8, 0xcc]) {
+      expect(inspectImage(jpegOf(table(marker), sof(0xc0, 320, 200)))).toMatchObject({
+        width: 320,
+        height: 200,
+      });
+    }
+  });
+
+  it('goes through the padding bytes that a JPEG may hold between segments', () => {
+    expect(inspectImage(jpegOf([0xff, 0xff, 0xff], sof(0xc0, 100, 90)))).toMatchObject({
+      width: 100,
+      height: 90,
+    });
+  });
+
+  it('gives up on a JPEG whose segments are broken, or that never says its size', () => {
+    // a byte that is not a marker where a marker must be
+    expect(inspectImage(jpegOf([0x12, 0x34, 0x56]))).toBeNull();
+    // a segment that announces more than the file holds
+    expect(inspectImage(jpegOf([0xff, 0xe0, 0xff, 0xff]))).toBeNull();
+    // only the start marker
+    expect(inspectImage(Uint8Array.from([0xff, 0xd8, 0xff, 0xe0]))).toBeNull();
+  });
+
+  it('does not loop on a segment that says it is empty', () => {
+    expect(inspectImage(jpegOf([0xff, 0xe0, 0x00, 0x00], [0xff, 0xe0, 0x00, 0x00]))).toBeNull();
+  });
+
+  it('refuses a WebP whose chunk is of a kind it does not know, or whose signature is wrong', () => {
+    const riff = (chunk: string) => {
+      const b = new Uint8Array(34);
+      b.set([
+        0x52,
+        0x49,
+        0x46,
+        0x46,
+        0,
+        0,
+        0,
+        0,
+        0x57,
+        0x45,
+        0x42,
+        0x50,
+        ...[...chunk].map((c) => c.charCodeAt(0)),
+      ]);
+      return b;
+    };
+    expect(inspectImage(riff('ABCD'))).toBeNull();
+    // lossy without its start code, lossless without its signature byte
+    expect(inspectImage(riff('VP8 '))).toBeNull();
+    expect(inspectImage(riff('VP8L'))).toBeNull();
+    // a WebP that is too short to hold a size
+    expect(inspectImage(riff('VP8X').subarray(0, 20))).toBeNull();
+  });
+
+  it('refuses a PNG that does not start with its header chunk, and a GIF that stops short', () => {
+    const notPng = png(100, 100);
+    notPng.set([0x41, 0x41, 0x41, 0x41], 12);
+    expect(inspectImage(notPng)).toBeNull();
+    expect(inspectImage(png(100, 100).subarray(0, 20))).toBeNull();
+    expect(inspectImage(gif(100, 100).subarray(0, 9))).toBeNull();
+  });
+
+  it('refuses a size of zero, in every format', () => {
+    for (const bytes of [png(0, 50), png(50, 0), gif(0, 5), jpeg(0, 5)]) {
+      expect(inspectImage(bytes)).toBeNull();
+    }
+  });
+
+  it('never throws, and never claims a size, on bytes that only start like an image', () => {
+    // a small seeded generator: the same garbage every time
+    let state = 20261016;
+    const next = () => {
+      state = (state * 1664525 + 1013904223) >>> 0;
+      return state;
+    };
+    const prefixes = [
+      [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+      [0xff, 0xd8, 0xff],
+      [0x47, 0x49, 0x46, 0x38],
+      [0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50],
+    ];
+    for (let round = 0; round < 4000; round += 1) {
+      const prefix = prefixes[round % prefixes.length] ?? [];
+      const bytes = Uint8Array.from([
+        ...prefix,
+        ...Array.from({ length: next() % 80 }, () => next() & 255),
+      ]);
+      expect(() => inspectImage(bytes)).not.toThrow();
+      expect(() => checkLogo(bytes)).not.toThrow();
+      const info = inspectImage(bytes);
+      if (info) {
+        // whatever it reads is a size the caller can compare, never NaN or a negative
+        expect(Number.isInteger(info.width) && info.width >= 1).toBe(true);
+        expect(Number.isInteger(info.height) && info.height >= 1).toBe(true);
+      }
+    }
+  });
+});
