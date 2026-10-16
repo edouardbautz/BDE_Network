@@ -1,0 +1,26 @@
+# JSX rules (see bde-typescript.yml). Tested by bde-jsx.tsx.
+rules:
+  - id: bde-no-dangerously-set-inner-html
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      Nothing a member typed is ever written as HTML: React escapes text, and `dangerouslySetInnerHTML` turns that off
+      (a stored cross-site script). If it is ever needed, the text must be a constant of the code.
+    pattern: <$COMPONENT ... dangerouslySetInnerHTML={...} />
+    paths:
+      include: [src/]
+
+  - id: bde-external-link-has-rel
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      A link that opens a new tab (`target="_blank"`) needs `rel="noopener noreferrer"`: otherwise the page it opens can
+      reach back into this one.
+    patterns:
+      - pattern: <a ... target="_blank" ... />
+      - pattern-not: <a ... target="_blank" ... rel="noopener noreferrer" ... />
+      - pattern-not: <a ... target="_blank" ... rel="noreferrer noopener" ... />
+      - pattern-not: <a ... rel="noopener noreferrer" ... target="_blank" ... />
+      - pattern-not: <a ... rel="noreferrer noopener" ... target="_blank" ... />
+    paths:
+      include: [src/]
