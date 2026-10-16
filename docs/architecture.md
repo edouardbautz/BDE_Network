@@ -233,6 +233,11 @@ point at a user (see `EventAssignee`).
   `events/export.ts`). The regression test is `src/lib/auth/removed-account.test.ts` (real NextAuth config +
   forged cookie; its fake database reproduces Prisma's `undefined` behaviour).
 
+- **What Auth.js logs** (`src/lib/auth/logger.ts`). A request refused because of what the visitor sent (a cookie that cannot be
+  read, a missing CSRF token, an unreadable callback address or state, an unknown action: `REFUSED_REQUEST_ERRORS`) is
+  a one-line warning with no trace and no echo of the value; every other error keeps Auth.js's complete report. A new
+  kind of refusal that floods the logs is added to that list; an error that matters never is. The attacks of the quality
+  campaign read the logs at the end (`qa/security/logs.ts`).
 - **Route guards live in Server Components**, not middleware (`(app)/layout.tsx` redirects
   unauthenticated users to `/`, `PENDING` users to `/pending`; `members/page.tsx` and
   `roles/`, `audit-log/page.tsx` and `settings/` additionally check `can(user, 'members.manage' | 'roles.manage')` /

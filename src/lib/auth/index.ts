@@ -1,6 +1,7 @@
 import NextAuth from 'next-auth';
 import { FortyTwoProvider } from './fortytwo-provider';
 import { registeredAddress } from '@/lib/public-address';
+import { authLogger } from './logger';
 import { AUTH_ERROR_PATH, jwtCallback, sessionCallback, signInCallback } from './callbacks';
 
 // The configuration is built for each request, not once when the module loads: the 42 application's
@@ -17,6 +18,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => {
     providers: [FortyTwoProvider()],
     session: { strategy: 'jwt' },
     trustHost: true,
+    logger: authLogger,
     pages: {
       error: AUTH_ERROR_PATH,
     },

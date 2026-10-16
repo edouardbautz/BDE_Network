@@ -80,6 +80,13 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Changed
 
+- **A refused sign-in request is one line in the logs, not an error with a stack trace.** Auth.js wrote an error for every
+  cookie it could not read (expired, forged, or signed with a secret that has since changed: every member's old cookie),
+  every form without its CSRF token and every callback address it could not parse, so a script could fill the logs and a
+  change of secret made them shout. Those five kinds are now a `[auth] <kind>: request refused` warning; every other error
+  (42 failing, the database, a callback that throws) keeps its complete report. Found by the attacks of the quality
+  campaign (359 stack traces for one run).
+
 - **A series is a rule, stored in one column (`Event.repeat`)** instead of one of three words and a day kept apart
   (`recurrence`, `monthlyDay`, which are dropped with their type). The update converts every series by itself, and
   **no date moves**: the identifier of every date in the calendar files stays the same (checked to the millisecond on
