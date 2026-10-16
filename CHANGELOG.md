@@ -66,9 +66,10 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Fixed
 
-- **An address whose percent-encoding is malformed (`%ff`, a lone `%`) is answered with a 400** instead of a 500 and an error in
-  the logs: Next.js fails while it reads the parameters of the route, for a request that is simply wrong. Found by the
-  attacks of the quality campaign; nothing was ever disclosed.
+- **An address whose percent-encoding is malformed (`%ff`, a lone `%`, and `%25` followed by something that is no longer valid
+  once decoded, like `/fr/x%25y`) is answered with a 400** instead of a 500 and an error in the logs: Next.js fails while it
+  reads the parameters of the route, for a request that is simply wrong (a page is decoded twice, an API route once).
+  Found by the attacks of the quality campaign; nothing was ever disclosed.
 
 ### Security
 

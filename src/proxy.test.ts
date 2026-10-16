@@ -25,6 +25,11 @@ describe('an address that cannot be read', () => {
     '/fr/%c0%af',
     '/fr/%E0%A4%A',
     '/%',
+    // a page is read twice: what the first reading leaves (`x%y`) is not valid either
+    '/fr/%25',
+    '/fr/x%25y',
+    '/fr/events/%25',
+    '/en/%252',
   ])('is a 400, whatever it asks for: %s', (path) => {
     const response = proxy(request(path));
     expect(response.status).toBe(400);
@@ -43,6 +48,10 @@ describe('an address that cannot be read', () => {
     '/fr/events/%C3%A9t%C3%A9',
     '/api/calendar/AbC-_123',
     '/fr/%E2%82%AC',
+    '/fr/a%2520b',
+    // an API route is read once: a literal percent sign is a wrong token, not a wrong address
+    '/api/calendar/%25',
+    '/api/logo/%25x',
   ])('leaves an address that can be read alone: %s', (path) => {
     expect(proxy(request(path)).status).not.toBe(400);
   });

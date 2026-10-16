@@ -7,10 +7,15 @@ const intl = createMiddleware(routing);
 
 const SETUP_PATH = /^\/(?:fr|en)\/setup(?:\/|$)/;
 
-/** Whether the percent-encoding of an address can be read (`%ff` and a lone `%` cannot). */
+/**
+ * Whether the percent-encoding of an address can be read (`%ff` and a lone `%` cannot). A page is read twice: the
+ * language routing rewrites the address it was given, decoded, and Next.js decodes that again, so `/fr/x%25y` (an `x%y`
+ * that is no longer valid) fails there. An API route is read once.
+ */
 function isWellEncoded(pathname: string): boolean {
   try {
-    decodeURIComponent(pathname);
+    const once = decodeURIComponent(pathname);
+    if (!pathname.startsWith('/api/')) decodeURIComponent(once);
     return true;
   } catch {
     return false;
