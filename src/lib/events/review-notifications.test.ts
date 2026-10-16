@@ -55,7 +55,7 @@ const stored = {
   status: 'PROPOSED' as const,
   startsAt: new Date('2099-05-10T18:00:00Z'),
   endsAt: new Date('2099-05-10T20:00:00Z'),
-  recurrence: 'NONE' as const,
+  repeat: null,
   recurrenceUntil: null,
   assignees: [{ login: 'alice', user: { fullName: 'Alice A' } }],
   authorLogin: 'dave',
@@ -216,7 +216,7 @@ describe('an approval (eventApproved)', () => {
     useChannels({ approved: 'discord' });
     found({
       status: 'PROPOSED',
-      recurrence: 'WEEKLY',
+      repeat: { freq: 'WEEKLY', interval: 1 },
       recurrenceUntil: new Date('2099-05-31T18:00:00Z'),
       occurrences: [
         {

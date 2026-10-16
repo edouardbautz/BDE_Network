@@ -98,7 +98,7 @@ function addEvent(overrides: Record<string, unknown> = {}) {
     status: 'CONFIRMED',
     startsAt: OCT5,
     endsAt: new Date(OCT5.getTime() + 2 * 3_600_000),
-    recurrence: 'WEEKLY',
+    repeat: { freq: 'WEEKLY', interval: 1 },
     recurrenceUntil: new Date('2026-11-09T22:00:00Z'),
     schoolYear: '2026-2027',
     authorLogin: 'alice',
@@ -117,7 +117,8 @@ function form(values: Record<string, string | string[]> = {}): FormData {
     categoryKey: 'sport',
     startsAt: '2026-10-05T18:00',
     endsAt: '2026-10-05T20:00',
-    recurrence: 'WEEKLY',
+    repeat: 'WEEKLY',
+    repeatEnd: 'until',
     recurrenceUntil: '2026-11-09',
     status: 'CONFIRMED',
     assignees: [],
@@ -180,14 +181,14 @@ beforeEach(() => {
 describe('editing an event that does not repeat', () => {
   beforeEach(() => {
     addEvent({
-      recurrence: 'NONE',
+      repeat: null,
       recurrenceUntil: null,
       status: 'DRAFT',
       confirmationNotifiedAt: null,
     });
   });
   const plain = (values: Record<string, string | string[]> = {}) =>
-    form({ recurrence: 'NONE', recurrenceUntil: '', status: 'DRAFT', ...values });
+    form({ repeat: 'NONE', recurrenceUntil: '', status: 'DRAFT', ...values });
 
   it('saves the change and audits what changed, with no scope (there is only one date)', async () => {
     const href = await redirectOf(updateEvent('evt', {}, plain({ title: 'Nouveau titre' })));
@@ -210,16 +211,16 @@ describe('editing an event that does not repeat', () => {
 
   it('does not announce an edit of an event that is already confirmed', async () => {
     db.reset();
-    addEvent({ recurrence: 'NONE', recurrenceUntil: null });
+    addEvent({ repeat: null, recurrenceUntil: null });
     await redirectOf(updateEvent('evt', {}, plain({ status: 'CONFIRMED', title: 'Autre' })));
     expect(afterCallbacks).toHaveLength(0);
   });
 
   it('turns it into a series when a frequency is chosen', async () => {
     await redirectOf(
-      updateEvent('evt', {}, plain({ recurrence: 'WEEKLY', recurrenceUntil: '2026-11-09' })),
+      updateEvent('evt', {}, plain({ repeat: 'WEEKLY', recurrenceUntil: '2026-11-09' })),
     );
-    expect(db.event('evt')).toMatchObject({ recurrence: 'WEEKLY' });
+    expect(db.event('evt')).toMatchObject({ repeat: { freq: 'WEEKLY', interval: 1 } });
     expect(audit()).toEqual([{ action: 'event.update', changed: ['recurrence'] }]);
   });
 
@@ -236,7 +237,7 @@ describe('editing an event that does not repeat', () => {
 
   it('events saved before location and description became mandatory need both on their next edit', async () => {
     db.reset();
-    addEvent({ recurrence: 'NONE', recurrenceUntil: null, description: null, location: null });
+    addEvent({ repeat: null, recurrenceUntil: null, description: null, location: null });
     const state = await updateEvent('evt', {}, plain({ description: '', location: '' }));
     expect(state.errors).toEqual({ description: 'required', location: 'required' });
 
@@ -271,7 +272,10 @@ describe('editing one date of a series ("only this one")', () => {
   it("ignores the form's frequency and end date: one date has none of its own", async () => {
     const data = withScope(
       formAt('2026-10-12', {
-        recurrence: 'BIWEEKLY',
+        repeat: 'CUSTOM',
+        repeatFreq: 'WEEKLY',
+        repeatInterval: '2',
+        repeatWeekdays: ['MO'],
         recurrenceUntil: '2026-12-01',
         title: 'Match',
       }),
@@ -281,7 +285,7 @@ describe('editing one date of a series ("only this one")', () => {
     await redirectOf(updateEvent('evt', {}, data));
 
     expect(db.event('evt')).toMatchObject({
-      recurrence: 'WEEKLY',
+      repeat: { freq: 'WEEKLY', interval: 1 },
       recurrenceUntil: new Date('2026-11-09T22:00:00Z'),
     });
     expect(db.table('eventOccurrence')).toMatchObject([{ title: 'Match' }]);
@@ -418,16 +422,22 @@ describe('editing a date and the following', () => {
 
   it('changes the frequency and the end of the following dates', async () => {
     const data = withScope(
-      formAt('2026-10-19', { recurrence: 'BIWEEKLY', recurrenceUntil: '2026-12-20' }),
+      formAt('2026-10-19', {
+        repeat: 'CUSTOM',
+        repeatFreq: 'WEEKLY',
+        repeatInterval: '2',
+        repeatWeekdays: ['MO'],
+        recurrenceUntil: '2026-12-20',
+      }),
       'following',
       OCT19,
     );
     await redirectOf(updateEvent('evt', {}, data));
 
     const [head, tail] = db.table('event');
-    expect(head).toMatchObject({ recurrence: 'WEEKLY', recurrenceUntil: OCT12 });
+    expect(head).toMatchObject({ repeat: { freq: 'WEEKLY', interval: 1 }, recurrenceUntil: OCT12 });
     expect(tail).toMatchObject({
-      recurrence: 'BIWEEKLY',
+      repeat: { freq: 'WEEKLY', interval: 2, weekdays: ['MO'] },
       recurrenceUntil: new Date('2026-12-20T22:59:00Z'),
     });
     expect(audit()[0]).toMatchObject({ changed: ['recurrence'] });
@@ -587,7 +597,7 @@ describe('confirming and putting back to draft', () => {
 
   it('an event that does not repeat needs no scope', async () => {
     addEvent({
-      recurrence: 'NONE',
+      repeat: null,
       recurrenceUntil: null,
       status: 'DRAFT',
       confirmationNotifiedAt: null,
@@ -658,14 +668,14 @@ describe('the proposal circuit', () => {
   /** An event that does not repeat, in the state given. */
   const addOneOff = (overrides: Record<string, unknown> = {}) =>
     addEvent({
-      recurrence: 'NONE',
+      repeat: null,
       recurrenceUntil: null,
       status: 'DRAFT',
       confirmationNotifiedAt: null,
       ...overrides,
     });
   const oneOff = (values: Record<string, string | string[]> = {}) =>
-    form({ recurrence: 'NONE', recurrenceUntil: '', status: 'DRAFT', ...values });
+    form({ repeat: 'NONE', recurrenceUntil: '', status: 'DRAFT', ...values });
 
   const REFUSED = {
     refusalComment: 'Pas ce jour-là',

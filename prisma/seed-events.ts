@@ -2,6 +2,8 @@ import type { PrismaClient } from '../src/generated/prisma/client';
 import { getConfig } from '../src/config';
 import { bdeConfigSchema, type BdeConfig } from '../src/config/schema';
 import { allOccurrences } from '../src/lib/events/recurrence';
+import { endOfCountedRule, type RepeatRule } from '../src/lib/events/repeat';
+import { repeatColumn } from '../src/lib/events/repeat-column';
 import { addDays, fromLocalDateTime, schoolYearOf, toLocalDateTime } from '../src/lib/events/time';
 
 /**
@@ -53,6 +55,11 @@ const ENGLISH: Record<string, string> = {
   'Brouillon : en attente du devis du car.': 'Draft: waiting for the coach quote.',
   'Station à définir, départ du parking du campus':
     'Resort to be decided, leaving from the campus car park',
+  'Entraînement de basket': 'Basketball practice',
+  'Le lundi et le mercredi, toutes les deux semaines, dix séances.':
+    'On Mondays and Wednesdays, every two weeks, ten sessions.',
+  'Café des associations': 'Student clubs coffee',
+  'Le deuxième mardi du mois, six fois.': 'The second Tuesday of the month, six times.',
   'Tournoi de jeux vidéo': 'Video game tournament',
   'Proposition du pôle Events : quatre jeux, huit équipes, finale en public.':
     'Proposed by the events team: four games, eight teams, a public final.',
@@ -67,7 +74,6 @@ const tr = (text: string): string =>
   process.env.SEED_LOCALE === 'en' ? (ENGLISH[text] ?? text) : text;
 
 type DemoLogin = 'demo-owner' | 'demo-admin' | 'demo-member1' | 'demo-member2' | 'demo-member3';
-type Recurrence = 'NONE' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY';
 
 interface DemoEvent {
   id: string;
@@ -83,8 +89,9 @@ interface DemoEvent {
   /** [days from today, hour, minute] on the BDE wall clock. */
   start: [number, number, number];
   end: [number, number, number];
-  recurrence?: Recurrence;
-  /** Days from today the series runs until (inclusive). */
+  /** How it repeats; a rule that ends after N dates (`count`) needs no end date. */
+  repeat?: RepeatRule;
+  /** Days from today the series runs until (inclusive), for a rule that has no `count`. */
   repeatUntilDays?: number;
   assignees: DemoLogin[];
   /** 0-based indexes of occurrences to cancel. */
@@ -102,6 +109,18 @@ async function platformConfig(prisma: PrismaClient): Promise<BdeConfig> {
   const row = await prisma.platformSettings.findUnique({ where: { id: 'platform' } });
   const parsed = row ? bdeConfigSchema.safeParse(row.config) : null;
   return parsed?.success ? parsed.data : getConfig();
+}
+
+/** Offset (in days) to the second Tuesday of next month, which is the day a "2nd Tuesday" series really starts on. */
+function daysUntilSecondTuesdayOfNextMonth(today: {
+  year: number;
+  month: number;
+  day: number;
+}): number {
+  const firstOfNext = Date.UTC(today.year, today.month, 1);
+  const firstTuesday = 1 + ((2 - new Date(firstOfNext).getUTCDay() + 7) % 7);
+  const target = Date.UTC(today.year, today.month, firstTuesday + 7);
+  return Math.round((target - Date.UTC(today.year, today.month - 1, today.day)) / 86_400_000);
 }
 
 /** Offset (in days) to the next occurrence of `weekday` (0 = Sunday), never today. */
@@ -132,6 +151,8 @@ export async function seedDemoEvents(
   const today = toLocalDateTime(now, timeZone);
   const weekdayNow = new Date(Date.UTC(today.year, today.month - 1, today.day)).getUTCDay();
   const nextTuesday = daysUntilWeekday(weekdayNow, 2);
+  const nextMonday = daysUntilWeekday(weekdayNow, 1);
+  const secondTuesday = daysUntilSecondTuesdayOfNextMonth(today);
   const nextFriday = daysUntilWeekday(weekdayNow, 5);
 
   const demoEvents: DemoEvent[] = [
@@ -207,7 +228,7 @@ export async function seedDemoEvents(
       status: 'CONFIRMED',
       start: [nextTuesday, 18, 0],
       end: [nextTuesday, 19, 30],
-      recurrence: 'WEEKLY',
+      repeat: { freq: 'WEEKLY', interval: 1 },
       repeatUntilDays: nextTuesday + 7 * 7,
       assignees: ['demo-member2'],
       cancel: [2],
@@ -227,7 +248,7 @@ export async function seedDemoEvents(
       status: 'CONFIRMED',
       start: [2, 12, 30],
       end: [2, 13, 30],
-      recurrence: 'BIWEEKLY',
+      repeat: { freq: 'WEEKLY', interval: 2 },
       repeatUntilDays: 2 + 14 * 4,
       assignees: ['demo-admin', 'demo-member1'],
       author: 'demo-admin',
@@ -253,10 +274,41 @@ export async function seedDemoEvents(
       status: 'CONFIRMED',
       start: [12, 19, 0],
       end: [12, 20, 30],
-      recurrence: 'MONTHLY',
+      repeat: { freq: 'MONTHLY', interval: 1 },
       repeatUntilDays: 12 + 31 * 5,
       assignees: ['demo-owner', 'demo-admin'],
       author: 'demo-owner',
+    },
+    {
+      id: 'demo-event-entrainement',
+      title: 'Entraînement de basket',
+      description: 'Le lundi et le mercredi, toutes les deux semaines, dix séances.',
+      location: 'Gymnase',
+      category: 1,
+      status: 'CONFIRMED',
+      start: [nextMonday, 19, 0],
+      end: [nextMonday, 20, 30],
+      repeat: { freq: 'WEEKLY', interval: 2, weekdays: ['MO', 'WE'], count: 10 },
+      assignees: ['demo-member2'],
+      author: 'demo-member1',
+    },
+    {
+      id: 'demo-event-cafe',
+      title: 'Café des associations',
+      description: 'Le deuxième mardi du mois, six fois.',
+      location: 'Foyer',
+      category: 3,
+      status: 'CONFIRMED',
+      start: [secondTuesday, 17, 30],
+      end: [secondTuesday, 19, 0],
+      repeat: {
+        freq: 'MONTHLY',
+        interval: 1,
+        monthly: { kind: 'nth', nth: 2, weekday: 'TU' },
+        count: 6,
+      },
+      assignees: ['demo-admin'],
+      author: 'demo-admin',
     },
     {
       id: 'demo-event-gala',
@@ -322,14 +374,15 @@ export async function seedDemoEvents(
 
     const startsAt = at(demo.start);
     const endsAt = at(demo.end);
-    const recurrence = demo.recurrence ?? 'NONE';
-    const recurrenceUntil =
-      recurrence !== 'NONE' && demo.repeatUntilDays !== undefined
-        ? fromLocalDateTime(
-            { ...addDays(today, demo.repeatUntilDays), hour: 23, minute: 59 },
+    const rule = demo.repeat ?? null;
+    const recurrenceUntil = !rule
+      ? null
+      : rule.count !== undefined
+        ? endOfCountedRule(rule, startsAt, endsAt, timeZone)
+        : fromLocalDateTime(
+            { ...addDays(today, demo.repeatUntilDays ?? 0), hour: 23, minute: 59 },
             timeZone,
-          )
-        : null;
+          );
 
     const data = {
       title: tr(demo.title),
@@ -339,7 +392,7 @@ export async function seedDemoEvents(
       status: demo.status,
       startsAt,
       endsAt,
-      recurrence,
+      repeat: repeatColumn(rule),
       recurrenceUntil,
       schoolYear: schoolYearOf(startsAt, timeZone),
       // Pretend confirmed events were announced days ago, so the day-before
@@ -372,7 +425,7 @@ export async function seedDemoEvents(
     await prisma.eventOccurrence.deleteMany({ where: { eventId: demo.id } });
     if (demo.own && demo.own.length > 0) {
       const occurrences = allOccurrences(
-        { startsAt, endsAt, recurrence, recurrenceUntil },
+        { startsAt, endsAt, repeat: rule, recurrenceUntil },
         timeZone,
       );
       for (const own of demo.own) {
@@ -393,7 +446,7 @@ export async function seedDemoEvents(
     await prisma.eventCancellation.deleteMany({ where: { eventId: demo.id } });
     if (demo.cancel && demo.cancel.length > 0) {
       const occurrences = allOccurrences(
-        { startsAt, endsAt, recurrence, recurrenceUntil },
+        { startsAt, endsAt, repeat: rule, recurrenceUntil },
         timeZone,
       );
       const cancelled = demo.cancel.flatMap((index) => {

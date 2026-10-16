@@ -14,7 +14,7 @@ function record(overrides: Partial<EventRecord> = {}): EventRecord {
     status: 'CONFIRMED',
     startsAt: new Date('2026-05-10T18:00:00Z'),
     endsAt: new Date('2026-05-10T20:00:00Z'),
-    recurrence: 'NONE',
+    repeat: null,
     recurrenceUntil: null,
     schoolYear: '2025-2026',
     updatedAt: new Date('2026-04-01T00:00:00Z'),
@@ -44,7 +44,7 @@ describe('expandEvents — draft visibility', () => {
   it('hides every occurrence of a draft series', () => {
     const draftSeries = record({
       status: 'DRAFT',
-      recurrence: 'WEEKLY',
+      repeat: { freq: 'WEEKLY', interval: 1 },
       recurrenceUntil: new Date('2026-05-31T00:00:00Z'),
     });
     expect(expand([draftSeries], false)).toEqual([]);
@@ -115,7 +115,7 @@ describe('expandEvents — proposals and the events of their own author', () => 
 
 describe('expandEvents — series and cancellations', () => {
   const series = record({
-    recurrence: 'WEEKLY',
+    repeat: { freq: 'WEEKLY', interval: 1 },
     recurrenceUntil: new Date('2026-05-31T00:00:00Z'),
   });
 

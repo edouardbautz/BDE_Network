@@ -38,6 +38,8 @@ import {
   editRefusal,
   reviewActorOf,
 } from '@/lib/events/review';
+import { isRepeating } from '@/lib/events/repeat';
+import { summarizeRepeat, summaryInputOf, type RepeatTranslate } from '@/lib/events/repeat-summary';
 import { resolveOccurrences, scopeFacts } from '@/lib/events/series';
 import { cn } from '@/lib/utils';
 import {
@@ -87,12 +89,14 @@ export default async function EventDetailPage({
     notFound();
   }
 
-  const [{ id }, rawSearch, t, locale] = await Promise.all([
+  const [{ id }, rawSearch, t, tRepeatSummary, locale] = await Promise.all([
     params,
     searchParams,
     getTranslations('events'),
+    getTranslations('events.repeat.summary'),
     getLocale(),
   ]);
+  const tRepeat = tRepeatSummary as unknown as RepeatTranslate;
 
   const visibility = draftVisibility(access);
   const event = await getVisibleEvent(id, visibility);

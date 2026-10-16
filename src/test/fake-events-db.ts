@@ -1,3 +1,4 @@
+import { Prisma } from '@/generated/prisma/client';
 /**
  * An in-memory database for the tests of series of events: the tables of the events module with the Prisma calls
  * the series operations and the actions make, and the guarantees of the real one that matter here.
@@ -99,6 +100,12 @@ export function createFakeEventsDb() {
 
   const rows = (name: TableName) => state[name];
 
+  /** What the database stores for what Prisma is given: a `Prisma.DbNull` is a SQL NULL. */
+  const databaseValues = <T extends Record<string, unknown>>(data: T): T =>
+    Object.fromEntries(
+      Object.entries(data).map(([key, value]) => [key, value === Prisma.DbNull ? null : value]),
+    ) as T;
+
   function assertUnique(name: TableName, row: Row, ignoring?: Row) {
     const keys = UNIQUE[name];
     if (!keys) return;
@@ -111,7 +118,7 @@ export function createFakeEventsDb() {
   function insert(name: TableName, data: Input, withDefaults: Input = {}): Row {
     const row: Row = {
       ...withDefaults,
-      ...data,
+      ...databaseValues(data),
       id: (data.id as string | undefined) ?? newId(`${name}-`),
     };
     assertUnique(name, row);
@@ -126,9 +133,8 @@ export function createFakeEventsDb() {
       description: null,
       location: null,
       status: 'DRAFT',
-      recurrence: 'NONE',
+      repeat: null,
       recurrenceUntil: null,
-      monthlyDay: null,
       seriesId: null,
       confirmationNotifiedAt: null,
       authorId: null,
@@ -199,7 +205,7 @@ export function createFakeEventsDb() {
 
   function table(name: TableName) {
     const touch = (row: Row, data: Row) => {
-      Object.assign(row, data);
+      Object.assign(row, databaseValues(data));
       if ('updatedAt' in row) row.updatedAt = new Date();
     };
     return {

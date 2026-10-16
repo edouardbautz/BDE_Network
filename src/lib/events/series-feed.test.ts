@@ -48,7 +48,7 @@ function weekly(overrides: Partial<EventRecord> = {}): EventRecord {
     status: 'CONFIRMED',
     startsAt: OCT5,
     endsAt: new Date(OCT5.getTime() + hours(2)),
-    recurrence: 'WEEKLY',
+    repeat: { freq: 'WEEKLY', interval: 1 },
     recurrenceUntil: new Date('2026-10-31T22:00:00Z'),
     schoolYear: '2026-2027',
     updatedAt: new Date('2026-09-01T00:00:00Z'),

@@ -134,7 +134,7 @@ function form(values: Record<string, string | string[]>): FormData {
     categoryKey: 'soiree',
     startsAt: '2026-10-10T20:00',
     endsAt: '2026-10-11T02:00',
-    recurrence: 'NONE',
+    repeat: 'NONE',
     recurrenceUntil: '',
     status: 'DRAFT',
     assignees: [],
@@ -154,7 +154,7 @@ const storedEvent = {
   status: 'DRAFT' as const,
   startsAt: new Date('2026-10-10T18:00:00Z'),
   endsAt: new Date('2026-10-11T00:00:00Z'),
-  recurrence: 'NONE' as const,
+  repeat: null,
   recurrenceUntil: null,
   schoolYear: '2026-2027',
   confirmationNotifiedAt: null,
@@ -167,7 +167,7 @@ const storedEvent = {
 
 const series = {
   ...storedEvent,
-  recurrence: 'WEEKLY' as const,
+  repeat: { freq: 'WEEKLY', interval: 1 },
   recurrenceUntil: new Date('2026-10-31T21:00:00Z'),
 };
 

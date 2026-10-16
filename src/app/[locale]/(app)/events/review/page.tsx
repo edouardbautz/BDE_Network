@@ -15,6 +15,8 @@ import { formatDateTimeRange, formatLongDate } from '@/lib/events/format';
 import { readEventNotice } from '@/lib/events/notice';
 import { listProposals } from '@/lib/events/queries';
 import { REFUSAL_COMMENT_MAX_LENGTH } from '@/lib/events/review';
+import { isRepeating } from '@/lib/events/repeat';
+import { summarizeRepeat, summaryInputOf, type RepeatTranslate } from '@/lib/events/repeat-summary';
 import { resolveOccurrences } from '@/lib/events/series';
 import { pageTitle } from '@/lib/page-title';
 import { refuseEvent, setEventStatus } from '../actions';
@@ -37,12 +39,14 @@ export default async function ReviewPage({
     notFound();
   }
 
-  const [t, locale, raw, proposals] = await Promise.all([
+  const [t, tRepeatSummary, locale, raw, proposals] = await Promise.all([
     getTranslations('events'),
+    getTranslations('events.repeat.summary'),
     getLocale(),
     searchParams,
     listProposals(),
   ]);
+  const tRepeat = tRepeatSummary as unknown as RepeatTranslate;
   const config = getConfig();
   const timeZone = config.bde.timezone;
   const channel = config.notifications.eventConfirmed;

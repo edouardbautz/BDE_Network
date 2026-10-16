@@ -26,8 +26,7 @@ const base: NotificationEventData = {
   assigneeNames: ['Paula', 'Sam'],
   start: new Date('2026-10-10T18:00:00Z'),
   end: new Date('2026-10-10T21:30:00Z'),
-  recurrence: 'NONE',
-  recurrenceUntil: null,
+  repeat: null,
   url: 'https://bde.example.fr/fr/events/evt1?occ=1',
 };
 
@@ -171,37 +170,19 @@ describe('buildEventEmbed', () => {
       expect(names(build({ assigneeNames: [] }))).toEqual(['🏷️  embed.fields.category']);
     });
 
-    it('says when and until when a series repeats, on its own line, with the date as Discord markup', () => {
+    it('says how a series repeats, in the sentence of the platform, on its own line', () => {
       const embed = build({
-        recurrence: 'WEEKLY',
-        recurrenceUntil: new Date('2026-12-17T16:30:00Z'),
+        repeat: 'Toutes les 2 semaines le lundi et le mercredi, 10 fois',
       });
       const repeats = fieldNamed(embed, 'embed.fields.repeats');
 
       expect(repeats?.name).toBe('🔁  embed.fields.repeats');
-      expect(repeats?.value).toBe('embed.repeatsValue.WEEKLY(until=<t:1797525000:D>)');
+      expect(repeats?.value).toBe('Toutes les 2 semaines le lundi et le mercredi, 10 fois');
       expect(repeats?.inline).toBeFalsy();
     });
 
-    it.each(['WEEKLY', 'BIWEEKLY', 'MONTHLY'] as const)(
-      'picks the %s wording of the repetition',
-      (recurrence) => {
-        const embed = build({ recurrence, recurrenceUntil: new Date('2026-12-17T16:30:00Z') });
-
-        expect(fieldNamed(embed, 'embed.fields.repeats')?.value).toBe(
-          `embed.repeatsValue.${recurrence}(until=<t:1797525000:D>)`,
-        );
-      },
-    );
-
-    it('shows no repetition line for a one-off event, even if an end date of a series was kept', () => {
+    it('shows no repetition line for an event that does not repeat', () => {
       expect(fieldNamed(build(), 'embed.fields.repeats')).toBeUndefined();
-      expect(
-        fieldNamed(
-          build({ recurrence: 'NONE', recurrenceUntil: new Date('2026-12-17T16:30:00Z') }),
-          'embed.fields.repeats',
-        ),
-      ).toBeUndefined();
     });
   });
 

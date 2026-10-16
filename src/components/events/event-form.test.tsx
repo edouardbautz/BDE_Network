@@ -3,10 +3,12 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EventFormState } from '@/app/[locale]/(app)/events/actions';
 import type { RawEventInput } from '@/lib/events/input';
+import { NO_REPEAT } from '@/lib/events/repeat-input';
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string, values?: Record<string, unknown>) =>
     values ? `${key}${JSON.stringify(values)}` : key,
+  useLocale: () => 'fr',
 }));
 vi.mock('@/i18n/navigation', () => ({
   Link: ({ href, children }: { href: string; children?: ReactNode }) => (
@@ -29,8 +31,7 @@ const empty: RawEventInput = {
   categoryKey: 'soiree',
   startsAt: '',
   endsAt: '',
-  recurrence: 'NONE',
-  recurrenceUntil: '',
+  ...NO_REPEAT,
   status: 'DRAFT',
   assigneeLogins: [],
 };
@@ -96,19 +97,20 @@ describe('EventForm — required fields', () => {
     expect(screen.getByText('form.requiredLegend')).toBeInTheDocument();
   });
 
-  it('keeps the members in charge, status and recurrence optional', () => {
+  it('keeps the members in charge, status and repetition optional', () => {
     renderForm(empty);
     expect(screen.getByLabelText(/form.status/)).not.toBeRequired();
-    expect(screen.getByLabelText(/form.recurrence$/)).not.toBeRequired();
+    expect(screen.getByLabelText('label')).not.toBeRequired();
     expect(screen.getByRole('checkbox', { name: /Alice A/ })).not.toBeRequired();
     expect(screen.getByText('(form.optional)')).toBeInTheDocument();
   });
 
-  it('requires the series end date only once a recurrence is chosen', () => {
+  it('asks how the series ends only once a repetition is chosen, and requires the date by default', () => {
     renderForm(complete);
-    expect(screen.queryByLabelText(/form.recurrenceUntil/)).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText(/form.recurrence$/), { target: { value: 'WEEKLY' } });
-    expect(screen.getByLabelText(/form.recurrenceUntil/)).toBeRequired();
+    expect(screen.queryByLabelText('untilLabel')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('label'), { target: { value: 'WEEKLY' } });
+    expect(screen.getByLabelText('untilLabel')).toBeEnabled();
+    expect(screen.getByLabelText('countLabel')).toBeDisabled();
   });
 });
 

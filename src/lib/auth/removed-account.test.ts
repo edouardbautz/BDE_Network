@@ -201,7 +201,7 @@ function event(id: string, title: string, status: 'DRAFT' | 'CONFIRMED') {
     status,
     startsAt: new Date('2026-10-10T18:00:00Z'),
     endsAt: new Date('2026-10-10T20:00:00Z'),
-    recurrence: 'NONE',
+    repeat: null,
     recurrenceUntil: null,
     schoolYear: '2026-2027',
     updatedAt: AT,
@@ -235,7 +235,7 @@ function eventForm() {
     categoryKey: 'soiree',
     startsAt: '2026-10-10T20:00',
     endsAt: '2026-10-11T02:00',
-    recurrence: 'NONE',
+    repeat: 'NONE',
     recurrenceUntil: '',
     status: 'DRAFT',
   };

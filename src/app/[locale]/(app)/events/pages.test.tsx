@@ -34,6 +34,7 @@ vi.mock('next-intl/server', () => ({
 }));
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
+  useLocale: () => 'fr',
 }));
 vi.mock('@/i18n/navigation', () => ({
   redirect: vi.fn((options: { href: string }) => {
@@ -128,7 +129,7 @@ const storedEvent = {
   status: 'CONFIRMED' as const,
   startsAt: new Date('2099-10-10T18:00:00Z'),
   endsAt: new Date('2099-10-10T20:00:00Z'),
-  recurrence: 'NONE' as const,
+  repeat: null,
   recurrenceUntil: null,
   schoolYear: '2099-2100',
   authorLogin: 'alice',
@@ -141,7 +142,7 @@ const storedEvent = {
 
 const series = {
   ...storedEvent,
-  recurrence: 'WEEKLY' as const,
+  repeat: { freq: 'WEEKLY', interval: 1 },
   recurrenceUntil: new Date('2099-10-31T00:00:00Z'),
 };
 
@@ -699,7 +700,8 @@ describe('/events/review', () => {
     const html = await reviewPage();
 
     expect(html).toMatch(/href="\/events\/p3\?occ=\d+"/);
-    expect(html).toContain('detail.repeatsValue');
+    // the sentence of the platform (the translator of the test only echoes the keys of the sentence)
+    expect(html).toContain('weekly');
     // The author's account is gone: the login is what is left.
     expect(html).toContain('alice');
   });

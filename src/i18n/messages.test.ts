@@ -36,8 +36,6 @@ describe('message catalogs', () => {
     const keys = new Set(flatten(fr));
     const expected = [
       ...['DRAFT', 'CONFIRMED'].map((s) => `events.status.${s}`),
-      ...['NONE', 'WEEKLY', 'BIWEEKLY', 'MONTHLY'].map((r) => `events.recurrence.${r}`),
-      ...['WEEKLY', 'BIWEEKLY', 'MONTHLY'].map((r) => `events.notifications.frequency.${r}`),
       ...[
         'required',
         'tooLong',
@@ -46,6 +44,10 @@ describe('message catalogs', () => {
         'untilRequired',
         'untilBeforeStart',
         'tooManyOccurrences',
+        'intervalInvalid',
+        'weekdaysRequired',
+        'countInvalid',
+        'monthlyUnavailable',
       ].map((e) => `events.form.errors.${e}`),
       ...['invalidAssignee', 'notFound'].map((e) => `events.form.formErrors.${e}`),
     ];

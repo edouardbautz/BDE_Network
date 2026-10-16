@@ -52,7 +52,7 @@ const weekly = (overrides: Record<string, unknown> = {}) => ({
   status: 'CONFIRMED' as const,
   startsAt: OCT(5),
   endsAt: new Date('2099-10-05T20:00:00Z'),
-  recurrence: 'WEEKLY' as const,
+  repeat: { freq: 'WEEKLY', interval: 1 },
   recurrenceUntil: new Date('2099-10-31T00:00:00Z'),
   seriesId: null,
   confirmationNotifiedAt: null,

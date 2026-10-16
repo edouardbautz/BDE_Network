@@ -24,8 +24,7 @@ const base: NotificationEventData = {
   assigneeNames: ['Alice', 'Bob'],
   start: new Date('2026-10-10T18:00:00Z'),
   end: new Date('2026-10-10T21:00:00Z'),
-  recurrence: 'NONE',
-  recurrenceUntil: null,
+  repeat: null,
   url: 'https://bde.example/fr/events/evt1',
 };
 
@@ -60,14 +59,14 @@ describe('event notification messages', () => {
     expect(whenLine).toContain('23:00');
   });
 
-  it('mentions the recurrence for a series', () => {
+  it('says how a series repeats, in the sentence of the platform', () => {
     const { body } = buildReminderMessage(
-      { ...base, recurrence: 'WEEKLY', recurrenceUntil: new Date('2026-12-19T22:59:00Z') },
+      { ...base, repeat: 'Toutes les semaines le samedi, jusqu’au 19 décembre 2026' },
       t,
       'fr',
       'Europe/Paris',
     );
-    expect(body).toContain('recurring(frequency=frequency.WEEKLY,until=19 décembre 2026)');
+    expect(body).toContain('Toutes les semaines le samedi, jusqu’au 19 décembre 2026');
   });
 
   it('omits optional lines when there is no location, assignee or link', () => {

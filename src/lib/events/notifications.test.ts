@@ -127,7 +127,7 @@ describe('notifyEventConfirmed', () => {
     status: 'CONFIRMED' as const,
     startsAt: new Date('2099-05-10T18:00:00Z'),
     endsAt: new Date('2099-05-10T20:00:00Z'),
-    recurrence: 'NONE' as const,
+    repeat: null,
     recurrenceUntil: null,
     assignees: [{ login: 'alice', user: { fullName: 'Alice A' } }],
   };
@@ -232,7 +232,7 @@ describe('notifyEventConfirmed', () => {
     it('puts every occurrence still to come in the file, and not a cancelled one', async () => {
       vi.mocked(prisma.event.findUnique).mockResolvedValue({
         ...storedEvent,
-        recurrence: 'WEEKLY',
+        repeat: { freq: 'WEEKLY', interval: 1 },
         recurrenceUntil: new Date('2099-05-31T18:00:00Z'),
         cancellations: [{ occurrenceStart: new Date('2099-05-17T18:00:00Z') }],
       } as never);
@@ -274,7 +274,7 @@ describe('notifyEventConfirmed', () => {
       const start = new Date(Date.now() - 15 * day);
       vi.mocked(prisma.event.findUnique).mockResolvedValue({
         ...storedEvent,
-        recurrence: 'WEEKLY',
+        repeat: { freq: 'WEEKLY', interval: 1 },
         startsAt: start,
         endsAt: new Date(start.getTime() + 3_600_000),
         recurrenceUntil: new Date(Date.now() + 15 * day),
