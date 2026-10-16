@@ -8,6 +8,12 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **Static security checks on every pull request**: the rules of the project as code (a setting read from the environment,
+  an unsafe call, a link that does not go through the i18n link, a cookie that is not HttpOnly, a secret in a log…:
+  Semgrep), the whole history read for secrets (gitleaks), known vulnerabilities of the lockfile and the Dockerfile
+  (Trivy), what a pull request adds to the dependencies (dependency review), and CodeQL on the code and on the
+  workflows, whose serious alerts stop the pull request. The production image is also scanned every night. Nothing
+  changes for a platform that runs.
 - **An exhaustive access matrix**, played against the real image every night: every page, API route and server action
   (all 73 entry points of the image) as each of nine profiles (visitor, account waiting for approval, member, proposer,
   validator, custom role, Admin, owner, removed member whose cookie is still valid), with the events module on and off:
