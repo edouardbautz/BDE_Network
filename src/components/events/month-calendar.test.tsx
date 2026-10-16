@@ -79,7 +79,11 @@ const query = parseEventsQuery(
   },
 );
 
-async function renderCalendar(occurrences: OccurrenceView[], selectedKey = '2026-10-10') {
+async function renderCalendar(
+  occurrences: OccurrenceView[],
+  selectedKey = '2026-10-10',
+  canCreate = false,
+) {
   return renderToHtml(
     <MonthCalendar
       grid={buildMonthGrid(month)}
@@ -90,6 +94,7 @@ async function renderCalendar(occurrences: OccurrenceView[], selectedKey = '2026
       todayKey="2026-10-15"
       selectedKey={selectedKey}
       query={query}
+      canCreate={canCreate}
     />,
   );
 }
@@ -191,6 +196,68 @@ describe('MonthCalendar', () => {
       }),
     ]);
     expect(html).toContain('border-muted-foreground/40');
+  });
+});
+
+describe('MonthCalendar, adding an event on a day', () => {
+  it('offers a "+" in every cell to whoever can create events, hidden until hover or focus', async () => {
+    const html = await renderCalendar([], '2026-10-10', true);
+    const links = html.match(/<a [^>]*href="\/events\/new\?date=[^"]*"[^>]*>/g) ?? [];
+    // one per cell of the 35-cell grid, plus the button of the day panel
+    expect(links).toHaveLength(36);
+    expect(html).toContain('href="/events/new?date=2026-10-10"');
+    expect(html).toContain('href="/events/new?date=2026-09-28"'); // a day of the month before, shown in the grid
+    const cell = links.find((link) => link.includes('date=2026-10-20')) ?? '';
+    expect(cell).toContain(
+      'aria-label="calendar.addOnDay{&quot;date&quot;:&quot;mardi 20 octobre&quot;}"',
+    );
+    // desktop only (a phone has the button of the panel), revealed by hover and by keyboard focus, always on a touch screen
+    expect(cell).toMatch(/class="[^"]*hidden[^"]*md:flex/);
+    expect(cell).toContain('opacity-0');
+    expect(cell).toContain('[td:hover_&amp;]:opacity-100');
+    expect(cell).toContain('group-focus-within/cell:opacity-100');
+    expect(cell).toContain('focus-visible:opacity-100');
+    expect(cell).toContain('pointer-coarse:opacity-100');
+    expect(cell).toContain('focus-visible:ring-3');
+  });
+
+  it('puts the "+" after the day link, so that the keyboard reaches the day first, then the "+", then its events', async () => {
+    const html = await renderCalendar(
+      [
+        occurrence({
+          start: '2026-10-20T16:00:00Z',
+          end: '2026-10-20T18:00:00Z',
+          title: 'Tournoi',
+        }),
+      ],
+      '2026-10-10',
+      true,
+    );
+    const cell = html.slice(html.indexOf('day=2026-10-20'));
+    expect(cell.indexOf('date=2026-10-20')).toBeGreaterThan(-1);
+    expect(cell.indexOf('date=2026-10-20')).toBeLessThan(cell.indexOf('Tournoi'));
+  });
+
+  it('adds an "add on this day" button to the panel of the selected day, for small screens', async () => {
+    const html = await renderCalendar([], '2026-10-12', true);
+    const panel = html.slice(html.indexOf('<section class="md:hidden"'));
+    expect(panel).toContain('id="add-on-selected-day"');
+    expect(panel).toContain('href="/events/new?date=2026-10-12"');
+    expect(panel).toContain('calendar.addOnSelectedDay');
+    // the heading stays a heading of its own
+    expect(panel).toMatch(/<h2 id="selected-day-heading"[^>]*>lundi 12 octobre<\/h2>/);
+  });
+
+  it('shows nothing of it to whoever cannot create events', async () => {
+    const html = await renderCalendar(
+      [occurrence({ start: '2026-10-10T18:00:00Z', end: '2026-10-10T20:00:00Z' })],
+      '2026-10-10',
+      false,
+    );
+    expect(html).not.toContain('/events/new');
+    expect(html).not.toContain('addOnDay');
+    expect(html).not.toContain('addOnSelectedDay');
+    expect(html).not.toContain('add-on-selected-day');
   });
 });
 

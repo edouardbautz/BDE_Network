@@ -403,7 +403,10 @@
       "dayEmpty": "Aucun événement ce jour-là.",
       "previous": "Mois précédent",
       "next": "Mois suivant",
-      "today": "Aujourd'hui"
+      "today": "Aujourd'hui",
+      "addOnDay": "Ajouter un événement le {date}",
+      "addOnDayShort": "Ajouter un événement",
+      "addOnSelectedDay": "Ajouter ce jour-là"
     },
     "filters": {
       "category": "Catégorie",

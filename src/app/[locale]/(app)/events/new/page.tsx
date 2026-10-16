@@ -6,23 +6,24 @@ import { redirect } from '@/i18n/navigation';
 import { getEventsAccess } from '@/lib/events/access';
 import { getCategories } from '@/lib/events/categories';
 import { listAssignableMembers } from '@/lib/events/queries';
-import { addDays, formatLocalInput, fromLocalDateTime, toLocalDateTime } from '@/lib/events/time';
+import { cancelHrefFor, defaultEventTimes, requestedEventDay } from '@/lib/events/defaults';
+import type { RawSearchParams } from '@/lib/events/search-params';
 import { createEvent } from '../actions';
 import { pageTitle } from '@/lib/page-title';
 
 export const dynamic = 'force-dynamic';
 export const generateMetadata = pageTitle('events', 'form.createTitle');
 
-/** Pre-fills tomorrow 18:00–20:00 (BDE timezone): a plausible starting point
- * that is quick to adjust, instead of an empty date picker. */
-function defaultTimes(now: Date, timeZone: string) {
-  const tomorrow = addDays(toLocalDateTime(now, timeZone), 1);
-  const start = fromLocalDateTime({ ...tomorrow, hour: 18, minute: 0 }, timeZone);
-  const end = fromLocalDateTime({ ...tomorrow, hour: 20, minute: 0 }, timeZone);
-  return { startsAt: formatLocalInput(start, timeZone), endsAt: formatLocalInput(end, timeZone) };
-}
-
-export default async function NewEventPage() {
+/**
+ * The form starts from 18:00–20:00 (BDE timezone), on the day of the "+" of the calendar (`?date=YYYY-MM-DD`, ignored
+ * when it is not a real day) or, from the button, on tomorrow. Only the people who can create events get here: the
+ * link of the calendar is hidden from the others, and this page and the action check it again.
+ */
+export default async function NewEventPage({
+  searchParams,
+}: {
+  searchParams: Promise<RawSearchParams>;
+}) {
   const access = await getEventsAccess();
   if (!access) {
     notFound();
@@ -32,7 +33,8 @@ export default async function NewEventPage() {
     redirect({ href: '/events', locale: await getLocale() });
   }
 
-  const t = await getTranslations('events');
+  const [t, raw] = await Promise.all([getTranslations('events'), searchParams]);
+  const day = requestedEventDay(raw.date);
   const timeZone = getConfig().bde.timezone;
   const categories = getCategories();
 
@@ -46,7 +48,7 @@ export default async function NewEventPage() {
           description: '',
           location: '',
           categoryKey: categories[0]?.key ?? '',
-          ...defaultTimes(new Date(), timeZone),
+          ...defaultEventTimes(new Date(), timeZone, day),
           recurrence: 'NONE',
           recurrenceUntil: '',
           status: 'DRAFT',
@@ -56,7 +58,7 @@ export default async function NewEventPage() {
         members={await listAssignableMembers()}
         timeZone={timeZone}
         submitLabel={t('form.create')}
-        cancelHref="/events"
+        cancelHref={cancelHrefFor(day)}
         isEditing={false}
       />
     </div>

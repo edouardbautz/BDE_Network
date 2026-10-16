@@ -6,6 +6,15 @@ All notable changes to this project are written here, in English. Format based o
 
 ## [Unreleased]
 
+### Added
+
+- **Create an event from the calendar.** On a computer, a **+** appears in the corner of a day when it is hovered or
+  reached with the keyboard (always shown on a touch screen); on a phone, tapping a day shows its events as before, with
+  an **Add on this day** button. Both open the creation form on that day, from 6 pm to 8 pm in the BDE's time zone
+  (**Cancel** comes back to that day). Only those who can manage events see them, and the form and the action check it
+  again on the server. The new browser test clicks them on a computer-sized and a phone-sized screen, in both languages,
+  and checks that a member is offered nothing.
+
 ## [1.2.0] - 2026-10-15
 
 ### Changed

@@ -578,6 +578,17 @@ User guide: `docs/en/events.md`. The shape worth knowing before touching it:
     is written **in the same transaction** as the change (`auditEventAction(..., tx)`).
   - **A conflict is a notice, not an error**: two people cutting the same series at once is retried, then answered
     with `?notice=seriesBusy`; a date that is gone is `occurrenceGone` (`lib/events/notice.ts`).
+- **Quick add from the calendar** (`lib/events/defaults.ts`, `month-calendar.tsx`, `events/new/page.tsx`; scenario "the
+  form opens on that day" and the member check of `e2e/events.mjs`). A "+" in each cell (from `md` up: `hidden md:flex`,
+  revealed by `[td:hover_&]` (an arbitrary variant, not `group-hover`: Tailwind wraps `hover:` in `@media (hover: hover)`, which a headless Chrome without a pointer, the CI's, does not match) and `group-focus-within/cell`, always shown under `pointer-coarse`, right after the day
+  link in the tab order, named "Add an event on" plus the day) and, below `md`, an "add on this day" button in the panel of the
+  selected day (`#add-on-selected-day`) both link to `/events/new?date=YYYY-MM-DD`. **Permission**: they are rendered only
+  when `access.canManage` (`canCreate`), which is a courtesy; `/events/new` redirects anybody else (with or without the
+  date) and `createEvent` calls `requireEventsManager()`: the day in the address grants nothing. The date is read
+  defensively (`requestedEventDay`: a real day of 2000–2100, anything else is ignored and the form starts from tomorrow as
+  from the button; a past day is kept, events are recorded after the fact). **Default time**: 18:00–20:00 on that day in
+  `bde.timezone` (`defaultEventTimes`, the same wall-clock helpers as the form: DST days stay 18:00 local; the browser's
+  time zone plays no part). Cancel returns to that day of the calendar (`cancelHrefFor`).
 - **Event input is validated by one pure Zod module** (`src/lib/events/input.ts`): required =
   title, description, location, category, start, end (+ series end date); only the assignees are
   optional. The form imports the very same `parseEventInput` to show errors before sending, and

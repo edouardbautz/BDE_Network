@@ -35,7 +35,16 @@ protection. A draft you have no right to is not "forbidden": it is not found.
 
 ## Creating an event
 
-**Events** → **New event**.
+**Events** → **New event**, or, faster, **from the calendar**:
+
+- **On a computer**, a **+** appears in the corner of a day when you point at it (and when the keyboard reaches it: Tab,
+  right after the day itself; on a touch screen it is always there). It opens the form **on that day**.
+- **On a phone**, tap a day, then **Add on this day** under the calendar.
+
+The form then starts from **6 pm to 8 pm** on that day (BDE time zone), which you adjust like any other date. Without
+a day (the **New event** button), it starts from tomorrow, 6 pm to 8 pm. A day in the past is accepted, to record an
+event after the fact. **Cancel** brings you back to that day of the calendar. These shortcuts only exist for those who
+can manage events: the others do not see them, and the form refuses them if they type its address.
 
 ![An event that repeats every week](../images/en/event.webp)
 

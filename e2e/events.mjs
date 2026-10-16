@@ -4,6 +4,7 @@
 //
 //   AUTH_SECRET=<the session secret of the platform> node e2e/events.mjs <address>
 //   OWNER=alice     the login of an owner account (it must exist)
+//   MEMBER=carol    the login of a member who can read events but not create them (it must exist)
 //   EVENT=e2e-weekly  the id of a confirmed weekly event that has at least two dates to come
 //   CHROME_PATH=...  SHOTS=<folder>
 //
@@ -17,7 +18,7 @@ import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { encode } from '@auth/core/jwt';
 import puppeteer from 'puppeteer-core';
-import { watchPage } from './watch-page.mjs';
+import { settled, watchPage } from './watch-page.mjs';
 
 const [base] = process.argv.slice(2);
 const secret = process.env.AUTH_SECRET;
@@ -26,6 +27,7 @@ if (!base || !secret) {
   process.exit(2);
 }
 const OWNER = process.env.OWNER ?? 'alice';
+const MEMBER = process.env.MEMBER ?? 'carol'; // an approved member without the right to create events
 const EVENT = process.env.EVENT ?? 'e2e-weekly';
 
 const CANDIDATES = [
@@ -47,6 +49,7 @@ if (shots) mkdirSync(shots, { recursive: true });
 
 const COOKIE = 'authjs.session-token';
 const token = await encode({ token: { login: OWNER }, secret, salt: COOKIE });
+const memberToken = await encode({ token: { login: MEMBER }, secret, salt: COOKIE });
 
 const SCREENS = {
   computer: { width: 1280, height: 900 },
@@ -59,6 +62,7 @@ const WORDS = {
     today: "Aujourd'hui",
     calendar: 'Calendrier',
     list: 'Liste',
+    addOnDay: 'Ajouter un événement le',
   },
   en: {
     previous: 'Previous month',
@@ -66,6 +70,7 @@ const WORDS = {
     today: 'Today',
     calendar: 'Calendar',
     list: 'List',
+    addOnDay: 'Add an event on',
   },
 };
 
@@ -202,6 +207,75 @@ async function run(screen, lang) {
   );
   step('a day of the grid selects that day');
 
+  // 2b. add an event on a day: the "+" in the corner of the cell (computer), the button of the day panel (phone), for
+  // whoever can create events; the form opens on that day, at 18:00–20:00 in the BDE's time zone
+  const addAddress = `/${lang}/events/new?date=${dayKey}`;
+  const addLink = `table a[href="${addAddress}"]`;
+  const dayLink = `table a[href*="day=${dayKey}"]`;
+  const opacityOf = (selector) =>
+    page.$eval(selector, (el) => getComputedStyle(el).opacity).catch(() => null);
+  // (sent to the page as it is: it can only use its argument)
+  const isOn = (address) => location.pathname + location.search === address;
+  const formStartsOn = async () => {
+    await page.waitForSelector('#startsAt');
+    const [startsAt, endsAt] = await page.$$eval('#startsAt, #endsAt', (els) =>
+      els.map((el) => el.value),
+    );
+    if (startsAt !== `${dayKey}T18:00` || endsAt !== `${dayKey}T20:00`)
+      fail(`[${label}] the form starts ${startsAt} – ${endsAt}, not ${dayKey} 18:00 – 20:00`);
+  };
+  const cancelBackToTheDay = async () => {
+    await clickAndWait(
+      `main a[href*="view=calendar"][href*="day=${dayKey}"]`,
+      () => location.pathname.endsWith('/events') && document.querySelector('table') !== null,
+      'cancelling the form did not come back to the calendar',
+    );
+    await settled(page);
+  };
+  await settled(page);
+  if (screen === 'computer') {
+    if ((await opacityOf(addLink)) !== '0')
+      fail(`[${label}] the "+" of a day shows without being asked`);
+    // (The Chrome of the CI has no pointing device: `@media (hover: hover)` does not match there, which is where Tailwind
+    // puts its `hover:` variants. The "+" must appear on hover without it: it is how this check found out.)
+    await page.hover(dayLink);
+    const shown = (selector) => getComputedStyle(document.querySelector(selector)).opacity === '1';
+    if (!(await waitFor(shown, addLink)))
+      fail(`[${label}] the "+" did not appear when the day was hovered`);
+    const name = await page.$eval(addLink, (el) => el.getAttribute('aria-label'));
+    if (!name?.startsWith(words.addOnDay) || !name.includes(String(pick)))
+      fail(`[${label}] the "+" is named "${name}"`);
+    step('the "+" of a day appears when the day is hovered, and says which day');
+
+    // the keyboard: the day, then its "+", which shows itself when it has the focus
+    await page.mouse.move(0, 0);
+    await page.focus(dayLink);
+    await page.keyboard.press('Tab');
+    const focused = await page.evaluate(() => document.activeElement?.getAttribute('href'));
+    if (focused !== addAddress)
+      fail(`[${label}] Tab from the day went to ${focused}, not to its "+"`);
+    if (!(await waitFor(shown, addLink)))
+      fail(`[${label}] the "+" stays invisible with the keyboard focus`);
+    step('the "+" is the next stop of the keyboard after the day, and shows itself there');
+
+    await clickAndWait(addLink, isOn, 'the "+" did not open the form on that day', addAddress);
+  } else {
+    // a phone has no hover: no "+" in the cells, a button under the grid for the day that is selected
+    const display = await page.$eval(addLink, (el) => getComputedStyle(el).display);
+    if (display !== 'none') fail(`[${label}] the "+" of the cells shows on a phone (${display})`);
+    await clickAndWait(
+      '#add-on-selected-day',
+      isOn,
+      'the button of the day did not open the form',
+      addAddress,
+    );
+  }
+  await formStartsOn();
+  step('the form opens on that day, 18:00–20:00');
+  await settled(page);
+  await cancelBackToTheDay();
+  step('cancelling comes back to that day of the calendar');
+
   // 3. the list, then the calendar again
   await clickAndWait(
     tab(words.list),
@@ -267,6 +341,29 @@ async function run(screen, lang) {
     // the test's own doing, not the page's.
     await page.waitForNetworkIdle({ idleTime: 500 }).catch(() => undefined);
     step('the menu opens the events page, from itself and from the dashboard');
+  }
+
+  if (screen === 'computer') {
+    // Somebody who can read events but not create them: no "+", no button, and the form sends them back to the list.
+    const member = await browser.newPage();
+    await member.setViewport(SCREENS.computer);
+    await member.setExtraHTTPHeaders({ 'Accept-Language': lang });
+    await member.setCookie({ name: COOKIE, value: memberToken, url: base, httpOnly: true });
+    await member.goto(`${base}/${lang}/events?view=calendar`, { waitUntil: 'networkidle0' });
+    const calendar = await member.$('table');
+    if (!calendar)
+      fail(`[${label}] the member ${MEMBER} cannot read the calendar (is the account there?)`);
+    const offered = await member.$$eval(
+      'a[href*="/events/new"], #add-on-selected-day',
+      (els) => els.length,
+    );
+    if (offered !== 0)
+      fail(`[${label}] ${offered} way(s) to create an event are offered to a member`);
+    await member.goto(`${base}/${lang}/events/new?date=${dayKey}`, { waitUntil: 'networkidle0' });
+    if (new URL(member.url()).pathname !== `/${lang}/events`)
+      fail(`[${label}] a member reached ${member.url()} with the address of the form`);
+    await member.close();
+    step('a member sees no way to create an event, and the form sends them back to the list');
   }
 
   if (watch.errors.length > 0) {

@@ -135,6 +135,7 @@ export default async function EventsPage({
             todayKey={todayKey}
             selectedKey={selectedKey}
             query={query}
+            canCreate={access.canManage}
           />
           {!monthHasEvents && (
             <Card className="mt-4 border-dashed">
