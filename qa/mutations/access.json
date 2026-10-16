@@ -54,9 +54,9 @@
     "return null;"
   ],
   [
-    "export: a visitor takes the data of somebody",
-    "src/app/api/me/export/route.ts",
-    "if (!session) {\n    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });\n  }",
-    ""
+    "events: a draft leaks through the calendar file",
+    "src/app/api/events/[id]/ics/route.ts",
+    "const visibility = draftVisibility(access);",
+    "const visibility = { includeDrafts: true };"
   ]
 ]
