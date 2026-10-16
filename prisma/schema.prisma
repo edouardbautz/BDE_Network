@@ -103,16 +103,9 @@ enum EventStatus {
   CONFIRMED
 }
 
-enum EventRecurrence {
-  NONE
-  WEEKLY
-  BIWEEKLY
-  MONTHLY
-}
-
 /// An event planned by the BDE board (events module). A recurring event is a
 /// single row — the "series master": occurrences are computed from
-/// startsAt/recurrence/recurrenceUntil in the BDE timezone, never stored.
+/// startsAt/repeat/recurrenceUntil in the BDE timezone, never stored.
 /// Authorship follows the AuditLog pattern: authorLogin is plain text so the
 /// history survives the author's account being removed.
 model Event {
@@ -127,8 +120,11 @@ model Event {
   startsAt               DateTime
   /// UTC. endsAt - startsAt is the duration of every occurrence.
   endsAt                 DateTime
-  recurrence             EventRecurrence @default(NONE)
-  /// UTC instant after which no occurrence starts. Required when recurrence is not NONE.
+  /// How the event repeats: a rule (src/lib/events/repeat.ts: frequency, interval, weekdays, day of the month, count),
+  /// read with readRepeatRule. null = the event does not repeat. What a rule leaves out is "like the first date".
+  repeat                 Json?
+  /// UTC instant after which no occurrence starts: the end date of a series, or the start of the last date of a
+  /// series that ends after N dates. null exactly when the event does not repeat (a CHECK the schema cannot express).
   recurrenceUntil        DateTime?
   /// Academic year of startsAt in the BDE timezone, e.g. "2025-2026"
   schoolYear             String
@@ -138,9 +134,6 @@ model Event {
   /// The first row of the series this row was cut from ("this date and the following" splits a series in two
   /// rows). null = this row is its own series. It keeps the UID of every date in the calendar feeds stable.
   seriesId               String?
-  /// Day of the month a MONTHLY series sticks to (31 → the last day of shorter months). null = the day of
-  /// startsAt. Set when a series is cut on a date that a short month had moved (the 28th, for a "31st").
-  monthlyDay             Int?
   /// When the event was last submitted for validation (status PROPOSED), to list the oldest first.
   proposedAt             DateTime?
   /// A validator refused the proposal: the comment the author reads, who wrote it and when. The event is a DRAFT

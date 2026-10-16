@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import type { EventRecurrence } from '@/generated/prisma/client';
 import {
   MAX_OCCURRENCES,
   allOccurrences,
@@ -11,8 +10,16 @@ import { formatLocalInput } from './time';
 
 const PARIS = 'Europe/Paris';
 
+/** What the series of the first versions were: the rules the migration turns them into. */
+const LEGACY_RULES = {
+  NONE: null,
+  WEEKLY: { freq: 'WEEKLY', interval: 1 },
+  BIWEEKLY: { freq: 'WEEKLY', interval: 2 },
+  MONTHLY: { freq: 'MONTHLY', interval: 1 },
+} as const;
+
 function source(
-  recurrence: EventRecurrence,
+  recurrence: keyof typeof LEGACY_RULES,
   startsAt: string,
   until: string | null,
   durationHours = 2,
@@ -21,7 +28,7 @@ function source(
   return {
     startsAt: start,
     endsAt: new Date(start.getTime() + durationHours * 3_600_000),
-    recurrence,
+    repeat: LEGACY_RULES[recurrence],
     recurrenceUntil: until ? new Date(until) : null,
   };
 }

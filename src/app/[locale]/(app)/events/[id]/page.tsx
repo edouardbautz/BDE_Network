@@ -123,7 +123,8 @@ export default async function EventDetailPage({
   const isProposerOnly = !isValidator && access.canPropose;
 
   const now = Date.now();
-  const isSeries = event.recurrence !== 'NONE';
+  const isSeries = isRepeating(event);
+  const repeatSummary = summaryInputOf(event, timeZone);
   const requested = Array.isArray(rawSearch.occ) ? rawSearch.occ[0] : rawSearch.occ;
   const live = occurrences.filter((o) => !o.cancelled);
   const shown =
@@ -432,12 +433,9 @@ export default async function EventDetailPage({
                 {formatDateTimeRange(shown.start, shown.end, locale, timeZone)}
               </span>
             </DetailRow>
-            {isSeries && event.recurrenceUntil && (
+            {repeatSummary && (
               <DetailRow icon={Repeat} label={t('detail.repeats')}>
-                {t('detail.repeatsValue', {
-                  frequency: t(`recurrence.${event.recurrence}`),
-                  until: formatLongDate(event.recurrenceUntil, locale, timeZone),
-                })}
+                {summarizeRepeat(repeatSummary, tRepeat, locale)}
               </DetailRow>
             )}
             {shown.location && (

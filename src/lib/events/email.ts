@@ -2,7 +2,7 @@ import { renderEmail } from '@/lib/notifications/email-layout';
 import type { EmailModel } from '@/lib/notifications/email-layout';
 import type { EmailContent } from '@/lib/notifications/types';
 import { truncate } from '@/lib/notifications/text';
-import { formatDate, whenLine, type NotificationEventData, type Translate } from './messages';
+import { whenLine, type NotificationEventData, type Translate } from './messages';
 import { KIND_LABEL_KEY, actionLabelKey, type EventCardKind } from './card-kind';
 import { buildIcs, icsFilename, occurrenceUid } from './ics';
 
@@ -49,14 +49,7 @@ ${data.review.comment}`
   const fields: EmailModel['fields'] = [
     { label: t('embed.fields.when'), value: whenLine(data, locale, timeZone) },
   ];
-  if (data.recurrence !== 'NONE' && data.recurrenceUntil) {
-    fields.push({
-      label: t('embed.fields.repeats'),
-      value: t(`embed.repeatsValue.${data.recurrence}`, {
-        until: formatDate(data.recurrenceUntil, locale, timeZone),
-      }),
-    });
-  }
+  if (data.repeat) fields.push({ label: t('embed.fields.repeats'), value: data.repeat });
   if (data.location) fields.push({ label: t('embed.fields.where'), value: data.location });
   fields.push({
     label: t('embed.fields.category'),

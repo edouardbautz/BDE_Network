@@ -2,6 +2,7 @@ import type { Prisma } from '@/generated/prisma/client';
 import { logAuditEvent } from '@/lib/audit-log';
 import { simulationAuditFields } from '@/lib/audit-fields';
 import type { EventsAccess } from './access';
+import { isRepeating } from './repeat';
 
 export type EventAuditAction =
   | 'event.create'
@@ -41,11 +42,11 @@ export async function auditEventAction(
  * that date and the following (`fromFirst`: the first date, so the whole series), and which date. An event that
  * does not repeat has none of it. */
 export function seriesAuditFields(
-  event: { recurrence: string; startsAt: Date },
+  event: { repeat?: unknown; recurrenceUntil: Date | null; startsAt: Date },
   scope: 'occurrence' | 'following',
   occurrenceStart: Date,
 ): Record<string, Prisma.InputJsonValue> {
-  if (event.recurrence === 'NONE') return {};
+  if (!isRepeating(event)) return {};
   return {
     scope,
     occurrenceStart: occurrenceStart.toISOString(),

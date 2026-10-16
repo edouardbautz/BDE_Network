@@ -10,13 +10,7 @@ import {
 } from '@/lib/notifications/slack-blocks';
 import { truncate } from '@/lib/notifications/text';
 import { KIND_LABEL_KEY, actionLabelKey, type EventCardKind } from './card-kind';
-import {
-  formatDate,
-  formatDateTime,
-  whenLine,
-  type NotificationEventData,
-  type Translate,
-} from './messages';
+import { formatDateTime, whenLine, type NotificationEventData, type Translate } from './messages';
 import { isSameLocalDay } from './time';
 
 /** How much of the event's description a message shows: it is a notice, the page has the rest. */
@@ -88,20 +82,7 @@ export function buildEventSlack(
     ...(data.assigneeNames.length > 0
       ? [column(t('embed.fields.inCharge'), text(data.assigneeNames.join(', '), 400))]
       : []),
-    ...(data.recurrence !== 'NONE' && data.recurrenceUntil
-      ? [
-          column(
-            t('embed.fields.repeats'),
-            t(`embed.repeatsValue.${data.recurrence}`, {
-              until: slackDate(
-                data.recurrenceUntil,
-                '{date_long}',
-                formatDate(data.recurrenceUntil, locale, timeZone),
-              ),
-            }),
-          ),
-        ]
-      : []),
+    ...(data.repeat ? [column(t('embed.fields.repeats'), text(data.repeat, 400))] : []),
   ];
 
   const blocks: SlackBlock[] = [

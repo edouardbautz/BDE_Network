@@ -29,6 +29,7 @@ import {
   type RawEventInput,
 } from '@/lib/events/input';
 import { NativeSelect, Textarea } from './field-styles';
+import { RepeatFields } from './repeat-fields';
 
 export interface FormCategory {
   key: string;
@@ -70,8 +71,6 @@ interface EventFormProps {
   series?: SeriesEditing;
 }
 
-const RECURRENCES = ['NONE', 'WEEKLY', 'BIWEEKLY', 'MONTHLY'] as const;
-
 function readRawInput(form: HTMLFormElement): RawEventInput {
   const data = new FormData(form);
   const text = (name: string) => String(data.get(name) ?? '');
@@ -82,9 +81,16 @@ function readRawInput(form: HTMLFormElement): RawEventInput {
     categoryKey: text('categoryKey'),
     startsAt: text('startsAt'),
     endsAt: text('endsAt'),
-    recurrence: text('recurrence'),
-    recurrenceUntil: text('recurrenceUntil'),
     status: text('status'),
+    repeat: text('repeat'),
+    repeatFreq: text('repeatFreq'),
+    repeatInterval: text('repeatInterval'),
+    repeatWeekdays: data.getAll('repeatWeekdays').map(String),
+    repeatMonthly: text('repeatMonthly'),
+    repeatMonthDay: text('repeatMonthDay'),
+    repeatEnd: text('repeatEnd'),
+    recurrenceUntil: text('recurrenceUntil'),
+    repeatCount: text('repeatCount'),
     assigneeLogins: data.getAll('assignees').map(String),
   };
 }
@@ -128,7 +134,9 @@ export function EventForm({
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, isPending] = useActionState(action, {});
   const values = state.values ?? initial;
-  const [recurrence, setRecurrence] = useState(values.recurrence);
+  // The first date and the end typed: the repeat choices are worded from them.
+  const [startsAt, setStartsAt] = useState(values.startsAt);
+  const [endsAt, setEndsAt] = useState(values.endsAt);
   // Errors found in the browser before sending; null until a first failed attempt.
   const [clientErrors, setClientErrors] = useState<EventFormErrors | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -292,6 +300,7 @@ export function EventForm({
               name="startsAt"
               type="datetime-local"
               defaultValue={values.startsAt}
+              onChange={(event) => setStartsAt(event.target.value)}
               {...field('startsAt', true)}
             />
             {fieldError('startsAt')}
@@ -306,6 +315,7 @@ export function EventForm({
               name="endsAt"
               type="datetime-local"
               defaultValue={values.endsAt}
+              onChange={(event) => setEndsAt(event.target.value)}
               {...field('endsAt', true)}
             />
             {fieldError('endsAt')}
@@ -314,41 +324,14 @@ export function EventForm({
             {t('form.timeZoneHelp', { timeZone })}
           </p>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="recurrence">{t('form.recurrence')}</FieldLabel>
-            <NativeSelect
-              id="recurrence"
-              name="recurrence"
-              value={recurrence}
-              onChange={(event) => setRecurrence(event.target.value)}
-              {...field('recurrence')}
-            >
-              {RECURRENCES.map((value) => (
-                <option key={value} value={value}>
-                  {t(`recurrence.${value}`)}
-                </option>
-              ))}
-            </NativeSelect>
-            {fieldError('recurrence')}
-          </div>
-
-          {recurrence !== 'NONE' && (
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="recurrenceUntil" required>
-                {t('form.recurrenceUntil')}
-              </FieldLabel>
-              <Input
-                id="recurrenceUntil"
-                name="recurrenceUntil"
-                type="date"
-                defaultValue={values.recurrenceUntil}
-                {...field('recurrenceUntil', true)}
-              />
-              <p className="text-muted-foreground text-xs">{t('form.recurrenceUntilHelp')}</p>
-              {fieldError('recurrenceUntil')}
-            </div>
-          )}
-          {isEditing && recurrence !== 'NONE' && (
+          <RepeatFields
+            values={values}
+            startsAt={startsAt}
+            endsAt={endsAt}
+            timeZone={timeZone}
+            error={error}
+          />
+          {isEditing && values.repeat !== 'NONE' && (
             <p className="text-muted-foreground text-xs sm:col-span-2">{t('form.seriesHelp')}</p>
           )}
 

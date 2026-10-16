@@ -54,10 +54,10 @@ export async function listOccurrences(
         ...filterWhere(options.filters),
         {
           OR: [
-            { recurrence: 'NONE', startsAt: { lt: range.to }, endsAt: { gt: range.from } },
+            // An event that does not repeat has no end date, a series always has one.
+            { recurrenceUntil: null, startsAt: { lt: range.to }, endsAt: { gt: range.from } },
             // Slight over-fetch: an occurrence can end after recurrenceUntil.
             {
-              recurrence: { not: 'NONE' },
               startsAt: { lt: range.to },
               recurrenceUntil: { gte: new Date(range.from.getTime() - DAY_MS) },
             },

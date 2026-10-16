@@ -67,7 +67,8 @@ export default async function ReviewPage({
           <CardContent>
             <ul className="divide-y">
               {proposals.map((event) => {
-                const isSeries = event.recurrence !== 'NONE';
+                const isSeries = isRepeating(event);
+                const repeatSummary = summaryInputOf(event, timeZone);
                 const dates = resolveOccurrences(event, timeZone).filter((d) => !d.cancelled);
                 const first = dates[0];
                 const notice = confirmationNotice(channel, event.confirmationNotifiedAt !== null);
@@ -108,13 +109,10 @@ export default async function ReviewPage({
                             </span>
                           </span>
                         )}
-                        {isSeries && event.recurrenceUntil && (
+                        {repeatSummary && (
                           <span className="inline-flex items-center gap-1">
                             <Repeat className="size-3.5" aria-hidden />
-                            {t('detail.repeatsValue', {
-                              frequency: t(`recurrence.${event.recurrence}`),
-                              until: formatLongDate(event.recurrenceUntil, locale, timeZone),
-                            })}
+                            {summarizeRepeat(repeatSummary, tRepeat, locale)}
                           </span>
                         )}
                       </div>

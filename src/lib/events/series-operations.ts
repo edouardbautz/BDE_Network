@@ -1,7 +1,9 @@
 import { getConfig } from '@/config';
-import type { EventRecurrence, EventStatus, Prisma } from '@/generated/prisma/client';
+import type { EventStatus, Prisma } from '@/generated/prisma/client';
 import { eventInclude } from './include';
 import { allOccurrences, type RecurringSource } from './recurrence';
+import { cutRule, readRepeatRule, sameRepeat, type RepeatRule } from './repeat';
+import { repeatColumn } from './repeat-column';
 import {
   applyToOverride,
   changedFields,
@@ -50,9 +52,10 @@ export interface DateChange {
   assignees?: readonly Assignee[];
 }
 
-/** For "this date and the following": the series' own rule, when the form also changes it. */
+/** For "this date and the following": the series' own rule, when the form also changes it: how it repeats (null: it
+ * does not) and when it ends (see `Event.recurrenceUntil`). */
 export interface FollowingChange extends DateChange {
-  recurrence?: { recurrence: EventRecurrence; recurrenceUntil: Date | null };
+  repeat?: { rule: RepeatRule | null; until: Date | null };
 }
 
 const timeZone = () => getConfig().bde.timezone;
@@ -182,10 +185,9 @@ async function splitSeries(
   const zone = timeZone();
   const cutAt = starts[index]!.start;
   const before = starts[index - 1]!.start;
-  const monthlyDay =
-    event.recurrence === 'MONTHLY'
-      ? (event.monthlyDay ?? toLocalDateTime(event.startsAt, zone).day)
-      : null;
+  // The two rows share the rule: the dates before the cut for the first, the others for the new one.
+  const rule = readRepeatRule(event.repeat);
+  const cut = rule ? cutRule(rule, toLocalDateTime(event.startsAt, zone), index) : null;
 
   const tail = await tx.event.create({
     data: {
@@ -196,9 +198,8 @@ async function splitSeries(
       status: event.status,
       startsAt: cutAt,
       endsAt: new Date(cutAt.getTime() + (event.endsAt.getTime() - event.startsAt.getTime())),
-      recurrence: event.recurrence,
+      repeat: repeatColumn(cut?.tail ?? null),
       recurrenceUntil: event.recurrenceUntil,
-      monthlyDay,
       schoolYear: schoolYearOf(cutAt, zone),
       // The same series: announced once, not again because it was cut.
       confirmationNotifiedAt: event.confirmationNotifiedAt,
@@ -213,16 +214,23 @@ async function splitSeries(
   await tx.eventOccurrence.updateMany({ where: from, data: { eventId: tail.id } });
   await tx.eventCancellation.updateMany({ where: from, data: { eventId: tail.id } });
   await tx.eventReminder.updateMany({ where: from, data: { eventId: tail.id } });
-  await tx.event.update({ where: { id: event.id }, data: endSeriesAt(index - 1, before) });
+  await tx.event.update({
+    where: { id: event.id },
+    data: endSeriesAt(index - 1, before, cut?.head ?? null),
+  });
 
   return loadEvent(tx, tail.id);
 }
 
 /** A series that is left with one date is an ordinary event; otherwise it stops at its last date. */
-function endSeriesAt(lastIndex: number, lastStart: Date): Prisma.EventUpdateInput {
+function endSeriesAt(
+  lastIndex: number,
+  lastStart: Date,
+  head: RepeatRule | null,
+): Prisma.EventUpdateInput {
   return lastIndex === 0
-    ? { recurrence: 'NONE', recurrenceUntil: null, monthlyDay: null }
-    : { recurrenceUntil: lastStart };
+    ? { repeat: repeatColumn(null), recurrenceUntil: null }
+    : { repeat: repeatColumn(head), recurrenceUntil: lastStart };
 }
 
 export interface FollowingResult {
@@ -253,10 +261,13 @@ export async function updateFollowing(
   const zone = timeZone();
   const { event, starts, index } = await locate(tx, eventId, occurrenceStart);
   const { current: before, wanted, keys } = compare(event, occurrenceStart, change);
+  // The rule as the form asks it against the one stored, both read from the first date the form gives (what a rule
+  // leaves out follows it). A rule that gives the same dates is not a change, however it is written.
+  const wantedFirst = toLocalDateTime(wanted.start, zone);
   const ruleChanged =
-    !!change.recurrence &&
-    (change.recurrence.recurrence !== event.recurrence ||
-      sameDay(change.recurrence.recurrenceUntil, event.recurrenceUntil, zone) === false);
+    !!change.repeat &&
+    (!sameRepeat(change.repeat.rule, readRepeatRule(event.repeat), wantedFirst) ||
+      sameDay(change.repeat.until, event.recurrenceUntil, zone) === false);
   if (keys.length === 0 && !ruleChanged) {
     // Nothing to change: not worth cutting the series.
     return {
@@ -272,7 +283,6 @@ export async function updateFollowing(
   }
 
   const row = index === 0 ? event : await splitSeries(tx, event, starts, index);
-  const current = resolveOccurrences(row, zone)[0]!;
   const touches = (key: FieldKey) => keys.includes(key);
 
   const update: Prisma.EventUncheckedUpdateInput = {};
@@ -285,28 +295,20 @@ export async function updateFollowing(
     update.startsAt = wanted.start;
     update.endsAt = wanted.end;
     update.schoolYear = schoolYearOf(wanted.start, zone);
-    // Only the hour changed: a series anchored on a day keeps it; on another day it is anchored there.
-    if (localDayKey(wanted.start, zone) !== localDayKey(current.start, zone)) {
-      update.monthlyDay = null;
-    }
   }
-  if (change.recurrence && ruleChanged) {
-    update.recurrence = change.recurrence.recurrence;
-    update.recurrenceUntil =
-      change.recurrence.recurrence === 'NONE' ? null : change.recurrence.recurrenceUntil;
-    if (change.recurrence.recurrence !== row.recurrence) update.monthlyDay = null;
+  if (change.repeat && ruleChanged) {
+    update.repeat = repeatColumn(change.repeat.rule);
+    update.recurrenceUntil = change.repeat.rule ? change.repeat.until : null;
   }
 
   const next: RecurringSource = {
     startsAt: (update.startsAt as Date | undefined) ?? row.startsAt,
     endsAt: (update.endsAt as Date | undefined) ?? row.endsAt,
-    recurrence: (update.recurrence as EventRecurrence | undefined) ?? row.recurrence,
+    repeat: change.repeat && ruleChanged ? change.repeat.rule : row.repeat,
     recurrenceUntil:
       update.recurrenceUntil === undefined
         ? row.recurrenceUntil
         : (update.recurrenceUntil as Date | null),
-    monthlyDay:
-      update.monthlyDay === undefined ? row.monthlyDay : (update.monthlyDay as number | null),
   };
   const dateMap = remapByLocalDay(
     allOccurrences(row, zone).map((o) => o.start),
@@ -411,9 +413,11 @@ export async function deleteFollowing(
   await tx.eventOccurrence.deleteMany({ where: from });
   await tx.eventCancellation.deleteMany({ where: from });
   await tx.eventReminder.deleteMany({ where: from });
+  const rule = readRepeatRule(event.repeat);
+  const head = rule ? cutRule(rule, toLocalDateTime(event.startsAt, timeZone()), index).head : null;
   await tx.event.update({
     where: { id: event.id },
-    data: endSeriesAt(index - 1, starts[index - 1]!.start),
+    data: endSeriesAt(index - 1, starts[index - 1]!.start, head),
   });
   return { deletedEvent: false, removed };
 }

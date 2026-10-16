@@ -9,7 +9,9 @@ import { formatLongDate } from '@/lib/events/format';
 import { getVisibleEvent, listAssignableMembers } from '@/lib/events/queries';
 import { canEditEvent, draftVisibility, reviewActorOf, statusChoices } from '@/lib/events/review';
 import { resolveOccurrences, scopeFacts } from '@/lib/events/series';
-import { formatLocalDateInput, formatLocalInput } from '@/lib/events/time';
+import { isRepeating, readRepeatRule } from '@/lib/events/repeat';
+import { rawRepeatOf } from '@/lib/events/repeat-input';
+import { formatLocalDateInput, formatLocalInput, toLocalDateTime } from '@/lib/events/time';
 import { updateEvent } from '../../actions';
 import { pageTitle } from '@/lib/page-title';
 
@@ -60,7 +62,7 @@ export default async function EditEventPage({
   if (!date) {
     notFound();
   }
-  const isSeries = event.recurrence !== 'NONE';
+  const isSeries = isRepeating(event);
   // A proposer edits the event as a whole, never one date of a series: no choice of scope to ask.
   const askScope = isSeries && actor.canValidate;
   const facts = scopeFacts(dates, date.originalStart);
@@ -88,10 +90,12 @@ export default async function EditEventPage({
           categoryKey: date.categoryKey,
           startsAt: formatLocalInput(date.start, timeZone),
           endsAt: formatLocalInput(date.end, timeZone),
-          recurrence: event.recurrence,
-          recurrenceUntil: event.recurrenceUntil
-            ? formatLocalDateInput(event.recurrenceUntil, timeZone)
-            : '',
+          // What it repeats on is read from the first date of the row, which its rule leaves out parts from.
+          ...rawRepeatOf(
+            readRepeatRule(event.repeat),
+            toLocalDateTime(event.startsAt, timeZone),
+            event.recurrenceUntil ? formatLocalDateInput(event.recurrenceUntil, timeZone) : '',
+          ),
           status: date.status,
           assigneeLogins: date.assignees.map((assignee) => assignee.login),
         }}
