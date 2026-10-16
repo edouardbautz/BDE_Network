@@ -98,6 +98,8 @@ export async function callAction(
   id: string,
   page: string,
   args: unknown[],
+  /** Headers on top of the usual ones, for a request a browser would not make (another origin, for instance). */
+  extraHeaders: Record<string, string> = {},
 ): Promise<Call> {
   const body = await encodeReply(args);
   const cookie = await cookieHeaderFor(persona(who), platform.secret);
@@ -109,6 +111,7 @@ export async function callAction(
       Accept: 'text/x-component',
       ...(typeof body === 'string' ? { 'Content-Type': 'text/plain;charset=UTF-8' } : {}),
       ...(cookie ? { cookie } : {}),
+      ...extraHeaders,
     },
     body,
   });
