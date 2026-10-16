@@ -8,6 +8,12 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **A quality harness (`qa/`)** for the campaign that checks the platform before real BDEs rely on it: nine personas (visitor,
+  pending account, member, proposer, validator, custom role, Admin, owner, removed member), a deterministic dataset of two
+  school years (about 300 members, 600 events), the invariants every database must satisfy (tested against corruption), a
+  script that starts the production image with all of this, and a `qa` workflow (nightly, on demand, or on a pull request
+  labelled `full-qa`). It changes nothing for a platform that runs; see the
+  [contributor guide](docs/en/contributing.md#the-quality-campaign).
 - **Repeat rules, like a calendar's.** An event can now repeat **every day, every weekday, every week, every month or
   every year**, and the **Custom…** choice builds the rest: every N days, weeks, months or years, on the days of the week
   you tick (_every 2 weeks on Monday and Wednesday_), on a day of the month (_the 10th_, _the 2nd Saturday_, _the last

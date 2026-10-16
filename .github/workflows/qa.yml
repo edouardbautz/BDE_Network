@@ -1,0 +1,83 @@
+name: qa
+
+# The quality campaign (see "Quality campaign" in docs/architecture.md). Three levels of CI:
+#
+#   - every pull request: ci.yml, fast and deterministic, what makes a change safe to merge;
+#   - this workflow, every night and on demand (Actions → qa → Run workflow): the heavy suites, played on the real image,
+#     a real PostgreSQL and the QA dataset;
+#   - a release: the last run of this workflow on the commit to tag must be green.
+#
+# A pull request can ask for it too: put the label `full-qa` on it (typically a change to the security headers, the
+# access rules, the migrations, or the harness itself). It is NOT required to merge: it is for changes that deserve it
+# (but a pull request that carries the label is merged only once it is green, like any other job).
+
+on:
+  schedule:
+    - cron: '17 2 * * *'
+  workflow_dispatch:
+  pull_request:
+    types: [labeled, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  # Is a platform made by qa/platform.sh up, does it tell the personas apart, does its database hold the invariants.
+  # Every later suite starts from this platform.
+  baseline:
+    name: baseline (${{ matrix.variant }})
+    # A pull request runs it only when it carries the label.
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-qa')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [events-enabled, events-disabled]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: docker/setup-buildx-action@v3
+
+      # The image of the pull request or of main, built once for both variants (the second finds it in the cache).
+      - name: Build the production image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: bde-network
+          cache-from: type=gha,scope=qa-image
+          cache-to: type=gha,mode=max,scope=qa-image
+
+      - name: Start the platform with the QA dataset
+        run: sh qa/platform.sh up --image bde-network --variant "${{ matrix.variant }}"
+
+      - name: Smoke test, and the invariants of the database
+        run: |
+          eval "$(sh qa/platform.sh env)"
+          npx tsx qa/smoke.ts
+
+      - name: Logs of the platform
+        if: always()
+        run: sh qa/platform.sh logs > "$RUNNER_TEMP/platform.log" || true
+
+      - name: Keep the logs of a failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-baseline-${{ matrix.variant }}-logs
+          path: ${{ runner.temp }}/platform.log
+          if-no-files-found: ignore
+
+      - name: Stop the platform
+        if: always()
+        run: sh qa/platform.sh down
