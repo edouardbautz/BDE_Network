@@ -29,7 +29,7 @@ export interface ActionCase {
   args(context: Context): unknown[];
   /** What the database must hold before the call, on top of the dataset (a cancelled date, a feed link…). */
   prepare?(db: Queryable, context: Context): Promise<void>;
-  /** A refusal must be a throw (HTTP 500), not just "nothing happened": the gate comes before everything. */
+  /** A refusal must be an error status (a throw is a 500, the installer's "not found" a 404), not just "nothing happened": the gate comes before everything. */
   strictThrow?: boolean;
   /** What an allowed persona shows: the database changes (default), or the action merely answers without throwing. */
   control?: 'changes' | 'answers';
@@ -395,6 +395,7 @@ export const CASES: readonly ActionCase[] = [
     label: `installer: ${name}`,
     allowed: nobody,
     args: () => [{}],
+    strictThrow: true,
   })),
   // ---- development tools: never in production, not even for an owner ----
   {
@@ -402,11 +403,13 @@ export const CASES: readonly ActionCase[] = [
     label: 'become another role',
     allowed: nobody,
     args: () => ['MEMBER'],
+    strictThrow: true,
   },
   {
     action: 'dev-impersonation.stopImpersonation',
     label: 'stop being another role',
     allowed: nobody,
     args: () => [],
+    strictThrow: true,
   },
 ];

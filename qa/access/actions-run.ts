@@ -158,8 +158,8 @@ export async function playActions(variant: PlatformVariant): Promise<ActionCell[
         const failure =
           changed.length > 0
             ? `changed ${changed.join(', ')}`
-            : item.strictThrow && !call.threw
-              ? `answered ${call.status} instead of refusing`
+            : item.strictThrow && call.status < 400
+              ? `answered ${call.status} instead of refusing (an error status)`
               : null;
         cells.push({
           action: item.action,
