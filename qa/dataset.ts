@@ -46,6 +46,37 @@ export interface Dataset {
   stats: Record<string, number>;
 }
 
+/**
+ * What the suites of the campaign name: accounts, a role and events with fixed identifiers, so that a test can say
+ * "the proposal of somebody else" without looking for one in the random part of the dataset.
+ */
+export const FIXTURES = {
+  accounts: {
+    /** A member who proposes events, like the proposer persona but somebody else: the author of "other people's" events. */
+    colleague: { id: 'qa-fixture-colleague', login: 'qa-colleague' },
+    /** An account waiting for approval (approving or refusing it is what the suites do). */
+    applicant: { id: 'qa-fixture-applicant', login: 'qa-applicant' },
+    /** A member with the default role, whom the suites remove or give another role. */
+    leaver: { id: 'qa-fixture-leaver', login: 'qa-leaver' },
+  },
+  /** A role nobody holds: the one that is edited and deleted. */
+  spareRole: 'role-qa-spare',
+  events: {
+    /** Published, written by the validator persona. */
+    confirmed: 'qa-fx-confirmed',
+    /** A draft written by the validator persona: nobody but those who validate may see it. */
+    draft: 'qa-fx-draft',
+    /** A proposal of the colleague. */
+    proposed: 'qa-fx-proposed',
+    /** A weekly series of 6 dates, published, written by the validator persona. */
+    series: 'qa-fx-series',
+    /** The proposer persona's own draft, own proposal and own published event. */
+    ownDraft: 'qa-fx-own-draft',
+    ownProposed: 'qa-fx-own-proposed',
+    ownConfirmed: 'qa-fx-own-confirmed',
+  },
+} as const;
+
 const DEFAULTS = {
   seed: 20261016,
   members: 300,
@@ -274,6 +305,14 @@ const EXTRA_ROLES: readonly PersonaRole[] = [
     builtin: false,
   },
   {
+    id: FIXTURES.spareRole,
+    name: 'QA Rôle libre',
+    description: 'Held by nobody: edited and deleted by the suites.',
+    permissions: ['events.view'],
+    allPermissions: false,
+    builtin: false,
+  },
+  {
     id: 'role-qa-events-team',
     name: 'Pôle Events',
     description: 'Proposes events.',
@@ -313,6 +352,28 @@ function buildPeople(rng: Random, members: number, now: Date): Person[] {
       lastLoginAt: new Date(now.getTime() - day(1)),
       calendarToken: who.status === 'PENDING' ? null : token(rng),
       ...(who.status === 'OWNER' ? { canPropose: true, canValidate: true } : rights(roleId)),
+    });
+  }
+
+  for (const [key, status, roleId] of [
+    ['colleague', 'MEMBER', ROLE_PROPOSER.id],
+    ['applicant', 'PENDING', null],
+    ['leaver', 'MEMBER', 'role-member'],
+  ] as const) {
+    const account = FIXTURES.accounts[key];
+    logins.add(account.login);
+    people.push({
+      id: account.id,
+      login: account.login,
+      fullName: `QA ${key}`,
+      email: `${account.login}@example.org`,
+      campus: 'Paris',
+      status,
+      roleId,
+      createdAt: new Date(now.getTime() - day(300)),
+      lastLoginAt: status === 'PENDING' ? null : new Date(now.getTime() - day(2)),
+      calendarToken: status === 'PENDING' ? null : token(rng),
+      ...rights(roleId),
     });
   }
 
@@ -740,6 +801,82 @@ function generateEvent(context: Context, yearStart: number): void {
   });
 }
 
+/** The events of `FIXTURES`: a few days after "now", at fixed hours, in the BDE's zone. */
+function addFixtureEvents(context: Context): void {
+  const { zone, now } = context;
+  const at = (daysAhead: number, hour: number) =>
+    fromLocalDateTime({ ...addDays(localDay(now, zone), daysAhead), hour, minute: 0 }, zone);
+  const row = (
+    id: string,
+    title: string,
+    author: string,
+    status: EventRow['status'],
+    daysAhead: number,
+    extra: Partial<EventRow> = {},
+  ): EventRow => {
+    const person = context.people.find((p) => p.login === author);
+    if (!person) throw new Error(`fixture author ${author} is not in the dataset`);
+    const startsAt = at(daysAhead, 19);
+    const createdAt = new Date(now.getTime() - day(3));
+    return {
+      id,
+      title,
+      description: 'Event of the quality fixtures.',
+      location: 'Salle B',
+      categoryKey: 'soiree',
+      status,
+      startsAt,
+      endsAt: new Date(startsAt.getTime() + 2 * 3_600_000),
+      repeat: null,
+      recurrenceUntil: null,
+      schoolYear: schoolYearOf(startsAt, zone),
+      confirmationNotifiedAt: status === 'CONFIRMED' ? createdAt : null,
+      seriesId: null,
+      proposedAt: status === 'PROPOSED' ? new Date(createdAt.getTime() + 3_600_000) : null,
+      refusalComment: null,
+      refusedByLogin: null,
+      refusedAt: null,
+      authorLogin: author,
+      authorId: person.id,
+      createdAt,
+      ...extra,
+    };
+  };
+  const events = FIXTURES.events;
+  const series: RepeatRule = { freq: 'WEEKLY', interval: 1, count: 6 };
+  const seriesStart = at(20, 18);
+  const seriesEnd = new Date(seriesStart.getTime() + 2 * 3_600_000);
+  for (const fixture of [
+    row(events.confirmed, 'Fixture: published', 'qa-validator', 'CONFIRMED', 10),
+    row(events.draft, 'Fixture: draft', 'qa-validator', 'DRAFT', 11),
+    row(
+      events.proposed,
+      'Fixture: proposal of a colleague',
+      FIXTURES.accounts.colleague.login,
+      'PROPOSED',
+      12,
+    ),
+    row(events.ownDraft, 'Fixture: draft of the proposer', 'qa-proposer', 'DRAFT', 13),
+    row(events.ownProposed, 'Fixture: proposal of the proposer', 'qa-proposer', 'PROPOSED', 14),
+    row(
+      events.ownConfirmed,
+      'Fixture: published event of the proposer',
+      'qa-proposer',
+      'CONFIRMED',
+      15,
+    ),
+    row(events.series, 'Fixture: series', 'qa-validator', 'CONFIRMED', 20, {
+      startsAt: seriesStart,
+      endsAt: seriesEnd,
+      repeat: series,
+      recurrenceUntil: endOfCountedRule(series, seriesStart, seriesEnd, zone),
+      categoryKey: 'sport',
+    }),
+  ]) {
+    context.events.push(fixture);
+  }
+}
+
 // ---- the whole data -------------------------------------------------------------------------------------------------
 
 export function buildDataset(options: DatasetOptions = {}): Dataset {
@@ -848,6 +985,7 @@ export function buildDataset(options: DatasetOptions = {}): Dataset {
       generateEvent(context, currentStart - offset);
     }
   }
+  addFixtureEvents(context);
   for (const row of context.events) auditEvent(context, row);
 
   script.insert(

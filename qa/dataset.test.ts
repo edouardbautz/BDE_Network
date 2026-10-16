@@ -2,7 +2,7 @@
 import { createHash } from 'node:crypto';
 import { decode } from '@auth/core/jwt';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { buildDataset } from './dataset';
+import { FIXTURES, buildDataset } from './dataset';
 import { checkInvariants, describeViolations } from './invariants';
 import { PERSONAS, SESSION_COOKIE, cookieHeaderFor, forgeSessionCookie, persona } from './personas';
 import { createRandom } from './prng';
@@ -117,13 +117,25 @@ describe('the dataset', () => {
     expect(dataset.sql).not.toContain("'qa-deleted'");
   });
 
+  it('has the fixtures the suites name, with the ids they name them by, even in a small dataset', () => {
+    for (const sql of [
+      dataset.sql,
+      buildDataset({ members: 0, eventsPerYear: 0, schoolYears: 1 }).sql,
+    ]) {
+      for (const account of Object.values(FIXTURES.accounts))
+        expect(sql).toContain(`'${account.id}'`);
+      for (const id of Object.values(FIXTURES.events)) expect(sql).toContain(`'${id}'`);
+      expect(sql).toContain(`'${FIXTURES.spareRole}'`);
+    }
+  });
+
   it('writes what is typed with an apostrophe as SQL can read it', () => {
     expect(dataset.sql).toContain("N''Diaye");
   });
 
   it('can be made smaller, for the suites that want a quick platform', () => {
     const small = buildDataset({ members: 20, eventsPerYear: 15, schoolYears: 1 });
-    expect(small.stats.User).toBe(27); // 7 personas that have an account, and 20 members
+    expect(small.stats.User).toBe(30); // 7 personas that have an account, 3 fixture accounts, and 20 members
     expect(small.stats.Event).toBeLessThan(dataset.stats.Event ?? 0);
   });
 });
