@@ -770,6 +770,11 @@ recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`)
   If a Prisma bump ever makes `migrate deploy` need a pruned file, the CI `docker` job (build + start
   against Postgres + `/api/health`) fails. `.dockerignore` must keep `.audit`, `.env*` and
   `bde.config.local.yml` out of the image. `HEALTHCHECK` calls `/api/health` (503 when the DB is down).
+- **The operating system of the image is kept up to date, and checked.** The runner stage starts with `apk upgrade`: a fix of
+  a library of Alpine (OpenSSL, for `psql` and `pg_dump`) is published before it reaches the next Node image. The `docker image` job
+  of CI then scans the image with Trivy and **fails on a HIGH or CRITICAL vulnerability that has a fix** (`--ignore-unfixed`:
+  what nobody can fix yet stops nobody). What is accepted is in `.trivyignore`, each with its reason and the same wording as
+  `scripts/audit-allowlist.json`.
 - **The published image** (`.github/workflows/release.yml`, `scripts/release.mjs`; tests in `scripts/release.test.ts`).
   `docker-compose.yml` starts `ghcr.io/edouardbautz/bde_network:${BDE_VERSION:-X.Y.Z}`: the version is **written in the
   file**, never `latest`, so that `git pull` + `docker compose up -d` is the whole update and an older checkout runs its

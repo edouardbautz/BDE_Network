@@ -124,6 +124,15 @@ jobs:
           docker build -t bde-network .
           docker images bde-network --format 'Image size: {{.Size}}'
 
+      # No fixable HIGH or CRITICAL vulnerability in what the image ships (its operating system, Node, the packages of the
+      # application). A vulnerability that has no fix yet does not stop anybody (--ignore-unfixed), and the few that are
+      # accepted are in .trivyignore with their reason. See "Quality campaign" in docs/architecture.md.
+      - name: Scan the image for known vulnerabilities
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/.trivyignore:/.trivyignore:ro" \
+            aquasec/trivy:0.76.0 image --quiet --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed \
+            --ignorefile /.trivyignore --exit-code 1 bde-network
+
       - name: Start it against PostgreSQL
         run: |
           docker run -d --name app --network host \
