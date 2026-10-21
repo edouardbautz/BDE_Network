@@ -1190,7 +1190,9 @@ start from the same three things, so that what one finds the others can replay.
   shouted): see the CHANGELOG. **The attacks are mutation-checked on the image** (`qa/mutations/attacks.json`,
   `qa/mutate-image.mjs`: a guard is broken in a throwaway worktree, an image is built, the attacks must fail): one image build per
   mutation, so it runs in the `mutations` job of `qa.yml` (label `qa-mutations` on a pull request, or by hand), not on a computer. Like
-  the other heavy tools (ZAP's active scan included), it is a CI job.
+  the other heavy tools (ZAP's active scan included), it is a CI job. A guard that two layers hold (the logo's `nosniff` is written by
+  its route **and** by the headers of every address) cannot be broken from one layer: that mutation survives, and is replaced by
+  one on the layer whose loss the image shows, the other being held by the unit tests of the route.
 - **Coverage** (`npm run test:coverage`, `coverage-thresholds.json`, `scripts/coverage-report.mjs`,
   `scripts/coverage-gaps.mjs`, `qa/coverage-plan.md`). The ubuntu job of `ci.yml` runs the unit tests through V8 coverage
   and **fails below a floor**: one for the whole project and one for each area that decides who may do what or what is

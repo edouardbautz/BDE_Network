@@ -48,10 +48,16 @@
     ""
   ],
   [
-    "uploads: the logo can be sniffed as a page",
+    "uploads: the logo is served as a page",
     "src/app/api/logo/route.ts",
-    "'X-Content-Type-Options': 'nosniff',",
-    ""
+    "'Content-Type': info.mime,",
+    "'Content-Type': 'text/html',"
+  ],
+  [
+    "headers: nothing tells a browser not to guess the type",
+    "src/lib/security-headers.ts",
+    "{ key: 'X-Content-Type-Options', value: 'nosniff' },\n    { key: 'X-Frame-Options', value: 'DENY' },",
+    "{ key: 'X-Frame-Options', value: 'DENY' },"
   ],
   [
     "uploads: a page named logo.png is accepted",
