@@ -9,7 +9,7 @@
 //
 // Nobody can sign in through 42 here, so the session cookies are forged with the platform's own secret, exactly as
 // Auth.js writes them: the page, the actions and the database are the real ones.
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { deflateSync } from 'node:zlib';
@@ -239,7 +239,7 @@ try {
   step('the contact address is saved and shown on the privacy page');
 
   // 3c. the logo: a refused file, then a real one, served as an image and used at once, then the default again
-  const dir = tmpdir();
+  const dir = mkdtempSync(join(tmpdir(), 'bde-settings-'));
   const bad = join(dir, 'not-a-logo.png');
   writeFileSync(bad, '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128"></svg>');
   await (await page.$('#settings-logo-file')).uploadFile(bad);

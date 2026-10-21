@@ -1,6 +1,7 @@
 import { appendFileSync } from 'node:fs';
 import { Client } from 'pg';
 import { checkInvariants, describeViolations } from './invariants';
+import { tableCell } from './markdown';
 import { cookieHeaderFor, persona, type PersonaKey } from './personas';
 
 /**
@@ -127,7 +128,7 @@ async function main() {
         '|---|---|---|',
         ...results.map(
           (result) =>
-            `| ${result.ok ? '✅' : '❌'} | ${result.name} | ${result.detail.replace(/\|/g, '\\|')} |`,
+            `| ${result.ok ? '✅' : '❌'} | ${result.name} | ${tableCell(result.detail)} |`,
         ),
         '',
       ].join('\n'),

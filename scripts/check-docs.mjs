@@ -53,10 +53,21 @@ function withoutFences(text) {
   return kept.join('\n');
 }
 
+/** The text of a heading without its HTML tags: read once, character by character (a bracket opens a tag, the next one closes it). */
+function withoutTags(text) {
+  let kept = '';
+  let inTag = false;
+  for (const character of text) {
+    if (character === '<') inTag = true;
+    else if (character === '>') inTag = false;
+    else if (!inTag) kept += character;
+  }
+  return kept;
+}
+
 /** GitHub's anchor of a heading. */
 function slugOf(heading) {
-  return heading
-    .replace(/<[^>]*>/g, '')
+  return withoutTags(heading)
     .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/`/g, '')
     .replace(/\*\*?([^*]+)\*\*?/g, '$1')

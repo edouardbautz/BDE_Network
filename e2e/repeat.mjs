@@ -13,12 +13,12 @@
 // Nobody can sign in through 42 here: the session cookie is forged with the platform's own secret, exactly as Auth.js
 // writes it. What the script creates is removed when it ends. The dates are typed on the wall clock of the BDE, which
 // is what the form does whatever the time zone of the browser.
-import { execSync } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { encode } from '@auth/core/jwt';
 import puppeteer from 'puppeteer-core';
 import { settled, watchPage } from './watch-page.mjs';
+import { sqlRunner } from './sql.mjs';
 
 const [base] = process.argv.slice(2);
 const secret = process.env.AUTH_SECRET;
@@ -81,8 +81,7 @@ const WORDS = {
   },
 };
 
-const sql = (statements) =>
-  execSync(`${PSQL} -v ON_ERROR_STOP=1 -q -tA`, { input: statements }).toString().trim();
+const sql = sqlRunner(PSQL);
 const quote = (value) => `'${String(value).replace(/'/g, "''")}'`;
 const PREFIX = 'E2E repeat';
 const cleanUp = () =>
