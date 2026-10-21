@@ -16,7 +16,7 @@ import {
 /**
  * Lighthouse on the pages of the platform made by `qa/platform.sh`: the four scores, the speed of what is drawn (LCP, TBT, CLS)
  * and the weight (transferred, scripts, requests), each held to the budget of `budgets.json`. Lighthouse is a pinned version run
- * with `npx`, not a dependency of the project (it brings hundreds of packages the project never ships), and Chrome is the one of
+ * with `npm exec`, not a dependency of the project (it brings hundreds of packages the project never ships), and Chrome is the one of
  * Playwright. Signed-in pages carry the forged cookie of a persona.
  *
  *   sh qa/platform.sh up --now 2026-10-16T12:00:00Z && eval "$(sh qa/platform.sh env)" && npx tsx qa/perf/lighthouse.ts [name…]
@@ -50,13 +50,14 @@ const TARGETS: Target[] = [
 ];
 
 /**
- * `npx` is a script on Windows, which only a shell runs, and a shell takes the arguments as one line: the ones with a space, a quote or
- * a character the shell uses (the & of an address) are quoted. (On the CI's Linux nothing is quoted and no shell is used.)
+ * What runs Lighthouse: `npm exec`, by the `npm-cli.js` of the npm that started this script (`npx tsx …` sets `npm_execpath`),
+ * with node itself, so that no shell is involved on any system and the arguments (an address with a `&`, a cookie) reach
+ * Lighthouse as they are, without anything to quote.
  */
-function quoted(argument: string): string {
-  return process.platform === 'win32' && /[\s"&|<>^%]/.test(argument)
-    ? `"${argument.replace(/"/g, '\\"')}"`
-    : argument;
+function npmCli(): string {
+  const path = process.env.npm_execpath;
+  if (!path) throw new Error('run it with npx: npx tsx qa/perf/lighthouse.ts');
+  return path;
 }
 
 function required(name: string): string {
@@ -86,10 +87,14 @@ async function main() {
       const headers = join(reports, `.headers-${target.name}.json`);
       if (cookie) writeFileSync(headers, JSON.stringify({ Cookie: cookie }));
       const run = spawnSync(
-        'npx',
+        process.execPath,
         [
+          npmCli(),
+          'exec',
           '--yes',
-          LIGHTHOUSE,
+          `--package=${LIGHTHOUSE}`,
+          '--',
+          'lighthouse',
           `${base}${target.path}`,
           '--output=json',
           `--output-path=${file}`,
@@ -98,11 +103,10 @@ async function main() {
           '--chrome-flags=--headless=new --no-sandbox',
           ...(formFactor === 'desktop' ? ['--preset=desktop'] : []),
           ...(cookie ? [`--extra-headers=${headers}`] : []),
-        ].map(quoted),
+        ],
         {
           env: { ...process.env, CHROME_PATH: chromium.executablePath() },
           stdio: ['ignore', 'inherit', 'inherit'],
-          shell: process.platform === 'win32',
         },
       );
       rmSync(headers, { force: true });

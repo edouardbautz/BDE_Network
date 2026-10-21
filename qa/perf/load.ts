@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, copyFileSync, mkdtempSync, readFileSync } from 'node:fs';
+import { appendFileSync, chmodSync, copyFileSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { Client } from 'pg';
@@ -89,6 +89,10 @@ async function main() {
 
   const work = mkdtempSync(join(tmpdir(), 'bde-load-'));
   copyFileSync(scriptPath, join(work, 'browse.js'));
+  // k6 runs as a user of its own in its image: it must read the script and write its summary in this folder (a temporary
+  // folder is private to the one who made it).
+  chmodSync(work, 0o777);
+  chmodSync(join(work, 'browse.js'), 0o644);
 
   const before = appMemory();
   const run = spawnSync(
