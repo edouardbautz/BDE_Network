@@ -70,6 +70,38 @@ const FOUR_HOURS = 4 * 3_600_000;
 const NOW = new Date('2026-10-16T12:00:00Z');
 const DAY = 86_400_000;
 
+/**
+ * Four cases the dataset does not hold (it has no date of a confirmed series that is back to draft, and every announcement is
+ * older than any reminder), added here so that the rules about them are exercised by something other than a unit test:
+ *
+ * - A: a confirmed weekly series whose third date (2026-11-18) is back to draft: that date is not reminded, the others are;
+ * - B: a draft weekly series whose second date (2026-11-12) was confirmed alone, announced before its reminder was due: only that
+ *   date is reminded;
+ * - C: a confirmed event announced AFTER its reminder was due (the evening before): no reminder, the members were just told;
+ * - D: the same, announced before: reminded.
+ */
+const FIXTURES = {
+  draftedDate: 'lt-a|2026-11-18T19:00:00.000Z',
+  keptDate: 'lt-a|2026-11-11T19:00:00.000Z',
+  aloneConfirmed: 'lt-b|2026-11-12T19:00:00.000Z',
+  aloneNotConfirmed: 'lt-b|2026-11-05T19:00:00.000Z',
+  announcedLate: 'lt-c|2026-11-20T10:00:00.000Z',
+  announcedInTime: 'lt-d|2026-11-21T10:00:00.000Z',
+};
+
+const FIXTURE_SQL = `
+INSERT INTO "Event" ("id","title","description","location","categoryKey","status","startsAt","endsAt","repeat","recurrenceUntil","schoolYear","confirmationNotifiedAt","authorLogin","updatedAt")
+VALUES
+ ('lt-a','Long time A','x','x','soiree','CONFIRMED','2026-11-04T19:00:00Z','2026-11-04T21:00:00Z','{"freq":"WEEKLY","interval":1}','2026-12-09T23:59:00Z','2026-2027','2026-10-01T10:00:00Z','qa-validator',now()),
+ ('lt-b','Long time B','x','x','soiree','DRAFT','2026-11-05T19:00:00Z','2026-11-05T21:00:00Z','{"freq":"WEEKLY","interval":1}','2026-11-26T23:59:00Z','2026-2027',NULL,'qa-validator',now()),
+ ('lt-c','Long time C','x','x','soiree','CONFIRMED','2026-11-20T10:00:00Z','2026-11-20T12:00:00Z',NULL,NULL,'2026-2027','2026-11-19T20:00:00Z','qa-validator',now()),
+ ('lt-d','Long time D','x','x','soiree','CONFIRMED','2026-11-21T10:00:00Z','2026-11-21T12:00:00Z',NULL,NULL,'2026-2027','2026-11-20T10:00:00Z','qa-validator',now());
+INSERT INTO "EventOccurrence" ("id","eventId","occurrenceStart","status","confirmationNotifiedAt","updatedAt")
+VALUES
+ ('lt-a-o','lt-a','2026-11-18T19:00:00Z','DRAFT',NULL,now()),
+ ('lt-b-o','lt-b','2026-11-12T19:00:00Z','CONFIRMED','2026-11-11T10:00:00Z',now());
+`;
+
 describe.skipIf(!ADMIN_URL)('the reminder loop over a year and a half', () => {
   let database: TestDatabase;
   let prisma: PrismaClient;
@@ -77,6 +109,7 @@ describe.skipIf(!ADMIN_URL)('the reminder loop over a year and a half', () => {
   beforeAll(async () => {
     database = await createMigratedDatabase();
     await database.client.query(buildDataset({ now: NOW }).sql);
+    await database.client.query(FIXTURE_SQL);
     prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: database.url }) });
     state.client = prisma;
   }, 120_000);
@@ -192,6 +225,23 @@ describe.skipIf(!ADMIN_URL)('the reminder loop over a year and a half', () => {
     const deliveries = await play(ticks);
     const problems = judge(deliveries, expected);
     expect(problems.slice(0, 8), `${problems.length} differences`).toEqual([]);
+
+    // The four added cases, from the rules and not from the oracle: what the loop did.
+    const sent = new Set(deliveries.map((delivery) => delivery.key));
+    expect(sent.has(FIXTURES.keptDate), 'a date of a confirmed series is reminded').toBe(true);
+    expect(sent.has(FIXTURES.draftedDate), 'a date back to draft is not').toBe(false);
+    expect(sent.has(FIXTURES.aloneConfirmed), 'a date confirmed alone, in a draft series, is').toBe(
+      true,
+    );
+    expect(
+      sent.has(FIXTURES.aloneNotConfirmed),
+      'a date of that draft series that is not, is not',
+    ).toBe(false);
+    expect(
+      sent.has(FIXTURES.announcedLate),
+      'an event announced after its reminder was due is not',
+    ).toBe(false);
+    expect(sent.has(FIXTURES.announcedInTime), 'an event announced before, is').toBe(true);
 
     // what the loop wrote is what it sent: one claim per message, on top of the claims there were
     expect((await claimed()).size).toBe(before.size + deliveries.length);
