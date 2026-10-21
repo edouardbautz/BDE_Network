@@ -933,7 +933,10 @@ vX.Y.Z`. **The GitHub release is created by the maintainer, not by the workflow*
   only; `'unsafe-inline'` is needed by Next hydration and next-themes; no `upgrade-insecure-requests`
   so an instance without an HTTPS proxy still works; profile pictures from `cdn.intra.42.fr`),
   nosniff, X-Frame-Options, Referrer-Policy, Permissions-Policy, and HSTS only when the request came
-  with `X-Forwarded-Proto: https`. A new external image/script host must be added to the CSP. **A header set in
+  with `X-Forwarded-Proto: https`. A new external image/script host must be added to the CSP. **Nothing of ours may violate it**: Zod compiles its schemas with
+  `new Function` and finds out by trying, which was a `script-src` violation on every page (found by the browser suite, which
+  listens to `securitypolicyviolation` in the three engines), so every module that brings a schema to the browser imports
+  `lib/zod-config.ts` (`jitless`) first; `zod-config.test.ts` lists them and fails if one asks to evaluate a string. **A header set in
   `next.config.ts` replaces the one a route sets for the same name** (the unit test of the route sees only the route, so it
   cannot tell): an address that needs a policy of its own, like the logo (`OWN_POLICY_PATH`), is left out of the rule of the
   pages. The attacks of the quality campaign (`qa/security/`) read the headers of the running image.
