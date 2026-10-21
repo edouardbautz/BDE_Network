@@ -102,12 +102,15 @@ export async function callAction(
   args: unknown[],
   /** Headers on top of the usual ones, for a request a browser would not make (another origin, for instance). */
   extraHeaders: Record<string, string> = {},
+  /** A platform that never answers is a failure, not a call that waits for ever. */
+  timeoutMs = 120_000,
 ): Promise<Call> {
   const body = await encodeReply(args);
   const cookie = await cookieHeaderFor(persona(who), platform.secret);
   const response = await fetch(`${platform.base}${page}`, {
     method: 'POST',
     redirect: 'manual',
+    signal: AbortSignal.timeout(timeoutMs),
     headers: {
       'Next-Action': id,
       Accept: 'text/x-component',

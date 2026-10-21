@@ -1330,6 +1330,38 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
     two to three times what was seen, there to catch a change of order of magnitude (an N+1 query, a bundle that doubles), not a
     few tens of percent. **A limit that fails now and then is never raised until it passes**: it is set from the spread of the
     runs, with the runs written down. The numbers that count are those of the CI, not of a developer's computer.
+- **Resilience** (`qa/resilience/`, the `resilience` job of `qa.yml`; `npx tsx qa/resilience/run.ts [--only database,app,webhook]` on a
+  platform made by `sh qa/platform.sh up --webhook https://qa-hang:8443/hook`). What happens to the platform when what it stands
+  on goes away. The suites stop, freeze and kill the platform's containers (Docker only, started without a shell, every wait has a
+  deadline), so they run on a platform made for them and each leaves it healthy, so that they can follow each other; they stop at
+  once when the platform was not healthy to begin with (what follows would pass or fail for the wrong reason). Each check says what
+  it saw, pass or fail.
+  - **`database`**: PostgreSQL **stopped** (`/api/health` 503 in seconds, a member, an owner and a visitor are sent to the page that
+    says the service is unavailable, a calendar link gets its bare 404, the application does not crash; then the platform serves
+    again by itself and **the same session cookies still sign people in**: Auth.js turns a failing lookup into "no session", which
+    must not outlive the outage), **frozen** (`docker pause`: the connections stay and nothing answers; health says 503 within 8 s and
+    a page answers within 30 s), and **killed in the middle of writes** (60 creations of events, 6 at a time, the container killed
+    700 ms in, started again): the judgment is not "all worked" but `wholeWrites` (`judge.ts`, unit-tested): every event that
+    exists has its audit entry (written in the same transaction), no audit entry is about an event that does not exist, and an
+    action that was answered exists. Then the invariants of the database (`qa/invariants.sql`).
+  - **`app`**: the application asked to stop (SIGTERM: it must leave with code 0 in under 9 s, `docker stop` kills after 10), started
+    again (serving, the same cookies still sign in), and **killed in the middle of the same batch of writes**: the same judgment.
+  - **`webhook`**: the notifications of the events go to a server that completes the TLS handshake, reads the request and never
+    answers (`webhook.ts`: a Node server with a certificate made on the spot by the machine's `openssl`, copied into its container
+    with `docker cp`; a plain socket would not do, the HTTP client gives up on a handshake by itself, and the case that matters is a
+    server that is there and says nothing). The action that causes a notification answers in under 5 s, the pages keep serving, the
+    platform **gives up on the hung connection within a minute**, and with the server gone the actions still answer at once and the
+    address of the webhook (the secret, on a real one) is not in the logs. The platform of this job alone has
+    `NODE_TLS_REJECT_UNAUTHORIZED=0` (`--webhook` of `platform.sh`: the platform refuses a non-https webhook, and the stand-in's
+    certificate is nobody's).
+  - **What the first run found**, each its own pull request: a **frozen database held every page for as long as it lasted** (the
+    pool had a connection timeout but no query timeout: `database-pool.ts`, `query_timeout`), and a **webhook, or a mail server, that
+    accepts and never answers held a socket and a task for five minutes** (no timeout on `fetch`, nodemailer's defaults:
+    `notifications/timeouts.ts`). What it did not find, which is as worth writing down: nothing lost or half written when the
+    database or the application is killed, no session forgotten by an outage, a clean stop in about a second.
+  - **Not covered yet**: the mail server (the timeouts are unit-tested with a silent server; the platform of the job has no SMTP), the
+    reminder loop with a tick that fails for months (phase 10, with the virtual clock), a disk that is full (the logo's folder), and the
+    supervisor's own handling of a database that is absent at start (`e2e/safe-update.sh` plays it).
 - **Coverage** (`npm run test:coverage`, `coverage-thresholds.json`, `scripts/coverage-report.mjs`,
   `scripts/coverage-gaps.mjs`, `qa/coverage-plan.md`). The ubuntu job of `ci.yml` runs the unit tests through V8 coverage
   and **fails below a floor**: one for the whole project and one for each area that decides who may do what or what is

@@ -8,6 +8,14 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **What the platform does when what it stands on goes away is played every night.** A suite stops, freezes and kills the
+  database while the platform serves signed-in people, stops and kills the application in the middle of a batch of writes, and
+  puts a webhook that accepts the connection and never answers behind the notifications. It checks that the platform says the
+  service is unavailable instead of failing, in seconds; that it comes back by itself and that the same sessions still sign people
+  in; that every write that happened is whole (the event and its audit entry, or neither) and the invariants of the database
+  hold; that the application stops cleanly in about a second; and that the address of the webhook is never in the logs. Its first
+  run found the two defects fixed under "Fixed" (a frozen database holding every page, a channel that never answers holding a
+  connection for minutes).
 - **How fast the pages are, and what the platform does under load, are measured every night.** Lighthouse judges seven pages, on
   a phone with a slow network and on a computer, against written budgets (the four scores, how soon the page is drawn, the
   layout shift, the weight and the number of requests); k6 plays a mix of what members, validators and owners open, with 20 people

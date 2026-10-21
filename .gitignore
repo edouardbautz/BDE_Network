@@ -66,6 +66,7 @@ next-env.d.ts
 /qa/browsers/.visual-local/
 /playwright-report/
 /lighthouse-reports/
+/resilience-report.json
 
 # internal pre-release audit notes (never committed)
 /.audit/
