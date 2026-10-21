@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
 
+# Every job reads the code and nothing else: the token is limited to that, whatever the default of the repository is.
+permissions:
+  contents: read
+
 jobs:
   ci:
     name: ci (${{ matrix.os }})
