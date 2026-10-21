@@ -475,7 +475,7 @@ const ICONS = {
 
 /** The tokens of src/app/globals.css (a test keeps them equal), so that this page looks like the app. */
 export const PAGE_STYLE = `
-:root{color-scheme:light dark;--background:oklch(0.985 0.002 258);--foreground:oklch(0.19 0.012 258);--card:oklch(1 0 0);--muted:oklch(0.96 0.003 258);--muted-foreground:oklch(0.48 0.012 258);--border:oklch(0.84 0.006 258);--destructive:oklch(0.577 0.245 27.325);--radius:0.5rem}
+:root{color-scheme:light dark;--background:oklch(0.985 0.002 258);--foreground:oklch(0.19 0.012 258);--card:oklch(1 0 0);--muted:oklch(0.96 0.003 258);--muted-foreground:oklch(0.48 0.012 258);--border:oklch(0.84 0.006 258);--destructive:oklch(0.505 0.213 27.518);--radius:0.5rem}
 @media (prefers-color-scheme:dark){:root{--background:oklch(0.16 0.014 258);--foreground:oklch(0.96 0.006 258);--card:oklch(0.205 0.014 258);--muted:oklch(0.225 0.013 258);--muted-foreground:oklch(0.68 0.014 258);--border:oklch(0.34 0.015 258);--destructive:oklch(0.704 0.191 22.216)}}
 *{box-sizing:border-box}
 body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:var(--background);color:var(--foreground);font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
