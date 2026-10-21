@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session } from 'next-auth';
+import { renderToHtml } from '@/test/render-server';
 import { sessionFor, type AccountKind } from '@/test/session-fixtures';
 
 /**
@@ -67,6 +68,28 @@ describe('AuditLogPage — direct URL access control', () => {
     await expect(callPage()).rejects.toThrow(RedirectSignal);
 
     expect(prisma.auditLog.findMany).not.toHaveBeenCalled();
+  });
+
+  it('puts the table in a named box the keyboard can scroll', async () => {
+    mockAuth.mockResolvedValue(sessionFor('OWNER'));
+    vi.mocked(prisma.auditLog.findMany).mockResolvedValue([
+      {
+        id: 'entry-1',
+        createdAt: new Date('2026-10-01T10:00:00Z'),
+        actorLogin: 'alice',
+        action: 'role.create',
+        targetType: 'Role',
+        targetLabel: 'Secretary',
+      },
+    ] as never);
+
+    const page = document.createElement('div');
+    page.innerHTML = await renderToHtml(await callPage());
+
+    const region = page.querySelector('[role="region"]');
+    expect(region?.getAttribute('aria-label')).toBe('title');
+    expect(region?.getAttribute('tabindex')).toBe('0');
+    expect(region?.querySelector('table')).not.toBeNull();
   });
 
   it('lets an OWNER through and loads the audit log', async () => {

@@ -170,6 +170,17 @@ describe('roles list', () => {
     expect(row('Admin').textContent).toContain('list.allPermissions');
   });
 
+  it('puts the table in a named box the keyboard can scroll', async () => {
+    as(memberWith(['roles.manage', 'events.view'], 'tre-1', 'tre-1'));
+    const page = document.createElement('div');
+    page.innerHTML = await html(listPage());
+
+    const region = page.querySelector('[role="region"]');
+    expect(region?.getAttribute('aria-label')).toBe('page.title');
+    expect(region?.getAttribute('tabindex')).toBe('0');
+    expect(region?.querySelector('table')).not.toBeNull();
+  });
+
   it('marks the viewer’s own role as theirs, and never editable', async () => {
     as(holding('role-treasurer', ['roles.manage', 'events.view']));
     const page = document.createElement('div');
