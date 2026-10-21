@@ -15,6 +15,8 @@ export function summarizeNotes(body: string): string {
   if (!first) return '';
   const text = first
     .replace(/<[^>]*>/g, '')
+    // One pass leaves a tag made by the removal itself (`<<b>script>`): what is left of the brackets goes too.
+    .replace(/[<>]/g, '')
     .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/[*_`~]+/g, '')
     .replace(/\s+/g, ' ')
