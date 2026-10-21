@@ -8,6 +8,12 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **How fast the pages are, and what the platform does under load, are measured every night.** Lighthouse judges seven pages, on
+  a phone with a slow network and on a computer, against written budgets (the four scores, how soon the page is drawn, the
+  layout shift, the weight and the number of requests); k6 plays a mix of what members, validators and owners open, with 20 people
+  at once for 40 seconds, against a limit per page and a limit of failures, and the memory of the application is checked after
+  it. The numbers are in the summary of each run. The first measures found that the calendar made 110 requests of its own
+  (see _Fixed_). Run them with `sh qa/platform.sh up`, then `npx tsx qa/perf/lighthouse.ts` and `npx tsx qa/perf/load.ts`.
 - **A change in how the pages look is seen before it is merged.** Every night, 80 pictures (19 pages, on a computer and a phone, in
   the light and the dark theme, and 4 pages in French) are compared with their reference, in Chromium; a page that looks different
   is shown with the difference drawn. The references are on a branch of their own (`qa/visual-baselines`), made by a workflow where

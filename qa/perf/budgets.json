@@ -1,0 +1,20 @@
+{
+  "defaults": {
+    "minPerformance": 70,
+    "minAccessibility": 95,
+    "minBestPractices": 90,
+    "minSeo": 90,
+    "maxLcpMs": 5500,
+    "maxTbtMs": 350,
+    "maxCls": 0.1,
+    "maxTotalKiB": 650,
+    "maxScriptKiB": 400,
+    "maxRequests": 70
+  },
+  "desktop": {
+    "minPerformance": 90,
+    "maxLcpMs": 2000,
+    "maxTbtMs": 100,
+    "maxTotalKiB": 700
+  }
+}

@@ -1290,6 +1290,34 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
     pictures that changed in the commit; if no, it is a defect. A picture that differs by itself, run after run, is never
     "retried until it passes": it is a page that depends on something (a date, a random value, an animation) that must be
     fixed or masked in the test, with the reason written.
+- **Performance and load** (`qa/perf/`, the `performance` job of `qa.yml`, `performance.spec.ts` of `qa/browsers`). Two tools that are not
+  dependencies of the project (they bring hundreds of packages it never ships, so no lockfile, no audit noise), each pinned where it
+  is run: **Lighthouse** (`lighthouse@13.5.0` through `npx`, driving the Chrome of Playwright) and **k6** (the image
+  `grafana/k6:2.3.0`, on the network of the platform).
+  - **Lighthouse** (`lighthouse.ts`, `lighthouse-report.ts`, `budgets.json`). Seven pages (login, dashboard, calendar, an event,
+    the event form, the members, the settings), on a phone (Lighthouse's own slow network and processor: what the budgets are
+    about) and, for four of them, on a computer; signed-in pages carry the cookie of a persona, written to a file of its own (a
+    shell would take a command line apart). Each is held to a **budget**: the four scores (performance, accessibility, best
+    practices, SEO), the largest contentful paint, the blocking time, the layout shift, the weight (transferred, scripts) and the
+    number of requests. A budget is a written number: `budgets.json` has defaults (phone), those of the computer, and what a page
+    says of its own (`members`, `members:desktop`). The report has no verdict of its own: the budgets are the verdict, and raising
+    one is a pull request that says why. The pure parts (what is read of a report, the budgets, the verdict) are
+    `lighthouse-report.ts`, unit-tested.
+  - **k6** (`load.ts`, `report.ts`, `k6/browse.js`). 20 virtual people for 40 seconds (ramped), a mix weighted like a day of a BDE:
+    the calendar and the dashboard most, the event, the list, the heavy pages (300 members, the audit log, the settings) less,
+    the login page and the calendar feed that calendar applications fetch by themselves. **Who asks is the personas**, with their forged
+    cookies (and the feed link of the member of the dataset). Thresholds are written in the script: almost no request fails
+    (0.5 %), what answers is the page that was asked for (a check on the content, because an error page can answer 200), and each
+    page has its own limit for 95 % of its answers (`p95`), which `load.ts` prints with the numbers. **The memory of the application
+    is measured after the load** (`docker stats` before and after: a limit of 1 GiB, what a small server has to spare): in
+    local runs it moved between 520 and 700 MiB over 2 500 requests and did not drift, which is what the limit assumes.
+  - **What neither sees** is what a browser does of its own accord: `performance.spec.ts` counts, in Chromium, the prefetches
+    Next.js makes (a header marks them). That is how the calendar's 110 prefetch requests (a rendering of an event page by the
+    server for each, for a month of 100 events) were seen: Lighthouse showed 141 requests and 645 KiB for the calendar of a
+    computer against 30 to 47 for every other page, the load test could not, and a count of prefetches now holds it.
+  - **Numbers come from the CI**, not a developer's computer: the budgets and the limits were set from a run on a Windows machine
+    with margin, and are meant to be read again against the first runs of the `performance` job (the summary of a run holds the
+    table). A budget set tight on a fast machine would only fail on the shared runner.
 - **Coverage** (`npm run test:coverage`, `coverage-thresholds.json`, `scripts/coverage-report.mjs`,
   `scripts/coverage-gaps.mjs`, `qa/coverage-plan.md`). The ubuntu job of `ci.yml` runs the unit tests through V8 coverage
   and **fails below a floor**: one for the whole project and one for each area that decides who may do what or what is
