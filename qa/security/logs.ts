@@ -21,12 +21,15 @@ const ERROR_LINE =
 /**
  * What the attacks make the framework write on purpose, because it is the refusal being logged: Next.js refusing an
  * action called from another origin (and the address it could not read in that origin, which the attack made up), an
- * action that throws `Forbidden` for a request a page could not have made, and a body over the limit.
+ * action that throws `Forbidden` for a request a page could not have made, the actions of the development tools
+ * (role simulation) called on an image where they are switched off, which throw the same way for the same reason (the
+ * access matrix calls every action of the image), and a body over the limit.
  */
 const REFUSALS = [
   /Invalid Server Actions request/,
   /^⨯ TypeError: Invalid URL$/,
   /^⨯ Error: Forbidden$/,
+  /^⨯ Error: Dev impersonation is disabled$/,
   /Body exceeded \d+mb limit/,
 ];
 
