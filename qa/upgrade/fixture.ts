@@ -17,11 +17,11 @@ export const OLD = {
   reader: 'upg-reader',
   member: 'upg-member',
   pending: 'upg-pending',
-  /** The tokens of the calendar links (64 hexadecimal characters, as the platform makes them). */
+  /** The tokens of the calendar links: 43 characters of the URL-safe alphabet, as the platform makes them. */
   tokens: {
-    member: 'a1'.repeat(32),
-    treasurer: 'b2'.repeat(32),
-    bde: 'c3'.repeat(32),
+    member: `member-${'A'.repeat(36)}`,
+    treasurer: `treasurer-${'B'.repeat(33)}`,
+    bde: `bde-${'C'.repeat(39)}`,
   },
   /** A role the update converts (events.manage) and one it leaves alone. */
   roles: { treasurer: 'Trésorier', reader: 'Lecteur' },

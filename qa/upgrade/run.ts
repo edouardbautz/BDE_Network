@@ -99,6 +99,13 @@ async function readFeeds(stack: Stack): Promise<Record<keyof typeof FEEDS, FeedE
   return result;
 }
 
+/**
+ * The page that says "not found", once Next.js has started to stream a page: it marks itself (no-index and the fallback marker);
+ * the words "Page not found" are in the payload of every page and say nothing.
+ */
+const isNotFound = (body: string): boolean =>
+  /name="robots" content="noindex/.test(body) && /NEXT_HTTP_ERROR_FALLBACK/.test(body);
+
 /** A page as a signed-in person (a cookie signed with the platform's own secret, kept through the update) asks for it. */
 async function page(stack: Stack, path: string, login?: string) {
   const cookie = login ? `${SESSION_COOKIE}=${await forgeSessionCookie(login, AUTH_SECRET)}` : null;
@@ -159,6 +166,10 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
     // ---- 2. the backup an operator makes before updating ---------------------------------------------------------------------
     stack.ensureBackups();
     const backedUp = stack.script('backup.sh');
+    const backupFile = readdirSync(join(dir, 'backups'))
+      .filter((name) => name.startsWith('bde-backup-'))
+      .sort()
+      .pop();
     check(
       'the backup before the update is made',
       backedUp.ok,
@@ -260,8 +271,14 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
     const treasurer = await page(stack, '/en/events/review', OLD.treasurer);
     check(
       'the treasurer, who could manage events, can validate them',
-      treasurer.status === 200 && !/Page not found/.test(treasurer.body),
+      treasurer.status === 200 && !isNotFound(treasurer.body),
       `${treasurer.status}`,
+    );
+    const reader = await page(stack, '/en/events/review', OLD.reader);
+    check(
+      'the reader, who could only view events, still cannot',
+      reader.status === 404 || isNotFound(reader.body) || reader.location !== null,
+      `${reader.status} ${reader.location ?? ''}`,
     );
     const pending = await page(stack, '/en/dashboard', OLD.pending);
     check(
@@ -331,9 +348,14 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
     }
 
     // ---- 5. the way back: the copy the platform made, then the old version ------------------------------------------------
-    const rolledBack = stack.script('restore.sh', '--pre-update', '--yes');
+    const fromArchive = from === '1.1.0';
+    const rolledBack = fromArchive
+      ? stack.script('restore.sh', join('backups', backupFile ?? 'missing'), '--no-start', '--yes')
+      : stack.script('restore.sh', '--pre-update', '--yes');
     check(
-      'the copy made before the update is put back',
+      fromArchive
+        ? 'the backup made before the update is put back, the application left stopped'
+        : 'the copy the platform made before the update is put back',
       rolledBack.ok,
       rolledBack.ok ? '' : rolledBack.out.slice(-400),
     );
@@ -343,11 +365,10 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
       old.migrations === before.migrations && sameCounts(before.counts, old.counts).length === 0,
       `${old.migrations} migrations, ${JSON.stringify(old.counts)}`,
     );
-    const oldRoles = diffRoles(before.roles, old.roles);
     check(
       'the roles are the old ones, events.manage included',
-      oldRoles.length === 0 && JSON.stringify(old.roles) === JSON.stringify(before.roles),
-      oldRoles.join('; ') || 'identical',
+      JSON.stringify(old.roles) === JSON.stringify(before.roles),
+      JSON.stringify(old.roles),
     );
 
     run('git', ['checkout', '--detach', '-f', `v${from}`], { cwd: dir });
