@@ -127,11 +127,14 @@ backup is lost**: the restore puts the database back in the state of the backup.
    the one you made yourself, or the copy the platform made before the update:
 
    ```text
-   ./scripts/restore.sh backups/bde-backup-YYYY-MM-DD_HH-MM-SS.tar.gz
+   ./scripts/restore.sh backups/bde-backup-YYYY-MM-DD_HH-MM-SS.tar.gz --no-start
    ./scripts/restore.sh --pre-update
    ```
 
-   The script asks you to type `RESTAURER`. It first makes a safety copy of the current state.
+   The script asks you to type `RESTAURER`. It first makes a safety copy of the current state. **It leaves the
+   application stopped** (`--no-start`; `--pre-update` always does): the folder is still at the version you are leaving,
+   and its application, started on the database you have just put back, would apply its migrations again at once; the
+   previous version would then refuse the database ("the database is newer than this version").
 
 2. Go back to the old version of the code (the one you noted):
 

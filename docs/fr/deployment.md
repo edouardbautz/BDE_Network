@@ -320,7 +320,9 @@ vous l'explique et vous demande de taper `RESTAURER` pour confirmer ; tout autre
 rien modifier. Juste avant, il fait une copie de sécurité de l'état actuel
 (`backups/bde-backup-…-avant-restauration.tar.gz`), arrête l'application, restaure, puis la
 relance. Si la restauration de la base échoue, la base reste exactement comme avant.
-(`--yes` supprime la question, pour un script ; à n'utiliser qu'en connaissance de cause.)
+(`--yes` supprime la question, pour un script ; à n'utiliser qu'en connaissance de cause. `--no-start` laisse
+l'application arrêtée : c'est ce qu'il faut pour revenir à une version précédente, voir
+[Revenir en arrière](upgrading.md#revenir-en-arrière) ; `--pre-update` le fait toujours.)
 
 **Sur un nouveau serveur** : installez Docker, clonez le dépôt, lancez `docker compose up -d`
 (aucun `.env` n'est nécessaire), copiez les deux archives dans `backups/`, puis restaurez avec `--secrets`

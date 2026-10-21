@@ -125,6 +125,13 @@ All notable changes to this project are written here, in English. Format based o
   menus (Base UI) refuses a menu label that is not inside a group, and it says so when the menu opens, not when the page is
   drawn, so nothing had caught it. The signed-in person's name, login and role are now the label of a group. Found by the
   browser tests of the quality campaign, which opened it in Safari's engine first.
+- **Going back to the previous version with `restore.sh` now works in the order the guide gives.** Putting the database back
+  with `./scripts/restore.sh` ended by starting the application of the folder, which was still at the version being left: it
+  applied its migrations again to the database that had just been put back, and the previous version, started right after
+  (`git checkout`, `docker compose up -d`), refused it ("the database is newer than this version"). The restore of a copy
+  made before an update (`--pre-update`) now leaves the application stopped, and `--no-start` does the same for any backup; the
+  guide of upgrading says to use it when going back. Found by the update suite of the quality campaign, which rolled back for
+  real.
 - **The facts of an event (when, repeats, where, in charge, description) are a valid description list.** The markup nested
   each term and its description one level too deep, so a screen reader did not announce them as a list of terms and
   descriptions (WCAG 1.3.1). The look is the same. Found by the accessibility checks of the quality campaign.
