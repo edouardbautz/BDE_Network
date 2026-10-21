@@ -175,6 +175,12 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Security
 
+- **Three places that show a value of the request or of the network are closed.** Nothing could be exploited (the language of the
+  page shown at a startup problem was always one of two words and the page has a policy that allows no script; the logo
+  preview was a temporary address of the browser; the notes of a release are shown as text), but the code said so only
+  implicitly, and the scanner of the code (CodeQL) rightly asked. The language is now one of two constants; the logo's picture
+  accepts only a temporary address of the browser or a path of the site; the summary of a release's notes keeps no angle
+  bracket, even when removing a tag would make another. A test of each states what must hold.
 - **The image applies the security updates of its operating system when it is built** (`apk upgrade`), and CI scans the image
   for known vulnerabilities (Trivy: HIGH and CRITICAL with a fix available fail the build; the two that are accepted, in
   development tools of Prisma that the platform never runs, are in `.trivyignore` with their reason). The scan found that the
