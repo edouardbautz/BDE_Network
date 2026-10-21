@@ -1021,6 +1021,10 @@ create what it needs with `sql`, click, `expectPage(...)`) before the CI is gree
 image (3 plays of each scenario: a defect that was 1 in 2 is missed 1 time in 8 per scenario, and one that is 14 in 15 is
 never missed); `MEASURE=1 ROUNDS=15 node e2e/actions.mjs` is how to measure a new page before choosing rule 2 or 3.
 
+**Prefetch.** Next.js prefetches the links it sees, and each prefetch of a page with data is a rendering by the server. A link that
+is repeated many times on a page (the events of the calendar: up to a hundred a month) is `prefetch={false}`: measured, the calendar
+made 110 prefetch requests against 13 to 18 for the list and the dashboard.
+
 **Tests.** `src/i18n/link.test.tsx` (the choice of the element, the address, no router option on the anchor). The proof that
 the buttons work is `e2e/events.mjs`, run by CI against the real image: it clicks next/previous month and "today", a day of
 the grid, the list and calendar buttons, another date of a series and the menu entry of the page itself, on a computer-sized and
