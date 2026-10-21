@@ -112,6 +112,11 @@ All notable changes to this project are written here, in English. Format based o
   `/api/auth/callback/42-school` it answered a 500 and logged an error for a request that is simply wrong; the unreadable
   value is now dropped, as if the visitor had not given one. Where a readable one leads is unchanged (Auth.js only follows an
   address of the platform). Found by the attacks of the quality campaign.
+- **The text of a destructive button (Remove, Refuse, Regenerate the link…) is readable on its tinted background.** In the
+  light theme the red was 3.8 to 4:1 against its own pale red (it needs 4.5:1, WCAG 1.4.3), which is hard to read for
+  people with low vision; it is darker now (the same hue; the dark theme is unchanged). A test now plays the contrast
+  table of the design document on the real colours of both themes. Found by the accessibility checks of the quality
+  campaign.
 
 ### Security
 
