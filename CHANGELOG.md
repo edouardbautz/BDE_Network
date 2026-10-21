@@ -88,6 +88,9 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Fixed
 
+- **The facts of an event (when, repeats, where, in charge, description) are a valid description list.** The markup nested
+  each term and its description one level too deep, so a screen reader did not announce them as a list of terms and
+  descriptions (WCAG 1.3.1). The look is the same. Found by the accessibility checks of the quality campaign.
 - **The export of one's own data is never kept by a cache** (`Cache-Control: private, no-store`, on the answer and on the
   refusal): it holds all the personal data of a member, and a proxy in front of the platform could otherwise keep it.
   Found by the attacks of the quality campaign.
