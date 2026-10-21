@@ -1362,6 +1362,36 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
   - **Not covered yet**: the mail server (the timeouts are unit-tested with a silent server; the platform of the job has no SMTP), the
     reminder loop with a tick that fails for months (phase 10, with the virtual clock), a disk that is full (the logo's folder), and the
     supervisor's own handling of a database that is absent at start (`e2e/safe-update.sh` plays it).
+- **Updates** (`qa/upgrade/`, the `upgrade` job of `qa.yml`, one job per version to leave; `npx tsx qa/upgrade/run.ts --from
+1.0.0|1.1.0|1.2.0`, after `docker build -t bde-network:local .`). The guide of upgrading played for real, the way an operator does
+  it: a folder of the project at the old version (a **worktree of its tag**, moved to the version under test with `git checkout`, as
+  `git pull` does), its `.env` and `bde.config.yml`, a Docker Compose project whose volumes stay through the update. 1.1.0 and
+  1.2.0 come from the registry; **1.0.0 was never published as an image and is built from its folder**, as its compose file says.
+  The run: (1) the old platform starts and is given the data of an old installation (`fixture.ts`, written in the schema of the old
+  version: roles, one of them with `events.manage`; members and a person waiting; single, weekly, every-two-weeks and monthly
+  events, the monthly one on the 31st; a draft; a cancelled date and, from 1.1.0, a moved and renamed one; the series cross the
+  change of clock of March 2027; calendar links of two members and of the BDE); (2) **what the old version says about that data is
+  recorded**: its calendar files, its roles, the rows of its tables; (3) the backup of the guide; (4) the folder is moved to the
+  version under test and `docker compose up -d`; (5) the new version is held to what the old one said (`compare.ts`, pure and
+  tested): every migration applied, no row lost, the roles identical except `events.manage` becoming validating, proposing and
+  viewing (and written in the audit log), the members and events identical, **each calendar file saying the same thing line by line**
+  (every UID, date, hour and cancellation: a differential test against the old algorithm, with no date computed by hand), the
+  invariants of the database, the copy the platform made by itself, the settings imported into the database, the old session
+  cookies still signing people in, and the treasurer able to validate while the reader still cannot; (6) a backup of the new version
+  and its restore (the row written after the backup is gone, the platform answers); (7) **the way back**: the copy the platform made
+  (`restore.sh --pre-update`) or the backup made before (`restore.sh <archive> --no-start`, for 1.1.0), `git checkout` of the old
+  tag, `docker compose up -d`, and the old version gives the same calendar files as before the update. The platform is made with the
+  published image's file mounted for 1.1.0 and later, a QA-only choice: what is held here is the data, the migrations and the way back,
+  not the baking of the configuration into an image (that is the `docker image` job).
+  - **What the first run found**: the way back did not work as the guide said. `restore.sh` ended by starting the application of the
+    folder, still at the version being left, which applied its migrations again to the database just put back, and the old version then
+    refused it (`--no-start`, implied by `--pre-update`; `restore.test.ts` holds it against a `docker` that is only a recorder). What
+    it did not find, which is as worth saying: no date, hour, right or row changed in an update from 1.0.0, 1.1.0 or 1.2.0.
+  - **Traps met writing it**: the tokens of the calendar links have a format an invariant checks (43 characters of the URL-safe
+    alphabet), and the first fixture's did not have it, so the feeds were empty and the comparison compared nothing (`the old version
+gives calendar files with the data in them` guards that); the not-found page marks itself, the words are in every page's payload.
+  - **Not covered yet**: an update from a platform installed by the web installer (it needs the browser; the settings are imported
+    from files here), a second update in a row, and an update interrupted in the middle (the safe-update script plays that).
 - **Coverage** (`npm run test:coverage`, `coverage-thresholds.json`, `scripts/coverage-report.mjs`,
   `scripts/coverage-gaps.mjs`, `qa/coverage-plan.md`). The ubuntu job of `ci.yml` runs the unit tests through V8 coverage
   and **fails below a floor**: one for the whole project and one for each area that decides who may do what or what is

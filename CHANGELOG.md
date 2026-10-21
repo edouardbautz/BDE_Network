@@ -8,6 +8,12 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **The updates an operator makes are played, from every released version, every night.** A platform of 1.0.0, 1.1.0 or 1.2.0 is
+  given the data of an old installation (roles, members, events of every kind of repetition, a cancelled and a moved date, calendar
+  links), the folder is moved to the version under test and `docker compose up -d` is run, as the guide of upgrading says. What the
+  old version said about its own data (every date of its calendar files, its roles, its rows) is what the new one is held to; then
+  a backup and its restore, and the way back to the old version, are played. It found that going back with `restore.sh` did not
+  work as written (see "Fixed"), and nothing else: no date, right or row changed in any of the three updates.
 - **What the platform does when what it stands on goes away is played every night.** A suite stops, freezes and kills the
   database while the platform serves signed-in people, stops and kills the application in the middle of a batch of writes, and
   puts a webhook that accepts the connection and never answers behind the notifications. It checks that the platform says the

@@ -525,3 +525,52 @@ jobs:
       - name: Stop the platform
         if: always()
         run: sh qa/platform.sh down
+
+  # The updates an operator makes (qa/upgrade; see "Updates" in docs/architecture.md): a platform of an old version with data in it,
+  # the folder moved to the version under test, `docker compose up -d`, then a backup and its restore and the way back to the old
+  # version. One job per version to leave: 1.0.0 was never published as an image, so its job builds it from its tag.
+  upgrade:
+    name: update from ${{ matrix.from }}
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-qa')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        from: ['1.0.0', '1.1.0', '1.2.0']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # the folders of the old versions are worktrees of their tags
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      # The name `docker-compose.build.yml` gives the image built from the folder.
+      - name: Build the image of the version under test
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          load: true
+          tags: bde-network:local
+          cache-from: type=gha,scope=qa-image
+          cache-to: type=gha,mode=max,scope=qa-image
+
+      - name: Update from ${{ matrix.from }}, back up, restore, go back
+        run: npx tsx qa/upgrade/run.ts --from ${{ matrix.from }} --report upgrade-report.json
+
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upgrade-report-${{ matrix.from }}
+          path: upgrade-report.json
+          if-no-files-found: ignore

@@ -67,6 +67,7 @@ next-env.d.ts
 /playwright-report/
 /lighthouse-reports/
 /resilience-report.json
+/upgrade-report.json
 
 # internal pre-release audit notes (never committed)
 /.audit/
