@@ -53,21 +53,29 @@ function withoutFences(text) {
   return kept.join('\n');
 }
 
+/** The text of a heading without its HTML tags: read once, character by character (a bracket opens a tag, the next one closes it). */
+function withoutTags(text) {
+  let kept = '';
+  let inTag = false;
+  for (const character of text) {
+    if (character === '<') inTag = true;
+    else if (character === '>') inTag = false;
+    else if (!inTag) kept += character;
+  }
+  return kept;
+}
+
 /** GitHub's anchor of a heading. */
 function slugOf(heading) {
-  return (
-    heading
-      // A tag, from its `<` to the next bracket: no `<` can survive, so a tag cannot be made by the removal of another.
-      .replace(/<[^<>]*>?/g, '')
-      .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
-      .replace(/`/g, '')
-      .replace(/\*\*?([^*]+)\*\*?/g, '$1')
-      .replace(/(^|\s)_([^_]+)_(?=\s|$)/g, '$1$2')
-      .trim()
-      .toLowerCase()
-      .replace(/[^\p{L}\p{N}\p{M}\s_-]/gu, '')
-      .replace(/\s/g, '-')
-  );
+  return withoutTags(heading)
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/`/g, '')
+    .replace(/\*\*?([^*]+)\*\*?/g, '$1')
+    .replace(/(^|\s)_([^_]+)_(?=\s|$)/g, '$1$2')
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\p{M}\s_-]/gu, '')
+    .replace(/\s/g, '-');
 }
 
 const parsed = new Map();
