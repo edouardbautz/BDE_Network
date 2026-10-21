@@ -63,6 +63,7 @@ next-env.d.ts
 
 # what the browser suite (qa/browsers) leaves: traces, screenshots, the report
 /test-results/
+/qa/browsers/.visual-local/
 /playwright-report/
 
 # internal pre-release audit notes (never committed)

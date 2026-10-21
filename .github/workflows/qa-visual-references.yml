@@ -1,0 +1,116 @@
+name: qa visual references
+
+# Makes the reference pictures of qa/browsers/visual.spec.ts (see "Visual regression" in docs/architecture.md) and commits them
+# to the branch `qa/visual-baselines`, where the `visual` job of the `qa` workflow reads them. Nothing but pictures is on that
+# branch, so they never weigh on main. They are made HERE, by the system that compares them: the same page is not drawn pixel
+# for pixel the same by two systems.
+#
+# Run it by hand (Actions → qa visual references → Run workflow) when the look of the pages was meant to change, or put the label
+# `visual-references` on a pull request (before it is merged, so that the `visual` job of the same pull request passes). Then
+# READ the pictures that changed (the summary of the run links the commit): the references are the decision of what the
+# platform looks like.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: visual-references
+  cancel-in-progress: false
+
+jobs:
+  references:
+    name: make the reference pictures
+    # A label of the project's own pull requests only: the code that runs here may write to a branch.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.label.name == 'visual-references' &&
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build the production image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: bde-network
+          cache-from: type=gha,scope=qa-image
+          cache-to: type=gha,mode=max,scope=qa-image
+
+      - name: Start the platform, with the clock of the dataset
+        run: sh qa/platform.sh up --image bde-network --now 2026-10-16T12:00:00Z
+
+      - name: Install the browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Take the pictures
+        run: |
+          eval "$(sh qa/platform.sh env)"
+          npx playwright test -c qa/browsers --project=visual --update-snapshots
+        env:
+          CI: 'true'
+          QA_VISUAL_DIR: ${{ runner.temp }}/new-references
+
+      - name: Stop the platform
+        if: always()
+        run: sh qa/platform.sh down
+
+      # The branch holds the pictures and a README, nothing else. Made from nothing the first time.
+      - name: Commit them to qa/visual-baselines
+        env:
+          SOURCE: ${{ github.event.pull_request.head.sha || github.sha }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          set -eu
+          repository="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          if git ls-remote --exit-code --heads "$repository" qa/visual-baselines >/dev/null 2>&1; then
+            git clone --quiet --depth 1 --branch qa/visual-baselines "$repository" "$RUNNER_TEMP/branch"
+          else
+            mkdir "$RUNNER_TEMP/branch"
+            git -C "$RUNNER_TEMP/branch" init --quiet --initial-branch qa/visual-baselines
+            git -C "$RUNNER_TEMP/branch" remote add origin "$repository"
+          fi
+          cd "$RUNNER_TEMP/branch"
+          git config user.name "$ACTOR"
+          git config user.email "$ACTOR@users.noreply.github.com"
+
+          find . -maxdepth 1 -name '*.png' -delete
+          cp "$RUNNER_TEMP"/new-references/*.png .
+          cat > README.md <<README
+          # Reference pictures of the visual suite
+
+          Made by the workflow \`qa visual references\` of the main branch's repository, from commit \`$SOURCE\`, in Chromium on the
+          platform of \`qa/platform.sh up --now 2026-10-16T12:00:00Z\`. Nothing else is on this branch: it is read by the \`visual\`
+          job of the \`qa\` workflow. See "Visual regression" in \`docs/architecture.md\`.
+          README
+
+          git add -A
+          if git diff --cached --quiet; then
+            echo "The pictures are the ones that were already there: nothing to commit." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          changed="$(git diff --cached --name-only | grep -c '\.png$' || true)"
+          git commit --quiet -m "chore(visual): the reference pictures of $(echo "$SOURCE" | cut -c1-7)" -m "$changed pictures added, changed or removed."
+          git push --quiet origin HEAD:qa/visual-baselines
+          {
+            echo "### Reference pictures"
+            echo "$changed pictures added, changed or removed, committed to \`qa/visual-baselines\` ($(git rev-parse --short HEAD))."
+            echo "Read them: https://github.com/${{ github.repository }}/commit/$(git rev-parse HEAD)"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -23,7 +23,18 @@ export default defineConfig({
   retries: 0,
   forbidOnly: true,
   timeout: 60_000,
-  expect: { timeout: 10_000 },
+  expect: {
+    timeout: 10_000,
+    // A picture may differ by a few pixels of anti-aliasing from one run to the next; a change of look is far above that.
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.002,
+      animations: 'disabled',
+      caret: 'hide',
+      scale: 'css',
+    },
+  },
+  // Where the reference pictures are: the branch the workflow checks out (QA_VISUAL_DIR), or a folder of your own, ignored by git.
+  snapshotPathTemplate: `${process.env.QA_VISUAL_DIR ?? '{testDir}/.visual-local'}/{arg}{ext}`,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : [['list']],
   use: {
     baseURL,
@@ -34,9 +45,20 @@ export default defineConfig({
     locale: 'en-GB',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    // What axe reports is the page's, not the engine's: the accessibility checks run once, in Chromium (the keyboard ones run in all three).
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] }, testIgnore: /a11y.spec.ts/ },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] }, testIgnore: /a11y.spec.ts/ },
+    // The pictures are compared in Chromium only, by the project of their own (and made there): see visual.spec.ts.
+    { name: 'visual', use: { ...devices['Desktop Chrome'] }, testMatch: /visual\.spec\.ts/ },
+    // Every other file runs in the three engines, except what axe reports, which is the page's and not the engine's: the
+    // accessibility checks run once, in Chromium (the keyboard ones run in all three).
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: /visual\.spec\.ts/ },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+      testIgnore: /(a11y|visual)\.spec\.ts/,
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+      testIgnore: /(a11y|visual)\.spec\.ts/,
+    },
   ],
 });
