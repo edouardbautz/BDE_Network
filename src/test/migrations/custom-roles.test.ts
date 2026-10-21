@@ -110,6 +110,7 @@ async function accounts(client: Client) {
   return Object.fromEntries(rows.map((row) => [row.login, row]));
 }
 
+// One database per test, dropped one after the other: this can take longer than the 10 s of a hook on a loaded runner.
 afterAll(async () => {
   await Promise.all(clients.map((client) => client.end().catch(() => undefined)));
   if (!ADMIN_URL || created.length === 0) return;
@@ -119,7 +120,7 @@ afterAll(async () => {
     await admin.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`);
   }
   await admin.end();
-});
+}, 60_000);
 
 describeWithDatabase('custom roles migration', () => {
   it('creates the two default roles on a fresh install, and logs nothing', async () => {
