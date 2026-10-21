@@ -46,6 +46,18 @@ describe('versions', () => {
 });
 
 describe('summarizeNotes', () => {
+  it('keeps no angle bracket, even when removing a tag would make another', () => {
+    for (const body of [
+      '<<b>script>alert(1)<</b>/script> after',
+      '<scr<script>ipt>x</scr</script>ipt>',
+      'a < b and c > d',
+    ]) {
+      const summary = summarizeNotes(body);
+      expect(summary, body).not.toMatch(/[<>]/);
+    }
+    expect(summarizeNotes('<<b>script>alert(1)')).toBe('scriptalert(1)');
+  });
+
   it('keeps the first paragraph that is not a heading or a list, as plain text', () => {
     const body =
       '## Title\n\n**Install from the browser** and [update](https://x.test) in `two` steps.\n\n- a list\n';

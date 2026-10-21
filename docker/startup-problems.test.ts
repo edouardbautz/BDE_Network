@@ -163,7 +163,25 @@ describe('parseReport', () => {
   });
 });
 
-describe('pickLanguage', () => {
+describe('pickLanguage, and what a request can put in the page', () => {
+  it('answers one of the two languages, whatever is asked, and the page holds nothing of the request', () => {
+    const hostile = [
+      '/x?lang=en"><script>alert(1)</script>',
+      '/x?lang=fr%22%20onload%3Dalert(1)',
+      '/x?lang=EN',
+      '/x?lang=<img src=x onerror=alert(1)>',
+      '/x?a=1&lang=en&lang=x',
+    ];
+    for (const url of hostile) {
+      const lang = pickLanguage(url, '"><script>alert(1)</script>');
+      expect(['fr', 'en'], url).toContain(lang);
+      const page = renderProblemPage({ kind: 'env', variables: [] }, lang, false);
+      expect(page, url).toMatch(/<html lang="(fr|en)">/);
+      expect(page, url).not.toContain('alert(1)');
+      expect(page, url).not.toContain('<script');
+    }
+  });
+
   it('follows ?lang= first', () => {
     expect(pickLanguage('/x?lang=en', 'fr-FR')).toBe('en');
     expect(pickLanguage('/x?lang=fr', 'en-US')).toBe('fr');

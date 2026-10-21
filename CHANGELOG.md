@@ -175,6 +175,11 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Security
 
+- **Two places that show a value of the request or of the network are closed.** Nothing could be exploited (the language of the
+  page shown at a startup problem was always one of two words and the page has a policy that allows no script; the notes of a
+  release are shown as text), but the code said so only implicitly, and the scanner of the code (CodeQL) rightly asked. The
+  language is now one of two constants; the summary of a release's notes keeps no angle bracket, even when removing a tag would
+  make another. A test of each states what must hold.
 - **The automation of the project is pinned and limited.** The actions that are not GitHub's own (Docker's build and publish
   actions, the link checker, the SBOM generator) are used by the commit they were published at, not by a tag that their owner can
   move to other code that would run with the project's token; Dependabot keeps the commits up to date. The main workflow of

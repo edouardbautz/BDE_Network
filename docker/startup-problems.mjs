@@ -509,8 +509,10 @@ const inline = (text) =>
 
 /** "fr" or "en": `?lang=` first, then the browser's preference, French by default. */
 export function pickLanguage(url, acceptLanguage) {
+  // What leaves this function is one of two constants, never a piece of the request (it ends up in the markup of the page).
   const asked = /[?&]lang=(fr|en)\b/.exec(url ?? '')?.[1];
-  if (asked) return asked;
+  if (asked === 'en') return 'en';
+  if (asked === 'fr') return 'fr';
   const header = String(acceptLanguage ?? '').toLowerCase();
   const fr = header.indexOf('fr');
   const en = header.indexOf('en');
