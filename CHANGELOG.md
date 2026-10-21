@@ -103,6 +103,11 @@ All notable changes to this project are written here, in English. Format based o
   was sent with a policy that lets scripts run. Nothing could be exploited (the type is the image's, and `nosniff` keeps a
   browser from taking it for a page), but the second line of defence that was written did not exist. The policy of the pages
   now leaves `/api/logo` out. Found by the attacks of the quality campaign.
+- **The button "Make default" of the roles page is named with the words it shows.** Its accessible name was "Make _Admin_
+  the default role" (and in French "Définir _Admin_ comme rôle par défaut"), which does not contain the visible text, so
+  somebody who speaks to their computer ("click Make default") was not understood (WCAG 2.5.3). The name now starts with
+  the visible words ("Make default: Admin"). A test checks every control named this way, in both languages. Found by the
+  accessibility checks of the quality campaign.
 - **No page violates the platform's own content policy any more.** The validation library (Zod) tried to compile its schemas
   with `new Function` to find out whether it may, which the policy forbids (no `'unsafe-eval'`, on purpose): every page load
   was a `script-src` violation, written to the console of Firefox and Safari's developer tools and sent to any report address
