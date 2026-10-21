@@ -27,7 +27,7 @@ import {
 const K6_IMAGE = 'grafana/k6:2.3.0';
 const NETWORK = process.env.QA_NETWORK ?? 'qa-net';
 const APP_CONTAINER = process.env.QA_APP_CONTAINER ?? 'qa-app';
-const MEMORY_LIMIT_MIB = Number(process.env.QA_MEMORY_LIMIT_MIB ?? 1024);
+const MEMORY_LIMIT_MIB = Number(process.env.QA_MEMORY_LIMIT_MIB ?? 1536);
 
 const flag = (name: string, fallback: string): string => {
   const at = process.argv.indexOf(`--${name}`);
