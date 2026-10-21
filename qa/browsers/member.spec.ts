@@ -119,6 +119,28 @@ test.describe('a member', () => {
     await expect(page.locator('html')).not.toHaveClass(/dark/);
   });
 
+  test('opens the menu of their name, reaches their profile, and signs out', async ({ as }) => {
+    const page = await as('member');
+    await page.goto('/en/dashboard');
+
+    await page.getByRole('button', { name: /QA member/ }).click();
+    const menu = page.getByRole('menu');
+    await expect(menu).toBeVisible();
+    await expect(menu).toContainText('qa-member');
+    await menu.getByRole('menuitem', { name: 'My profile' }).click();
+    await expect(page).toHaveURL(/\/en\/profile$/);
+    await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeVisible();
+
+    await page.getByRole('button', { name: /QA member/ }).click();
+    await page.getByRole('menuitem', { name: 'Sign out' }).click();
+    await expect(
+      page.getByRole('button', { name: /Sign in with 42|Se connecter avec 42/ }),
+    ).toBeVisible();
+    // The session is gone: the application sends the visitor back to the login page.
+    await page.goto('/en/dashboard');
+    await expect(page).toHaveURL(/\/(en|fr)$/);
+  });
+
   test('is shown no way to create an event, nor any page of the board', async ({ as }) => {
     const page = await as('member');
     await page.goto('/en/events');

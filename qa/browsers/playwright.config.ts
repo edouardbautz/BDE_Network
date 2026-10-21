@@ -35,7 +35,8 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    // What axe reports is the page's, not the engine's: the accessibility checks run once, in Chromium (the keyboard ones run in all three).
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] }, testIgnore: /a11y.spec.ts/ },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] }, testIgnore: /a11y.spec.ts/ },
   ],
 });

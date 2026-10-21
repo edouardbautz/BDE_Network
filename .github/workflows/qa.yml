@@ -237,6 +237,7 @@ jobs:
   # The journeys of the platform in the three engines people use: Chromium, Firefox and WebKit (Safari's), each in a job of its
   # own, against the real image and the QA dataset (qa/browsers; see "Browsers" in docs/architecture.md). What a page raises,
   # an exception, a console error, a violation of the content policy, a server error, fails the journey that raised it.
+  # The accessibility of every page (axe, WCAG 2.2 AA) is checked in the Chromium job, and the keyboard in all three.
   browsers:
     name: browsers (${{ matrix.engine }})
     if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-qa')

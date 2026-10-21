@@ -12,7 +12,11 @@ interface Fixtures {
   /** A page signed in as a persona (a fresh browser context each time), watched for what it should never do. */
   as: (
     who: PersonaKey,
-    options?: { viewport?: { width: number; height: number } },
+    options?: {
+      viewport?: { width: number; height: number };
+      /** The scheme the browser reports: with no choice made in the interface, the theme follows it. */
+      colorScheme?: 'light' | 'dark';
+    },
   ) => Promise<Page>;
   problems: Problems;
 }
@@ -100,7 +104,11 @@ export const test = base.extend<Fixtures>({
     const judgements: (() => void)[] = [];
     await use(async (who, options = {}) => {
       const account = persona(who);
-      const context = await browser.newContext({ baseURL, viewport: options.viewport });
+      const context = await browser.newContext({
+        baseURL,
+        viewport: options.viewport,
+        colorScheme: options.colorScheme,
+      });
       contexts.push(context);
       if (account.hasCookie && account.login) {
         await context.addCookies([
