@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -39,13 +40,16 @@ export async function UserMenu({ name, login, image, roleLabel }: UserMenuProps)
         </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
-        <DropdownMenuLabel className="flex flex-col gap-1 font-normal">
-          <span className="text-sm font-medium">{name}</span>
-          <span className="text-muted-foreground text-xs">{login}</span>
-          <Badge variant="secondary" className="w-fit">
-            {roleLabel}
-          </Badge>
-        </DropdownMenuLabel>
+        {/* A menu label belongs to a group: Base UI throws when the menu opens if it does not (it did, for everybody). */}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="flex flex-col gap-1 font-normal">
+            <span className="text-sm font-medium">{name}</span>
+            <span className="text-muted-foreground text-xs">{login}</span>
+            <Badge variant="secondary" className="w-fit">
+              {roleLabel}
+            </Badge>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem render={<Link href="/profile" />}>
           <UserRound className="size-4" />
