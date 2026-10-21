@@ -10,7 +10,6 @@ import { Field, fieldError, useFailureText } from '@/components/setup/fields';
 import { removeLogo, saveLogo } from '@/app/[locale]/(app)/settings/actions';
 import type { ActionFailure } from '@/app/[locale]/setup/actions';
 import { LOGO_MAX_BYTES } from '@/lib/branding/image';
-import { logoSource } from '@/lib/branding/image-source';
 
 /** What the file input offers; the server checks the bytes again, whatever the browser says. */
 const ACCEPT = 'image/png,image/jpeg,image/gif,image/webp';
@@ -89,7 +88,7 @@ export function LogoSection({ logoPath, custom }: { logoPath: string; custom: bo
         <div className="bg-muted/50 border-border flex size-20 shrink-0 items-center justify-center rounded-lg border p-2">
           {/* eslint-disable-next-line @next/next/no-img-element -- the logo is served by /api/logo or /public: next/image would only get in the way */}
           <img
-            src={logoSource(preview, logoPath)}
+            src={preview ?? logoPath}
             alt={t('currentAlt')}
             className="size-full object-contain"
             id="settings-logo-preview"
