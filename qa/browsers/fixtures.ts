@@ -1,4 +1,4 @@
-import { test as base, expect, type ConsoleMessage, type Page } from '@playwright/test';
+import { test as base, expect, type Page } from '@playwright/test';
 import { SESSION_COOKIE, forgeSessionCookie, persona, type PersonaKey } from '../personas';
 
 export { expect };
@@ -73,26 +73,6 @@ const RECENTLY_MS = 5000;
  */
 const INTERRUPTED_PREFETCH = /[?&]_rsc=[\w-]+ due to access control checks\.?$/;
 
-/** Reads what `console.error` was given, whatever it was (an object is `JSHandle@object` in `text()`). */
-async function describeConsole(message: ConsoleMessage): Promise<string> {
-  const parts = await Promise.all(
-    message
-      .args()
-      .map((argument) =>
-        argument
-          .evaluate((value: unknown) =>
-            value instanceof Error
-              ? `${value.name}: ${value.message}`
-              : typeof value === 'string'
-                ? value
-                : JSON.stringify(value),
-          )
-          .catch(() => '?'),
-      ),
-  );
-  return (parts.join(' ') || message.text()).slice(0, 300);
-}
-
 export const test = base.extend<Fixtures>({
   problems: async ({}, use) => {
     const problems: Problems = { list: [] };
@@ -148,7 +128,40 @@ export const test = base.extend<Fixtures>({
       await page.exposeFunction('__reportViolation', (what: string) =>
         report(`policy violation: ${what}`),
       );
+      // What the page gives `console.error` is read where the call is made, in the page, before anything else can happen to it. Read
+      // afterwards from here, an object was already gone when the page had navigated meanwhile (a redirect, the next click), and
+      // all that was left was "?": the one thing the judgment of a cancelled fetch (`suspect`) needs, its words, was lost.
+      await page.exposeFunction('__reportConsoleError', (described: string) => {
+        if (NETWORK_WORDS.some((words) => words.test(described))) return;
+        if (suspect(described, `console error: ${described}`)) return;
+        report(`console error: ${described}`);
+      });
       await page.addInitScript(() => {
+        const describe = (value: unknown): string => {
+          try {
+            return value instanceof Error
+              ? `${value.name}: ${value.message}`
+              : typeof value === 'string'
+                ? value
+                : (JSON.stringify(value) ?? String(value));
+          } catch {
+            return String(value);
+          }
+        };
+        const original = console.error;
+        console.error = (...args: unknown[]) => {
+          try {
+            const described = args.map(describe).join(' ').slice(0, 300);
+            void Promise.resolve(
+              (
+                window as unknown as { __reportConsoleError(what: string): unknown }
+              ).__reportConsoleError(described),
+            ).catch(() => {});
+          } catch {
+            // the page never fails because of the watcher
+          }
+          original.apply(console, args);
+        };
         document.addEventListener('securitypolicyviolation', (event) => {
           if (event.violatedDirective.startsWith('connect-src') && event.blockedURI === 'blob')
             return; // the tracer's fetch
@@ -165,13 +178,14 @@ export const test = base.extend<Fixtures>({
         if (!suspect(error.message, `exception: ${error.message}`))
           report(`exception: ${error.message}`);
       });
-      page.on('console', async (message) => {
-        if (message.type() !== 'error') return;
-        const text = message.text();
+      // The errors the browser writes by itself (a blocked request, a policy) have no arguments; the calls of the page's own code
+      // are the ones reported above.
+      page.on('console', (message) => {
+        if (message.type() !== 'error' || message.args().length > 0) return;
+        const text = message.text().slice(0, 300);
         if (NETWORK_WORDS.some((words) => words.test(text))) return;
-        const described = await describeConsole(message);
-        if (suspect(`${text} ${described}`, `console error: ${described}`)) return;
-        report(`console error: ${described}`);
+        if (suspect(text, `console error: ${text}`)) return;
+        report(`console error: ${text}`);
       });
       // A request that failed otherwise than by being cancelled (the next click, a page left), or a server error.
       page.on('requestfailed', (request) => {

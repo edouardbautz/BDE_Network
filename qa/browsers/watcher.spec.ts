@@ -48,6 +48,29 @@ test.describe('the watcher of the journeys', () => {
     problems.list.length = 0;
   });
 
+  test('reads an error object whole, even when the page navigates away at once', async ({
+    as,
+    problems,
+  }) => {
+    const page = await as('anonymous');
+    await page.goto('/en');
+    await expect(page.getByRole('button', { name: 'Sign in with 42' })).toBeVisible();
+    // What went wrong in a journey once: the arguments were read after the fact, and a page that had already left (a redirect,
+    // the next click) gave back "?" instead of the words the judgment of a cancelled fetch needs.
+    await page.evaluate(() => {
+      console.error(new Error('object read on purpose'));
+      const leave = document.createElement('a');
+      leave.href = '/en/privacy';
+      leave.click();
+    });
+    await expect(page).toHaveURL(/\/en\/privacy$/);
+    await expect
+      .poll(() => problems.list.some((line) => /Error: object read on purpose/.test(line)))
+      .toBe(true);
+    expect(problems.list.some((line) => /console error: \?$/.test(line))).toBe(false);
+    problems.list.length = 0;
+  });
+
   test('sees a server error', async ({ as, problems }) => {
     const page = await as('anonymous');
     await page.goto('/en');
