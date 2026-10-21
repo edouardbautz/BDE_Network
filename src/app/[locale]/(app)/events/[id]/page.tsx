@@ -67,12 +67,14 @@ function DetailRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex gap-3">
-      <Icon className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
-      <div className="flex min-w-0 flex-col gap-0.5">
-        <dt className="text-muted-foreground text-xs">{label}</dt>
-        <dd className="text-sm break-words">{children}</dd>
-      </div>
+    // A description list only holds terms and descriptions (a group may be wrapped in a div, which then holds nothing
+    // else): the icon sits inside the term, and the description is indented by the width of the icon and its gap.
+    <div className="flex min-w-0 flex-col gap-0.5">
+      <dt className="text-muted-foreground flex items-center gap-3 text-xs">
+        <Icon className="size-4 shrink-0" aria-hidden />
+        {label}
+      </dt>
+      <dd className="pl-7 text-sm break-words">{children}</dd>
     </div>
   );
 }

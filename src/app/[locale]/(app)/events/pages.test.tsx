@@ -304,6 +304,35 @@ describe('/events/[id]', () => {
     expect(html).not.toContain('detail.confirm');
   });
 
+  it('writes the facts as a description list a screen reader can read: terms and descriptions, and nothing else', async () => {
+    vi.mocked(getEventsAccess).mockResolvedValue(asMember);
+    vi.mocked(getVisibleEvent).mockResolvedValue(series as never);
+    const document = new DOMParser().parseFromString(await detailPage(), 'text/html');
+
+    const lists = [...document.querySelectorAll('dl')];
+    expect(lists.length).toBeGreaterThan(0);
+    for (const list of lists) {
+      const groups = [...list.children];
+      expect(groups.length).toBeGreaterThan(0);
+      for (const group of groups) {
+        // A direct child is a term, a description, or a div that holds only terms and descriptions.
+        if (group.tagName === 'DIV') {
+          expect(group.children.length).toBeGreaterThan(0);
+          for (const child of group.children) expect(['DT', 'DD']).toContain(child.tagName);
+        } else {
+          expect(['DT', 'DD']).toContain(group.tagName);
+        }
+      }
+    }
+    // And every term and description is in such a list (none is left loose, whatever holds it).
+    for (const item of document.querySelectorAll('dt, dd')) {
+      expect(item.closest('dl'), item.outerHTML).not.toBeNull();
+      expect(
+        item.parentElement?.tagName === 'DL' || item.parentElement?.parentElement?.tagName === 'DL',
+      ).toBe(true);
+    }
+  });
+
   it('gives a validator the edit, status and delete controls', async () => {
     vi.mocked(getEventsAccess).mockResolvedValue(asValidator);
     vi.mocked(getVisibleEvent).mockResolvedValue(storedEvent as never);
