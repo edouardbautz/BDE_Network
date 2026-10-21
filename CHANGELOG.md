@@ -108,6 +108,10 @@ All notable changes to this project are written here, in English. Format based o
 - **The refusal of the logo route (404) carries the same strict policy and `nosniff`** as the logo itself: leaving the policy
   of the pages out of that route had left its refusals without any policy. Nothing could be exploited (the body is empty), but
   every answer is meant to carry one. Found by the attacks of the quality campaign.
+- **The tables of the audit log, the members and the roles can be scrolled with the keyboard.** On a narrow screen a table
+  scrolls sideways, and a box that scrolls but cannot take the focus cannot be scrolled with the keyboard (WCAG 2.1.1). The
+  scrolling box of each table is now a named region reached with Tab, which shows the focus like every control. Found by the
+  accessibility checks of the quality campaign.
 - **A sign-in address with a `callbackUrl` that Auth.js cannot read (`javascript:…`) is no longer a server error.** On
   `/api/auth/callback/42-school` it answered a 500 and logged an error for a request that is simply wrong; the unreadable
   value is now dropped, as if the visitor had not given one. Where a readable one leads is unchanged (Auth.js only follows an

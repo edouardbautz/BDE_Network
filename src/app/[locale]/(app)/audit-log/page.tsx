@@ -1,5 +1,6 @@
 import { ScrollText } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
+import { ScrollableTable } from '@/components/scrollable-table';
 import { getEffectiveSession } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
 import { canViewAuditLog } from '@/lib/permissions';
@@ -53,34 +54,36 @@ export default async function AuditLogPage({ params }: { params: Promise<{ local
               <p className="text-muted-foreground text-sm">{t('empty')}</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('columns.date')}</TableHead>
-                  <TableHead>{t('columns.actor')}</TableHead>
-                  <TableHead>{t('columns.action')}</TableHead>
-                  <TableHead>{t('columns.target')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {entries.map((entry) => (
-                  <TableRow key={entry.id}>
-                    <TableCell className="text-muted-foreground whitespace-nowrap">
-                      {dateFormatter.format(entry.createdAt)}
-                    </TableCell>
-                    <TableCell className="font-medium">{entry.actorLogin}</TableCell>
-                    <TableCell>
-                      <code className="bg-muted rounded-sm px-1.5 py-0.5 text-xs">
-                        {entry.action}
-                      </code>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {entry.targetLabel ?? entry.targetType}
-                    </TableCell>
+            <ScrollableTable label={t('title')}>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('columns.date')}</TableHead>
+                    <TableHead>{t('columns.actor')}</TableHead>
+                    <TableHead>{t('columns.action')}</TableHead>
+                    <TableHead>{t('columns.target')}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {entries.map((entry) => (
+                    <TableRow key={entry.id}>
+                      <TableCell className="text-muted-foreground whitespace-nowrap">
+                        {dateFormatter.format(entry.createdAt)}
+                      </TableCell>
+                      <TableCell className="font-medium">{entry.actorLogin}</TableCell>
+                      <TableCell>
+                        <code className="bg-muted rounded-sm px-1.5 py-0.5 text-xs">
+                          {entry.action}
+                        </code>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {entry.targetLabel ?? entry.targetType}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollableTable>
           )}
         </CardContent>
       </Card>

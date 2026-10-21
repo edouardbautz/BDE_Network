@@ -1,3 +1,4 @@
+import { ScrollableTable } from '@/components/scrollable-table';
 import { CalendarSync, UserCheck, Users } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { getConfig } from '@/config';
@@ -166,37 +167,39 @@ export default async function MembersPage({
           {pending.length === 0 ? (
             <p className="text-muted-foreground text-sm">{t('pendingEmpty')}</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('columns.name')}</TableHead>
-                  <TableHead>{t('columns.login')}</TableHead>
-                  <TableHead>{t('columns.campus')}</TableHead>
-                  <TableHead className="text-right">{t('columns.actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pending.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <MemberIdentity name={user.fullName} photoUrl={user.photoUrl} />
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{user.login}</TableCell>
-                    <TableCell className="text-muted-foreground">{user.campus}</TableCell>
-                    <TableCell className="whitespace-normal">
-                      {offeredFirst && (
-                        <PendingMemberActions
-                          userId={user.id}
-                          memberName={user.fullName}
-                          roles={choices}
-                          initialRoleId={offeredFirst.id}
-                        />
-                      )}
-                    </TableCell>
+            <ScrollableTable label={t('pendingSection')}>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('columns.name')}</TableHead>
+                    <TableHead>{t('columns.login')}</TableHead>
+                    <TableHead>{t('columns.campus')}</TableHead>
+                    <TableHead className="text-right">{t('columns.actions')}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {pending.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <MemberIdentity name={user.fullName} photoUrl={user.photoUrl} />
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{user.login}</TableCell>
+                      <TableCell className="text-muted-foreground">{user.campus}</TableCell>
+                      <TableCell className="whitespace-normal">
+                        {offeredFirst && (
+                          <PendingMemberActions
+                            userId={user.id}
+                            memberName={user.fullName}
+                            roles={choices}
+                            initialRoleId={offeredFirst.id}
+                          />
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollableTable>
           )}
         </CardContent>
       </Card>
@@ -213,58 +216,62 @@ export default async function MembersPage({
           {active.length === 0 ? (
             <p className="text-muted-foreground text-sm">{t('empty')}</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('columns.name')}</TableHead>
-                  <TableHead>{t('columns.login')}</TableHead>
-                  <TableHead>{t('columns.campus')}</TableHead>
-                  <TableHead>{t('columns.role')}</TableHead>
-                  <TableHead className="text-right">{t('columns.actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {active.map((user) => {
-                  const lock = lockOf(user);
-                  return (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <MemberIdentity name={user.fullName} photoUrl={user.photoUrl} />
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{user.login}</TableCell>
-                      <TableCell className="text-muted-foreground">{user.campus}</TableCell>
-                      <TableCell className="whitespace-normal">
-                        {user.status === 'MEMBER' && user.role ? (
-                          <MemberRoleSelect
-                            userId={user.id}
-                            memberName={user.fullName}
-                            currentRoleId={user.role.id}
-                            roles={choices}
-                            lock={lock}
-                          />
-                        ) : (
-                          <div className="flex flex-col gap-1">
-                            <Badge variant="secondary" className="self-start">
-                              {accountLabel({ status: user.status, roleName: null }, tRoles)}
-                            </Badge>
-                            <span className="text-muted-foreground text-xs">{t('ownerNote')}</span>
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {user.status === 'MEMBER' && lock === null && (
-                          <RemoveMemberButton
-                            userId={user.id}
-                            login={user.login}
-                            memberName={user.fullName}
-                          />
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <ScrollableTable label={t('activeSection')}>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('columns.name')}</TableHead>
+                    <TableHead>{t('columns.login')}</TableHead>
+                    <TableHead>{t('columns.campus')}</TableHead>
+                    <TableHead>{t('columns.role')}</TableHead>
+                    <TableHead className="text-right">{t('columns.actions')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {active.map((user) => {
+                    const lock = lockOf(user);
+                    return (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <MemberIdentity name={user.fullName} photoUrl={user.photoUrl} />
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{user.login}</TableCell>
+                        <TableCell className="text-muted-foreground">{user.campus}</TableCell>
+                        <TableCell className="whitespace-normal">
+                          {user.status === 'MEMBER' && user.role ? (
+                            <MemberRoleSelect
+                              userId={user.id}
+                              memberName={user.fullName}
+                              currentRoleId={user.role.id}
+                              roles={choices}
+                              lock={lock}
+                            />
+                          ) : (
+                            <div className="flex flex-col gap-1">
+                              <Badge variant="secondary" className="self-start">
+                                {accountLabel({ status: user.status, roleName: null }, tRoles)}
+                              </Badge>
+                              <span className="text-muted-foreground text-xs">
+                                {t('ownerNote')}
+                              </span>
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {user.status === 'MEMBER' && lock === null && (
+                            <RemoveMemberButton
+                              userId={user.id}
+                              login={user.login}
+                              memberName={user.fullName}
+                            />
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </ScrollableTable>
           )}
         </CardContent>
       </Card>
