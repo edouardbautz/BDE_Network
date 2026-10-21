@@ -49,6 +49,18 @@ export function numbersOf(lhr: Lhr): PageNumbers {
   };
 }
 
+/**
+ * The run that stands for several: the one with the median performance score, whole (the numbers of one run belong together:
+ * the median of each number taken apart would describe a page that never was). Lighthouse on a shared runner moves from one
+ * run to the next (the blocking time of the members page was 468 ms, then 712), and the median of three is what its own
+ * continuous-integration tool takes.
+ */
+export function medianRun<T extends { numbers: PageNumbers }>(runs: T[]): T {
+  if (runs.length === 0) throw new Error('no run to take the median of');
+  const sorted = [...runs].sort((a, b) => a.numbers.performance - b.numbers.performance);
+  return sorted[Math.floor((sorted.length - 1) / 2)]!;
+}
+
 /** What a page may not go over (or under). Every key is optional: a page is held to what its budget says. */
 export interface Budget {
   minPerformance?: number;
@@ -142,6 +154,8 @@ export function markdownTable(results: PageResult[]): string {
   );
   return [
     '### Lighthouse',
+    '',
+    'The median run of several for each page (the one with the median performance score).',
     '',
     '| page | performance / accessibility / best practices / SEO | LCP ms | TBT ms | CLS | KiB | script KiB | requests | |',
     '| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |',

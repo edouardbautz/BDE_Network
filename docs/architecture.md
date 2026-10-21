@@ -1299,7 +1299,9 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
     about) and, for four of them, on a computer; signed-in pages carry the cookie of a persona, written to a file of its own (a
     shell would take a command line apart). Each is held to a **budget**: the four scores (performance, accessibility, best
     practices, SEO), the largest contentful paint, the blocking time, the layout shift, the weight (transferred, scripts) and the
-    number of requests. A budget is a written number: `budgets.json` has defaults (phone), those of the computer, and what a page
+    number of requests. **Each page is run three times and the median run is judged** (`medianRun`: the run with the median performance
+    score, whole; on a shared runner the blocking time of one page went from 468 to 712 ms between two runs of the same code, and the
+    median of three is what Lighthouse's own continuous-integration tool takes). A budget is a written number: `budgets.json` has defaults (phone), those of the computer, and what a page
     says of its own (`members`, `members:desktop`). The report has no verdict of its own: the budgets are the verdict, and raising
     one is a pull request that says why. The pure parts (what is read of a report, the budgets, the verdict) are
     `lighthouse-report.ts`, unit-tested.

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { breaches, budgetFor, markdownTable, numbersOf, type Lhr } from './lighthouse-report';
+import {
+  breaches,
+  budgetFor,
+  markdownTable,
+  medianRun,
+  numbersOf,
+  type Lhr,
+} from './lighthouse-report';
 
 const lhr: Lhr = {
   categories: {
@@ -145,5 +152,31 @@ describe('markdownTable', () => {
       '| dashboard (mobile) | 88 / 100 / 96 / 90 | 3800 | 90 | 0.004 | 449 | 300 | 49 | ok |',
     );
     expect(table).toContain('**scripts (KiB): 300 (limit 250)**');
+  });
+});
+
+describe('medianRun', () => {
+  const run = (performance: number, tbtMs: number) => ({
+    numbers: { ...numbersOf({ categories: {}, audits: {} }), performance, tbtMs },
+  });
+
+  it('is the run of the median performance score, whole', () => {
+    const a = run(71, 468);
+    const b = run(60, 712);
+    const c = run(84, 200);
+    // The numbers stay the ones of a run that was: 71 with its own 468 ms, not 71 with the 200 of another.
+    expect(medianRun([a, b, c])).toBe(a);
+    expect(medianRun([c, b, a])).toBe(a);
+  });
+
+  it('is the run itself for one, and the lower middle one for two (the pessimistic of the two)', () => {
+    const slow = run(60, 712);
+    const fast = run(84, 200);
+    expect(medianRun([fast])).toBe(fast);
+    expect(medianRun([fast, slow])).toBe(slow);
+  });
+
+  it('refuses nothing to judge, rather than judge a page that was not measured', () => {
+    expect(() => medianRun([])).toThrow(/no run/);
   });
 });

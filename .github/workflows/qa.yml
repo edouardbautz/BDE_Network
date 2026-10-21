@@ -398,7 +398,7 @@ jobs:
     name: performance and load
     if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-qa')
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 

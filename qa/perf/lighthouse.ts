@@ -7,9 +7,11 @@ import {
   breaches,
   budgetFor,
   markdownTable,
+  medianRun,
   numbersOf,
   type Budgets,
   type Lhr,
+  type PageNumbers,
   type PageResult,
 } from './lighthouse-report';
 
@@ -25,6 +27,8 @@ import {
  */
 
 const LIGHTHOUSE = 'lighthouse@13.5.0';
+/** Lighthouse is run this many times on a page and the median run is judged (see `medianRun`). */
+const RUNS = Number(process.env.LIGHTHOUSE_RUNS ?? 3);
 
 interface Target {
   name: string;
@@ -82,40 +86,47 @@ async function main() {
     for (const formFactor of target.desktop
       ? (['mobile', 'desktop'] as const)
       : (['mobile'] as const)) {
-      const file = join(reports, `${target.name}-${formFactor}.json`);
       // The cookie goes in a file of its own (Lighthouse reads one), not on a command line that a shell would take apart.
       const headers = join(reports, `.headers-${target.name}.json`);
       if (cookie) writeFileSync(headers, JSON.stringify({ Cookie: cookie }));
-      const run = spawnSync(
-        process.execPath,
-        [
-          npmCli(),
-          'exec',
-          '--yes',
-          `--package=${LIGHTHOUSE}`,
-          '--',
-          'lighthouse',
-          `${base}${target.path}`,
-          '--output=json',
-          `--output-path=${file}`,
-          '--quiet',
-          '--only-categories=performance,accessibility,best-practices,seo',
-          '--chrome-flags=--headless=new --no-sandbox',
-          ...(formFactor === 'desktop' ? ['--preset=desktop'] : []),
-          ...(cookie ? [`--extra-headers=${headers}`] : []),
-        ],
-        {
-          env: { ...process.env, CHROME_PATH: chromium.executablePath() },
-          stdio: ['ignore', 'inherit', 'inherit'],
-        },
-      );
-      rmSync(headers, { force: true });
-      if (run.status !== 0)
-        throw new Error(
-          `Lighthouse failed on ${target.name} (${formFactor}), status ${run.status}`,
-        );
 
-      const numbers = numbersOf(JSON.parse(readFileSync(file, 'utf8')) as Lhr);
+      const runs: { numbers: PageNumbers; file: string }[] = [];
+      for (let attempt = 1; attempt <= RUNS; attempt += 1) {
+        const file = join(reports, `${target.name}-${formFactor}-${attempt}.json`);
+        const run = spawnSync(
+          process.execPath,
+          [
+            npmCli(),
+            'exec',
+            '--yes',
+            `--package=${LIGHTHOUSE}`,
+            '--',
+            'lighthouse',
+            `${base}${target.path}`,
+            '--output=json',
+            `--output-path=${file}`,
+            '--quiet',
+            '--only-categories=performance,accessibility,best-practices,seo',
+            '--chrome-flags=--headless=new --no-sandbox',
+            ...(formFactor === 'desktop' ? ['--preset=desktop'] : []),
+            ...(cookie ? [`--extra-headers=${headers}`] : []),
+          ],
+          {
+            env: { ...process.env, CHROME_PATH: chromium.executablePath() },
+            stdio: ['ignore', 'inherit', 'inherit'],
+          },
+        );
+        if (run.status !== 0) {
+          rmSync(headers, { force: true });
+          throw new Error(
+            `Lighthouse failed on ${target.name} (${formFactor}), status ${run.status}`,
+          );
+        }
+        runs.push({ numbers: numbersOf(JSON.parse(readFileSync(file, 'utf8')) as Lhr), file });
+      }
+      rmSync(headers, { force: true });
+
+      const { numbers } = medianRun(runs);
       results.push({
         page: target.name,
         formFactor,
