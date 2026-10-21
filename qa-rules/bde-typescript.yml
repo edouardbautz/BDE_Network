@@ -54,6 +54,8 @@ rules:
       - pattern: require('node:child_process')
     paths:
       include: [src/]
+      # A test may start a process of its own (a fresh Node, to look at what a module does when it is loaded).
+      exclude: ['**/*.test.ts', '**/*.test.tsx']
 
   - id: bde-no-math-random
     languages: [typescript]
