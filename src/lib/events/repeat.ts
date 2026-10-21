@@ -1,3 +1,4 @@
+import '../zod-config';
 import { z } from 'zod';
 import { fromLocalDateTime, toLocalDateTime, type LocalDate } from './time';
 

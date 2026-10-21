@@ -92,6 +92,11 @@ All notable changes to this project are written here, in English. Format based o
   was sent with a policy that lets scripts run. Nothing could be exploited (the type is the image's, and `nosniff` keeps a
   browser from taking it for a page), but the second line of defence that was written did not exist. The policy of the pages
   now leaves `/api/logo` out. Found by the attacks of the quality campaign.
+- **No page violates the platform's own content policy any more.** The validation library (Zod) tried to compile its schemas
+  with `new Function` to find out whether it may, which the policy forbids (no `'unsafe-eval'`, on purpose): every page load
+  was a `script-src` violation, written to the console of Firefox and Safari's developer tools and sent to any report address
+  a BDE would add. Nothing broke (the library falls back on its plain path), and nothing is slower in practice. Found by the
+  browser tests of the quality campaign.
 - **The refusal of the logo route (404) carries the same strict policy and `nosniff`** as the logo itself: leaving the policy
   of the pages out of that route had left its refusals without any policy. Nothing could be exploited (the body is empty), but
   every answer is meant to carry one. Found by the attacks of the quality campaign.

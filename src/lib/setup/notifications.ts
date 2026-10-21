@@ -1,3 +1,4 @@
+import '../zod-config';
 import { z } from 'zod';
 import type { SmtpSettings } from './notify-test';
 import {
