@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { findings, judge } from './zap-gate.mjs';
 import { contentSecurityPolicy } from '../../src/lib/security-headers';
-import { cspProblems, missingEverywhere, parseCsp } from './headers';
+import { OWN_POLICY, cspProblems, missingEverywhere, parseCsp } from './headers';
 import { unfold } from './feeds';
 import { PAYLOADS, unescaped, violations } from './injection';
 import { png } from './uploads';
@@ -90,6 +90,38 @@ describe('missingEverywhere', () => {
     expect(missingEverywhere(response({ ...good, server: 'nginx/1.18.0' })).join()).toContain(
       'version',
     );
+  });
+});
+
+describe('missingEverywhere, for a route with a policy of its own', () => {
+  const own = {
+    status: 404,
+    headers: new Headers({
+      'content-security-policy': OWN_POLICY,
+      'x-content-type-options': 'nosniff',
+      'x-frame-options': 'DENY',
+      'referrer-policy': 'no-referrer',
+      'permissions-policy': 'camera=()',
+    }),
+    body: '',
+    ms: 0,
+  };
+
+  it('accepts its exact policy, and refuses it where the policy of the pages is expected', () => {
+    expect(missingEverywhere(own, { ownPolicy: true })).toEqual([]);
+    expect(missingEverywhere(own).length).toBeGreaterThan(0);
+  });
+
+  it('notices the policy of the pages where its own is expected', () => {
+    const pages = { ...own, headers: new Headers(own.headers) };
+    pages.headers.set('content-security-policy', contentSecurityPolicy());
+    expect(missingEverywhere(pages, { ownPolicy: true }).join()).toContain('expected');
+  });
+
+  it('notices a refusal without any policy', () => {
+    const bare = { ...own, headers: new Headers(own.headers) };
+    bare.headers.delete('content-security-policy');
+    expect(missingEverywhere(bare, { ownPolicy: true })).toContain('Content-Security-Policy');
   });
 });
 

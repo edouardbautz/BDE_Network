@@ -57,13 +57,25 @@ export function cspProblems(value: string): string[] {
   return problems;
 }
 
-/** What a response must have, whatever it is. */
-export function missingEverywhere(response: Response2): string[] {
+/** The policy of a route that answers with its own (the logo: nothing may run, nothing may load). */
+export const OWN_POLICY = "default-src 'none'; sandbox";
+
+/**
+ * What a response must have, whatever it is. A route that writes a policy of its own (`ownPolicy`) must send exactly
+ * that one, refusals included: it replaces the policy of the pages instead of adding to it.
+ */
+export function missingEverywhere(
+  response: Response2,
+  { ownPolicy = false }: { ownPolicy?: boolean } = {},
+): string[] {
   const missing: string[] = [];
   const header = (name: string) => response.headers.get(name);
   const csp = header('content-security-policy');
   if (!csp) missing.push('Content-Security-Policy');
-  else missing.push(...cspProblems(csp));
+  else if (ownPolicy) {
+    if (csp !== OWN_POLICY)
+      missing.push(`Content-Security-Policy is ${csp}, expected ${OWN_POLICY}`);
+  } else missing.push(...cspProblems(csp));
   if (header('x-content-type-options')?.toLowerCase() !== 'nosniff')
     missing.push('X-Content-Type-Options: nosniff');
   if (header('x-frame-options')?.toUpperCase() !== 'DENY') missing.push('X-Frame-Options: DENY');
@@ -89,7 +101,7 @@ const LEAKS = [
 ];
 
 export async function checkHeaders(platform: Platform, report: Report): Promise<void> {
-  const probes: { label: string; path: string; as?: PersonaKey }[] = [
+  const probes: { label: string; path: string; as?: PersonaKey; ownPolicy?: boolean }[] = [
     { label: 'the login page', path: '/fr' },
     { label: 'a page of the application', path: '/fr/dashboard', as: 'owner' },
     { label: 'the events', path: '/fr/events', as: 'member' },
@@ -98,14 +110,14 @@ export async function checkHeaders(platform: Platform, report: Report): Promise<
     { label: 'the privacy policy', path: '/en/privacy' },
     { label: 'liveness', path: '/api/health' },
     { label: 'the session route', path: '/api/auth/session' },
-    { label: 'a logo that does not exist', path: '/api/logo?v=0000000000000000' },
+    { label: 'a logo that does not exist', path: '/api/logo?v=0000000000000000', ownPolicy: true },
     { label: 'a feed that does not exist', path: `/api/calendar/${'A'.repeat(43)}` },
     { label: 'the export of one’s data', path: '/api/me/export', as: 'member' },
   ];
 
   for (const probe of probes) {
     const response = await send(platform, probe.path, probe.as ? { as: probe.as } : {});
-    const missing = missingEverywhere(response);
+    const missing = missingEverywhere(response, { ownPolicy: probe.ownPolicy });
     report.check(
       'headers',
       `${probe.label}: the headers every answer carries`,
