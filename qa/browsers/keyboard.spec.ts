@@ -1,5 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { atRest } from './rest';
 
 /**
  * What axe cannot judge, played with the keyboard alone, in the three engines (they differ most here: what Tab reaches, where
@@ -41,6 +42,11 @@ test.describe('with the keyboard alone', () => {
   }) => {
     const page = await as('member');
     await page.goto('/en/dashboard');
+    // The content of the dashboard comes in after the shell (the page is streamed). A Tab pressed before it is there finds nothing
+    // to reach in the main part and goes on to the footer: found on a loaded runner, whose last snapshot had the focus on the
+    // privacy link. So the precondition is written down: there is a link in the content, and the page is at rest.
+    await atRest(page);
+    await expect(page.locator('main').getByRole('link').first()).toBeVisible();
     const skip = page.getByRole('link', { name: 'Skip to the content' });
     if (browserName === 'webkit') {
       // Safari's default is not to stop on links with Tab (Option+Tab does): the link is put under the focus by hand.
