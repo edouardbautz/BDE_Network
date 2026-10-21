@@ -118,6 +118,10 @@ All notable changes to this project are written here, in English. Format based o
   was a `script-src` violation, written to the console of Firefox and Safari's developer tools and sent to any report address
   a BDE would add. Nothing broke (the library falls back on its plain path), and nothing is slower in practice. Found by the
   browser tests of the quality campaign.
+- **A drop-down list (category, role, language…) shows where the keyboard focus is in Safari.** Safari draws such a list with
+  the system's look and ignores the focus ring the other controls use, so somebody who moved through a form with Tab saw
+  nothing on the list (WCAG 2.4.7). Its focus is now an outline of the same colour and width. Found by the accessibility
+  checks of the quality campaign, which play the keyboard in Chromium, Firefox and WebKit.
 - **The refusal of the logo route (404) carries the same strict policy and `nosniff`** as the logo itself: leaving the policy
   of the pages out of that route had left its refusals without any policy. Nothing could be exploited (the body is empty), but
   every answer is meant to carry one. Found by the attacks of the quality campaign.

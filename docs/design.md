@@ -181,7 +181,10 @@ container changes.
   color change alone, always a background that moves.
 - **Keyboard focus**: `focus-visible:ring-3 focus-visible:ring-ring/50` on every custom interactive element (nav
   links, footer links, `BrandMark`); the shadcn / Base UI components (`Button`, `Input`, `Select`…) already include
-  it, do not remove it.
+  it, do not remove it. **The native `<select>` is the exception** (`NativeSelect`, `events/field-styles.tsx`): Safari draws it
+  with the system's look and ignores `box-shadow` on it, so a ring would never show; its focus is an outline of the same width
+  and colour. The keyboard suite (`qa/browsers/keyboard.spec.ts`) checks in all three engines that every control Tab reaches
+  shows its focus.
 - **Skip link**: `app-shell.tsx` includes a "skip to the content" link (`sr-only` except on focus) pointing at
   `#main-content`. Keep it in any future layout rework.
 - **Loading** and **empty**: see the Components section above.
