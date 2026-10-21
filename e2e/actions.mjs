@@ -28,13 +28,13 @@
 // Nobody can sign in through 42 here: the session cookie is forged with the platform's own secret, exactly as Auth.js
 // writes it. Each scenario creates what it needs with SQL (`PSQL` reads the statements on its standard input) and
 // removes it afterwards, so it can be played again and again on the same platform.
-import { execSync } from 'node:child_process';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { deflateSync } from 'node:zlib';
 import { encode } from '@auth/core/jwt';
 import puppeteer from 'puppeteer-core';
+import { sqlRunner } from './sql.mjs';
 
 const [base] = process.argv.slice(2);
 const secret = process.env.AUTH_SECRET;
@@ -68,8 +68,7 @@ if (shots) mkdirSync(shots, { recursive: true });
 const COOKIE = 'authjs.session-token';
 const token = await encode({ token: { login: OWNER }, secret, salt: COOKIE });
 
-const sql = (statements) =>
-  execSync(`${PSQL} -v ON_ERROR_STOP=1 -q -tA`, { input: statements }).toString().trim();
+const sql = sqlRunner(PSQL);
 
 /** A real PNG of one colour, made here (no file to ship): the server checks what it receives. */
 function makePng(side) {
@@ -105,7 +104,7 @@ function makePng(side) {
     chunk('IEND', Buffer.alloc(0)),
   ]);
 }
-const logoFile = join(tmpdir(), 'bde-actions-logo.png');
+const logoFile = join(mkdtempSync(join(tmpdir(), 'bde-actions-')), 'logo.png');
 writeFileSync(logoFile, makePng(128));
 
 const browser = await puppeteer.launch({

@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { basename, dirname, join, relative } from 'node:path';
+import { startsWithUseServer } from './use-server';
 
 /**
  * Everything the platform answers, found in the source: its pages, its API routes and its server actions. The access
@@ -43,15 +44,13 @@ export function discoverApiRoutes(root = process.cwd()): string[] {
     .sort();
 }
 
-const USE_SERVER_AT_TOP = /^\s*(\/\/.*\n|\/\*[\s\S]*?\*\/\s*)*['"]use server['"]/;
-
 /** `<folder>.<action>` for every exported action of a file that starts with `'use server'`. */
 export function discoverExportedActions(root = process.cwd()): string[] {
   return files(join(root, 'src'))
     .filter(isSource)
     .flatMap((path) => {
       const source = readFileSync(path, 'utf8');
-      if (!USE_SERVER_AT_TOP.test(source)) return [];
+      if (!startsWithUseServer(source)) return [];
       const file = basename(path).replace(/\.tsx?$/, '');
       const owner = file === 'actions' ? basename(dirname(path)) : file.replace(/-actions$/, '');
       return [...source.matchAll(/^export async function (\w+)/gm)].map(
@@ -77,7 +76,7 @@ export function discoverInlineActions(root = process.cwd()): InlineAction[] {
     .filter(isSource)
     .flatMap((path) => {
       const source = readFileSync(path, 'utf8');
-      if (USE_SERVER_AT_TOP.test(source)) return [];
+      if (startsWithUseServer(source)) return [];
       const lines = source.split('\n');
       const found: InlineAction[] = [];
       lines.forEach((line, index) => {

@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { startsWithUseServer } from '../../qa/access/use-server';
 
 /**
  * Every server action of the platform is played in a real browser, on the real image, by one of the scripts of `e2e/`
@@ -49,7 +50,7 @@ function exportedActions(): string[] {
     .filter((path) => /\.tsx?$/.test(path) && !/\.test\.tsx?$/.test(path))
     .flatMap((path) => {
       const source = readFileSync(path, 'utf8');
-      if (!/^\s*(\/\/.*\n|\/\*[\s\S]*?\*\/\s*)*['"]use server['"]/.test(source)) return [];
+      if (!startsWithUseServer(source)) return [];
       const file = basename(path).replace(/\.tsx?$/, '');
       // `.../settings/actions.ts` is "settings"; `dev-impersonation-actions.ts` is "dev-impersonation".
       const owner = file === 'actions' ? basename(dirname(path)) : file.replace(/-actions$/, '');

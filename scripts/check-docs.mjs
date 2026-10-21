@@ -55,16 +55,20 @@ function withoutFences(text) {
 
 /** GitHub's anchor of a heading. */
 function slugOf(heading) {
-  return heading
-    .replace(/<[^>]*>/g, '')
-    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/`/g, '')
-    .replace(/\*\*?([^*]+)\*\*?/g, '$1')
-    .replace(/(^|\s)_([^_]+)_(?=\s|$)/g, '$1$2')
-    .trim()
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\p{M}\s_-]/gu, '')
-    .replace(/\s/g, '-');
+  return (
+    heading
+      .replace(/<[^>]*>/g, '')
+      // One pass leaves a tag made by the removal itself; GitHub's anchor drops what is left of the brackets as punctuation.
+      .replace(/[<>]/g, '')
+      .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+      .replace(/`/g, '')
+      .replace(/\*\*?([^*]+)\*\*?/g, '$1')
+      .replace(/(^|\s)_([^_]+)_(?=\s|$)/g, '$1$2')
+      .trim()
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\p{M}\s_-]/gu, '')
+      .replace(/\s/g, '-')
+  );
 }
 
 const parsed = new Map();

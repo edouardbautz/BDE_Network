@@ -15,12 +15,12 @@
 // the platform's own secret, exactly as Auth.js writes them, one browser context for each person so that their
 // cookies never mix. Every answer waits for the page to CHANGE (see "Navigation" in docs/architecture.md): the
 // actions of the circuit answer an address, which the browser loads.
-import { execSync } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { encode } from '@auth/core/jwt';
 import puppeteer from 'puppeteer-core';
 import { settled, watchPage } from './watch-page.mjs';
+import { sqlRunner } from './sql.mjs';
 
 const [base] = process.argv.slice(2);
 const secret = process.env.AUTH_SECRET;
@@ -93,8 +93,7 @@ const WORDS = {
   },
 };
 
-const sql = (statements) =>
-  execSync(`${PSQL} -v ON_ERROR_STOP=1 -q -tA`, { input: statements }).toString().trim();
+const sql = sqlRunner(PSQL);
 const quote = (value) => `'${String(value).replace(/'/g, "''")}'`;
 
 const ROLE = 'e2e-role-pole';
