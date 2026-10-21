@@ -35,7 +35,7 @@
       "edit": "Modifier",
       "editLabel": "Modifier le rôle {name}",
       "setDefault": "Définir par défaut",
-      "setDefaultLabel": "Définir {name} comme rôle par défaut",
+      "setDefaultLabel": "Définir par défaut : {name}",
       "defaultSet": "« {name} » est maintenant le rôle par défaut.",
       "delete": "Supprimer",
       "deleteWarning": "Ce rôle disparaît définitivement. Cette action ne peut pas être annulée.",

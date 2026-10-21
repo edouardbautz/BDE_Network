@@ -20,6 +20,31 @@ describe('message catalogs', () => {
     expect([...enKeys].filter((key) => !frKeys.has(key))).toEqual([]);
   });
 
+  it('name every control with the text it shows (WCAG 2.5.3, "label in name")', () => {
+    // By convention `xLabel` is the accessible name of the control whose visible text is `x`: the name must contain the text,
+    // or somebody who speaks to their computer ("click Make default") is not understood by the control they see.
+    const pairs = (catalog: Catalog, prefix = ''): [string, string, string][] =>
+      Object.entries(catalog).flatMap(([key, value]) => {
+        if (typeof value !== 'string') {
+          return Array.isArray(value) ? [] : pairs(value, `${prefix}${key}.`);
+        }
+        const visible = key.endsWith('Label') ? catalog[key.slice(0, -'Label'.length)] : undefined;
+        return typeof visible === 'string' ? [[`${prefix}${key}`, visible, value]] : [];
+      });
+
+    for (const [name, catalog] of [
+      ['fr', fr],
+      ['en', en],
+    ] as const) {
+      const found = pairs(catalog as Catalog);
+      expect(found.length, `no pair found in ${name}: the convention changed?`).toBeGreaterThan(0);
+      const missing = found
+        .filter(([, visible, label]) => !label.toLowerCase().includes(visible.toLowerCase()))
+        .map(([key, visible, label]) => `${name} ${key}: "${label}" does not contain "${visible}"`);
+      expect(missing).toEqual([]);
+    }
+  });
+
   it('have no empty strings', () => {
     for (const catalog of [fr, en] as Catalog[]) {
       const empty = flatten(catalog).filter((key) => {

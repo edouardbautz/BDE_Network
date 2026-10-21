@@ -35,7 +35,7 @@
       "edit": "Edit",
       "editLabel": "Edit the role {name}",
       "setDefault": "Make default",
-      "setDefaultLabel": "Make {name} the default role",
+      "setDefaultLabel": "Make default: {name}",
       "defaultSet": "\"{name}\" is now the default role.",
       "delete": "Delete",
       "deleteWarning": "This role is gone for good. This cannot be undone.",
