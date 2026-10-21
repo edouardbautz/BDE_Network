@@ -1290,6 +1290,44 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
     pictures that changed in the commit; if no, it is a defect. A picture that differs by itself, run after run, is never
     "retried until it passes": it is a page that depends on something (a date, a random value, an animation) that must be
     fixed or masked in the test, with the reason written.
+- **Performance and load** (`qa/perf/`, the `performance` job of `qa.yml`, `performance.spec.ts` of `qa/browsers`). Two tools that are not
+  dependencies of the project (they bring hundreds of packages it never ships, so no lockfile, no audit noise), each pinned where it
+  is run: **Lighthouse** (`lighthouse@13.5.0` through `npx`, driving the Chrome of Playwright) and **k6** (the image
+  `grafana/k6:2.3.0`, on the network of the platform).
+  - **Lighthouse** (`lighthouse.ts`, `lighthouse-report.ts`, `budgets.json`). Seven pages (login, dashboard, calendar, an event,
+    the event form, the members, the settings), on a phone (Lighthouse's own slow network and processor: what the budgets are
+    about) and, for four of them, on a computer; signed-in pages carry the cookie of a persona, written to a file of its own (a
+    shell would take a command line apart). Each is held to a **budget**: the four scores (performance, accessibility, best
+    practices, SEO), the largest contentful paint, the blocking time, the layout shift, the weight (transferred, scripts) and the
+    number of requests. **Each page is run three times and the median run is judged** (`medianRun`: the run with the median performance
+    score, whole; on a shared runner the blocking time of one page went from 468 to 712 ms between two runs of the same code, and the
+    median of three is what Lighthouse's own continuous-integration tool takes). A budget is a written number: `budgets.json` has defaults (phone), those of the computer, and what a page
+    says of its own (`members`, `members:desktop`). The report has no verdict of its own: the budgets are the verdict, and raising
+    one is a pull request that says why. The pure parts (what is read of a report, the budgets, the verdict) are
+    `lighthouse-report.ts`, unit-tested.
+  - **k6** (`load.ts`, `report.ts`, `k6/browse.js`). 20 virtual people for 40 seconds (ramped), a mix weighted like a day of a BDE:
+    the calendar and the dashboard most, the event, the list, the heavy pages (300 members, the audit log, the settings) less,
+    the login page and the calendar feed that calendar applications fetch by themselves. **Who asks is the personas**, with their forged
+    cookies (and the feed link of the member of the dataset). Thresholds are written in the script: almost no request fails
+    (0.5 %), what answers is the page that was asked for (a check on the content, because an error page can answer 200), and each
+    page has its own limit for 95 % of its answers (`p95`), which `load.ts` prints with the numbers. **The memory of the application
+    is measured after the load** (`docker stats` before and after, a limit of 1.5 GiB for runaway growth): Node's heap grows to what the
+    machine lets it and is cleaned when it likes, so the figure moves with the timing: 520 to 700 MiB over five successive
+    runs of 2 500 requests locally (no drift), 662 and then 976 MiB in two runs of the CI. It is a limit for a leak that eats the
+    server, not a measure of the application's size.
+  - **What neither sees** is what a browser does of its own accord: `performance.spec.ts` counts, in Chromium, the prefetches
+    Next.js makes (a header marks them). That is how the calendar's 110 prefetch requests (a rendering of an event page by the
+    server for each, for a month of 100 events) were seen: Lighthouse showed 141 requests and 645 KiB for the calendar of a
+    computer against 30 to 47 for every other page, the load test could not, and a count of prefetches now holds it.
+  - **Which numbers are held tight, and which loose** (`budgets.json`, `notes`, and the limits of `k6/browse.js`). What does not depend
+    on the machine is tight: the weight in KiB, the scripts, the number of requests, the layout shift (measured in the CI, with
+    about 10 % of room; the calendar's 141 requests would have broken it). What depends on the machine is loose: the performance
+    score, the largest contentful paint, the blocking time and the p95 of the load. On the shared runners the same code gave 206
+    then 480 ms of blocking time on the dashboard (phone), 468, 712 then 882 ms on the members page, and the p95 of a page of the
+    load was 664 ms in one run and 1 108 in the next: a limit set at the numbers of one run is a lottery, so those limits are
+    two to three times what was seen, there to catch a change of order of magnitude (an N+1 query, a bundle that doubles), not a
+    few tens of percent. **A limit that fails now and then is never raised until it passes**: it is set from the spread of the
+    runs, with the runs written down. The numbers that count are those of the CI, not of a developer's computer.
 - **Coverage** (`npm run test:coverage`, `coverage-thresholds.json`, `scripts/coverage-report.mjs`,
   `scripts/coverage-gaps.mjs`, `qa/coverage-plan.md`). The ubuntu job of `ci.yml` runs the unit tests through V8 coverage
   and **fails below a floor**: one for the whole project and one for each area that decides who may do what or what is

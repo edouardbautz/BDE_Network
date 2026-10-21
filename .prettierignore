@@ -3,6 +3,7 @@ node_modules
 coverage
 test-results
 playwright-report
+lighthouse-reports
 src/components/ui
 prisma/migrations
 package-lock.json

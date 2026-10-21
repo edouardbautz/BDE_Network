@@ -65,6 +65,7 @@ next-env.d.ts
 /test-results/
 /qa/browsers/.visual-local/
 /playwright-report/
+/lighthouse-reports/
 
 # internal pre-release audit notes (never committed)
 /.audit/

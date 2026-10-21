@@ -60,6 +60,8 @@ const CANCELLATION_WORDS = [
   /Error in input stream/i,
   /NetworkError/i,
   /NS_BASE_STREAM_CLOSED/i,
+  // React's own word (#412) for a stream of the router that was closed under it: the prefetch it was reading was cancelled.
+  /Minified React error #412|Connection closed/i,
 ];
 const RECENTLY_MS = 5000;
 

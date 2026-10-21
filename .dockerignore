@@ -8,6 +8,7 @@ docs
 coverage
 test-results
 playwright-report
+lighthouse-reports
 *.tsbuildinfo
 *.log
 .env

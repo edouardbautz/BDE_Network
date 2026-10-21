@@ -54,6 +54,14 @@ test.describe('with the keyboard alone', () => {
 
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL(/#main-content$/);
+    // The address changes before the browser has moved the place the next Tab starts from (the target of the link). A Tab pressed
+    // in between starts from the link, and goes to the menu: so wait for the focus to have left the link, which is the browser
+    // having done it (found on a slower runner, where the Tab came first).
+    await expect
+      .poll(() =>
+        page.evaluate(() => document.activeElement?.getAttribute('href') !== '#main-content'),
+      )
+      .toBe(true);
     // The browser starts the next Tab from the target: the next control reached is in the content, not in the menu.
     await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
     await expect

@@ -23,6 +23,7 @@ const eslintConfig = defineConfig([
     'coverage/**',
     'test-results/**',
     'playwright-report/**',
+    'lighthouse-reports/**',
   ]),
   {
     // Playwright's fixtures are written with a function called `use`, which the rules of React's hooks take for a hook.
