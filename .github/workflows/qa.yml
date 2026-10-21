@@ -233,3 +233,77 @@ jobs:
         env:
           MUTATION_RUN: qa/security/run.ts
         run: node qa/mutate-image.mjs qa/mutations/attacks.json
+
+  # The journeys of the platform in the three engines people use: Chromium, Firefox and WebKit (Safari's), each in a job of its
+  # own, against the real image and the QA dataset (qa/browsers; see "Browsers" in docs/architecture.md). What a page raises,
+  # an exception, a console error, a violation of the content policy, a server error, fails the journey that raised it.
+  browsers:
+    name: browsers (${{ matrix.engine }})
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-qa')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build the production image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: bde-network
+          cache-from: type=gha,scope=qa-image
+          cache-to: type=gha,mode=max,scope=qa-image
+
+      - name: Start the platform with the QA dataset
+        run: sh qa/platform.sh up --image bde-network
+
+      - name: Install the browser
+        run: npx playwright install --with-deps ${{ matrix.engine }}
+
+      - name: Play the journeys
+        run: |
+          eval "$(sh qa/platform.sh env)"
+          npx playwright test -c qa/browsers --project=${{ matrix.engine }}
+        env:
+          CI: 'true'
+
+      # The traces and screenshots of a failure, and the report: open the trace with `npx playwright show-trace`.
+      - name: Keep what a failure left
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browsers-${{ matrix.engine }}
+          path: |
+            test-results
+            playwright-report
+          if-no-files-found: ignore
+
+      - name: Keep the logs of the platform
+        if: always()
+        run: sh qa/platform.sh logs > "$RUNNER_TEMP/platform.log" || true
+
+      - name: Keep the logs of the platform (upload)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browsers-${{ matrix.engine }}-platform-logs
+          path: ${{ runner.temp }}/platform.log
+          if-no-files-found: ignore
+
+      - name: Stop the platform
+        if: always()
+        run: sh qa/platform.sh down

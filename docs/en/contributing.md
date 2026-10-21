@@ -192,7 +192,7 @@ sh qa/platform.sh down
 ```
 
 The heavy suites run every night and on demand (**Actions → qa**), not on every pull request; a pull request can ask for them
-with the label `full-qa`; the label `qa-mutations` plays the mutation check of the attacks (one image build per mutation, so never on your computer). The details are in the [architecture](../architecture.md#quality-campaign-qa-githubworkflowsqayml).
+with the label `full-qa`; the label `qa-mutations` plays the mutation check of the attacks (one image build per mutation, so never on your computer). The journeys of the platform are played in Chromium, Firefox and WebKit by `qa/browsers` (Playwright): after `sh qa/platform.sh up` and `eval "$(sh qa/platform.sh env)"`, `npx playwright install firefox` then `npx playwright test -c qa/browsers --project=firefox` plays one engine on your computer. The details are in the [architecture](../architecture.md#quality-campaign-qa-githubworkflowsqayml).
 
 ## Code conventions
 

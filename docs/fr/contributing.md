@@ -200,7 +200,7 @@ sh qa/platform.sh down
 ```
 
 Les suites lourdes tournent toutes les nuits et à la demande (**Actions → qa**), pas à chaque pull request ; une pull request
-peut les demander avec l'étiquette `full-qa` ; l'étiquette `qa-mutations` joue le contrôle par mutation des attaques (une construction d'image par mutation, donc jamais sur votre ordinateur). Le détail est dans l'[architecture](../architecture.md#quality-campaign-qa-githubworkflowsqayml).
+peut les demander avec l'étiquette `full-qa` ; l'étiquette `qa-mutations` joue le contrôle par mutation des attaques (une construction d'image par mutation, donc jamais sur votre ordinateur). Les parcours de la plateforme sont joués dans Chromium, Firefox et WebKit par `qa/browsers` (Playwright) : après `sh qa/platform.sh up` et `eval "$(sh qa/platform.sh env)"`, `npx playwright install firefox` puis `npx playwright test -c qa/browsers --project=firefox` joue un moteur sur votre ordinateur. Le détail est dans l'[architecture](../architecture.md#quality-campaign-qa-githubworkflowsqayml).
 
 ## Conventions de code
 

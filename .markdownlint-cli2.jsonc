@@ -2,7 +2,15 @@
 // What it adds is the content rules: heading levels, fenced code languages, links, duplicated headings…
 {
   "globs": ["**/*.md"],
-  "ignores": ["node_modules/**", "src/generated/**", ".next/**", ".audit/**", "coverage/**"],
+  "ignores": [
+    "node_modules/**",
+    "src/generated/**",
+    ".next/**",
+    ".audit/**",
+    "coverage/**",
+    "test-results/**",
+    "playwright-report/**",
+  ],
   "config": {
     "default": true,
     // Prettier does not wrap prose, and tables and links make long lines unavoidable.
