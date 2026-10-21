@@ -120,6 +120,11 @@ All notable changes to this project are written here, in English. Format based o
 - **The facts of an event (when, repeats, where, in charge, description) are a valid description list.** The markup nested
   each term and its description one level too deep, so a screen reader did not announce them as a list of terms and
   descriptions (WCAG 1.3.1). The look is the same. Found by the accessibility checks of the quality campaign.
+- **A database that stops answering no longer holds every page for as long as it stays frozen.** The application gave up on a
+  database that did not accept a connection after 3 seconds, but not on one that accepted it and then said nothing (a stalled
+  disk, a paused virtual machine): every page waited, with no end, until the database came back. A query is now given up after
+  15 seconds, the visitor sees the error page, and the platform works again by itself when the database does. Found by the
+  resilience suite of the quality campaign.
 - **A long page no longer jumps sideways when it finishes loading.** A page is short while its loading skeleton shows and long once
   it is drawn (the members, the list of events). With a classic scrollbar (Windows, Linux, and so most computers), the bar
   appears at that moment and moved the whole content sideways by half its width, in front of everybody's eyes: a layout shift of
