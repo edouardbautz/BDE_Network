@@ -70,8 +70,11 @@ neutral `foreground` token.
 
 ### Contrast (WCAG AA)
 
-Each token pair was checked by converting OKLCH → linear sRGB → WCAG relative luminance before being chosen
-(throwaway script, values below):
+Each token pair was checked by converting OKLCH → linear sRGB → WCAG relative luminance before being chosen (values below).
+**`src/lib/design-tokens.test.ts` plays this table on the real tokens of `globals.css`** (both themes, and the tinted button
+of `destructive`, the worst of the surfaces it sits on): a token that breaks a pair fails the test, not a page. The destructive
+red was darkened from red-600 to red-700 when the accessibility checks found the destructive button's text at 3.8–4.0:1 on its
+tint:
 
 | Pair                                   | Light | Dark |
 | -------------------------------------- | ----- | ---- |
@@ -79,7 +82,9 @@ Each token pair was checked by converting OKLCH → linear sRGB → WCAG relativ
 | `foreground` / `card`                  | 18.5  | 16.0 |
 | `muted-foreground` / `background`      | 6.3   | 6.7  |
 | `muted-foreground` / `card` or `muted` | 5.8   | 6.2  |
-| `destructive` (text) / `background`    | 4.6   | 6.7  |
+| `destructive` (text) / `background`    | 6.1   | 6.7  |
+| `destructive` (text) / `card`          | 6.4   | 6.2  |
+| `destructive` / its own 10 % tint      | 4.8   | 5.2  |
 
 Minimum required: 4.5:1 for normal text, 3:1 for large text and UI. Any new text/background pair must be checked the
 same way before it is added — especially if a future module introduces a new semantic color (success, warning…).
