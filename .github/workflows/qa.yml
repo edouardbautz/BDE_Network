@@ -462,3 +462,66 @@ jobs:
       - name: Stop the platform
         if: always()
         run: sh qa/platform.sh down
+
+  # What happens to the platform when what it stands on goes away (qa/resilience; see "Resilience" in docs/architecture.md): the
+  # database stopped, frozen and killed in the middle of writes, the application stopped and killed in the middle of writes, and a
+  # webhook that accepts the connection and never answers. The platform is made with that webhook; the suites stop and kill its
+  # containers, so it is theirs alone.
+  resilience:
+    name: resilience
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-qa')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Build the production image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          load: true
+          tags: bde-network
+          cache-from: type=gha,scope=qa-image
+          cache-to: type=gha,mode=max,scope=qa-image
+
+      - name: Start the platform, its notifications going to a webhook that will not answer
+        run: sh qa/platform.sh up --image bde-network --webhook https://qa-hang:8443/hook
+
+      - name: Take the database and the application away, and the webhook
+        run: |
+          eval "$(sh qa/platform.sh env)"
+          npx tsx qa/resilience/run.ts --report resilience-report.json
+
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resilience-report
+          path: resilience-report.json
+          if-no-files-found: ignore
+
+      - name: Keep the logs of the platform
+        if: always()
+        run: sh qa/platform.sh logs > "$RUNNER_TEMP/platform.log" || true
+
+      - name: Keep the logs of the platform (upload)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resilience-platform-logs
+          path: ${{ runner.temp }}/platform.log
+          if-no-files-found: ignore
+
+      - name: Stop the platform
+        if: always()
+        run: sh qa/platform.sh down
