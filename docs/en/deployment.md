@@ -308,7 +308,8 @@ The restore **replaces all current data** with that of the backup. The script ex
 `RESTAURER` to confirm; any other text cancels without changing anything. Just before, it makes a safety copy of the
 current state (`backups/bde-backup-…-avant-restauration.tar.gz`), stops the platform, restores, then starts it again.
 If the database restore fails, the database stays exactly as before. (`--yes` removes the question, for a script; use
-it knowingly.)
+it knowingly. `--no-start` leaves the platform stopped: it is what going back to an earlier version needs, see
+[Rolling back](upgrading.md#rolling-back); `--pre-update` always does.)
 
 **On a new server**: install Docker, clone the repository, run `docker compose up -d` (no `.env` is needed),
 copy both archives into `backups/`, then restore with `--secrets` as above. If you no longer have the keys archive,

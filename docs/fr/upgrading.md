@@ -132,11 +132,14 @@ saisies depuis la sauvegarde sont perdues** : la restauration remet la base dans
    soit celle que vous avez faite vous-même, soit la copie que la plateforme a faite avant la mise à jour :
 
    ```text
-   ./scripts/restore.sh backups/bde-backup-AAAA-MM-JJ_HH-MM-SS.tar.gz
+   ./scripts/restore.sh backups/bde-backup-AAAA-MM-JJ_HH-MM-SS.tar.gz --no-start
    ./scripts/restore.sh --pre-update
    ```
 
-   Le script vous demande de taper `RESTAURER`. Il fait d'abord une copie de sécurité de l'état actuel.
+   Le script vous demande de taper `RESTAURER`. Il fait d'abord une copie de sécurité de l'état actuel. **Il laisse
+   l'application arrêtée** (`--no-start` ; `--pre-update` le fait toujours) : le dossier est encore à la version que vous
+   quittez, et son application, lancée sur la base que vous venez de remettre, appliquerait aussitôt ses migrations de
+   nouveau ; la version précédente refuserait alors la base (« la base de données est plus récente »).
 
 2. Revenez à l'ancienne version du code (celle que vous aviez notée) :
 

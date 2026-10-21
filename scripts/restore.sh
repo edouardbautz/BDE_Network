@@ -6,6 +6,7 @@
 #
 # Usage : ./scripts/restore.sh backups/bde-backup-AAAA-MM-JJ_HH-MM-SS.tar.gz [--secrets backups/bde-secrets-....tar.gz] [--yes]
 #         ./scripts/restore.sh --pre-update [pre-update_AAAAMMJJTHHMMSSZ_vX.Y.Z.sql.gz] [--yes]
+#         ./scripts/restore.sh backups/bde-backup-....tar.gz --no-start        (pour revenir à une version précédente)
 #   --pre-update  restaure la copie que la plateforme a faite TOUTE SEULE avant d'appliquer une mise à jour de la
 #              base (volume « backups » de Docker ; la plus récente si vous n'en nommez pas). Elle ne contient que la
 #              base : les clés du volume « secrets » n'ont pas changé.
@@ -13,6 +14,11 @@
 #              sinon les secrets chiffrés de la base (clé 42, SMTP, webhooks) ne peuvent plus être lus.
 #              Sur le serveur d'origine, dont le volume « secrets » est intact, elle n'est pas nécessaire.
 #   --yes      ne demande pas de confirmation (pour un script ; à utiliser en connaissance de cause)
+#   --no-start laisse l'application ARRÊTÉE à la fin. Pour revenir à une version précédente : le dossier est encore à la
+#              version que vous quittez, et son application, relancée aussitôt, appliquerait de nouveau ses migrations à la
+#              base que vous venez de remettre, que la version précédente refuserait alors (« la base de données est plus
+#              récente »). Restaurez avec --no-start, revenez au code précédent (git checkout), puis docker compose up -d.
+#              --pre-update l'implique : une copie d'avant mise à jour ne sert qu'à revenir en arrière.
 #
 # ATTENTION : cela REMPLACE toutes les données actuelles par celles de la sauvegarde. Une
 # sauvegarde de sécurité de l'état actuel est faite juste avant, dans backups/.
@@ -22,19 +28,24 @@ export MSYS_NO_PATHCONV=1
 umask 077
 
 usage() {
-  echo "Usage : ./scripts/restore.sh backups/bde-backup-AAAA-MM-JJ_HH-MM-SS.tar.gz [--secrets backups/bde-secrets-....tar.gz] [--yes]"
+  echo "Usage : ./scripts/restore.sh backups/bde-backup-AAAA-MM-JJ_HH-MM-SS.tar.gz [--secrets backups/bde-secrets-....tar.gz] [--no-start] [--yes]"
   echo "        ./scripts/restore.sh --pre-update [pre-update_....sql.gz] [--yes]"
 }
 
 FILE=""
 SECRETS_FILE=""
 ASSUME_YES=0
+NO_START=0
 PRE_UPDATE=0
 PRE_UPDATE_NAME=
 while [ $# -gt 0 ]; do
   case "$1" in
     --yes)
       ASSUME_YES=1
+      shift
+      ;;
+    --no-start)
+      NO_START=1
       shift
       ;;
     --pre-update)
@@ -76,6 +87,10 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
+
+# A copy made before an update is for going back to the version before it: the application of this folder, started on it, would
+# apply its migrations again at once.
+[ "$PRE_UPDATE" -eq 1 ] && NO_START=1
 
 if [ "$PRE_UPDATE" -eq 1 ] && [ -n "$FILE" ]; then
   echo "--pre-update et un fichier de sauvegarde ne vont pas ensemble : choisissez l'un ou l'autre." >&2
@@ -165,7 +180,11 @@ echo "Vous allez RESTAURER : $FILE"
 echo ""
 echo "  • La base de données actuelle sera REMPLACÉE par celle de la sauvegarde."
 echo "  • Tout ce qui a été fait depuis cette sauvegarde sera perdu (sauf dans la copie de sécurité)."
-echo "  • L'application sera arrêtée pendant l'opération, puis relancée."
+if [ "$NO_START" -eq 1 ]; then
+  echo "  • L'application sera arrêtée, et LAISSÉE ARRÊTÉE (retour à une version précédente : voir la fin)."
+else
+  echo "  • L'application sera arrêtée pendant l'opération, puis relancée."
+fi
 echo "  • Une copie de sécurité de l'état actuel est faite juste avant, dans backups/."
 if [ -n "$SECRETS_FILE" ]; then
   echo "  • Les clés du volume « secrets » (session, chiffrement des secrets) seront REMPLACÉES par celles de :"
@@ -244,12 +263,19 @@ if [ -f "$WORK/logo.tar" ]; then
   fi
 fi
 
-echo "5/5 Relance de l'application..."
-docker compose up -d app >/dev/null
+if [ "$NO_START" -eq 1 ]; then
+  echo "5/5 Application laissée arrêtée."
+  echo ""
+  echo "Restauration terminée. Pour revenir à la version précédente : git checkout <la version notée>, puis docker compose up -d."
+  echo "(Relancée ici, l'application de ce dossier appliquerait de nouveau ses migrations à la base que vous venez de remettre.)"
+else
+  echo "5/5 Relance de l'application..."
+  docker compose up -d app >/dev/null
 
-echo ""
-echo "Restauration terminée. L'application redémarre (les migrations éventuelles s'appliquent toutes seules)."
-echo "Vérifiez avec : docker compose logs --tail 20 app"
+  echo ""
+  echo "Restauration terminée. L'application redémarre (les migrations éventuelles s'appliquent toutes seules)."
+  echo "Vérifiez avec : docker compose logs --tail 20 app"
+fi
 if [ -z "$SECRETS_FILE" ]; then
   echo ""
   echo "Rappel : sur un AUTRE serveur que celui d'origine, relancez avec --secrets <archive des clés>."
