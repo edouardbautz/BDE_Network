@@ -8,6 +8,14 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **The journeys of the platform in the three engines people use**, played every night: Chromium, Firefox and WebKit (Safari's),
+  against the real image and the QA dataset. A visitor, an account waiting for approval and a removed member; a member (the
+  calendar's month, list and filter buttons, a calendar file download, the theme, the menu on a phone, and what a member is
+  never shown); a proposer who proposes a weekly event, a validator who approves it or refuses it with a comment, and a member
+  who reads it; the confirmation dialog's focus and keyboard; the calendar in French and its + on a day; the owner's every
+  page, and the logo's upload, preview and reset. Every journey fails if one of its pages raises an exception, writes an error
+  to the console, violates the content policy or gets a server error; the first runs found that every page did (see
+  _Fixed_). Run it with `sh qa/platform.sh up`, then `npx playwright test -c qa/browsers --project=firefox`.
 - **Attacks on the real image, every night**: headers and policy of every kind of answer, forged and expired cookies, actions
   called from another site, calendar links (300 guesses, near misses, injections, revocation), trapped logo uploads (a script as
   SVG, a bomb that claims 100000 × 100000 pixels, a polyglot), a corpus of hostile text in every field and every address (read

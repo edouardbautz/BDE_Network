@@ -1196,6 +1196,43 @@ start from the same three things, so that what one finds the others can replay.
   the other heavy tools (ZAP's active scan included), it is a CI job. A guard that two layers hold (the logo's `nosniff` is written by
   its route **and** by the headers of every address) cannot be broken from one layer: that mutation survives, and is replaced by
   one on the layer whose loss the image shows, the other being held by the unit tests of the route.
+- **Browsers** (`qa/browsers/`, the `browsers` job of `qa.yml`: one job per engine; `npx playwright test -c qa/browsers
+--project=chromium|firefox|webkit` on a platform made by `qa/platform.sh`). The journeys of the platform in Chromium, Firefox
+  and WebKit (Safari's engine), written with Playwright (the older `e2e/` scripts stay on Puppeteer: Playwright is for the new
+  suites only). Accounts are the personas, signed in with the forged cookie (`fixtures.ts`: `as('member')` gives a page of a fresh
+  browser context); locators are by role and accessible name, so a page that loses an accessible name fails the suite. `public`
+  (visitor, pending account, removed member), `member` (calendar buttons, list, filter, calendar file download, theme, phone
+  menu, what a member is never shown), `circuit` (a proposer proposes a weekly event, a validator approves it, a member reads
+  it; a refusal with a comment; the confirmation dialog's focus, trap and Escape), `calendar` (French, the + of a day, the
+  keyboard), `owner` (every page of the board; the logo's file input, preview, upload and reset; a file that is not an image),
+  and `watcher` (the watcher itself, see below). **No retry, ever**: a journey that fails now and then is a defect to find (see
+  "Browser tests that fail now and then"); `workers: 1`, because the journeys change the one database, and each makes events of
+  its own, named after its engine.
+  - **Every journey ends by asking what its pages raised** (`fixtures.ts`, a fixture every test uses): an exception, an error
+    written to the console, a **violation of the content policy** (the `securitypolicyviolation` event, the same in the three
+    engines: Firefox also writes it to the console, Chromium does not), a request that failed otherwise than by being cancelled,
+    a 5xx. `watcher.spec.ts` makes a page do each on purpose and checks it is seen: a watcher that sees nothing would let every
+    journey pass. Found this way in its first runs: **every page violated the platform's own policy** (Zod's probe for `eval`:
+    see "Security headers"), fixed in its own pull request.
+  - **What is let through, and why it is narrow.** (1) `Failed to load resource` (Chromium's word for any failed request, which
+    the network events say better). (2) How the engines word a fetch that a navigation cancelled (Next.js prefetches the pages
+    a link leads to, and the click that comes next cancels the ones still on their way): an error worded like that is let
+    through only if a request was really cancelled within 5 s of it, judged at the end of the journey because an engine can
+    report the error before the request; and WebKit's rejection of an interrupted `_rsc` prefetch (`…_rsc=… due to access control
+checks`), only that exact message, a known behaviour of Next.js's client in Safari that the router should catch. (3)
+    Playwright's own tracer reads the images of the page again with `fetch`, which `connect-src 'self'` refuses for the `blob:`
+    preview of a file just chosen: let through for that one directive and that one address (no violation without a trace:
+    checked). Anything else is a failure. **Never widen these to "the errors that come before a navigation"** (see the
+    hydration section).
+  - **Traps met writing it.** Role queries skip what is `aria-hidden`, and a dialog hides the page behind it: after "Approve" the
+    row vanishes from the tree while the dialog is open, so "the row is gone" is true at once; wait for the real page drawn again
+    (rule 2 of "Navigation": the action loads the page, and the loading skeleton has no row either). Code run inside
+    `page.evaluate` is exempt from the content policy (the debugging protocol lets evaluation through), so a violation meant to
+    test the watcher is asked from a `setTimeout`. The focus of an open dialog passes through guards at its edges: it is polled,
+    not read once. A phone starts on the list, not the calendar (no choice made: "the layout adapts to the screen").
+  - **Browsers are installed where they run** (`npx playwright install --with-deps <engine>` in the job); the artefacts
+    (`test-results/`, `playwright-report/`) are ignored by git, Prettier, ESLint, markdownlint and Docker. The suite compares no
+    screenshot (phase 6) and runs no accessibility rule engine (phase 5): it plays the journeys.
 - **Coverage** (`npm run test:coverage`, `coverage-thresholds.json`, `scripts/coverage-report.mjs`,
   `scripts/coverage-gaps.mjs`, `qa/coverage-plan.md`). The ubuntu job of `ci.yml` runs the unit tests through V8 coverage
   and **fails below a floor**: one for the whole project and one for each area that decides who may do what or what is
