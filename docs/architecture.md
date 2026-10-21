@@ -1166,7 +1166,9 @@ start from the same three things, so that what one finds the others can replay.
   positive is dismissed there, by a person, with the reason. The **production image** is scanned for known vulnerabilities
   in the `docker image` job (a HIGH or CRITICAL one that has a fix fails) and every night in `qa.yml`. Every scanner runs from a
   pinned Docker image, so a new version never changes a result by itself (Dependabot proposes it). What is accepted is in
-  `.trivyignore`, with the same reasons as `scripts/audit-allowlist.json`.
+  `.trivyignore`, with the same reasons as `scripts/audit-allowlist.json`. **The workflows themselves are held** by
+  `scripts/workflows.test.ts`: each declares its token's permissions, and every action that is not GitHub's is used by its full commit
+  with the tag in a comment (a tag moves, a commit does not; Dependabot updates the commits). CodeQL had both as alerts.
 - **Attacks** (`qa/security/`, the `Attacks` step and the `zap` job of `qa.yml`; `npx tsx qa/security/run.ts [--only suite,…]`
   on a platform made by `qa/platform.sh`). What somebody who is not a member, or is and wants more, can try against the real
   image; each suite says, check by check, what it saw (`Report`: one line per failure, and a table by suite in the job

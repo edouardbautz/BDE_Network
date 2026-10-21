@@ -175,6 +175,12 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Security
 
+- **The automation of the project is pinned and limited.** The actions that are not GitHub's own (Docker's build and publish
+  actions, the link checker, the SBOM generator) are used by the commit they were published at, not by a tag that their owner can
+  move to other code that would run with the project's token; Dependabot keeps the commits up to date. The main workflow of
+  the project (`ci.yml`) now says that its token only reads the code, instead of taking the repository's default. A test of the
+  workflows fails if an action is used by a tag again, or a workflow forgets its permissions. Nothing changes for a platform
+  that runs.
 - **The image applies the security updates of its operating system when it is built** (`apk upgrade`), and CI scans the image
   for known vulnerabilities (Trivy: HIGH and CRITICAL with a fix available fail the build; the two that are accepted, in
   development tools of Prisma that the platform never runs, are in `.trivyignore` with their reason). The scan found that the
