@@ -1392,6 +1392,25 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
 gives calendar files with the data in them` guards that); the not-found page marks itself, the words are in every page's payload.
   - **Not covered yet**: an update from a platform installed by the web installer (it needs the browser; the settings are imported
     from files here), a second update in a row, and an update interrupted in the middle (the safe-update script plays that).
+- **Long time** (`qa/longtime/`, the `longtime` job of `qa.yml`: nightly, by hand, or with the label `full-qa`; `QA_LONGTIME=1`
+  and `MIGRATION_TEST_DATABASE_URL` for `npx vitest run qa/longtime`). What months do to the platform, without waiting for them. The
+  reminder loop takes the instant to look at as a parameter (`runReminderTick(now)`), so no clock is faked: it is called with each of
+  the ~2400 instants it would look at over **a year and a half** (every four hours, from 2026-10-16), on a real PostgreSQL with the QA
+  dataset, only its sending replaced by a recorder. What it did is held to an oracle that does not use the code under test
+  (`oracle.ts`: the moment a reminder is due is read from the wall clock with `Intl` alone, across the two changes of clock; the
+  moment it is sent is the first tick after it is due and before the date starts): **every confirmed date is reminded exactly once,
+  at that tick, and nothing else is**; a claim written in the database for each message; the invariants of the database hold after
+  it. Three runs: the year and a half; six loops looking at the busiest moment at once (each reminder claimed once); and three
+  weeks without a loop (a date that started meanwhile is never reminded after the fact, the ones to come are reminded at the first
+  tick back). Four cases the dataset does not hold are added by the suite itself (a date back to draft in a confirmed series, a date
+  confirmed alone in a draft series, a confirmation announced after the reminder was due, and before). `school-year.test.ts` holds
+  the school year of an instant at the first of September of every year to 2032, minute by minute at the boundary, in five zones
+  (two behind UTC, two ahead, one with a half-hour offset). **Mutation-checked** (a cancelled date reminded, a draft, an hour too
+  early, before it is due, announced after, already started, a claim lost to another loop and sent anyway: each must fail). It found
+  nothing: the loop does what the documentation says over a year and a half.
+  - **Not covered yet**: the loop's own timer (the 5-minute interval and the first tick 15 s after start are `scheduler.test.ts`),
+    a platform that has run for months as a process (memory and handles: the load test of phase 7 holds the memory after a load),
+    and the sending itself over months (phase 8 holds a channel that is down).
 - **Coverage** (`npm run test:coverage`, `coverage-thresholds.json`, `scripts/coverage-report.mjs`,
   `scripts/coverage-gaps.mjs`, `qa/coverage-plan.md`). The ubuntu job of `ci.yml` runs the unit tests through V8 coverage
   and **fails below a floor**: one for the whole project and one for each area that decides who may do what or what is
