@@ -61,6 +61,17 @@ describe('GET /api/logo', () => {
     expect((await call('?v=0123456789abcdef')).status).toBe(404);
   });
 
+  it('keeps the strict policy and nosniff on every refusal too', async () => {
+    const version = '0123456789abcdef';
+    await writeFile(join(uploadsDir(), `logo-${version}`), '<script>alert(1)</script>');
+    for (const query of ['', '?v=0123456789abcdef', '?v=../../etc/passwd']) {
+      const response = await call(query);
+      expect(response.status).toBe(404);
+      expect(response.headers.get('content-security-policy')).toBe("default-src 'none'; sandbox");
+      expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+    }
+  });
+
   it('never walks out of the folder, whatever the version says', async () => {
     expect((await call('?v=../../../etc/passwd')).status).toBe(404);
     expect((await call('?v=%2e%2e%2f%2e%2e%2fsecrets')).status).toBe(404);

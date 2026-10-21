@@ -5,7 +5,16 @@ import { isLogoVersion, logoVersionOf, readLogo } from '@/lib/branding/storage';
 
 export const dynamic = 'force-dynamic';
 
-const notFound = () => new NextResponse(null, { status: 404 });
+/**
+ * The route answers with its own strict policy (the one of the pages does not apply to it, see `security-headers.ts`),
+ * so every answer carries it, a refusal included.
+ */
+const POLICY_HEADERS = {
+  'Content-Security-Policy': "default-src 'none'; sandbox",
+  'X-Content-Type-Options': 'nosniff',
+};
+
+const notFound = () => new NextResponse(null, { status: 404, headers: POLICY_HEADERS });
 
 /**
  * The logo the BDE uploaded (settings page). Public on purpose: the login page, Discord, Slack and the readers
@@ -29,8 +38,7 @@ export async function GET(request: Request) {
     headers: {
       'Content-Type': info.mime,
       'Content-Length': String(bytes.length),
-      'Content-Security-Policy': "default-src 'none'; sandbox",
-      'X-Content-Type-Options': 'nosniff',
+      ...POLICY_HEADERS,
       ETag: `"${version}"`,
       'Cache-Control': isLogoVersion(asked)
         ? 'public, max-age=31536000, immutable'
