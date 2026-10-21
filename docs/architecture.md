@@ -1108,7 +1108,13 @@ start from the same three things, so that what one finds the others can replay.
   a BDE by importing the settings from a configuration file (no browser needed), then loads the dataset; `down` removes
   everything; `env` prints `QA_BASE_URL`, `QA_AUTH_SECRET`, `QA_DATABASE_URL` for the suites. It takes about 10 seconds with the
   image built. The 42 API and the release API are pointed at an address that answers nothing: the platform must work
-  without them. `--variant events-disabled` runs it without the module. POSIX `sh`, like the scripts of `scripts/`.
+  without them. `--variant events-disabled` runs it without the module. **`--now <ISO date>` sets the clock of the application**
+  (`qa/fake-clock.cjs`, loaded with `NODE_OPTIONS=--require`; tested by `fake-clock.test.ts`): from that moment the clock runs at the
+  normal speed, so the dates to come, the day marked as today and the reminders are those of the dataset (built around
+  2026-10-16T12:00:00Z) whenever the platform is made. Only `Date` is changed (a Proxy: `new Date()`, `Date.now()`, `Date()`; a date
+  built from arguments is untouched and the objects stay real dates); the database keeps its own `now()`. QA tooling only: nothing of
+  the application reads `BDE_QA_NOW`. The suites that need a stable "today" (visual references) use it, and so will the long-time
+  suite. POSIX `sh`, like the scripts of `scripts/`.
 - **The smoke test** (`qa/smoke.ts`): is the platform up, does it tell the personas apart, do the invariants hold. It is the
   first step of every run of `qa.yml`.
 - **Run it by hand**: `docker build -t bde-network .`, then `sh qa/platform.sh up`, `eval "$(sh qa/platform.sh env)"`,
@@ -1257,6 +1263,29 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
     and every released version** (a Base UI menu label outside a group, which Base UI refuses only when the menu opens: no test
     opened the menu, nor did any script; `user-menu.test.tsx` and the journey "opens the menu of their name… and signs out" do).
     **A component that only does something when it is opened, hovered or focused is tested opened, hovered or focused.**
+- **Visual regression** (`qa/browsers/visual.spec.ts`, the `visual` project of the Playwright config, the `visual` job of `qa.yml`, the
+  workflow `qa-visual-references.yml`). 19 pages × a computer and a phone × the light and the dark theme, plus 4 pages in French
+  (80 pictures), compared with `toHaveScreenshot` in **Chromium only** (`maxDiffPixelRatio` 0.2 %, animations off, the page
+  waited out by `rest.ts`, which axe uses too), on a platform made with `--now 2026-10-16T12:00:00Z`: the page is the same today
+  and in a month (checked: a second pass, then a platform made again from nothing, are 80/80 identical). A page of 300 rows is a
+  picture of what the screen shows, not of the whole page. A change of look nobody meant is a picture that differs, with the
+  reference, the page and the difference kept as an artifact; **a change that was meant is accepted by making the references
+  again, which is a commit of pictures that a person reads.**
+  - **The references live on the branch `qa/visual-baselines`**, which holds the pictures and a README and nothing else, so that
+    pictures never weigh on main or its history. **They are made where they are compared**: `qa visual references` (run by hand, or
+    by the label `visual-references` on a pull request of the project, before it is merged so that its own `visual` job passes)
+    builds the image, starts the platform, takes the pictures with `--update-snapshots` and commits them with the identity of
+    whoever started it. The same page is not drawn pixel for pixel the same by two systems (fonts, anti-aliasing): references made
+    on a developer's computer would differ everywhere. The `visual` job fails, with the command to run, when the branch does not
+    exist yet; it never passes by comparing with nothing.
+  - **Locally**, `QA_VISUAL_DIR` is a folder of your own (default `qa/browsers/.visual-local`, ignored by git): make your own
+    references there on your system to see a change of look before the pull request (`--update-snapshots`), then compare.
+    They are not the ones of the branch and never will be.
+  - **What a failure is**: a token, a class, or a library that draws a control another way, a page that gained or lost a block, a
+    string that wraps differently. The question is "did we mean this look?": if yes, make the references again and read the
+    pictures that changed in the commit; if no, it is a defect. A picture that differs by itself, run after run, is never
+    "retried until it passes": it is a page that depends on something (a date, a random value, an animation) that must be
+    fixed or masked in the test, with the reason written.
 - **Coverage** (`npm run test:coverage`, `coverage-thresholds.json`, `scripts/coverage-report.mjs`,
   `scripts/coverage-gaps.mjs`, `qa/coverage-plan.md`). The ubuntu job of `ci.yml` runs the unit tests through V8 coverage
   and **fails below a floor**: one for the whole project and one for each area that decides who may do what or what is

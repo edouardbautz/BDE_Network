@@ -8,6 +8,12 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **A change in how the pages look is seen before it is merged.** Every night, 80 pictures (19 pages, on a computer and a phone, in
+  the light and the dark theme, and 4 pages in French) are compared with their reference, in Chromium; a page that looks different
+  is shown with the difference drawn. The references are on a branch of their own (`qa/visual-baselines`), made by a workflow where
+  they are compared, and a look that was meant to change is accepted by making them again and reading the pictures that changed.
+  For that, the platform of the quality campaign can now run with another clock (`sh qa/platform.sh up --now <date>`), so that
+  the dates to come and the day marked as today are those of its data, whatever day it is run.
 - **Accessibility is checked on every page, and with the keyboard, every night.** axe checks each page of the platform against
   WCAG 2.2 level AA (both languages, both themes, computer and phone, as the people who can see it); the keyboard is played in
   Chromium, Firefox and WebKit: the skip link, the menus, the phone's drawer, the message of a form that is not valid, the
