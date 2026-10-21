@@ -1,4 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
+import type { Page } from '@playwright/test';
 import { PAGES } from '../access/matrix';
 import { LOCALE } from '../access/model';
 import { PERSONAS, type PersonaKey } from '../personas';
@@ -63,6 +64,25 @@ function viewersOf(probe: {
 
 const probes = PAGES.flatMap((page) => page.probes);
 
+/**
+ * The page at rest. axe judges the colours as they are drawn at the instant it looks, and a control that fades (the Save
+ * button of the campuses is disabled while the list loads, and fades in when it arrives) is drawn half-way for a moment: in CI,
+ * slower than a developer's computer, axe caught it at 72 % (white on 3.2:1). So the page is left alone until what it asks of
+ * the platform has come back and what it animates has finished (an animation that never ends, a spinner, is what it is).
+ */
+async function atRest(page: Page) {
+  await page.waitForLoadState('networkidle');
+  await page.waitForFunction(() =>
+    document
+      .getAnimations()
+      .every(
+        (animation) =>
+          animation.playState === 'finished' ||
+          animation.effect?.getComputedTiming().iterations === Infinity,
+      ),
+  );
+}
+
 test.describe('accessibility (axe, WCAG 2.2 AA)', () => {
   for (const probe of probes) {
     for (const who of viewersOf(probe)) {
@@ -80,6 +100,7 @@ test.describe('accessibility (axe, WCAG 2.2 AA)', () => {
           // What is checked is the page, not the loading skeleton that stands in for it.
           await expect(page.locator('[data-slot="skeleton"]')).toHaveCount(0);
           await expect(page.locator('main')).toBeVisible();
+          await atRest(page);
           await expect(page.locator('html')).toHaveAttribute('lang', combination.locale);
           await expect(page.locator('html')).toHaveClass(
             combination.colorScheme === 'dark' ? /dark/ : /^(?!.*dark).*$/,
