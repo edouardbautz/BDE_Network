@@ -114,6 +114,11 @@ All notable changes to this project are written here, in English. Format based o
 - **The facts of an event (when, repeats, where, in charge, description) are a valid description list.** The markup nested
   each term and its description one level too deep, so a screen reader did not announce them as a list of terms and
   descriptions (WCAG 1.3.1). The look is the same. Found by the accessibility checks of the quality campaign.
+- **A long page no longer jumps sideways when it finishes loading.** A page is short while its loading skeleton shows and long once
+  it is drawn (the members, the list of events). With a classic scrollbar (Windows, Linux, and so most computers), the bar
+  appears at that moment and moved the whole content sideways by half its width, in front of everybody's eyes: a layout shift of
+  0.78 on the members page (0.1 is the limit of "good"). The place of the scrollbar is now kept, whether the page needs one
+  or not. Found by the performance checks of the quality campaign.
 - **The export of one's own data is never kept by a cache** (`Cache-Control: private, no-store`, on the answer and on the
   refusal): it holds all the personal data of a member, and a proxy in front of the platform could otherwise keep it.
   Found by the attacks of the quality campaign.
