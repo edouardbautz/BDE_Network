@@ -1,5 +1,6 @@
 import { appendFileSync, writeFileSync } from 'node:fs';
 import { platformFromEnvironment, type Platform } from '../access/http';
+import { tableCell } from '../markdown';
 import { Report } from '../security/core';
 import { checkApp } from './app';
 import { checkDatabase } from './database';
@@ -68,7 +69,7 @@ async function main() {
         '|---|---|---|',
         ...report.checks.map(
           (check) =>
-            `| ${check.ok ? '✅' : '❌'} | [${check.area}] ${check.name.replace(/\|/g, '\\|')} | ${check.detail.replace(/\|/g, '\\|')} |`,
+            `| ${check.ok ? '✅' : '❌'} | [${check.area}] ${tableCell(check.name)} | ${tableCell(check.detail)} |`,
         ),
         '',
         '</details>',
