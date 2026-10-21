@@ -1,4 +1,3 @@
-import '../zod-config';
 import { z } from 'zod';
 import type { EventStatus } from '@/generated/prisma/client';
 import type { RepeatRule } from './repeat';

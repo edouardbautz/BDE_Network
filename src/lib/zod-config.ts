@@ -8,6 +8,7 @@ import { z } from 'zod';
  * cannot be told from one that is attacked.
  *
  * Every module that brings a schema to the browser imports this one first, before its schemas are built (they probe when
- * they are created). A schema here parses a form or a file once: the plain path costs nothing that can be measured.
+ * they are created), directly or through a module that does (`events/input.ts` through
+ * `events/repeat.ts`). A schema here parses a form or a file once: the plain path costs nothing that can be measured.
  */
 z.config({ jitless: true });
