@@ -200,7 +200,7 @@ sh qa/platform.sh down
 ```
 
 Les suites lourdes tournent toutes les nuits et à la demande (**Actions → qa**), pas à chaque pull request ; une pull request
-peut les demander avec l'étiquette `full-qa`. Le détail est dans l'[architecture](../architecture.md#quality-campaign-qa-githubworkflowsqayml).
+peut les demander avec l'étiquette `full-qa` ; l'étiquette `qa-mutations` joue le contrôle par mutation des attaques (une construction d'image par mutation, donc jamais sur votre ordinateur). Le détail est dans l'[architecture](../architecture.md#quality-campaign-qa-githubworkflowsqayml).
 
 ## Conventions de code
 

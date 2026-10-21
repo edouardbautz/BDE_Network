@@ -1187,7 +1187,10 @@ start from the same three things, so that what one finds the others can replay.
   documented above, and the forms of server actions, which the `csrf` suite plays), and an accepted entry that no longer
   shows up is reported. The first run of these suites found five defects, each fixed in its own pull request (a malformed
   address, the export's cache header, the logo's policy replaced by the pages', an unreadable `callbackUrl`, a log that
-  shouted): see the CHANGELOG.
+  shouted): see the CHANGELOG. **The attacks are mutation-checked on the image** (`qa/mutations/attacks.json`,
+  `qa/mutate-image.mjs`: a guard is broken in a throwaway worktree, an image is built, the attacks must fail): one image build per
+  mutation, so it runs in the `mutations` job of `qa.yml` (label `qa-mutations` on a pull request, or by hand), not on a computer. Like
+  the other heavy tools (ZAP's active scan included), it is a CI job.
 - **Coverage** (`npm run test:coverage`, `coverage-thresholds.json`, `scripts/coverage-report.mjs`,
   `scripts/coverage-gaps.mjs`, `qa/coverage-plan.md`). The ubuntu job of `ci.yml` runs the unit tests through V8 coverage
   and **fails below a floor**: one for the whole project and one for each area that decides who may do what or what is

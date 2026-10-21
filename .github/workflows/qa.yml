@@ -206,3 +206,30 @@ jobs:
       - name: Stop the platform
         if: always()
         run: sh qa/platform.sh down
+
+  # Mutation check of the attacks on the PRODUCTION IMAGE: each guard they rely on is broken in a throwaway worktree, an
+  # image is built from it, and the attacks must fail (qa/mutate-image.mjs). One image build per mutation, which is why it
+  # runs here and not on a computer: put the label `qa-mutations` on a pull request that changes the attacks or one of the
+  # guards in qa/mutations/attacks.json, or run this workflow by hand.
+  mutations:
+    name: mutation check of the attacks (the image)
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'qa-mutations'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Break each guard, build the image, play the attacks
+        env:
+          MUTATION_RUN: qa/security/run.ts
+        run: node qa/mutate-image.mjs qa/mutations/attacks.json
