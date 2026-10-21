@@ -88,6 +88,11 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Fixed
 
+- **The menu of the signed-in person (My profile, Sign out) opens.** Clicking one's name at the bottom of the menu showed the
+  "Something went wrong" page instead of the menu, in every browser, with the mouse or the keyboard: the library that draws
+  menus (Base UI) refuses a menu label that is not inside a group, and it says so when the menu opens, not when the page is
+  drawn, so nothing had caught it. The signed-in person's name, login and role are now the label of a group. Found by the
+  browser tests of the quality campaign, which opened it in Safari's engine first.
 - **The facts of an event (when, repeats, where, in charge, description) are a valid description list.** The markup nested
   each term and its description one level too deep, so a screen reader did not announce them as a list of terms and
   descriptions (WCAG 1.3.1). The look is the same. Found by the accessibility checks of the quality campaign.
