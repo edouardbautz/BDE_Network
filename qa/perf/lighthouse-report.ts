@@ -98,6 +98,8 @@ export interface Budgets {
   desktop?: Budget;
   /** What a page says of its own, by name (`members`), or by name and form factor (`members:desktop`). */
   pages?: Record<string, Budget>;
+  /** Why a page has the budget it has, when it is not the defaults': read by people, not by the check. */
+  notes?: Record<string, string>;
 }
 
 /** The budget of a page: the defaults, then those of the form factor, then what the page says (for all, then for that form factor). */
