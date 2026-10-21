@@ -1232,7 +1232,31 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
     not read once. A phone starts on the list, not the calendar (no choice made: "the layout adapts to the screen").
   - **Browsers are installed where they run** (`npx playwright install --with-deps <engine>` in the job); the artefacts
     (`test-results/`, `playwright-report/`) are ignored by git, Prettier, ESLint, markdownlint and Docker. The suite compares no
-    screenshot (phase 6) and runs no accessibility rule engine (phase 5): it plays the journeys.
+    screenshot (phase 6).
+  - **Accessibility** (phase 5: `a11y.spec.ts` and `keyboard.spec.ts`). **axe** (`@axe-core/playwright`, pinned) checks every page
+    of the platform against WCAG 2.2 level AA, in **Chromium only** (what it reports is the page's, not the engine's; the
+    project is the only one that runs the file, `testIgnore` in `playwright.config.ts`). The pages are **those of the access matrix**
+    (`PAGES` in `qa/access/matrix.ts`): a page added to the matrix is checked with nothing to write. Each page is opened as two
+    personas (the first who sees it and the one with the most rights, from the matrix's own expectations) in two combinations
+    (English, light, computer; French, dark, phone), with the loading skeleton waited out, `<html lang>` and the theme asserted
+    (a check on the wrong theme proves nothing) and a title of its own (WCAG 2.4.2). A violation fails with its elements, there
+    is **no list of accepted ones**; an exception would be written in the file with its reason, next to the page. The first test
+    gives the page what axe is for (a control with no name, pale text, an image with no alternative) and checks it is seen.
+    **The keyboard** (all three engines, because they differ most there): the skip link (reached by Tab, or put under the focus
+    in WebKit, whose default is not to stop on links), the menus (Enter, arrows, Escape, the focus given back), the phone's
+    drawer, a form's first error (focus on the field, message linked), and **every control Tab reaches on six pages shows its
+    focus** (outline or ring), plus the menu of the signed-in person. Two limits of the measure, both written in the probe: the
+    focus inside a date and time field is drawn by the engine (the field is the active element but not the `:focus-visible` one),
+    and WebKit does not stop on links with Tab.
+  - **What the first runs found** (each its own pull request, the numbers are in the CHANGELOG): the facts of an event were an
+    invalid description list; the button "Make default" was not named with its visible words (and a test now checks every
+    control named by `x` / `xLabel`); tables that scroll sideways could not be scrolled by keyboard (`ScrollableTable`); the
+    destructive red had 3.8–4:1 on its own tint (a test, `design-tokens.test.ts`, plays the contrast table of the design document
+    on the real tokens); the chips of the calendar were 20 px high and a draft was faded below readable contrast; a `<select>` showed
+    no focus in Safari (it ignores `box-shadow` there); and **the menu of the signed-in person crashed on opening, in every browser
+    and every released version** (a Base UI menu label outside a group, which Base UI refuses only when the menu opens: no test
+    opened the menu, nor did any script; `user-menu.test.tsx` and the journey "opens the menu of their name… and signs out" do).
+    **A component that only does something when it is opened, hovered or focused is tested opened, hovered or focused.**
 - **Coverage** (`npm run test:coverage`, `coverage-thresholds.json`, `scripts/coverage-report.mjs`,
   `scripts/coverage-gaps.mjs`, `qa/coverage-plan.md`). The ubuntu job of `ci.yml` runs the unit tests through V8 coverage
   and **fails below a floor**: one for the whole project and one for each area that decides who may do what or what is

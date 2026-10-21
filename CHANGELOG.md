@@ -8,6 +8,13 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **Accessibility is checked on every page, and with the keyboard, every night.** axe checks each page of the platform against
+  WCAG 2.2 level AA (both languages, both themes, computer and phone, as the people who can see it); the keyboard is played in
+  Chromium, Firefox and WebKit: the skip link, the menus, the phone's drawer, the message of a form that is not valid, the
+  focus of every control a Tab reaches, and the menu of the signed-in person. What the first runs found is under _Fixed_ (a
+  description list, the name of a button, tables that cannot be scrolled with the keyboard, the contrast of the destructive
+  red, the size of the calendar's events, the focus of a drop-down list in Safari, and the menu of the signed-in person that
+  failed when it opened).
 - **The journeys of the platform in the three engines people use**, played every night: Chromium, Firefox and WebKit (Safari's),
   against the real image and the QA dataset. A visitor, an account waiting for approval and a removed member; a member (the
   calendar's month, list and filter buttons, a calendar file download, the theme, the menu on a phone, and what a member is
