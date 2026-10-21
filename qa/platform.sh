@@ -5,12 +5,18 @@
 #
 #   sh qa/platform.sh up   [--image bde-network] [--port 3100] [--variant events-enabled|events-disabled]
 #                          [--dataset full|small|none] [--keep-config] [--now 2026-10-16T12:00:00Z]
+#                          [--webhook https://qa-hang:8443/hook]
 #   sh qa/platform.sh env  [--port 3100]     the variables the suites read (QA_BASE_URL, QA_AUTH_SECRET, QA_DATABASE_URL)
 #   sh qa/platform.sh logs
 #   sh qa/platform.sh down
 #
 # `--now` sets the clock of the application to the moment of the dataset (qa/fake-clock.cjs, which runs from there at the normal
 # speed): the dates to come, the day marked as today and the reminders are then the same whenever the platform is made.
+#
+# `--webhook` sends the notifications of the events to that address as Discord messages, so that a suite can make the other
+# side slow, deaf or absent (qa/resilience): the platform must not notice, except in its logs. The address must be https (the
+# platform refuses any other) and the suite's stand-in has a certificate nobody signed, so the application of this platform
+# alone does not verify certificates (NODE_TLS_REJECT_UNAUTHORIZED=0); nothing of a real installation does.
 #
 # The accounts are the personas of qa/personas.ts: the owner of the platform is `qa-owner`. Nothing here is reused by
 # a real installation: the secrets are public, the 42 API and the release API are pointed at an address that answers
@@ -29,6 +35,7 @@ PORT=3100
 VARIANT=events-enabled
 DATASET=full
 NOW=
+WEBHOOK=
 
 command="${1:-}"
 [ $# -gt 0 ] && shift
@@ -39,6 +46,7 @@ while [ $# -gt 0 ]; do
     --variant) VARIANT="$2"; shift 2 ;;
     --dataset) DATASET="$2"; shift 2 ;;
     --now) NOW="$2"; shift 2 ;;
+    --webhook) WEBHOOK="$2"; shift 2 ;;
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
 done
@@ -59,6 +67,8 @@ write_config() {
     events-disabled) modules='[]' ;;
     *) echo "unknown variant $VARIANT" >&2; exit 2 ;;
   esac
+  channel=none
+  [ -n "$WEBHOOK" ] && channel=discord
   cat >"$1" <<EOF
 bde:
   name: 'BDE QA'
@@ -84,11 +94,11 @@ notifications:
   memberPending: 'none'
   memberApproved: 'none'
   memberRemoved: 'none'
-  eventConfirmed: 'none'
-  eventReminder: 'none'
-  eventProposed: 'none'
-  eventApproved: 'none'
-  eventRefused: 'none'
+  eventConfirmed: '$channel'
+  eventReminder: '$channel'
+  eventProposed: '$channel'
+  eventApproved: '$channel'
+  eventRefused: '$channel'
 updates:
   check: false
 EOF
@@ -125,6 +135,10 @@ case "$command" in
       set -- -v "$(host_path "$clock_file"):/qa/fake-clock.cjs:ro" -e "BDE_QA_NOW=$NOW" -e NODE_OPTIONS=--require=/qa/fake-clock.cjs
     fi
 
+    if [ -n "$WEBHOOK" ]; then
+      set -- "$@" -e "DISCORD_WEBHOOK_URL=$WEBHOOK" -e NODE_TLS_REJECT_UNAUTHORIZED=0
+    fi
+
     config_dir="$(mktemp -d)"
     write_config "$config_dir/bde.config.yml"
     chmod 644 "$config_dir/bde.config.yml"
@@ -156,7 +170,7 @@ case "$command" in
     docker logs "$APP_CONTAINER" 2>&1
     ;;
   down)
-    docker rm -f "$APP_CONTAINER" "$DATABASE_CONTAINER" >/dev/null 2>&1 || true
+    docker rm -f "$APP_CONTAINER" "$DATABASE_CONTAINER" qa-hang >/dev/null 2>&1 || true
     docker network rm "$NETWORK" >/dev/null 2>&1 || true
     ;;
   *)

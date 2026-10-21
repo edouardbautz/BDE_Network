@@ -43,7 +43,7 @@ const nobody = () => false;
 const events = FIXTURES.events;
 
 /** The form of an event, as the page sends it. */
-function eventForm(overrides: Record<string, string> = {}): FormData {
+export function eventForm(overrides: Record<string, string> = {}): FormData {
   const form = new FormData();
   const fields: Record<string, string> = {
     title: 'Created by the access matrix',
