@@ -97,3 +97,13 @@ describe.each([
     });
   },
 );
+
+describe('the page layout', () => {
+  it('keeps the place of the scrollbar, so that a page that grows does not move sideways', () => {
+    // A page is short while its skeleton shows and long once it is drawn; a classic scrollbar (Windows, Linux) that appears then
+    // moves the whole content by half its width. Measured by Lighthouse on the members page: a layout shift of 0.78.
+    const base = /@layer base\s*\{[\s\S]*?\n\}/.exec(css)?.[0] ?? '';
+    const html = /html\s*\{([^}]*)\}/.exec(base)?.[1] ?? '';
+    expect(html).toMatch(/scrollbar-gutter:\s*stable/);
+  });
+});
