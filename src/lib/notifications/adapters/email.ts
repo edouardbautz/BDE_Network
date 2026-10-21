@@ -1,6 +1,7 @@
 import { createTransport, type Transporter } from 'nodemailer';
 import type { NotificationAdapter, NotificationMessage, SendOutcome } from '../types';
 import { setting } from '@/lib/settings/runtime';
+import { SMTP_TIMEOUTS } from '../timeouts';
 
 function smtpSettings() {
   const host = setting('SMTP_HOST');
@@ -57,6 +58,7 @@ export class EmailAdapter implements NotificationAdapter {
             : undefined,
           pool: true,
           maxConnections: 1,
+          ...SMTP_TIMEOUTS,
         });
 
         try {

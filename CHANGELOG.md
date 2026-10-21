@@ -133,6 +133,11 @@ All notable changes to this project are written here, in English. Format based o
 - **The export of one's own data is never kept by a cache** (`Cache-Control: private, no-store`, on the answer and on the
   refusal): it holds all the personal data of a member, and a proxy in front of the platform could otherwise keep it.
   Found by the attacks of the quality campaign.
+- **A Discord, Slack or mail server that accepts the connection and never answers no longer holds a socket and a task for
+  minutes.** The notifications are sent after the response, so nobody waited, but the call had no limit of its own: five minutes
+  for a webhook, ten for the mail library, and the reminder loop sends its messages one after the other. A webhook now has 10
+  seconds to answer, and a mail server 10 seconds to accept and greet and 30 seconds of silence. Found by the resilience suite of
+  the quality campaign.
 - **An address whose percent-encoding is malformed (`%ff`, a lone `%`, and `%25` followed by something that is no longer valid
   once decoded, like `/fr/x%25y`) is answered with a 400** instead of a 500 and an error in the logs: Next.js fails while it
   reads the parameters of the route, for a request that is simply wrong (a page is decoded twice, an API route once).
