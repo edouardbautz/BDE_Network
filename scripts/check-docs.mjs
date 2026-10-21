@@ -57,9 +57,8 @@ function withoutFences(text) {
 function slugOf(heading) {
   return (
     heading
-      .replace(/<[^>]*>/g, '')
-      // One pass leaves a tag made by the removal itself; GitHub's anchor drops what is left of the brackets as punctuation.
-      .replace(/[<>]/g, '')
+      // A tag, from its `<` to the next bracket: no `<` can survive, so a tag cannot be made by the removal of another.
+      .replace(/<[^<>]*>?/g, '')
       .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
       .replace(/`/g, '')
       .replace(/\*\*?([^*]+)\*\*?/g, '$1')
