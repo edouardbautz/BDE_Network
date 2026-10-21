@@ -158,10 +158,11 @@ export async function MonthCalendar({
                                 }`}
                                 style={tint(category.color)}
                                 className={cn(
-                                  'hover:bg-muted flex min-w-0 items-center gap-1 rounded-sm border-l-2 px-1.5 py-0.5 text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
+                                  // 24 px at least: a target smaller than that, with others a few pixels away, is hard to hit (WCAG 2.5.8)
+                                  'hover:bg-muted flex min-h-6 min-w-0 items-center gap-1 rounded-sm border-l-2 px-1.5 text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
                                   !category.color && 'border-muted-foreground/40 bg-muted/50',
-                                  occurrence.status !== 'CONFIRMED' &&
-                                    'border-dashed italic opacity-80',
+                                  // Not confirmed: dashed and italic. Never faded (an opacity lowers the contrast of the text).
+                                  occurrence.status !== 'CONFIRMED' && 'border-dashed italic',
                                 )}
                               >
                                 <span className="text-muted-foreground shrink-0 tabular-nums">
@@ -176,7 +177,7 @@ export async function MonthCalendar({
                           <li>
                             <Link
                               href={dayHref(day)}
-                              className="text-muted-foreground hover:text-foreground rounded-sm px-1.5 text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                              className="text-muted-foreground hover:text-foreground flex min-h-6 items-center rounded-sm px-1.5 text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                             >
                               {t('calendar.more', { count: occurrences.length - MAX_CHIPS })}
                             </Link>

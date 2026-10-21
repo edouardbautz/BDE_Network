@@ -126,6 +126,41 @@ describe('MonthCalendar', () => {
     );
   });
 
+  it('makes every chip a target of 24 px at least, and never fades the chip of an event that is not confirmed', async () => {
+    const html = await renderCalendar([
+      occurrence({
+        start: '2026-10-10T18:00:00Z',
+        end: '2026-10-10T20:00:00Z',
+        title: 'Confirmed',
+      }),
+      occurrence({
+        start: '2026-10-10T19:00:00Z',
+        end: '2026-10-10T20:00:00Z',
+        title: 'Waiting',
+        status: 'PROPOSED',
+      }),
+      ...Array.from({ length: 4 }, (_, i) =>
+        occurrence({ start: '2026-10-11T1' + i + ':00:00Z', end: '2026-10-11T2' + i + ':00:00Z' }),
+      ),
+    ]);
+    const page = new DOMParser().parseFromString(html, 'text/html');
+
+    const chips = [...page.querySelectorAll('ul a[title]')];
+    expect(chips.length).toBeGreaterThan(2);
+    // min-h-6 is 1.5rem: the height the guideline asks for (the width of a chip is the width of its day).
+    for (const chip of chips)
+      expect(chip.className, chip.getAttribute('title') ?? '').toContain('min-h-6');
+    // The link that opens the rest of a busy day is a target too.
+    const more = [...page.querySelectorAll('ul a')].find((link) => !link.hasAttribute('title'));
+    expect(more?.className).toContain('min-h-6');
+
+    const waiting = chips.find((chip) => chip.getAttribute('title')?.startsWith('Waiting'));
+    expect(waiting?.className).toContain('border-dashed');
+    expect(waiting?.className).toContain('italic');
+    // An opacity would lower the contrast of the time and the title below what is readable.
+    for (const chip of chips) expect(chip.className).not.toMatch(/opacity-/);
+  });
+
   it('caps the chips of a busy day at three and offers the rest through the day link', async () => {
     const busy = Array.from({ length: 5 }, (_, i) =>
       occurrence({
