@@ -73,6 +73,22 @@ jobs:
           eval "$(sh qa/platform.sh env)"
           npx tsx qa/access/run.ts --variant "${{ matrix.variant }}" --report "$RUNNER_TEMP/access-report.json"
 
+      # What somebody who wants more than they have can try: headers, forged cookies, a form on another site, calendar
+      # links, trapped uploads, hostile text in every field, floods, and what the logs held afterwards. Last of the suites:
+      # the logs it reads are those of everything above. See "Attacks" in docs/architecture.md.
+      - name: Attacks
+        run: |
+          eval "$(sh qa/platform.sh env)"
+          npx tsx qa/security/run.ts --report "$RUNNER_TEMP/attacks-report.json"
+
+      - name: Keep the report of the attacks
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: attacks-${{ matrix.variant }}
+          path: ${{ runner.temp }}/attacks-report.json
+          if-no-files-found: ignore
+
       - name: Keep the report of the access matrix
         if: always()
         uses: actions/upload-artifact@v4
@@ -130,3 +146,90 @@ jobs:
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/.trivyignore:/.trivyignore:ro" \
             aquasec/trivy:0.76.0 image --quiet --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed \
             --ignorefile /.trivyignore --exit-code 1 bde-network
+
+  # OWASP ZAP against the platform, signed in as the owner: every night the baseline (the spider and the passive rules, what
+  # every response says) and the active scan (ZAP sends attacks at every page and form it found). A pull request that
+  # carries the label `full-qa` runs the baseline only. The verdict is qa/security/zap-gate.mjs: an alert of medium level
+  # or above fails unless it is in qa/security/zap-accepted.json with its reason.
+  zap:
+    name: ZAP (${{ github.event_name == 'schedule' && 'baseline and active scan' || 'baseline' }})
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-qa')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build the production image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: bde-network
+          cache-from: type=gha,scope=qa-image
+          cache-to: type=gha,mode=max,scope=qa-image
+
+      - name: Start the platform with the QA dataset
+        run: sh qa/platform.sh up --image bde-network --dataset small
+
+      - name: Baseline
+        run: sh qa/security/zap.sh baseline "$RUNNER_TEMP/zap-baseline"
+
+      # The active scan changes things (it is let loose on the pages of an owner): a platform of its own, made again.
+      - name: Active scan
+        if: github.event_name != 'pull_request'
+        run: |
+          sh qa/platform.sh up --image bde-network --dataset small
+          sh qa/security/zap.sh full "$RUNNER_TEMP/zap-full"
+
+      - name: Keep the reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-reports
+          path: |
+            ${{ runner.temp }}/zap-baseline/zap.html
+            ${{ runner.temp }}/zap-baseline/zap.json
+            ${{ runner.temp }}/zap-full/zap.html
+            ${{ runner.temp }}/zap-full/zap.json
+          if-no-files-found: ignore
+
+      - name: Stop the platform
+        if: always()
+        run: sh qa/platform.sh down
+
+  # Mutation check of the attacks on the PRODUCTION IMAGE: each guard they rely on is broken in a throwaway worktree, an
+  # image is built from it, and the attacks must fail (qa/mutate-image.mjs). One image build per mutation, which is why it
+  # runs here and not on a computer: put the label `qa-mutations` on a pull request that changes the attacks or one of the
+  # guards in qa/mutations/attacks.json, or run this workflow by hand.
+  mutations:
+    name: mutation check of the attacks (the image)
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'qa-mutations'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Break each guard, build the image, play the attacks
+        env:
+          MUTATION_RUN: qa/security/run.ts
+        run: node qa/mutate-image.mjs qa/mutations/attacks.json

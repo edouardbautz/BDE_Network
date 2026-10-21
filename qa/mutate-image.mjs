@@ -4,6 +4,7 @@
 // mutations and removed at the end. A mutation costs one image build (a few minutes).
 //
 //   node qa/mutate-image.mjs <mutations.json> [name filter]
+// The suite that must notice is the access matrix, or what MUTATION_RUN says (the attacks: `MUTATION_RUN="qa/security/run.ts"`).
 // mutations.json: [[name, file, find, replace, variant?], ...]  (variant: the platform variant to play, default events-enabled)
 import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
@@ -64,7 +65,12 @@ try {
             return match ? [[match[1], match[2]]] : [];
           }),
       );
-      const result = run('npx', ['tsx', 'qa/access/run.ts', '--variant', variant], {
+      const suite = process.env.MUTATION_RUN?.split(' ') ?? [
+        'qa/access/run.ts',
+        '--variant',
+        variant,
+      ];
+      const result = run('npx', ['tsx', ...suite], {
         shell: true,
         env: { ...process.env, ...env },
       });

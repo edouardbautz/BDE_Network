@@ -68,6 +68,7 @@ const addEvent = (client: Client, id: string, status: string) =>
     [id, status],
   );
 
+// One database per test, dropped one after the other: this can take longer than the 10 s of a hook on a loaded runner.
 afterAll(async () => {
   await Promise.all(clients.map((client) => client.end().catch(() => undefined)));
   if (!ADMIN_URL || created.length === 0) return;
@@ -75,7 +76,7 @@ afterAll(async () => {
   await admin.connect();
   for (const name of created) await admin.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`);
   await admin.end();
-});
+}, 60_000);
 
 describeWithDatabase('event proposals migration', () => {
   it('turns "events.manage" into "events.validate", with what it includes, sorted', async () => {

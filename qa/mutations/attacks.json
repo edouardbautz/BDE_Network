@@ -1,0 +1,92 @@
+[
+  [
+    "headers: the pages can be framed",
+    "src/lib/security-headers.ts",
+    "{ key: 'X-Frame-Options', value: 'DENY' },",
+    ""
+  ],
+  [
+    "headers: the policy allows eval",
+    "src/lib/security-headers.ts",
+    "\"script-src 'self' 'unsafe-inline'\",",
+    "\"script-src 'self' 'unsafe-inline' 'unsafe-eval'\","
+  ],
+  [
+    "headers: the logo loses its own policy again",
+    "src/lib/security-headers.ts",
+    "source: `/((?!${OWN_POLICY_PATH.slice(1)}(?:/|$)).*)`,",
+    "source: '/:path*',"
+  ],
+  [
+    "headers: a malformed address is a server error again",
+    "src/proxy.ts",
+    "if (!isWellEncoded(pathname)) {",
+    "if (false) {"
+  ],
+  [
+    "feeds: a link can be cached by a shared cache",
+    "src/lib/events/feed-response.ts",
+    "'Cache-Control': 'private, no-store',",
+    "'Cache-Control': 'public, max-age=3600',"
+  ],
+  [
+    "feeds: the BDE link holds the drafts",
+    "src/lib/events/export.ts",
+    "includeDrafts: false,\n  });\n\n  return buildCalendarIcs(\n    occurrences.filter((occurrence) => occurrence.status === 'CONFIRMED'),",
+    "includeDrafts: true,\n  });\n\n  return buildCalendarIcs(\n    occurrences,"
+  ],
+  [
+    "feeds: a line break in an event writes lines of its own",
+    "src/lib/events/ics.ts",
+    "    .replace(/\\r\\n|\\r|\\n/g, '\\\\n');",
+    "    .replace(/\\r\\n/g, '\\r\\n');"
+  ],
+  [
+    "uploads: a bomb of 100000 pixels is accepted",
+    "src/lib/branding/image.ts",
+    "if (Math.max(info.width, info.height) > LOGO_MAX_SIDE) return { ok: false, code: 'logoLarge' };",
+    ""
+  ],
+  [
+    "uploads: the logo is served as a page",
+    "src/app/api/logo/route.ts",
+    "'Content-Type': info.mime,",
+    "'Content-Type': 'text/html',"
+  ],
+  [
+    "headers: nothing tells a browser not to guess the type",
+    "src/lib/security-headers.ts",
+    "{ key: 'X-Content-Type-Options', value: 'nosniff' },\n    { key: 'X-Frame-Options', value: 'DENY' },",
+    "{ key: 'X-Frame-Options', value: 'DENY' },"
+  ],
+  [
+    "uploads: a page named logo.png is accepted",
+    "src/lib/branding/image.ts",
+    "if (!info) return { ok: false, code: 'logoFormat' };",
+    "if (!info) return { ok: true, info: { type: 'png', mime: 'image/png', width: 128, height: 128 } };"
+  ],
+  [
+    "injection: a member's name is written as HTML",
+    "src/app/[locale]/(app)/members/page.tsx",
+    "<span className=\"font-medium\">{name}</span>",
+    "<span className=\"font-medium\" dangerouslySetInnerHTML={{ __html: name }} />"
+  ],
+  [
+    "injection: the platform trusts the address it is reached on",
+    "src/lib/auth/public-request.ts",
+    "  return new NextRequest(url, request);",
+    "  return request;"
+  ],
+  [
+    "csrf: another site may call the actions",
+    "next.config.ts",
+    "experimental: { serverActions: { bodySizeLimit: '3mb' } },",
+    "experimental: { serverActions: { bodySizeLimit: '3mb', allowedOrigins: ['evil.example', 'null'] } },"
+  ],
+  [
+    "logs: an unreadable callback address is logged with its value",
+    "src/lib/auth/logger.ts",
+    "  'InvalidCallbackUrl',\n",
+    ""
+  ]
+]

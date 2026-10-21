@@ -46,13 +46,14 @@ const insertMember = (client: Client, login: string, email: string) =>
     [login, email],
   );
 
+// One database per test, dropped one after the other: this can take longer than the 10 s of a hook on a loaded runner.
 afterAll(async () => {
   await Promise.all(clients.map((client) => client.end().catch(() => undefined)));
   const admin = new Client({ connectionString: ADMIN_URL });
   await admin.connect();
   for (const name of created) await admin.query(`DROP DATABASE IF EXISTS ${name}`);
   await admin.end();
-});
+}, 60_000);
 
 describeWithDatabase('migration user_email_not_unique', () => {
   it('lets two accounts have the same e-mail address', async () => {

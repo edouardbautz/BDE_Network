@@ -90,6 +90,8 @@ export interface Call {
   status: number;
   /** An action that throws (a refusal is one) answers 500 and says nothing else. */
   threw: boolean;
+  /** What the platform answered (the payload of the action, for the suites that read it). */
+  text: string;
 }
 
 export async function callAction(
@@ -98,6 +100,8 @@ export async function callAction(
   id: string,
   page: string,
   args: unknown[],
+  /** Headers on top of the usual ones, for a request a browser would not make (another origin, for instance). */
+  extraHeaders: Record<string, string> = {},
 ): Promise<Call> {
   const body = await encodeReply(args);
   const cookie = await cookieHeaderFor(persona(who), platform.secret);
@@ -109,11 +113,12 @@ export async function callAction(
       Accept: 'text/x-component',
       ...(typeof body === 'string' ? { 'Content-Type': 'text/plain;charset=UTF-8' } : {}),
       ...(cookie ? { cookie } : {}),
+      ...extraHeaders,
     },
     body,
   });
-  await response.text();
-  return { status: response.status, threw: response.status >= 500 };
+  const text = await response.text();
+  return { status: response.status, threw: response.status >= 500, text };
 }
 
 export interface ActionCell {
