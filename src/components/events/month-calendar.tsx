@@ -147,6 +147,9 @@ export async function MonthCalendar({
                           return (
                             <li key={occurrence.key} className="min-w-0">
                               <Link
+                                // A month shows a hundred events at most: prefetching each one would make the server draw a hundred pages
+                                // (the page of every event, with its dates) for a person who opens one of them.
+                                prefetch={false}
                                 href={{
                                   pathname: `/events/${occurrence.eventId}`,
                                   query: { occ: occurrence.originalStart.getTime() },

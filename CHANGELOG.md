@@ -101,6 +101,11 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Fixed
 
+- **Opening the calendar no longer makes the server draw the page of every event of the month.** On a computer, each event of a
+  day is a link, and the browser prefetches the links it can see: a month of 100 events was 110 extra requests, each one a
+  full rendering of an event page by the server, for a person who opens one of them (the list and the dashboard make 13 to
+  18). The events of the calendar are not prefetched now (the page of an event loads when it is clicked, as it did before).
+  Found by the performance checks of the quality campaign.
 - **The menu of the signed-in person (My profile, Sign out) opens.** Clicking one's name at the bottom of the menu showed the
   "Something went wrong" page instead of the menu, in every browser, with the mouse or the keyboard: the library that draws
   menus (Base UI) refuses a menu label that is not inside a group, and it says so when the menu opens, not when the page is

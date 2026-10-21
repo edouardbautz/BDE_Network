@@ -16,7 +16,16 @@ vi.mock('next-intl/server', () => ({
   ),
 }));
 vi.mock('@/i18n/navigation', () => ({
-  Link: ({ href, children, ...rest }: { href: Href; children?: ReactNode }) => {
+  Link: ({
+    href,
+    children,
+    prefetch,
+    ...rest
+  }: {
+    href: Href;
+    children?: ReactNode;
+    prefetch?: boolean;
+  }) => {
     const target =
       typeof href === 'string'
         ? href
@@ -24,7 +33,7 @@ vi.mock('@/i18n/navigation', () => ({
             Object.entries(href.query ?? {}).map(([k, v]) => [k, String(v)]),
           ).toString()}`;
     return (
-      <a href={target} {...rest}>
+      <a href={target} data-prefetch={String(prefetch)} {...rest}>
         {children}
       </a>
     );
@@ -159,6 +168,21 @@ describe('MonthCalendar', () => {
     expect(waiting?.className).toContain('italic');
     // An opacity would lower the contrast of the time and the title below what is readable.
     for (const chip of chips) expect(chip.className).not.toMatch(/opacity-/);
+  });
+
+  it('does not ask the server for the page of every event of the month: a chip is not prefetched', async () => {
+    const html = await renderCalendar(
+      Array.from({ length: 6 }, (_, i) =>
+        occurrence({
+          start: `2026-10-0${i + 1}T18:00:00Z`,
+          end: `2026-10-0${i + 1}T20:00:00Z`,
+        }),
+      ),
+    );
+    const page = new DOMParser().parseFromString(html, 'text/html');
+    const chips = [...page.querySelectorAll('ul a[title]')];
+    expect(chips).toHaveLength(6);
+    for (const chip of chips) expect(chip.getAttribute('data-prefetch')).toBe('false');
   });
 
   it('caps the chips of a busy day at three and offers the rest through the day link', async () => {
