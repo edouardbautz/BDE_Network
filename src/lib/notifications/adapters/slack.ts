@@ -2,6 +2,7 @@ import { neutralizeForSlack } from '../sanitize';
 import { fitSlackPayload } from '../slack-blocks';
 import type { NotificationAdapter, NotificationMessage } from '../types';
 import { setting } from '@/lib/settings/runtime';
+import { WEBHOOK_TIMEOUT_MS } from '../timeouts';
 
 /** What is posted to the webhook for this message: the card (blocks under a colour bar) when the
  * notification has one, the plain subject and body otherwise. The summary for notifications goes in the
@@ -35,6 +36,7 @@ export class SlackAdapter implements NotificationAdapter {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payloadOf(message)),
+      signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
     });
 
     if (!response.ok) {

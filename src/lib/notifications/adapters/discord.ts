@@ -2,6 +2,7 @@ import { fitEmbed } from '../discord-embed';
 import { neutralizeEmbedForDiscord, neutralizeForDiscord } from '../sanitize';
 import type { NotificationAdapter, NotificationMessage } from '../types';
 import { setting } from '@/lib/settings/runtime';
+import { WEBHOOK_TIMEOUT_MS } from '../timeouts';
 
 /** Discord accepts up to ten cards in a message; the platform sends one. */
 const MAX_EMBEDS = 10;
@@ -44,6 +45,7 @@ export class DiscordAdapter implements NotificationAdapter {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payloadOf(message)),
+      signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
     });
 
     if (!response.ok) {
