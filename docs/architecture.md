@@ -1578,6 +1578,8 @@ touching layout or adding UI. The short version:
   runs it on a real throwaway repository: the files a link points to are intact after the removal, the links are gone when git is
   asked to remove (an ordering a Linux runner would not show by its result alone), a link that cannot be removed stops everything,
   and **a scan of the repository fails on any other `git worktree add|remove`**. Mutation-checked (`qa/mutations/worktree.json`).
+  When git itself fails on a path Windows finds too long (the cache of a Next.js build in a worktree: it deletes what it can and stops),
+  the links being gone already, the script removes the folder with Node and prunes; with a link still there, or any other failure, it throws.
 - **No `any`** (`@typescript-eslint/no-explicit-any` is an error, not a warning).
 - Cross-platform: no `&&`/`||`/`$VAR`/`rm -rf`/`cp` in npm scripts — use `cross-env`, `rimraf`,
   or plain Node. LF line endings are enforced by `.gitattributes`. The exception is the server-side
