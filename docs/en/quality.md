@@ -55,6 +55,14 @@ whose cookie is still valid.
 - **A walk through the interface.** As each profile, on a computer and on a phone, every link is followed and every menu and
   dialog opened, looking for a dead link, a page with no heading, a page that scrolls sideways, a picture that does not load, a
   menu that breaks the page.
+- **Privacy.** Every column of the database that can hold a person is read from the schema and classified: where the
+  export of one's data finds it, and that an account can always be deleted. On a real database with the QA dataset, removing an
+  account must leave **no e-mail address, full name, picture or personal calendar link anywhere**, and the login only where the
+  privacy policy page of the platform (`/privacy`) says (the audit log, the events written, the people in charge); the rows of that
+  history are kept. These run in every pull request, not only at night.
+- **The tests of the rules are tested.** A mutation tester changes the code of the rules that decide who may do what (permissions,
+  roles, the proposal circuit, what a session holds, who becomes an owner, what the logo may be) one operator at a time, and the
+  tests must fail for each change; the job fails below 95 % (97.6 % at the last measure).
 
 Every pull request is also read by static analysis: the project's own rules (Semgrep: no setting read around the settings, no
 raw SQL built from text, no link that skips the language router…), a search for secrets in the whole history (gitleaks), CodeQL on
@@ -63,20 +71,20 @@ actions of the workflows are pinned to a commit.
 
 ## What it found
 
-Since version 1.2.0, the campaign has found and fixed **22 defects**, each in a pull request of its own with a test that would
+Since version 1.2.0, the campaign has found and fixed **23 defects**, each in a pull request of its own with a test that would
 have caught it. The details are in the [CHANGELOG](../../CHANGELOG.md) (sections "Fixed" and "Security" of the unreleased
 changes).
 
-| Kind                  | Count | Examples                                                                                                                                                                                                                                                                           |
-| --------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Does not work         | 1     | **The menu of the signed-in person (profile, sign out) crashed when opened**, in every released version: no test had ever opened it.                                                                                                                                               |
-| Operations            | 3     | Going back to the previous version with `restore.sh` did not work in the order the guide gave; a frozen database held every page for as long as it lasted; a webhook or mail server that never answers held a connection for minutes.                                              |
-| Security and privacy  | 9     | The export of one's own data could be kept by a cache; the logo's strict policy was replaced by the pages'; a malformed address or an unreadable `callbackUrl` gave a server error; every page violated the platform's own content policy; the workflows' actions were not pinned. |
-| Accessibility and use | 7     | Menus and tables unreachable or unreadable with the keyboard or a screen reader, text too pale on red buttons, calendar events too small to hit, a list with no visible focus in Safari, three pages with no heading.                                                              |
-| Speed                 | 2     | The calendar made the server draw the page of every event of the month in advance (110 requests, against 13 to 18 for the other pages); a long page jumped sideways when it finished loading.                                                                                      |
+| Kind                  | Count | Examples                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| --------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Does not work         | 1     | **The menu of the signed-in person (profile, sign out) crashed when opened**, in every released version: no test had ever opened it.                                                                                                                                                                                                                                                                                                              |
+| Operations            | 3     | Going back to the previous version with `restore.sh` did not work in the order the guide gave; a frozen database held every page for as long as it lasted; a webhook or mail server that never answers held a connection for minutes.                                                                                                                                                                                                             |
+| Security and privacy  | 10    | The export of one's own data could be kept by a cache, and it left out four kinds of data the platform holds about the person (dates in charge of, dates cancelled, proposals refused, what was done to the account); the logo's strict policy was replaced by the pages'; a malformed address or an unreadable `callbackUrl` gave a server error; every page violated the platform's own content policy; the workflows' actions were not pinned. |
+| Accessibility and use | 7     | Menus and tables unreachable or unreadable with the keyboard or a screen reader, text too pale on red buttons, calendar events too small to hit, a list with no visible focus in Safari, three pages with no heading.                                                                                                                                                                                                                             |
+| Speed                 | 2     | The calendar made the server draw the page of every event of the month in advance (110 requests, against 13 to 18 for the other pages); a long page jumped sideways when it finished loading.                                                                                                                                                                                                                                                     |
 
 Nothing is claimed beyond that. In particular, **the suites looked for and did not find**: a path where a profile could do what it
-may not (the access matrix and the attacks), a write left half done when the database or the application is killed, a session lost
+may not (the access matrix and the attacks), a write left half done when the database or the application is killed, an e-mail address, a name, a picture or a calendar link left behind by the removal of an account, a session lost
 by an outage, a date, an hour, a right or a row changed by an update from 1.0.0, 1.1.0 or 1.2.0, a reminder sent twice or not
 sent over a year and a half, and a dead link in the interface.
 
