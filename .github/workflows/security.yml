@@ -92,5 +92,6 @@ jobs:
         with:
           fail-on-severity: high
           # The licenses the production dependencies have today (the LGPL ones are the optional image libraries of sharp, which the
-          # production image leaves out); anything else is looked at by a person.
-          allow-licenses: MIT, MIT-0, ISC, BSD-2-Clause, BSD-3-Clause, Apache-2.0, 0BSD, Unlicense, CC0-1.0, CC-BY-4.0, Python-2.0, BlueOak-1.0.0, MPL-2.0, LGPL-3.0-or-later, EPL-2.0
+          # production image leaves out); anything else is looked at by a person. PSF-2.0 is the same permissive license as
+          # Python-2.0 above (argparse 2, which js-yaml's command-line tool uses) under the identifier argparse 3 declares.
+          allow-licenses: MIT, MIT-0, ISC, BSD-2-Clause, BSD-3-Clause, Apache-2.0, 0BSD, Unlicense, CC0-1.0, CC-BY-4.0, Python-2.0, PSF-2.0, BlueOak-1.0.0, MPL-2.0, LGPL-3.0-or-later, EPL-2.0
