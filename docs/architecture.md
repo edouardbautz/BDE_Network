@@ -1435,7 +1435,7 @@ gives calendar files with the data in them` guards that); the not-found page mar
   `account.ts` (what a session holds, who becomes an owner or stops being one) and `branding/image.ts` (what the logo may be). The
   rest of the code is not mutated (it would take hours); the mutation checks by hand of the access rules (re-break a guard in a
   worktree, see "Conventions") stay the way to prove a new rule. Stryker is **not a dependency of the project** (hundreds of packages
-  the platform never ships): the job installs it with `--no-save` at the version written in the workflow. `summary.ts` (pure, tested)
+  the platform never ships): the job installs it with `--no-save --legacy-peer-deps` (npm 10, the one of Node 22, stops on the overrides of `package.json` without it) at the version written in the workflow. `summary.ts` (pure, tested)
   writes the table and the list of survivors into the summary of the job.
   - **A ratchet**: the break threshold of `stryker.config.json` (95 %) fails the job below it, goes up when the tests do and comes
     down only in a pull request that says why, like the coverage floors.

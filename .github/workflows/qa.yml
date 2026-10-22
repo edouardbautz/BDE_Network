@@ -632,8 +632,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # --legacy-peer-deps: npm 10 (the one of Node 22) stops with "Cannot read properties of null (reading 'edgesOut')" on the
+      # overrides of package.json otherwise; the one peer Stryker asks for, vitest, is already in the project.
       - name: Install Stryker (not part of the project's dependencies)
-        run: npm install --no-save @stryker-mutator/core@10.0.0 @stryker-mutator/vitest-runner@10.0.0
+        run: npm install --no-save --legacy-peer-deps @stryker-mutator/core@10.0.0 @stryker-mutator/vitest-runner@10.0.0
 
       - name: Change the rules one operator at a time, and see that the tests notice
         run: npx stryker run qa/mutation/stryker.config.json
