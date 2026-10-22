@@ -178,6 +178,8 @@ with their coverage: CI fails below the floors of `coverage-thresholds.json`, so
 
 ## The quality campaign
 
+What the campaign checks, and what it found, is written for everybody on the [Quality](quality.md) page.
+
 Beyond the unit tests, `qa/` holds the harness of the quality suites: nine **personas** (visitor, pending account, member,
 proposer, validator, custom role, Admin, owner, removed member), a deterministic **dataset** of two school years (about 300
 members and 600 events), the **invariants** every database must satisfy, and a script that starts the production image

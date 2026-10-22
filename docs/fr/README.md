@@ -25,6 +25,7 @@ Cette documentation est écrite en français et en anglais. Les deux versions di
 3. [Configuration](configuration.md) : la page Paramètres et la référence de chaque réglage.
 4. [Mettre à jour](upgrading.md) : sauvegarde, commande, vérification, retour arrière.
 5. [Problèmes fréquents](troubleshooting.md) : ce que l'on voit, pourquoi, que faire.
+6. [Qualité](quality.md) : ce qui est vérifié, comment, ce que cela a trouvé, et ce qui n'est pas couvert.
 
 ### Je contribue au code
 

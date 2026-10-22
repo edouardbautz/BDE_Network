@@ -1,0 +1,124 @@
+🇫🇷 Français · [🇬🇧 English](../en/quality.md)
+
+# Qualité : ce qui est vérifié, comment, et ce que cela a trouvé
+
+Un BDE confie à cette plateforme ses membres, son calendrier et sa connexion. Cette page dit ce qui est fait pour le mériter :
+ce qui est vérifié, à quelle fréquence, ce que les contrôles ont trouvé et, tout aussi important, **ce qu'ils ne couvrent pas**.
+Chaque phrase s'appuie sur un test ou un workflow du dépôt ; le détail technique est dans l'
+[architecture](../architecture.md#quality-campaign-qa-githubworkflowsqayml) (en anglais).
+
+Elle décrit le projet à la version 1.2.0 plus les changements depuis (voir le [CHANGELOG](../../CHANGELOG.md), en anglais).
+
+## Ce qui est vérifié, et quand
+
+| Quand                                      | Quoi                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Chaque pull request** (quelques minutes) | Types, lint, mise en forme ; plus de 3 000 tests unitaires, avec une **couverture minimale** qui ne fait que monter (au moins 91 % des instructions pour chaque zone qui décide qui peut faire quoi ou ce qui est écrit dans la base) ; chaque migration sur un vrai PostgreSQL ; la documentation (liens, ancres, jumeaux FR/EN) ; l'image construite, démarrée et mise à jour ; la sécurité statique (plus bas). |
+| **Chaque nuit**, et à la demande           | Les suites lourdes ci-dessous, sur l'image réelle, un vrai PostgreSQL et un jeu de données d'environ 300 membres et 600 événements sur deux années scolaires.                                                                                                                                                                                                                                                      |
+| **Avant une version**                      | La dernière exécution de nuit sur le commit à étiqueter doit être verte ; le workflow de publication teste l'image qu'il s'apprête à publier, sur les deux architectures, avant de la nommer.                                                                                                                                                                                                                      |
+
+Personne ne se connecte par 42 dans ces tests : le cookie de session de chaque profil est forgé avec le secret de la plateforme,
+comme la plateforme l'écrit. Les profils sont neuf : visiteur, compte en attente d'approbation, membre, membre qui propose des
+événements, membre qui les valide, membre avec un rôle personnalisé, membre avec le rôle Admin, propriétaire, et un membre retiré
+dont le cookie est encore valide.
+
+## Ce que font les suites de nuit
+
+- **Qui peut faire quoi.** Chaque page, chaque route de l'API et chaque action serveur, pour chacun des neuf profils, avec le
+  module Événements activé et désactivé. Un refus ne doit rien changer dans la base et ne rien montrer de personne ; ce qui est
+  permis doit vraiment passer et écrire ce qu'il faut (une porte qui refuse tout le monde paraîtrait « sûre » sinon). Une nouvelle
+  page ou action fait échouer les tests de la pull request qui l'ajoute tant qu'elle n'est pas dans la liste.
+- **Attaques.** En-têtes et règles de cache de chaque sorte de réponse ; cookies de session forgés, expirés ou coupés ; une action
+  appelée depuis un autre site ; 300 essais de lien de calendrier ; du texte hostile saisi dans chaque champ et relu comme le ferait
+  un navigateur ; envois de logo piégés ; déluges de mauvaises requêtes ; et les journaux, fouillés pour tout secret rencontré
+  pendant l'exécution. OWASP ZAP analyse la plateforme en marche, connecté comme propriétaire. À la demande, les attaques sont
+  elles-mêmes vérifiées en cassant une protection exprès et en construisant l'image, pour voir qu'elles s'en aperçoivent.
+- **Navigateurs.** Les parcours de la plateforme (une proposition approuvée, un refus avec son commentaire, le calendrier, les
+  réglages, le clavier) dans **Chromium, Firefox et WebKit** (le moteur de Safari). Un parcours échoue si ses pages lèvent une
+  exception, écrivent une erreur dans la console, enfreignent leur propre politique de sécurité du contenu ou reçoivent une erreur
+  serveur.
+- **Accessibilité.** Chaque page vérifiée selon WCAG 2.2 niveau AA (axe), avec deux profils chacune, dans deux combinaisons
+  (anglais, clair, ordinateur ; français, sombre, téléphone) ; et le clavier seul : le lien d'évitement, les menus, le tiroir du
+  téléphone, un formulaire qui dit ce qui ne va pas, et un focus visible sur tout ce que Tab atteint.
+- **Apparence.** 80 images des pages sont comparées à des images de référence, pour qu'un changement d'apparence que personne n'a
+  voulu soit vu.
+- **Vitesse et charge.** Lighthouse juge sept pages selon des budgets écrits (poids, requêtes, décalage de mise en page, notes) ;
+  20 personnes à la fois parcourent la plateforme avec une limite par page et un contrôle de la mémoire ensuite.
+- **Résilience.** La base arrêtée, gelée et tuée en pleine écriture ; l'application arrêtée et tuée en pleine écriture ; un
+  webhook qui accepte la connexion et ne répond jamais. La plateforme doit dire qu'elle ne peut pas, vite, revenir seule, garder
+  les gens connectés, et ne laisser **aucune écriture à moitié faite**.
+- **Mises à jour.** Une plateforme en **1.0.0, 1.1.0 ou 1.2.0**, garnie des données d'une ancienne installation (rôles, membres,
+  séries d'événements de chaque répétition, une date annulée et une déplacée), est mise à jour comme le dit le
+  [guide de mise à jour](upgrading.md). Ce que l'ancienne version disait de ses propres données (chaque date de ses fichiers de
+  calendrier, ses rôles, ses lignes) est ce à quoi la nouvelle est tenue ; puis une sauvegarde, sa restauration, et le retour à
+  l'ancienne version.
+- **Long terme.** Un an et demi de la boucle de rappels, joué sur une vraie base et comparé à un calcul qui n'utilise pas son
+  code : chaque rappel envoyé exactement une fois, à l'heure, aux deux changements d'heure ; et l'année scolaire à chaque
+  1er septembre jusqu'en 2032.
+- **Une promenade dans l'interface.** Pour chaque profil, sur ordinateur et sur téléphone, chaque lien est suivi et chaque menu et
+  dialogue ouvert, à la recherche d'un lien mort, d'une page sans titre, d'une page qui défile en largeur, d'une image qui ne se
+  charge pas, d'un menu qui casse la page.
+
+Chaque pull request est aussi lue par l'analyse statique : les règles propres au projet (Semgrep : aucun réglage lu en
+contournant les réglages, aucun SQL brut construit à partir d'un texte, aucun lien qui évite le routeur de langue…), une recherche de
+secrets dans tout l'historique (gitleaks), CodeQL sur le code et sur les workflows, Trivy sur les dépendances, les fichiers et
+l'image, et une revue des dépendances qu'elle ajoute. Les actions des workflows sont épinglées à un commit.
+
+## Ce que cela a trouvé
+
+Depuis la version 1.2.0, la campagne a trouvé et corrigé **22 défauts**, chacun dans une pull request à part avec un test qui l'aurait
+détecté. Le détail est dans le [CHANGELOG](../../CHANGELOG.md) (rubriques « Fixed » et « Security » des changements non publiés).
+
+| Sorte                  | Nombre | Exemples                                                                                                                                                                                                                                                                                                                                                 |
+| ---------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ne marche pas          | 1      | **Le menu de la personne connectée (profil, déconnexion) plantait à l'ouverture**, dans toutes les versions publiées : aucun test ne l'avait jamais ouvert.                                                                                                                                                                                              |
+| Exploitation           | 3      | Revenir à la version précédente avec `restore.sh` ne marchait pas dans l'ordre du guide ; une base gelée bloquait chaque page tant qu'elle l'était ; un webhook ou un serveur de mail qui ne répond jamais gardait une connexion des minutes.                                                                                                            |
+| Sécurité et vie privée | 9      | L'export de ses propres données pouvait être gardé par un cache ; la politique stricte du logo était remplacée par celle des pages ; une adresse mal formée ou un `callbackUrl` illisible donnait une erreur serveur ; chaque page enfreignait la politique de sécurité du contenu de la plateforme ; les actions des workflows n'étaient pas épinglées. |
+| Accessibilité et usage | 7      | Menus et tableaux inaccessibles ou illisibles au clavier ou avec un lecteur d'écran, texte trop pâle sur les boutons rouges, événements du calendrier trop petits pour être touchés, une liste sans focus visible dans Safari, trois pages sans titre.                                                                                                   |
+| Vitesse                | 2      | Le calendrier faisait dessiner d'avance par le serveur la page de chaque événement du mois (110 requêtes, contre 13 à 18 pour les autres pages) ; une longue page sautait sur le côté en finissant de se charger.                                                                                                                                        |
+
+Rien n'est affirmé au-delà. En particulier, **les suites ont cherché sans trouver** : un chemin où un profil pourrait faire ce qu'il
+ne doit pas (la matrice d'accès et les attaques), une écriture laissée à moitié faite quand la base ou l'application est tuée, une
+session perdue par une panne, une date, une heure, un droit ou une ligne changés par une mise à jour depuis la 1.0.0, la 1.1.0 ou la
+1.2.0, un rappel envoyé deux fois ou pas du tout sur un an et demi, et un lien mort dans l'interface.
+
+## Ce qui n'est pas couvert
+
+Être clair là-dessus compte autant que le reste.
+
+- **La plateforme ne limite pas le débit**, sauf sur le code de l'installateur. La connexion passe par 42 (il n'y a pas de mot de
+  passe à deviner), mais rien n'empêche quelqu'un d'inonder le site : si cela vous importe, limitez-le dans votre reverse proxy
+  ([Déploiement](deployment.md#3-reverse-proxy-https)). Les tests notent ce que la plateforme accepte.
+- **42 et les services de messagerie sont remplacés par des doublures.** La connexion par le vrai 42 et la livraison vers un vrai
+  Discord, Slack ou serveur de mail ne sont pas testées ; une doublure joue leur rôle, y compris une qui ne répond jamais.
+- **Le serveur de mail** est testé contre un serveur silencieux et par des tests unitaires, pas par une plateforme qui envoie de
+  vrais mails.
+- **Une mise à jour depuis une plateforme installée avec l'installateur web** n'est pas jouée (il faut un navigateur) ; la suite de
+  mise à jour part des fichiers de réglages de la 1.0.0, de la 1.1.0 et de la 1.2.0, puis les importe. Une mise à jour qui échoue
+  en cours de route est couverte par le script de [mise à jour sûre](deployment.md#copie-automatique-avant-une-mise-à-jour), pas
+  par cette suite.
+- **La charge** est de 20 personnes à la fois, c'est-à-dire un BDE, pas tout l'intranet d'une école.
+- **Les contrôles d'apparence et d'accessibilité** tournent dans Chromium (le clavier et les parcours tournent dans les trois
+  moteurs) ; un lecteur d'écran ne fait pas partie des tests : axe trouve une partie de ce qui ne va pas, une personne trouve le
+  reste.
+- **Les formulaires sont regardés, pas remplis** par la promenade dans l'interface ; les parcours et la matrice d'accès les soumettent.
+
+Si vous trouvez quelque chose que ces contrôles ont manqué, signalez-le (voir [Sécurité](../../SECURITY.md) pour une faille, une
+issue sinon) : un défaut trouvé, c'est un test écrit.
+
+## Le lancer vous-même
+
+Avec Docker et Node, depuis le dossier du projet (voir aussi le [guide du contributeur](contributing.md#la-campagne-qualité)) :
+
+```text
+docker build -t bde-network .
+sh qa/platform.sh up
+eval "$(sh qa/platform.sh env)"
+npx tsx qa/smoke.ts                 # est-elle en marche, les profils diffèrent-ils, la base tient-elle ses invariants
+npx tsx qa/access/run.ts --variant events-enabled   # qui peut ouvrir quoi
+npx tsx qa/security/run.ts          # les attaques
+sh qa/platform.sh down
+```
+
+Les autres suites ont leurs propres commandes, écrites avec chacune dans l'architecture. Les lourdes sont faites pour l'exécution de
+nuit : les chiffres qui comptent sont ceux de la CI, pas ceux d'un ordinateur.

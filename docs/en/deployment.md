@@ -126,6 +126,11 @@ sudo certbot --nginx -d your-domain.example
 The `X-Forwarded-Proto` header matters: it tells the platform that the connection is HTTPS (secure cookies, the
 `Strict-Transport-Security` header).
 
+**The platform does not limit the number of requests** (only the installer's code is protected against guesses). Signing in
+goes through 42, so there is no password to guess, but nothing stops somebody from flooding the site: if that matters to you,
+limit the rate in the proxy (nginx has `limit_req` for that). What the platform accepts under load is part of its
+[quality checks](quality.md#what-is-not-covered).
+
 ## Without an HTTPS proxy
 
 **The simplest is still to install Caddy**: three lines of configuration and a domain name are enough, even for a

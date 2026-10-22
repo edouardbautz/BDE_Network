@@ -186,6 +186,8 @@ arrive avec ses tests. La CI lance tout cela
 
 ## La campagne qualité
 
+Ce que la campagne vérifie, et ce qu'elle a trouvé, est écrit pour tout le monde sur la page [Qualité](quality.md).
+
 Au-delà des tests unitaires, `qa/` contient le socle des suites de qualité : neuf **profils** (visiteur, compte en attente,
 membre, proposeur, validateur, rôle personnalisé, Admin, propriétaire, membre retiré), un **jeu de données** déterministe de
 deux années scolaires (environ 300 membres et 600 événements), les **invariants** que toute base de données doit respecter,

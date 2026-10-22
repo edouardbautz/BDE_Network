@@ -72,6 +72,7 @@ The documentation is in English and in French, with the same pages.
 | Set up Discord, Slack or email | [Notifications](docs/en/notifications.md)                                                                |
 | Change a setting               | [Configuration](docs/en/configuration.md)                                                                |
 | Solve a problem                | [Troubleshooting](docs/en/troubleshooting.md) · [FAQ](docs/en/faq.md) · [Glossary](docs/en/glossary.md)  |
+| Know how it is checked         | [Quality](docs/en/quality.md)                                                                            |
 | Contribute                     | [Contributor guide](docs/en/contributing.md) · [Architecture](docs/architecture.md)                      |
 
 ## Roadmap
