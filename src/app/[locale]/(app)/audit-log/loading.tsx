@@ -2,9 +2,10 @@ import { PageHeaderSkeleton } from '@/components/layout/page-header-skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
+/** A long table too: at least one screen high, so the footer does not jump out of the screen when the rows arrive. */
 export default function AuditLogLoading() {
   return (
-    <>
+    <div className="min-h-dvh">
       <PageHeaderSkeleton eyebrow={false} />
       <Card>
         <CardContent className="flex flex-col gap-4">
@@ -18,6 +19,6 @@ export default function AuditLogLoading() {
           ))}
         </CardContent>
       </Card>
-    </>
+    </div>
   );
 }

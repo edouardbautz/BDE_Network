@@ -32,4 +32,13 @@ describe('the loading screens of the signed-in area', () => {
       file === 'dashboard/loading.tsx';
     expect(drawsHead).toBe(true);
   });
+
+  // The pages that list hundreds of rows are taller than any screen: a loading screen shorter than one screen leaves the footer in
+  // view, and it jumps out of it when the rows arrive (0.17 of layout shift on the members page of a phone).
+  it.each(['members/loading.tsx', 'audit-log/loading.tsx'])(
+    '%s is at least one screen high',
+    (file) => {
+      expect(readFileSync(join(root, file), 'utf8')).toContain('min-h-dvh');
+    },
+  );
 });

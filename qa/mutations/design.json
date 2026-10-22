@@ -145,5 +145,12 @@
     "      <DropdownMenuTrigger\n",
     "      <DropdownMenuTrigger\n        aria-label={name}\n",
     ["src/components/layout/user-menu.test.tsx"]
+  ],
+  [
+    "skeleton: the members page loads shorter than a screen",
+    "src/app/[locale]/(app)/members/loading.tsx",
+    "<div className=\"min-h-dvh\">",
+    "<div>",
+    ["src/lib/loading-skeletons.test.ts"]
   ]
 ]

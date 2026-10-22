@@ -1530,7 +1530,8 @@ specification): **`docs/design.md`**. Read it before touching layout or adding U
 - Every list/table that can be empty renders an empty state (`galets/empty-state.tsx`: icon tile + title + text [+ one action]) — never a blank card. Under 640 px a table is a list
   (cells carry `data-label`). Every `(app)/` route ships a `loading.tsx` with `Skeleton`s shaped like its real content, not a generic spinner, and
   **starting with `PageHeaderSkeleton`** (the head the page will have): a loading screen of another height moves the footer when the page replaces it, a layout shift the
-  performance budget counts (0.1 on the page of an event when its skeleton still had the old head; `loading-skeletons.test.ts` holds it).
+  performance budget counts (0.1 on the page of an event when its skeleton still had the old head; `loading-skeletons.test.ts` holds it). The long lists (members, audit log) load
+  at least one screen high (`min-h-dvh`): the footer must be out of view while they show, or it jumps out of it when 300 rows arrive (0.17).
 - To look at a change of look: `QA_ACCENT=#E4572E sh qa/platform.sh up …` then `npx tsx qa/design-preview.ts --name <screen> --path <address> --as <persona> [--extras]`
   (light and dark, computer, tablet and phone, the menu and the sheets open). The references of the visual suite are made again by `qa visual references`.
 

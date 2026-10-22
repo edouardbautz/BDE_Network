@@ -19,9 +19,14 @@ function RowsSkeleton({ rows }: { rows: number }) {
   );
 }
 
+/**
+ * The page lists every member at once (300 in the QA dataset): it is far taller than any screen. The loading screen is at least one
+ * screen high, so the footer is below the fold while it shows and does not jump out of it when the list arrives (a layout shift of
+ * 0.17 on a phone otherwise).
+ */
 export default function MembersLoading() {
   return (
-    <>
+    <div className="min-h-dvh">
       <PageHeaderSkeleton eyebrow={false} />
       <div className="flex flex-col gap-3 sm:gap-4">
         <Card>
@@ -41,6 +46,6 @@ export default function MembersLoading() {
           </CardContent>
         </Card>
       </div>
-    </>
+    </div>
   );
 }
