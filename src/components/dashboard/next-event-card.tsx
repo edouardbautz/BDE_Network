@@ -50,7 +50,7 @@ export async function NextEventCard({
         <li className="flex items-center gap-2">
           <CalendarDays aria-hidden="true" className="size-4.5 shrink-0" />
           <span>
-            <span className="capitalize">
+            <span>
               {formatShortDate(occurrence.start, locale, timeZone)}
             </span>
             {' · '}
