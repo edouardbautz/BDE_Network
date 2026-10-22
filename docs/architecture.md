@@ -1452,6 +1452,23 @@ gives calendar files with the data in them` guards that); the not-found page mar
     were missing.
   - **The survivors are not all proven equivalent.** Those examined are changes the code makes redundant (a check of a type that
     the next check repeats, a boundary on a length that a later byte check absorbs); the others are listed, not hidden.
+- **Privacy** (`qa/privacy/`; run by every pull request: the classification needs only the schema, the erasure needs the PostgreSQL of the
+  `migrations` job). Two checks of what the privacy policy promises. `personal-data.test.ts` reads `prisma/schema.prisma` for every column
+  that can hold a person (a foreign key to `User`; a login, an e-mail, a name, a picture, a campus, a token) and fails until each one is
+  written down with the piece of `api/me/export/route.ts` that exports it; it also requires every foreign key to an account to be
+  `SetNull` or `Cascade` (an account can always be deleted) and the policy to list the five things collected about an account, in both
+  languages. `erasure.test.ts` removes the validator of the QA dataset from a migrated PostgreSQL (the deletion the application does,
+  with the foreign keys as the migrations ship them) and scans **every text and JSON column of every table**: the e-mail address, the
+  full name, the picture and the personal calendar link must be nowhere, the identifier of the account only as the target of audit
+  entries, and the login (as a whole word) only in the columns the policy names; the rows that carry it as text (events written, dates
+  cancelled, people in charge) must all still be there. Mutation-checked (a foreign key that blocks the deletion, one that deletes the
+  history with the account, an export that drops a category, a new column nobody classified). **What it found**: the export promised
+  "a copy of everything we hold about you" and left out the dates in charge of, the dates cancelled, the proposals refused and what was
+  done to the account (fixed in its own pull request). **What it did not find**: anything left of an account after its removal.
+  - **Not covered**: the removal as the application does it end to end (the action, its audit entry and its notification are held by
+    their own tests; the platform job does not remove a persona), free text a member typed (an event's description may name somebody),
+    the logs (the attacks read them for secrets, not for personal data), and the legal side (a retention period, a data processing
+    agreement): this is a check of what the policy says against what the database does, not a compliance audit.
 - **Coverage** (`npm run test:coverage`, `coverage-thresholds.json`, `scripts/coverage-report.mjs`,
   `scripts/coverage-gaps.mjs`, `qa/coverage-plan.md`). The ubuntu job of `ci.yml` runs the unit tests through V8 coverage
   and **fails below a floor**: one for the whole project and one for each area that decides who may do what or what is

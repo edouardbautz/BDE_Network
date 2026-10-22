@@ -8,6 +8,11 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **What the privacy policy promises is checked against the database.** Every column that can hold a person is read from the schema
+  and has to say where the export of one's data finds it; and removing an account, on a real database with 300 members and 600
+  events, must leave no e-mail address, full name, picture or personal calendar link anywhere, and the login only where the policy
+  says, with the history (events written, dates cancelled) kept. It found the export was missing four kinds of data (see "Fixed")
+  and nothing left behind by a removal.
 - **The tests of the rules that decide who may do what are tested, every night.** A mutation tester changes the code of those rules
   one operator at a time and the tests must fail for each change. Its first run found the tests of who becomes an owner after
   signing in did not exist (every test of the sign-in replaces that code by a stand-in), and the exact limits of the logo
