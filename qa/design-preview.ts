@@ -5,10 +5,11 @@
  *
  *   eval "$(sh qa/platform.sh env)"
  *   QA_PREVIEW_DIR=design-ref/captures npx tsx qa/design-preview.ts [--name dashboard] [--path /en/dashboard] [--as validator]
- *                                                                    [--label teal] [--extras]
+ *                                                                    [--label teal] [--extras] [--viewport]
  *
  * The accent is the platform's (`QA_ACCENT=#E4572E sh qa/platform.sh up …`); `--label` names it in the file names.
- * `--extras` also opens the account menu, the "More" and "Create" sheets and the keyboard focus.
+ * `--extras` also opens the account menu, the "More" and "Create" sheets and the keyboard focus; `--viewport` takes what the screen shows
+ * of a computer instead of the whole page (a page of 300 rows is not a picture).
  */
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
