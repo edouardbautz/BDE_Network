@@ -4,7 +4,3 @@
 # deepmerge-ts: used by the Prisma CLI to merge prisma.config.ts, a trusted file written by the operator. Fixing it needs
 # deepmerge-ts 8 inside Prisma itself.
 CVE-2026-40345
-
-# mysql2: only reachable through `prisma dev` (Prisma's local development database). This project uses PostgreSQL and never
-# starts it; no MySQL connection is ever made.
-GHSA-3f6p-5ww8-9rcr
