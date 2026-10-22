@@ -77,14 +77,30 @@ async function main(): Promise<void> {
           colorScheme: theme,
           reducedMotion: 'reduce',
           deviceScaleFactor: device === 'phone' ? 2 : 1,
+          // A phone has touch and scrollbars that float over the page: without this the picture has a classic scrollbar's gutter.
+          isMobile: device === 'phone',
+          hasTouch: device === 'phone',
         });
         await signedIn(context);
         const page = await context.newPage();
         await page.goto(path);
         await atRest(page);
+        // `next dev` draws its own indicator over the foot of the page: it is not the page.
+        await page.evaluate(() =>
+          document.querySelectorAll('nextjs-portal').forEach((element) => element.remove()),
+        );
         const file = (suffix = '') =>
           join(out, `${name}-${label}-${theme}-${device}${suffix ? `-${suffix}` : ''}.png`);
-        await page.screenshot({ path: file(), fullPage: true });
+        if (device === 'phone') {
+          // The tab bar is fixed: on a picture of the whole page it would sit in the middle of it. A phone gets the top and the foot.
+          await page.screenshot({ path: file('top') });
+          await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+          await atRest(page);
+          await page.screenshot({ path: file('foot') });
+          await page.evaluate(() => window.scrollTo(0, 0));
+        } else {
+          await page.screenshot({ path: file(), fullPage: true });
+        }
 
         if (extras) {
           if (device === 'phone') {
@@ -102,7 +118,7 @@ async function main(): Promise<void> {
               await page.keyboard.press('Escape');
             }
           } else {
-            const account = page.locator('aside').getByRole('button').last();
+            const account = page.locator('aside button[aria-haspopup="menu"]');
             await account.click();
             await page.getByRole('menu').waitFor();
             await atRest(page);
