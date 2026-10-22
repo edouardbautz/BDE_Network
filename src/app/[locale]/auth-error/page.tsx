@@ -61,8 +61,8 @@ export default async function AuthErrorPage({
       </div>
       <Card className="w-full max-w-sm text-center">
         <CardHeader className="items-center gap-1">
-          <div className="bg-danger-soft text-destructive mb-2 flex size-10 items-center justify-center rounded-pill">
-            <TriangleAlert className="size-5" />
+          <div className="bg-danger-soft text-danger mb-2 flex size-14 items-center justify-center rounded-xl">
+            <TriangleAlert className="size-7" />
           </div>
           <CardTitle role="heading" aria-level={1} className="text-title-2">
             {t('title')}

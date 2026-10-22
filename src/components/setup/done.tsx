@@ -10,8 +10,8 @@ export function Done({ locale }: { locale: string }) {
   const t = useTranslations('setup.done');
   return (
     <div className="flex flex-col items-center gap-6 text-center">
-      <div className="flex size-10 items-center justify-center rounded-full bg-green-600/10 text-green-600">
-        <CheckCircle2 className="size-5" aria-hidden="true" />
+      <div className="flex size-14 items-center justify-center rounded-xl bg-success-soft text-success">
+        <CheckCircle2 className="size-7" aria-hidden="true" />
       </div>
       <div className="flex flex-col gap-1">
         <h2 className="text-title-3">{t('title')}</h2>
