@@ -1,0 +1,69 @@
+name: design preview
+
+# Pictures of the dashboard (light and dark, computer, tablet and phone, four accent colours) taken from the production image,
+# kept as an artifact for a person to look at before a change of look goes further. Temporary: it lives on the branch of the
+# redesign and goes away with it.
+on:
+  push:
+    branches: [feat/design-galets-dashboard]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pictures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Build the production image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          load: true
+          tags: bde-network
+          cache-from: type=gha,scope=qa-image
+          cache-to: type=gha,mode=max,scope=qa-image
+
+      - name: Install the browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Take the pictures, one platform for each accent colour
+        run: |
+          for entry in "teal:#0f766e" "blue:#2F5BEA" "orange:#E4572E" "green:#1E9E6A" "yellow:#F0B429"; do
+            label="${entry%%:*}"
+            accent="${entry#*:}"
+            QA_ACCENT="$accent" sh qa/platform.sh up --image bde-network --now 2026-10-16T12:00:00Z
+            eval "$(sh qa/platform.sh env)"
+            if [ "$label" = teal ]; then
+              QA_PREVIEW_DIR=captures npx tsx qa/design-preview.ts --label "$label" --extras
+              QA_PREVIEW_DIR=captures npx tsx qa/design-preview.ts --label "$label" --as member --name dashboard-member
+              QA_PREVIEW_DIR=captures npx tsx qa/design-preview.ts --label "$label" --as owner --name dashboard-owner
+            else
+              QA_PREVIEW_DIR=captures npx tsx qa/design-preview.ts --label "$label"
+            fi
+            sh qa/platform.sh down
+          done
+
+      - name: Keep the pictures
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-pictures
+          path: captures
+          if-no-files-found: error
+
+      - name: Stop the platform
+        if: always()
+        run: sh qa/platform.sh down

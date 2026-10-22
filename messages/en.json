@@ -2,7 +2,8 @@
   "theme": {
     "light": "Light",
     "dark": "Dark",
-    "system": "System"
+    "system": "System",
+    "label": "Theme"
   },
   "language": {
     "label": "Language"
@@ -162,7 +163,18 @@
     "skipToContent": "Skip to the content",
     "settings": "Settings",
     "eventsReview": "To validate",
-    "eventsReviewCount": "{count, plural, one {# proposal to validate} other {# proposals to validate}}"
+    "eventsReviewCount": "{count, plural, one {# proposal to validate} other {# proposals to validate}}",
+    "more": "More",
+    "create": "Create",
+    "rail": {
+      "dashboard": "Home",
+      "events": "Calendar",
+      "eventsReview": "To validate",
+      "members": "Members",
+      "roles": "Roles",
+      "auditLog": "Log",
+      "settings": "Settings"
+    }
   },
   "dashboard": {
     "title": "Dashboard",
@@ -171,6 +183,20 @@
       "title": "No module turned on",
       "description": "The Events module (club calendar, reminders, calendar subscription) is available but not turned on. An owner can turn it on in Settings, Modules section.",
       "cta": "Manage members"
+    },
+    "greeting": "Hello {name}",
+    "nextEvent": {
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "inDays": "In {count} days",
+      "label": "Next event",
+      "view": "View the event"
+    },
+    "shortcuts": {
+      "title": "Shortcuts"
+    },
+    "account": {
+      "profile": "My profile"
     }
   },
   "members": {

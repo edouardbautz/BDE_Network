@@ -37,6 +37,16 @@ export function formatLongDate(date: Date, locale: string, timeZone: string): st
   return new Intl.DateTimeFormat(locale, { dateStyle: 'full', timeZone }).format(date);
 }
 
+/** "jeu. 22 oct." (the short form of the specification: weekday, day, month). */
+export function formatShortDate(date: Date, locale: string, timeZone: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    timeZone,
+  }).format(date);
+}
+
 /** "23 octobre" (the year too when the day is not in the year one is reading about). */
 export function formatDayMonth(
   date: Date,

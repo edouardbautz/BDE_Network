@@ -14,6 +14,8 @@ import {
 import { LogOut, UserRound } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { initialsOf } from '@/lib/initials';
+import { cn } from '@/lib/utils';
+import { AccountPreferenceGroups, PreferenceControls } from './account-preferences';
 
 interface UserMenuProps {
   name: string;
@@ -21,30 +23,46 @@ interface UserMenuProps {
   image: string | null;
   /** The owner/pending label, or the name of the member's role. */
   roleLabel: string;
+  /** At the foot of the rail (the menu opens beside it) or in the header of a page on a phone (it opens under it). */
+  placement: 'rail' | 'header';
 }
 
-export async function UserMenu({ name, login, image, roleLabel }: UserMenuProps) {
+async function signOutAction() {
+  'use server';
+  await signOut({ redirectTo: '/' });
+}
+
+/** The account menu (spec 5.4): the avatar of the signed-in person, which opens profile, theme, language and sign-out. */
+export async function UserMenu({ name, login, image, roleLabel, placement }: UserMenuProps) {
   const t = await getTranslations();
   const initials = initialsOf(name);
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex min-w-0 flex-1 items-center gap-2 rounded-md p-1.5 text-left outline-none transition-colors hover:bg-sidebar-accent focus-visible:ring-3 focus-visible:ring-ring/50">
-        <Avatar size="sm">
-          {image ? <AvatarImage src={image} alt={name} /> : null}
-          <AvatarFallback>{initials}</AvatarFallback>
+      <DropdownMenuTrigger
+        aria-label={name}
+        className={cn(
+          'bg-surface elev-1 shrink-0 rounded-pill outline-none focus-visible:outline-offset-2',
+          placement === 'rail' ? 'size-10.5' : 'size-11',
+        )}
+      >
+        <Avatar className="size-full after:hidden">
+          {image ? <AvatarImage src={image} alt="" /> : null}
+          <AvatarFallback className="bg-surface-2 text-small text-ink font-extrabold">
+            {initials}
+          </AvatarFallback>
         </Avatar>
-        <span className="flex min-w-0 flex-col">
-          <span className="truncate text-sm font-medium">{name}</span>
-          <span className="text-muted-foreground truncate text-xs">{roleLabel}</span>
-        </span>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-56">
+      <DropdownMenuContent
+        align="end"
+        side={placement === 'rail' ? 'right' : 'bottom'}
+        className="w-60 rounded-lg p-1.5"
+      >
         {/* A menu label belongs to a group: Base UI throws when the menu opens if it does not (it did, for everybody). */}
         <DropdownMenuGroup>
           <DropdownMenuLabel className="flex flex-col gap-1 font-normal">
-            <span className="text-sm font-medium">{name}</span>
-            <span className="text-muted-foreground text-xs">{login}</span>
+            <span className="text-body-strong text-ink">{name}</span>
+            <span className="text-small text-muted-foreground">{login}</span>
             <Badge variant="secondary" className="w-fit">
               {roleLabel}
             </Badge>
@@ -55,12 +73,10 @@ export async function UserMenu({ name, login, image, roleLabel }: UserMenuProps)
           <UserRound className="size-4" />
           {t('nav.profile')}
         </DropdownMenuItem>
-        <form
-          action={async () => {
-            'use server';
-            await signOut({ redirectTo: '/' });
-          }}
-        >
+        <DropdownMenuSeparator />
+        <AccountPreferenceGroups />
+        <DropdownMenuSeparator />
+        <form action={signOutAction}>
           <DropdownMenuItem render={<button type="submit" className="w-full" />}>
             <LogOut className="size-4" />
             {t('auth.logout')}
@@ -68,5 +84,35 @@ export async function UserMenu({ name, login, image, roleLabel }: UserMenuProps)
         </form>
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+/** The account part of the "More" sheet of a phone: the same choices as the menu, laid out as rows. */
+export async function AccountSheetContent() {
+  const t = await getTranslations();
+  return (
+    <div className="border-line mt-3 flex flex-col gap-1 border-t pt-3">
+      <Link
+        href="/profile"
+        className="text-body-strong hover:bg-surface-2 flex min-h-12 items-center gap-3 rounded-lg px-2 outline-none focus-visible:outline-offset-1"
+      >
+        <span className="bg-accent-soft text-accent-ink flex size-9 shrink-0 items-center justify-center rounded-sm">
+          <UserRound aria-hidden="true" className="size-5" />
+        </span>
+        {t('nav.profile')}
+      </Link>
+      <PreferenceControls />
+      <form action={signOutAction}>
+        <button
+          type="submit"
+          className="text-body-strong hover:bg-surface-2 flex min-h-12 w-full items-center gap-3 rounded-lg px-2 outline-none focus-visible:outline-offset-1"
+        >
+          <span className="bg-surface-2 text-ink flex size-9 shrink-0 items-center justify-center rounded-sm">
+            <LogOut aria-hidden="true" className="size-5" />
+          </span>
+          {t('auth.logout')}
+        </button>
+      </form>
+    </div>
   );
 }

@@ -5,11 +5,11 @@ export async function Footer() {
   const t = await getTranslations('nav');
 
   return (
-    <footer className="border-t py-4">
-      <div className="text-muted-foreground mx-auto max-w-5xl px-4 text-sm sm:px-6">
+    <footer className="pb-[calc(var(--tabbar-height)+var(--tabbar-gap)+var(--space-9))] sm:pb-6">
+      <div className="text-small text-muted-foreground mx-auto w-full max-w-wide px-4 sm:px-7">
         <Link
           href="/privacy"
-          className="hover:text-foreground rounded-sm underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          className="hover:text-ink rounded-xs underline underline-offset-4 outline-none focus-visible:outline-offset-2"
         >
           {t('privacy')}
         </Link>

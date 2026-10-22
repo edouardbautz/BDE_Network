@@ -12,6 +12,11 @@ vi.mock('next-intl/server', () => ({
   getTranslations: vi.fn(async () => (key: string) => key),
 }));
 vi.mock('@/lib/auth', () => ({ signOut: vi.fn() }));
+// The theme and language choices are client components with their own tests; here the menu is what is opened.
+vi.mock('./account-preferences', () => ({
+  AccountPreferenceGroups: () => null,
+  PreferenceControls: () => null,
+}));
 vi.mock('@/i18n/navigation', () => ({
   Link: ({ href, children, ...rest }: { href: string; children?: ReactNode }) => (
     <a href={href} {...rest}>
@@ -26,7 +31,13 @@ afterEach(cleanup);
 
 const open = async () => {
   render(
-    await UserMenu({ name: 'Alice Martin', login: 'amartin', image: null, roleLabel: 'Admin' }),
+    await UserMenu({
+      name: 'Alice Martin',
+      login: 'amartin',
+      image: null,
+      roleLabel: 'Admin',
+      placement: 'rail',
+    }),
   );
   fireEvent.click(screen.getByRole('button', { name: /Alice Martin/ }));
 };

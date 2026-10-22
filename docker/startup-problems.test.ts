@@ -282,15 +282,7 @@ describe('the page looks like the app', () => {
   const token = (scope: string, name: string): string | undefined =>
     new RegExp(`--${name}:\\s*([^;]+);`).exec(block(scope))?.[1]?.trim();
 
-  const used = [
-    'background',
-    'foreground',
-    'card',
-    'muted',
-    'muted-foreground',
-    'border',
-    'destructive',
-  ];
+  const used = ['bg', 'surface', 'surface-2', 'ink', 'muted', 'danger', 'shadow-1'];
 
   it.each(used)('uses the %s token of globals.css, light and dark', (name) => {
     const [light, dark] = PAGE_STYLE.split('@media (prefers-color-scheme:dark)');
@@ -299,7 +291,8 @@ describe('the page looks like the app', () => {
   });
 
   it('uses the radius of the cards', () => {
-    expect(PAGE_STYLE).toContain(`--radius:${token(':root', 'radius')}`);
+    // the specification's radius tokens live in the @theme block of globals.css
+    expect(css).toContain(`--radius-2xl: ${/--radius-2xl:\s*(\d+px)/.exec(PAGE_STYLE)?.[1]};`);
   });
 });
 

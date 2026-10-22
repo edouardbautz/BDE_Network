@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Manrope } from 'next/font/google';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -12,14 +12,10 @@ import { ImpersonationBanner } from '@/components/dev/impersonation-banner';
 import { buildAccentStyle } from '@/lib/color';
 import '../globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
+// One typeface for the whole interface (spec 2.3): Manrope, variable 200 to 800, served by the platform itself.
+const manrope = Manrope({
+  variable: '--font-manrope',
+  subsets: ['latin', 'latin-ext'],
 });
 
 export function generateStaticParams() {
@@ -60,11 +56,9 @@ export default async function LocaleLayout({
   const accentStyle = buildAccentStyle(config.bde.accentColor) as CSSProperties;
 
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-screen font-sans antialiased`}
-        style={accentStyle}
-      >
+    // The accent is on <html>, where the theme class is too: globals.css picks the tokens of the theme without a script.
+    <html lang={locale} suppressHydrationWarning style={accentStyle}>
+      <body className={`${manrope.variable} min-h-screen font-sans antialiased`}>
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <ImpersonationBanner />

@@ -2,7 +2,8 @@
   "theme": {
     "light": "Clair",
     "dark": "Sombre",
-    "system": "Système"
+    "system": "Système",
+    "label": "Thème"
   },
   "language": {
     "label": "Langue"
@@ -162,7 +163,18 @@
     "skipToContent": "Aller au contenu",
     "settings": "Paramètres",
     "eventsReview": "À valider",
-    "eventsReviewCount": "{count, plural, one {# proposition à valider} other {# propositions à valider}}"
+    "eventsReviewCount": "{count, plural, one {# proposition à valider} other {# propositions à valider}}",
+    "more": "Plus",
+    "create": "Créer",
+    "rail": {
+      "dashboard": "Accueil",
+      "events": "Agenda",
+      "eventsReview": "À valider",
+      "members": "Membres",
+      "roles": "Rôles",
+      "auditLog": "Journal",
+      "settings": "Réglages"
+    }
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -171,6 +183,20 @@
       "title": "Aucun module activé",
       "description": "Le module Événements (calendrier du bureau, rappels, abonnement à l'agenda) est disponible mais pas activé. Un propriétaire peut l'activer dans Paramètres, section Modules.",
       "cta": "Gérer les membres"
+    },
+    "greeting": "Bonjour {name}",
+    "nextEvent": {
+      "today": "Aujourd'hui",
+      "tomorrow": "Demain",
+      "inDays": "Dans {count} jours",
+      "label": "Prochain événement",
+      "view": "Voir l'événement"
+    },
+    "shortcuts": {
+      "title": "Raccourcis"
+    },
+    "account": {
+      "profile": "Mon profil"
     }
   },
   "members": {
