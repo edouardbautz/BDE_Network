@@ -38,7 +38,7 @@ export function StepSummary({ view, run, onNext, onBack }: StepProps & { view: D
     [t('address'), view.addressUrl],
     [
       t('clientId'),
-      <span key="uid" className="font-mono text-xs">
+      <span key="uid" className="font-mono text-small">
         {view.clientId}
       </span>,
     ],
@@ -64,7 +64,7 @@ export function StepSummary({ view, run, onNext, onBack }: StepProps & { view: D
       nextLabel={pending ? t('installing') : t('install')}
       failure={failure}
     >
-      <dl className="border-border divide-border divide-y rounded-lg border text-sm">
+      <dl className="border-border divide-border divide-y rounded-lg border text-body">
         {rows.map(([label, value]) => (
           <div key={label} className="grid gap-1 px-3 py-2 sm:grid-cols-[10rem_1fr] sm:gap-4">
             <dt className="text-muted-foreground">{label}</dt>

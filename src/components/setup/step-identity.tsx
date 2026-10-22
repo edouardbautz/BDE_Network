@@ -114,10 +114,10 @@ export function StepIdentity({
           </div>
         </div>
         {colorValid && (
-          <p className="text-muted-foreground flex items-center gap-2 text-xs">
+          <p className="text-muted-foreground flex items-center gap-2 text-small">
             {t('preview')}
             <span
-              className="inline-block rounded-lg px-3 py-1 text-sm font-medium text-white"
+              className="inline-block rounded-lg px-3 py-1 text-body-strong text-white"
               style={{ backgroundColor: color }}
               aria-hidden="true"
             >

@@ -96,7 +96,7 @@ export function SetupWizard({
               />
             ))}
           </div>
-          <p className="text-muted-foreground text-xs" aria-hidden="true">
+          <p className="text-muted-foreground text-small" aria-hidden="true">
             {t('step', { current: current + 1, total: names.length })} · {names[current]}
           </p>
         </div>

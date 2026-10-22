@@ -42,8 +42,8 @@ export default async function NewRolePage({ params }: { params: Promise<{ locale
           {t('edit.back')}
         </Button>
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{t('new.title')}</h1>
-          <p className="text-muted-foreground text-sm">{t('new.description')}</p>
+          <h1 className="text-2xl font-bold">{t('new.title')}</h1>
+          <p className="text-muted-foreground text-body">{t('new.description')}</p>
         </div>
       </div>
 

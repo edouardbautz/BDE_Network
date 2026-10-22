@@ -44,7 +44,7 @@ function MemberIdentity({ name, photoUrl }: { name: string; photoUrl: string | n
         {photoUrl ? <AvatarImage src={photoUrl} alt="" /> : null}
         <AvatarFallback>{initialsOf(name)}</AvatarFallback>
       </Avatar>
-      <span className="font-medium">{name}</span>
+      <span className="font-semibold">{name}</span>
     </div>
   );
 }
@@ -121,7 +121,7 @@ export default async function MembersPage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
         {can(session.user, ROLES_MANAGE) && (
           <Button variant="outline" size="sm" render={<Link href="/roles" />}>
             {t('manageRoles')}
@@ -155,7 +155,7 @@ export default async function MembersPage({
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle className="flex items-center gap-2 text-base">
+          <CardTitle className="flex items-center gap-2 text-body">
             <UserCheck className="text-muted-foreground size-4" />
             {t('pendingSection')}
           </CardTitle>
@@ -165,7 +165,7 @@ export default async function MembersPage({
         </CardHeader>
         <CardContent>
           {pending.length === 0 ? (
-            <p className="text-muted-foreground text-sm">{t('pendingEmpty')}</p>
+            <p className="text-muted-foreground text-body">{t('pendingEmpty')}</p>
           ) : (
             <ScrollableTable label={t('pendingSection')}>
               <Table>
@@ -206,7 +206,7 @@ export default async function MembersPage({
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle className="flex items-center gap-2 text-base">
+          <CardTitle className="flex items-center gap-2 text-body">
             <Users className="text-muted-foreground size-4" />
             {t('activeSection')}
           </CardTitle>
@@ -214,7 +214,7 @@ export default async function MembersPage({
         </CardHeader>
         <CardContent>
           {active.length === 0 ? (
-            <p className="text-muted-foreground text-sm">{t('empty')}</p>
+            <p className="text-muted-foreground text-body">{t('empty')}</p>
           ) : (
             <ScrollableTable label={t('activeSection')}>
               <Table>
@@ -251,7 +251,7 @@ export default async function MembersPage({
                               <Badge variant="secondary" className="self-start">
                                 {accountLabel({ status: user.status, roleName: null }, tRoles)}
                               </Badge>
-                              <span className="text-muted-foreground text-xs">
+                              <span className="text-muted-foreground text-small">
                                 {t('ownerNote')}
                               </span>
                             </div>

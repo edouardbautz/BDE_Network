@@ -794,7 +794,8 @@
   },
   "confirmDialog": {
     "cancel": "Cancel",
-    "working": "Working…"
+    "working": "Working…",
+    "close": "Close"
   },
   "metadata": {
     "description": "Management platform of {name}"

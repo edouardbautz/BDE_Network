@@ -101,8 +101,8 @@ export function StepOwners({
       </Field>
 
       {unverified && (
-        <div role="alert" className="bg-muted flex flex-col gap-2 rounded-lg p-3 text-sm">
-          <p className="font-medium">{t('unknownTitle')}</p>
+        <div role="alert" className="bg-muted flex flex-col gap-2 rounded-lg p-3 text-body">
+          <p className="font-semibold">{t('unknownTitle')}</p>
           <p>{t('unknownBody')}</p>
           <Button
             type="button"
@@ -116,15 +116,15 @@ export function StepOwners({
       )}
 
       <div className="flex flex-col gap-2">
-        <p className="text-sm font-medium">{t('listTitle')}</p>
+        <p className="text-body-strong">{t('listTitle')}</p>
         {owners.length === 0 ? (
-          <p className="text-muted-foreground text-sm">{t('empty')}</p>
+          <p className="text-muted-foreground text-body">{t('empty')}</p>
         ) : (
           <ul className="flex flex-wrap gap-2">
             {owners.map((owner) => (
               <li
                 key={owner}
-                className="bg-muted flex items-center gap-1 rounded-full py-0.5 pr-1 pl-3 font-mono text-sm"
+                className="bg-muted flex items-center gap-1 rounded-full py-0.5 pr-1 pl-3 font-mono text-body"
               >
                 {owner}
                 <button
@@ -139,7 +139,7 @@ export function StepOwners({
             ))}
           </ul>
         )}
-        <p className="text-muted-foreground text-xs">{t('hint')}</p>
+        <p className="text-muted-foreground text-small">{t('hint')}</p>
       </div>
     </StepFrame>
   );

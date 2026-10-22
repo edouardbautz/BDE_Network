@@ -64,7 +64,7 @@ export default async function AuthErrorPage({
           <div className="bg-destructive/10 text-destructive mb-2 flex size-10 items-center justify-center rounded-full">
             <TriangleAlert className="size-5" />
           </div>
-          <CardTitle role="heading" aria-level={1} className="text-xl font-semibold tracking-tight">
+          <CardTitle role="heading" aria-level={1} className="text-title-2">
             {t('title')}
           </CardTitle>
           <CardDescription>{message}</CardDescription>
@@ -72,7 +72,7 @@ export default async function AuthErrorPage({
         <CardContent>
           <Link
             href="/"
-            className="text-muted-foreground hover:text-foreground rounded-sm text-sm underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            className="text-muted-foreground hover:text-foreground rounded-sm text-body underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
           >
             {t('backToLogin')}
           </Link>

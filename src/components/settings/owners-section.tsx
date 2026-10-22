@@ -63,29 +63,29 @@ export function OwnersSection({ owners, actorLogin }: { owners: string[]; actorL
   return (
     <section aria-labelledby="settings-owners" className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h2 id="settings-owners" className="text-lg font-semibold tracking-tight">
+        <h2 id="settings-owners" className="text-title-3">
           {t('title')}
         </h2>
-        <p className="text-muted-foreground text-sm">{t('description')}</p>
+        <p className="text-muted-foreground text-body">{t('description')}</p>
       </div>
 
       <div className="flex flex-col gap-2">
-        <p className="text-sm font-medium">{t('listTitle')}</p>
+        <p className="text-body-strong">{t('listTitle')}</p>
         <ul className="border-border divide-border divide-y rounded-lg border">
           {owners.map((owner) => {
             const isYou = owner.toLowerCase() === actorLogin.toLowerCase();
             return (
               <li key={owner} className="flex items-center justify-between gap-2 px-3 py-2">
-                <span className="font-mono text-sm">
+                <span className="font-mono text-body">
                   {owner}
                   {isYou && (
-                    <span className="text-muted-foreground ml-2 font-sans text-xs">
+                    <span className="text-muted-foreground ml-2 font-sans text-small">
                       ({t('you')})
                     </span>
                   )}
                 </span>
                 {isYou ? (
-                  <span className="text-muted-foreground text-xs">{t('cannotRemoveSelf')}</span>
+                  <span className="text-muted-foreground text-small">{t('cannotRemoveSelf')}</span>
                 ) : (
                   <ConfirmDialog
                     title={t('removeTitle', { login: owner })}
@@ -135,7 +135,7 @@ export function OwnersSection({ owners, actorLogin }: { owners: string[]; actorL
           </div>
         </Field>
         {failure && !failure.field && (
-          <p role="alert" className="text-destructive text-sm">
+          <p role="alert" className="text-destructive text-body">
             {text(failure)}
           </p>
         )}

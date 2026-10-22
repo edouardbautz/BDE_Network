@@ -94,10 +94,10 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
   return (
     <section aria-labelledby="settings-events" className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h2 id="settings-events" className="text-lg font-semibold tracking-tight">
+        <h2 id="settings-events" className="text-title-3">
           {t('title')}
         </h2>
-        <p className="text-muted-foreground text-sm">{t('description')}</p>
+        <p className="text-muted-foreground text-body">{t('description')}</p>
       </div>
 
       <form
@@ -109,7 +109,7 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
         noValidate
       >
         <div className="flex flex-col gap-2">
-          <p id="settings-events-categories" className="text-sm font-medium">
+          <p id="settings-events-categories" className="text-body-strong">
             {t('categories')}
           </p>
           <ul aria-labelledby="settings-events-categories" className="flex flex-col gap-2">
@@ -131,7 +131,7 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
                   autoComplete="off"
                 />
                 {used(row) > 0 && (
-                  <span className="text-muted-foreground shrink-0 text-xs whitespace-nowrap">
+                  <span className="text-muted-foreground shrink-0 text-small whitespace-nowrap">
                     {t('usage', { count: used(row) })}
                   </span>
                 )}
@@ -148,9 +148,9 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
               </li>
             ))}
           </ul>
-          {active.length <= 1 && <p className="text-muted-foreground text-xs">{t('keepOne')}</p>}
+          {active.length <= 1 && <p className="text-muted-foreground text-small">{t('keepOne')}</p>}
           {failure?.field === 'categories' && (
-            <p role="alert" className="text-destructive text-sm">
+            <p role="alert" className="text-destructive text-body">
               {text(failure)}
             </p>
           )}
@@ -169,13 +169,13 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
         </div>
 
         {removed.length > 0 && (
-          <div className="border-border flex flex-col gap-3 rounded-lg border border-dashed p-3">
-            <p className="text-sm font-medium">{t('pendingTitle')}</p>
+          <div className="border-border flex flex-col gap-3 rounded-lg border p-3">
+            <p className="text-body-strong">{t('pendingTitle')}</p>
             <ul className="flex flex-col gap-3">
               {removed.map((row) => (
                 <li key={row.id} className="flex flex-col gap-2">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm line-through">{row.label}</span>
+                    <span className="text-body line-through">{row.label}</span>
                     <Button
                       type="button"
                       variant="ghost"
@@ -231,7 +231,7 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
         </Field>
 
         {failure && !failure.field && (
-          <p role="alert" className="text-destructive text-sm">
+          <p role="alert" className="text-destructive text-body">
             {text(failure)}
           </p>
         )}

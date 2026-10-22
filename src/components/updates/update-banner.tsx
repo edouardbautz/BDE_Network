@@ -90,7 +90,7 @@ export function UpdateBanner({ enabled }: { enabled: boolean }) {
           <CopyField id="update-command-pull" value="git pull" label={t('commandPull')} />
           <CopyField id="update-command-up" value="docker compose up -d" label={t('commandUp')} />
         </div>
-        <span className="text-muted-foreground text-xs">{t('backup')}</span>
+        <span className="text-muted-foreground text-small">{t('backup')}</span>
         <div>
           <Button
             type="button"

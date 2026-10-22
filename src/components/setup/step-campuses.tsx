@@ -106,15 +106,15 @@ export function StepCampuses({
       nextDisabled={loading}
     >
       {loading && (
-        <p className="text-muted-foreground text-sm" role="status">
+        <p className="text-muted-foreground text-body" role="status">
           {t('loading')}
         </p>
       )}
 
-      {options === null && <p className="text-muted-foreground text-sm">{t('manualHelp')}</p>}
+      {options === null && <p className="text-muted-foreground text-body">{t('manualHelp')}</p>}
 
       {!loading && (
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-body">
           <input
             type="checkbox"
             checked={allowAll}
@@ -122,8 +122,8 @@ export function StepCampuses({
             className="size-4"
           />
           <span>
-            <span className="font-medium">{t('all')}</span>
-            <span className="text-muted-foreground block text-xs">{t('allHelp')}</span>
+            <span className="font-semibold">{t('all')}</span>
+            <span className="text-muted-foreground block text-small">{t('allHelp')}</span>
           </span>
         </label>
       )}
@@ -159,17 +159,17 @@ export function StepCampuses({
             {options && query.trim() !== '' && (
               <ul className="border-border mt-1 flex flex-col overflow-hidden rounded-lg border">
                 {suggestions.length === 0 && (
-                  <li className="text-muted-foreground px-3 py-2 text-sm">{t('noMatch')}</li>
+                  <li className="text-muted-foreground px-3 py-2 text-body">{t('noMatch')}</li>
                 )}
                 {suggestions.map((campus) => (
                   <li key={campus.name}>
                     <button
                       type="button"
                       onClick={() => add(campus.name)}
-                      className="hover:bg-muted focus-visible:bg-muted flex w-full items-center justify-between px-3 py-2 text-left text-sm outline-none"
+                      className="hover:bg-muted focus-visible:bg-muted flex w-full items-center justify-between px-3 py-2 text-left text-body outline-none"
                     >
                       <span>{campus.name}</span>
-                      <span className="text-muted-foreground text-xs">{campus.country}</span>
+                      <span className="text-muted-foreground text-small">{campus.country}</span>
                     </button>
                   </li>
                 ))}
@@ -178,15 +178,15 @@ export function StepCampuses({
           </Field>
 
           <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium">{t('selectedTitle')}</p>
+            <p className="text-body-strong">{t('selectedTitle')}</p>
             {selected.length === 0 ? (
-              <p className="text-muted-foreground text-sm">{t('none')}</p>
+              <p className="text-muted-foreground text-body">{t('none')}</p>
             ) : (
               <ul className="flex flex-wrap gap-2">
                 {selected.map((name) => (
                   <li
                     key={name}
-                    className="bg-muted flex items-center gap-1 rounded-full py-0.5 pr-1 pl-3 text-sm"
+                    className="bg-muted flex items-center gap-1 rounded-full py-0.5 pr-1 pl-3 text-body"
                   >
                     {name}
                     <button

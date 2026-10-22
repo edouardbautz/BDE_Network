@@ -107,8 +107,8 @@ export default async function EventsPage({
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-          <p className="text-muted-foreground mt-1 text-sm">{t('subtitle')}</p>
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
+          <p className="text-muted-foreground mt-1 text-body">{t('subtitle')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {sharedCalendarButton}
@@ -140,7 +140,7 @@ export default async function EventsPage({
             canCreate={access.canCreate}
           />
           {!monthHasEvents && (
-            <Card className="mt-4 border-dashed">
+            <Card className="mt-4">
               <CardContent>
                 <EmptyState
                   title={hasFilters ? t('empty.filteredTitle') : t('empty.monthTitle')}
@@ -157,7 +157,7 @@ export default async function EventsPage({
       {showList && (
         <div className={query.view === undefined ? 'md:hidden' : undefined}>
           {upcoming.length === 0 ? (
-            <Card className="border-dashed">
+            <Card className="">
               <CardContent>
                 <EmptyState
                   title={hasFilters ? t('empty.filteredTitle') : t('empty.title')}

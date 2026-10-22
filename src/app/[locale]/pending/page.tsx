@@ -38,13 +38,13 @@ export default async function PendingPage({ params }: { params: Promise<{ locale
           <div className="bg-muted text-muted-foreground mb-2 flex size-10 items-center justify-center rounded-full">
             <Clock className="size-5" />
           </div>
-          <CardTitle role="heading" aria-level={1} className="text-xl font-semibold tracking-tight">
+          <CardTitle role="heading" aria-level={1} className="text-title-2">
             {t('title')}
           </CardTitle>
           <CardDescription>{t('description')}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-body">
             {t('signedInAs', {
               name: session.user.name ?? session.user.login,
               login: session.user.login,

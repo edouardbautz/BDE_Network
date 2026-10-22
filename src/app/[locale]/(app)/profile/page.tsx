@@ -33,8 +33,8 @@ export default async function ProfilePage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-        <p className="text-muted-foreground mt-1 text-sm">{t('subtitle')}</p>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <p className="text-muted-foreground mt-1 text-body">{t('subtitle')}</p>
       </div>
 
       <Card className="max-w-xl">
@@ -44,7 +44,7 @@ export default async function ProfilePage() {
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
           <div className="flex min-w-0 flex-col gap-0.5">
-            <CardTitle className="truncate text-base">{displayName}</CardTitle>
+            <CardTitle className="truncate text-body">{displayName}</CardTitle>
             <CardDescription className="truncate">
               {user.login} · {user.campus}
             </CardDescription>
@@ -58,7 +58,7 @@ export default async function ProfilePage() {
       {feedUrl && (
         <Card className="max-w-3xl">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
+            <CardTitle className="flex items-center gap-2 text-body">
               <CalendarSync className="text-muted-foreground size-4" />
               {t('calendar.title')}
             </CardTitle>
@@ -67,7 +67,7 @@ export default async function ProfilePage() {
           <CardContent className="flex flex-col gap-5">
             <CopyField id="calendar-feed-url" value={feedUrl} label={t('calendar.linkLabel')} />
 
-            <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-sm">
+            <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-body">
               <li>{t('calendar.google')}</li>
               <li>{t('calendar.outlook')}</li>
               <li>{t('calendar.apple')}</li>
@@ -87,7 +87,7 @@ export default async function ProfilePage() {
               </ConfirmDialog>
             </div>
 
-            <p className="text-muted-foreground text-xs">{t('calendar.privacy')}</p>
+            <p className="text-muted-foreground text-small">{t('calendar.privacy')}</p>
           </CardContent>
         </Card>
       )}

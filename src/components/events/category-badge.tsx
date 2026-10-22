@@ -12,7 +12,7 @@ export function CategoryBadge({
   className?: string;
 }) {
   return (
-    <span className={cn('inline-flex min-w-0 items-center gap-1.5 text-xs font-medium', className)}>
+    <span className={cn('inline-flex min-w-0 items-center gap-1.5 text-small', className)}>
       <span
         aria-hidden
         className="bg-muted-foreground/40 size-2.5 shrink-0 rounded-full"

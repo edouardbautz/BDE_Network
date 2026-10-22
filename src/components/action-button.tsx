@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, type ComponentProps, type ReactNode } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Spinner } from '@/components/galets/spinner';
 import { Button } from '@/components/ui/button';
 import { isActionTarget, type ActionTarget } from '@/lib/action-target';
 
@@ -13,7 +13,7 @@ import { isActionTarget, type ActionTarget } from '@/lib/action-target';
 export function ActionButton({
   action,
   children,
-  variant = 'outline',
+  variant = 'secondary',
   size = 'sm',
 }: {
   action: () => Promise<ActionTarget>;
@@ -45,7 +45,7 @@ export function ActionButton({
       focusableWhenDisabled
       aria-busy={busy || undefined}
     >
-      {busy && <Loader2 className="animate-spin" data-icon="inline-start" aria-hidden />}
+      {busy && <Spinner />}
       {children}
     </Button>
   );

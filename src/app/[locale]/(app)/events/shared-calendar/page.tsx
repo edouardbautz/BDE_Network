@@ -58,8 +58,8 @@ export default async function SharedCalendarPage({
       </Button>
 
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-        <p className="text-muted-foreground mt-1 max-w-2xl text-sm">{t('subtitle')}</p>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <p className="text-muted-foreground mt-1 max-w-2xl text-body">{t('subtitle')}</p>
       </div>
 
       {status && (
@@ -70,7 +70,7 @@ export default async function SharedCalendarPage({
       )}
 
       {!feedUrl ? (
-        <Card className="max-w-3xl border-dashed">
+        <Card className="max-w-3xl">
           <CardContent>
             <EmptyState
               title={t('inactive.title')}
@@ -92,7 +92,7 @@ export default async function SharedCalendarPage({
       ) : (
         <Card className="max-w-3xl">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
+            <CardTitle className="flex items-center gap-2 text-body">
               <CalendarSync className="text-muted-foreground size-4" />
               {t('active.title')}
             </CardTitle>
@@ -101,7 +101,7 @@ export default async function SharedCalendarPage({
           <CardContent className="flex flex-col gap-5">
             <CopyField id="bde-feed-url" value={feedUrl} label={t('active.linkLabel')} />
 
-            <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-sm">
+            <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-body">
               <li>{t('active.confirmedOnly')}</li>
               <li>{tProfile('google')}</li>
               <li>{tProfile('outlook')}</li>

@@ -77,7 +77,7 @@ export async function MonthCalendar({
 
   return (
     <div className="flex flex-col gap-4">
-      <table className="w-full table-fixed border-collapse text-sm">
+      <table className="w-full table-fixed border-collapse text-body">
         <caption className="sr-only">{t('calendar.caption')}</caption>
         <thead>
           <tr>
@@ -86,7 +86,7 @@ export async function MonthCalendar({
                 key={label}
                 scope="col"
                 abbr={weekdaysLong[index]}
-                className="text-muted-foreground pb-2 text-center text-xs font-medium capitalize"
+                className="text-muted-foreground pb-2 text-center text-small capitalize"
               >
                 {label}
               </th>
@@ -119,7 +119,7 @@ export async function MonthCalendar({
                           count: occurrences.length,
                         })}
                         className={cn(
-                          'flex size-6 items-center justify-center self-start rounded-full text-xs font-medium tabular-nums outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
+                          'flex size-6 items-center justify-center self-start rounded-full text-small tabular-nums outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
                           !day.inMonth && 'text-muted-foreground',
                           isToday && 'bg-primary text-primary-foreground',
                           isSelected && !isToday && 'ring-primary ring-2 md:ring-0',
@@ -162,10 +162,10 @@ export async function MonthCalendar({
                                 style={tint(category.color)}
                                 className={cn(
                                   // 24 px at least: a target smaller than that, with others a few pixels away, is hard to hit (WCAG 2.5.8)
-                                  'hover:bg-muted flex min-h-6 min-w-0 items-center gap-1 rounded-sm border-l-2 px-1.5 text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
+                                  'hover:bg-muted flex min-h-6 min-w-0 items-center gap-1 rounded-sm border-l-2 px-1.5 text-small outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
                                   !category.color && 'border-muted-foreground/40 bg-muted/50',
                                   // Not confirmed: dashed and italic. Never faded (an opacity lowers the contrast of the text).
-                                  occurrence.status !== 'CONFIRMED' && 'border-dashed italic',
+                                  occurrence.status !== 'CONFIRMED' && ' italic',
                                 )}
                               >
                                 <span className="text-muted-foreground shrink-0 tabular-nums">
@@ -180,7 +180,7 @@ export async function MonthCalendar({
                           <li>
                             <Link
                               href={dayHref(day)}
-                              className="text-muted-foreground hover:text-foreground flex min-h-6 items-center rounded-sm px-1.5 text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                              className="text-muted-foreground hover:text-foreground flex min-h-6 items-center rounded-sm px-1.5 text-small outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                             >
                               {t('calendar.more', { count: occurrences.length - MAX_CHIPS })}
                             </Link>
@@ -217,7 +217,7 @@ export async function MonthCalendar({
         <div className="flex items-center justify-between gap-3 border-b pb-2">
           <h2
             id="selected-day-heading"
-            className="text-muted-foreground text-sm font-medium first-letter:uppercase"
+            className="text-muted-foreground text-body-strong first-letter:uppercase"
           >
             {selectedDay ? formatDayHeading(selectedDay, locale) : ''}
           </h2>

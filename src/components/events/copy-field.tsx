@@ -31,7 +31,7 @@ export function CopyField({ id, value, label }: { id: string; value: string; lab
         value={value}
         aria-label={label}
         onFocus={(event) => event.currentTarget.select()}
-        className="font-mono text-xs"
+        className="font-mono text-small"
       />
       <Button type="button" variant="outline" onClick={copy} className="shrink-0">
         {copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}

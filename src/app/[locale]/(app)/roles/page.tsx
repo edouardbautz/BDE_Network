@@ -71,8 +71,8 @@ export default async function RolesPage({
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{t('page.title')}</h1>
-          <p className="text-muted-foreground max-w-2xl text-sm">{t('page.description')}</p>
+          <h1 className="text-2xl font-bold">{t('page.title')}</h1>
+          <p className="text-muted-foreground max-w-2xl text-body">{t('page.description')}</p>
         </div>
         <Button render={<Link href="/roles/new" />}>
           <Plus data-icon="inline-start" />
@@ -109,11 +109,13 @@ export default async function RolesPage({
                     <TableRow key={role.id}>
                       <TableCell className="whitespace-normal">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-medium">{role.name}</span>
+                          <span className="font-semibold">{role.name}</span>
                           {role.isDefault && <Badge variant="secondary">{t('list.default')}</Badge>}
                         </div>
                         {role.description && (
-                          <p className="text-muted-foreground mt-0.5 text-xs">{role.description}</p>
+                          <p className="text-muted-foreground mt-0.5 text-small">
+                            {role.description}
+                          </p>
                         )}
                       </TableCell>
                       <TableCell className="text-muted-foreground max-w-xs whitespace-normal">
@@ -149,7 +151,7 @@ export default async function RolesPage({
         </CardContent>
       </Card>
 
-      <p className="text-muted-foreground text-xs">{t('list.defaultNote')}</p>
+      <p className="text-muted-foreground text-small">{t('list.defaultNote')}</p>
     </div>
   );
 }

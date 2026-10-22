@@ -34,7 +34,7 @@ export async function UpcomingEventsCard({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="flex items-center gap-2 text-base">
+        <CardTitle className="flex items-center gap-2 text-body">
           <CalendarDays className="text-muted-foreground size-4" />
           {t('dashboard.title')}
         </CardTitle>
@@ -62,7 +62,7 @@ export async function UpcomingEventsCard({
                 key={occurrence.key}
                 className="flex flex-wrap items-center gap-x-4 gap-y-1 py-2.5"
               >
-                <p className="text-muted-foreground w-28 shrink-0 text-sm tabular-nums">
+                <p className="text-muted-foreground w-28 shrink-0 text-body tabular-nums">
                   <span className="capitalize">{dateFormat.format(occurrence.start)}</span>{' '}
                   {formatTime(occurrence.start, locale, timeZone)}
                 </p>
@@ -71,7 +71,7 @@ export async function UpcomingEventsCard({
                     pathname: `/events/${occurrence.eventId}`,
                     query: { occ: occurrence.originalStart.getTime() },
                   }}
-                  className="min-w-0 flex-1 truncate rounded-sm text-sm font-medium outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+                  className="min-w-0 flex-1 truncate rounded-sm text-body-strong outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
                   {occurrence.title}
                 </Link>

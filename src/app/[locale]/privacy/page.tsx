@@ -20,54 +20,54 @@ export default async function PrivacyPage() {
         <LocaleSwitcher />
       </div>
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-        <p className="text-muted-foreground mt-2 text-sm">{t('intro', { bdeName })}</p>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <p className="text-muted-foreground mt-2 text-body">{t('intro', { bdeName })}</p>
       </div>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold">{t('dataCollected.title')}</h2>
-        <p className="text-muted-foreground text-sm">{t('dataCollected.description')}</p>
-        <ul className="text-muted-foreground list-inside list-disc text-sm">
+        <h2 className="text-body-strong">{t('dataCollected.title')}</h2>
+        <p className="text-muted-foreground text-body">{t('dataCollected.description')}</p>
+        <ul className="text-muted-foreground list-inside list-disc text-body">
           {dataItems.map((item) => (
             <li key={item}>{item}</li>
           ))}
         </ul>
-        <p className="text-muted-foreground text-sm">{t('dataCollected.note')}</p>
+        <p className="text-muted-foreground text-body">{t('dataCollected.note')}</p>
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold">{t('purpose.title')}</h2>
-        <p className="text-muted-foreground text-sm">{t('purpose.description')}</p>
+        <h2 className="text-body-strong">{t('purpose.title')}</h2>
+        <p className="text-muted-foreground text-body">{t('purpose.description')}</p>
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold">{t('notifications.title')}</h2>
-        <p className="text-muted-foreground text-sm">{t('notifications.description')}</p>
+        <h2 className="text-body-strong">{t('notifications.title')}</h2>
+        <p className="text-muted-foreground text-body">{t('notifications.description')}</p>
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold">{t('calendar.title')}</h2>
-        <p className="text-muted-foreground text-sm">{t('calendar.description')}</p>
+        <h2 className="text-body-strong">{t('calendar.title')}</h2>
+        <p className="text-muted-foreground text-body">{t('calendar.description')}</p>
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold">{t('retention.title')}</h2>
-        <p className="text-muted-foreground text-sm">{t('retention.description')}</p>
+        <h2 className="text-body-strong">{t('retention.title')}</h2>
+        <p className="text-muted-foreground text-body">{t('retention.description')}</p>
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold">{t('rights.title')}</h2>
-        <p className="text-muted-foreground text-sm">{t('rights.description')}</p>
+        <h2 className="text-body-strong">{t('rights.title')}</h2>
+        <p className="text-muted-foreground text-body">{t('rights.description')}</p>
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold">{t('cookies.title')}</h2>
-        <p className="text-muted-foreground text-sm">{t('cookies.description')}</p>
+        <h2 className="text-body-strong">{t('cookies.title')}</h2>
+        <p className="text-muted-foreground text-body">{t('cookies.description')}</p>
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold">{t('contact.title')}</h2>
-        <p className="text-muted-foreground text-sm">
+        <h2 className="text-body-strong">{t('contact.title')}</h2>
+        <p className="text-muted-foreground text-body">
           {contactEmail ? (
             <>
               {t('contact.withAddress')}{' '}
@@ -85,7 +85,7 @@ export default async function PrivacyPage() {
       {session && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">{t('export.title')}</CardTitle>
+            <CardTitle className="text-body">{t('export.title')}</CardTitle>
             <CardDescription>{t('export.description')}</CardDescription>
           </CardHeader>
           <CardContent>

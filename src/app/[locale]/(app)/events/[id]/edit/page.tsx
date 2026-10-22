@@ -85,9 +85,9 @@ export default async function EditEventPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold tracking-tight">{t('form.editTitle')}</h1>
+      <h1 className="text-2xl font-bold">{t('form.editTitle')}</h1>
       {askScope && (
-        <p className="text-muted-foreground text-sm first-letter:uppercase">
+        <p className="text-muted-foreground text-body first-letter:uppercase">
           {formatLongDate(date.start, locale, timeZone)}
         </p>
       )}

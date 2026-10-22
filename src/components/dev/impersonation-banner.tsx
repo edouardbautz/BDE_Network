@@ -37,13 +37,13 @@ export async function ImpersonationBanner() {
     return (
       <div
         role="status"
-        className="flex flex-wrap items-center justify-center gap-3 bg-amber-400 px-4 py-2 text-sm font-medium text-amber-950 dark:bg-amber-500"
+        className="flex flex-wrap items-center justify-center gap-3 bg-amber-400 px-4 py-2 text-body-strong text-amber-950 dark:bg-amber-500"
       >
         <span>🧪 {t('active', { role: label })}</span>
         <form action={stopImpersonation}>
           <button
             type="submit"
-            className="rounded-md bg-amber-950 px-2.5 py-1 text-xs font-semibold text-amber-50 outline-none transition-colors hover:bg-amber-900 focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="rounded-md bg-amber-950 px-2.5 py-1 text-small text-amber-50 outline-none transition-colors hover:bg-amber-900 focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             {t('exit')}
           </button>
@@ -56,7 +56,7 @@ export async function ImpersonationBanner() {
   const defaultChoice = defaultRole ? `role:${defaultRole.id}` : 'PENDING';
 
   return (
-    <div className="bg-muted text-muted-foreground flex flex-wrap items-center justify-center gap-2 px-4 py-1.5 text-xs">
+    <div className="bg-muted text-muted-foreground flex flex-wrap items-center justify-center gap-2 px-4 py-1.5 text-small">
       <span>{t('pickRole')}</span>
       <form
         action={async (formData: FormData) => {
@@ -68,7 +68,7 @@ export async function ImpersonationBanner() {
         <select
           name="role"
           defaultValue={defaultChoice}
-          className="border-input bg-background rounded-md border px-2 py-0.5 text-xs"
+          className="border-input bg-background rounded-md border px-2 py-0.5 text-small"
         >
           <option value="PENDING">{tRoles('PENDING')}</option>
           {roles.map((role) => (
@@ -79,7 +79,7 @@ export async function ImpersonationBanner() {
         </select>
         <button
           type="submit"
-          className="bg-primary text-primary-foreground hover:bg-primary/80 rounded-md px-2.5 py-1 text-xs font-semibold outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="bg-primary text-primary-foreground hover:bg-primary/80 rounded-md px-2.5 py-1 text-small outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           {t('start')}
         </button>

@@ -79,8 +79,8 @@ export function StepAddress({
       </Field>
 
       {notice && browserOrigin && checked.ok && (
-        <div role="status" className="bg-muted flex flex-col gap-2 rounded-lg p-3 text-sm">
-          <p className="flex items-center gap-2 font-medium">
+        <div role="status" className="bg-muted flex flex-col gap-2 rounded-lg p-3 text-body">
+          <p className="flex items-center gap-2 font-semibold">
             <TriangleAlert className="size-4 shrink-0" aria-hidden="true" />
             {t(notice === 'unspecified' ? 'unspecifiedTitle' : 'differsTitle')}
           </p>
@@ -93,8 +93,11 @@ export function StepAddress({
       )}
 
       {insecure && (
-        <div role="alert" className="bg-destructive/10 flex flex-col gap-2 rounded-lg p-3 text-sm">
-          <p className="flex items-center gap-2 font-medium">
+        <div
+          role="alert"
+          className="bg-destructive/10 flex flex-col gap-2 rounded-lg p-3 text-body"
+        >
+          <p className="flex items-center gap-2 font-semibold">
             <TriangleAlert className="text-destructive size-4 shrink-0" aria-hidden="true" />
             {t('insecureTitle')}
           </p>

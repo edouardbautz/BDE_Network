@@ -42,10 +42,10 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
   return (
     <div className="flex max-w-3xl flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-        <p className="text-muted-foreground mt-1 text-sm">{t('subtitle')}</p>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <p className="text-muted-foreground mt-1 text-body">{t('subtitle')}</p>
         {installation && (
-          <p className="text-muted-foreground mt-1 text-xs">
+          <p className="text-muted-foreground mt-1 text-small">
             {t('since', {
               date: new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(
                 installation.installedAt,
@@ -54,7 +54,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
           </p>
         )}
         {version && (
-          <p className="text-muted-foreground mt-1 text-xs">{t('version', { version })}</p>
+          <p className="text-muted-foreground mt-1 text-small">{t('version', { version })}</p>
         )}
       </div>
 

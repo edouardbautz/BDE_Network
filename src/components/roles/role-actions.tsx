@@ -47,7 +47,7 @@ export function RoleActions({
 
   if (!manageable) {
     return (
-      <span className="text-muted-foreground text-xs">
+      <span className="text-muted-foreground text-small">
         {lockedReason === 'own' ? t('list.lockedOwn') : t('list.lockedAbove')}
       </span>
     );

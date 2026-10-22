@@ -794,7 +794,8 @@
   },
   "confirmDialog": {
     "cancel": "Annuler",
-    "working": "En cours…"
+    "working": "En cours…",
+    "close": "Fermer"
   },
   "metadata": {
     "description": "Plateforme de gestion du {name}"

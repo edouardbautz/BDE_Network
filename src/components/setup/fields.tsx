@@ -24,12 +24,12 @@ export function Field({
       <Label htmlFor={id}>{label}</Label>
       {children}
       {hint && (
-        <p id={`${id}-hint`} className="text-muted-foreground text-xs">
+        <p id={`${id}-hint`} className="text-muted-foreground text-small">
           {hint}
         </p>
       )}
       {error && (
-        <p id={`${id}-error`} role="alert" className="text-destructive text-sm">
+        <p id={`${id}-error`} role="alert" className="text-destructive text-body">
           {error}
         </p>
       )}

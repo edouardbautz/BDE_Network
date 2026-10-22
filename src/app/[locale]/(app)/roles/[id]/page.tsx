@@ -59,10 +59,10 @@ export default async function EditRolePage({
           {t('edit.back')}
         </Button>
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <h1 className="text-2xl font-bold">
             {t('edit.title')} · {role.name}
           </h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-body">
             {refusal === null ? t('edit.description') : null}{' '}
             {t('edit.members', { count: role._count.users })}
           </p>
@@ -98,12 +98,12 @@ export default async function EditRolePage({
               )}
               {groups.map((group) => (
                 <section key={group.section} className="flex flex-col gap-2">
-                  <h2 className="text-sm font-semibold">{group.title}</h2>
+                  <h2 className="text-body-strong">{group.title}</h2>
                   <ul className="flex flex-col gap-2">
                     {group.options.map((option) => {
                       const has = role.allPermissions || granted.has(option.key);
                       return (
-                        <li key={option.key} className="flex items-start gap-3 text-sm">
+                        <li key={option.key} className="flex items-start gap-3 text-body">
                           <span
                             aria-hidden
                             className={cn(
@@ -112,13 +112,13 @@ export default async function EditRolePage({
                             )}
                           />
                           <span className="flex flex-col gap-0.5">
-                            <span className={has ? 'font-medium' : 'text-muted-foreground'}>
+                            <span className={has ? 'font-semibold' : 'text-muted-foreground'}>
                               {option.label}
                               <span className="sr-only">
                                 {has ? t('edit.has') : t('edit.hasNot')}
                               </span>
                             </span>
-                            <span className="text-muted-foreground text-xs">
+                            <span className="text-muted-foreground text-small">
                               {option.description}
                             </span>
                           </span>

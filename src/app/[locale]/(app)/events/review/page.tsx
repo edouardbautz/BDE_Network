@@ -54,14 +54,14 @@ export default async function ReviewPage({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{t('review.title')}</h1>
-        <p className="text-muted-foreground mt-1 text-sm">{t('review.subtitle')}</p>
+        <h1 className="text-2xl font-bold">{t('review.title')}</h1>
+        <p className="text-muted-foreground mt-1 text-body">{t('review.subtitle')}</p>
       </div>
 
       <EventNoticeAlert notice={readEventNotice(raw.notice)} />
 
       {proposals.length === 0 ? (
-        <Card className="border-dashed">
+        <Card className="">
           <CardContent>
             <EmptyState title={t('review.emptyTitle')} description={t('review.emptyDescription')} />
           </CardContent>
@@ -99,11 +99,11 @@ export default async function ReviewPage({
                             ? { query: { occ: first.originalStart.getTime() } }
                             : {}),
                         }}
-                        className="w-fit rounded-sm font-medium break-words outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+                        className="w-fit rounded-sm font-semibold break-words outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
                       >
                         {event.title}
                       </Link>
-                      <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                      <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-small">
                         <CategoryBadge category={resolveCategory(event.categoryKey)} />
                         {first && (
                           <span className="inline-flex items-center gap-1">
@@ -120,7 +120,7 @@ export default async function ReviewPage({
                           </span>
                         )}
                       </div>
-                      <p className="text-muted-foreground text-xs">
+                      <p className="text-muted-foreground text-small">
                         {t('review.proposedBy', {
                           author,
                           date: formatLongDate(

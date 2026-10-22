@@ -78,10 +78,10 @@ export function LogoSection({ logoPath, custom }: { logoPath: string; custom: bo
   return (
     <section aria-labelledby="settings-logo" className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h2 id="settings-logo" className="text-lg font-semibold tracking-tight">
+        <h2 id="settings-logo" className="text-title-3">
           {t('title')}
         </h2>
-        <p className="text-muted-foreground text-sm">{t('description')}</p>
+        <p className="text-muted-foreground text-body">{t('description')}</p>
       </div>
 
       <div className="flex items-center gap-4">
@@ -95,10 +95,10 @@ export function LogoSection({ logoPath, custom }: { logoPath: string; custom: bo
           />
         </div>
         <div className="flex min-w-0 flex-col gap-1">
-          <p className="text-sm font-medium">
+          <p className="text-body-strong">
             {preview ? t('newLogo') : custom ? t('custom') : t('default')}
           </p>
-          <p className="text-muted-foreground text-xs">{t('requirements')}</p>
+          <p className="text-muted-foreground text-small">{t('requirements')}</p>
         </div>
       </div>
 
@@ -124,11 +124,11 @@ export function LogoSection({ logoPath, custom }: { logoPath: string; custom: bo
             onChange={(event) => choose(event.target.files?.[0] ?? null)}
             aria-invalid={failure?.field === 'logo'}
             aria-describedby="settings-logo-file-hint"
-            className="border-input bg-background file:bg-secondary file:text-secondary-foreground block w-full cursor-pointer rounded-lg border text-sm file:mr-3 file:cursor-pointer file:border-0 file:px-3 file:py-2 file:text-sm file:font-medium focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            className="border-input bg-background file:bg-secondary file:text-secondary-foreground block w-full cursor-pointer rounded-lg border text-body file:mr-3 file:cursor-pointer file:border-0 file:px-3 file:py-2 file:text-body file:font-semibold focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
           />
         </Field>
         {failure && !failure.field && (
-          <p role="alert" className="text-destructive text-sm">
+          <p role="alert" className="text-destructive text-body">
             {text(failure)}
           </p>
         )}

@@ -51,14 +51,14 @@ export function StepFrame({
   return (
     <form onSubmit={submit} className="flex flex-col gap-6" noValidate>
       <div className="flex flex-col gap-1">
-        <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
-        <p className="text-muted-foreground text-sm">{description}</p>
+        <h2 className="text-title-3">{title}</h2>
+        <p className="text-muted-foreground text-body">{description}</p>
       </div>
 
       <div className="flex flex-col gap-4">{children}</div>
 
       {failure && !failure.field && (
-        <p role="alert" className="text-destructive text-sm">
+        <p role="alert" className="text-destructive text-body">
           {failureText(failure)}
         </p>
       )}

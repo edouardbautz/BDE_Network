@@ -40,8 +40,8 @@ export default async function AuditLogPage({ params }: { params: Promise<{ local
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-        <p className="text-muted-foreground mt-1 text-sm">{t('subtitle')}</p>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <p className="text-muted-foreground mt-1 text-body">{t('subtitle')}</p>
       </div>
 
       <Card>
@@ -51,7 +51,7 @@ export default async function AuditLogPage({ params }: { params: Promise<{ local
               <div className="bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-full">
                 <ScrollText className="size-5" />
               </div>
-              <p className="text-muted-foreground text-sm">{t('empty')}</p>
+              <p className="text-muted-foreground text-body">{t('empty')}</p>
             </div>
           ) : (
             <ScrollableTable label={t('title')}>
@@ -70,9 +70,9 @@ export default async function AuditLogPage({ params }: { params: Promise<{ local
                       <TableCell className="text-muted-foreground whitespace-nowrap">
                         {dateFormatter.format(entry.createdAt)}
                       </TableCell>
-                      <TableCell className="font-medium">{entry.actorLogin}</TableCell>
+                      <TableCell className="font-semibold">{entry.actorLogin}</TableCell>
                       <TableCell>
-                        <code className="bg-muted rounded-sm px-1.5 py-0.5 text-xs">
+                        <code className="bg-muted rounded-sm px-1.5 py-0.5 text-small">
                           {entry.action}
                         </code>
                       </TableCell>

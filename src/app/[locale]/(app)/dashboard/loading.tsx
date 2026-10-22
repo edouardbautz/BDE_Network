@@ -22,7 +22,7 @@ export default function DashboardLoading() {
         </CardContent>
       </Card>
 
-      <Card className="border-dashed">
+      <Card className="">
         <CardContent className="flex flex-col items-center gap-3 py-10">
           <Skeleton className="size-10 rounded-full" />
           <Skeleton className="h-4 w-48" />

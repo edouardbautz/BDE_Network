@@ -164,11 +164,11 @@ export function RoleForm({
               aria-invalid={nameError ? true : undefined}
               aria-describedby={nameError ? 'name-error' : 'name-help'}
             />
-            <p id="name-help" className="text-muted-foreground text-xs">
+            <p id="name-help" className="text-muted-foreground text-small">
               {t('form.nameHelp')}
             </p>
             {nameError && (
-              <p id="name-error" className="text-destructive text-xs">
+              <p id="name-error" className="text-destructive text-small">
                 {nameError}
               </p>
             )}
@@ -190,7 +190,7 @@ export function RoleForm({
               aria-describedby={descriptionError ? 'description-error' : undefined}
             />
             {descriptionError && (
-              <p id="description-error" className="text-destructive text-xs">
+              <p id="description-error" className="text-destructive text-small">
                 {descriptionError}
               </p>
             )}
@@ -200,7 +200,7 @@ export function RoleForm({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">{t('form.permissions')}</CardTitle>
+          <CardTitle className="text-body">{t('form.permissions')}</CardTitle>
           <CardDescription>{t('form.permissionsHelp')}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
@@ -216,12 +216,12 @@ export function RoleForm({
                 className="accent-primary mt-0.5 size-4"
               />
               <span className="flex flex-col gap-1">
-                <span className="text-sm font-medium">{t('form.allPermissions')}</span>
-                <span id="all-help" className="text-muted-foreground text-xs">
+                <span className="text-body-strong">{t('form.allPermissions')}</span>
+                <span id="all-help" className="text-muted-foreground text-small">
                   {t('form.allPermissionsHelp')}
                 </span>
                 {!canGrantAll && (
-                  <span className="text-muted-foreground text-xs">
+                  <span className="text-muted-foreground text-small">
                     {t('form.allPermissionsLocked')}
                   </span>
                 )}
@@ -231,7 +231,7 @@ export function RoleForm({
 
           {groups.map((group) => (
             <fieldset key={group.section} className="flex flex-col gap-2" disabled={allPermissions}>
-              <legend className="mb-1 text-sm font-semibold">{group.title}</legend>
+              <legend className="mb-1 text-body-strong">{group.title}</legend>
               <ul className="flex flex-col gap-1">
                 {group.options.map((option) => {
                   const id = `permission-${option.key.replace(/\W/g, '-')}`;
@@ -254,8 +254,8 @@ export function RoleForm({
                           className="accent-primary mt-0.5 size-4"
                         />
                         <span className="flex flex-col gap-0.5">
-                          <span className="text-sm font-medium">{option.label}</span>
-                          <span id={`${id}-help`} className="text-muted-foreground text-xs">
+                          <span className="text-body-strong">{option.label}</span>
+                          <span id={`${id}-help`} className="text-muted-foreground text-small">
                             {option.description}
                             {option.locked && ` ${t('form.permissionLocked')}`}
                           </span>

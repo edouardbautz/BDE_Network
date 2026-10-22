@@ -9,9 +9,9 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Textarea } from '@/components/events/field-styles';
+import { Spinner } from '@/components/galets/spinner';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { isActionTarget } from '@/lib/action-target';
@@ -181,7 +181,7 @@ export function ConfirmDialog({
           {children}
         </DialogTrigger>
       )}
-      <DialogContent initialFocus={cancelRef} finalFocus={returnFocusRef}>
+      <DialogContent initialFocus={cancelRef} finalFocus={returnFocusRef} closeLabel={t('close')}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
@@ -192,7 +192,7 @@ export function ConfirmDialog({
             {choices.map((option) => (
               <label
                 key={option.value}
-                className="has-checked:border-primary has-checked:bg-muted flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm"
+                className="bg-surface-2 has-checked:bg-accent-soft text-body flex cursor-pointer items-start gap-3 rounded-lg p-3.5 transition-colors duration-(--dur-fast)"
               >
                 <input
                   type="radio"
@@ -200,12 +200,12 @@ export function ConfirmDialog({
                   value={option.value}
                   checked={choice === option.value}
                   onChange={() => setChoice(option.value)}
-                  className="accent-primary mt-0.5 size-4"
+                  className="accent-accent-fill mt-0.5 size-5"
                 />
                 <span className="flex flex-col gap-0.5">
-                  <span className="font-medium">{option.label}</span>
+                  <span className="text-body-strong">{option.label}</span>
                   {option.hint && (
-                    <span className="text-muted-foreground text-xs">{option.hint}</span>
+                    <span className="text-small text-muted-foreground">{option.hint}</span>
                   )}
                 </span>
               </label>
@@ -215,7 +215,7 @@ export function ConfirmDialog({
         {field && (
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={fieldId}>{field.label}</Label>
-            {field.hint && <p className="text-muted-foreground text-xs">{field.hint}</p>}
+            {field.hint && <p className="text-small text-muted-foreground">{field.hint}</p>}
             <Textarea
               id={fieldId}
               value={text}
@@ -228,17 +228,17 @@ export function ConfirmDialog({
           </div>
         )}
         <DialogFooter>
-          <DialogClose render={<Button ref={cancelRef} variant="outline" disabled={isPending} />}>
+          <DialogClose render={<Button ref={cancelRef} variant="secondary" disabled={isPending} />}>
             {t('cancel')}
           </DialogClose>
           <Button
-            variant={tone === 'destructive' ? 'destructive' : 'default'}
+            variant={tone === 'destructive' ? 'confirm' : 'default'}
             onClick={confirm}
             disabled={isPending || missingText}
             focusableWhenDisabled
             aria-busy={isPending || undefined}
           >
-            {isPending && <Loader2 className="animate-spin" data-icon="inline-start" aria-hidden />}
+            {isPending && <Spinner />}
             {confirmLabel}
             {isPending && <span className="sr-only"> — {t('working')}</span>}
           </Button>

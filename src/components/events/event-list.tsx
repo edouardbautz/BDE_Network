@@ -25,7 +25,7 @@ export async function EventRow({
 
   return (
     <li className="flex flex-col gap-1 py-3 sm:flex-row sm:gap-4">
-      <p className="text-muted-foreground w-full shrink-0 text-sm tabular-nums sm:w-44">
+      <p className="text-muted-foreground w-full shrink-0 text-body tabular-nums sm:w-44">
         {formatTimeRange(occurrence.start, occurrence.end, locale, timeZone)}
       </p>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -35,7 +35,7 @@ export async function EventRow({
               pathname: `/events/${occurrence.eventId}`,
               query: { occ: occurrence.originalStart.getTime() },
             }}
-            className="rounded-sm font-medium outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="rounded-sm font-semibold outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             {occurrence.title}
           </Link>
@@ -46,7 +46,7 @@ export async function EventRow({
             <Repeat className="text-muted-foreground size-3.5" aria-label={t('recurring')} />
           )}
         </div>
-        <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+        <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-small">
           <CategoryBadge category={category} />
           {occurrence.location && (
             <span className="inline-flex items-center gap-1">
@@ -86,7 +86,7 @@ export async function EventList({ occurrences, categories, timeZone }: EventRows
           <section key={key} aria-labelledby={`day-${key}`}>
             <h2
               id={`day-${key}`}
-              className="text-muted-foreground border-b pb-2 text-sm font-medium first-letter:uppercase"
+              className="text-muted-foreground border-b pb-2 text-body-strong first-letter:uppercase"
             >
               {formatDayHeading(day, locale)}
             </h2>
@@ -123,8 +123,8 @@ export function EmptyState({
         <CalendarDays className="size-5" />
       </div>
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-medium">{title}</p>
-        {description && <p className="text-muted-foreground max-w-sm text-sm">{description}</p>}
+        <p className="text-body-strong">{title}</p>
+        {description && <p className="text-muted-foreground max-w-sm text-body">{description}</p>}
       </div>
       {action}
     </div>

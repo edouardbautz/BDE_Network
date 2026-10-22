@@ -48,7 +48,7 @@ export async function EventsToolbar({
         href={viewLink(view)}
         aria-current={selected ? 'page' : undefined}
         className={cn(
-          'inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50',
+          'inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-body-strong outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50',
           selected
             ? 'bg-primary/10 text-foreground'
             : 'text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -86,7 +86,7 @@ export async function EventsToolbar({
             >
               <ChevronLeft />
             </Button>
-            <h2 className="min-w-36 text-center text-sm font-semibold" aria-live="polite">
+            <h2 className="min-w-36 text-center text-body-strong" aria-live="polite">
               {formatMonthTitle(currentMonth, locale)}
             </h2>
             <Button

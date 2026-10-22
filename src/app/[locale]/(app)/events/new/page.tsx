@@ -45,7 +45,7 @@ export default async function NewEventPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold tracking-tight">{t('form.createTitle')}</h1>
+      <h1 className="text-2xl font-bold">{t('form.createTitle')}</h1>
       <EventForm
         action={createEvent}
         initial={{

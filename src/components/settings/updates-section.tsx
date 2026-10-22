@@ -35,10 +35,10 @@ export function UpdatesSection({ check }: { check: boolean }) {
   return (
     <section aria-labelledby="settings-updates" className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h2 id="settings-updates" className="text-lg font-semibold tracking-tight">
+        <h2 id="settings-updates" className="text-title-3">
           {t('title')}
         </h2>
-        <p className="text-muted-foreground text-sm">{t('description')}</p>
+        <p className="text-muted-foreground text-body">{t('description')}</p>
       </div>
 
       <form
@@ -54,10 +54,10 @@ export function UpdatesSection({ check }: { check: boolean }) {
             <BellRing className="size-4" aria-hidden="true" />
           </div>
           <div className="flex-1">
-            <p id="settings-updates-title" className="text-sm font-medium">
+            <p id="settings-updates-title" className="text-body-strong">
               {t('checkTitle')}
             </p>
-            <p className="text-muted-foreground text-sm">{t('checkBody')}</p>
+            <p className="text-muted-foreground text-body">{t('checkBody')}</p>
           </div>
           <Switch
             checked={enabled}
@@ -67,7 +67,7 @@ export function UpdatesSection({ check }: { check: boolean }) {
         </div>
 
         {failure && (
-          <p role="alert" className="text-destructive text-sm">
+          <p role="alert" className="text-destructive text-body">
             {text(failure)}
           </p>
         )}

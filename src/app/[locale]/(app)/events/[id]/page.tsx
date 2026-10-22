@@ -70,11 +70,11 @@ function DetailRow({
     // A description list only holds terms and descriptions (a group may be wrapped in a div, which then holds nothing
     // else): the icon sits inside the term, and the description is indented by the width of the icon and its gap.
     <div className="flex min-w-0 flex-col gap-0.5">
-      <dt className="text-muted-foreground flex items-center gap-3 text-xs">
+      <dt className="text-muted-foreground flex items-center gap-3 text-small">
         <Icon className="size-4 shrink-0" aria-hidden />
         {label}
       </dt>
-      <dd className="pl-7 text-sm break-words">{children}</dd>
+      <dd className="pl-7 text-body break-words">{children}</dd>
     </div>
   );
 }
@@ -190,7 +190,7 @@ export default async function EventDetailPage({
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-2">
-          <h1 className="text-2xl font-semibold tracking-tight break-words">{shown.title}</h1>
+          <h1 className="text-2xl font-bold break-words">{shown.title}</h1>
           <div className="flex flex-wrap items-center gap-3">
             <CategoryBadge category={category} />
             <Badge variant={shown.status === 'CONFIRMED' ? 'secondary' : 'outline'}>
@@ -462,7 +462,7 @@ export default async function EventDetailPage({
               </DetailRow>
             )}
           </dl>
-          <p className="text-muted-foreground mt-6 border-t pt-4 text-xs">
+          <p className="text-muted-foreground mt-6 border-t pt-4 text-small">
             {t('detail.meta', { author: event.authorLogin, schoolYear: event.schoolYear })}
           </p>
         </CardContent>
@@ -471,11 +471,11 @@ export default async function EventDetailPage({
       {isSeries && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">{t('detail.occurrences.title')}</CardTitle>
+            <CardTitle className="text-body">{t('detail.occurrences.title')}</CardTitle>
           </CardHeader>
           <CardContent>
             {upcoming.length === 0 ? (
-              <p className="text-muted-foreground text-sm">{t('detail.occurrences.allPast')}</p>
+              <p className="text-muted-foreground text-body">{t('detail.occurrences.allPast')}</p>
             ) : (
               <ul className="divide-y">
                 {upcoming.slice(0, MAX_LISTED_OCCURRENCES).map((date) => {
@@ -489,9 +489,9 @@ export default async function EventDetailPage({
                         <Link
                           href={{ pathname: `/events/${event.id}`, query: { occ: key } }}
                           className={cn(
-                            'rounded-sm text-sm outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50',
+                            'rounded-sm text-body outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50',
                             date.cancelled && 'text-muted-foreground line-through',
-                            key === occurrence && 'font-medium',
+                            key === occurrence && 'font-semibold',
                           )}
                         >
                           <span className="first-letter:uppercase">
@@ -526,14 +526,14 @@ export default async function EventDetailPage({
               </ul>
             )}
             {upcoming.length > MAX_LISTED_OCCURRENCES && (
-              <p className="text-muted-foreground mt-3 text-xs">
+              <p className="text-muted-foreground mt-3 text-small">
                 {t('detail.occurrences.truncated', {
                   count: upcoming.length - MAX_LISTED_OCCURRENCES,
                 })}
               </p>
             )}
             {pastCount > 0 && (
-              <p className="text-muted-foreground mt-3 text-xs">
+              <p className="text-muted-foreground mt-3 text-small">
                 {t('detail.occurrences.past', { count: pastCount })}
               </p>
             )}
