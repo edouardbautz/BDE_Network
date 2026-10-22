@@ -6,6 +6,8 @@ All notable changes to this project are written here, in English. Format based o
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-22
+
 ### Changed
 
 - **A new look for the whole platform, the "Galets" direction.** Cards without borders on three levels of background, titles in bold Manrope over calm text,
@@ -41,6 +43,10 @@ All notable changes to this project are written here, in English. Format based o
   becomes…"). It is now an information notice of the design system above the preview: "October 23 does not match this rule: the
   series will start on Monday, October 26.", with a button "Start on October 26" that changes the start date for you, keeping its
   time and its duration.
+- **Dependencies updated** (Next.js 16.4.2, React 19.3.1, Prisma 7.10.1, nodemailer 10.1.7, js-yaml 5.5.0, Zod 4.6.7, Vite 8.3.5, markdown-it 15.0.3, and the rest of
+  the weekly group). All the Dependabot alerts that were open are fixed but one (KaTeX, a development tool of the documentation lint, low severity), and the exceptions of
+  `scripts/audit-allowlist.json` and `.trivyignore` are gone because what they covered is fixed (`mysql2`, `deepmerge-ts`, the `postcss` copy of Next.js). The
+  dependency review also accepts the `PSF-2.0` license (the same as `Python-2.0`, which was already accepted).
 
 ## [1.3.0] - 2026-10-22
 
@@ -816,7 +822,8 @@ Initial version (never tagged): the platform's foundation.
 - Docker Compose (production and development with hot reload), Dockerfile.
 - GitHub Actions CI (lint, format, typecheck, build, test) on ubuntu-latest and windows-latest.
 
-[Unreleased]: https://github.com/edouardbautz/BDE_Network/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/edouardbautz/BDE_Network/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/edouardbautz/BDE_Network/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/edouardbautz/BDE_Network/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/edouardbautz/BDE_Network/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/edouardbautz/BDE_Network/compare/v1.0.0...v1.1.0
