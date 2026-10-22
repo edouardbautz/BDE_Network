@@ -1,6 +1,2 @@
 # Advisories that Trivy reports and that are accepted, with the reason. The same ones, in the same words, are in
 # scripts/audit-allowlist.json (the gate of `npm run audit:prod`): drop an entry when its dependency is fixed.
-
-# deepmerge-ts: used by the Prisma CLI to merge prisma.config.ts, a trusted file written by the operator. Fixing it needs
-# deepmerge-ts 8 inside Prisma itself.
-CVE-2026-40345
