@@ -1565,6 +1565,19 @@ touching layout or adding UI. The short version:
   the tests run, and the worktree is removed or reset as a whole. `node qa/mutate.mjs qa/mutations/<list>.json` does exactly
   that (a list is `[name, file, text to break, replacement, [test files]]`; **commit first**: the worktree is made from
   `HEAD`), and the lists of the campaign are kept in `qa/mutations/` so that a "mutation-checked" claim can be played again.
+- **A worktree is created and removed by `qa/worktree.mjs`, and by nothing else.** Never `git worktree remove`, `rm -rf`,
+  `rimraf` or a file explorer on a worktree by hand, never `git worktree add` in a new script. The worktrees of the campaign
+  (`qa/mutate.mjs`, `qa/mutate-image.mjs`, the update suite `qa/upgrade/run.ts`) borrow the project's `node_modules` and the
+  generated Prisma client through a **junction**, and on Windows `git worktree remove --force` follows a junction and deletes what
+  it points to: it emptied the real `node_modules` of the project **twice** (nothing tracked was lost, `npm ci` restored it).
+  `addWorktree(project, dir, ref, { links })` makes the worktree and its links; `removeWorktree(project, dir)` removes **every**
+  link of the worktree as a link (a scan that never goes into one, so a link nobody declared is found too), checks none is left,
+  and only then asks git to remove the worktree. It refuses, and deletes nothing, for the project itself, a folder that is not a
+  worktree of this repository, and a worktree in which a link could not be removed. From a shell:
+  `node qa/worktree.mjs add <dir> [ref] [--link node_modules]` and `node qa/worktree.mjs remove <dir>`. `qa/worktree.test.ts`
+  runs it on a real throwaway repository: the files a link points to are intact after the removal, the links are gone when git is
+  asked to remove (an ordering a Linux runner would not show by its result alone), a link that cannot be removed stops everything,
+  and **a scan of the repository fails on any other `git worktree add|remove`**. Mutation-checked (`qa/mutations/worktree.json`).
 - **No `any`** (`@typescript-eslint/no-explicit-any` is an error, not a warning).
 - Cross-platform: no `&&`/`||`/`$VAR`/`rm -rf`/`cp` in npm scripts — use `cross-env`, `rimraf`,
   or plain Node. LF line endings are enforced by `.gitattributes`. The exception is the server-side
