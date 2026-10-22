@@ -1,0 +1,37 @@
+[
+  [
+    "worktree: the links are not removed before git removes the worktree",
+    "qa/worktree.mjs",
+    "for (const link of findLinks(dir)) removeLink(link, unlink, rmdir);",
+    "",
+    ["qa/worktree.test.ts"]
+  ],
+  [
+    "worktree: the scan goes into a link",
+    "qa/worktree.mjs",
+    "else if (entry.isDirectory() && entry.name !== '.git') walk(path);",
+    "else if (entry.name !== '.git') walk(path);",
+    ["qa/worktree.test.ts"]
+  ],
+  [
+    "worktree: a link that stays is not noticed",
+    "qa/worktree.mjs",
+    "if (lstatExists(path)) throw new Error(`the link ${path} could not be removed`);",
+    "",
+    ["qa/worktree.test.ts"]
+  ],
+  [
+    "worktree: any folder is removed, registered or not",
+    "qa/worktree.mjs",
+    "if (!registeredWorktrees(project, git).includes(normalized(dir)))",
+    "if (false)",
+    ["qa/worktree.test.ts"]
+  ],
+  [
+    "worktree: the project itself can be removed",
+    "qa/worktree.mjs",
+    "if (normalized(dir) === normalized(project))",
+    "if (false)",
+    ["qa/worktree.test.ts"]
+  ]
+]

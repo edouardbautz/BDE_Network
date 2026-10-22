@@ -17,6 +17,7 @@ import {
 } from './compare';
 import { COUNTED_TABLES, fixtureSql, OCCURRENCE_TABLES, OLD } from './fixture';
 import { AUTH_SECRET, run, Stack } from './stack';
+import { addWorktree, removeWorktree } from '../worktree.mjs';
 
 /**
  * Updates, played the way the guide of upgrading says an operator does them: a platform of an old version with data in it, the
@@ -127,9 +128,11 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
   const index = VERSIONS.indexOf(from);
   const sha = process.env.QA_UPGRADE_SHA ?? run('git', ['rev-parse', 'HEAD']).out;
   const dir = mkdtempSync(join(tmpdir(), `qa-upgrade-${from}-`));
-  const added = run('git', ['worktree', 'add', '--detach', dir, `v${from}`]);
-  if (!added.ok) {
-    check(`the folder of version ${from} could be checked out`, false, added.out.slice(0, 300));
+  const project = run('git', ['rev-parse', '--show-toplevel']).out;
+  try {
+    addWorktree(project, dir, `v${from}`);
+  } catch (error) {
+    check(`the folder of version ${from} could be checked out`, false, String(error).slice(0, 300));
     return;
   }
   const stack = new Stack(dir, `qaupg${index}`, 3200 + index, 55440 + index);
@@ -398,7 +401,7 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
     }
   } finally {
     stack.down();
-    run('git', ['worktree', 'remove', '--force', dir]);
+    removeWorktree(project, dir);
   }
 }
 

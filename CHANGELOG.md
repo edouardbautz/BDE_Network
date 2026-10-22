@@ -8,6 +8,11 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Changed
 
+- **Worktrees of the quality tooling are made and removed by one script, which cannot reach what they borrow.** The mutation checks
+  and the update suite work in a throwaway git worktree that links the project's `node_modules` into it; on Windows removing such
+  a worktree with git followed the link and emptied the real `node_modules` (twice). `qa/worktree.mjs` removes every link as a
+  link first, refuses anything that is not a worktree of the repository, and is the only code allowed to create or remove one (a
+  test checks it, and that the files a link points to survive). Development tooling only: nothing of the platform changes.
 - **A repetition starts on the first day that fits it, and the interval is counted from that day.** "Every 2 weeks on Monday and
   Wednesday, 10 times" typed on Friday 23 October used to start on Monday 2 November (the weeks were counted from the week of the
   Friday, which skipped the Monday after); it now starts on **Monday 26 October** and gives the 26th and 28th, then the 9th and

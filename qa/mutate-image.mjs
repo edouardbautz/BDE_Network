@@ -1,7 +1,7 @@
 // Mutation check on the PRODUCTION IMAGE: break a guard of the application, build the image from a dedicated worktree, start
 // a platform with it, and see whether the access matrix notices. Like qa/mutate.mjs, nothing here touches the working
 // tree of the project (docs/architecture.md): the worktree is made from HEAD (commit first), reset as a whole between
-// mutations and removed at the end. A mutation costs one image build (a few minutes).
+// mutations and removed at the end, by qa/worktree.mjs and by nothing else. A mutation costs one image build (a few minutes).
 //
 //   node qa/mutate-image.mjs <mutations.json> [name filter]
 // The suite that must notice is the access matrix, or what MUTATION_RUN says (the attacks: `MUTATION_RUN="qa/security/run.ts"`).
@@ -10,6 +10,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { addWorktree, removeWorktree } from './worktree.mjs';
 
 const PROJECT = execFileSync('git', ['rev-parse', '--show-toplevel']).toString().trim();
 const [file, only] = process.argv.slice(2);
@@ -17,7 +18,7 @@ const mutations = JSON.parse(readFileSync(file, 'utf8'));
 
 const wt = join(mkdtempSync(join(tmpdir(), 'bde-image-mutations-')), 'tree');
 const git = (...args) => execFileSync('git', args, { cwd: wt, stdio: 'pipe' }).toString();
-execFileSync('git', ['worktree', 'add', '--detach', wt, 'HEAD'], { cwd: PROJECT, stdio: 'pipe' });
+addWorktree(PROJECT, wt, 'HEAD');
 
 const run = (command, args, options = {}) =>
   spawnSync(command, args, {
@@ -84,11 +85,7 @@ try {
     console.log(`${killed ? 'killed  ' : 'SURVIVED'}  ${name}${detail}`);
   }
 } finally {
-  try {
-    execFileSync('git', ['worktree', 'remove', '--force', wt], { cwd: PROJECT, stdio: 'pipe' });
-  } catch {
-    /* removed with the temporary folder */
-  }
+  removeWorktree(PROJECT, wt);
 }
 console.log(`\n${survived} surviving mutation(s)`);
 process.exitCode = survived ? 1 : 0;
