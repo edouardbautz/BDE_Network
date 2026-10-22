@@ -314,7 +314,7 @@ Component, `onConfirm` is an inline `'use server'` action. A new module's delete
 
 Inside the card or the zone, centred, 32 of padding: an icon tile of 56 (radius 18, `accent-soft`, icon 28 `accent-ink`), the title (`card-title`, 800) 14 below, a `body` muted text (320 wide at most),
 and at most one action 16 below (the main one if it is what the page expects). No illustration, no forced humour: the text says what is missing and how to create it. Every list that can be empty uses
-`components/galets/empty-state.tsx`; every `(app)` route has a `loading.tsx` of skeletons shaped like its content.
+`components/galets/empty-state.tsx`; every `(app)` route has a `loading.tsx` of skeletons shaped like its content, starting with `PageHeaderSkeleton` (the same box as `PageHeader`: a screen of another height moves the footer).
 
 ### Alerts
 

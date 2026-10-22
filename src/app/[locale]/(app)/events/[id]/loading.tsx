@@ -1,33 +1,47 @@
-import { Card, CardContent } from '@/components/ui/card';
+import { PageHeaderSkeleton } from '@/components/layout/page-header-skeleton';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
+/** The page of an event: the title with its way back, the badges and buttons, the facts and the dates of a series. */
 export default function EventDetailLoading() {
   return (
-    <div className="flex flex-col gap-6">
-      <Skeleton className="h-8 w-24 rounded-lg" />
-      <div className="flex flex-wrap items-start justify-between gap-4">
+    <>
+      <PageHeaderSkeleton />
+      <div className="flex flex-col gap-3 sm:gap-4">
         <div className="flex flex-col gap-3">
-          <Skeleton className="h-7 w-64 max-w-full" />
-          <Skeleton className="h-4 w-40" />
+          <div className="flex gap-2">
+            <Skeleton className="h-5.5 w-20 rounded-pill" />
+            <Skeleton className="h-5.5 w-24 rounded-pill" />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Skeleton className="h-10 w-44 rounded-pill" />
+            <Skeleton className="h-10 w-24 rounded-pill" />
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Skeleton className="h-8 w-40 rounded-lg" />
-          <Skeleton className="h-8 w-24 rounded-lg" />
-        </div>
-      </div>
-      <Card>
-        <CardContent className="flex flex-col gap-5">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="flex gap-3">
-              <Skeleton className="size-4 shrink-0" />
-              <div className="flex flex-1 flex-col gap-2">
-                <Skeleton className="h-3 w-16" />
-                <Skeleton className="h-4 w-64 max-w-full" />
+        <Card>
+          <CardContent className="flex flex-col gap-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="size-7 shrink-0 rounded-xs" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+                <Skeleton className="ml-10 h-4 w-64 max-w-full" />
               </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-    </div>
+            ))}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-4 w-32" />
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Skeleton key={index} className="h-9 w-full" />
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }

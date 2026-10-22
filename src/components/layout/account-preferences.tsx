@@ -46,7 +46,7 @@ export function AccountPreferenceGroups() {
         </DropdownMenuLabel>
         <DropdownMenuRadioGroup value={preferences.theme} onValueChange={preferences.setTheme}>
           {THEMES.map((theme) => (
-            <DropdownMenuRadioItem key={theme} value={theme}>
+            <DropdownMenuRadioItem key={theme} value={theme} closeOnClick>
               {t(`theme.${theme}`)}
             </DropdownMenuRadioItem>
           ))}
@@ -61,7 +61,7 @@ export function AccountPreferenceGroups() {
           onValueChange={(value) => preferences.setLocale(value as SupportedLocale)}
         >
           {SUPPORTED_LOCALES.map((locale) => (
-            <DropdownMenuRadioItem key={locale} value={locale} lang={locale}>
+            <DropdownMenuRadioItem key={locale} value={locale} lang={locale} closeOnClick>
               {LANGUAGE_NAMES[locale]}
             </DropdownMenuRadioItem>
           ))}

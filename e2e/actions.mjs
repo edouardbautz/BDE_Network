@@ -228,6 +228,17 @@ const setDefaultRoleByName = (name) =>
 // ---------------------------------------------------------------------------------------------------------------------
 // The scenarios: each one performs an action and returns what `expectPage` says. `ctx.id` is unique to the round.
 
+// The language is chosen in the menu of the account, at the foot of the rail.
+async function chooseLanguage(name) {
+  await page.click('aside button[aria-haspopup="menu"]');
+  await page.waitForSelector('[role="menuitemradio"]');
+  await page.evaluate((wanted) => {
+    [...document.querySelectorAll('[role="menuitemradio"]')]
+      .find((item) => item.textContent.includes(wanted))
+      .click();
+  }, name);
+}
+
 const SCENARIOS = [
   {
     name: 'members: approve a request',
@@ -665,15 +676,13 @@ const SCENARIOS = [
     name: 'language: switch to English and back',
     async run() {
       await goto('/members');
-      await page.click('button[aria-label="Langue"], button[aria-label="Language"]');
-      await click('English');
+      await chooseLanguage('English');
       const english = await expectPage(
         () => location.pathname === '/en/members' && document.body.innerText.includes('Member'),
         undefined,
         'language-en',
       );
-      await page.click('button[aria-label="Language"], button[aria-label="Langue"]');
-      await click('Français');
+      await chooseLanguage('Français');
       const french = await expectPage(
         () => location.pathname === '/fr/members',
         undefined,

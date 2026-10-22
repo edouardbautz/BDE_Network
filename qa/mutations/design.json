@@ -110,5 +110,19 @@
     "              {item.shortLabel}\n            </span>\n            {/* After the name",
     "            </span>\n            {/* After the name",
     ["src/components/layout/app-shell.test.tsx"]
+  ],
+  [
+    "menu: choosing a theme leaves the menu open",
+    "src/components/layout/account-preferences.tsx",
+    "<DropdownMenuRadioItem key={theme} value={theme} closeOnClick>",
+    "<DropdownMenuRadioItem key={theme} value={theme}>",
+    ["src/components/layout/account-preferences.test.tsx"]
+  ],
+  [
+    "skeleton: the event page loads with the head of the old interface",
+    "src/app/[locale]/(app)/events/[id]/loading.tsx",
+    "<PageHeaderSkeleton />",
+    "<div />",
+    ["src/lib/loading-skeletons.test.ts"]
   ]
 ]
