@@ -134,6 +134,23 @@ async function shootLanguage(browser, lang) {
     const text = () => page.evaluate(() => document.body.innerText);
     const waitText = (needle) =>
       page.waitForFunction((value) => document.body.innerText.includes(value), {}, needle);
+    /** The card that holds the heading `title` of the settings page. */
+    const shootSection = async (title, name) => {
+      const handle = await page.evaluateHandle((wanted) => {
+        const heading = [...document.querySelectorAll('h2, h3')].find(
+          (el) => el.textContent?.trim() === wanted,
+        );
+        let node = heading;
+        while (node && node.parentElement && node.getBoundingClientRect().height < 160)
+          node = node.parentElement;
+        return node?.closest('[data-slot="card"], section, form') ?? node;
+      }, title);
+      const element = handle.asElement();
+      if (!element) throw new Error(`no section "${title}"`);
+      await element.screenshot({ path: join(out, name), type: 'webp', quality: 86 });
+      log(name);
+    };
+
     const click = async (label) => {
       const find = (wanted) =>
         [...document.querySelectorAll('button, a')].find((el) =>
@@ -180,6 +197,19 @@ async function shootLanguage(browser, lang) {
     await click(t.setup.nav.next);
     await waitText(t.setup.modules.title);
     await click(t.setup.nav.next);
+    // The notifications: Discord and e-mail set up, Slack left to set up (its column stays grey), and what goes where.
+    await waitText(t.setup.notifications.matrixTitle);
+    await page.type('#setup-discord', 'https://discord.com/api/webhooks/123456789/demo-webhook');
+    await page.type('#setup-smtp-host', 'smtp.mon-ecole.fr');
+    await page.type('#setup-smtp-from', 'bde@mon-ecole.fr');
+    const names = t.setup.notifications.channelNames;
+    for (const channel of [names.discord, names.email])
+      await click(t.setup.notifications.checkColumn.replace('{channel}', channel));
+    // the e-mail of the reminders is left out: the people in charge already get the calendar
+    await page.click(
+      `input[aria-label="${t.setup.notifications.types.eventReminder.name} — ${names.email}"]`,
+    );
+    await shootSection(t.setup.notifications.matrixTitle, 'notifications.webp');
     await click(t.setup.nav.next);
     await waitText(t.setup.summary.title);
     await click(t.setup.summary.install);
@@ -287,23 +317,6 @@ async function shootLanguage(browser, lang) {
       await page.goto(`${base}/${lang}${path}`, { waitUntil: 'networkidle0' });
       await new Promise((resolve) => setTimeout(resolve, settle));
     };
-    /** The card that holds the heading `title` of the settings page. */
-    const shootSection = async (title, name) => {
-      const handle = await page.evaluateHandle((wanted) => {
-        const heading = [...document.querySelectorAll('h2, h3')].find(
-          (el) => el.textContent?.trim() === wanted,
-        );
-        let node = heading;
-        while (node && node.parentElement && node.getBoundingClientRect().height < 160)
-          node = node.parentElement;
-        return node?.closest('[data-slot="card"], section, form') ?? node;
-      }, title);
-      const element = handle.asElement();
-      if (!element) throw new Error(`no section "${title}"`);
-      await element.screenshot({ path: join(out, name), type: 'webp', quality: 86 });
-      log(name);
-    };
-
     await page.setViewport({ width: 1280, height: 800 });
     await page.deleteCookie({ name: COOKIE, url: base });
     await open('', { settle: 400 });

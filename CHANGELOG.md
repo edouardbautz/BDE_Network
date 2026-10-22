@@ -8,12 +8,35 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **A notification can go through several channels at once.** Each type of notification (an access request, a confirmed event, a
+  reminder, a proposal…) now has a **list** of channels among Discord, Slack and e-mail, instead of one: Discord **and** e-mail for the
+  access requests, only Slack for the reminders, nothing for the rest. In **Settings** and in the installer, the _Notifications_ form is
+  a panel per channel (what it needs, a "Set up" badge, its own test, a removal) and a **table of boxes**: a row per notification, a
+  column per channel, shortcuts to tick or clear a whole column, a box that can only be ticked when its channel is set up, no e-mail box
+  for a member who was removed, and on a phone a list of blocks that does not scroll sideways. A notification with no box ticked sends
+  nothing.
+- **The channels are independent.** A message goes out on every channel ticked at the same time: a Discord channel that is down no longer
+  holds back the e-mails or the Slack message, and a card that cannot be built leaves only its own channel with the plain message. None of
+  it blocks the action that caused the notification, and the logs name the channel that failed.
+- **The test message tests one channel, and shows what it will look like.** One test per channel, through what is typed in its panel
+  (saved or not), sends the **real card or e-mail** with an invented event marked "Test message", with the BDE's name, color and logo.
+
 - **The update suite starts from 1.3.0 and 1.4.0 too**, with the data of a board that has used what they brought: roles that only propose, that
   validate and that manage the shared calendar; series with advanced rules (every two weeks on Monday and Wednesday ten times across the change of
   clock, the second Saturday, the last day of the month, every year); a series cut in two with a cancelled date and a moved one; a proposal, the
   proposal of a series, a refusal with its comment, drafts, and a draft series with one date confirmed alone. Each is updated to the code of the
   branch, held to what the old version said (every row, every line of its four calendar files, the rights), backed up, restored and taken back.
   Development tooling only: nothing of the platform changes.
+
+### Changed
+
+- `notifications.<type>` of `bde.config.yml` and of the stored settings is a list (`[discord, email]`; `[]` for nothing). **The old
+  form is still read**: `"discord"` is `[discord]`, `"none"` and a missing key are `[]`. Nothing is migrated or rewritten by the update
+  (the update suite checks that each notification keeps its channel, from 1.0.0 to 1.4.0); the lists are written the next time the
+  settings page is saved. `bde.config.example.yml` documents the lists.
+- The e-mail of an approved member is now its own message next to the team's card, with its own subject, when both channels are ticked.
+- Update suite: the QA configuration names a different channel for each notification (as every version before 1.5.0 wrote it), and the
+  settings page of the version under test must tick exactly those boxes.
 
 ## [1.4.0] - 2026-10-22
 
