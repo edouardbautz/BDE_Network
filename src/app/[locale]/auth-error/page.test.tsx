@@ -36,6 +36,11 @@ beforeEach(() => {
 });
 
 describe('AuthErrorPage', () => {
+  it('has a heading of level 1, whatever went wrong', async () => {
+    await renderPage({ error: 'AccessDenied' });
+    expect(screen.getByRole('heading', { level: 1, name: 'title' })).toBeInTheDocument();
+  });
+
   it('says the application is refused when 42 refuses it, whichever way Auth.js reports it', async () => {
     mocks.credentials.mockResolvedValue('rejected');
     for (const error of ['OAuthCallbackError', 'Configuration']) {

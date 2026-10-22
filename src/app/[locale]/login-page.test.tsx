@@ -47,6 +47,11 @@ beforeEach(() => {
 });
 
 describe('LoginPage', () => {
+  it('has a heading of level 1: the name of the BDE (a page with none gives a screen reader nothing to start from)', async () => {
+    await renderPage();
+    expect(screen.getByRole('heading', { level: 1, name: 'BDE Test' })).toBeInTheDocument();
+  });
+
   it('offers the sign-in button when 42 accepts the application', async () => {
     await renderPage();
     expect(screen.getByRole('button', { name: 'loginButton' })).toBeEnabled();

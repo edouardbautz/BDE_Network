@@ -63,7 +63,7 @@ describe('the waiting page', () => {
     mocks.session.mockResolvedValue(pendingSession);
     await open();
 
-    expect(screen.getByText(tPending('title'))).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: tPending('title') })).toBeInTheDocument();
     expect(
       screen.getByText(tPending('signedInAs', { name: 'Marie Dupont', login: 'dupont' })),
     ).toBeInTheDocument();
