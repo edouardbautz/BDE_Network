@@ -181,6 +181,7 @@ export function StepNotifications({
                     error={fieldError(failure, 'testTo', text)}
                   >
                     <Input
+                      className="bg-surface"
                       id="setup-test-to"
                       type="email"
                       value={typed.testTo}

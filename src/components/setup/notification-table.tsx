@@ -111,7 +111,7 @@ export function NotificationTable({
             </TableRow>
             {MATRIX_GROUPS[group].map((event) => (
               <TableRow key={event}>
-                <TableCell className="whitespace-normal">
+                <TableCell className="whitespace-normal max-sm:flex-col max-sm:items-start max-sm:gap-0.5">
                   <span className="text-body-strong block">{t(`types.${event}.name`)}</span>
                   <span className="text-muted-foreground text-small block font-normal">
                     {t(`types.${event}.hint`)}

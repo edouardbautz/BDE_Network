@@ -166,7 +166,7 @@ export function WebhookField({
         onChange={(event) => onChange(event.target.value)}
         autoComplete="off"
         spellCheck={false}
-        className="font-mono text-small"
+        className="bg-surface font-mono text-small"
         aria-invalid={failure?.field === field}
       />
     </Field>
@@ -192,6 +192,7 @@ export function SmtpFields({
     <div className="grid gap-4 sm:grid-cols-2">
       <Field id="setup-smtp-host" label={t('smtpHost')} error={fieldText('smtpHost')}>
         <Input
+          className="bg-surface"
           id="setup-smtp-host"
           value={value.host}
           onChange={(event) => onChange({ ...value, host: event.target.value })}
@@ -201,6 +202,7 @@ export function SmtpFields({
       </Field>
       <Field id="setup-smtp-port" label={t('smtpPort')} error={fieldText('smtpPort')}>
         <Input
+          className="bg-surface"
           id="setup-smtp-port"
           value={value.port}
           onChange={(event) => onChange({ ...value, port: event.target.value })}
@@ -211,6 +213,7 @@ export function SmtpFields({
       </Field>
       <Field id="setup-smtp-user" label={t('smtpUser')} error={fieldText('smtpUser')}>
         <Input
+          className="bg-surface"
           id="setup-smtp-user"
           value={value.user}
           onChange={(event) => onChange({ ...value, user: event.target.value })}
@@ -225,6 +228,7 @@ export function SmtpFields({
         error={fieldText('smtpPassword')}
       >
         <Input
+          className="bg-surface"
           id="setup-smtp-password"
           type="password"
           value={value.password}
@@ -236,6 +240,7 @@ export function SmtpFields({
       <div className="sm:col-span-2">
         <Field id="setup-smtp-from" label={t('smtpFrom')} error={fieldText('smtpFrom')}>
           <Input
+            className="bg-surface"
             id="setup-smtp-from"
             type="email"
             value={value.from}
