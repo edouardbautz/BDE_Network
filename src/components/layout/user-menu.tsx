@@ -40,7 +40,6 @@ export async function UserMenu({ name, login, image, roleLabel, placement }: Use
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        aria-label={name}
         className={cn(
           'bg-surface elev-1 shrink-0 rounded-pill focus-visible:outline-offset-2',
           placement === 'rail' ? 'size-10.5' : 'size-11',
@@ -48,10 +47,15 @@ export async function UserMenu({ name, login, image, roleLabel, placement }: Use
       >
         <Avatar className="size-full after:hidden">
           {image ? <AvatarImage src={image} alt="" /> : null}
-          <AvatarFallback className="bg-surface-2 text-small text-ink font-extrabold">
+          <AvatarFallback
+            aria-hidden="true"
+            className="bg-surface-2 text-small text-ink font-extrabold"
+          >
             {initials}
           </AvatarFallback>
         </Avatar>
+        {/* The name is text, not an aria-label: a label that does not contain the visible initials fails WCAG 2.5.3. */}
+        <span className="sr-only">{name}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"

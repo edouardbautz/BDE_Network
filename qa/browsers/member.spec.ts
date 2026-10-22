@@ -1,4 +1,5 @@
 import { expect, test } from './fixtures';
+import { atRest } from './rest';
 
 /**
  * An ordinary member, in every engine: the dashboard, the calendar and the list of events (the buttons that change only the
@@ -136,6 +137,9 @@ test.describe('a member', () => {
     await expect(
       page.getByRole('button', { name: /Sign in with 42|Se connecter avec 42/ }),
     ).toBeVisible();
+    // The login page finishes loading before the next address is asked for: leaving it with a script still on its way is the
+    // test's own doing (Firefox words the cancelled script as a ChunkLoadError), not something to let the watcher through.
+    await atRest(page);
     // The session is gone: the application sends the visitor back to the login page.
     await page.goto('/en/dashboard');
     await expect(page).toHaveURL(/\/(en|fr)$/);

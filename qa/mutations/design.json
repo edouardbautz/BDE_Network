@@ -124,5 +124,26 @@
     "<PageHeaderSkeleton />",
     "<div />",
     ["src/lib/loading-skeletons.test.ts"]
+  ],
+  [
+    "accent: a white veil under white text",
+    "src/lib/color.ts",
+    "'rgba(0, 0, 0, 0.18)'",
+    "'rgba(255, 255, 255, 0.22)'",
+    ["src/lib/color.test.ts"]
+  ],
+  [
+    "frame: the logo is named by an aria-label again",
+    "src/components/layout/app-shell.tsx",
+    "      href=\"/dashboard\"\n",
+    "      href=\"/dashboard\"\n      aria-label={bdeName}\n",
+    ["src/components/layout/app-shell.test.tsx"]
+  ],
+  [
+    "frame: the account button is named by an aria-label again",
+    "src/components/layout/user-menu.tsx",
+    "      <DropdownMenuTrigger\n",
+    "      <DropdownMenuTrigger\n        aria-label={name}\n",
+    ["src/components/layout/user-menu.test.tsx"]
   ]
 ]

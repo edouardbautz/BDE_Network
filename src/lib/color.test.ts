@@ -93,6 +93,16 @@ describe('deriveAccent', () => {
             expect(ratio(rgb(tokens.ink), soft), `${hex} ${theme} ink/soft`).toBeGreaterThanOrEqual(
               4.6,
             );
+            // the badge of the accent card (text on the veiled fill): a white veil under white text read 3.57:1 on a teal
+            const veil = /rgba\((\d+), (\d+), (\d+), ([\d.]+)\)/.exec(tokens.onSoft)!;
+            const veiled = blend(
+              [Number(veil[1]), Number(veil[2]), Number(veil[3])],
+              Number(veil[4]),
+              rgb(tokens.fill),
+            );
+            expect(ratio(rgb(tokens.on), veiled), `${hex} ${theme} on/veil`).toBeGreaterThanOrEqual(
+              onFill,
+            );
             // the states only add contrast
             expect(
               ratio(rgb(tokens.on), rgb(tokens.fillHover)),
@@ -127,9 +137,9 @@ describe('deriveAccent', () => {
     expect(deriveAccent('#2F5BEA', 'dark').softHover).toBe('rgba(47, 91, 234, 0.28)');
   });
 
-  it('veils the accent card in white or in near black, whichever its text is', () => {
-    expect(deriveAccent('#2F5BEA', 'light').onSoft).toBe('rgba(255, 255, 255, 0.22)');
-    expect(deriveAccent('#F0B429', 'light').onSoft).toBe('rgba(17, 17, 17, 0.12)');
+  it('veils the accent card darker under white text and lighter under dark text, so the contrast only goes up', () => {
+    expect(deriveAccent('#2F5BEA', 'light').onSoft).toBe('rgba(0, 0, 0, 0.18)');
+    expect(deriveAccent('#F0B429', 'light').onSoft).toBe('rgba(255, 255, 255, 0.3)');
   });
 
   it('is the same colour in both themes except for what must change with the surface', () => {

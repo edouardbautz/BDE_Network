@@ -46,6 +46,8 @@ describe('UserMenu', () => {
   it('opens, with who is signed in, a link to the profile and the way to sign out', async () => {
     await open();
 
+    // the button is named by text, not by an aria-label that leaves out the initials drawn on it (WCAG 2.5.3)
+    expect(screen.getByRole('button', { name: /Alice Martin/ })).not.toHaveAttribute('aria-label');
     const menu = await screen.findByRole('menu');
     expect(menu).toHaveTextContent('Alice Martin');
     expect(menu).toHaveTextContent('amartin');

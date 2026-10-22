@@ -88,7 +88,6 @@ function Logo({
   return (
     <Link
       href="/dashboard"
-      aria-label={bdeName}
       className="bg-accent-fill text-accent-on accent-edge text-body-strong flex size-11.5 shrink-0 items-center justify-center overflow-hidden rounded-md font-extrabold focus-visible:outline-offset-3"
     >
       {defaultLogo ? (
@@ -97,6 +96,8 @@ function Logo({
         // eslint-disable-next-line @next/next/no-img-element -- the BDE's own logo, served by the platform
         <img src={logoPath} alt="" className="size-full object-cover" />
       )}
+      {/* The name is text, not an aria-label: a label that does not contain the visible initials fails WCAG 2.5.3. */}
+      <span className="sr-only">{bdeName}</span>
     </Link>
   );
 }

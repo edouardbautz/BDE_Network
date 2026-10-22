@@ -59,7 +59,7 @@ export interface AccentTokens {
   /** Translucent tinted background (active entry, icon tile, event chip), and the same under the pointer. */
   soft: string;
   softHover: string;
-  /** A veil on `fill`: badge and gauge track of the accent card. */
+  /** A veil on `fill`, always in the direction that raises the contrast of `on` (darker under white text, lighter under dark text): the badge of the accent card. */
   onSoft: string;
   /** The fill is too close to the page background: the surfaces filled with it get a hairline. */
   edge: boolean;
@@ -111,7 +111,7 @@ export function deriveAccent(hex: string, theme: 'light' | 'dark'): AccentTokens
     ink: toHex(ink),
     soft: rgba(alpha),
     softHover: rgba(Math.round((alpha + 0.06) * 100) / 100),
-    onSoft: on === '#FFFFFF' ? 'rgba(255, 255, 255, 0.22)' : 'rgba(17, 17, 17, 0.12)',
+    onSoft: on === '#FFFFFF' ? 'rgba(0, 0, 0, 0.18)' : 'rgba(255, 255, 255, 0.3)',
     edge: contrast(fill, hexToRgb(BACKGROUND[theme])) < 1.4,
     adjusted,
   };

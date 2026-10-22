@@ -128,7 +128,10 @@ describe('the rail', () => {
 
   it('shows the initials of the BDE on the accent while it has not uploaded a logo, and its logo once it has', () => {
     renderShell(items, [], true);
-    expect(screen.getByRole('link', { name: 'BDE Test' })).toHaveTextContent('BT');
+    const mark = screen.getByRole('link', { name: 'BDE Test' });
+    expect(mark).toHaveTextContent('BT');
+    // named by text, not by an aria-label that leaves out the initials on screen (WCAG 2.5.3, flagged by axe on every page)
+    expect(mark).not.toHaveAttribute('aria-label');
     cleanup();
     renderShell(items, [], false);
     const logo = screen.getByRole('link', { name: 'BDE Test' });

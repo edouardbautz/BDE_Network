@@ -105,7 +105,7 @@ installer proposes it, the example configuration writes it); a platform that has
 | `--accent-on`      | Text and icons on `accent-fill` (`#FFFFFF` or `#111111`)                    |
 | `--accent-ink`     | The accent as text or icon on a surface: links, active icon, **focus ring** |
 | `--accent-soft`    | Translucent tint: active rail entry, icon tiles, event chips                |
-| `--accent-on-soft` | A veil on `accent-fill`: badge and gauge track in the accent card           |
+| `--accent-on-soft` | A veil on `accent-fill` that only adds contrast: badge in the accent card   |
 
 **The algorithm** (`deriveAccent` in `src/lib/color.ts`, tested on a spread of 500 colours and against the examples): the colour is
 kept as the fill whenever white (4.5:1) or near-black `#111111` (4.5:1) carries text on it, otherwise it is darkened until white

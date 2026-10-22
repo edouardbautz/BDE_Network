@@ -194,7 +194,7 @@
   --accent-ink: var(--accent-ink-l, #2950ce);
   --accent-soft: var(--accent-soft-l, rgba(47, 91, 234, 0.13));
   --accent-soft-hover: var(--accent-soft-hover-l, rgba(47, 91, 234, 0.19));
-  --accent-on-soft: var(--accent-on-soft-l, rgba(255, 255, 255, 0.22));
+  --accent-on-soft: var(--accent-on-soft-l, rgba(0, 0, 0, 0.18));
   --accent-edge: var(--accent-edge-l, 0 0 0 0 transparent);
 
   /* Spacing (spec 2.4), base 4 */
@@ -260,7 +260,7 @@
   --accent-ink: var(--accent-ink-d, #7e99f2);
   --accent-soft: var(--accent-soft-d, rgba(47, 91, 234, 0.22));
   --accent-soft-hover: var(--accent-soft-hover-d, rgba(47, 91, 234, 0.28));
-  --accent-on-soft: var(--accent-on-soft-d, rgba(255, 255, 255, 0.22));
+  --accent-on-soft: var(--accent-on-soft-d, rgba(0, 0, 0, 0.18));
   --accent-edge: var(--accent-edge-d, 0 0 0 0 transparent);
 }
 
