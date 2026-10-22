@@ -6,6 +6,20 @@ All notable changes to this project are written here, in English. Format based o
 
 ## [Unreleased]
 
+### Changed
+
+- **A repetition starts on the first day that fits it, and the interval is counted from that day.** "Every 2 weeks on Monday and
+  Wednesday, 10 times" typed on Friday 23 October used to start on Monday 2 November (the weeks were counted from the week of the
+  Friday, which skipped the Monday after); it now starts on **Monday 26 October** and gives the 26th and 28th, then the 9th and
+  11th of November… The same goes for "every 2 months on the 15th" typed on the 20th (the months are counted from November) and
+  "every 2 years" on a day already past this year. A series whose first date already is a day of its rule keeps every date it
+  had: the series that exist are not changed (checked against the previous counting, on the demonstration data and on the golden
+  test of the series that existed before the rules).
+- **The form says where a series will start in a visible notice.** It was a line of small grey text in the preview ("The first date
+  becomes…"). It is now an information notice of the design system above the preview: "October 23 does not match this rule: the
+  series will start on Monday, October 26.", with a button "Start on October 26" that changes the start date for you, keeping its
+  time and its duration.
+
 ## [1.3.0] - 2026-10-22
 
 ### Added

@@ -682,10 +682,10 @@ describe('proposing an event', () => {
       status: 'PROPOSED',
       repeat: { freq: 'WEEKLY', interval: 2, weekdays: ['MO', 'WE'], count: 10 },
     });
-    // the first date typed (a Saturday) moved to the first that fits (the Monday of the next week that counts);
-    // the series ends where its tenth date starts
-    expect(data.startsAt).toEqual(new Date('2026-10-19T18:00:00Z'));
-    expect(data.recurrenceUntil).toEqual(new Date('2026-12-16T19:00:00Z'));
+    // the first date typed (a Saturday) moved to the first that fits (the Monday after), and the weeks are counted from
+    // it; the series ends where its tenth date starts (Wednesday 9 December)
+    expect(data.startsAt).toEqual(new Date('2026-10-12T18:00:00Z'));
+    expect(data.recurrenceUntil).toEqual(new Date('2026-12-09T19:00:00Z'));
   });
 
   it('refuses to propose a series with more dates than an event holds: nothing is stored', async () => {

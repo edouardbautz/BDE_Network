@@ -37,6 +37,37 @@ export function formatLongDate(date: Date, locale: string, timeZone: string): st
   return new Intl.DateTimeFormat(locale, { dateStyle: 'full', timeZone }).format(date);
 }
 
+/** "23 octobre" (the year too when the day is not in the year one is reading about). */
+export function formatDayMonth(
+  date: Date,
+  locale: string,
+  timeZone: string,
+  withYear = false,
+): string {
+  return new Intl.DateTimeFormat(locale, {
+    day: 'numeric',
+    month: 'long',
+    ...(withYear ? { year: 'numeric' } : {}),
+    timeZone,
+  }).format(date);
+}
+
+/** "lundi 26 octobre" (with the year when asked). */
+export function formatWeekdayDayMonth(
+  date: Date,
+  locale: string,
+  timeZone: string,
+  withYear = false,
+): string {
+  return new Intl.DateTimeFormat(locale, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    ...(withYear ? { year: 'numeric' } : {}),
+    timeZone,
+  }).format(date);
+}
+
 /** Full date + time range for the detail page. */
 export function formatDateTimeRange(
   start: Date,

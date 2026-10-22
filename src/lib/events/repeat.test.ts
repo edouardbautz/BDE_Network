@@ -161,6 +161,53 @@ describe('every weekday, every week, every N weeks', () => {
     ]);
   });
 
+  it('starts on the first day that fits and counts the weeks from there: "every 2 weeks on Monday and Wednesday", from a Friday', () => {
+    // Friday 2026-10-23: the Monday and the Wednesday of its week are behind it. The series starts on Monday 26 and the
+    // weeks are counted from that one (26 and 28 October, 9 and 11 November…), not from the week of the Friday, which
+    // would have skipped the following Monday and started on 2 November.
+    expect(days(series(weekly(['MO', 'WE'], 2, 10), '2026-10-23', '2027-12-31'))).toEqual([
+      '2026-10-26',
+      '2026-10-28',
+      '2026-11-09',
+      '2026-11-11',
+      '2026-11-23',
+      '2026-11-25',
+      '2026-12-07',
+      '2026-12-09',
+      '2026-12-21',
+      '2026-12-23',
+    ]);
+  });
+
+  it('does the same when the first date is a Sunday and the rule is a Monday', () => {
+    expect(days(series(weekly(['MO'], 3), '2026-10-25', '2026-12-31'))).toEqual([
+      '2026-10-26',
+      '2026-11-16',
+      '2026-12-07',
+      '2026-12-28',
+    ]);
+  });
+
+  it('does not move a series whose first date has a day of the rule later in its own week', () => {
+    // Monday 2026-10-05: the week of the first date is the first of the "every 2 weeks", as it always was.
+    expect(days(series(weekly(['MO', 'WE'], 2), '2026-10-05', '2026-11-05'))).toEqual([
+      '2026-10-05',
+      '2026-10-07',
+      '2026-10-19',
+      '2026-10-21',
+      '2026-11-02',
+      '2026-11-04',
+    ]);
+    // Tuesday 2026-10-06: Wednesday is still ahead in the week, so that week is the first.
+    expect(days(series(weekly(['MO', 'WE'], 2), '2026-10-06', '2026-11-05'))).toEqual([
+      '2026-10-07',
+      '2026-10-19',
+      '2026-10-21',
+      '2026-11-02',
+      '2026-11-04',
+    ]);
+  });
+
   it('puts a Sunday at the end of its week, not at the start of the next', () => {
     // Sunday 2026-10-11 is the last day of the week of Monday 2026-10-05.
     expect(days(series(weekly(['SU'], 2), '2026-10-11', '2026-11-30'))).toEqual([
@@ -269,6 +316,32 @@ describe('every month, every N months', () => {
   });
 });
 
+describe('every month, every N months, from a first date that is not one of the days', () => {
+  it('counts the months from the first month that has the day: every 2 months on the 15th, from the 20th', () => {
+    // the 15th of October is behind: the first date is the 15th of November, then January, March
+    expect(days(series(monthly({ kind: 'day', day: 15 }, 2), '2026-10-20', '2027-04-30'))).toEqual([
+      '2026-11-15',
+      '2027-01-15',
+      '2027-03-15',
+    ]);
+  });
+
+  it('does the same on the Nth weekday: every 3 months on the 2nd Tuesday, from after it', () => {
+    // the 2nd Tuesday of October 2026 is the 13th: November's is the 10th, then February, May
+    expect(
+      days(series(monthly({ kind: 'nth', nth: 2, weekday: 'TU' }, 3), '2026-10-20', '2027-06-30')),
+    ).toEqual(['2026-11-10', '2027-02-09', '2027-05-11']);
+  });
+
+  it('does not move a series whose day is still ahead in its own month', () => {
+    expect(days(series(monthly({ kind: 'day', day: 15 }, 2), '2026-10-03', '2027-02-28'))).toEqual([
+      '2026-10-15',
+      '2026-12-15',
+      '2027-02-15',
+    ]);
+  });
+});
+
 describe('every year, every N years', () => {
   it('repeats on the date of the first date', () => {
     expect(days(series(yearly(), '2026-03-15', '2029-12-31'))).toEqual([
@@ -286,6 +359,13 @@ describe('every year, every N years', () => {
       '2030-03-15',
       '2032-03-15',
     ]);
+  });
+
+  it('counts the years from the first year that has the day: every 2 years on the 2nd Tuesday of October, from the 20th', () => {
+    // the 2nd Tuesday of October 2026 is behind: the first date is the one of 2027, then 2029
+    expect(
+      days(series(yearly({ kind: 'nth', nth: 2, weekday: 'TU' }, 2), '2026-10-20', '2030-12-31')),
+    ).toEqual(['2027-10-12', '2029-10-09']);
   });
 
   it('puts the 29th of February on the 28th in the years that are not leap years', () => {
@@ -451,6 +531,13 @@ describe('alignStart', () => {
     expect(aligned.endsAt.getTime() - aligned.startsAt.getTime()).toBe(2 * 3_600_000);
   });
 
+  it('moves a Friday to the Monday after, with "every 2 weeks on Monday and Wednesday"', () => {
+    const { startsAt, endsAt } = at('2026-10-23T18:00');
+    const aligned = alignStart(weekly(['MO', 'WE'], 2, 10), startsAt, endsAt, PARIS);
+    expect(local(aligned.startsAt)).toBe('2026-10-26T18:00');
+    expect(aligned.endsAt.getTime() - aligned.startsAt.getTime()).toBe(2 * 3_600_000);
+  });
+
   it('moves it to the 15th, or to the second Tuesday of the month', () => {
     const { startsAt, endsAt } = at('2026-10-03T18:00');
     expect(
@@ -535,13 +622,78 @@ const dim = (d: Date) =>
   new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
 const ymd = (d: Date) => d.toISOString().slice(0, 10);
 
-/** Looks at every day, one after the other, and asks the calendar (`getUTCDay`, never the rule's arithmetic). */
+/**
+ * Looks at every day, one after the other, and asks the calendar (`getUTCDay`, never the rule's arithmetic). The series starts on
+ * the first day, from the first date on, that the rule's days fall on, and the weeks, months and years are counted from there.
+ */
 function byScanning(rule: RepeatRule, first: Date, last: Date): string[] {
   const weekdays = rule.weekdays ?? [WEEKDAYS[(first.getUTCDay() + 6) % 7]!];
   const pattern: MonthlyPattern = rule.monthly ?? { kind: 'day', day: first.getUTCDate() };
   const weekOf = (d: Date) =>
     Math.floor((d.getTime() - ((d.getUTCDay() + 6) % 7) * 86_400_000) / (7 * 86_400_000));
-  const fits = (d: Date): boolean => {
+  const monthsBetween = (from: Date, to: Date) =>
+    (to.getUTCFullYear() - from.getUTCFullYear()) * 12 + to.getUTCMonth() - from.getUTCMonth();
+  /** Does the rule's day (the weekday, the day of the month, the month of a year) fall on this day, whatever the interval? */
+  const onTheDays = (d: Date): boolean => {
+    const date = d.getUTCDate();
+    const onPattern =
+      pattern.kind === 'day'
+        ? date === Math.min(pattern.day, dim(d))
+        : pattern.kind === 'lastDay'
+          ? date === dim(d)
+          : WEEKDAYS[(d.getUTCDay() + 6) % 7] === pattern.weekday &&
+            (pattern.nth === -1 ? date + 7 > dim(d) : Math.ceil(date / 7) === pattern.nth);
+    switch (rule.freq) {
+      case 'DAILY':
+        return true;
+      case 'WEEKLY':
+        return weekdays.includes(WEEKDAYS[(d.getUTCDay() + 6) % 7]!);
+      case 'MONTHLY':
+        return onPattern;
+      case 'YEARLY':
+        return d.getUTCMonth() === first.getUTCMonth() && onPattern;
+    }
+  };
+
+  // The first date of the series, and the day the weeks, months and years are counted from.
+  let anchor = new Date(first);
+  while (!onTheDays(anchor)) anchor = new Date(anchor.getTime() + 86_400_000);
+
+  const found: string[] = [];
+  for (
+    let d = new Date(anchor);
+    d.getTime() <= last.getTime();
+    d = new Date(d.getTime() + 86_400_000)
+  ) {
+    if (!onTheDays(d)) continue;
+    const periods =
+      rule.freq === 'DAILY'
+        ? Math.round((d.getTime() - anchor.getTime()) / 86_400_000)
+        : rule.freq === 'WEEKLY'
+          ? weekOf(d) - weekOf(anchor)
+          : rule.freq === 'MONTHLY'
+            ? monthsBetween(anchor, d)
+            : monthsBetween(anchor, d) / 12;
+    if (periods % rule.interval === 0) found.push(ymd(d));
+  }
+  return found;
+}
+
+/**
+ * The way the weeks, months and years were counted before a series started on the first day that fits its rule: from the
+ * week, month or year of the first date itself. Kept to show that nothing differs for a series that starts on one of its days.
+ */
+function countedFromTheFirstDate(rule: RepeatRule, first: Date, last: Date): string[] {
+  const weekdays = rule.weekdays ?? [WEEKDAYS[(first.getUTCDay() + 6) % 7]!];
+  const pattern: MonthlyPattern = rule.monthly ?? { kind: 'day', day: first.getUTCDate() };
+  const weekOf = (d: Date) =>
+    Math.floor((d.getTime() - ((d.getUTCDay() + 6) % 7) * 86_400_000) / (7 * 86_400_000));
+  const found: string[] = [];
+  for (
+    let d = new Date(first);
+    d.getTime() <= last.getTime();
+    d = new Date(d.getTime() + 86_400_000)
+  ) {
     const date = d.getUTCDate();
     const onPattern =
       pattern.kind === 'day'
@@ -552,34 +704,86 @@ function byScanning(rule: RepeatRule, first: Date, last: Date): string[] {
             (pattern.nth === -1 ? date + 7 > dim(d) : Math.ceil(date / 7) === pattern.nth);
     const months =
       (d.getUTCFullYear() - first.getUTCFullYear()) * 12 + d.getUTCMonth() - first.getUTCMonth();
-    switch (rule.freq) {
-      case 'DAILY':
-        return Math.round((d.getTime() - first.getTime()) / 86_400_000) % rule.interval === 0;
-      case 'WEEKLY':
-        return (
-          weekdays.includes(WEEKDAYS[(d.getUTCDay() + 6) % 7]!) &&
-          (weekOf(d) - weekOf(first)) % rule.interval === 0
-        );
-      case 'MONTHLY':
-        return months % rule.interval === 0 && onPattern;
-      case 'YEARLY':
-        return (
-          months % (12 * rule.interval) === 0 &&
-          d.getUTCMonth() === first.getUTCMonth() &&
-          onPattern
-        );
-    }
-  };
-  const found: string[] = [];
-  for (
-    let d = new Date(first);
-    d.getTime() <= last.getTime();
-    d = new Date(d.getTime() + 86_400_000)
-  ) {
-    if (fits(d)) found.push(ymd(d));
+    const fits =
+      rule.freq === 'DAILY'
+        ? Math.round((d.getTime() - first.getTime()) / 86_400_000) % rule.interval === 0
+        : rule.freq === 'WEEKLY'
+          ? weekdays.includes(WEEKDAYS[(d.getUTCDay() + 6) % 7]!) &&
+            (weekOf(d) - weekOf(first)) % rule.interval === 0
+          : rule.freq === 'MONTHLY'
+            ? months % rule.interval === 0 && onPattern
+            : months % (12 * rule.interval) === 0 &&
+              d.getUTCMonth() === first.getUTCMonth() &&
+              onPattern;
+    if (fits) found.push(ymd(d));
   }
   return found;
 }
+
+describe('a series that starts on one of its days keeps the dates it always had', () => {
+  it('for a thousand rules chosen at random, in every zone', () => {
+    const next = random(20261022);
+    const pick = <T>(values: readonly T[]): T => values[Math.floor(next() * values.length)]!;
+    const zones = ['Europe/Paris', 'America/New_York', 'Pacific/Auckland', 'Asia/Kolkata', 'UTC'];
+
+    for (let round = 0; round < 1000; round += 1) {
+      const freq = pick(['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'] as const);
+      const weekdays = [...WEEKDAYS].filter(() => next() < 0.35);
+      const rule: RepeatRule = {
+        freq,
+        interval: pick([1, 1, 2, 3, 5]),
+        ...(freq === 'WEEKLY' && weekdays.length > 0 ? { weekdays } : {}),
+        ...((freq === 'MONTHLY' || freq === 'YEARLY') && next() < 0.8
+          ? {
+              monthly: pick<MonthlyPattern>([
+                { kind: 'day', day: 1 + Math.floor(next() * 31) },
+                { kind: 'lastDay' },
+                { kind: 'nth', nth: pick([1, 2, 3, 4, -1] as const), weekday: pick(WEEKDAYS) },
+              ]),
+            }
+          : {}),
+      };
+      const typed = new Date(
+        Date.UTC(
+          2024 + Math.floor(next() * 6),
+          Math.floor(next() * 12),
+          1 + Math.floor(next() * 28),
+        ),
+      );
+      const last = new Date(
+        typed.getTime() + (freq === 'YEARLY' ? 365 * 25 : 365 * 5) * 86_400_000,
+      );
+      // The first date saved is a day of the rule: the one the form moves a date typed to.
+      const savedFirst = byScanning(rule, typed, last)[0];
+      if (!savedFirst) continue;
+      const first = new Date(savedFirst);
+
+      const zone = pick(zones);
+      const at = (hour: number, minute: number, end: Date) =>
+        fromLocalDateTime(
+          {
+            year: end.getUTCFullYear(),
+            month: end.getUTCMonth() + 1,
+            day: end.getUTCDate(),
+            hour,
+            minute,
+          },
+          zone,
+        );
+      const source = {
+        startsAt: at(18, 0, first),
+        endsAt: at(20, 0, first),
+        repeat: rule,
+        recurrenceUntil: at(23, 59, last),
+      };
+      const got = expandRepeat(source, zone).occurrences.map((o) =>
+        formatLocalInput(o.start, zone).slice(0, 10),
+      );
+      const before = countedFromTheFirstDate(rule, first, last).slice(0, MAX_OCCURRENCES);
+      expect(got, `${zone} ${ymd(first)} ${JSON.stringify(rule)}`).toEqual(before);
+    }
+  });
+});
 
 describe('the engine, against a way of finding the dates that looks at every day', () => {
   const zones = ['Europe/Paris', 'America/New_York', 'Pacific/Auckland', 'Asia/Kolkata', 'UTC'];

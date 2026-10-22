@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { Info } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -30,8 +33,13 @@ import {
   weekdayName,
   type RepeatTranslate,
 } from '@/lib/events/repeat-summary';
-import { formatLongDate } from '@/lib/events/format';
-import { fromLocalDateTime, parseLocalInput, toLocalDateTime } from '@/lib/events/time';
+import { formatDayMonth, formatLongDate, formatWeekdayDayMonth } from '@/lib/events/format';
+import {
+  formatLocalInput,
+  fromLocalDateTime,
+  parseLocalInput,
+  toLocalDateTime,
+} from '@/lib/events/time';
 import { NativeSelect } from './field-styles';
 
 /** How many of the next dates the preview lists. */
@@ -47,6 +55,11 @@ interface RepeatFieldsProps {
   startsAt: string;
   endsAt: string;
   timeZone: string;
+  /**
+   * Moves the first date of the form (and its end, so the duration stays) to the day the series would start on: the button
+   * of the notice shown when the date typed is not one of the rule's days.
+   */
+  onStartChange: (startsAt: string, endsAt: string) => void;
   /** The message of the error a field carries (the form validates, here and on the server), or null. */
   error: (field: RepeatField) => string | null;
 }
@@ -58,7 +71,14 @@ const MONTHLY_CHOICES: readonly MonthlyChoice[] = ['day', 'nth', 'last', 'lastDa
  * "Every month on the 2nd Tuesday"…), "Custom" for the rest, how the series ends, and under it the sentence that says
  * the rule and the next dates it gives. Everything is worked out by the same functions the server runs again.
  */
-export function RepeatFields({ values, startsAt, endsAt, timeZone, error }: RepeatFieldsProps) {
+export function RepeatFields({
+  values,
+  startsAt,
+  endsAt,
+  timeZone,
+  onStartChange,
+  error,
+}: RepeatFieldsProps) {
   const t = useTranslations('events.repeat.form');
   const tSummary = useTranslations('events.repeat.summary') as unknown as RepeatTranslate;
   const tErrors = useTranslations('events.form.errors');
@@ -146,6 +166,17 @@ export function RepeatFields({ values, startsAt, endsAt, timeZone, error }: Repe
     (first.day !== startLocal.day ||
       first.month !== startLocal.month ||
       first.year !== startLocal.year);
+  // The date typed is not one of the rule's days: the series starts on the first that is, and says so in a notice.
+  const startsOn = moved && planned ? planned.startsAt : null;
+  const startNow = () => {
+    if (!planned) return;
+    onStartChange(
+      formatLocalInput(planned.startsAt, timeZone),
+      formatLocalInput(planned.endsAt, timeZone),
+    );
+    // The button goes away with the notice: the focus goes back to where the date is typed.
+    document.getElementById('startsAt')?.focus();
+  };
   const problem: RepeatErrorCode | null =
     plan && !plan.ok ? (Object.values(plan.errors)[0] ?? null) : null;
 
@@ -365,6 +396,35 @@ export function RepeatFields({ values, startsAt, endsAt, timeZone, error }: Repe
         </fieldset>
       )}
 
+      {preset !== 'NONE' && startsOn && startLocal && first && (
+        <Alert role="status">
+          <Info />
+          <AlertDescription className="text-foreground flex flex-col items-start gap-2">
+            <p>
+              {t('startNotice', {
+                typed: formatDayMonth(
+                  fromLocalDateTime(startLocal, timeZone),
+                  locale,
+                  timeZone,
+                  startLocal.year !== first.year,
+                ),
+                first: formatWeekdayDayMonth(
+                  startsOn,
+                  locale,
+                  timeZone,
+                  startLocal.year !== first.year,
+                ),
+              })}
+            </p>
+            <Button type="button" variant="outline" size="sm" onClick={startNow}>
+              {t('startNoticeAction', {
+                date: formatDayMonth(startsOn, locale, timeZone, startLocal.year !== first.year),
+              })}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {preset !== 'NONE' && (sentence || problem) && (
         <div
           role="status"
@@ -375,11 +435,6 @@ export function RepeatFields({ values, startsAt, endsAt, timeZone, error }: Repe
           {sentence && planned && first ? (
             <>
               <p className="font-medium">{sentence}</p>
-              {moved && (
-                <p className="text-muted-foreground text-xs">
-                  {t('previewMoved', { date: formatLongDate(planned.startsAt, locale, timeZone) })}
-                </p>
-              )}
               <p className="text-muted-foreground text-xs">
                 {t('previewNext', {
                   dates: dates

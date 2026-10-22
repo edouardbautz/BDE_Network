@@ -173,7 +173,15 @@ export function resolveRule(rule: RepeatRule, first: LocalDate): ResolvedRule {
   };
 }
 
-/** The calendar days of the rule, in order, from `first` on and for ever (the caller stops it). */
+/**
+ * The calendar days of the rule, in order, from `first` on and for ever (the caller stops it).
+ *
+ * The first date is the first day, from `first` on, that the rule's days fall on (a Friday, with "Monday and Wednesday",
+ * is the Monday after), and **the interval is counted from the week, month or year of that day**, not from the one of
+ * `first`: "every 2 weeks on Monday and Wednesday" typed on Friday 23 October gives Monday 26, Wednesday 28, then
+ * 9 and 11 November. When `first` is itself a day of the rule (always the case for an event that is saved, whose first
+ * date was moved to one), the two are the same week, month or year and nothing differs from counting from `first`.
+ */
 function* calendarDays(rule: ResolvedRule, first: LocalDate): Generator<LocalDate> {
   const firstDay = epochDay(first);
 
@@ -182,8 +190,11 @@ function* calendarDays(rule: ResolvedRule, first: LocalDate): Generator<LocalDat
   }
 
   if (rule.freq === 'WEEKLY') {
-    const weekStart = firstDay - mondayIndex(firstDay);
     const offsets = rule.weekdays.map((weekday) => WEEKDAYS.indexOf(weekday));
+    const firstWeek = firstDay - mondayIndex(firstDay);
+    // The week the count starts from: the week of the first date, unless every day of the rule is already behind it there.
+    const weekStart =
+      firstWeek + (offsets.some((offset) => firstWeek + offset >= firstDay) ? 0 : 7);
     for (let week = 0; ; week += 1) {
       for (const offset of offsets) {
         const day = weekStart + week * rule.interval * 7 + offset;
@@ -194,7 +205,9 @@ function* calendarDays(rule: ResolvedRule, first: LocalDate): Generator<LocalDat
   }
 
   if (rule.freq === 'MONTHLY') {
-    const firstMonth = first.year * 12 + first.month - 1;
+    // The month the count starts from: the month of the first date, unless the day of the rule is already behind it there.
+    const behind = dayInMonth(first.year, first.month, rule.monthly) < first.day;
+    const firstMonth = first.year * 12 + first.month - 1 + (behind ? 1 : 0);
     for (let step = 0; ; step += 1) {
       const monthIndex = firstMonth + step * rule.interval;
       const year = Math.floor(monthIndex / 12);
@@ -204,8 +217,10 @@ function* calendarDays(rule: ResolvedRule, first: LocalDate): Generator<LocalDat
     }
   }
 
+  // The year the count starts from: the year of the first date, unless the day of the rule is already behind it there.
+  const behind = dayInMonth(first.year, first.month, rule.monthly) < first.day;
   for (let step = 0; ; step += 1) {
-    const year = first.year + step * rule.interval;
+    const year = first.year + (behind ? 1 : 0) + step * rule.interval;
     const date = { year, month: first.month, day: dayInMonth(year, first.month, rule.monthly) };
     if (epochDay(date) >= firstDay) yield date;
   }

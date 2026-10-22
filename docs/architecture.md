@@ -574,10 +574,16 @@ recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`)
     the first date in `bde.timezone` (so the hour does not move at a change of clock), stopped by `recurrenceUntil`
     (inclusive), `count` or **`MAX_OCCURRENCES` = 400** (`truncated`: the form and the server refuse it, `planRepeat`).
     Choices that are decisions, not accidents: a day a month lacks is its last day (the 29th of February is the 28th);
-    weeks start on Monday and the interval counts weeks from the one of the first date (RFC 5545 with `WKST=MO`: a Saturday
-    start with "every 2 weeks on Monday and Wednesday" starts on the Monday two weeks later); a first date that does not fit
-    the rule **moves to the first that does** (`alignStart`, announced by the preview); a yearly rule has one month, the
-    one of the first date. Known limit: a row holds one instant for its first date, so when a series is **cut exactly on a
+    weeks start on Monday (RFC 5545 with `WKST=MO`); a first date that does not fit the rule **moves to the first that
+    does** (`alignStart`), and **the interval is counted from that day, not from the date typed**: a Friday start with
+    "every 2 weeks on Monday and Wednesday" starts on the Monday after and gives the 26th and 28th of October, then the
+    9th and 11th of November (`calendarDays` starts its week, month or year from the first day that has a day of the
+    rule; it used to count from the week of the Friday and skipped the Monday after, which started the series two weeks
+    later and surprised the person who typed the date). A first date that already is a day of the rule is its own
+    anchor, so **a series saved before this change keeps every date to the day**: every start the application ever
+    saved was already moved to a day of the rule (`planRepeat`), cut series start on one of their dates, and the demo
+    and the QA series start on theirs (`repeat.test.ts` holds it against the previous counting kept in the test, for a
+    thousand random rules in five zones). A yearly rule has one month, the one of the first date. Known limit: a row holds one instant for its first date, so when a series is **cut exactly on a
     date that falls in the hour a clock change skips** (02:30 the night the clocks go forward), the second row starts an
     hour later and keeps it (`repeat-cut.test.ts` pins it).
   - **The form and the server are the same code** (`repeat-input.ts`, pure, imported by both): the raw fields
@@ -586,8 +592,13 @@ recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`)
     `describeRepeat`; a fifth weekday offers "the last"), `presetOf` / `rawRepeatOf` (a stored rule back into the form),
     `parseRepeatInput` and `planRepeat` (the rule, the first date and the end, or the errors, each on its field). `parseEventInput`
     calls `planRepeat`, so **the first date saved can differ from the one typed**; the server runs it again, the browser is not trusted.
-    The preview of `components/events/repeat-fields.tsx` (sentence, three next dates, total, "first date becomes…") is
-    computed by those same functions, never by a second implementation.
+    The preview of `components/events/repeat-fields.tsx` (sentence, three next dates, total) is computed by those same
+    functions, never by a second implementation. **A date typed that is not a day of the rule is told in a notice of the
+    design system** (`Alert`, `role="status"`: polite, not the assertive `alert` of an error; not the small grey text of the
+    preview), "_the 23rd of October does not match this rule: the series will start on Monday the 26th of October_", with a
+    button that calls `onStartChange` (the form holds the start and the end in state and gives the new ones: the same
+    hour, the same duration, the focus back on the start field since the button leaves with the notice). The year is said
+    only when the series starts in another year than the one typed.
   - **One sentence** (`repeat-summary.ts`, messages `events.repeat.summary.*`): the form, the page of an event, the page
     of proposals and every notification say a rule with `summarizeRepeat`, so they never say it differently
     (`NotificationEventData.repeat` is that sentence, or null). The names of days and months come from Intl; French elides

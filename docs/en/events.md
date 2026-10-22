@@ -161,18 +161,24 @@ Under _End of the repetition_, choose one of two ways:
 
 As soon as a repetition is chosen, the form shows, under the fields, **what it will do** before anything is saved: the
 rule in a sentence (_Every 2 weeks on Monday and Wednesday, 10 times_), the **next three dates** and the **number of
-dates** in total. The same sentence is on the page of the event, in the proposals to validate and in the
+dates** in total. When the start date you typed is not one of the days of the rule, a notice above it says on which
+day the series will start (see below). The same sentence is on the page of the event, in the proposals to validate and in the
 notifications. If something is wrong (an end before the first date, no day ticked…), the preview says what, in the
 same words as the message under the field.
 
 ### Rules worth knowing
 
-- **The first date moves to the first one that fits.** An event typed on a Saturday and repeated _on Monday and
-  Wednesday_ starts on a Monday: the preview says so (_The first date becomes…_) and the event is saved with that
-  date.
-- **Weeks start on Monday.** With _every 2 weeks_, the week of the first date is the first of them. A series typed on
-  Saturday, October 10 and repeated every 2 weeks on Monday and Wednesday starts on Monday, October 19: the week of
-  October 5 counts, but its Monday and Wednesday are before the start, and the week of October 12 is skipped.
+- **The series starts on the first day that fits the rule.** An event typed on Friday, October 23 and repeated
+  _every 2 weeks on Monday and Wednesday_ starts on **Monday, October 26**. The form says so in a blue notice above the
+  preview (_October 23 does not match this rule: the series will start on Monday, October 26._), with a button
+  (_Start on October 26_) that changes the start date for you, keeping its time and its duration; if you do not use it,
+  the event is saved with that Monday all the same. The same goes for a monthly or a yearly rule (_the 15th_ typed on
+  the 20th starts on the 15th of the next month).
+- **Weeks start on Monday, and the interval is counted from the first date of the series.** With _every 2 weeks_,
+  the week of the first date is the first of them. The Friday series above gives October 26 and 28, then November 9
+  and 11, then November 23 and 25… Likewise _every 2 months_ counts the months from the first month that has the day,
+  and _every 2 years_ the years from the first year that has it. A series whose start date already is a day of the
+  rule is not affected: it keeps the dates it has always had.
 - **A day the month does not have is its last day.** An event on the 31st falls on April 30, February 28… and on the
   29th of February it falls on the 28th the years that have none. A series cut on one of those days keeps its day:
   the following dates are back on the 31st.
