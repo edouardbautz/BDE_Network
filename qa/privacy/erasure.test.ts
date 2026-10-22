@@ -106,7 +106,28 @@ describe.skipIf(!ADMIN_URL)('what is left of a person once their account is remo
       expect.arrayContaining(['Event.authorLogin']),
     );
 
+    // The history they leave is kept: the rows that carry their login as text (events written, dates cancelled, people in charge)
+    // are still there after the removal, only their link to an account is gone.
+    const kept = async () => {
+      const counts: Record<string, number> = {};
+      for (const place of [...LOGIN_MAY_STAY].filter(
+        (p) => !/AuditLog.(metadata|targetLabel)/.test(p),
+      )) {
+        const [table, column] = place.split('.');
+        const { rows } = await database.client.query(
+          `SELECT count(*)::int AS n FROM "${table}" WHERE "${column}" = $1`,
+          [before.login],
+        );
+        counts[place] = Number(rows[0]?.n);
+      }
+      return counts;
+    };
+    const rowsBefore = await kept();
+    expect(rowsBefore['Event.authorLogin'], 'events they wrote').toBeGreaterThan(0);
+
     await database.client.query(`DELETE FROM "User" WHERE "id" = $1`, [before.id]);
+
+    expect(await kept(), 'the rows that carry their login as text').toEqual(rowsBefore);
 
     expect(await person('qa-validator'), 'the account').toBeUndefined();
     for (const [what, value] of [
