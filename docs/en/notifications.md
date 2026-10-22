@@ -3,10 +3,12 @@
 # Notifications
 
 The platform can notify the BDE by **email**, through a **Discord** channel, through a **Slack** channel, or not at
-all. **Discord is the easiest to set up.**
+all, and **each type of notification can go through several of them at once** (for example Discord and email).
+**Discord is the easiest to set up.**
 
-The channel and its settings (webhook address, mail server) are chosen in **Settings**, **Notifications** section,
-with a test message. They apply at once.
+The channels (webhook address, mail server) and **what goes through which** are chosen in **Settings**,
+**Notifications** section, and in the installer, step 7. They apply at once. See
+[One notification, several channels](#one-notification-several-channels).
 
 | Notification                            | When                             | Who is notified                                                                              |
 | --------------------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------- |
@@ -19,11 +21,36 @@ with a test message. They apply at once.
 | **Proposal approved** (`eventApproved`) | a proposal is approved           | Email: its author. Discord or Slack: the channel.                                            |
 | **Proposal refused** (`eventRefused`)   | a proposal is refused            | Email: its author, with the validator's comment. Discord or Slack: the channel.              |
 
-In Settings, **a single channel** serves every notification. To have one channel per type of notification, see
-[Configuration](configuration.md#replace-the-settings-with-files).
+On every channel ticked, the notification goes out the way the table above says: email to the people concerned,
+Discord or Slack as one message in the channel.
 
-Messages are sent **after** the action. A send that fails never prevents the action: it is written to the server's
-logs (`docker compose logs app`).
+Messages are sent **after** the action. **Each channel is sent on its own**: a Discord channel that is down never
+holds back the emails or the Slack message, and cancels nothing that already went. A send that fails never prevents
+the action either: it is written to the server's logs (`docker compose logs app`), with the name of the channel.
+
+## One notification, several channels
+
+In **Settings**, **Notifications** section (and in the installer), two blocks:
+
+1. **Channels.** One panel for each of Discord, Slack and email, with what it needs (the webhook address, the mail
+   server), a **Set up** or **Not set up** badge and its own **test**. The test sends the **real card or email**, with
+   an invented event ("Game night (example)") marked "Test message", through what is typed in the panel, saved or
+   not: you see how your channel will look, with your BDE's name, logo and color. **Remove** forgets a channel's
+   settings and clears its boxes (when you press Save).
+2. **Who is told, and where.** A table with **a row per notification** and **a column per channel**. Tick a box to
+   send that notification through that channel; tick several in a row to send it through several. A row with **no
+   box ticked sends nothing**.
+   - A box can only be ticked when its **channel is set up**. Until then its column is greyed and says "Not set up".
+   - The **shortcuts** above the table tick (or clear) a whole column in one click: "Discord: check all". "Clear all"
+     empties the table.
+   - **Member removed** has no box for email: the removed person is never written to.
+   - The rows of the Events module only show when the module is on (what they hold is kept).
+   - On a phone, each notification is a block with its boxes one under the other, each at least 44 px high: nothing
+     scrolls sideways.
+
+A configuration written before version 1.5.0, with **one channel per notification**, is read as it was meant:
+`discord` becomes the Discord box ticked, `none` no box. Nothing is lost, and nothing changes until you save from
+Settings (see [Configuration](configuration.md#notifications-1)).
 
 Texts are written in the language of the messages chosen in **Settings**, Your BDE section.
 

@@ -136,7 +136,7 @@ the platform as "pending" or with any role. This function only exists in develop
 
 In development, no email leaves your machine: the platform sends them to [Mailpit](https://mailpit.axllent.org),
 which keeps them and shows them at <http://localhost:8025> (HTML rendering, text version, `.ics` file, mail app
-compatibility test). Set a notification's channel to `email` in your `bde.config.local.yml`, restart, and trigger it
+compatibility test). List `email` for a notification (`eventConfirmed: [email]`) in your `bde.config.local.yml`, restart, and trigger it
 (confirm an event, approve a member…). `APP_URL=http://localhost:3000` in `.env` makes the logo appear.
 
 To send through a real SMTP server, set `DEV_SMTP_HOST`, `DEV_SMTP_PORT`, `DEV_SMTP_FROM` (and `DEV_SMTP_USER`,

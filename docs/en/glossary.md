@@ -50,7 +50,7 @@ The words of the platform, as they appear in the interface. One word always mean
 | Word             | Meaning                                                                                              |
 | ---------------- | ---------------------------------------------------------------------------------------------------- |
 | **Notification** | A message the platform sends: event confirmed, reminder, access request, member approved or removed. |
-| **Channel**      | Where the notification goes: email, Discord, Slack, or none.                                         |
+| **Channel**      | Where the notification goes: email, Discord or Slack (none, one or several, **for each type**).      |
 | **Webhook**      | The secret address of a Discord or Slack channel, which lets the platform write in it.               |
 | **Card**         | The formatted message the platform posts on Discord or Slack.                                        |
 | **Reminder**     | The notification sent the day before an event, at the **reminder hour** set in Settings.             |

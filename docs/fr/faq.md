@@ -141,10 +141,12 @@ règle en une phrase et liste les prochaines dates avant tout enregistrement. Vo
 Non. Sans canal, la plateforme n'envoie rien. **Discord** est le plus simple à mettre en place : un webhook se crée en
 deux clics. Voir [Notifications](notifications.md).
 
-### Peut-on choisir un canal différent pour chaque notification ?
+### Une notification peut-elle passer par plusieurs canaux, ou par un canal différent selon le type ?
 
-Pas dans la page Paramètres : elle applique un seul canal à toutes les notifications. Un canal par type est possible
-avec les fichiers de configuration (voir [Configuration](configuration.md#remplacer-les-réglages-par-les-fichiers)).
+Oui, les deux. Dans **Paramètres**, section **Notifications**, un tableau a une ligne par notification et une colonne
+par canal : cochez les cases voulues (Discord **et** e-mail pour les demandes d'accès, seulement Slack pour les
+rappels…). Une ligne sans case cochée n'envoie rien. Voir
+[Notifications](notifications.md#une-notification-plusieurs-canaux).
 
 ### Pourquoi la personne retirée ne reçoit-elle pas d'e-mail ?
 

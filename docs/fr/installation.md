@@ -93,15 +93,16 @@ bouton **Retour**.
 | 4. Campus         | Les campus autorisés                                                                     | Propose la liste des campus 42 avec une recherche. En déduit le fuseau horaire.                                                                                                                                                    |
 | 5. Propriétaires  | Les logins 42 des propriétaires                                                          | Vérifie que chaque login existe sur l'intra.                                                                                                                                                                                       |
 | 6. Modules        | Le module Événements (activé par défaut)                                                 |                                                                                                                                                                                                                                    |
-| 7. Notifications  | Un canal : Discord, Slack, e-mail ou aucun                                               | Avec un webhook ou un serveur SMTP, un bouton envoie un message de test.                                                                                                                                                           |
+| 7. Notifications  | Les canaux que vous utilisez (Discord, Slack, e-mail), puis ce qui passe par lequel      | Avec un webhook ou un serveur SMTP, un bouton envoie un message de test.                                                                                                                                                           |
 | 8. Récapitulatif  |                                                                                          | Montre tout (les secrets restent masqués). **Installer la plateforme** enregistre.                                                                                                                                                 |
 
 Les réponses restent en mémoire pendant l'installation : recharger la page ne fait rien perdre. Les secrets
 (clé 42, mot de passe SMTP, webhooks) **ne reviennent jamais au navigateur** et sont **chiffrés** dans la base. La
 clé de session et le mot de passe de la base sont **créés automatiquement** : vous ne les voyez jamais.
 
-À l'étape 7, un seul canal sert pour **toutes** les notifications (sauf que le retrait d'un membre n'envoie
-jamais d'e-mail). Pour choisir un canal par type de notification, voir [Configuration](configuration.md#notifications).
+À l'étape 7, configurez les canaux que vous utilisez (chacun a son test), puis cochez, dans un tableau, quelle
+notification passe par quel canal : aucun, un ou plusieurs. Rien de coché n'envoie rien, et vous pourrez tout changer
+plus tard dans Paramètres. Voir [Notifications](notifications.md#une-notification-plusieurs-canaux).
 
 ### Créer l'application sur l'intra 42
 
