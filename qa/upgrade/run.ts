@@ -126,6 +126,16 @@ async function readFeeds(stack: Stack, paths: Record<string, string>): Promise<F
 const isNotFound = (body: string): boolean =>
   /name="robots" content="noindex/.test(body) && /NEXT_HTTP_ERROR_FALLBACK/.test(body);
 
+/**
+ * A page that shows nothing to the person who asked: not found, or sent elsewhere (a redirect Next.js has started to stream answers 200 and
+ * says it in a meta tag, `qa/access/http.ts`).
+ */
+const isDenied = (answer: { status: number; location: string | null; body: string }): boolean =>
+  answer.status === 404 ||
+  answer.location !== null ||
+  isNotFound(answer.body) ||
+  /<meta id="__next-page-redirect"/.test(answer.body);
+
 /** A page as a signed-in person (a cookie signed with the platform's own secret, kept through the update) asks for it. */
 async function page(stack: Stack, path: string, login?: string) {
   const cookie = login ? `${SESSION_COOKIE}=${await forgeSessionCookie(login, AUTH_SECRET)}` : null;
@@ -196,8 +206,8 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
       const proposer = feedsBefore.proposer?.length ?? 0;
       const validator = feedsBefore.validator?.length ?? 0;
       check(
-        'the old version tells the rights apart in its calendar files: a validator holds drafts and proposals, a proposer their own, a member neither',
-        validator > proposer && proposer > member,
+        'the old version tells the rights apart in its calendar files: only a validator holds drafts and proposals (a proposer, who only proposes, has the same file as a member)',
+        validator > member && proposer === member,
         `validator ${validator}, proposer ${proposer}, member ${member}`,
       );
       const held = await stack.database((db) => checkInvariants(db));
@@ -332,7 +342,7 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
       const proposer = await page(stack, '/en/events/review', CURRENT.proposer);
       check(
         'the one who only proposes still cannot validate',
-        proposer.status === 404 || isNotFound(proposer.body) || proposer.location !== null,
+        isDenied(proposer),
         `${proposer.status} ${proposer.location ?? ''}`,
       );
       const refused = await page(stack, `/en/events/${CURRENT.events.refused}`, CURRENT.proposer);
@@ -353,7 +363,7 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
       const notShared = await page(stack, '/en/events/shared-calendar', CURRENT.proposer);
       check(
         'the one who only proposes still cannot manage it',
-        notShared.status === 404 || isNotFound(notShared.body) || notShared.location !== null,
+        isDenied(notShared),
         `${notShared.status} ${notShared.location ?? ''}`,
       );
     } else {
@@ -366,7 +376,7 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
       const reader = await page(stack, '/en/events/review', OLD.reader);
       check(
         'the reader, who could only view events, still cannot',
-        reader.status === 404 || isNotFound(reader.body) || reader.location !== null,
+        isDenied(reader),
         `${reader.status} ${reader.location ?? ''}`,
       );
     }
