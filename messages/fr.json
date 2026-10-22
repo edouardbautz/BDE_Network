@@ -301,7 +301,8 @@
       "action": "Action",
       "target": "Cible"
     },
-    "empty": "Aucun événement enregistré."
+    "empty": "Aucun événement enregistré.",
+    "emptyHint": "Les actions des propriétaires et des membres autorisés apparaîtront ici."
   },
   "privacy": {
     "title": "Politique de confidentialité",

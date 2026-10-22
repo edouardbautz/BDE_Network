@@ -1,10 +1,12 @@
-import { CalendarSync, Plus } from 'lucide-react';
+import { CalendarDays, CalendarSync, Plus } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { getConfig } from '@/config';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { EmptyState, EventList } from '@/components/events/event-list';
+import { EventList } from '@/components/events/event-list';
+import { EmptyState } from '@/components/galets/empty-state';
+import { PageHeader } from '@/components/layout/page-header';
 import { EventsToolbar } from '@/components/events/events-toolbar';
 import { EventNoticeAlert } from '@/components/events/event-notice';
 import { MonthCalendar } from '@/components/events/month-calendar';
@@ -62,7 +64,7 @@ export default async function EventsPage({
   const todayKey = dayKey(today);
 
   const createButton = access.canCreate ? (
-    <Button size="sm" render={<Link href="/events/new" />}>
+    <Button size="lg" render={<Link href="/events/new" />}>
       <Plus data-icon="inline-start" />
       {t('new')}
     </Button>
@@ -97,90 +99,95 @@ export default async function EventsPage({
 
   // The BDE-wide calendar link needs its own permission (events.shared_calendar), not events.validate.
   const sharedCalendarButton = canManageSharedCalendar(access.session.user) ? (
-    <Button variant="outline" size="sm" render={<Link href="/events/shared-calendar" />}>
+    <Button variant="secondary" size="lg" render={<Link href="/events/shared-calendar" />}>
       <CalendarSync data-icon="inline-start" />
       {t('sharedCalendar.open')}
     </Button>
   ) : null;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">{t('title')}</h1>
-          <p className="text-muted-foreground mt-1 text-body">{t('subtitle')}</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {sharedCalendarButton}
-          {createButton}
-        </div>
-      </div>
-
-      <EventNoticeAlert notice={readEventNotice(raw.notice)} />
-
-      <EventsToolbar
-        query={query}
-        categories={categories}
-        options={options}
-        showMonthNav={showCalendar}
-        currentMonth={query.month}
+    <>
+      <PageHeader
+        title={t('title')}
+        actions={
+          <>
+            {sharedCalendarButton}
+            {createButton}
+          </>
+        }
       />
+      <p className="text-body text-muted-foreground -mt-2 mb-4 max-w-[68ch] sm:-mt-3 sm:mb-5">
+        {t('subtitle')}
+      </p>
+      <div className="flex flex-col gap-3 sm:gap-4">
+        <EventNoticeAlert notice={readEventNotice(raw.notice)} />
 
-      {showCalendar && (
-        <div className={query.view === undefined ? 'hidden md:block' : undefined}>
-          <MonthCalendar
-            grid={grid}
-            month={query.month}
-            groups={groups}
-            categories={categories}
-            timeZone={timeZone}
-            todayKey={todayKey}
-            selectedKey={selectedKey}
-            query={query}
-            canCreate={access.canCreate}
-          />
-          {!monthHasEvents && (
-            <Card className="mt-4">
-              <CardContent>
-                <EmptyState
-                  title={hasFilters ? t('empty.filteredTitle') : t('empty.monthTitle')}
-                  description={
-                    hasFilters ? t('empty.filteredDescription') : t('empty.monthDescription')
-                  }
-                />
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
+        <EventsToolbar
+          query={query}
+          categories={categories}
+          options={options}
+          showMonthNav={showCalendar}
+          currentMonth={query.month}
+        />
 
-      {showList && (
-        <div className={query.view === undefined ? 'md:hidden' : undefined}>
-          {upcoming.length === 0 ? (
-            <Card className="">
-              <CardContent>
-                <EmptyState
-                  title={hasFilters ? t('empty.filteredTitle') : t('empty.title')}
-                  description={
-                    hasFilters
-                      ? t('empty.filteredDescription')
-                      : access.canCreate
-                        ? t('empty.descriptionManager')
-                        : t('empty.description')
-                  }
-                  action={hasFilters ? undefined : (createButton ?? undefined)}
-                />
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent>
-                <EventList occurrences={upcoming} categories={categories} timeZone={timeZone} />
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
-    </div>
+        {showCalendar && (
+          <div className={query.view === undefined ? 'hidden md:block' : undefined}>
+            <MonthCalendar
+              grid={grid}
+              month={query.month}
+              groups={groups}
+              categories={categories}
+              timeZone={timeZone}
+              todayKey={todayKey}
+              selectedKey={selectedKey}
+              query={query}
+              canCreate={access.canCreate}
+            />
+            {!monthHasEvents && (
+              <Card className="mt-3 sm:mt-4">
+                <CardContent>
+                  <EmptyState
+                    icon={CalendarDays}
+                    title={hasFilters ? t('empty.filteredTitle') : t('empty.monthTitle')}
+                    description={
+                      hasFilters ? t('empty.filteredDescription') : t('empty.monthDescription')
+                    }
+                  />
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+
+        {showList && (
+          <div className={query.view === undefined ? 'md:hidden' : undefined}>
+            {upcoming.length === 0 ? (
+              <Card>
+                <CardContent>
+                  <EmptyState
+                    icon={CalendarDays}
+                    title={hasFilters ? t('empty.filteredTitle') : t('empty.title')}
+                    description={
+                      hasFilters
+                        ? t('empty.filteredDescription')
+                        : access.canCreate
+                          ? t('empty.descriptionManager')
+                          : t('empty.description')
+                    }
+                    action={hasFilters ? undefined : (createButton ?? undefined)}
+                  />
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent>
+                  <EventList occurrences={upcoming} categories={categories} timeZone={timeZone} />
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+      </div>
+    </>
   );
 }

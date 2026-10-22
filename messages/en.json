@@ -301,7 +301,8 @@
       "action": "Action",
       "target": "Target"
     },
-    "empty": "No events recorded yet."
+    "empty": "No events recorded yet.",
+    "emptyHint": "What owners and authorised members do will appear here."
   },
   "privacy": {
     "title": "Privacy policy",

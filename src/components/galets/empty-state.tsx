@@ -13,7 +13,7 @@ export function EmptyState({
 }: {
   icon: LucideIcon;
   title: string;
-  description: string;
+  description?: string;
   action?: ReactNode;
 }) {
   return (
@@ -22,7 +22,9 @@ export function EmptyState({
         <Icon aria-hidden="true" className="size-7" />
       </div>
       <p className="text-card-title text-ink mt-3.5 font-extrabold">{title}</p>
-      <p className="text-body text-muted-foreground mt-1.5 max-w-80">{description}</p>
+      {description && (
+        <p className="text-body text-muted-foreground mt-1.5 max-w-80">{description}</p>
+      )}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );

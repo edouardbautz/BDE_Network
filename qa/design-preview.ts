@@ -99,7 +99,7 @@ async function main(): Promise<void> {
           await page.screenshot({ path: file('foot') });
           await page.evaluate(() => window.scrollTo(0, 0));
         } else {
-          await page.screenshot({ path: file(), fullPage: true });
+          await page.screenshot({ path: file(), fullPage: !process.argv.includes('--viewport') });
         }
 
         if (extras) {

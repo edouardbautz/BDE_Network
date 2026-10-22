@@ -3,6 +3,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { EmptyState } from '@/components/galets/empty-state';
 import { cardLink, cardSurface, pillButton } from '@/components/galets/styles';
+import { CategoryBadge } from '@/components/events/category-badge';
 import { resolveCategory, type CategoryView } from '@/lib/events/categories';
 import { formatTime } from '@/lib/events/format';
 import type { OccurrenceView } from '@/lib/events/occurrences';
@@ -22,20 +23,6 @@ function DateTile({ date, locale, timeZone }: { date: Date; locale: string; time
       </span>
       <span className="text-title-3 tabular leading-none">{day}</span>
     </div>
-  );
-}
-
-/** A category as a neutral badge: its colour is a dot, the label stays in ink so contrast never depends on the BDE's palette. */
-function CategoryPill({ category }: { category: CategoryView }) {
-  return (
-    <span className="bg-surface-2 text-caption text-ink inline-flex h-5.5 max-w-full items-center gap-1.5 rounded-pill px-2.5">
-      <span
-        aria-hidden="true"
-        className="bg-muted-foreground size-2 shrink-0 rounded-pill"
-        style={category.color ? { backgroundColor: category.color } : undefined}
-      />
-      <span className="truncate">{category.label}</span>
-    </span>
   );
 }
 
@@ -103,7 +90,7 @@ export async function UpcomingList({
                   </span>
                 </span>
                 <span className="hidden min-w-0 sm:block">
-                  <CategoryPill category={resolveCategory(occurrence.categoryKey, categories)} />
+                  <CategoryBadge category={resolveCategory(occurrence.categoryKey, categories)} />
                 </span>
               </Link>
             </li>

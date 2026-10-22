@@ -48,24 +48,23 @@ export async function EventsToolbar({
         href={viewLink(view)}
         aria-current={selected ? 'page' : undefined}
         className={cn(
-          'inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-body-strong outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50',
-          selected
-            ? 'bg-primary/10 text-foreground'
-            : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+          'text-small inline-flex h-9 items-center gap-1.5 rounded-pill px-4 outline-none max-sm:h-11',
+          'transition-[background-color,box-shadow] duration-(--dur-base) ease-(--ease-standard)',
+          selected ? 'bg-surface elev-1 text-ink font-bold' : 'text-muted-foreground',
         )}
       >
-        <Icon className={cn('size-4', selected && 'text-primary')} aria-hidden />
+        <Icon className="size-4" aria-hidden />
         {label}
       </Link>
     );
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3 sm:gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <nav
           aria-label={t('views.label')}
-          className="flex items-center gap-1 rounded-lg border p-0.5"
+          className="bg-surface-2 flex items-center gap-1 rounded-pill p-1"
         >
           {tab('calendar', CalendarDays, t('views.calendar'))}
           {tab('list', List, t('views.list'))}
@@ -79,18 +78,18 @@ export async function EventsToolbar({
             )}
           >
             <Button
-              variant="outline"
+              variant="secondary"
               size="icon-sm"
               render={<Link href={monthLink(shiftMonth(currentMonth, -1))} />}
               aria-label={t('calendar.previous')}
             >
               <ChevronLeft />
             </Button>
-            <h2 className="min-w-36 text-center text-body-strong" aria-live="polite">
+            <h2 className="text-title-3 min-w-40 text-center" aria-live="polite">
               {formatMonthTitle(currentMonth, locale)}
             </h2>
             <Button
-              variant="outline"
+              variant="secondary"
               size="icon-sm"
               render={<Link href={monthLink(shiftMonth(currentMonth, 1))} />}
               aria-label={t('calendar.next')}
@@ -98,7 +97,7 @@ export async function EventsToolbar({
               <ChevronRight />
             </Button>
             <Button
-              variant="ghost"
+              variant="secondary"
               size="sm"
               render={
                 <Link
@@ -117,7 +116,7 @@ export async function EventsToolbar({
 
       <form
         method="get"
-        className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(3,1fr)_auto]"
+        className="bg-surface elev-1 grid grid-cols-1 gap-4 rounded-xl p-4 sm:grid-cols-2 sm:rounded-2xl sm:p-5 lg:grid-cols-[repeat(3,1fr)_auto]"
       >
         {activeView && <input type="hidden" name="view" value={activeView} />}
         {activeView !== 'list' && showMonthNav && (

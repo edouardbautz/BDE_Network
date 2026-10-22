@@ -14,6 +14,7 @@ import { allOccurrences } from '@/lib/events/recurrence';
 import { rawRepeatOf } from '@/lib/events/repeat-input';
 import { formatLocalDateInput, formatLocalInput, toLocalDateTime } from '@/lib/events/time';
 import { updateEvent } from '../../actions';
+import { PageHeader } from '@/components/layout/page-header';
 import { pageTitle } from '@/lib/page-title';
 
 export const dynamic = 'force-dynamic';
@@ -84,13 +85,11 @@ export default async function EditEventPage({
   const knownCategory = categories.some((category) => category.key === date.categoryKey);
 
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold">{t('form.editTitle')}</h1>
-      {askScope && (
-        <p className="text-muted-foreground text-body first-letter:uppercase">
-          {formatLongDate(date.start, locale, timeZone)}
-        </p>
-      )}
+    <>
+      <PageHeader
+        title={t('form.editTitle')}
+        eyebrow={askScope ? formatLongDate(date.start, locale, timeZone) : undefined}
+      />
       <EventForm
         action={updateEvent.bind(null, event.id)}
         initial={{
@@ -130,6 +129,6 @@ export default async function EditEventPage({
             : undefined
         }
       />
-    </div>
+    </>
   );
 }

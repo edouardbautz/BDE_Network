@@ -9,6 +9,7 @@ import { SettingsPanels } from '@/components/settings/settings-panels';
 import { getConfig } from '@/config';
 import { checkFortyTwoCredentials } from '@/lib/auth/oauth-check';
 import { prisma } from '@/lib/prisma';
+import { PageHeader } from '@/components/layout/page-header';
 import { pageTitle } from '@/lib/page-title';
 import { getSettingsManager, isSettingsEditable } from '@/lib/settings/access';
 import { getRuntimeSettings } from '@/lib/settings/runtime';
@@ -40,12 +41,12 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
     : null;
 
   return (
-    <div className="flex max-w-3xl flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold">{t('title')}</h1>
-        <p className="text-muted-foreground mt-1 text-body">{t('subtitle')}</p>
+    <>
+      <PageHeader title={t('title')} />
+      <div className="-mt-2 mb-4 flex max-w-[68ch] flex-col gap-1 sm:-mt-3 sm:mb-5">
+        <p className="text-body text-muted-foreground">{t('subtitle')}</p>
         {installation && (
-          <p className="text-muted-foreground mt-1 text-small">
+          <p className="text-small text-muted-foreground">
             {t('since', {
               date: new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(
                 installation.installedAt,
@@ -53,58 +54,58 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
             })}
           </p>
         )}
-        {version && (
-          <p className="text-muted-foreground mt-1 text-small">{t('version', { version })}</p>
-        )}
+        {version && <p className="text-small text-muted-foreground">{t('version', { version })}</p>}
       </div>
 
-      {editable && <UpdateBanner enabled={getConfig().updates.check} />}
+      <div className="flex max-w-3xl flex-col gap-3 sm:gap-4">
+        {editable && <UpdateBanner enabled={getConfig().updates.check} />}
 
-      {/* The keys are not in the database: this is the one thing to keep safe, so it is always in view. */}
-      <Alert>
-        <KeyRound aria-hidden="true" />
-        <AlertTitle>{t('backup.title')}</AlertTitle>
-        <AlertDescription className="flex flex-col gap-3">
-          <span>{t('backup.body')}</span>
-          <CopyField
-            id="settings-backup-command"
-            value="./scripts/backup.sh"
-            label={t('backup.commandLabel')}
+        {/* The keys are not in the database: this is the one thing to keep safe, so it is always in view. */}
+        <Alert>
+          <KeyRound aria-hidden="true" />
+          <AlertTitle>{t('backup.title')}</AlertTitle>
+          <AlertDescription className="flex flex-col gap-3">
+            <span>{t('backup.body')}</span>
+            <CopyField
+              id="settings-backup-command"
+              value="./scripts/backup.sh"
+              label={t('backup.commandLabel')}
+            />
+            <span>{t('backup.note')}</span>
+          </AlertDescription>
+        </Alert>
+
+        {editable && (await checkFortyTwoCredentials()) === 'rejected' && <OAuthRejectedAlert />}
+
+        {secretsStatus === 'lost' && (
+          <Alert variant="destructive">
+            <ShieldAlert aria-hidden="true" />
+            <AlertTitle>{t('secrets.lostTitle')}</AlertTitle>
+            <AlertDescription>{t('secrets.lostBody')}</AlertDescription>
+          </Alert>
+        )}
+        {secretsStatus === 'resealed' && (
+          <Alert>
+            <ShieldAlert aria-hidden="true" />
+            <AlertTitle>{t('secrets.resealedTitle')}</AlertTitle>
+            <AlertDescription>{t('secrets.resealedBody')}</AlertDescription>
+          </Alert>
+        )}
+
+        {editable ? (
+          <SettingsPanels
+            view={settingsView()}
+            extras={await settingsExtras()}
+            actorLogin={session.user.login}
           />
-          <span>{t('backup.note')}</span>
-        </AlertDescription>
-      </Alert>
-
-      {editable && (await checkFortyTwoCredentials()) === 'rejected' && <OAuthRejectedAlert />}
-
-      {secretsStatus === 'lost' && (
-        <Alert variant="destructive">
-          <ShieldAlert aria-hidden="true" />
-          <AlertTitle>{t('secrets.lostTitle')}</AlertTitle>
-          <AlertDescription>{t('secrets.lostBody')}</AlertDescription>
-        </Alert>
-      )}
-      {secretsStatus === 'resealed' && (
-        <Alert>
-          <ShieldAlert aria-hidden="true" />
-          <AlertTitle>{t('secrets.resealedTitle')}</AlertTitle>
-          <AlertDescription>{t('secrets.resealedBody')}</AlertDescription>
-        </Alert>
-      )}
-
-      {editable ? (
-        <SettingsPanels
-          view={settingsView()}
-          extras={await settingsExtras()}
-          actorLogin={session.user.login}
-        />
-      ) : (
-        <Alert>
-          <FileWarning aria-hidden="true" />
-          <AlertTitle>{t('readOnly.title')}</AlertTitle>
-          <AlertDescription>{t('readOnly.body')}</AlertDescription>
-        </Alert>
-      )}
-    </div>
+        ) : (
+          <Alert>
+            <FileWarning aria-hidden="true" />
+            <AlertTitle>{t('readOnly.title')}</AlertTitle>
+            <AlertDescription>{t('readOnly.body')}</AlertDescription>
+          </Alert>
+        )}
+      </div>
+    </>
   );
 }

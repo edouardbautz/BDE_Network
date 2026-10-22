@@ -1,12 +1,16 @@
 'use client';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { ChevronLeft } from 'lucide-react';
+import { Link } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 import { useShell } from './shell-context';
 
 interface PageHeaderProps {
   /** What the page is about, small and above the title: the date, a count (spec 5.6). */
   eyebrow?: string;
+  /** On the page of a thing that belongs to a list (an event): the eyebrow becomes the way back to it, "‹ Calendar". */
+  back?: { href: string; label: string };
   title: string;
   /** The actions of the page on a computer: the main one last. A phone has the tab bar for them. */
   actions?: ReactNode;
@@ -17,7 +21,7 @@ interface PageHeaderProps {
  * avatar; once the title has scrolled away, a bar of 52 px keeps its name on screen, on the page background blurred (the one
  * place the specification allows a blur).
  */
-export function PageHeader({ eyebrow, title, actions }: PageHeaderProps) {
+export function PageHeader({ eyebrow, back, title, actions }: PageHeaderProps) {
   const { userMenu } = useShell();
   const sentinel = useRef<HTMLDivElement>(null);
   const [compact, setCompact] = useState(false);
@@ -55,7 +59,17 @@ export function PageHeader({ eyebrow, title, actions }: PageHeaderProps) {
       </div>
 
       <div className="min-w-0">
-        {eyebrow && <p className="text-small text-muted-foreground">{eyebrow}</p>}
+        {back ? (
+          <Link
+            href={back.href}
+            className="text-small text-muted-foreground hover:text-ink inline-flex items-center gap-0.5 rounded-xs font-bold underline-offset-3 outline-none hover:underline"
+          >
+            <ChevronLeft aria-hidden="true" className="size-4" />
+            {back.label}
+          </Link>
+        ) : (
+          eyebrow && <p className="text-small text-muted-foreground">{eyebrow}</p>
+        )}
         <h1 className="text-title-1 text-ink mt-0.5">{title}</h1>
       </div>
 
