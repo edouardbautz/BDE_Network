@@ -8,6 +8,13 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **A year and a half of the reminder loop is played every night.** The loop is called with each of the ~2400 instants it would
+  look at, on a real database with the QA dataset, and what it did is compared with a calculation that does not use its code: every
+  confirmed date is reminded exactly once, at the first look after the evening before (across the two changes of clock), nothing
+  is reminded for a cancelled date, a draft or a date back to draft, a confirmation announced after the reminder was due, or a date
+  that has started; six loops looking at the same moment claim each reminder once; and three weeks without a loop lose only what
+  started meanwhile. The school year of an instant is checked at the first of September of every year to 2032 in five time zones. It
+  found nothing.
 - **The updates an operator makes are played, from every released version, every night.** A platform of 1.0.0, 1.1.0 or 1.2.0 is
   given the data of an old installation (roles, members, events of every kind of repetition, a cancelled and a moved date, calendar
   links), the folder is moved to the version under test and `docker compose up -d` is run, as the guide of upgrading says. What the
