@@ -47,8 +47,9 @@ dont le cookie est encore valide.
 - **Résilience.** La base arrêtée, gelée et tuée en pleine écriture ; l'application arrêtée et tuée en pleine écriture ; un
   webhook qui accepte la connexion et ne répond jamais. La plateforme doit dire qu'elle ne peut pas, vite, revenir seule, garder
   les gens connectés, et ne laisser **aucune écriture à moitié faite**.
-- **Mises à jour.** Une plateforme en **1.0.0, 1.1.0 ou 1.2.0**, garnie des données d'une ancienne installation (rôles, membres,
-  séries d'événements de chaque répétition, une date annulée et une déplacée), est mise à jour comme le dit le
+- **Mises à jour.** Une plateforme en **1.0.0, 1.1.0, 1.2.0, 1.3.0 ou 1.4.0**, garnie des données d'une ancienne installation
+  (rôles, membres, séries d'événements de chaque répétition, une date annulée et une déplacée ; à partir de la 1.3.0, des rôles qui
+  proposent, valident et gèrent l'agenda partagé, des séries à règles avancées, des propositions, un refus avec son commentaire), est mise à jour comme le dit le
   [guide de mise à jour](upgrading.md). Ce que l'ancienne version disait de ses propres données (chaque date de ses fichiers de
   calendrier, ses rôles, ses lignes) est ce à quoi la nouvelle est tenue ; puis une sauvegarde, sa restauration, et le retour à
   l'ancienne version.
@@ -88,8 +89,8 @@ détecté. Le détail est dans le [CHANGELOG](../../CHANGELOG.md) (rubriques « 
 
 Rien n'est affirmé au-delà. En particulier, **les suites ont cherché sans trouver** : un chemin où un profil pourrait faire ce qu'il
 ne doit pas (la matrice d'accès et les attaques), une écriture laissée à moitié faite quand la base ou l'application est tuée, une adresse e-mail, un nom, une photo ou un lien de calendrier laissés par la suppression d'un compte, une
-session perdue par une panne, une date, une heure, un droit ou une ligne changés par une mise à jour depuis la 1.0.0, la 1.1.0 ou la
-1.2.0, un rappel envoyé deux fois ou pas du tout sur un an et demi, et un lien mort dans l'interface.
+session perdue par une panne, une date, une heure, un droit ou une ligne changés par une mise à jour depuis la 1.0.0, la 1.1.0, la
+1.2.0, la 1.3.0 ou la 1.4.0, un rappel envoyé deux fois ou pas du tout sur un an et demi, et un lien mort dans l'interface.
 
 ## Ce qui n'est pas couvert
 
@@ -103,7 +104,7 @@ session perdue par une panne, une date, une heure, un droit ou une ligne changé
 - **Le serveur de mail** est testé contre un serveur silencieux et par des tests unitaires, pas par une plateforme qui envoie de
   vrais mails.
 - **Une mise à jour depuis une plateforme installée avec l'installateur web** n'est pas jouée (il faut un navigateur) ; la suite de
-  mise à jour part des fichiers de réglages de la 1.0.0, de la 1.1.0 et de la 1.2.0, puis les importe. Une mise à jour qui échoue
+  mise à jour part des fichiers de réglages de la 1.0.0 à la 1.4.0, puis les importe. Une mise à jour qui échoue
   en cours de route est couverte par le script de [mise à jour sûre](deployment.md#copie-automatique-avant-une-mise-à-jour), pas
   par cette suite.
 - **La charge** est de 20 personnes à la fois, c'est-à-dire un BDE, pas tout l'intranet d'une école.
