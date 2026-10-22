@@ -148,6 +148,10 @@ All notable changes to this project are written here, in English. Format based o
 - **The facts of an event (when, repeats, where, in charge, description) are a valid description list.** The markup nested
   each term and its description one level too deep, so a screen reader did not announce them as a list of terms and
   descriptions (WCAG 1.3.1). The look is the same. Found by the accessibility checks of the quality campaign.
+- **The login page, the "sign-in refused" page and the waiting page have a heading.** Their title was a plain block of text, so
+  a screen reader found no heading to start from on the three pages every visitor sees first (the other pages had one). The
+  title is now announced as a heading of level 1; nothing changes on screen. Found by the walk through the interface of the
+  quality campaign, which checks that every page has a heading.
 - **A database that stops answering no longer holds every page for as long as it stays frozen.** The application gave up on a
   database that did not accept a connection after 3 seconds, but not on one that accepted it and then said nothing (a stalled
   disk, a paused virtual machine): every page waited, with no end, until the database came back. A query is now given up after

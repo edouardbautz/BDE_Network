@@ -38,7 +38,9 @@ export default async function PendingPage({ params }: { params: Promise<{ locale
           <div className="bg-muted text-muted-foreground mb-2 flex size-10 items-center justify-center rounded-full">
             <Clock className="size-5" />
           </div>
-          <CardTitle className="text-xl font-semibold tracking-tight">{t('title')}</CardTitle>
+          <CardTitle role="heading" aria-level={1} className="text-xl font-semibold tracking-tight">
+            {t('title')}
+          </CardTitle>
           <CardDescription>{t('description')}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">

@@ -52,7 +52,9 @@ export default async function LoginPage({ params }: { params: Promise<{ locale: 
             height={40}
             className="mb-2 object-contain"
           />
-          <CardTitle className="text-xl font-semibold tracking-tight">{config.bde.name}</CardTitle>
+          <CardTitle role="heading" aria-level={1} className="text-xl font-semibold tracking-tight">
+            {config.bde.name}
+          </CardTitle>
           <CardDescription>{t('loginSubtitle')}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
