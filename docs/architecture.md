@@ -1427,6 +1427,27 @@ gives calendar files with the data in them` guards that); the not-found page mar
   sign-in refused page and the waiting page, had no heading of level 1 (their title was a `div`: axe does not report it, it is a
   best practice and not a WCAG criterion); fixed in its own pull request. **What they did not find**: a dead link, a page that scrolls
   sideways, a broken picture or a menu that breaks, for any of the eight personas on either screen.
+- **Mutation testing** (`qa/mutation/`, the `mutation-testing` job of `qa.yml`: nightly, by hand, or with the label `full-qa`; about ten minutes).
+  Coverage says what ran; this says what was **checked**. Stryker changes the code one operator at a time (a `<` becomes `<=`, a
+  condition becomes `true`, a string is emptied) and the tests must fail for each change; a change no test notices is a
+  `survived` mutant, a line that is run and not held. Applied to the rules that decide who may do what and what is accepted:
+  `permissions/registry.ts` and `index.ts`, `roles/guards.ts`, `events/review.ts` (the proposal circuit), `auth/access.ts` and
+  `account.ts` (what a session holds, who becomes an owner or stops being one) and `branding/image.ts` (what the logo may be). The
+  rest of the code is not mutated (it would take hours); the mutation checks by hand of the access rules (re-break a guard in a
+  worktree, see "Conventions") stay the way to prove a new rule. Stryker is **not a dependency of the project** (hundreds of packages
+  the platform never ships): the job installs it with `--no-save` at the version written in the workflow. `summary.ts` (pure, tested)
+  writes the table and the list of survivors into the summary of the job.
+  - **A ratchet**: the break threshold of `stryker.config.json` (95 %) fails the job below it, goes up when the tests do and comes
+    down only in a pull request that says why, like the coverage floors.
+  - **What the first run found**: 87.4 % over 628 mutants, and not evenly. The rules that had been broken by hand and tested
+    (`permissions`, `roles`, `review`) were at 97 to 98 %; **`auth/account.ts`, which decides who is an owner after signing in,
+    was at 0 %**: every test of the sign-in replaces it by a stand-in, and no test ran its lines (`account.test.ts` now does); the
+    image inspector was at 79 % (the exact limits: 2 MiB, 64 px, 4096 px; a signature checked in part; the bytes of a WebP size),
+    now 95 % (`image-limits.test.ts`); `auth/access.ts` at 79 % (a session for an owner or a waiting account that carried a role).
+    After the new tests: 97.6 %, 15 survivors of 628, listed in the summary of every run. No defect of the product: tests that
+    were missing.
+  - **The survivors are not all proven equivalent.** Those examined are changes the code makes redundant (a check of a type that
+    the next check repeats, a boundary on a length that a later byte check absorbs); the others are listed, not hidden.
 - **Coverage** (`npm run test:coverage`, `coverage-thresholds.json`, `scripts/coverage-report.mjs`,
   `scripts/coverage-gaps.mjs`, `qa/coverage-plan.md`). The ubuntu job of `ci.yml` runs the unit tests through V8 coverage
   and **fails below a floor**: one for the whole project and one for each area that decides who may do what or what is

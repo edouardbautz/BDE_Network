@@ -21,3 +21,5 @@ bde.config.local.yml
 npm-debug.log*
 e2e
 .uploads
+mutation-report
+.stryker-tmp

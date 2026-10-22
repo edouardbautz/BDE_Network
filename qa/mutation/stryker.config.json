@@ -1,9 +1,11 @@
 {
   "$schema": "https://raw.githubusercontent.com/stryker-mutator/stryker/master/packages/api/schema/stryker-core.json",
-  "_": "Mutation testing of the rules that decide who may do what and what is accepted (see \"Mutation testing\" in docs/architecture.md). Stryker is not a dependency of the project: the workflow installs it with --no-save.",
+  "_": "Mutation testing of the rules that decide who may do what and what is accepted (see \"Mutation testing\" in docs/architecture.md). Stryker is not a dependency of the project: the workflow installs it with --no-save. The break threshold is a RATCHET like the coverage floors: it goes up when the tests do and comes down only in a pull request that says why.",
   "testRunner": "vitest",
   "plugins": ["@stryker-mutator/vitest-runner"],
-  "vitest": { "configFile": "vitest.config.ts" },
+  "vitest": {
+    "configFile": "vitest.config.ts"
+  },
   "coverageAnalysis": "perTest",
   "mutate": [
     "src/lib/permissions/registry.ts",
@@ -16,9 +18,16 @@
   ],
   "ignoreStatic": true,
   "reporters": ["clear-text", "json"],
-  "jsonReporter": { "fileName": "mutation-report/report.json" },
+  "jsonReporter": {
+    "fileName": "mutation-report/report.json"
+  },
   "tempDirName": ".stryker-tmp",
   "cleanTempDir": true,
   "concurrency": 2,
-  "timeoutMS": 30000
+  "timeoutMS": 30000,
+  "thresholds": {
+    "high": 98,
+    "low": 95,
+    "break": 95
+  }
 }
