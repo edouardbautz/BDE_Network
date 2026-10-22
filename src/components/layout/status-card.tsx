@@ -28,11 +28,11 @@ export function StatusCard({
     >
       <Card className="w-full max-w-sm text-center">
         <CardHeader className="items-center gap-1">
-          <div className="bg-muted text-muted-foreground mb-2 flex size-10 items-center justify-center justify-self-center rounded-full">
-            <Icon className="size-5" />
+          <div className="bg-accent-soft text-accent-ink mb-2 flex size-14 items-center justify-center justify-self-center rounded-xl">
+            <Icon className="size-7" />
           </div>
-          <CardTitle className="text-xl font-semibold tracking-tight">{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
+          <CardTitle className="text-title-2">{title}</CardTitle>
+          <CardDescription className="text-balance">{description}</CardDescription>
         </CardHeader>
         {children && <CardContent className="flex flex-col gap-3">{children}</CardContent>}
       </Card>

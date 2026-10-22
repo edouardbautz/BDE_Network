@@ -6,7 +6,7 @@ function TableSkeleton({ rows }: { rows: number }) {
     <div className="flex flex-col gap-3">
       {Array.from({ length: rows }).map((_, index) => (
         <div key={index} className="flex items-center gap-3">
-          <Skeleton className="size-6 shrink-0 rounded-full" />
+          <Skeleton className="size-6 shrink-0 rounded-pill" />
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-4 w-24" />
           <Skeleton className="ml-auto h-7 w-20 rounded-lg" />

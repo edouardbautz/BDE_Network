@@ -64,7 +64,7 @@ export function StepSummary({ view, run, onNext, onBack }: StepProps & { view: D
       nextLabel={pending ? t('installing') : t('install')}
       failure={failure}
     >
-      <dl className="border-border divide-border divide-y rounded-lg border text-body">
+      <dl className="divide-line divide-y rounded-lg bg-surface-2 text-body">
         {rows.map(([label, value]) => (
           <div key={label} className="grid gap-1 px-3 py-2 sm:grid-cols-[10rem_1fr] sm:gap-4">
             <dt className="text-muted-foreground">{label}</dt>

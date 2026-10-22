@@ -157,7 +157,7 @@ export function StepCampuses({
               )}
             </div>
             {options && query.trim() !== '' && (
-              <ul className="border-border mt-1 flex flex-col overflow-hidden rounded-lg border">
+              <ul className="bg-surface-2 mt-1 flex flex-col overflow-hidden rounded-lg">
                 {suggestions.length === 0 && (
                   <li className="text-muted-foreground px-3 py-2 text-body">{t('noMatch')}</li>
                 )}
@@ -166,7 +166,7 @@ export function StepCampuses({
                     <button
                       type="button"
                       onClick={() => add(campus.name)}
-                      className="hover:bg-muted focus-visible:bg-muted flex w-full items-center justify-between px-3 py-2 text-left text-body outline-none"
+                      className="hover:bg-surface-3 focus-visible:bg-surface-3 flex min-h-10 w-full items-center justify-between px-3 py-2 text-left text-body outline-none"
                     >
                       <span>{campus.name}</span>
                       <span className="text-muted-foreground text-small">{campus.country}</span>

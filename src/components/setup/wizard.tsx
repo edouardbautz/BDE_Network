@@ -92,7 +92,7 @@ export function SetupWizard({
             {names.map((name, index) => (
               <div
                 key={name}
-                className={`h-1.5 flex-1 rounded-full ${index <= current ? 'bg-primary' : 'bg-muted'}`}
+                className={`h-1.5 flex-1 rounded-pill ${index <= current ? 'bg-accent-fill' : 'bg-surface-3'}`}
               />
             ))}
           </div>

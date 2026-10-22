@@ -61,7 +61,7 @@ export default async function LoginPage({ params }: { params: Promise<{ locale: 
           {oauthRejected && (
             <div
               role="alert"
-              className="bg-destructive/10 flex flex-col gap-2 rounded-lg p-3 text-left text-body"
+              className="bg-danger-soft flex flex-col gap-2 rounded-lg p-3 text-left text-body"
             >
               <p className="flex items-center gap-2 font-semibold">
                 <TriangleAlert className="text-destructive size-4 shrink-0" aria-hidden="true" />
@@ -77,7 +77,7 @@ export default async function LoginPage({ params }: { params: Promise<{ locale: 
               await signIn('42-school');
             }}
           >
-            <Button type="submit" className="w-full" disabled={oauthRejected}>
+            <Button type="submit" size="lg" className="w-full" disabled={oauthRejected}>
               {t('loginButton')}
             </Button>
           </form>

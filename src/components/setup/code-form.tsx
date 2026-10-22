@@ -35,7 +35,7 @@ export function CodeForm() {
   return (
     <form onSubmit={submit} className="flex flex-col gap-6" noValidate>
       <div className="flex flex-col items-center gap-2 text-center">
-        <div className="bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-full">
+        <div className="bg-accent-soft text-accent-ink flex size-14 items-center justify-center rounded-xl">
           <KeyRound className="size-5" aria-hidden="true" />
         </div>
         <h2 className="text-title-3">{t('title')}</h2>

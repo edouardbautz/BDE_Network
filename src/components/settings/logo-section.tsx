@@ -85,7 +85,7 @@ export function LogoSection({ logoPath, custom }: { logoPath: string; custom: bo
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="bg-muted/50 border-border flex size-20 shrink-0 items-center justify-center rounded-lg border p-2">
+        <div className="bg-surface-2 flex size-20 shrink-0 items-center justify-center rounded-lg p-2">
           {/* eslint-disable-next-line @next/next/no-img-element -- the logo is served by /api/logo or /public: next/image would only get in the way */}
           <img
             src={preview ?? logoPath}
@@ -124,7 +124,7 @@ export function LogoSection({ logoPath, custom }: { logoPath: string; custom: bo
             onChange={(event) => choose(event.target.files?.[0] ?? null)}
             aria-invalid={failure?.field === 'logo'}
             aria-describedby="settings-logo-file-hint"
-            className="border-input bg-background file:bg-secondary file:text-secondary-foreground block w-full cursor-pointer rounded-lg border text-body file:mr-3 file:cursor-pointer file:border-0 file:px-3 file:py-2 file:text-body file:font-semibold focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            className="bg-surface-2 file:bg-surface-3 file:text-ink block w-full cursor-pointer rounded-pill text-body file:mr-3 file:cursor-pointer file:border-0 file:px-3 file:py-2 file:text-body file:font-semibold focus-visible:shadow-[inset_0_0_0_2px_var(--accent-ink)] focus-visible:outline-none"
           />
         </Field>
         {failure && !failure.field && (

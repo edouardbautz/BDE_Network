@@ -88,7 +88,7 @@ export function StepIdentity({
             aria-label={t('accentLabel')}
             value={colorValid ? color : '#0f766e'}
             onChange={(event) => setColor(event.target.value)}
-            className="border-input size-8 shrink-0 cursor-pointer rounded-lg border bg-transparent p-0.5"
+            className="size-9 shrink-0 cursor-pointer rounded-pill bg-surface-2 p-1"
           />
           <Input
             id="setup-color"
@@ -108,7 +108,7 @@ export function StepIdentity({
                 aria-pressed={color.toLowerCase() === preset}
                 onClick={() => setColor(preset)}
                 style={{ backgroundColor: preset }}
-                className="focus-visible:ring-ring/50 size-6 rounded-full border border-black/10 outline-none focus-visible:ring-3 aria-pressed:ring-2 aria-pressed:ring-offset-2 aria-pressed:ring-offset-card aria-pressed:ring-foreground"
+                className="size-7 rounded-pill border border-black/10 outline-none aria-pressed:ring-2 aria-pressed:ring-offset-2 aria-pressed:ring-offset-surface aria-pressed:ring-ink"
               />
             ))}
           </div>

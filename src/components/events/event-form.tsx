@@ -373,16 +373,16 @@ export function EventForm({
               <span className="text-muted-foreground font-normal">({t('form.optional')})</span>
             </legend>
             <p className="text-muted-foreground text-small">{t('form.inChargeHelp')}</p>
-            <ul className="grid max-h-56 gap-1 overflow-y-auto rounded-lg border p-2 sm:grid-cols-2">
+            <ul className="grid max-h-56 gap-1 overflow-y-auto rounded-lg bg-surface-2 p-2 sm:grid-cols-2">
               {members.map((member) => (
                 <li key={member.login}>
-                  <label className="hover:bg-muted flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-body">
+                  <label className="hover:bg-surface-3 flex min-h-10 cursor-pointer items-center gap-3 rounded-sm px-2 py-1.5 text-body">
                     <input
                       type="checkbox"
                       name="assignees"
                       value={member.login}
                       defaultChecked={values.assigneeLogins.includes(member.login)}
-                      className="accent-primary size-4"
+                      className="accent-accent-fill size-5"
                     />
                     <span className="truncate">{member.name}</span>
                     <span className="text-muted-foreground truncate text-small">

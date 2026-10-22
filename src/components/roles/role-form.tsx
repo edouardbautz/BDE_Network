@@ -204,7 +204,7 @@ export function RoleForm({
           <CardDescription>{t('form.permissionsHelp')}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
-          <div className="rounded-lg border p-3">
+          <div className="rounded-lg bg-surface-2 p-4">
             <label className="flex cursor-pointer items-start gap-3">
               <input
                 type="checkbox"
@@ -213,7 +213,7 @@ export function RoleForm({
                 disabled={!canGrantAll}
                 onChange={(event) => setAllPermissions(event.target.checked)}
                 aria-describedby="all-help"
-                className="accent-primary mt-0.5 size-4"
+                className="accent-accent-fill mt-0.5 size-5"
               />
               <span className="flex flex-col gap-1">
                 <span className="text-body-strong">{t('form.allPermissions')}</span>
@@ -240,7 +240,7 @@ export function RoleForm({
                     <li key={option.key}>
                       <label
                         htmlFor={id}
-                        className="hover:bg-muted flex cursor-pointer items-start gap-3 rounded-md px-2 py-1.5"
+                        className="hover:bg-surface-3 flex min-h-10 cursor-pointer items-start gap-3 rounded-sm px-2 py-1.5"
                       >
                         <input
                           id={id}
@@ -251,7 +251,7 @@ export function RoleForm({
                           disabled={allPermissions || option.locked}
                           onChange={(event) => toggle(option, event.target.checked)}
                           aria-describedby={`${id}-help`}
-                          className="accent-primary mt-0.5 size-4"
+                          className="accent-accent-fill mt-0.5 size-5"
                         />
                         <span className="flex flex-col gap-0.5">
                           <span className="text-body-strong">{option.label}</span>

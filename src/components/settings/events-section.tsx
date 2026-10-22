@@ -120,7 +120,7 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
                   aria-label={t('colorOf', { label: row.label || t('newCategory') })}
                   value={/^#[0-9a-f]{6}$/i.test(row.color) ? row.color : '#0f766e'}
                   onChange={(event) => update(row.id, { color: event.target.value })}
-                  className="border-input size-9 shrink-0 cursor-pointer rounded-lg border bg-transparent p-0.5"
+                  className="size-9 shrink-0 cursor-pointer rounded-pill bg-surface-2 p-1"
                 />
                 <Input
                   value={row.label}
@@ -169,7 +169,7 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
         </div>
 
         {removed.length > 0 && (
-          <div className="border-border flex flex-col gap-3 rounded-lg border p-3">
+          <div className="flex flex-col gap-3 rounded-lg bg-surface-2 p-3.5">
             <p className="text-body-strong">{t('pendingTitle')}</p>
             <ul className="flex flex-col gap-3">
               {removed.map((row) => (

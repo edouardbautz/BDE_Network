@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
  * the ink of the accent (it replaces the outline), an error is the same ring in the danger colour, read-only is a hairline.
  */
 const FIELD =
-  "w-full min-w-0 rounded-pill border-0 bg-surface-2 px-4 text-body text-ink transition-[background-color,box-shadow] duration-(--dur-fast) ease-(--ease-standard) outline-none placeholder:text-muted-foreground hover:bg-surface-3 focus-visible:bg-surface focus-visible:shadow-[inset_0_0_0_2px_var(--accent-ink)] focus-visible:outline-none read-only:bg-transparent read-only:shadow-[inset_0_0_0_1px_var(--line)] read-only:hover:bg-transparent disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-disabled disabled:hover:bg-surface-2 aria-invalid:shadow-[inset_0_0_0_2px_var(--danger)]"
+  "w-full min-w-0 rounded-pill border-0 bg-surface-2 px-4 text-body text-ink transition-[background-color,box-shadow] duration-(--dur-fast) ease-(--ease-standard) outline-none placeholder:text-muted-foreground hover:bg-surface-3 focus-visible:bg-surface focus-visible:shadow-[inset_0_0_0_2px_var(--accent-ink)] focus-visible:outline-none [&:is(input,textarea):read-only]:bg-transparent [&:is(input,textarea):read-only]:shadow-[inset_0_0_0_1px_var(--line)] [&:is(input,textarea):read-only]:hover:bg-transparent disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-disabled disabled:hover:bg-surface-2 aria-invalid:shadow-[inset_0_0_0_2px_var(--danger)]"
 
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (

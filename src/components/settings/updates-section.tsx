@@ -49,8 +49,8 @@ export function UpdatesSection({ check }: { check: boolean }) {
         }}
         noValidate
       >
-        <div className="border-border flex items-start gap-3 rounded-lg border p-3">
-          <div className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-full">
+        <div className="bg-surface-2 flex items-start gap-3 rounded-lg p-3.5">
+          <div className="bg-accent-soft text-accent-ink flex size-9 shrink-0 items-center justify-center rounded-sm">
             <BellRing className="size-4" aria-hidden="true" />
           </div>
           <div className="flex-1">

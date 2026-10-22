@@ -71,7 +71,7 @@ export function OwnersSection({ owners, actorLogin }: { owners: string[]; actorL
 
       <div className="flex flex-col gap-2">
         <p className="text-body-strong">{t('listTitle')}</p>
-        <ul className="border-border divide-border divide-y rounded-lg border">
+        <ul className="divide-line divide-y rounded-lg bg-surface-2">
           {owners.map((owner) => {
             const isYou = owner.toLowerCase() === actorLogin.toLowerCase();
             return (

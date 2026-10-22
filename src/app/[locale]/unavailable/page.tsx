@@ -22,7 +22,7 @@ export default async function UnavailablePage() {
     <main className="flex min-h-screen items-center justify-center p-6">
       <Card className="w-full max-w-sm text-center">
         <CardHeader className="items-center gap-1">
-          <div className="bg-muted text-muted-foreground mb-2 flex size-10 items-center justify-center rounded-full">
+          <div className="bg-muted text-muted-foreground mb-2 flex size-10 items-center justify-center rounded-pill">
             <CloudOff className="size-5" />
           </div>
           <h1 className="text-title-2">{t('title')}</h1>

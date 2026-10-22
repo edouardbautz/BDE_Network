@@ -93,7 +93,7 @@ export function StepNotifications({
         {MODES.map((value) => (
           <label
             key={value}
-            className="border-border has-checked:border-foreground has-checked:bg-muted/50 has-focus-visible:ring-ring/50 flex cursor-pointer items-start gap-3 rounded-lg border p-3 has-focus-visible:ring-3"
+            className="bg-surface-2 has-checked:bg-accent-soft has-focus-visible:outline-3 has-focus-visible:outline-solid has-focus-visible:outline-accent-ink has-focus-visible:outline-offset-2 flex cursor-pointer items-start gap-3 rounded-lg p-3.5 transition-colors duration-(--dur-fast)"
           >
             <input
               type="radio"
@@ -215,7 +215,7 @@ export function StepNotifications({
       )}
 
       {mode !== 'none' && (
-        <div className="border-border flex flex-col gap-3 rounded-lg border p-3">
+        <div className="bg-surface-2 flex flex-col gap-3 rounded-lg p-3.5">
           <p className="text-body-strong">{t('testTitle')}</p>
           <p className="text-muted-foreground text-small">{t('testHelp')}</p>
           {mode === 'email' && (
