@@ -150,6 +150,7 @@ vi.mock('@/lib/prisma', () => {
       }),
     },
     eventAssignee: { findMany: vi.fn(async () => []) },
+    eventOccurrenceAssignee: { findMany: vi.fn(async () => []) },
     eventCancellation: { findMany: vi.fn(async () => []) },
     eventReminder: { findMany: vi.fn(async () => []) },
   };
@@ -362,6 +363,10 @@ describe('accounts that still exist', () => {
     expect(body.user.login).toBe('alice');
     expect(body.auditLogActions).toEqual([]);
     expect(body.events.authored).toEqual([]);
+    expect(body.events.datesInChargeOf).toEqual([]);
+    expect(body.events.cancelledDates).toEqual([]);
+    expect(body.events.refusedProposals).toEqual([]);
+    expect(body.auditLogAboutYou).toEqual([]);
     expect(body.user.role).toBe('Membre');
   });
 

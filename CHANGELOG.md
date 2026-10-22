@@ -172,6 +172,12 @@ All notable changes to this project are written here, in English. Format based o
   disk, a paused virtual machine): every page waited, with no end, until the database came back. A query is now given up after
   15 seconds, the visitor sees the error page, and the platform works again by itself when the database does. Found by the
   resilience suite of the quality campaign.
+- **"Download my data" gives everything the platform holds about the person.** The page promises "a copy of everything we hold
+  about you", and the export left out four things: the dates of a series a person is in charge of on their own, the dates they
+  cancelled, the proposals they refused (with the comment they wrote), and what was done to their account (approved, given a
+  role…, without saying by whom: that is somebody else's data). They are in the file now. A test reads the columns that can hold a
+  person from the database schema and fails until each new one says where the export finds it. Found by the privacy check of the
+  quality campaign.
 - **A long page no longer jumps sideways when it finishes loading.** A page is short while its loading skeleton shows and long once
   it is drawn (the members, the list of events). With a classic scrollbar (Windows, Linux, and so most computers), the bar
   appears at that moment and moved the whole content sideways by half its width, in front of everybody's eyes: a layout shift of

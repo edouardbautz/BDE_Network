@@ -157,6 +157,10 @@ meetings do not exist yet.
   `campus`). Removing a member **deletes the row** — there's no soft-delete: it keeps the RGPD story
   simple (real erasure). `status` + `roleId` replace the old `role` enum; the per-user `ModulePermission`
   table is gone (permissions live on roles).
+- **A column that can hold a person** (a foreign key to `User`, or a login, an e-mail, a name, a picture, a campus, a token) is
+  classified in `qa/privacy/personal-data.test.ts`, which reads the schema: where the self-service export (`api/me/export`) finds it,
+  and that an account can be deleted whatever points to it (`onDelete: SetNull` or `Cascade`). A new such column fails that test until
+  it says so.
 - **`AuditLog`**: append-only, OWNER-only to read, never edited/deleted from the app. Every row
   stores `actorLogin: String` (plain text) **and** an optional `actorId` FK (`onDelete: SetNull`).
   This is the pattern to replicate on any future business entity: keep a text field with the

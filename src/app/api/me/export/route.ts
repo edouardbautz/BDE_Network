@@ -16,7 +16,15 @@ export async function GET() {
 
   const userId = session.user.id;
 
-  const [user, auditLogActions, authoredEvents, assignedEvents] = await Promise.all([
+  const [
+    user,
+    auditLogActions,
+    auditLogAboutYou,
+    authoredEvents,
+    assignedEvents,
+    assignedDates,
+    cancelledDates,
+  ] = await Promise.all([
     prisma.user.findUniqueOrThrow({
       where: { id: userId },
       select: {
@@ -39,6 +47,12 @@ export async function GET() {
       select: { action: true, targetType: true, targetLabel: true, createdAt: true },
       orderBy: { createdAt: 'desc' },
     }),
+    // What was done to the account (approved, given a role…), by whom is left out: that is another person's data.
+    prisma.auditLog.findMany({
+      where: { targetType: 'User', targetId: userId },
+      select: { action: true, targetLabel: true, createdAt: true },
+      orderBy: { createdAt: 'desc' },
+    }),
     prisma.event.findMany({
       where: { authorId: userId },
       select: { title: true, status: true, startsAt: true, createdAt: true },
@@ -48,7 +62,29 @@ export async function GET() {
       where: { userId },
       select: { event: { select: { title: true, startsAt: true } } },
     }),
+    // The dates of a series the person is in charge of on their own, and the dates they cancelled.
+    prisma.eventOccurrenceAssignee.findMany({
+      where: { userId },
+      select: {
+        occurrence: { select: { occurrenceStart: true, event: { select: { title: true } } } },
+      },
+    }),
+    prisma.eventCancellation.findMany({
+      where: { cancelledById: userId },
+      select: { occurrenceStart: true, createdAt: true, event: { select: { title: true } } },
+      orderBy: { createdAt: 'desc' },
+    }),
   ]);
+
+  // The proposals this person refused are recorded under their login (the text a validator wrote is theirs). The login comes
+  // from the account just read, never from the request: an empty one would drop the filter and export everybody's.
+  const refusedProposals = user.login
+    ? await prisma.event.findMany({
+        where: { refusedByLogin: user.login },
+        select: { title: true, refusedAt: true, refusalComment: true },
+        orderBy: { refusedAt: 'desc' },
+      })
+    : [];
 
   const { calendarToken, role, ...profile } = user;
 
@@ -59,9 +95,20 @@ export async function GET() {
       user: { ...profile, role: role?.name ?? null },
       calendarFeedActive: calendarToken !== null,
       auditLogActions,
+      auditLogAboutYou,
       events: {
         authored: authoredEvents,
         inChargeOf: assignedEvents.map((assignment) => assignment.event),
+        datesInChargeOf: assignedDates.map((assignment) => ({
+          title: assignment.occurrence.event.title,
+          occurrenceStart: assignment.occurrence.occurrenceStart,
+        })),
+        cancelledDates: cancelledDates.map((cancellation) => ({
+          title: cancellation.event.title,
+          occurrenceStart: cancellation.occurrenceStart,
+          cancelledAt: cancellation.createdAt,
+        })),
+        refusedProposals,
       },
     },
     null,
