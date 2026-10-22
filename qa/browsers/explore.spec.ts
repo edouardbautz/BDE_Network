@@ -3,7 +3,7 @@ import { PAGES } from '../access/matrix';
 import { LOCALE } from '../access/model';
 import type { PersonaKey } from '../personas';
 import { expect, test } from './fixtures';
-import { patternOf } from './explore-support';
+import { openPopups, patternOf } from './explore-support';
 import { atRest } from './rest';
 
 /**
@@ -35,7 +35,6 @@ function seenBy(who: PersonaKey): string[] {
 
 const MAX_PAGES = 70;
 const PER_PATTERN = 2;
-const MAX_TRIGGERS = 8;
 
 /** The viewers: everybody who can be somebody (the removed member is sent away at the first request: `public.spec.ts`). */
 const WALKERS: readonly PersonaKey[] = [
@@ -86,33 +85,27 @@ async function linksOf(page: Page): Promise<Link[]> {
   );
 }
 
-/** Opens every menu and dialog the page offers (and closes it), and says what went wrong. */
-async function openPopups(page: Page, at: string): Promise<string[]> {
-  const findings: string[] = [];
-  const triggers = page.locator(
-    '[aria-haspopup]:not([aria-haspopup="false"]):visible, button[aria-expanded]:visible',
-  );
-  const count = Math.min(await triggers.count(), MAX_TRIGGERS);
-  for (let index = 0; index < count; index += 1) {
-    const trigger = triggers.nth(index);
-    const name = ((await trigger.getAttribute('aria-label')) ?? (await trigger.innerText()).trim())
-      .replace(/\s+/g, ' ')
-      .slice(0, 40);
-    await trigger
-      .click({ timeout: 5_000 })
-      .catch(() => findings.push(`${at}: "${name}" could not be clicked`));
-    await page.waitForTimeout(250);
-    const alive = await page
-      .locator('main, [role="main"]')
-      .first()
-      .isVisible()
-      .catch(() => false);
-    if (!alive) findings.push(`${at}: the page lost its content when "${name}" was opened`);
-    await page.keyboard.press('Escape');
-    await page.waitForTimeout(150);
-  }
-  return findings;
-}
+test.describe('the walk itself', () => {
+  // A walk that sees nothing would let every persona pass: these make a page do what it must catch.
+  test('sees a menu that breaks the page when it opens, and lets a menu that works alone', async ({
+    as,
+  }) => {
+    const page = await as('anonymous');
+    await page.setContent(`
+      <main><h1>A page</h1></main>
+      <button aria-haspopup="menu" aria-label="Good menu"
+        onclick="document.body.insertAdjacentHTML('beforeend', '<div role=menu>open</div>')">Good</button>`);
+    expect(await openPopups(page, '/good')).toEqual([]);
+
+    await page.setContent(`
+      <main><h1>A page</h1></main>
+      <button aria-haspopup="menu" aria-label="Broken menu"
+        onclick="document.querySelector('main').remove()">Broken</button>`);
+    expect(await openPopups(page, '/broken')).toEqual([
+      '/broken: the page lost its content when "Broken menu" was opened',
+    ]);
+  });
+});
 
 test.describe('a walk through the interface', () => {
   for (const who of WALKERS) {
