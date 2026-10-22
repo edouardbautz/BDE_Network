@@ -37,12 +37,25 @@ events:
     - { key: 'partenariat', label: 'Partenariat', color: '#2563eb' }
   reminderHour: 18
 notifications:
-  memberPending: 'none'
-  memberApproved: 'none'
-  memberRemoved: 'none'
-  eventConfirmed: 'none'
-  eventReminder: 'none'
+  memberPending: 'email'
+  memberApproved: 'discord'
+  memberRemoved: 'slack'
+  eventConfirmed: 'discord'
+  eventReminder: 'email'
 `;
+
+/**
+ * What `CONFIG` says about each notification, as the settings page of the current version must show it after the update: one
+ * channel per notification was how every version before 1.5.0 wrote it, and each becomes one ticked box of the table. The
+ * labels are the English ones of the page ("type — channel").
+ */
+export const NOTIFICATION_BOXES = [
+  'Access request waiting — E-mail',
+  'Request approved — Discord',
+  'Member removed — Slack',
+  'Event confirmed — Discord',
+  'Event reminder — E-mail',
+] as const;
 
 export interface Run {
   ok: boolean;
@@ -105,6 +118,12 @@ export class Stack {
         `AUTH_SECRET=${AUTH_SECRET}`,
         'FORTYTWO_CLIENT_ID=qa-client',
         'FORTYTWO_CLIENT_SECRET=qa-client-secret',
+        // what the channels of `CONFIG` need to start: nothing is ever sent to them
+        'DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/123456789/qa-upgrade',
+        'SLACK_WEBHOOK_URL=https://hooks.slack.com/services/T123/B456/qaupgrade',
+        'SMTP_HOST=smtp.invalid',
+        'SMTP_PORT=587',
+        'SMTP_FROM=bde@example.org',
         `APP_URL=http://localhost:${this.port}`,
         'APP_BIND=127.0.0.1',
         `APP_PORT=${this.port}`,
