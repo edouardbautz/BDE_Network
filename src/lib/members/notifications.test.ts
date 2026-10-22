@@ -1,3 +1,4 @@
+import { notificationsConfig } from '@/test/notifications';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import fr from '../../../messages/fr.json';
 
@@ -38,16 +39,21 @@ const { notifyMemberApproved, notifyMemberPending, notifyMemberRemoved } =
 type Channel = 'email' | 'discord' | 'slack' | 'none';
 
 function useChannels(
-  channels: Partial<Record<'memberPending' | 'memberApproved' | 'memberRemoved', Channel>>,
+  channels: Partial<
+    Record<
+      'memberPending' | 'memberApproved' | 'memberRemoved',
+      Channel | Exclude<Channel, 'none'>[]
+    >
+  >,
 ) {
   vi.mocked(getConfig).mockReturnValue({
     bde: { name: 'BDE Test', defaultLocale: 'fr' },
-    notifications: {
+    notifications: notificationsConfig({
       memberPending: 'none',
       memberApproved: 'none',
       memberRemoved: 'none',
       ...channels,
-    },
+    }),
   } as unknown as ReturnType<typeof getConfig>);
 }
 
@@ -239,12 +245,29 @@ describe('notifyMemberApproved', () => {
 
     expect(deliver).toHaveBeenCalledWith(
       'memberApproved',
-      expect.objectContaining({ subject: 'Votre accès à BDE Test est validé' }),
+      expect.anything(),
       ['jean@x.fr'],
       expect.any(String),
     );
-    expect(firstCall(vi.mocked(deliver))[1].body).toContain('Votre rôle : Trésorier.');
+    // The mail speaks to the member, with its own subject; the plain message every channel falls back to is the team's.
+    const message = firstCall(vi.mocked(deliver))[1];
+    expect(message.email?.subject).toBe('Votre accès à BDE Test est validé');
+    expect(message.email?.text).toContain('Trésorier');
     expect(prisma.user.findMany).not.toHaveBeenCalled();
+  });
+
+  it('on an e-mail and the chat at once: the letter to the member and the card for the team, from one notification', async () => {
+    useChannels({ memberApproved: ['discord', 'email'] });
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(approved as never);
+
+    await notifyMemberApproved('u1');
+
+    expect(deliver).toHaveBeenCalledTimes(1);
+    const message = firstCall(vi.mocked(deliver))[1];
+    expect(message.email?.subject).toBe('Votre accès à BDE Test est validé');
+    expect(message.discord?.embeds).toHaveLength(1);
+    expect(message.slack).toBeUndefined();
+    expect(message.subject).toBe('Demande approuvée : Jean Dupont');
   });
 
   it.each(['discord', 'slack'] as const)(

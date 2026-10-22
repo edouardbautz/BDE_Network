@@ -9,7 +9,7 @@ import { settingsExtras, settingsView } from './view';
 const mocks = vi.hoisted(() => ({ groupBy: vi.fn() }));
 vi.mock('@/lib/prisma', () => ({ prisma: { event: { groupBy: mocks.groupBy } } }));
 
-const config = (notifications: Record<string, string> = {}) =>
+const config = (notifications: Record<string, unknown> = {}) =>
   bdeConfigSchema.parse({
     bde: {
       name: 'BDE Test',
@@ -64,17 +64,36 @@ describe('settingsView: what the page may show', () => {
       events: true,
     });
     expect(view.notifications).toMatchObject({
-      mode: 'discord',
+      // the configuration says one channel per notification, as it did before 1.5.0: it is read as a list
+      matrix: { eventConfirmed: ['discord'], memberPending: ['discord'], memberApproved: [] },
       hasDiscordWebhook: true,
       hasSlackWebhook: false,
+      hasSmtp: false, // the host and the password are saved, not the port and the sender
       smtp: { host: 'smtp.exemple.fr', hasPassword: true },
     });
   });
 
-  it('says there is no channel when nothing is sent, and no secret when none is saved', () => {
+  it('shows several channels for a notification, in the order of the table, and no e-mail for a member removed', () => {
+    setRuntimeSettings({
+      config: config({
+        eventConfirmed: ['email', 'discord'],
+        memberRemoved: ['slack', 'email'],
+      }),
+      values: {},
+      source: 'database',
+    });
+    const { matrix } = settingsView().notifications;
+    expect(matrix.eventConfirmed).toEqual(['discord', 'email']);
+    // the e-mail of a removed member never exists: an older configuration may list it, the page does not show it
+    expect(matrix.memberRemoved).toEqual(['slack']);
+  });
+
+  it('says nothing is ticked when nothing is sent, and no secret when none is saved', () => {
     setRuntimeSettings({ config: config(), values: {}, source: 'database' });
     const view = settingsView();
-    expect(view.notifications.mode).toBe('none');
+    expect(
+      Object.values(view.notifications.matrix).every((channels) => channels.length === 0),
+    ).toBe(true);
     expect(view.hasClientSecret).toBe(false);
     expect(view.addressUrl).toBe('');
   });

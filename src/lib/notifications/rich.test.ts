@@ -1,3 +1,4 @@
+import { notificationsConfig } from '@/test/notifications';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/config', () => ({ getConfig: vi.fn() }));
@@ -14,7 +15,7 @@ type Channel = 'email' | 'discord' | 'slack' | 'none';
 function setChannel(channel: Channel) {
   vi.mocked(getConfig).mockReturnValue({
     bde: { name: 'BDE Nice', logoPath: '/logo.svg' },
-    notifications: { eventConfirmed: channel },
+    notifications: notificationsConfig({ eventConfirmed: channel }),
   } as unknown as ReturnType<typeof getConfig>);
 }
 

@@ -61,7 +61,7 @@ function channelsInUse(config: BdeConfig): Set<string> {
   const channels = new Set<string>();
   if (config.modules.enabled.includes(EVENTS_MODULE_KEY)) {
     for (const event of EVENTS_NOTIFICATIONS) {
-      channels.add(config.notifications[event]);
+      for (const channel of config.notifications[event]) channels.add(channel);
     }
   }
   return channels;
@@ -163,7 +163,7 @@ export function validateEnvironment(env: Env, config: BdeConfig): EnvironmentRep
         fail(
           `${name} est vide alors que des notifications sont réglées sur « email » dans bde.config.yml.\n` +
             "    → Renseignez le serveur d'envoi d'e-mails dans .env (SMTP_HOST, SMTP_PORT, SMTP_FROM),\n" +
-            '      ou remplacez « email » par « none » dans la section notifications de bde.config.yml.',
+            '      ou retirez « email » de la section notifications de bde.config.yml.',
         );
       }
     }
@@ -185,8 +185,8 @@ export function validateEnvironment(env: Env, config: BdeConfig): EnvironmentRep
     if (!value) {
       fail(
         `${variable} est vide alors que des notifications sont réglées sur « ${channel} » dans bde.config.yml.\n` +
-          `    → Collez l'adresse du webhook ${service} dans .env, ou remplacez « ${channel} » par « none »\n` +
-          '      dans la section notifications de bde.config.yml.',
+          `    → Collez l'adresse du webhook ${service} dans .env, ou retirez « ${channel} »\n` +
+          '      de la section notifications de bde.config.yml.',
       );
     } else if (!/^https:\/\//i.test(value)) {
       fail(
@@ -231,25 +231,25 @@ const CHANNEL_VARIABLES: Record<string, readonly string[]> = {
 
 function warnMemberNotifications(env: Env, config: BdeConfig, warnings: string[]): void {
   for (const event of MEMBER_NOTIFICATIONS) {
-    const channel = config.notifications[event];
+    for (const channel of config.notifications[event]) {
+      if (event === 'memberRemoved' && channel === 'email') {
+        warnings.push(
+          "La notification memberRemoved est réglée sur « email », mais elle n'envoie jamais d'e-mail\n" +
+            '    (la personne retirée ne reçoit rien). Elle ne fonctionne que sur « discord » ou « slack ».\n' +
+            '    → Retirez « email » de memberRemoved dans la section notifications de bde.config.yml.',
+        );
+        continue;
+      }
 
-    if (event === 'memberRemoved' && channel === 'email') {
-      warnings.push(
-        "La notification memberRemoved est réglée sur « email », mais elle n'envoie jamais d'e-mail\n" +
-          '    (la personne retirée ne reçoit rien). Elle ne fonctionne que sur « discord » ou « slack ».\n' +
-          '    → Changez-la dans la section notifications de bde.config.yml, ou mettez « none ».',
-      );
-      continue;
-    }
-
-    const missing = (CHANNEL_VARIABLES[channel] ?? []).filter((name) => isBlank(env[name]));
-    if (missing.length > 0) {
-      warnings.push(
-        `La notification ${event} est réglée sur « ${channel} », mais ${missing.join(', ')} ${
-          missing.length > 1 ? 'ne sont pas renseignés' : "n'est pas renseigné"
-        } dans .env : l'alerte ne partira pas.\n` +
-          `    → Renseignez-le dans .env, ou mettez « none » pour ${event} dans bde.config.yml.`,
-      );
+      const missing = (CHANNEL_VARIABLES[channel] ?? []).filter((name) => isBlank(env[name]));
+      if (missing.length > 0) {
+        warnings.push(
+          `La notification ${event} est réglée sur « ${channel} », mais ${missing.join(', ')} ${
+            missing.length > 1 ? 'ne sont pas renseignés' : "n'est pas renseigné"
+          } dans .env : l'alerte ne partira pas sur ce canal.\n` +
+            `    → Renseignez-le dans .env, ou retirez « ${channel} » de ${event} dans bde.config.yml.`,
+        );
+      }
     }
   }
 }

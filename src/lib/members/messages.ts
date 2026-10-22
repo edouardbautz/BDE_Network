@@ -36,24 +36,15 @@ export function buildPendingMessage(
   return { subject: t('pending.subject', { name: member.fullName }), body: lines.join('\n') };
 }
 
-/** The member is approved. By email it speaks to them; on a chat channel it informs the team. */
+/**
+ * The member is approved, told to the team: what a chat channel posts, and the plain text every channel falls back to. The
+ * e-mail speaks to the member themselves and is its own message (`buildApprovedEmail`, with its own subject).
+ */
 export function buildApprovedMessage(
   member: MemberFacts,
   roleName: string,
-  audience: 'member' | 'team',
   t: Translate,
-  appUrl: string | null,
-  bdeName: string,
 ): BuiltMessage {
-  if (audience === 'member') {
-    const lines = [
-      t('approved.memberIntro', { name: member.fullName }),
-      t('approved.memberRole', { role: roleName }),
-    ];
-    if (appUrl) lines.push(`${t('approved.memberLink')} : ${appUrl}`);
-    return { subject: t('approved.memberSubject', { bde: bdeName }), body: lines.join('\n') };
-  }
-
   return {
     subject: t('approved.teamSubject', { name: member.fullName }),
     body: t('approved.teamBody', { name: member.fullName, login: member.login, role: roleName }),

@@ -1,5 +1,8 @@
-import { createTransport } from 'nodemailer';
-import type { FetchLike } from './fortytwo';
+import type { NotificationChannel } from '@/config/schema';
+import { DiscordAdapter } from '@/lib/notifications/adapters/discord';
+import { EmailAdapter } from '@/lib/notifications/adapters/email';
+import { SlackAdapter } from '@/lib/notifications/adapters/slack';
+import { buildTestMessage, type TestMessageContext } from '@/lib/notifications/test-message';
 
 /** The mail settings typed in the installer. */
 export interface SmtpSettings {
@@ -8,6 +11,13 @@ export interface SmtpSettings {
   user: string;
   password: string;
   from: string;
+}
+
+/** What a channel needs to send, typed or saved. */
+export interface ChannelCredentials {
+  discordWebhook?: string;
+  slackWebhook?: string;
+  smtp?: SmtpSettings;
 }
 
 export type TestResult = { ok: true } | { ok: false; detail: string };
@@ -21,68 +31,37 @@ function describe(error: unknown, secrets: readonly string[] = []): string {
   return text.replace(/https?:\/\/\S+/g, '<url>').slice(0, 200);
 }
 
-async function post(fetchFn: FetchLike, url: string, body: unknown): Promise<TestResult> {
+/**
+ * Sends the test message of ONE channel, through the very adapter a real notification uses and with what was typed (or saved) for
+ * that channel: if it arrives, the channel works, and the card or the e-mail shows how it will look. A failure is a short
+ * reason without any address or secret. The other channels are not touched.
+ */
+export async function sendTestMessage(
+  channel: NotificationChannel,
+  credentials: ChannelCredentials,
+  context: TestMessageContext,
+  to?: string,
+): Promise<TestResult> {
+  const secrets = [
+    credentials.discordWebhook,
+    credentials.slackWebhook,
+    credentials.smtp?.password,
+    credentials.smtp?.user,
+  ].filter((secret): secret is string => Boolean(secret));
   try {
-    const response = await fetchFn(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    return response.ok ? { ok: true } : { ok: false, detail: `HTTP ${response.status}` };
-  } catch (error) {
-    return { ok: false, detail: describe(error, [url]) };
-  }
-}
-
-/** A message in the Discord channel of the webhook. It can ping nobody. */
-export function sendDiscordTest(
-  fetchFn: FetchLike,
-  webhookUrl: string,
-  text: string,
-): Promise<TestResult> {
-  return post(fetchFn, webhookUrl, { content: text, allowed_mentions: { parse: [] } });
-}
-
-/** A message in the Slack channel of the webhook. */
-export function sendSlackTest(
-  fetchFn: FetchLike,
-  webhookUrl: string,
-  text: string,
-): Promise<TestResult> {
-  return post(fetchFn, webhookUrl, { text });
-}
-
-/** The two things of a mail transport the installer uses: the tests play it. */
-export interface MailTransport {
-  verify(): Promise<unknown>;
-  sendMail(message: { from: string; to: string; subject: string; text: string }): Promise<unknown>;
-}
-
-export type TransportFactory = (smtp: SmtpSettings) => MailTransport;
-
-export const realTransport: TransportFactory = (smtp) =>
-  createTransport({
-    host: smtp.host,
-    port: smtp.port,
-    secure: smtp.port === 465,
-    auth: smtp.user ? { user: smtp.user, pass: smtp.password } : undefined,
-    connectionTimeout: 10_000,
-    greetingTimeout: 10_000,
-    socketTimeout: 15_000,
-  });
-
-/** Sends a test mail (which also proves the server is reachable and the login accepted). */
-export async function sendTestMail(
-  factory: TransportFactory,
-  smtp: SmtpSettings,
-  to: string,
-  subject: string,
-  text: string,
-): Promise<TestResult> {
-  try {
-    await factory(smtp).sendMail({ from: smtp.from, to, subject, text });
+    const message = await buildTestMessage(channel, context);
+    if (channel === 'discord' && credentials.discordWebhook) {
+      await new DiscordAdapter(credentials.discordWebhook).send(message);
+    } else if (channel === 'slack' && credentials.slackWebhook) {
+      await new SlackAdapter(credentials.slackWebhook).send(message);
+    } else if (channel === 'email' && credentials.smtp && to) {
+      const { host, port, from, user, password } = credentials.smtp;
+      await new EmailAdapter({ host, port, from, user, password }).send({ ...message, to });
+    } else {
+      return { ok: false, detail: 'not configured' };
+    }
     return { ok: true };
   } catch (error) {
-    return { ok: false, detail: describe(error, [smtp.password, smtp.user]) };
+    return { ok: false, detail: describe(error, secrets) };
   }
 }

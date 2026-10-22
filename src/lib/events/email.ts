@@ -83,7 +83,7 @@ ${data.review.comment}`
     fields,
     ...(data.url && { action: { label: t(actionLabelKey(kind, 'email')), url: data.url } }),
     ...(ics && { note: t('email.calendarNote') }),
-    footer: t('email.footer', { bde: brand.name }),
+    footer: t(kind === 'test' ? 'email.footerTest' : 'email.footer', { bde: brand.name }),
   });
 
   return { ...rendered, ...(ics && { ics }) };

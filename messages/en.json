@@ -379,7 +379,8 @@
           "reminderToday": "Reminder · today",
           "proposed": "Event proposed",
           "approved": "Proposal approved",
-          "refused": "Proposal refused"
+          "refused": "Proposal refused",
+          "test": "Test message"
         },
         "fields": {
           "when": "When",
@@ -397,7 +398,8 @@
         "action": "View the event",
         "calendarNote": "The attached file adds the event to your calendar.",
         "footer": "You are receiving this message because you are a member of {bde}.",
-        "reviewAction": "Review the proposal"
+        "reviewAction": "Review the proposal",
+        "footerTest": "This is a test message sent from the settings of {bde}."
       },
       "slack": {
         "action": "View the event",
@@ -493,7 +495,8 @@
         "title": "Confirm this event?",
         "body": "The event becomes visible to all members.",
         "notifyEmail": "Members will be notified by email.",
-        "notifyChat": "A message will be posted in the {channel} channel.",
+        "notifyChat": "A message will be posted on {channels}.",
+        "notifyBoth": "Members will be notified by email, and a message will be posted on {channels}.",
         "alreadyNotified": "Members were already notified about this event: they will not be notified a second time.",
         "confirm": "Confirm the event"
       },
@@ -936,33 +939,86 @@
     },
     "notifications": {
       "title": "Notifications",
-      "description": "The platform can notify the board: new access request, event confirmed, reminders. Choose a channel; you can change it later.",
-      "none": "None for now",
-      "noneBody": "Nothing is sent.",
-      "discord": "Discord",
-      "discordBody": "A message in a channel of your server.",
-      "slack": "Slack",
-      "slackBody": "A message in a channel of your workspace.",
-      "email": "E-mail",
-      "emailBody": "E-mails sent through your mail server (SMTP).",
+      "description": "The platform can tell the board and the members: a new access request, a confirmed event, reminders. Set up the channels you use, then tick what goes where. You can change everything later.",
+      "channelsTitle": "Channels",
+      "channelsHelp": "A channel has to be set up before it can be ticked in the table. Each channel is independent: if one is down, the others still send.",
+      "channelNames": {
+        "discord": "Discord",
+        "slack": "Slack",
+        "email": "E-mail"
+      },
+      "channelBodies": {
+        "discord": "A message in a channel of your server.",
+        "slack": "A message in a channel of your workspace.",
+        "email": "E-mails sent by your mail server (SMTP)."
+      },
+      "configured": "Set up",
+      "notConfigured": "Not set up",
+      "removeChannel": "Remove {channel}",
+      "removalPending": "{channel} will be removed when you save: its boxes will be cleared.",
+      "undoRemoval": "Keep {channel}",
       "discordLabel": "Discord webhook address",
       "discordHelp": "In Discord: channel settings, Integrations, Webhooks, New webhook, then \"Copy webhook URL\".",
       "slackLabel": "Slack webhook address",
-      "slackHelp": "Create a Slack application, turn on \"Incoming Webhooks\" and copy the webhook address (see the notifications guide).",
-      "webhookKept": "Address already saved: leave empty to keep it.",
+      "slackHelp": "Create a Slack app, turn on \"Incoming Webhooks\" and copy the webhook address (see the notifications documentation).",
+      "webhookKept": "Address already saved: leave blank to keep it.",
       "smtpHost": "SMTP server",
       "smtpPort": "Port",
-      "smtpUser": "Username (optional)",
+      "smtpUser": "Login (optional)",
       "smtpPassword": "Password (optional)",
       "smtpFrom": "Sender address",
-      "passwordKept": "Password already saved: leave empty to keep it.",
-      "testTitle": "Test",
-      "testHelp": "The test is optional but recommended: you see the message arrive.",
+      "passwordKept": "Password already saved: leave blank to keep it.",
       "testTo": "Send the test to",
-      "testButton": "Send a test message",
+      "testButton": "Send a test on {channel}",
       "testing": "Sending…",
-      "testOk": "Message sent: check that it arrived.",
-      "testFailed": "Sending failed ({detail})."
+      "testOk": "Test sent on {channel}: check that it arrived. It is the real presentation, with an invented event.",
+      "testFailed": "Sending failed ({detail}).",
+      "matrixTitle": "Who is told, and where",
+      "matrixHelp": "One row per notification, one column per channel. A row with no box ticked sends nothing.",
+      "typeColumn": "Notification",
+      "shortcuts": "Shortcuts",
+      "checkColumn": "{channel}: check all",
+      "uncheckColumn": "{channel}: clear all",
+      "clearAll": "Clear all",
+      "types": {
+        "groups": {
+          "members": "Members",
+          "events": "Events"
+        },
+        "memberRemovedNoEmail": "Never by e-mail",
+        "memberPending": {
+          "name": "Access request waiting",
+          "hint": "Tells the owners and whoever can approve it."
+        },
+        "memberApproved": {
+          "name": "Request approved",
+          "hint": "Tells the member by e-mail, and the team in the channel."
+        },
+        "memberRemoved": {
+          "name": "Member removed",
+          "hint": "A message in the channel: the person removed never gets an e-mail."
+        },
+        "eventConfirmed": {
+          "name": "Event confirmed",
+          "hint": "Tells every member, once per event."
+        },
+        "eventReminder": {
+          "name": "Event reminder",
+          "hint": "The day before, to the people in charge (or to those who validate when nobody is)."
+        },
+        "eventProposed": {
+          "name": "Event proposed",
+          "hint": "Tells whoever can validate it."
+        },
+        "eventApproved": {
+          "name": "Proposal approved",
+          "hint": "Tells its author."
+        },
+        "eventRefused": {
+          "name": "Proposal refused",
+          "hint": "Tells its author, with the comment."
+        }
+      }
     },
     "summary": {
       "title": "Summary",
@@ -988,7 +1044,9 @@
       "install": "Install the platform",
       "installing": "Installing…",
       "incomplete": "An answer is missing: go back to the previous steps.",
-      "invalid": "These settings do not make a valid platform ({detail})."
+      "invalid": "These settings do not make a valid platform ({detail}).",
+      "notificationTypes": "{count, plural, one {# type} other {# types}}",
+      "notificationsNone": "None for now"
     },
     "done": {
       "title": "Platform installed",
@@ -999,8 +1057,12 @@
       "tipBackup": "Back up the \"secrets\" volume with ./scripts/backup.sh: without it, the saved secrets cannot be decrypted after a restore."
     },
     "test": {
-      "message": "Test message from the setup of {name}. If you read this, notifications work!",
-      "subject": "Test from {name}"
+      "message": "Test message from {name}. If you read it, this channel works.",
+      "subject": "Test from {name}",
+      "sampleTitle": "Game night (example)",
+      "sampleDescription": "This is how the notifications of {name} look. No event was created.",
+      "sampleLocation": "Common room",
+      "sampleCategory": "Example"
     },
     "errors": {
       "wrong": "That code is not right. Check the latest code shown by the server.",
@@ -1052,7 +1114,9 @@
       "categoryDuplicate": "Two categories have the same name.",
       "categoryLast": "Keep at least one category.",
       "categoryInUse": "Events still use \"{detail}\": choose the category to move them to.",
-      "tooManyCategories": "There are already 30 categories, which is the maximum."
+      "tooManyCategories": "There are already 30 categories, which is the maximum.",
+      "channelNotConfigured": "A box is ticked for a channel that is not set up: set it up first, or clear its boxes.",
+      "removedNotEmailed": "The person removed never gets an e-mail: clear that box, the message goes in the channel."
     }
   },
   "settings": {

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { bdeConfigSchema, DEFAULT_ACCENT } from './schema';
+import { bdeConfigSchema, channelsFor, DEFAULT_ACCENT } from './schema';
 
 const validConfig = {
   bde: {
@@ -60,16 +60,79 @@ describe('bdeConfigSchema', () => {
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.notifications).toEqual({
-        memberPending: 'none',
-        memberApproved: 'none',
-        memberRemoved: 'none',
-        eventConfirmed: 'none',
-        eventReminder: 'none',
-        eventProposed: 'none',
-        eventApproved: 'none',
-        eventRefused: 'none',
+        memberPending: [],
+        memberApproved: [],
+        memberRemoved: [],
+        eventConfirmed: [],
+        eventReminder: [],
+        eventProposed: [],
+        eventApproved: [],
+        eventRefused: [],
       });
     }
+  });
+
+  describe('the channels of a notification: a list, and the old single value still read', () => {
+    const channelsOf = (notifications: unknown) => {
+      const result = bdeConfigSchema.safeParse({ ...validConfig, notifications });
+      return result.success ? result.data.notifications : null;
+    };
+
+    it.each([
+      ['discord', ['discord']],
+      ['slack', ['slack']],
+      ['email', ['email']],
+      ['none', []],
+      [undefined, []],
+      [null, []],
+    ])(
+      'reads the single value %j as the list %j (a configuration written before 1.5.0)',
+      (value, list) => {
+        expect(channelsOf({ memberPending: value })?.memberPending).toEqual(list);
+      },
+    );
+
+    it('accepts none, one or several channels', () => {
+      const n = channelsOf({
+        memberPending: [],
+        memberApproved: ['slack'],
+        eventConfirmed: ['discord', 'slack', 'email'],
+      });
+      expect(n?.memberPending).toEqual([]);
+      expect(n?.memberApproved).toEqual(['slack']);
+      expect(n?.eventConfirmed).toEqual(['discord', 'slack', 'email']);
+    });
+
+    it('writes a list once, in the order of the table, whatever the order it was given', () => {
+      expect(
+        channelsOf({ eventConfirmed: ['email', 'discord', 'email', 'slack'] })?.eventConfirmed,
+      ).toEqual(['discord', 'slack', 'email']);
+    });
+
+    it('refuses a channel that does not exist, in a list too, and something that is neither a name nor a list', () => {
+      expect(channelsOf({ memberPending: ['discord', 'carrier-pigeon'] })).toBeNull();
+      expect(channelsOf({ memberPending: ['none'] })).toBeNull();
+      expect(channelsOf({ memberPending: 3 })).toBeNull();
+      expect(channelsOf({ memberPending: { discord: true } })).toBeNull();
+    });
+
+    it('keeps a keyed-out notification off, and one that is there is not touched by the others', () => {
+      const n = channelsOf({ eventReminder: 'slack' });
+      expect(n?.eventReminder).toEqual(['slack']);
+      expect(n?.eventConfirmed).toEqual([]);
+    });
+  });
+
+  describe('channelsFor: what a notification really goes through', () => {
+    it('is the list, except the e-mail of a member removed, which is never sent', () => {
+      const parsed = bdeConfigSchema.parse({
+        ...validConfig,
+        notifications: { memberRemoved: ['discord', 'email'], memberPending: ['email'] },
+      });
+      expect(channelsFor(parsed, 'memberRemoved')).toEqual(['discord']);
+      expect(channelsFor(parsed, 'memberPending')).toEqual(['email']);
+      expect(channelsFor(parsed, 'eventConfirmed')).toEqual([]);
+    });
   });
 
   it('still refuses a channel that does not exist in a notifications section that is there', () => {
@@ -141,12 +204,12 @@ describe('bdeConfigSchema', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.events?.reminderHour).toBe(18);
-        expect(result.data.notifications.eventConfirmed).toBe('none');
-        expect(result.data.notifications.eventReminder).toBe('none');
+        expect(result.data.notifications.eventConfirmed).toEqual([]);
+        expect(result.data.notifications.eventReminder).toEqual([]);
         // The proposal circuit's notifications came later: an older file keeps validating, with them off.
-        expect(result.data.notifications.eventProposed).toBe('none');
-        expect(result.data.notifications.eventApproved).toBe('none');
-        expect(result.data.notifications.eventRefused).toBe('none');
+        expect(result.data.notifications.eventProposed).toEqual([]);
+        expect(result.data.notifications.eventApproved).toEqual([]);
+        expect(result.data.notifications.eventRefused).toEqual([]);
       }
     });
 

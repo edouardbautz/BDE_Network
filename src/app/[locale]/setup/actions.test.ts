@@ -16,9 +16,7 @@ const mocks = vi.hoisted(() => {
     verifyCredentials: vi.fn(),
     listCampuses: vi.fn(),
     checkLogin: vi.fn(),
-    sendDiscordTest: vi.fn(),
-    sendSlackTest: vi.fn(),
-    sendTestMail: vi.fn(),
+    sendTestMessage: vi.fn(),
     installPlatform: vi.fn(),
     startScheduler: vi.fn(),
   };
@@ -53,9 +51,7 @@ vi.mock('@/lib/setup/fortytwo', async (importOriginal) => ({
 }));
 vi.mock('@/lib/setup/notify-test', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/setup/notify-test')>()),
-  sendDiscordTest: mocks.sendDiscordTest,
-  sendSlackTest: mocks.sendSlackTest,
-  sendTestMail: mocks.sendTestMail,
+  sendTestMessage: mocks.sendTestMessage,
 }));
 vi.mock('@/lib/settings/store', () => ({ installPlatform: mocks.installPlatform }));
 vi.mock('@/lib/events/scheduler', () => ({ startEventReminderScheduler: mocks.startScheduler }));
@@ -63,6 +59,18 @@ vi.mock('@/lib/events/scheduler', () => ({ startEventReminderScheduler: mocks.st
 const actions = await import('./actions');
 const guard = await import('@/lib/setup/guard');
 const { draftFor } = await import('@/lib/setup/draft');
+
+/** Nothing ticked: every type of notification, an empty list. */
+const NONE = {
+  memberPending: [],
+  memberApproved: [],
+  memberRemoved: [],
+  eventConfirmed: [],
+  eventReminder: [],
+  eventProposed: [],
+  eventApproved: [],
+  eventRefused: [],
+};
 
 const UID = 'u-s4t2ud-uid-abcdef';
 const SECRET = 's-s4t2ud-secret-abcdef';
@@ -113,7 +121,7 @@ async function answerEverything() {
   ).toEqual({ ok: true });
   expect(await actions.saveOwners({ owners: ['alice'] })).toEqual({ ok: true });
   expect(await actions.saveModules({ events: true })).toEqual({ ok: true });
-  expect(await actions.saveNotifications({ mode: 'none' })).toEqual({ ok: true });
+  expect(await actions.saveNotifications({ matrix: NONE })).toEqual({ ok: true });
 }
 
 describe('without the code', () => {
@@ -129,8 +137,8 @@ describe('without the code', () => {
       () => actions.checkOwner({ login: 'alice' }),
       () => actions.saveOwners({ owners: ['alice'] }),
       () => actions.saveModules({ events: true }),
-      () => actions.saveNotifications({ mode: 'none' }),
-      () => actions.testNotification({ mode: 'none' }, { locale: 'fr' }),
+      () => actions.saveNotifications({ matrix: NONE }),
+      () => actions.testNotification({ matrix: NONE }, { locale: 'fr', channel: 'discord' }),
       () => actions.finishInstallation(),
     ];
     for (const call of calls) expect(await call()).toMatchObject({ ok: false, code: 'session' });
@@ -442,106 +450,172 @@ describe('the steps', () => {
   });
 
   describe('7. the notifications', () => {
+    const webhook = 'https://discord.com/api/webhooks/123456789/secret-part';
+    const smtp = {
+      host: 'smtp.exemple.fr',
+      port: '587',
+      user: 'bde',
+      password: 'p4ss',
+      from: 'bde@exemple.fr',
+    };
+
     it('Discord: the webhook is checked, kept when left empty, and never sent back', async () => {
-      const webhook = 'https://discord.com/api/webhooks/123456789/secret-part';
       expect(
         await actions.saveNotifications({
-          mode: 'discord',
+          matrix: NONE,
           discordWebhook: 'https://evil.example/x',
         }),
       ).toMatchObject({ ok: false, code: 'discord', field: 'discordWebhook' });
-      expect(await actions.saveNotifications({ mode: 'discord', discordWebhook: webhook })).toEqual(
-        { ok: true },
-      );
-      expect(await actions.saveNotifications({ mode: 'discord', discordWebhook: '' })).toEqual({
-        ok: true,
-      });
-      expect(await actions.saveNotifications({ mode: 'slack', slackWebhook: '' })).toMatchObject({
-        ok: false,
-        code: 'slack',
-      });
+      expect(
+        await actions.saveNotifications({
+          matrix: { ...NONE, memberPending: ['discord'] },
+          discordWebhook: webhook,
+        }),
+      ).toEqual({ ok: true });
+      // blank: the address typed before is kept, so its box stays tickable
+      expect(
+        await actions.saveNotifications({
+          matrix: { ...NONE, eventConfirmed: ['discord'] },
+          discordWebhook: '',
+        }),
+      ).toEqual({ ok: true });
+      expect(
+        await actions.saveNotifications({
+          matrix: { ...NONE, eventConfirmed: ['slack'] },
+          slackWebhook: '',
+        }),
+      ).toMatchObject({ ok: false, code: 'channelNotConfigured', field: 'matrix' });
+    });
+
+    it('a box is only ticked for a channel that is set up, and a member removed is never written to', async () => {
+      expect(
+        await actions.saveNotifications({ matrix: { ...NONE, memberPending: ['email'] } }),
+      ).toMatchObject({ ok: false, code: 'channelNotConfigured' });
+      expect(
+        await actions.saveNotifications({ matrix: { ...NONE, memberRemoved: ['email'] }, smtp }),
+      ).toMatchObject({ ok: false, code: 'removedNotEmailed' });
+      expect(
+        await actions.saveNotifications({
+          matrix: { ...NONE, memberRemoved: ['discord'] },
+          discordWebhook: webhook,
+        }),
+      ).toEqual({ ok: true });
+    });
+
+    it('several channels at once, and a channel removed after being set up', async () => {
+      expect(
+        await actions.saveNotifications({
+          matrix: { ...NONE, memberPending: ['discord', 'email'], eventConfirmed: ['email'] },
+          discordWebhook: webhook,
+          smtp,
+        }),
+      ).toEqual({ ok: true });
+      expect(
+        await actions.saveNotifications({
+          matrix: { ...NONE, memberPending: ['discord', 'email'] },
+          removed: ['email'],
+        }),
+      ).toMatchObject({ ok: false, code: 'channelNotConfigured' });
+      expect(
+        await actions.saveNotifications({
+          matrix: { ...NONE, memberPending: ['discord'] },
+          removed: ['email'],
+        }),
+      ).toEqual({ ok: true });
     });
 
     it('e-mail: every setting is validated', async () => {
-      const smtp = {
-        host: 'smtp.exemple.fr',
-        port: '587',
-        user: 'bde',
-        password: 'p4ss',
-        from: 'bde@exemple.fr',
-      };
+      const email = { matrix: { ...NONE, memberPending: ['email'] } };
       expect(
-        await actions.saveNotifications({ mode: 'email', smtp: { ...smtp, host: 'not a host' } }),
+        await actions.saveNotifications({ ...email, smtp: { ...smtp, host: 'not a host' } }),
       ).toMatchObject({ ok: false, code: 'smtpHost', field: 'smtpHost' });
       expect(
-        await actions.saveNotifications({ mode: 'email', smtp: { ...smtp, port: '99999' } }),
+        await actions.saveNotifications({ ...email, smtp: { ...smtp, port: '99999' } }),
       ).toMatchObject({ ok: false, code: 'port', field: 'smtpPort' });
       expect(
-        await actions.saveNotifications({ mode: 'email', smtp: { ...smtp, from: 'nope' } }),
+        await actions.saveNotifications({ ...email, smtp: { ...smtp, from: 'nope' } }),
       ).toMatchObject({ ok: false, code: 'email', field: 'smtpFrom' });
       expect(
-        await actions.saveNotifications({ mode: 'email', smtp: { ...smtp, password: "it's" } }),
+        await actions.saveNotifications({ ...email, smtp: { ...smtp, password: "it's" } }),
       ).toMatchObject({ ok: false, code: 'secretChars' });
-      expect(await actions.saveNotifications({ mode: 'email' })).toMatchObject({
+      expect(await actions.saveNotifications(email)).toMatchObject({
         ok: false,
-        code: 'invalid',
+        code: 'channelNotConfigured',
       });
-      expect(await actions.saveNotifications({ mode: 'email', smtp })).toEqual({ ok: true });
+      expect(await actions.saveNotifications({ ...email, smtp })).toEqual({ ok: true });
       expect(
-        await actions.saveNotifications({ mode: 'email', smtp: { ...smtp, password: '' } }),
+        await actions.saveNotifications({ ...email, smtp: { ...smtp, password: '' } }),
       ).toEqual({ ok: true });
     });
 
-    it('a test message goes through what was typed, with the name of the BDE, and says why it failed', async () => {
+    it('what is not a table of lists of channels is refused', async () => {
+      expect(await actions.saveNotifications({ mode: 'discord' })).toMatchObject({
+        ok: false,
+        code: 'invalid',
+      });
+      expect(
+        await actions.saveNotifications({ matrix: { ...NONE, memberPending: 'discord' } }),
+      ).toMatchObject({ ok: false, code: 'invalid' });
+    });
+
+    it('a test goes through ONE channel, with what was typed for it and the name of the BDE, and says why it failed', async () => {
       await actions.saveIdentity({ name: 'BDE Test', accentColor: '#0f766e', messageLocale: 'fr' });
-      const webhook = 'https://discord.com/api/webhooks/123456789/secret-part';
-      mocks.sendDiscordTest.mockResolvedValue({ ok: true });
+      mocks.sendTestMessage.mockResolvedValue({ ok: true });
 
       expect(
         await actions.testNotification(
-          { mode: 'discord', discordWebhook: webhook },
-          { locale: 'fr' },
+          // a typo in another channel does not stop this test
+          { matrix: NONE, discordWebhook: webhook, slackWebhook: 'http://nope' },
+          { locale: 'fr', channel: 'discord' },
         ),
       ).toEqual({ ok: true });
-      expect(mocks.sendDiscordTest).toHaveBeenCalledWith(
-        expect.any(Function),
-        webhook,
-        expect.stringContaining('BDE Test'),
+      expect(mocks.sendTestMessage).toHaveBeenCalledWith(
+        'discord',
+        { discordWebhook: webhook },
+        expect.objectContaining({ name: 'BDE Test', locale: 'fr', installed: false }),
+        undefined,
       );
 
-      mocks.sendDiscordTest.mockResolvedValue({ ok: false, detail: 'HTTP 404' });
+      mocks.sendTestMessage.mockResolvedValue({ ok: false, detail: 'HTTP 404' });
       const failed = await actions.testNotification(
-        { mode: 'discord', discordWebhook: webhook },
-        { locale: 'fr' },
+        { matrix: NONE, discordWebhook: webhook },
+        { locale: 'fr', channel: 'discord' },
       );
       expect(failed).toEqual({ ok: false, code: 'testFailed', detail: 'HTTP 404' });
       expect(JSON.stringify(failed)).not.toContain('secret-part');
     });
 
-    it('a test e-mail needs an address to send to', async () => {
-      const smtp = {
-        host: 'smtp.exemple.fr',
-        port: '587',
-        user: '',
-        password: '',
-        from: 'bde@exemple.fr',
-      };
+    it('a test of a channel that is not typed is refused, and an unknown channel too', async () => {
       expect(
-        await actions.testNotification({ mode: 'email', smtp }, { locale: 'en', to: 'nope' }),
-      ).toMatchObject({ ok: false, code: 'email', field: 'testTo' });
-      mocks.sendTestMail.mockResolvedValue({ ok: true });
+        await actions.testNotification({ matrix: NONE }, { locale: 'fr', channel: 'slack' }),
+      ).toMatchObject({ ok: false });
       expect(
         await actions.testNotification(
-          { mode: 'email', smtp },
-          { locale: 'en', to: 'me@exemple.fr' },
+          { matrix: NONE, discordWebhook: webhook },
+          { locale: 'fr', channel: 'carrier-pigeon' },
         ),
+      ).toMatchObject({ ok: false, code: 'invalid' });
+      expect(mocks.sendTestMessage).not.toHaveBeenCalled();
+    });
+
+    it('a test e-mail needs an address to send to', async () => {
+      const typed = { matrix: NONE, smtp: { ...smtp, user: '', password: '' } };
+      expect(
+        await actions.testNotification(typed, { locale: 'en', channel: 'email', to: 'nope' }),
+      ).toMatchObject({ ok: false, code: 'email', field: 'testTo' });
+      mocks.sendTestMessage.mockResolvedValue({ ok: true });
+      expect(
+        await actions.testNotification(typed, {
+          locale: 'en',
+          channel: 'email',
+          to: 'me@exemple.fr',
+        }),
       ).toEqual({ ok: true });
-      expect(mocks.sendTestMail).toHaveBeenCalledWith(
-        expect.any(Function),
-        expect.objectContaining({ host: 'smtp.exemple.fr' }),
+      expect(mocks.sendTestMessage).toHaveBeenCalledWith(
+        'email',
+        { smtp: expect.objectContaining({ host: 'smtp.exemple.fr' }) },
+        expect.objectContaining({ locale: 'en' }),
         'me@exemple.fr',
-        expect.any(String),
-        expect.any(String),
       );
     });
   });
@@ -598,12 +672,14 @@ describe('the end', () => {
     answers.push(await actions.checkOwner({ login: 'alice' }));
     answers.push(
       await actions.saveNotifications({
-        mode: 'slack',
-        slackWebhook: 'https://hooks.slack.com/services/T1/B1/secret-part',
+        matrix: { ...NONE, memberPending: ['slack'] },
+        slackWebhook: 'https://hooks.slack.com/services/T1/B1/secretpart',
       }),
     );
-    answers.push(await actions.testNotification({ mode: 'slack' }, { locale: 'fr' }));
+    answers.push(
+      await actions.testNotification({ matrix: NONE }, { locale: 'fr', channel: 'slack' }),
+    );
     const text = JSON.stringify(answers);
-    for (const secret of [SECRET, 'app-token', 'secret-part']) expect(text).not.toContain(secret);
+    for (const secret of [SECRET, 'app-token', 'secretpart']) expect(text).not.toContain(secret);
   });
 });

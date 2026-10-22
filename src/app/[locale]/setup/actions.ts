@@ -3,7 +3,7 @@
 import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { getSetupSession as session } from '@/lib/setup/session';
-import { getTranslations } from 'next-intl/server';
+import { DEFAULT_ACCENT, NOTIFICATION_CHANNELS } from '@/config/schema';
 import { z } from 'zod';
 import { installPlatform } from '@/lib/settings/store';
 import { forgetDrafts, type SetupDraft } from '@/lib/setup/draft';
@@ -15,7 +15,11 @@ import {
   verifySetupCode,
 } from '@/lib/setup/guard';
 import { buildInstallation } from '@/lib/setup/install';
-import { parseNotifications, type NotificationSettings } from '@/lib/setup/notifications';
+import {
+  parseChannelForTest,
+  parseNotifications,
+  type NotificationSettings,
+} from '@/lib/setup/notifications';
 import {
   checkLogin,
   listCampuses,
@@ -24,12 +28,7 @@ import {
   verifyCredentials,
   type Campus,
 } from '@/lib/setup/fortytwo';
-import {
-  realTransport,
-  sendDiscordTest,
-  sendSlackTest,
-  sendTestMail,
-} from '@/lib/setup/notify-test';
+import { sendTestMessage } from '@/lib/setup/notify-test';
 import {
   redirectUrl,
   validateAddress,
@@ -374,40 +373,46 @@ export async function saveNotifications(input: unknown): Promise<ActionResult> {
   return { ok: true };
 }
 
-const testSchema = z.object({ locale: z.enum(['fr', 'en']), to: stringField.optional() });
+const testSchema = z.object({
+  locale: z.enum(['fr', 'en']),
+  channel: z.enum(NOTIFICATION_CHANNELS),
+  to: stringField.optional(),
+});
 
-/** Sends one test message through what was typed (not saved yet), so the person sees it arrive. */
+/**
+ * Sends the test message of ONE channel through what was typed (not saved yet), so the person sees it arrive: the same
+ * card or e-mail as a real notification, with an invented event.
+ */
 export async function testNotification(
   notifications: unknown,
   input: unknown,
 ): Promise<ActionResult> {
   const ctx = await session();
   if (!ctx) return fail('session');
-  const taken = takeNotifications(ctx.draft, notifications);
-  if (!taken.ok) return taken;
   const parsed = testSchema.safeParse(input);
   if (!parsed.success) return fail('invalid');
+  const { channel, locale } = parsed.data;
+  const taken = parseChannelForTest(notifications, channel, ctx.draft.notifications);
+  if (!taken.ok) return fail(taken.code, taken.field ? { field: taken.field } : {});
 
-  const t = await getTranslations({ locale: parsed.data.locale, namespace: 'setup.test' });
-  const text = t('message', { name: ctx.draft.name ?? 'BDE' });
-  const value = taken.value;
-
-  let result: { ok: true } | { ok: false; detail: string } = { ok: true };
-  if (value.mode === 'discord' && value.discordWebhook) {
-    result = await sendDiscordTest(realFetch, value.discordWebhook, text);
-  } else if (value.mode === 'slack' && value.slackWebhook) {
-    result = await sendSlackTest(realFetch, value.slackWebhook, text);
-  } else if (value.mode === 'email' && value.smtp) {
-    const to = validateEmail(parsed.data.to ?? '');
-    if (!to.ok) return fail('email', { field: 'testTo' });
-    result = await sendTestMail(
-      realTransport,
-      value.smtp,
-      to.value,
-      t('subject', { name: ctx.draft.name ?? 'BDE' }),
-      text,
-    );
+  let to: string | undefined;
+  if (channel === 'email') {
+    const address = validateEmail(parsed.data.to ?? '');
+    if (!address.ok) return fail('email', { field: 'testTo' });
+    to = address.value;
   }
+  const result = await sendTestMessage(
+    channel,
+    taken.value,
+    {
+      name: ctx.draft.name ?? 'BDE',
+      locale,
+      timeZone: ctx.draft.timezone ?? 'Europe/Paris',
+      accent: ctx.draft.accentColor ?? DEFAULT_ACCENT,
+      installed: false,
+    },
+    to,
+  );
   return result.ok ? { ok: true } : fail('testFailed', { detail: result.detail });
 }
 

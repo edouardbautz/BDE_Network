@@ -24,6 +24,7 @@ const KIND_ICON: Record<EventCardKind, string> = {
   proposed: '📝',
   approved: '✅',
   refused: '⛔',
+  test: '🧪',
 };
 const ICON = {
   when: '📅',

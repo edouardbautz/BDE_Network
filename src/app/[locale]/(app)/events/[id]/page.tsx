@@ -15,6 +15,7 @@ import {
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { getConfig } from '@/config';
+import { channelsFor } from '@/config/schema';
 import { ActionButton } from '@/components/action-button';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { CategoryBadge } from '@/components/events/category-badge';
@@ -25,7 +26,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from '@/i18n/navigation';
 import { getEventsAccess } from '@/lib/events/access';
-import { confirmationNotice } from '@/lib/events/confirmation-notice';
+import { chatNames, confirmationNotice } from '@/lib/events/confirmation-notice';
 import { resolveCategory } from '@/lib/events/categories';
 import { formatDateTimeRange, formatLongDate, formatTimeRange } from '@/lib/events/format';
 import { readEventNotice } from '@/lib/events/notice';
@@ -161,14 +162,12 @@ export default async function EventDetailPage({
     { value: 'following', label: followingLabel, hint: hints.following },
   ];
 
-  const channel = getConfig().notifications.eventConfirmed;
+  const confirmationChannels = channelsFor(getConfig(), 'eventConfirmed');
   const noticeFor = (alreadyNotified: boolean): string | null => {
-    const notice = confirmationNotice(channel, alreadyNotified);
-    return notice === 'notifyChat'
-      ? t('detail.confirmDialog.notifyChat', { channel: channel === 'slack' ? 'Slack' : 'Discord' })
-      : notice
-        ? t(`detail.confirmDialog.${notice}`)
-        : null;
+    const notice = confirmationNotice(confirmationChannels, alreadyNotified);
+    return notice
+      ? t(`detail.confirmDialog.${notice.key}`, { channels: chatNames(notice, locale) })
+      : null;
   };
   const sentence = (...parts: (string | null)[]) => parts.filter(Boolean).join(' ');
   const confirmationText = sentence(

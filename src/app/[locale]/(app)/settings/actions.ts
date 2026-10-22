@@ -1,9 +1,10 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 import { getConfig } from '@/config';
+import { NOTIFICATION_CHANNELS } from '@/config/schema';
+import { registeredAddress } from '@/lib/public-address';
 import type { ActionResult, CampusOption } from '@/app/[locale]/setup/actions';
 import { LOGO_MAX_BYTES } from '@/lib/branding/image';
 import {
@@ -29,13 +30,8 @@ import {
   realSleep,
   verifyCredentials,
 } from '@/lib/setup/fortytwo';
-import { parseNotifications } from '@/lib/setup/notifications';
-import {
-  realTransport,
-  sendDiscordTest,
-  sendSlackTest,
-  sendTestMail,
-} from '@/lib/setup/notify-test';
+import { parseChannelForTest, parseNotifications } from '@/lib/setup/notifications';
+import { sendTestMessage } from '@/lib/setup/notify-test';
 import {
   redirectUrl,
   validateAddress,
@@ -353,34 +349,47 @@ export async function saveNotifications(input: unknown): Promise<ActionResult> {
   return change({ section: 'notifications', notifications: input });
 }
 
-const testSchema = z.object({ locale: z.enum(['fr', 'en']), to: text.optional() });
+const testSchema = z.object({
+  locale: z.enum(['fr', 'en']),
+  channel: z.enum(NOTIFICATION_CHANNELS),
+  to: text.optional(),
+});
 
-/** One test message through what was typed (not saved yet), so the owner sees it arrive. */
+/**
+ * One test message through ONE channel, with what was typed (or saved) for it: the same card or e-mail as a real notification,
+ * with an invented event, so the owner sees how it looks. The other channels are not touched.
+ */
 export async function testNotification(
   notifications: unknown,
   input: unknown,
 ): Promise<ActionResult> {
   await requireSettingsManager();
-  const parsed = parseNotifications(notifications, savedNotifications(currentValues()));
-  if (!parsed.ok) return failure(parsed.code, parsed.field ? { field: parsed.field } : {});
   const options = testSchema.safeParse(input);
   if (!options.success) return failure('invalid');
+  const { channel, locale } = options.data;
+  const parsed = parseChannelForTest(notifications, channel, savedNotifications(currentValues()));
+  if (!parsed.ok) return failure(parsed.code, parsed.field ? { field: parsed.field } : {});
 
-  const name = getConfig().bde.name;
-  const t = await getTranslations({ locale: options.data.locale, namespace: 'setup.test' });
-  const body = t('message', { name });
-  const value = parsed.value;
-
-  let result: { ok: true } | { ok: false; detail: string } = { ok: true };
-  if (value.mode === 'discord' && value.discordWebhook) {
-    result = await sendDiscordTest(realFetch, value.discordWebhook, body);
-  } else if (value.mode === 'slack' && value.slackWebhook) {
-    result = await sendSlackTest(realFetch, value.slackWebhook, body);
-  } else if (value.mode === 'email' && value.smtp) {
-    const to = validateEmail(options.data.to ?? '');
-    if (!to.ok) return failure('email', { field: 'testTo' });
-    result = await sendTestMail(realTransport, value.smtp, to.value, t('subject', { name }), body);
+  let to: string | undefined;
+  if (channel === 'email') {
+    const address = validateEmail(options.data.to ?? '');
+    if (!address.ok) return failure('email', { field: 'testTo' });
+    to = address.value;
   }
+  const { bde } = getConfig();
+  const result = await sendTestMessage(
+    channel,
+    parsed.value,
+    {
+      name: bde.name,
+      locale,
+      timeZone: bde.timezone,
+      accent: bde.accentColor,
+      appUrl: registeredAddress(),
+      installed: true,
+    },
+    to,
+  );
   return result.ok ? { ok: true } : failure('testFailed', { detail: result.detail });
 }
 

@@ -2,16 +2,28 @@
 
 import { useState, useTransition } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { ActionFailure } from '@/app/[locale]/setup/actions';
+import { NOTIFICATION_CHANNELS, type NotificationChannel } from '@/config/schema';
+import { effectiveMatrix, type Configured } from '@/lib/setup/notification-matrix';
+import type { DraftView } from '@/lib/setup/draft';
 import type { StepApi } from './api';
-import type { Channel, DraftView } from '@/lib/setup/draft';
 import { Field, fieldError, useFailureText } from './fields';
+import {
+  ChannelPanel,
+  SmtpFields,
+  WebhookField,
+  type TestState,
+  type TypedCredentials,
+} from './notification-channels';
+import { NotificationTable } from './notification-table';
 import { StepFrame, type StepProps } from './step-frame';
 
-const MODES: Channel[] = ['none', 'discord', 'slack', 'email'];
-
+/**
+ * The notifications, for the installer and for the settings page: first the channels (what each needs, its test, its
+ * removal), then the table of what goes where. A channel that is not configured cannot be ticked; a type with nothing ticked
+ * sends nothing.
+ */
 export function StepNotifications({
   api,
   view,
@@ -25,23 +37,47 @@ export function StepNotifications({
   const text = useFailureText();
   const initial = view.notifications;
 
-  const [mode, setMode] = useState<Channel>(initial.mode);
-  const [discord, setDiscord] = useState('');
-  const [slack, setSlack] = useState('');
-  const [smtp, setSmtp] = useState({
-    host: initial.smtp.host,
-    port: initial.smtp.port,
-    user: initial.smtp.user,
-    password: '',
-    from: initial.smtp.from,
+  const [matrix, setMatrix] = useState(initial.matrix);
+  const [typed, setTyped] = useState<TypedCredentials>({
+    discord: '',
+    slack: '',
+    smtp: {
+      host: initial.smtp.host,
+      port: initial.smtp.port,
+      user: initial.smtp.user,
+      password: '',
+      from: initial.smtp.from,
+    },
+    testTo: '',
   });
-  const [testTo, setTestTo] = useState('');
+  const [removed, setRemoved] = useState<NotificationChannel[]>([]);
   const [failure, setFailure] = useState<ActionFailure | null>(null);
-  const [tested, setTested] = useState<'ok' | ActionFailure | null>(null);
+  const [tests, setTests] = useState<Partial<Record<NotificationChannel, TestState>>>({});
+  const [testing, setTesting] = useState<NotificationChannel | null>(null);
   const [pending, start] = useTransition();
-  const [testing, startTest] = useTransition();
 
-  const payload = { mode, discordWebhook: discord, slackWebhook: slack, smtp };
+  const saved: Configured = {
+    discord: initial.hasDiscordWebhook,
+    slack: initial.hasSlackWebhook,
+    email: initial.hasSmtp,
+  };
+  const isRemoved = (channel: NotificationChannel) => removed.includes(channel);
+  /** What the page can say before saving: a saved channel not removed, or one whose form is filled in. The server decides. */
+  const configured: Configured = {
+    discord: (saved.discord && !isRemoved('discord')) || typed.discord.trim() !== '',
+    slack: (saved.slack && !isRemoved('slack')) || typed.slack.trim() !== '',
+    email:
+      (saved.email && !isRemoved('email')) ||
+      (typed.smtp.host.trim() !== '' && typed.smtp.from.trim() !== ''),
+  };
+
+  const payload = {
+    matrix: effectiveMatrix(matrix, configured),
+    discordWebhook: typed.discord,
+    slackWebhook: typed.slack,
+    smtp: typed.smtp,
+    removed,
+  };
 
   function submit() {
     start(async () => {
@@ -50,15 +86,17 @@ export function StepNotifications({
       setFailure(null);
       onSaved({
         notifications: {
-          mode,
-          hasDiscordWebhook: mode === 'discord',
-          hasSlackWebhook: mode === 'slack',
+          matrix: payload.matrix,
+          hasDiscordWebhook: configured.discord,
+          hasSlackWebhook: configured.slack,
+          hasSmtp: configured.email,
           smtp: {
-            host: smtp.host.trim(),
-            port: smtp.port.trim(),
-            user: smtp.user.trim(),
-            from: smtp.from.trim(),
-            hasPassword: smtp.password !== '' || initial.smtp.hasPassword,
+            host: typed.smtp.host.trim(),
+            port: typed.smtp.port.trim(),
+            user: typed.smtp.user.trim(),
+            from: typed.smtp.from.trim(),
+            hasPassword:
+              configured.email && (typed.smtp.password !== '' || initial.smtp.hasPassword),
           },
         },
       });
@@ -66,18 +104,40 @@ export function StepNotifications({
     });
   }
 
-  function sendTest() {
-    setTested(null);
-    startTest(async () => {
-      const result = await run(api.testNotification(payload, { locale, to: testTo }));
-      setFailure(result.ok ? null : result.field ? result : null);
-      setTested(result.ok ? 'ok' : result);
-    });
+  async function sendTest(channel: NotificationChannel) {
+    setTests((all) => ({ ...all, [channel]: null }));
+    setTesting(channel);
+    const result = await run(api.testNotification(payload, { locale, channel, to: typed.testTo }));
+    setFailure(result.ok ? null : result.field ? result : null);
+    setTests((all) => ({ ...all, [channel]: result.ok ? 'ok' : result }));
+    setTesting(null);
   }
 
-  const fieldText = (name: string) => fieldError(failure, name, text);
-  const alreadyDiscord = initial.mode === 'discord' && initial.hasDiscordWebhook;
-  const alreadySlack = initial.mode === 'slack' && initial.hasSlackWebhook;
+  function remove(channel: NotificationChannel) {
+    setRemoved((all) => [...all, channel]);
+    setTyped((all) => ({
+      ...all,
+      ...(channel === 'discord' ? { discord: '' } : {}),
+      ...(channel === 'slack' ? { slack: '' } : {}),
+    }));
+  }
+
+  const stateOf = (channel: NotificationChannel) => ({
+    configured: configured[channel],
+    saved: saved[channel],
+    removed: isRemoved(channel),
+    hasPassword: channel === 'email' ? initial.smtp.hasPassword : undefined,
+  });
+
+  const panelProps = (channel: NotificationChannel) => ({
+    channel,
+    state: stateOf(channel),
+    testing: testing === channel,
+    test: tests[channel] ?? null,
+    onTest: () => sendTest(channel),
+    onRemove: () => remove(channel),
+    onUndoRemove: () => setRemoved((all) => all.filter((c) => c !== channel)),
+  });
 
   return (
     <StepFrame
@@ -88,171 +148,82 @@ export function StepNotifications({
       pending={pending}
       failure={failure}
     >
-      <fieldset className="flex flex-col gap-2">
-        <legend className="sr-only">{t('title')}</legend>
-        {MODES.map((value) => (
-          <label
-            key={value}
-            className="bg-surface-2 has-checked:bg-accent-soft has-focus-visible:outline-3 has-focus-visible:outline-solid has-focus-visible:outline-accent-ink has-focus-visible:outline-offset-2 flex cursor-pointer items-start gap-3 rounded-lg p-3.5 transition-colors duration-(--dur-fast)"
-          >
-            <input
-              type="radio"
-              name="setup-notification-mode"
-              value={value}
-              checked={mode === value}
-              onChange={() => {
-                setMode(value);
-                setTested(null);
-              }}
-              className="mt-1 size-4"
-            />
-            <span>
-              <span className="block text-body-strong">{t(value)}</span>
-              <span className="text-muted-foreground block text-body">{t(`${value}Body`)}</span>
-            </span>
-          </label>
-        ))}
-      </fieldset>
-
-      {mode === 'discord' && (
-        <Field
-          id="setup-discord"
-          label={t('discordLabel')}
-          hint={alreadyDiscord ? t('webhookKept') : t('discordHelp')}
-          error={fieldText('discordWebhook')}
-        >
-          <Input
-            id="setup-discord"
-            type="password"
-            value={discord}
-            onChange={(event) => setDiscord(event.target.value)}
-            autoComplete="off"
-            spellCheck={false}
-            className="font-mono text-small"
-            aria-invalid={failure?.field === 'discordWebhook'}
-          />
-        </Field>
-      )}
-
-      {mode === 'slack' && (
-        <Field
-          id="setup-slack"
-          label={t('slackLabel')}
-          hint={alreadySlack ? t('webhookKept') : t('slackHelp')}
-          error={fieldText('slackWebhook')}
-        >
-          <Input
-            id="setup-slack"
-            type="password"
-            value={slack}
-            onChange={(event) => setSlack(event.target.value)}
-            autoComplete="off"
-            spellCheck={false}
-            className="font-mono text-small"
-            aria-invalid={failure?.field === 'slackWebhook'}
-          />
-        </Field>
-      )}
-
-      {mode === 'email' && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field id="setup-smtp-host" label={t('smtpHost')} error={fieldText('smtpHost')}>
-            <Input
-              id="setup-smtp-host"
-              value={smtp.host}
-              onChange={(event) => setSmtp({ ...smtp, host: event.target.value })}
-              autoComplete="off"
-              aria-invalid={failure?.field === 'smtpHost'}
-            />
-          </Field>
-          <Field id="setup-smtp-port" label={t('smtpPort')} error={fieldText('smtpPort')}>
-            <Input
-              id="setup-smtp-port"
-              value={smtp.port}
-              onChange={(event) => setSmtp({ ...smtp, port: event.target.value })}
-              inputMode="numeric"
-              autoComplete="off"
-              aria-invalid={failure?.field === 'smtpPort'}
-            />
-          </Field>
-          <Field id="setup-smtp-user" label={t('smtpUser')} error={fieldText('smtpUser')}>
-            <Input
-              id="setup-smtp-user"
-              value={smtp.user}
-              onChange={(event) => setSmtp({ ...smtp, user: event.target.value })}
-              autoComplete="off"
-              aria-invalid={failure?.field === 'smtpUser'}
-            />
-          </Field>
-          <Field
-            id="setup-smtp-password"
-            label={t('smtpPassword')}
-            hint={initial.smtp.hasPassword ? t('passwordKept') : undefined}
-            error={fieldText('smtpPassword')}
-          >
-            <Input
-              id="setup-smtp-password"
-              type="password"
-              value={smtp.password}
-              onChange={(event) => setSmtp({ ...smtp, password: event.target.value })}
-              autoComplete="off"
-              aria-invalid={failure?.field === 'smtpPassword'}
-            />
-          </Field>
-          <div className="sm:col-span-2">
-            <Field id="setup-smtp-from" label={t('smtpFrom')} error={fieldText('smtpFrom')}>
-              <Input
-                id="setup-smtp-from"
-                type="email"
-                value={smtp.from}
-                onChange={(event) => setSmtp({ ...smtp, from: event.target.value })}
-                autoComplete="off"
-                aria-invalid={failure?.field === 'smtpFrom'}
-              />
-            </Field>
-          </div>
+      <section aria-labelledby="setup-notification-channels" className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1">
+          <h3 id="setup-notification-channels" className="text-body-strong">
+            {t('channelsTitle')}
+          </h3>
+          <p className="text-muted-foreground text-body">{t('channelsHelp')}</p>
         </div>
-      )}
-
-      {mode !== 'none' && (
-        <div className="bg-surface-2 flex flex-col gap-3 rounded-lg p-3.5">
-          <p className="text-body-strong">{t('testTitle')}</p>
-          <p className="text-muted-foreground text-small">{t('testHelp')}</p>
-          {mode === 'email' && (
-            <Field id="setup-test-to" label={t('testTo')} error={fieldText('testTo')}>
-              <Input
-                id="setup-test-to"
-                type="email"
-                value={testTo}
-                onChange={(event) => setTestTo(event.target.value)}
-                autoComplete="off"
-                aria-invalid={failure?.field === 'testTo'}
+        {NOTIFICATION_CHANNELS.map((channel) => {
+          if (channel === 'discord' || channel === 'slack') {
+            return (
+              <ChannelPanel key={channel} {...panelProps(channel)}>
+                <WebhookField
+                  channel={channel}
+                  value={typed[channel]}
+                  onChange={(value) => setTyped({ ...typed, [channel]: value })}
+                  saved={saved[channel]}
+                  failure={failure}
+                />
+              </ChannelPanel>
+            );
+          }
+          return (
+            <ChannelPanel
+              key={channel}
+              {...panelProps(channel)}
+              testToField={
+                configured.email && !isRemoved('email') ? (
+                  <Field
+                    id="setup-test-to"
+                    label={t('testTo')}
+                    error={fieldError(failure, 'testTo', text)}
+                  >
+                    <Input
+                      id="setup-test-to"
+                      type="email"
+                      value={typed.testTo}
+                      onChange={(event) => setTyped({ ...typed, testTo: event.target.value })}
+                      autoComplete="off"
+                      aria-invalid={failure?.field === 'testTo'}
+                    />
+                  </Field>
+                ) : undefined
+              }
+            >
+              <SmtpFields
+                value={typed.smtp}
+                onChange={(smtp) => setTyped({ ...typed, smtp })}
+                hasPassword={initial.smtp.hasPassword}
+                failure={failure}
               />
-            </Field>
-          )}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={sendTest}
-            disabled={testing}
-            className="w-fit"
-          >
-            {testing ? t('testing') : t('testButton')}
-          </Button>
-          {tested === 'ok' && (
-            <p role="status" className="text-body">
-              {t('testOk')}
-            </p>
-          )}
-          {tested && tested !== 'ok' && !tested.field && (
-            <p role="alert" className="text-destructive text-body">
-              {tested.code === 'testFailed'
-                ? t('testFailed', { detail: tested.detail ?? '' })
-                : text(tested)}
-            </p>
-          )}
+            </ChannelPanel>
+          );
+        })}
+      </section>
+
+      <section aria-labelledby="setup-notification-matrix" className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1">
+          <h3 id="setup-notification-matrix" className="text-body-strong">
+            {t('matrixTitle')}
+          </h3>
+          <p id="setup-notifications-matrix-help" className="text-muted-foreground text-body">
+            {t('matrixHelp')}
+          </p>
         </div>
-      )}
+        <NotificationTable
+          matrix={matrix}
+          onChange={setMatrix}
+          configured={configured}
+          events={view.events}
+        />
+        {failure?.field === 'matrix' && (
+          <p role="alert" className="text-destructive text-body">
+            {text(failure)}
+          </p>
+        )}
+      </section>
     </StepFrame>
   );
 }

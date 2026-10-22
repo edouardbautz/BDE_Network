@@ -515,91 +515,193 @@ describe('the sections', () => {
 
   describe('notifications', () => {
     const discord = 'https://discord.com/api/webhooks/123456789/secret-part';
+    const slack = 'https://hooks.slack.com/services/T123/B456/slacksecret';
+    const smtp = {
+      host: 'smtp.exemple.fr',
+      port: '587',
+      user: 'bde',
+      password: 'p4ss',
+      from: 'bde@exemple.fr',
+    };
+    const none = {
+      memberPending: [],
+      memberApproved: [],
+      memberRemoved: [],
+      eventConfirmed: [],
+      eventReminder: [],
+      eventProposed: [],
+      eventApproved: [],
+      eventRefused: [],
+    };
+    const save = (notifications: unknown, db: ReturnType<typeof fakeDb>['db']) =>
+      run({ section: 'notifications', notifications }, db);
 
-    it('choose a channel for every notification, keep the webhook sealed, and audit only that it changed', async () => {
+    it('tick the boxes of a channel, keep its webhook sealed, and audit only what changed, never a secret', async () => {
       const { db, state } = fakeDb();
       expect(
-        await run(
-          { section: 'notifications', notifications: { mode: 'discord', discordWebhook: discord } },
+        await save(
+          {
+            matrix: { ...none, memberPending: ['discord'], eventConfirmed: ['discord'] },
+            discordWebhook: discord,
+          },
           db,
         ),
       ).toEqual({ ok: true, changed: true });
 
       expect(getRuntimeSettings()?.config.notifications).toEqual({
-        memberPending: 'discord',
-        memberApproved: 'discord',
-        memberRemoved: 'discord',
-        eventConfirmed: 'discord',
-        eventReminder: 'discord',
-        eventProposed: 'discord',
-        eventApproved: 'discord',
-        eventRefused: 'discord',
+        ...none,
+        memberPending: ['discord'],
+        eventConfirmed: ['discord'],
       });
       expect(setting('DISCORD_WEBHOOK_URL')).toBe(discord);
       expect(state.audit[0]?.metadata).toEqual({
-        channel: { from: 'none', to: 'discord' },
+        channels: {
+          memberPending: { from: [], to: ['discord'] },
+          eventConfirmed: { from: [], to: ['discord'] },
+        },
         changedSecrets: ['DISCORD_WEBHOOK_URL'],
       });
       expect(JSON.stringify([state.audit, state.row])).not.toContain('secret-part');
     });
 
-    it('keep what was saved for a channel that is not chosen, so that switching back finds it', async () => {
+    it('several channels for one notification, each with its own settings', async () => {
       const { db } = fakeDb();
-      await run(
-        { section: 'notifications', notifications: { mode: 'discord', discordWebhook: discord } },
-        db,
-      );
-      await run({ section: 'notifications', notifications: { mode: 'none' } }, db);
-      expect(setting('DISCORD_WEBHOOK_URL')).toBe(discord);
-      // …and a blank field keeps it
       expect(
-        await run(
-          { section: 'notifications', notifications: { mode: 'discord', discordWebhook: '' } },
+        await save(
+          {
+            matrix: {
+              ...none,
+              memberPending: ['discord', 'slack', 'email'],
+              eventReminder: ['email'],
+            },
+            discordWebhook: discord,
+            slackWebhook: slack,
+            smtp,
+          },
           db,
         ),
       ).toEqual({ ok: true, changed: true });
-      expect(getRuntimeSettings()?.config.notifications.eventConfirmed).toBe('discord');
+      const lists = getRuntimeSettings()?.config.notifications;
+      expect(lists?.memberPending).toEqual(['discord', 'slack', 'email']);
+      expect(lists?.eventReminder).toEqual(['email']);
+      expect(lists?.memberApproved).toEqual([]);
+      expect(setting('DISCORD_WEBHOOK_URL')).toBe(discord);
+      expect(setting('SLACK_WEBHOOK_URL')).toBe(slack);
+      expect(setting('SMTP_HOST')).toBe('smtp.exemple.fr');
+      expect(setting('SMTP_PASSWORD')).toBe('p4ss');
     });
 
-    it('refuse a channel whose settings are missing or wrong, and send nothing for the removal over e-mail', async () => {
+    it('nothing ticked sends nothing, and a blank field keeps what is saved for a channel', async () => {
       const { db } = fakeDb();
+      await save({ matrix: { ...none, memberPending: ['discord'] }, discordWebhook: discord }, db);
+      // every box cleared: no notification, the channel is still there to be ticked again
+      await save({ matrix: none }, db);
+      expect(getRuntimeSettings()?.config.notifications).toEqual(none);
+      expect(setting('DISCORD_WEBHOOK_URL')).toBe(discord);
+      // …a blank field keeps the address, so the box can be ticked without typing it again
       expect(
-        await run(
-          { section: 'notifications', notifications: { mode: 'slack', slackWebhook: '' } },
+        await save({ matrix: { ...none, eventConfirmed: ['discord'] }, discordWebhook: '' }, db),
+      ).toEqual({ ok: true, changed: true });
+      expect(getRuntimeSettings()?.config.notifications.eventConfirmed).toEqual(['discord']);
+    });
+
+    it('removing a channel forgets its settings and clears its boxes, and only its', async () => {
+      const { db, state } = fakeDb();
+      await save(
+        {
+          matrix: { ...none, memberPending: ['discord', 'slack'] },
+          discordWebhook: discord,
+          slackWebhook: slack,
+        },
+        db,
+      );
+      expect(
+        await save(
+          { matrix: { ...none, memberPending: ['discord', 'slack'] }, removed: ['discord'] },
+          db,
+        ),
+      ).toMatchObject({ ok: false, code: 'channelNotConfigured' });
+
+      expect(
+        await save({ matrix: { ...none, memberPending: ['slack'] }, removed: ['discord'] }, db),
+      ).toEqual({ ok: true, changed: true });
+      expect(setting('DISCORD_WEBHOOK_URL')).toBeUndefined();
+      expect(setting('SLACK_WEBHOOK_URL')).toBe(slack);
+      expect(getRuntimeSettings()?.config.notifications.memberPending).toEqual(['slack']);
+      expect(state.audit.at(-1)?.metadata).toMatchObject({
+        changedSecrets: ['DISCORD_WEBHOOK_URL'],
+      });
+    });
+
+    it('refuse a box ticked for a channel that is not set up, or wrongly set up', async () => {
+      const { db, state } = fakeDb();
+      expect(
+        await save({ matrix: { ...none, eventConfirmed: ['slack'] }, slackWebhook: '' }, db),
+      ).toMatchObject({ ok: false, code: 'channelNotConfigured', field: 'matrix' });
+      expect(
+        await save(
+          { matrix: { ...none, eventConfirmed: ['slack'] }, slackWebhook: 'http://not-slack' },
           db,
         ),
       ).toMatchObject({ ok: false, code: 'slack' });
       expect(
-        await run(
+        await save(
           {
-            section: 'notifications',
-            notifications: {
-              mode: 'email',
-              smtp: { host: 'bad host', port: '587', user: '', password: '', from: 'a@b.fr' },
-            },
+            matrix: { ...none, eventConfirmed: ['email'] },
+            smtp: { ...smtp, host: 'bad host' },
           },
           db,
         ),
       ).toMatchObject({ ok: false, code: 'smtpHost' });
-      await run(
-        {
-          section: 'notifications',
-          notifications: {
-            mode: 'email',
-            smtp: {
-              host: 'smtp.exemple.fr',
-              port: '587',
-              user: 'bde',
-              password: 'p4ss',
-              from: 'bde@exemple.fr',
-            },
-          },
-        },
-        db,
+      // nothing was written by a refusal
+      expect(state.audit).toHaveLength(0);
+    });
+
+    it('refuse the e-mail of a member who was removed: the person is never written to', async () => {
+      const { db } = fakeDb();
+      expect(await save({ matrix: { ...none, memberRemoved: ['email'] }, smtp }, db)).toMatchObject(
+        { ok: false, code: 'removedNotEmailed', field: 'matrix' },
       );
-      expect(getRuntimeSettings()?.config.notifications.memberRemoved).toBe('none');
-      expect(getRuntimeSettings()?.config.notifications.memberPending).toBe('email');
-      expect(setting('SMTP_PASSWORD')).toBe('p4ss');
+      expect(
+        await save(
+          { matrix: { ...none, memberRemoved: ['discord'] }, discordWebhook: discord },
+          db,
+        ),
+      ).toEqual({ ok: true, changed: true });
+    });
+
+    it('refuse what is not a table of lists of channels', async () => {
+      const { db } = fakeDb();
+      expect(await save({ matrix: { ...none, eventConfirmed: 'discord' } }, db)).toMatchObject({
+        ok: false,
+        code: 'invalid',
+      });
+      expect(
+        await save({ matrix: { ...none, eventConfirmed: ['carrier-pigeon'] } }, db),
+      ).toMatchObject({
+        ok: false,
+        code: 'invalid',
+      });
+      expect(await save({ matrix: { memberPending: [] } }, db)).toMatchObject({
+        ok: false,
+        code: 'invalid',
+      });
+    });
+
+    it('an installation whose configuration still says one channel per notification is read, and saving the same boxes changes nothing', async () => {
+      // a row written before 1.5.0 holds "discord" and "none" (and a key left out): the schema reads them as lists
+      const { db, state } = fakeDb({ values: { ...baseValues, DISCORD_WEBHOOK_URL: discord } });
+      (state.row?.config as { notifications: unknown }).notifications = {
+        memberPending: 'discord',
+        eventConfirmed: 'discord',
+        memberRemoved: 'none',
+      };
+      expect(
+        await save(
+          { matrix: { ...none, memberPending: ['discord'], eventConfirmed: ['discord'] } },
+          db,
+        ),
+      ).toEqual({ ok: true, changed: false });
     });
   });
 });
@@ -761,7 +863,16 @@ describe('what is never accepted', () => {
       {
         section: 'notifications',
         notifications: {
-          mode: 'email',
+          matrix: {
+            memberPending: ['email'],
+            memberApproved: [],
+            memberRemoved: [],
+            eventConfirmed: [],
+            eventReminder: [],
+            eventProposed: [],
+            eventApproved: [],
+            eventRefused: [],
+          },
           smtp: {
             host: 'smtp.exemple.fr',
             port: '587',

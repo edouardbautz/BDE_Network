@@ -1,3 +1,4 @@
+import { notificationsConfig } from '@/test/notifications';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
@@ -34,11 +35,11 @@ type Channel = 'email' | 'discord' | 'slack' | 'none';
 function useChannels(channels: Partial<Record<'proposed' | 'approved' | 'refused', Channel>>) {
   vi.mocked(getConfig).mockReturnValue({
     bde: { name: 'BDE Test', logoPath: '/logo.svg', timezone: 'Europe/Paris', defaultLocale: 'fr' },
-    notifications: {
+    notifications: notificationsConfig({
       eventProposed: channels.proposed ?? 'none',
       eventApproved: channels.approved ?? 'none',
       eventRefused: channels.refused ?? 'none',
-    },
+    }),
     events: { categories: [{ key: 'sport', label: 'Sport', color: '#16a34a' }], reminderHour: 18 },
   } as unknown as ReturnType<typeof getConfig>);
 }

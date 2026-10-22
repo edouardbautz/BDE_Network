@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fr from '../../../messages/fr.json';
 import type { DraftView } from '@/lib/setup/draft';
+import { emptyMatrix } from '@/lib/setup/notifications';
 
 /**
  * The installer's screens, with the real French messages and the server actions played: what a person sees,
@@ -72,9 +73,10 @@ const view = (patch: Partial<DraftView> = {}): DraftView => ({
   owners: [],
   events: true,
   notifications: {
-    mode: 'none',
+    matrix: emptyMatrix(),
     hasDiscordWebhook: false,
     hasSlackWebhook: false,
+    hasSmtp: false,
     smtp: { host: '', port: '587', user: '', from: '', hasPassword: false },
   },
   ...patch,
@@ -458,26 +460,18 @@ describe('the wizard', () => {
   });
 
   describe('the notifications', () => {
-    it('start with nothing, and show only the fields of the channel chosen', () => {
+    it('start with nothing ticked, and no channel set up', () => {
       renderWizard(view({ step: 6 }));
-      expect(screen.getByLabelText(/Aucune pour l'instant/)).toBeChecked();
-      expect(screen.queryByLabelText('Adresse du webhook Discord')).toBeNull();
-
-      fireEvent.click(screen.getByLabelText(/Discord/));
-      expect(screen.getByLabelText('Adresse du webhook Discord')).toHaveAttribute(
-        'type',
-        'password',
-      );
-      expect(
-        screen.getByRole('button', { name: 'Envoyer un message de test' }),
-      ).toBeInTheDocument();
-
-      fireEvent.click(screen.getByLabelText(/E-mail/));
-      expect(screen.getByLabelText('Serveur SMTP')).toBeInTheDocument();
-      expect(screen.getByLabelText('Envoyer le test à')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Canaux' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Qui est prévenu, et où' })).toBeInTheDocument();
+      for (const box of screen.getAllByRole('checkbox')) {
+        expect(box).not.toBeChecked();
+        expect(box).toBeDisabled();
+      }
+      expect(screen.getAllByText('Non configuré').length).toBeGreaterThanOrEqual(3);
     });
 
-    it('send a test message and say how it went, with the reason', async () => {
+    it('send a test on one channel and say how it went, with the reason', async () => {
       mocks.testNotification.mockResolvedValueOnce({ ok: true });
       mocks.testNotification.mockResolvedValueOnce({
         ok: false,
@@ -485,23 +479,19 @@ describe('the wizard', () => {
         detail: 'HTTP 404',
       });
       renderWizard(view({ step: 6 }));
-      fireEvent.click(screen.getByLabelText(/Discord/));
       type('Adresse du webhook Discord', 'https://discord.com/api/webhooks/1/x');
 
-      click('Envoyer un message de test');
-      expect(await screen.findByText(/Message envoyé/)).toBeInTheDocument();
+      click('Envoyer un test sur Discord');
+      expect(await screen.findByText(/Test envoyé sur Discord/)).toBeInTheDocument();
       expect(mocks.testNotification).toHaveBeenCalledWith(
-        expect.objectContaining({
-          mode: 'discord',
-          discordWebhook: 'https://discord.com/api/webhooks/1/x',
-        }),
-        { locale: 'fr', to: '' },
+        expect.objectContaining({ discordWebhook: 'https://discord.com/api/webhooks/1/x' }),
+        { locale: 'fr', channel: 'discord', to: '' },
       );
 
       await waitFor(() =>
-        expect(screen.getByRole('button', { name: 'Envoyer un message de test' })).toBeEnabled(),
+        expect(screen.getByRole('button', { name: 'Envoyer un test sur Discord' })).toBeEnabled(),
       );
-      click('Envoyer un message de test');
+      click('Envoyer un test sur Discord');
       expect(await screen.findByText(/L'envoi a échoué \(HTTP 404\)/)).toBeInTheDocument();
     });
   });

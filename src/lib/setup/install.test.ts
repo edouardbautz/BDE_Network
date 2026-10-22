@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { bdeConfigSchema } from '@/config/schema';
 import { toView, type SetupDraft } from './draft';
+import { emptyMatrix } from './notifications';
 import { buildInstallation } from './install';
 import { enterSetupMode, setupBanner } from './mode';
 import { isSetupMode, leaveSetupMode } from './guard';
@@ -26,7 +27,7 @@ const complete = (): SetupDraft => ({
   timezone: 'Europe/Paris',
   owners: ['alice'],
   events: true,
-  notifications: { mode: 'none' },
+  notifications: { matrix: emptyMatrix() },
 });
 
 const ENV = { AUTH_SECRET: 'x'.repeat(44), DATABASE_URL: 'postgresql://u:p@postgres:5432/db' };
@@ -101,13 +102,34 @@ describe('buildInstallation', () => {
     expect(result).toMatchObject({ ok: false, reason: 'invalid' });
   });
 
-  describe('the notification channel', () => {
-    it('Discord: the webhook is a secret setting, every notification goes there', () => {
+  describe('the notification channels', () => {
+    const SMTP = {
+      host: 'smtp.exemple.fr',
+      port: 587,
+      user: 'bde',
+      password: 'p4ss',
+      from: 'bde@exemple.fr',
+    };
+
+    it('nothing ticked: nothing is sent, and no channel setting is written', () => {
+      const result = buildInstallation(complete(), ENV);
+      if (!result.ok) throw new Error(result.reason);
+      expect(Object.values(result.config.notifications).every((list) => list.length === 0)).toBe(
+        true,
+      );
+      expect(Object.keys(result.values).some((key) => /WEBHOOK|SMTP/.test(key))).toBe(false);
+    });
+
+    it('Discord: the webhook is a secret setting, and the boxes ticked are the channels of each notification', () => {
       const result = buildInstallation(
         {
           ...complete(),
           notifications: {
-            mode: 'discord',
+            matrix: {
+              ...emptyMatrix(),
+              memberPending: ['discord'],
+              eventConfirmed: ['discord'],
+            },
             discordWebhook: 'https://discord.com/api/webhooks/123456789/abc',
           },
         },
@@ -118,48 +140,52 @@ describe('buildInstallation', () => {
         'https://discord.com/api/webhooks/123456789/abc',
       );
       expect(result.config.notifications).toEqual({
-        memberPending: 'discord',
-        memberApproved: 'discord',
-        memberRemoved: 'discord',
-        eventConfirmed: 'discord',
-        eventReminder: 'discord',
-        eventProposed: 'discord',
-        eventApproved: 'discord',
-        eventRefused: 'discord',
+        ...Object.fromEntries(Object.keys(emptyMatrix()).map((event) => [event, []])),
+        memberPending: ['discord'],
+        eventConfirmed: ['discord'],
       });
     });
 
-    it('e-mail: the settings of the mail server, and nothing sent when a member is removed', () => {
+    it('several channels at once: each notification has its own list, and every channel has its settings', () => {
       const result = buildInstallation(
         {
           ...complete(),
           notifications: {
-            mode: 'email',
-            smtp: {
-              host: 'smtp.exemple.fr',
-              port: 587,
-              user: 'bde',
-              password: 'p4ss',
-              from: 'bde@exemple.fr',
+            matrix: {
+              ...emptyMatrix(),
+              memberPending: ['discord', 'slack', 'email'],
+              eventReminder: ['email'],
             },
+            discordWebhook: 'https://discord.com/api/webhooks/123456789/abc',
+            slackWebhook: 'https://hooks.slack.com/services/T1/B1/xyz',
+            smtp: SMTP,
           },
         },
         ENV,
       );
       if (!result.ok) throw new Error(result.reason);
       expect(result.values).toMatchObject({
+        DISCORD_WEBHOOK_URL: 'https://discord.com/api/webhooks/123456789/abc',
+        SLACK_WEBHOOK_URL: 'https://hooks.slack.com/services/T1/B1/xyz',
         SMTP_HOST: 'smtp.exemple.fr',
         SMTP_PORT: '587',
         SMTP_USER: 'bde',
         SMTP_PASSWORD: 'p4ss',
         SMTP_FROM: 'bde@exemple.fr',
       });
-      expect(result.config.notifications.memberRemoved).toBe('none');
-      expect(result.config.notifications.memberPending).toBe('email');
+      expect(result.config.notifications.memberPending).toEqual(['discord', 'slack', 'email']);
+      expect(result.config.notifications.eventReminder).toEqual(['email']);
+      expect(result.config.notifications.memberApproved).toEqual([]);
     });
 
-    it('refuses a channel whose settings are missing (the platform would not start)', () => {
-      const result = buildInstallation({ ...complete(), notifications: { mode: 'slack' } }, ENV);
+    it('refuses a channel ticked without its settings (the platform would not start)', () => {
+      const result = buildInstallation(
+        {
+          ...complete(),
+          notifications: { matrix: { ...emptyMatrix(), eventConfirmed: ['slack'] } },
+        },
+        ENV,
+      );
       expect(result).toMatchObject({ ok: false, reason: 'invalid' });
       if (!result.ok && result.reason === 'invalid') {
         expect(result.issues).toContain('SLACK_WEBHOOK_URL');
@@ -173,7 +199,7 @@ describe('toView: what the browser may see of a draft', () => {
     const draft: SetupDraft = {
       ...complete(),
       notifications: {
-        mode: 'email',
+        matrix: { ...emptyMatrix(), memberPending: ['email'] },
         discordWebhook: 'https://discord.com/api/webhooks/1/secret-webhook',
         slackWebhook: 'https://hooks.slack.com/services/T1/B1/secret-webhook',
         smtp: {
@@ -198,7 +224,10 @@ describe('toView: what the browser may see of a draft', () => {
     }
     expect(view.hasClientSecret).toBe(true);
     expect(view.notifications.hasDiscordWebhook).toBe(true);
+    expect(view.notifications.hasSlackWebhook).toBe(true);
+    expect(view.notifications.hasSmtp).toBe(true);
     expect(view.notifications.smtp.hasPassword).toBe(true);
+    expect(view.notifications.matrix.memberPending).toEqual(['email']);
     expect(view.clientId).toBe('u-s4t2ud-uid-abcdef'); // the UID is not a secret
   });
 

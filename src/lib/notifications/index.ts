@@ -1,12 +1,10 @@
-import { getConfig } from '@/config';
-import type { NotificationEvent } from '@/config/schema';
+import type { NotificationChannel } from '@/config/schema';
 import { DiscordAdapter } from './adapters/discord';
 import { EmailAdapter } from './adapters/email';
-import { NoneAdapter } from './adapters/none';
 import { SlackAdapter } from './adapters/slack';
 import type { NotificationAdapter, NotificationMessage, SendOutcome } from './types';
 
-function getAdapter(channel: string): NotificationAdapter {
+function getAdapter(channel: NotificationChannel): NotificationAdapter {
   switch (channel) {
     case 'email':
       return new EmailAdapter();
@@ -14,36 +12,32 @@ function getAdapter(channel: string): NotificationAdapter {
       return new DiscordAdapter();
     case 'slack':
       return new SlackAdapter();
-    default:
-      return new NoneAdapter();
   }
 }
 
 /**
- * Sends a notification through the channel configured for this event in bde.config.yml.
- * Callers are the members notifications (lib/members/notifications.ts) and the events ones
- * (lib/events/notifications.ts), always through `deliver()` (./deliver.ts), which turns a failure
- * into a log line: a notification must never break the action that triggered it. This function
- * itself throws if the adapter fails.
+ * Sends a notification through one channel. Callers are the members notifications (lib/members/notifications.ts) and the
+ * events ones (lib/events/notifications.ts), always through `deliver()` (./deliver.ts), which asks it once for each channel
+ * the event is set to and turns a failure into a log line: a notification must never break the action that triggered it,
+ * and the failure of a channel never stops the others. This function itself throws if the adapter fails.
  */
 export async function notify(
-  event: NotificationEvent,
+  channel: NotificationChannel,
   message: NotificationMessage,
 ): Promise<void> {
-  const channel = getConfig().notifications[event];
   await getAdapter(channel).send(message);
 }
 
 /**
- * Sends the same event's notification as several messages (one per email recipient). An adapter
- * that can share a connection does (see `sendMany`); the others send one after the other. One
- * outcome per message; never throws for a single failure.
+ * Sends the same notification as several messages (one per email recipient) through one channel. An adapter that can share
+ * a connection does (see `sendMany`); the others send one after the other. One outcome per message; never throws for a
+ * single failure.
  */
 export async function notifyMany(
-  event: NotificationEvent,
+  channel: NotificationChannel,
   messages: NotificationMessage[],
 ): Promise<SendOutcome[]> {
-  const adapter = getAdapter(getConfig().notifications[event]);
+  const adapter = getAdapter(channel);
   if (adapter.sendMany) {
     return adapter.sendMany(messages);
   }

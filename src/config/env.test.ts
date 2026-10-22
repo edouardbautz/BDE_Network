@@ -14,7 +14,7 @@ const VALID_ENV = {
 function configWith(overrides: {
   owners?: string[];
   modules?: string[];
-  notifications?: Partial<Record<string, string>>;
+  notifications?: Partial<Record<string, string | string[]>>;
 }): BdeConfig {
   return bdeConfigSchema.parse({
     bde: {
@@ -140,7 +140,7 @@ describe('APP_URL', () => {
 });
 
 describe('notification channels', () => {
-  const eventsConfig = (notifications: Record<string, string>) =>
+  const eventsConfig = (notifications: Record<string, string | string[]>) =>
     configWith({ modules: ['events'], notifications });
 
   it('does not ask for SMTP when nothing uses e-mail', () => {
@@ -157,7 +157,7 @@ describe('notification channels', () => {
     expect(report.warnings).toHaveLength(1);
     expect(report.warnings[0]).toContain('memberPending');
     expect(report.warnings[0]).toContain('SMTP_HOST, SMTP_PORT, SMTP_FROM');
-    expect(report.warnings[0]).toContain('« none »');
+    expect(report.warnings[0]).toContain('retirez « email »');
   });
 
   it.each([
@@ -185,6 +185,51 @@ describe('notification channels', () => {
     expect(warnings[0]).toContain("n'envoie jamais d'e-mail");
   });
 
+  it('asks for what every channel of a notification needs, when several are ticked', () => {
+    const { errors } = check(
+      VALID_ENV,
+      eventsConfig({ eventConfirmed: ['discord', 'email'], eventReminder: ['slack'] }),
+    );
+    expect(errors.map((error) => error.split(' ')[0]).sort()).toEqual([
+      'DISCORD_WEBHOOK_URL',
+      'SLACK_WEBHOOK_URL',
+      'SMTP_FROM',
+      'SMTP_HOST',
+      'SMTP_PORT',
+    ]);
+  });
+
+  it('is quiet when every channel ticked is set up, however many there are', () => {
+    const env = {
+      ...VALID_ENV,
+      SMTP_HOST: 'smtp.x.fr',
+      SMTP_PORT: '587',
+      SMTP_FROM: 'a@x.fr',
+      DISCORD_WEBHOOK_URL: 'https://discord.com/api/webhooks/1/abc',
+      SLACK_WEBHOOK_URL: 'https://hooks.slack.com/services/T1/B1/abc',
+    };
+    const report = check(
+      env,
+      eventsConfig({
+        eventConfirmed: ['discord', 'slack', 'email'],
+        memberPending: ['email', 'slack'],
+      }),
+    );
+    expect(report.errors).toEqual([]);
+    expect(report.warnings).toEqual([]);
+  });
+
+  it('warns for the channel of a member notification that is not set up, and only for it', () => {
+    const env = { ...VALID_ENV, SLACK_WEBHOOK_URL: 'https://hooks.slack.com/services/T1/B1/abc' };
+    const { warnings } = check(
+      env,
+      configWith({ notifications: { memberPending: ['discord', 'slack'] } }),
+    );
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('« discord »');
+    expect(warnings[0]).toContain('DISCORD_WEBHOOK_URL');
+  });
+
   it('ignores events notifications while the events module is off', () => {
     const config = configWith({ notifications: { eventConfirmed: 'email' } });
     expect(check(VALID_ENV, config).errors).toEqual([]);
@@ -197,7 +242,7 @@ describe('notification channels', () => {
       'SMTP_PORT',
       'SMTP_FROM',
     ]);
-    expect(errors[0]).toContain('remplacez « email » par « none »');
+    expect(errors[0]).toContain('retirez « email »');
   });
 
   it('checks the SMTP port is a number', () => {

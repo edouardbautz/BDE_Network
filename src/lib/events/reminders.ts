@@ -1,4 +1,5 @@
 import { getConfig } from '@/config';
+import { channelsFor } from '@/config/schema';
 import { emailsOfHolders } from '@/lib/notifications/recipients';
 import { EVENTS_VALIDATE } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
@@ -150,7 +151,7 @@ export async function runReminderTick(now: Date = new Date()): Promise<ReminderT
       // Nobody in charge to write to: the people who run the events get it, so a reminder is never
       // sent to no one. (Looked up only when it is an email: a chat channel needs no recipient.)
       const emails =
-        assigneeEmails.length === 0 && config.notifications.eventReminder === 'email'
+        assigneeEmails.length === 0 && channelsFor(config, 'eventReminder').includes('email')
           ? await emailsOfHolders(EVENTS_VALIDATE)
           : assigneeEmails;
       await deliver('eventReminder', message, emails);

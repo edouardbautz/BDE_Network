@@ -1,3 +1,4 @@
+import { notificationsConfig } from '@/test/notifications';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/config', () => ({ getConfig: vi.fn() }));
@@ -54,7 +55,7 @@ function setConfig(options: { enabled?: boolean; channel?: string } = {}) {
     bde: { timezone: PARIS, defaultLocale: 'fr' },
     modules: { enabled: enabled ? ['events'] : [] },
     events: { categories: [], reminderHour: 18 },
-    notifications: { eventReminder: options.channel ?? 'email' },
+    notifications: notificationsConfig({ eventReminder: options.channel ?? 'email' }),
   } as unknown as ReturnType<typeof getConfig>);
 }
 

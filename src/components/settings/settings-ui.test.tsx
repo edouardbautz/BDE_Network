@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fr from '../../../messages/fr.json';
 import type { SettingsExtras } from '@/lib/settings/view';
 import type { DraftView } from '@/lib/setup/draft';
+import { emptyMatrix } from '@/lib/setup/notifications';
 
 configure({ asyncUtilTimeout: 5000 });
 
@@ -69,9 +70,10 @@ const view = (patch: Partial<DraftView> = {}): DraftView => ({
   owners: ['alice', 'bob'],
   events: true,
   notifications: {
-    mode: 'none',
+    matrix: emptyMatrix(),
     hasDiscordWebhook: false,
     hasSlackWebhook: false,
+    hasSmtp: false,
     smtp: { host: '', port: '587', user: '', from: '', hasPassword: false },
   },
   ...patch,

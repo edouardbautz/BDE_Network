@@ -1,7 +1,12 @@
 import { DEFAULT_ACCENT } from '@/config/schema';
 import type { Address } from './validate';
 import type { Campus } from './fortytwo';
-import type { Channel, NotificationSettings } from './notifications';
+import {
+  emptyMatrix,
+  type Channel,
+  type NotificationMatrix,
+  type NotificationSettings,
+} from './notifications';
 
 export type { Channel };
 export type Language = 'fr' | 'en';
@@ -78,9 +83,12 @@ export interface DraftView {
   owners: string[];
   events: boolean;
   notifications: {
-    mode: Channel;
+    /** What each type of notification is sent through. */
+    matrix: NotificationMatrix;
+    /** Whether each channel has what it needs (never the secret itself). */
     hasDiscordWebhook: boolean;
     hasSlackWebhook: boolean;
+    hasSmtp: boolean;
     smtp: { host: string; port: string; user: string; from: string; hasPassword: boolean };
   };
 }
@@ -104,9 +112,10 @@ export function toView(draft: SetupDraft, defaults: { addressUrl: string }): Dra
     owners: draft.owners ?? [],
     events: draft.events ?? true,
     notifications: {
-      mode: notifications?.mode ?? 'none',
+      matrix: notifications?.matrix ?? emptyMatrix(),
       hasDiscordWebhook: Boolean(notifications?.discordWebhook),
       hasSlackWebhook: Boolean(notifications?.slackWebhook),
+      hasSmtp: Boolean(notifications?.smtp),
       smtp: {
         host: notifications?.smtp?.host ?? '',
         port: notifications?.smtp ? String(notifications.smtp.port) : '587',
