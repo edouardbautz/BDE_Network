@@ -48,17 +48,17 @@ export default defineConfig({
     // The pictures are compared in Chromium only, by the project of their own (and made there): see visual.spec.ts.
     { name: 'visual', use: { ...devices['Desktop Chrome'] }, testMatch: /visual\.spec\.ts/ },
     // Every other file runs in the three engines, except what is the page's and not the engine's: what axe reports, and the
-    // prefetches Next.js makes (performance.spec.ts) run once, in Chromium (the keyboard ones run in all three).
+    // prefetches Next.js makes (performance.spec.ts) and the walk through the interface (explore.spec.ts) run once, in Chromium (the keyboard ones run in all three).
     { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: /visual\.spec\.ts/ },
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
-      testIgnore: /(a11y|visual|performance)\.spec\.ts/,
+      testIgnore: /(a11y|visual|performance|explore)\.spec\.ts/,
     },
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
-      testIgnore: /(a11y|visual|performance)\.spec\.ts/,
+      testIgnore: /(a11y|visual|performance|explore)\.spec\.ts/,
     },
   ],
 });

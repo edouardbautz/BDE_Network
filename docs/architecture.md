@@ -1411,6 +1411,22 @@ gives calendar files with the data in them` guards that); the not-found page mar
   - **Not covered yet**: the loop's own timer (the 5-minute interval and the first tick 15 s after start are `scheduler.test.ts`),
     a platform that has run for months as a process (memory and handles: the load test of phase 7 holds the memory after a load),
     and the sending itself over months (phase 8 holds a channel that is down).
+- **Exploration** (`qa/browsers/explore.spec.ts`, in the `browsers` job, Chromium only). Somebody who goes through the interface as each
+  persona (visitor, waiting account, member, proposer, validator, custom role, admin, owner), on a computer and on a phone: from the
+  first page **and from every page of the access matrix the persona is shown** (some pages are offered by no link: the one that says
+  the service is down, the one that says the sign-in was refused), every link the page offers is followed (within the language, never
+  the API), and **every menu and dialog is opened and closed** (never acted on: nothing is submitted, the database is left as it
+  was). The walk is bounded (45 to 70 pages, two of each kind of address: `patternOf`, tested) and the same on every run. What is
+  written down, as findings that fail the test with the page and the link that led there: a link to a page that does not exist or
+  that sends a signed-in person to the login page (the interface offered what the person cannot use); a page with no title of its own,
+  no heading, or in another language than its address; a page that scrolls sideways on a phone; a picture of the platform that does not
+  load; and a menu or dialog that makes the page lose its content when it opens (the exceptions and console errors it raises are added
+  by the watcher of the journeys). The menu of the signed-in person crashed on opening in every released version until phase 5 because
+  no test ever opened it: this one would have found it. `the walk itself` makes a page do it (a menu that removes the content, and
+  one that works) and requires it to be seen. **What the first runs found**: three pages every visitor meets first, the login page, the
+  sign-in refused page and the waiting page, had no heading of level 1 (their title was a `div`: axe does not report it, it is a
+  best practice and not a WCAG criterion); fixed in its own pull request. **What they did not find**: a dead link, a page that scrolls
+  sideways, a broken picture or a menu that breaks, for any of the eight personas on either screen.
 - **Coverage** (`npm run test:coverage`, `coverage-thresholds.json`, `scripts/coverage-report.mjs`,
   `scripts/coverage-gaps.mjs`, `qa/coverage-plan.md`). The ubuntu job of `ci.yml` runs the unit tests through V8 coverage
   and **fails below a floor**: one for the whole project and one for each area that decides who may do what or what is

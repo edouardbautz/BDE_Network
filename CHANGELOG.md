@@ -8,6 +8,11 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **A walk through the interface is played as every kind of member, on a computer and on a phone, every night.** From the first
+  page and from every page the person is shown, it follows every link, opens every menu and dialog, and fails on what a person
+  would notice: a link to a page that does not exist or that sends a signed-in person to the login page, a page with no heading or
+  no title of its own, a page that scrolls sideways on a phone, a picture that does not load, a menu that breaks the page when it
+  opens. It found that the login page, the "sign-in refused" page and the waiting page had no heading (see "Fixed").
 - **A year and a half of the reminder loop is played every night.** The loop is called with each of the ~2400 instants it would
   look at, on a real database with the QA dataset, and what it did is compared with a calculation that does not use its code: every
   confirmed date is reminded exactly once, at the first look after the evening before (across the two changes of clock), nothing
