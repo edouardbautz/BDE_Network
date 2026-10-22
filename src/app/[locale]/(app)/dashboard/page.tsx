@@ -100,43 +100,35 @@ export default async function DashboardPage() {
         {/* Only an owner can update the platform, and only an owner is told (the route says 404 to anybody else). */}
         {canManageSettings(session.user) && <UpdateBanner enabled={config.updates.check} />}
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-6 sm:gap-4 lg:grid-cols-12">
-          {next && (
-            <NextEventCard
-              occurrence={next}
-              now={now}
-              timeZone={timeZone}
-              className="sm:col-span-6 lg:col-span-8 lg:row-start-1"
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-12">
+          {/* The wide column: the one accent moment, then what comes next. */}
+          <div className="flex min-w-0 flex-col gap-3 sm:gap-4 lg:col-span-8">
+            {next && <NextEventCard occurrence={next} now={now} timeZone={timeZone} />}
+            {eventsAccess && (
+              <UpcomingList
+                occurrences={next ? others : []}
+                categories={getCategories()}
+                timeZone={timeZone}
+                canCreate={eventsAccess.canCreate}
+              />
+            )}
+          </div>
+
+          {/* The narrow column: who is signed in comes first on a computer, the shortcuts first on a phone. */}
+          <div className="flex min-w-0 flex-col gap-3 sm:gap-4 lg:col-span-4">
+            <Shortcuts title={t('shortcuts.title')} items={shortcuts} />
+            <AccountCard
+              name={displayName}
+              initials={initialsOf(displayName)}
+              image={session.user.image ?? null}
+              detail={`${session.user.login} · ${session.user.campus}`}
+              roleLabel={accountLabel(session.user, tRoles)}
+              className="lg:-order-1"
             />
-          )}
-
-          {eventsAccess && (
-            <UpcomingList
-              occurrences={next ? others : []}
-              categories={getCategories()}
-              timeZone={timeZone}
-              canCreate={eventsAccess.canCreate}
-              className="sm:col-span-6 lg:col-span-8 lg:row-start-2"
-            />
-          )}
-
-          <Shortcuts
-            title={t('shortcuts.title')}
-            items={shortcuts}
-            className="sm:col-span-3 lg:col-span-4 lg:col-start-9 lg:row-start-2"
-          />
-
-          <AccountCard
-            name={displayName}
-            initials={initialsOf(displayName)}
-            image={session.user.image ?? null}
-            detail={`${session.user.login} · ${session.user.campus}`}
-            roleLabel={accountLabel(session.user, tRoles)}
-            className="sm:col-span-3 lg:col-span-4 lg:col-start-9 lg:row-start-1"
-          />
+          </div>
 
           {config.modules.enabled.length === 0 && (
-            <section className={cn(cardSurface, 'sm:col-span-6 lg:col-span-12')}>
+            <section className={cn(cardSurface, 'lg:col-span-12')}>
               <EmptyState
                 icon={LayoutGrid}
                 title={t('empty.title')}

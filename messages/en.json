@@ -169,7 +169,7 @@
     "rail": {
       "dashboard": "Home",
       "events": "Calendar",
-      "eventsReview": "To validate",
+      "eventsReview": "Review",
       "members": "Members",
       "roles": "Roles",
       "auditLog": "Log",

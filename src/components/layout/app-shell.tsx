@@ -162,7 +162,7 @@ function Rail({
                   isActive ? 'text-accent-ink' : 'text-muted-foreground group-hover:text-ink',
                 )}
               />
-              <Counter item={item} className="absolute -top-1.5 -right-2.5" />
+              <Counter item={item} className="absolute -top-2 -right-4" />
             </span>
             <span
               className={cn(

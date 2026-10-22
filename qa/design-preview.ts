@@ -65,61 +65,65 @@ async function signedIn(context: BrowserContext): Promise<void> {
   ]);
 }
 
-mkdirSync(out, { recursive: true });
-const browser = await chromium.launch();
-try {
-  for (const theme of ['light', 'dark'] as const) {
-    for (const [device, viewport] of Object.entries(SCREENS)) {
-      const context = await browser.newContext({
-        baseURL: base,
-        viewport,
-        colorScheme: theme,
-        reducedMotion: 'reduce',
-        deviceScaleFactor: device === 'phone' ? 2 : 1,
-      });
-      await signedIn(context);
-      const page = await context.newPage();
-      await page.goto(path);
-      await atRest(page);
-      const file = (suffix = '') =>
-        join(out, `${name}-${label}-${theme}-${device}${suffix ? `-${suffix}` : ''}.png`);
-      await page.screenshot({ path: file(), fullPage: true });
+async function main(): Promise<void> {
+  mkdirSync(out, { recursive: true });
+  const browser = await chromium.launch();
+  try {
+    for (const theme of ['light', 'dark'] as const) {
+      for (const [device, viewport] of Object.entries(SCREENS)) {
+        const context = await browser.newContext({
+          baseURL: base,
+          viewport,
+          colorScheme: theme,
+          reducedMotion: 'reduce',
+          deviceScaleFactor: device === 'phone' ? 2 : 1,
+        });
+        await signedIn(context);
+        const page = await context.newPage();
+        await page.goto(path);
+        await atRest(page);
+        const file = (suffix = '') =>
+          join(out, `${name}-${label}-${theme}-${device}${suffix ? `-${suffix}` : ''}.png`);
+        await page.screenshot({ path: file(), fullPage: true });
 
-      if (extras) {
-        if (device === 'phone') {
-          await page.getByRole('button', { name: /^(More|Plus)$/ }).click();
-          await page.getByRole('dialog').waitFor();
-          await atRest(page);
-          await page.screenshot({ path: file('more') });
-          await page.keyboard.press('Escape');
-          const create = page.getByRole('button', { name: /^(Create|Créer)$/ });
-          if (await create.count()) {
-            await create.click();
+        if (extras) {
+          if (device === 'phone') {
+            await page.getByRole('button', { name: /^(More|Plus)$/ }).click();
             await page.getByRole('dialog').waitFor();
             await atRest(page);
-            await page.screenshot({ path: file('create') });
+            await page.screenshot({ path: file('more') });
             await page.keyboard.press('Escape');
+            const create = page.getByRole('button', { name: /^(Create|Créer)$/ });
+            if (await create.count()) {
+              await create.click();
+              await page.getByRole('dialog').waitFor();
+              await atRest(page);
+              await page.screenshot({ path: file('create') });
+              await page.keyboard.press('Escape');
+            }
+          } else {
+            const account = page.locator('aside').getByRole('button').last();
+            await account.click();
+            await page.getByRole('menu').waitFor();
+            await atRest(page);
+            await page.screenshot({ path: file('menu') });
+            await page.keyboard.press('Escape');
+            await page.keyboard.press('Tab');
+            await page.keyboard.press('Tab');
+            await page.keyboard.press('Tab');
+            await page.screenshot({
+              path: file('focus'),
+              clip: { x: 0, y: 0, width: 700, height: 500 },
+            });
           }
-        } else {
-          const account = page.locator('aside').getByRole('button').last();
-          await account.click();
-          await page.getByRole('menu').waitFor();
-          await atRest(page);
-          await page.screenshot({ path: file('menu') });
-          await page.keyboard.press('Escape');
-          await page.keyboard.press('Tab');
-          await page.keyboard.press('Tab');
-          await page.keyboard.press('Tab');
-          await page.screenshot({
-            path: file('focus'),
-            clip: { x: 0, y: 0, width: 700, height: 500 },
-          });
         }
+        await context.close();
       }
-      await context.close();
     }
+  } finally {
+    await browser.close();
   }
-} finally {
-  await browser.close();
+  console.log(`pictures of ${name} (${label}, ${who}) in ${out}`);
 }
-console.log(`pictures of ${name} (${label}, ${who}) in ${out}`);
+
+void main();

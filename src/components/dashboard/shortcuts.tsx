@@ -26,7 +26,7 @@ export function Shortcuts({
 }) {
   return (
     <section aria-label={title} className={className}>
-      <ul className="grid grid-cols-3 gap-3 sm:grid-cols-2">
+      <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-2">
         {items.map((item) => (
           <li key={item.href}>
             <Link
@@ -45,7 +45,7 @@ export function Shortcuts({
                   <>
                     <span
                       aria-hidden="true"
-                      className="bg-accent-fill text-accent-on accent-edge text-micro tabular absolute -top-1.5 -right-2 flex h-4.5 min-w-4.5 items-center justify-center rounded-pill px-1 font-extrabold"
+                      className="bg-accent-fill text-accent-on accent-edge text-micro tabular absolute -top-2 -right-3 flex h-4.5 min-w-4.5 items-center justify-center rounded-pill px-1 font-extrabold"
                     >
                       {item.count}
                     </span>
