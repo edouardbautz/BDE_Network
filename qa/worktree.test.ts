@@ -165,6 +165,48 @@ describe('removeWorktree', () => {
     targetsIntact();
   });
 
+  it('removes the folder itself when git cannot (a path Windows finds too long), the links being gone already', () => {
+    addWorktree(project, tree, 'HEAD', { links: ['node_modules'] });
+    removeWorktree(project, tree, {
+      git: (cwd: string, args: string[]) => {
+        // git stops on a long path: it fails and leaves the folder, as it did on a .next cache
+        if (args.includes('remove')) throw new Error('Filename too long');
+        return git(cwd, ...args);
+      },
+    });
+
+    expect(existsSync(tree)).toBe(false);
+    expect(
+      worktrees()
+        .split('\n')
+        .filter((line) => line.startsWith('worktree ')),
+    ).toHaveLength(1);
+    targetsIntact();
+  });
+
+  it('does not fall back on deleting the folder when something else is wrong with it', () => {
+    addWorktree(project, tree, 'HEAD');
+    const outside = join(base, 'outside');
+    mkdirSync(outside);
+    writeFileSync(join(outside, 'precious.txt'), 'keep');
+
+    expect(() =>
+      removeWorktree(project, tree, {
+        git: (cwd: string, args: string[]) => {
+          if (args.includes('remove')) {
+            // a link appears after the scan, and git then fails: the folder must not be deleted by hand
+            symlinkSync(outside, join(tree, 'late'), 'junction');
+            throw new Error('Filename too long');
+          }
+          return git(cwd, ...args);
+        },
+      }),
+    ).toThrow(/Filename too long/);
+
+    expect(existsSync(join(tree, 'src', 'a.txt'))).toBe(true);
+    expect(readFileSync(join(outside, 'precious.txt'), 'utf8')).toBe('keep');
+  });
+
   it('refuses the project itself', () => {
     expect(() => removeWorktree(project, project)).toThrow(/the project/);
     targetsIntact();

@@ -20,6 +20,7 @@ import {
   mkdirSync,
   readdirSync,
   realpathSync,
+  rmSync,
   rmdirSync,
   symlinkSync,
   unlinkSync,
@@ -130,7 +131,14 @@ export function removeWorktree(
     if (left.length > 0)
       throw new Error(`links are left in ${dir} (${left.join(', ')}): nothing was removed`);
   }
-  git(project, ['worktree', 'remove', '--force', dir]);
+  try {
+    git(project, ['worktree', 'remove', '--force', dir]);
+  } catch (error) {
+    // Git can fail on a path Windows finds too long (the cache of a Next.js build): it deletes what it can and stops. The links are
+    // gone (checked above), so removing the folder by hand reaches nothing outside it; anything else is still an error.
+    if (!existsSync(dir) || findLinks(dir).length > 0) throw error;
+    rmSync(dir, { recursive: true, force: true, maxRetries: 3 });
+  }
   git(project, ['worktree', 'prune']);
 }
 
