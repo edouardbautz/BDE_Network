@@ -161,6 +161,14 @@ describe('ruleSetDefaultRole', () => {
 });
 
 describe('ruleAssignRole — giving a member another role', () => {
+  it('refuses an account that is not a member even if its row names a role (the database refuses it; the rule must not rely on that)', () => {
+    const secretary = actor(['members.manage', 'events.view']);
+    const events = role('role-events', ['events.view']);
+    expect(ruleAssignRole(secretary, member(events, { status: 'PENDING' }), events)).toBe(
+      'targetNotMember',
+    );
+  });
+
   const secretary = actor(['members.manage', 'events.view', 'events.validate'], {
     roleId: 'role-secretary',
   });

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/stryker-mutator/stryker/master/packages/api/schema/stryker-core.json",
+  "_": "Mutation testing of the rules that decide who may do what and what is accepted (see \"Mutation testing\" in docs/architecture.md). Stryker is not a dependency of the project: the workflow installs it with --no-save.",
+  "testRunner": "vitest",
+  "plugins": ["@stryker-mutator/vitest-runner"],
+  "vitest": { "configFile": "vitest.config.ts" },
+  "coverageAnalysis": "perTest",
+  "mutate": [
+    "src/lib/permissions/registry.ts",
+    "src/lib/permissions/index.ts",
+    "src/lib/roles/guards.ts",
+    "src/lib/events/review.ts",
+    "src/lib/auth/access.ts",
+    "src/lib/auth/account.ts",
+    "src/lib/branding/image.ts"
+  ],
+  "ignoreStatic": true,
+  "reporters": ["clear-text", "json"],
+  "jsonReporter": { "fileName": "mutation-report/report.json" },
+  "tempDirName": ".stryker-tmp",
+  "cleanTempDir": true,
+  "concurrency": 2,
+  "timeoutMS": 30000
+}

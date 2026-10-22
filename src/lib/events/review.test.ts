@@ -184,6 +184,11 @@ describe('what a status change is called', () => {
     ['PROPOSED', 'CONFIRMED', 'approve'],
     ['DRAFT', 'CONFIRMED', 'status_change'],
     ['CONFIRMED', 'DRAFT', 'status_change'],
+    // nothing changed, or not one of the moves that have a name
+    ['PROPOSED', 'PROPOSED', 'status_change'],
+    ['DRAFT', 'DRAFT', 'status_change'],
+    ['CONFIRMED', 'CONFIRMED', 'status_change'],
+    ['CONFIRMED', 'PROPOSED', 'propose'],
   ])('%s → %s is %s', (from, to, move) => {
     expect(statusMove(from, to)).toBe(move);
   });
