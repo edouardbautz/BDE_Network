@@ -71,3 +71,5 @@ next-env.d.ts
 
 # internal pre-release audit notes (never committed)
 /.audit/
+/mutation-report/
+/.stryker-tmp/

@@ -612,3 +612,44 @@ jobs:
 
       - name: Play a year and a half of the reminder loop, and the school year at every boundary
         run: npx vitest run qa/longtime
+
+  # Mutation testing of the rules that decide who may do what and what is accepted (qa/mutation; see "Mutation testing" in
+  # docs/architecture.md): Stryker changes the code one operator at a time and the tests must notice. It is not a dependency of the
+  # project (hundreds of packages the platform never ships): it is installed here with --no-save, at the version written here.
+  mutation-testing:
+    name: mutation testing
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-qa')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # npm 11, not the npm 10 of Node 22: npm 10 stops on this project's tree with "Cannot read properties of null (reading
+      # 'edgesOut')", and its work-around (--legacy-peer-deps) prunes the peers `npm ci` installed (@testing-library/dom), so that the
+      # tests no longer load and Stryker finds none. --no-save: package.json and the lock are not touched.
+      - name: Install Stryker (not part of the project's dependencies)
+        run: npx -y npm@11.9.0 install --no-save @stryker-mutator/core@10.0.0 @stryker-mutator/vitest-runner@10.0.0
+
+      - name: Change the rules one operator at a time, and see that the tests notice
+        run: npx stryker run qa/mutation/stryker.config.json
+
+      # Whatever the score, the table and the mutations nobody noticed are in the summary of the job.
+      - name: Summary
+        if: always()
+        run: npx tsx qa/mutation/summary-run.ts
+
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: mutation-report
+          if-no-files-found: ignore

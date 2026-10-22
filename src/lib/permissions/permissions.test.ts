@@ -25,6 +25,14 @@ const asStatus = (value: unknown) => value as UserStatus;
 const set = (keys: string[], all = false): PermissionSet => ({ all, keys: new Set(keys) });
 
 describe('the permission registry', () => {
+  it('lets the two core permissions stand alone: neither implies anything', () => {
+    const core = permissionDefinitions([]);
+    expect(core.map((definition) => [definition.key, definition.implies])).toEqual([
+      [MEMBERS_MANAGE, []],
+      [ROLES_MANAGE, []],
+    ]);
+  });
+
   it('has the two core permissions when no module is enabled', () => {
     expect(activePermissionKeys([])).toEqual([MEMBERS_MANAGE, ROLES_MANAGE]);
   });

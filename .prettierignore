@@ -12,3 +12,5 @@ package-lock.json
 # The cases of the Semgrep rules: a comment applies to the line under it, so their layout is not Prettier's to change
 qa-rules/*.ts
 qa-rules/*.tsx
+mutation-report
+.stryker-tmp

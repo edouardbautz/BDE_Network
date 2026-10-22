@@ -8,6 +8,11 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **The tests of the rules that decide who may do what are tested, every night.** A mutation tester changes the code of those rules
+  one operator at a time and the tests must fail for each change. Its first run found the tests of who becomes an owner after
+  signing in did not exist (every test of the sign-in replaces that code by a stand-in), and the exact limits of the logo
+  checker (2 MiB, 64 px, 4096 px, the bytes of a WebP) were not held; both are now, and the score went from 87.4 % to 97.6 %.
+  The job fails below 95 %. No defect of the product was found: the tests were missing.
 - **A page of the documentation says what is checked, how, and what it found** ([Quality](docs/en/quality.md), in English and in
   French): the checks of every pull request and of the nightly run, what the suites do, the 22 defects the campaign has found and
   fixed since 1.2.0 by kind, what it looked for and did not find, and, as clearly, what it does not cover (no rate limit in the
