@@ -16,6 +16,7 @@ import {
   type RoleFacts,
 } from './compare';
 import { COUNTED_TABLES, fixtureSql, OCCURRENCE_TABLES, OLD } from './fixture';
+import { CURRENT, fixtureSqlCurrent } from './fixture-proposals';
 import { AUTH_SECRET, run, Stack } from './stack';
 import { addWorktree, removeWorktree } from '../worktree.mjs';
 
@@ -25,7 +26,7 @@ import { addWorktree, removeWorktree } from '../worktree.mjs';
  * the old version with the copy the platform made by itself. What the old version says about its own data (its calendar feeds,
  * its roles, the rows of its tables) is the reference the new one is held to: no date moved, no right lost, nothing missing.
  *
- *   tsx qa/upgrade/run.ts --from 1.0.0|1.1.0|1.2.0 [--report report.json]
+ *   tsx qa/upgrade/run.ts --from 1.0.0|1.1.0|1.2.0|1.3.0|1.4.0 [--report report.json]
  *
  * The image of the version under test is built before (`docker build -t bde-network:local .`, the name of
  * `docker-compose.build.yml`); the old ones come from their tag (1.0.0 was never published: it is built from its folder, as its
@@ -37,7 +38,14 @@ const flag = (name: string): string | undefined => {
   return index === -1 ? undefined : process.argv[index + 1];
 };
 
-const VERSIONS = ['1.0.0', '1.1.0', '1.2.0'] as const;
+const VERSIONS = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0'] as const;
+
+/**
+ * From 1.3.0 on the schema is the one of today (the proposal circuit and the repeat rules, no migration after them): the old
+ * version holds the data of `fixture-proposals.ts`, the update has nothing to migrate, so there is no conversion of the roles and
+ * the platform makes no copy of its own; the way back is the backup the operator made. Before, the data is that of `fixture.ts`.
+ */
+const holdsProposals = (from: (typeof VERSIONS)[number]) => from === '1.3.0' || from === '1.4.0';
 
 interface Facts {
   counts: Record<string, number>;
@@ -85,15 +93,26 @@ async function readFacts(db: Client): Promise<Facts> {
   return { counts, roles, users, events, migrations };
 }
 
-const FEEDS = {
-  member: `/api/calendar/${OLD.tokens.member}`,
-  treasurer: `/api/calendar/${OLD.tokens.treasurer}`,
-  bde: `/api/calendar/bde/${OLD.tokens.bde}`,
-} as const;
+/** The calendar links of the fixture: a member, those who hold drafts and proposals in theirs, and the BDE's. */
+const feedPaths = (proposals: boolean): Record<string, string> =>
+  proposals
+    ? {
+        member: `/api/calendar/${CURRENT.tokens.member}`,
+        proposer: `/api/calendar/${CURRENT.tokens.proposer}`,
+        validator: `/api/calendar/${CURRENT.tokens.validator}`,
+        bde: `/api/calendar/bde/${CURRENT.tokens.bde}`,
+      }
+    : {
+        member: `/api/calendar/${OLD.tokens.member}`,
+        treasurer: `/api/calendar/${OLD.tokens.treasurer}`,
+        bde: `/api/calendar/bde/${OLD.tokens.bde}`,
+      };
 
-async function readFeeds(stack: Stack): Promise<Record<keyof typeof FEEDS, FeedEvent[]>> {
-  const result = {} as Record<keyof typeof FEEDS, FeedEvent[]>;
-  for (const [name, path] of Object.entries(FEEDS) as [keyof typeof FEEDS, string][]) {
+type Feeds = Record<string, FeedEvent[]>;
+
+async function readFeeds(stack: Stack, paths: Record<string, string>): Promise<Feeds> {
+  const result: Feeds = {};
+  for (const [name, path] of Object.entries(paths)) {
     const response = await fetch(`${stack.base}${path}`, { signal: AbortSignal.timeout(30_000) });
     result[name] = response.status === 200 ? parseFeed(await response.text()) : [];
   }
@@ -106,6 +125,16 @@ async function readFeeds(stack: Stack): Promise<Record<keyof typeof FEEDS, FeedE
  */
 const isNotFound = (body: string): boolean =>
   /name="robots" content="noindex/.test(body) && /NEXT_HTTP_ERROR_FALLBACK/.test(body);
+
+/**
+ * A page that shows nothing to the person who asked: not found, or sent elsewhere (a redirect Next.js has started to stream answers 200 and
+ * says it in a meta tag, `qa/access/http.ts`).
+ */
+const isDenied = (answer: { status: number; location: string | null; body: string }): boolean =>
+  answer.status === 404 ||
+  answer.location !== null ||
+  isNotFound(answer.body) ||
+  /<meta id="__next-page-redirect"/.test(answer.body);
 
 /** A page as a signed-in person (a cookie signed with the platform's own secret, kept through the update) asks for it. */
 async function page(stack: Stack, path: string, login?: string) {
@@ -126,6 +155,8 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
   const area = `upgrade from ${from}`;
   const check = (name: string, ok: boolean, detail = '') => report.check(area, name, ok, detail);
   const index = VERSIONS.indexOf(from);
+  const proposals = holdsProposals(from);
+  const paths = feedPaths(proposals);
   const sha = process.env.QA_UPGRADE_SHA ?? run('git', ['rev-parse', 'HEAD']).out;
   const dir = mkdtempSync(join(tmpdir(), `qa-upgrade-${from}-`));
   const project = run('git', ['rev-parse', '--show-toplevel']).out;
@@ -156,15 +187,36 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
       const found = await db.query(`SELECT to_regclass('"EventOccurrence"') AS t`);
       return found.rows[0]?.t !== null;
     });
-    await stack.database((db) => db.query(fixtureSql({ occurrences: hasOccurrences })));
+    await stack.database((db) =>
+      db.query(proposals ? fixtureSqlCurrent() : fixtureSql({ occurrences: hasOccurrences })),
+    );
     const before = await stack.database(readFacts);
-    const feedsBefore = await readFeeds(stack);
-    const counted = (feed: FeedEvent[]) => feed.length;
+    const feedsBefore = await readFeeds(stack, paths);
+    const sizes = Object.entries(feedsBefore)
+      .map(([name, feed]) => `${name} ${feed.length}`)
+      .join(', ');
     check(
       `the old version gives calendar files with the data in them (the comparison below means something)`,
-      counted(feedsBefore.member) >= 15 && counted(feedsBefore.bde) >= 15,
-      `member ${counted(feedsBefore.member)}, treasurer ${counted(feedsBefore.treasurer)}, BDE ${counted(feedsBefore.bde)} events`,
+      (feedsBefore.member?.length ?? 0) >= (proposals ? 25 : 15) &&
+        (feedsBefore.bde?.length ?? 0) >= (proposals ? 25 : 15),
+      `${sizes} events`,
     );
+    if (proposals) {
+      const member = feedsBefore.member?.length ?? 0;
+      const proposer = feedsBefore.proposer?.length ?? 0;
+      const validator = feedsBefore.validator?.length ?? 0;
+      check(
+        'the old version tells the rights apart in its calendar files: only a validator holds drafts and proposals (a proposer, who only proposes, has the same file as a member)',
+        validator > member && proposer === member,
+        `validator ${validator}, proposer ${proposer}, member ${member}`,
+      );
+      const held = await stack.database((db) => checkInvariants(db));
+      check(
+        'the data of the old version satisfies the invariants of the database (it is what a board could hold)',
+        held.length === 0,
+        held.length === 0 ? 'none broken' : describeViolations(held),
+      );
+    }
 
     // ---- 2. the backup an operator makes before updating ---------------------------------------------------------------------
     stack.ensureBackups();
@@ -212,7 +264,9 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
     );
     const roleProblems = diffRoles(before.roles, after.roles);
     check(
-      'the roles are the same, with events.manage converted and nothing else changed',
+      proposals
+        ? 'the roles are the same, right for right (proposing, validating, the shared calendar)'
+        : 'the roles are the same, with events.manage converted and nothing else changed',
       roleProblems.length === 0,
       roleProblems.join('; ') || `${after.roles.length} roles`,
     );
@@ -227,25 +281,27 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
       before.events.filter((event) => !after.events.includes(event)).join('; ') ||
         `${after.events.length} events`,
     );
-    const feedsAfter = await readFeeds(stack);
-    for (const name of ['member', 'treasurer', 'bde'] as const) {
-      const problems = diffFeeds(feedsBefore[name], feedsAfter[name]);
+    const feedsAfter = await readFeeds(stack, paths);
+    for (const name of Object.keys(paths)) {
+      const problems = diffFeeds(feedsBefore[name] ?? [], feedsAfter[name] ?? []);
       check(
         `the ${name} calendar file says the same thing before and after (every date, hour and cancellation)`,
         problems.length === 0,
-        problems.slice(0, 5).join('; ') || `${feedsAfter[name].length} events`,
+        problems.slice(0, 5).join('; ') || `${feedsAfter[name]?.length} events`,
       );
     }
-    const converted = await stack.database((db) =>
-      db.query(
-        `SELECT count(*)::int AS n FROM "AuditLog" WHERE "id" = 'audit-event-proposals-migration'`,
-      ),
-    );
-    check(
-      'the conversion of the roles is written in the audit log',
-      Number(converted.rows[0]?.n) === 1,
-      `${converted.rows[0]?.n} entry`,
-    );
+    if (!proposals) {
+      const converted = await stack.database((db) =>
+        db.query(
+          `SELECT count(*)::int AS n FROM "AuditLog" WHERE "id" = 'audit-event-proposals-migration'`,
+        ),
+      );
+      check(
+        'the conversion of the roles is written in the audit log',
+        Number(converted.rows[0]?.n) === 1,
+        `${converted.rows[0]?.n} entry`,
+      );
+    }
     const violations = await stack.database((db) => checkInvariants(db));
     check(
       'the invariants of the database hold',
@@ -254,9 +310,11 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
     );
     const copies = stack.compose('exec', '-T', 'app', 'ls', '/backups');
     check(
-      'the platform made a copy of the database by itself before applying the migrations',
-      /pre-update_/.test(copies.out),
-      copies.out.slice(0, 200),
+      proposals
+        ? 'the platform made no copy of its own: there was nothing to migrate'
+        : 'the platform made a copy of the database by itself before applying the migrations',
+      /pre-update_/.test(copies.out) === !proposals,
+      copies.out.slice(0, 200) || '(no copy)',
     );
 
     const owner = await page(stack, '/en/settings', OLD.owner);
@@ -265,25 +323,64 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
       owner.status === 200 && /Settings stored in the database/.test(owner.body),
       `${owner.status}`,
     );
-    const member = await page(stack, '/en/dashboard', OLD.member);
+    const member = await page(stack, '/en/dashboard', proposals ? CURRENT.member : OLD.member);
     check(
       'a member is still signed in with the cookie of before',
       member.status === 200 && !member.location,
       `${member.status} ${member.location ?? ''}`,
     );
-    const treasurer = await page(stack, '/en/events/review', OLD.treasurer);
-    check(
-      'the treasurer, who could manage events, can validate them',
-      treasurer.status === 200 && !isNotFound(treasurer.body),
-      `${treasurer.status}`,
-    );
-    const reader = await page(stack, '/en/events/review', OLD.reader);
-    check(
-      'the reader, who could only view events, still cannot',
-      reader.status === 404 || isNotFound(reader.body) || reader.location !== null,
-      `${reader.status} ${reader.location ?? ''}`,
-    );
-    const pending = await page(stack, '/en/dashboard', OLD.pending);
+    if (proposals) {
+      const validator = await page(stack, '/en/events/review', CURRENT.validator);
+      check(
+        'the validator finds the proposals to validate, the one of a series included',
+        validator.status === 200 &&
+          !isNotFound(validator.body) &&
+          validator.body.includes('Afterwork partenaires') &&
+          validator.body.includes('Atelier cuisine du jeudi'),
+        `${validator.status}`,
+      );
+      const proposer = await page(stack, '/en/events/review', CURRENT.proposer);
+      check(
+        'the one who only proposes still cannot validate',
+        isDenied(proposer),
+        `${proposer.status} ${proposer.location ?? ''}`,
+      );
+      const refused = await page(stack, `/en/events/${CURRENT.events.refused}`, CURRENT.proposer);
+      check(
+        'the author of a refused proposal still reads the comment, whole',
+        refused.status === 200 &&
+          refused.body.includes('Voyage surprise') &&
+          /Le budget n(&#x27;|')est pas voté/.test(refused.body) &&
+          refused.body.includes('Merci de proposer une date plus tard'),
+        `${refused.status}`,
+      );
+      const shared = await page(stack, '/en/events/shared-calendar', CURRENT.shared);
+      check(
+        'the holder of the shared calendar right still manages the link of the BDE',
+        shared.status === 200 && !isNotFound(shared.body),
+        `${shared.status}`,
+      );
+      const notShared = await page(stack, '/en/events/shared-calendar', CURRENT.proposer);
+      check(
+        'the one who only proposes still cannot manage it',
+        isDenied(notShared),
+        `${notShared.status} ${notShared.location ?? ''}`,
+      );
+    } else {
+      const treasurer = await page(stack, '/en/events/review', OLD.treasurer);
+      check(
+        'the treasurer, who could manage events, can validate them',
+        treasurer.status === 200 && !isNotFound(treasurer.body),
+        `${treasurer.status}`,
+      );
+      const reader = await page(stack, '/en/events/review', OLD.reader);
+      check(
+        'the reader, who could only view events, still cannot',
+        isDenied(reader),
+        `${reader.status} ${reader.location ?? ''}`,
+      );
+    }
+    const pending = await page(stack, '/en/dashboard', proposals ? CURRENT.pending : OLD.pending);
     check(
       'the person waiting is still kept on the waiting page',
       /pending/.test(pending.location ?? ''),
@@ -351,7 +448,8 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
     }
 
     // ---- 5. the way back: the copy the platform made, then the old version ------------------------------------------------
-    const fromArchive = from === '1.1.0';
+    // The platform keeps a copy of its own only when it migrates; 1.1.0's cannot be put back by `--pre-update`, and from 1.3.0 on there is none.
+    const fromArchive = from === '1.1.0' || proposals;
     const rolledBack = fromArchive
       ? stack.script('restore.sh', join('backups', backupFile ?? 'missing'), '--no-start', '--yes')
       : stack.script('restore.sh', '--pre-update', '--yes');
@@ -369,7 +467,9 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
       `${old.migrations} migrations, ${JSON.stringify(old.counts)}`,
     );
     check(
-      'the roles are the old ones, events.manage included',
+      proposals
+        ? 'the roles are the old ones'
+        : 'the roles are the old ones, events.manage included',
       JSON.stringify(old.roles) === JSON.stringify(before.roles),
       JSON.stringify(old.roles),
     );
@@ -389,13 +489,13 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
       againReady === null ? stack.logs(40).slice(-600) : `${Math.round(againReady)} ms`,
     );
     if (againReady !== null) {
-      const feedsAgain = await readFeeds(stack);
-      for (const name of ['member', 'treasurer', 'bde'] as const) {
-        const problems = diffFeeds(feedsBefore[name], feedsAgain[name]);
+      const feedsAgain = await readFeeds(stack, paths);
+      for (const name of Object.keys(paths)) {
+        const problems = diffFeeds(feedsBefore[name] ?? [], feedsAgain[name] ?? []);
         check(
           `the old version gives the same ${name} calendar file as before the update`,
           problems.length === 0,
-          problems.slice(0, 5).join('; ') || `${feedsAgain[name].length} events`,
+          problems.slice(0, 5).join('; ') || `${feedsAgain[name]?.length} events`,
         );
       }
     }

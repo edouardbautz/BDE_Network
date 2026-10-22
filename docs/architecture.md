@@ -1380,10 +1380,10 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
     reminder loop with a tick that fails for months (phase 10, with the virtual clock), a disk that is full (the logo's folder), and the
     supervisor's own handling of a database that is absent at start (`e2e/safe-update.sh` plays it).
 - **Updates** (`qa/upgrade/`, the `upgrade` job of `qa.yml`, one job per version to leave; `npx tsx qa/upgrade/run.ts --from
-1.0.0|1.1.0|1.2.0`, after `docker build -t bde-network:local .`). The guide of upgrading played for real, the way an operator does
+1.0.0|1.1.0|1.2.0|1.3.0|1.4.0`, after `docker build -t bde-network:local .`). The guide of upgrading played for real, the way an operator does
   it: a folder of the project at the old version (a **worktree of its tag**, moved to the version under test with `git checkout`, as
   `git pull` does), its `.env` and `bde.config.yml`, a Docker Compose project whose volumes stay through the update. 1.1.0 and
-  1.2.0 come from the registry; **1.0.0 was never published as an image and is built from its folder**, as its compose file says.
+  1.2.0, 1.3.0 and 1.4.0 come from the registry; **1.0.0 was never published as an image and is built from its folder**, as its compose file says.
   The run: (1) the old platform starts and is given the data of an old installation (`fixture.ts`, written in the schema of the old
   version: roles, one of them with `events.manage`; members and a person waiting; single, weekly, every-two-weeks and monthly
   events, the monthly one on the 31st; a draft; a cancelled date and, from 1.1.0, a moved and renamed one; the series cross the
@@ -1396,7 +1396,7 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
   invariants of the database, the copy the platform made by itself, the settings imported into the database, the old session
   cookies still signing people in, and the treasurer able to validate while the reader still cannot; (6) a backup of the new version
   and its restore (the row written after the backup is gone, the platform answers); (7) **the way back**: the copy the platform made
-  (`restore.sh --pre-update`) or the backup made before (`restore.sh <archive> --no-start`, for 1.1.0), `git checkout` of the old
+  (`restore.sh --pre-update`) or the backup made before (`restore.sh <archive> --no-start`, for 1.1.0 and from 1.3.0 on), `git checkout` of the old
   tag, `docker compose up -d`, and the old version gives the same calendar files as before the update. The platform is made with the
   published image's file mounted for 1.1.0 and later, a QA-only choice: what is held here is the data, the migrations and the way back,
   not the baking of the configuration into an image (that is the `docker image` job).
@@ -1404,6 +1404,19 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
     folder, still at the version being left, which applied its migrations again to the database just put back, and the old version then
     refused it (`--no-start`, implied by `--pre-update`; `restore.test.ts` holds it against a `docker` that is only a recorder). What
     it did not find, which is as worth saying: no date, hour, right or row changed in an update from 1.0.0, 1.1.0 or 1.2.0.
+  - **From 1.3.0 and 1.4.0** (`fixture-proposals.ts`, `fixture-proposals.test.ts`): the schema is the one of today (no migration came after
+    the proposal circuit and the repeat rules), so the data is written in it and is a board that has used them: roles that propose, validate
+    and manage the shared calendar; series with advanced rules (every two weeks on Monday and Wednesday ten times across the change of
+    clock, the second Saturday, the last day, every year); a series cut in two with a cancelled date and a moved one with other people in
+    charge; a proposal, the proposal of a series, a refusal with its multi-line comment, drafts, and a draft series with one date
+    confirmed alone. A test reads the fixture with the engine of the repository (every series has the dates its comment names, a counted
+    series ends on the start of its last date) and, on a migrated PostgreSQL, against the invariants; the run checks them on the old
+    platform too, and that a validator's calendar file holds drafts and proposals while a proposer's is a member's. There is nothing to
+    migrate, so what is held is different: no conversion of the roles, **no copy made by the platform** (asserted: it makes none when
+    nothing is pending), the proposals still listed for the validator, the refusal comment read whole by its author, the shared calendar
+    still managed by its holder and refused to a proposer (a refusal that is a streamed redirect counts, `isDenied`), and the way back
+    by the backup. The suite compares the old release with the code under test, so on the day of a release, 1.4.0 is held to 1.4.0
+    plus whatever came after.
   - **Traps met writing it**: the tokens of the calendar links have a format an invariant checks (43 characters of the URL-safe
     alphabet), and the first fixture's did not have it, so the feeds were empty and the comparison compared nothing (`the old version
 gives calendar files with the data in them` guards that); the not-found page marks itself, the words are in every page's payload.

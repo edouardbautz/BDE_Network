@@ -1,0 +1,37 @@
+[
+  [
+    "fixture: the advanced rule counts nine dates",
+    "qa/upgrade/fixture-proposals.ts",
+    "weekdays: ['MO', 'WE'], count: 10",
+    "weekdays: ['MO', 'WE'], count: 9",
+    ["qa/upgrade/fixture-proposals.test.ts"]
+  ],
+  [
+    "fixture: a counted series ends before its last date",
+    "qa/upgrade/fixture-proposals.ts",
+    "until: '2027-03-31T18:00:00Z'",
+    "until: '2027-03-29T18:00:00Z'",
+    ["qa/upgrade/fixture-proposals.test.ts"]
+  ],
+  [
+    "fixture: the date cancelled in the cut series is not one of its dates",
+    "qa/upgrade/fixture-proposals.ts",
+    "start: '2027-05-12T17:00:00Z' },",
+    "start: '2027-05-13T17:00:00Z' },",
+    ["qa/upgrade/fixture-proposals.test.ts"]
+  ],
+  [
+    "fixture: the second Saturday is the first",
+    "qa/upgrade/fixture-proposals.ts",
+    "monthly: { kind: 'nth', nth: 2, weekday: 'SA' }",
+    "monthly: { kind: 'nth', nth: 1, weekday: 'SA' }",
+    ["qa/upgrade/fixture-proposals.test.ts"]
+  ],
+  [
+    "fixture: no proposal is left",
+    "qa/upgrade/fixture-proposals.ts",
+    "    status: 'PROPOSED',\n    startsAt: '2027-04-20T16:00:00Z',",
+    "    status: 'CONFIRMED',\n    startsAt: '2027-04-20T16:00:00Z',",
+    ["qa/upgrade/fixture-proposals.test.ts"]
+  ]
+]

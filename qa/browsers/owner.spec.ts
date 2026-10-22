@@ -1,5 +1,6 @@
 import { expect, test } from './fixtures';
 import { solidPng } from './png';
+import { atRest } from './rest';
 
 /**
  * The owner, in every engine: every page of the board opens, and the one place where a file travels from the browser to the
@@ -24,6 +25,9 @@ test.describe('an owner', () => {
       await page.goto(path);
       await expect(page, path).toHaveTitle(title);
       await expect(page.getByRole('main').getByRole('heading', { level: 1 }), path).toBeVisible();
+      // Leaving a page whose links are still being prefetched is the test's own doing: WebKit words the interrupted fetch as an
+      // exception of the page it came from ("access control checks", "Load failed"). Each page is at rest before the next address.
+      await atRest(page);
     }
 
     // The menu lists them too, with the proposals waiting counted for those who validate.

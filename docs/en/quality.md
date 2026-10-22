@@ -45,8 +45,9 @@ whose cookie is still valid.
 - **Resilience.** The database stopped, frozen and killed in the middle of writes; the application stopped and killed in the
   middle of writes; a webhook that accepts the connection and never answers. The platform must say it cannot, quickly, come
   back by itself, keep people signed in, and leave **no write half done**.
-- **Updates.** A platform of **1.0.0, 1.1.0 or 1.2.0**, given the data of an old installation (roles, members, series of events
-  of every repetition, a cancelled and a moved date), is updated the way the [upgrading guide](upgrading.md) says. What the old
+- **Updates.** A platform of **1.0.0, 1.1.0, 1.2.0, 1.3.0 or 1.4.0**, given the data of an old installation (roles, members, series
+  of events of every repetition, a cancelled and a moved date; from 1.3.0, roles that propose, validate and manage the shared
+  calendar, series with advanced rules, proposals, a refusal with its comment), is updated the way the [upgrading guide](upgrading.md) says. What the old
   version said about its own data (every date of its calendar files, its roles, its rows) is what the new one is held to; then
   a backup, its restore, and the way back to the old version.
 - **Long time.** A year and a half of the reminder loop, played on a real database and compared with a calculation that does not
@@ -85,7 +86,7 @@ changes).
 
 Nothing is claimed beyond that. In particular, **the suites looked for and did not find**: a path where a profile could do what it
 may not (the access matrix and the attacks), a write left half done when the database or the application is killed, an e-mail address, a name, a picture or a calendar link left behind by the removal of an account, a session lost
-by an outage, a date, an hour, a right or a row changed by an update from 1.0.0, 1.1.0 or 1.2.0, a reminder sent twice or not
+by an outage, a date, an hour, a right or a row changed by an update from 1.0.0, 1.1.0, 1.2.0, 1.3.0 or 1.4.0, a reminder sent twice or not
 sent over a year and a half, and a dead link in the interface.
 
 ## What is not covered
@@ -99,7 +100,7 @@ Being clear about this matters as much as the rest.
   server, are not tested; a stand-in plays their part, including one that never answers.
 - **The mail server** is tested against a silent server and by unit tests, not by a platform that sends real mail.
 - **An update from a platform installed with the web installer** is not played (it needs a browser); the update suite starts
-  from the settings files of 1.0.0, 1.1.0 and 1.2.0, then imports them. An update that fails in the middle is covered by the
+  from the settings files of 1.0.0 to 1.4.0, then imports them. An update that fails in the middle is covered by the
   [safe update](deployment.md#automatic-copy-before-an-update) script, not by this suite.
 - **The load** is 20 people at once, which is a BDE, not a school's whole intranet.
 - **The visual and accessibility checks** run in Chromium (the keyboard and the journeys run in the three engines); a screen

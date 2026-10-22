@@ -196,4 +196,4 @@ export const COUNTED_TABLES = [
   'BdeCalendarFeed',
   'AuditLog',
 ] as const;
-export const OCCURRENCE_TABLES = ['EventOccurrence'] as const;
+export const OCCURRENCE_TABLES = ['EventOccurrence', 'EventOccurrenceAssignee'] as const;

@@ -6,6 +6,15 @@ All notable changes to this project are written here, in English. Format based o
 
 ## [Unreleased]
 
+### Added
+
+- **The update suite starts from 1.3.0 and 1.4.0 too**, with the data of a board that has used what they brought: roles that only propose, that
+  validate and that manage the shared calendar; series with advanced rules (every two weeks on Monday and Wednesday ten times across the change of
+  clock, the second Saturday, the last day of the month, every year); a series cut in two with a cancelled date and a moved one; a proposal, the
+  proposal of a series, a refusal with its comment, drafts, and a draft series with one date confirmed alone. Each is updated to the code of the
+  branch, held to what the old version said (every row, every line of its four calendar files, the rights), backed up, restored and taken back.
+  Development tooling only: nothing of the platform changes.
+
 ## [1.4.0] - 2026-10-22
 
 ### Changed
