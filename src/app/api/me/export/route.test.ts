@@ -8,6 +8,8 @@ vi.mock('@/lib/prisma', () => ({
     auditLog: { findMany: vi.fn() },
     event: { findMany: vi.fn() },
     eventAssignee: { findMany: vi.fn() },
+    eventOccurrenceAssignee: { findMany: vi.fn() },
+    eventCancellation: { findMany: vi.fn() },
   },
 }));
 
@@ -29,7 +31,28 @@ beforeEach(() => {
     calendarToken: SECRET,
   } as never);
   vi.mocked(prisma.auditLog.findMany).mockResolvedValue([]);
-  vi.mocked(prisma.event.findMany).mockResolvedValue([{ title: 'Tournoi' }] as never);
+  vi.mocked(prisma.event.findMany).mockImplementation((async (args: {
+    where: Record<string, unknown>;
+  }) =>
+    'refusedByLogin' in args.where
+      ? [
+          {
+            title: 'Soirée trop tardive',
+            refusedAt: new Date('2026-10-01T10:00:00Z'),
+            refusalComment: 'Pendant les examens.',
+          },
+        ]
+      : [{ title: 'Tournoi' }]) as never);
+  vi.mocked(prisma.eventOccurrenceAssignee.findMany).mockResolvedValue([
+    { occurrence: { occurrenceStart: new Date('2026-11-04T19:00:00Z'), event: { title: 'Jeux' } } },
+  ] as never);
+  vi.mocked(prisma.eventCancellation.findMany).mockResolvedValue([
+    {
+      occurrenceStart: new Date('2026-11-11T19:00:00Z'),
+      createdAt: new Date('2026-11-10T09:00:00Z'),
+      event: { title: 'Jeux' },
+    },
+  ] as never);
   vi.mocked(prisma.eventAssignee.findMany).mockResolvedValue([
     { event: { title: 'Soirée', startsAt: new Date('2026-10-10T18:00:00Z') } },
   ] as never);
@@ -63,5 +86,80 @@ describe('GET /api/me/export', () => {
     expect(text).not.toContain(SECRET);
     expect(body.user).not.toHaveProperty('calendarToken');
     expect(body.user).toMatchObject({ status: 'MEMBER', role: 'Membre' });
+  });
+
+  it('includes everything else the platform holds about the member: dates in charge of, dates cancelled, proposals refused', async () => {
+    const body = JSON.parse(await (await GET()).text());
+
+    expect(body.events.datesInChargeOf).toEqual([
+      { title: 'Jeux', occurrenceStart: '2026-11-04T19:00:00.000Z' },
+    ]);
+    expect(body.events.cancelledDates).toEqual([
+      {
+        title: 'Jeux',
+        occurrenceStart: '2026-11-11T19:00:00.000Z',
+        cancelledAt: '2026-11-10T09:00:00.000Z',
+      },
+    ]);
+    expect(body.events.refusedProposals).toEqual([
+      {
+        title: 'Soirée trop tardive',
+        refusedAt: '2026-10-01T10:00:00.000Z',
+        refusalComment: 'Pendant les examens.',
+      },
+    ]);
+  });
+
+  it('includes what was done to the account, without saying by whom (that is the data of another person)', async () => {
+    vi.mocked(prisma.auditLog.findMany).mockImplementation((async (args: {
+      where: Record<string, unknown>;
+    }) =>
+      args.where.targetType === 'User'
+        ? [
+            {
+              action: 'member.approve',
+              targetLabel: 'alice',
+              createdAt: new Date('2026-09-02T08:00:00Z'),
+            },
+          ]
+        : []) as never);
+    const body = JSON.parse(await (await GET()).text());
+
+    expect(body.auditLogAboutYou).toEqual([
+      { action: 'member.approve', targetLabel: 'alice', createdAt: '2026-09-02T08:00:00.000Z' },
+    ]);
+    expect(Object.keys(body.auditLogAboutYou[0])).not.toContain('actorLogin');
+  });
+
+  it('filters every query on the member, never on a value that could be missing (Prisma drops an undefined filter and exports everybody)', async () => {
+    await GET();
+
+    const filters = [
+      ...vi.mocked(prisma.auditLog.findMany).mock.calls.map(([args]) => args?.where),
+      ...vi.mocked(prisma.event.findMany).mock.calls.map(([args]) => args?.where),
+      ...vi.mocked(prisma.eventAssignee.findMany).mock.calls.map(([args]) => args?.where),
+      ...vi.mocked(prisma.eventOccurrenceAssignee.findMany).mock.calls.map(([args]) => args?.where),
+      ...vi.mocked(prisma.eventCancellation.findMany).mock.calls.map(([args]) => args?.where),
+    ];
+    expect(filters.length).toBeGreaterThanOrEqual(7);
+    for (const where of filters) {
+      expect(where).toBeDefined();
+      for (const value of Object.values(where ?? {})) expect(value).not.toBeUndefined();
+    }
+  });
+
+  it('exports nothing about anybody, rather than everybody, if the account has no login', async () => {
+    vi.mocked(prisma.user.findUniqueOrThrow).mockResolvedValue({
+      login: '',
+      status: 'MEMBER',
+      role: null,
+      calendarToken: null,
+    } as never);
+    const body = JSON.parse(await (await GET()).text());
+    expect(body.events.refusedProposals).toEqual([]);
+    const refusals = vi
+      .mocked(prisma.event.findMany)
+      .mock.calls.filter(([args]) => args?.where && 'refusedByLogin' in args.where);
+    expect(refusals).toEqual([]);
   });
 });
