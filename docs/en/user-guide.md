@@ -23,37 +23,39 @@ normal.
 
 ## Once your account is approved
 
-You land on the **dashboard**: your role and the next events.
+You land on the **dashboard**: the next event, the ones after it, shortcuts and your account.
 
 ![The dashboard](../images/en/dashboard.webp)
 
 ### Finding your way around
 
-The menu is a **sidebar on the left**. On a phone, it opens with the "☰" button at the top. It only shows what
-**your role** allows:
+On a computer or a tablet, the menu is a **column of icons on the left**, each with its name under it. On a phone it
+is a **bar at the bottom of the screen**: Home, Calendar, a round **Create** button, Members and **More** (the rest of the
+platform, your profile, the theme, the language and sign-out). It only shows what **your role** allows:
 
-| Entry         | Who sees it                                     |
-| ------------- | ----------------------------------------------- |
-| **Dashboard** | Everyone.                                       |
-| **Events**    | Those who can view events, if the module is on. |
-| **Members**   | Those who have the "Manage members" right.      |
-| **Roles**     | Those who have the "Manage roles" right.        |
-| **Audit log** | Owners.                                         |
-| **Settings**  | Owners.                                         |
+| Entry               | Who sees it                                     |
+| ------------------- | ----------------------------------------------- |
+| **Home**            | Everyone.                                       |
+| **Calendar**        | Those who can view events, if the module is on. |
+| **To validate**     | Those who can validate events (it counts them). |
+| **Members**         | Those who have the "Manage members" right.      |
+| **Roles**           | Those who have the "Manage roles" right.        |
+| **Log** (audit log) | Owners.                                         |
+| **Settings**        | Owners.                                         |
 
-At the bottom of the sidebar you find your name and role (one click opens **My profile** and sign out), then the
-language switcher and the theme button. The **Privacy** link is at the bottom of the page.
+At the foot of the column, your **round picture or initials** open the menu of your account: your name and role,
+**My profile**, the theme, the language and **Sign out**. On a phone the same picture is at the top right of the page,
+and everything is also behind **More**. The **Privacy** link is at the bottom of the page.
 
 ### Changing the language
 
-The interface exists in French and in English. Click the language icon at the bottom of the sidebar (and on public
+The interface exists in French and in English. Open the menu of your account (and use the language icon on public
 pages, such as the sign-in page), then choose **Français** or **English**. You stay on the same page, and your choice
 is remembered for your next visit.
 
 ### Changing the theme
 
-The sun/moon button at the bottom of the sidebar chooses between the **light** theme, the **dark** theme, or your
-device's setting.
+The menu of your account chooses between the **light** theme, the **dark** theme, or your device's setting.
 
 ### Confirmation dialogs
 
@@ -130,8 +132,8 @@ events, you create and edit them here (a proposal waits for a validator). See [E
 
 ## On a phone
 
-The platform works on a phone. The menu opens with the "☰" button. Events open as a list; the Calendar view shows a
-colored dot for each day.
+The platform works on a phone. The menu is the bar at the bottom of the screen. Events open as a list; the Calendar
+view shows a colored dot for each day.
 
 <img src="../images/en/mobile.webp" alt="The dashboard on a phone" width="260">
 
@@ -142,7 +144,7 @@ collected and why. Once signed in, you can **download a copy of all your data** 
 
 ## Signing out
 
-At the bottom of the sidebar, click your name, then **Sign out**.
+Open the menu of your account, then click **Sign out**.
 
 ## If something does not work
 

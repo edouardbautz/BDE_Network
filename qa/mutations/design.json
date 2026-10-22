@@ -1,0 +1,156 @@
+[
+  [
+    "accent: the ink only has to reach 3:1",
+    "src/lib/color.ts",
+    "if (contrast(ink, softOnWorst) >= 4.6) break;",
+    "if (contrast(ink, softOnWorst) >= 3) break;",
+    ["src/lib/color.test.ts"]
+  ],
+  [
+    "accent: white text is accepted at 3:1",
+    "src/lib/color.ts",
+    "if (contrast(WHITE, c) >= 4.5) on = '#FFFFFF';",
+    "if (contrast(WHITE, c) >= 3) on = '#FFFFFF';",
+    ["src/lib/color.test.ts"]
+  ],
+  [
+    "accent: no hairline for a fill close to the page",
+    "src/lib/color.ts",
+    "edge: contrast(fill, hexToRgb(BACKGROUND[theme])) < 1.4,",
+    "edge: false,",
+    ["src/lib/color.test.ts"]
+  ],
+  [
+    "accent: a soft tint is not stronger under the pointer",
+    "src/lib/color.ts",
+    "softHover: rgba(Math.round((alpha + 0.06) * 100) / 100),",
+    "softHover: rgba(alpha),",
+    ["src/lib/color.test.ts"]
+  ],
+  [
+    "tokens: the dark danger fill is the specification's, under AA",
+    "src/app/globals.css",
+    "--danger-fill: #d34247;",
+    "--danger-fill: #e5484d;",
+    ["src/lib/design-tokens.test.ts"]
+  ],
+  [
+    "tokens: the focus ring is the fill of the accent, not its ink",
+    "src/app/globals.css",
+    "outline: 3px solid var(--accent-ink);",
+    "outline: 3px solid var(--accent-fill);",
+    ["src/lib/design-tokens.test.ts"]
+  ],
+  [
+    "cn: a size token is taken for a colour",
+    "src/lib/utils.ts",
+    "            'caption',\n            'micro',\n",
+    "            'caption',\n",
+    ["src/lib/utils.test.ts"]
+  ],
+  [
+    "guard: a link that switches its focus ring off",
+    "src/components/layout/footer.tsx",
+    "underline underline-offset-4 focus-visible:outline-offset-2",
+    "underline underline-offset-4 outline-none focus-visible:outline-offset-2",
+    ["src/lib/design-tokens.test.ts"]
+  ],
+  [
+    "guard: a colour written in a component",
+    "src/components/layout/footer.tsx",
+    "hover:text-ink",
+    "hover:text-[#123456]",
+    ["src/lib/design-tokens.test.ts"]
+  ],
+  [
+    "button: not 44 px high on a phone",
+    "src/components/ui/button.tsx",
+    "default: \"h-10 px-4.5 max-sm:h-11\",",
+    "default: \"h-10 px-4.5\",",
+    ["src/components/ui/primitives.test.tsx"]
+  ],
+  [
+    "input: the read-only look reaches every select",
+    "src/components/ui/input.tsx",
+    "[&:is(input,textarea):read-only]:bg-transparent",
+    "read-only:bg-transparent",
+    ["src/components/ui/primitives.test.tsx"]
+  ],
+  [
+    "alert: every alert is announced at once",
+    "src/components/ui/alert.tsx",
+    "role={role ?? (variant === \"destructive\" ? \"alert\" : \"status\")}",
+    "role={role ?? \"alert\"}",
+    ["src/components/ui/primitives.test.tsx"]
+  ],
+  [
+    "table: a phone scrolls sideways",
+    "src/components/ui/table.tsx",
+    "\"w-full caption-bottom border-separate border-spacing-0 text-body max-sm:block\",",
+    "\"w-full caption-bottom border-separate border-spacing-0 text-body\",",
+    ["src/components/ui/primitives.test.tsx"]
+  ],
+  [
+    "default accent: the old teal",
+    "src/config/schema.ts",
+    "export const DEFAULT_ACCENT = '#2F5BEA';",
+    "export const DEFAULT_ACCENT = '#0f766e';",
+    ["src/config/schema.test.ts"]
+  ],
+  [
+    "font: Geist comes back",
+    "src/app/[locale]/layout.tsx",
+    "import { Manrope } from 'next/font/google';",
+    "import { Manrope, Geist } from 'next/font/google';\nvoid Geist;",
+    ["src/lib/self-hosted-assets.test.ts"]
+  ],
+  [
+    "frame: no name under an icon of the rail",
+    "src/components/layout/app-shell.tsx",
+    "              {item.shortLabel}\n            </span>\n            {/* After the name",
+    "            </span>\n            {/* After the name",
+    ["src/components/layout/app-shell.test.tsx"]
+  ],
+  [
+    "menu: choosing a theme leaves the menu open",
+    "src/components/layout/account-preferences.tsx",
+    "<DropdownMenuRadioItem key={theme} value={theme} closeOnClick>",
+    "<DropdownMenuRadioItem key={theme} value={theme}>",
+    ["src/components/layout/account-preferences.test.tsx"]
+  ],
+  [
+    "skeleton: the event page loads with the head of the old interface",
+    "src/app/[locale]/(app)/events/[id]/loading.tsx",
+    "<PageHeaderSkeleton />",
+    "<div />",
+    ["src/lib/loading-skeletons.test.ts"]
+  ],
+  [
+    "accent: a white veil under white text",
+    "src/lib/color.ts",
+    "'rgba(0, 0, 0, 0.18)'",
+    "'rgba(255, 255, 255, 0.22)'",
+    ["src/lib/color.test.ts"]
+  ],
+  [
+    "frame: the logo is named by an aria-label again",
+    "src/components/layout/app-shell.tsx",
+    "      href=\"/dashboard\"\n",
+    "      href=\"/dashboard\"\n      aria-label={bdeName}\n",
+    ["src/components/layout/app-shell.test.tsx"]
+  ],
+  [
+    "frame: the account button is named by an aria-label again",
+    "src/components/layout/user-menu.tsx",
+    "      <DropdownMenuTrigger\n",
+    "      <DropdownMenuTrigger\n        aria-label={name}\n",
+    ["src/components/layout/user-menu.test.tsx"]
+  ],
+  [
+    "skeleton: the members page loads shorter than a screen",
+    "src/app/[locale]/(app)/members/loading.tsx",
+    "<div className=\"min-h-dvh\">",
+    "<div>",
+    ["src/lib/loading-skeletons.test.ts"]
+  ]
+]

@@ -1,5 +1,6 @@
 'use client';
 
+import { DEFAULT_ACCENT } from '@/config/schema';
 import { useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
@@ -8,10 +9,12 @@ import { useFrameMode, type StepApi } from './api';
 import type { DraftView } from '@/lib/setup/draft';
 import { NativeSelect } from '@/components/events/field-styles';
 import { Field, fieldError, useFailureText } from './fields';
+import { AccentPreview } from './accent-preview';
 import { StepFrame, type StepProps } from './step-frame';
 
 /** A few colors to start from; the picker and the text field accept any. */
-const PRESETS = ['#0f766e', '#2563eb', '#7c3aed', '#db2777', '#ea580c', '#16a34a'];
+// The accents of the specification's checklist first, then two more: choices offered to a person, not styling.
+const PRESETS = [DEFAULT_ACCENT, '#E4572E', '#1E9E6A', '#F0B429', '#7c3aed', '#db2777'];
 
 export function StepIdentity({
   api,
@@ -86,9 +89,9 @@ export function StepIdentity({
           <input
             type="color"
             aria-label={t('accentLabel')}
-            value={colorValid ? color : '#0f766e'}
+            value={colorValid ? color : DEFAULT_ACCENT}
             onChange={(event) => setColor(event.target.value)}
-            className="border-input size-8 shrink-0 cursor-pointer rounded-lg border bg-transparent p-0.5"
+            className="size-9 shrink-0 cursor-pointer rounded-pill bg-surface-2 p-1"
           />
           <Input
             id="setup-color"
@@ -105,26 +108,15 @@ export function StepIdentity({
                 key={preset}
                 type="button"
                 aria-label={preset}
-                aria-pressed={color.toLowerCase() === preset}
+                aria-pressed={color.toLowerCase() === preset.toLowerCase()}
                 onClick={() => setColor(preset)}
                 style={{ backgroundColor: preset }}
-                className="focus-visible:ring-ring/50 size-6 rounded-full border border-black/10 outline-none focus-visible:ring-3 aria-pressed:ring-2 aria-pressed:ring-offset-2 aria-pressed:ring-offset-card aria-pressed:ring-foreground"
+                className="size-7 rounded-pill border border-black/10 aria-pressed:ring-2 aria-pressed:ring-offset-2 aria-pressed:ring-offset-surface aria-pressed:ring-ink"
               />
             ))}
           </div>
         </div>
-        {colorValid && (
-          <p className="text-muted-foreground flex items-center gap-2 text-xs">
-            {t('preview')}
-            <span
-              className="inline-block rounded-lg px-3 py-1 text-sm font-medium text-white"
-              style={{ backgroundColor: color }}
-              aria-hidden="true"
-            >
-              {name.trim() || t('namePlaceholder')}
-            </span>
-          </p>
-        )}
+        {colorValid && <AccentPreview color={color} name={name} />}
       </Field>
 
       <Field

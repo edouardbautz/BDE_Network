@@ -62,14 +62,16 @@ describe('ConfirmDialog — what it shows', () => {
 
     expect(screen.getByRole('button', { name: 'confirmDialog.cancel' })).toBeTruthy();
     const action = screen.getByRole('button', { name: 'Retirer' });
-    expect(action.className).toContain('text-destructive');
+    // the solid danger of a confirmation (docs/design.md, "Buttons"), not the soft one of a trigger
+    expect(action.className).toContain('bg-danger-fill');
+    expect(action.className).toContain('text-on-danger');
   });
 
   it('uses the primary style for a change that can be undone', async () => {
     renderDialog({ tone: 'default' });
     await openDialog();
 
-    expect(screen.getByRole('button', { name: 'Retirer' }).className).toContain('bg-primary');
+    expect(screen.getByRole('button', { name: 'Retirer' }).className).toContain('bg-accent-fill');
   });
 });
 

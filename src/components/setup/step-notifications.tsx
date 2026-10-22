@@ -93,7 +93,7 @@ export function StepNotifications({
         {MODES.map((value) => (
           <label
             key={value}
-            className="border-border has-checked:border-foreground has-checked:bg-muted/50 has-focus-visible:ring-ring/50 flex cursor-pointer items-start gap-3 rounded-lg border p-3 has-focus-visible:ring-3"
+            className="bg-surface-2 has-checked:bg-accent-soft has-focus-visible:outline-3 has-focus-visible:outline-solid has-focus-visible:outline-accent-ink has-focus-visible:outline-offset-2 flex cursor-pointer items-start gap-3 rounded-lg p-3.5 transition-colors duration-(--dur-fast)"
           >
             <input
               type="radio"
@@ -107,8 +107,8 @@ export function StepNotifications({
               className="mt-1 size-4"
             />
             <span>
-              <span className="block text-sm font-medium">{t(value)}</span>
-              <span className="text-muted-foreground block text-sm">{t(`${value}Body`)}</span>
+              <span className="block text-body-strong">{t(value)}</span>
+              <span className="text-muted-foreground block text-body">{t(`${value}Body`)}</span>
             </span>
           </label>
         ))}
@@ -128,7 +128,7 @@ export function StepNotifications({
             onChange={(event) => setDiscord(event.target.value)}
             autoComplete="off"
             spellCheck={false}
-            className="font-mono text-xs"
+            className="font-mono text-small"
             aria-invalid={failure?.field === 'discordWebhook'}
           />
         </Field>
@@ -148,7 +148,7 @@ export function StepNotifications({
             onChange={(event) => setSlack(event.target.value)}
             autoComplete="off"
             spellCheck={false}
-            className="font-mono text-xs"
+            className="font-mono text-small"
             aria-invalid={failure?.field === 'slackWebhook'}
           />
         </Field>
@@ -215,9 +215,9 @@ export function StepNotifications({
       )}
 
       {mode !== 'none' && (
-        <div className="border-border flex flex-col gap-3 rounded-lg border p-3">
-          <p className="text-sm font-medium">{t('testTitle')}</p>
-          <p className="text-muted-foreground text-xs">{t('testHelp')}</p>
+        <div className="bg-surface-2 flex flex-col gap-3 rounded-lg p-3.5">
+          <p className="text-body-strong">{t('testTitle')}</p>
+          <p className="text-muted-foreground text-small">{t('testHelp')}</p>
           {mode === 'email' && (
             <Field id="setup-test-to" label={t('testTo')} error={fieldText('testTo')}>
               <Input
@@ -240,12 +240,12 @@ export function StepNotifications({
             {testing ? t('testing') : t('testButton')}
           </Button>
           {tested === 'ok' && (
-            <p role="status" className="text-sm">
+            <p role="status" className="text-body">
               {t('testOk')}
             </p>
           )}
           {tested && tested !== 'ok' && !tested.field && (
-            <p role="alert" className="text-destructive text-sm">
+            <p role="alert" className="text-destructive text-body">
               {tested.code === 'testFailed'
                 ? t('testFailed', { detail: tested.detail ?? '' })
                 : text(tested)}

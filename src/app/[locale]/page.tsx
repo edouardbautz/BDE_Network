@@ -52,7 +52,7 @@ export default async function LoginPage({ params }: { params: Promise<{ locale: 
             height={40}
             className="mb-2 object-contain"
           />
-          <CardTitle role="heading" aria-level={1} className="text-xl font-semibold tracking-tight">
+          <CardTitle role="heading" aria-level={1} className="text-title-2">
             {config.bde.name}
           </CardTitle>
           <CardDescription>{t('loginSubtitle')}</CardDescription>
@@ -61,14 +61,14 @@ export default async function LoginPage({ params }: { params: Promise<{ locale: 
           {oauthRejected && (
             <div
               role="alert"
-              className="bg-destructive/10 flex flex-col gap-2 rounded-lg p-3 text-left text-sm"
+              className="bg-danger-soft flex flex-col gap-2 rounded-lg p-3 text-left text-body"
             >
-              <p className="flex items-center gap-2 font-medium">
+              <p className="flex items-center gap-2 font-semibold">
                 <TriangleAlert className="text-destructive size-4 shrink-0" aria-hidden="true" />
                 {t('oauthRejected.title')}
               </p>
               <p>{t('oauthRejected.description')}</p>
-              <p className="text-muted-foreground text-xs">{t('oauthRejected.operator')}</p>
+              <p className="text-muted-foreground text-small">{t('oauthRejected.operator')}</p>
             </div>
           )}
           <form
@@ -77,7 +77,7 @@ export default async function LoginPage({ params }: { params: Promise<{ locale: 
               await signIn('42-school');
             }}
           >
-            <Button type="submit" className="w-full" disabled={oauthRejected}>
+            <Button type="submit" size="lg" className="w-full" disabled={oauthRejected}>
               {t('loginButton')}
             </Button>
           </form>
@@ -85,7 +85,7 @@ export default async function LoginPage({ params }: { params: Promise<{ locale: 
       </Card>
       <Link
         href="/privacy"
-        className="text-muted-foreground hover:text-foreground rounded-sm text-sm underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+        className="text-muted-foreground hover:text-foreground rounded-sm text-body underline underline-offset-4"
       >
         {tNav('privacy')}
       </Link>

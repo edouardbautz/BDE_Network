@@ -73,3 +73,6 @@ next-env.d.ts
 /.audit/
 /mutation-report/
 /.stryker-tmp/
+
+# design reference given by the maintainer (spec, captures): local only
+/design-ref/

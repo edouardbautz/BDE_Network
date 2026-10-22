@@ -65,7 +65,7 @@ export function StepFortyTwo({
 
   const instructions = (
     <>
-      <ol className="flex list-decimal flex-col gap-1 pl-5 text-sm">
+      <ol className="flex list-decimal flex-col gap-1 pl-5 text-body">
         <li>{t('step1')}</li>
         <li>{t('step2')}</li>
         <li>{t('step3')}</li>
@@ -100,12 +100,12 @@ export function StepFortyTwo({
       {mode === 'section' ? (
         // On the settings page the guide is there if needed, not in the way of a form the owner knows.
         <details className="bg-muted/50 rounded-lg p-3">
-          <summary className="cursor-pointer text-sm font-medium">{t('stepsTitle')}</summary>
+          <summary className="cursor-pointer text-body-strong">{t('stepsTitle')}</summary>
           <div className="mt-3 flex flex-col gap-3">{instructions}</div>
         </details>
       ) : (
         <div className="bg-muted/50 flex flex-col gap-3 rounded-lg p-3">
-          <p className="text-sm font-medium">{t('stepsTitle')}</p>
+          <p className="text-body-strong">{t('stepsTitle')}</p>
           {instructions}
         </div>
       )}
@@ -125,7 +125,7 @@ export function StepFortyTwo({
           onChange={(event) => setClientId(event.target.value)}
           autoComplete="off"
           spellCheck={false}
-          className="font-mono text-xs"
+          className="font-mono text-small"
           aria-invalid={failure?.field === 'clientId'}
         />
       </Field>
@@ -143,22 +143,25 @@ export function StepFortyTwo({
           onChange={(event) => setClientSecret(event.target.value)}
           autoComplete="off"
           spellCheck={false}
-          className="font-mono text-xs"
+          className="font-mono text-small"
           aria-invalid={failure?.field === 'clientSecret'}
           aria-describedby={view.hasClientSecret ? 'setup-secret-hint' : undefined}
         />
       </Field>
 
       {view.credentialsVerified && !failure && (
-        <p className="text-muted-foreground flex items-center gap-2 text-sm" role="status">
+        <p className="text-muted-foreground flex items-center gap-2 text-body" role="status">
           <CheckCircle2 className="size-4 text-green-600" aria-hidden="true" />
           {t('verified')}
         </p>
       )}
 
       {unreachable && failure && (
-        <div role="alert" className="bg-destructive/10 flex flex-col gap-2 rounded-lg p-3 text-sm">
-          <p className="font-medium">{t('unreachableTitle')}</p>
+        <div
+          role="alert"
+          className="bg-destructive/10 flex flex-col gap-2 rounded-lg p-3 text-body"
+        >
+          <p className="font-semibold">{t('unreachableTitle')}</p>
           <p>{text(failure)}</p>
           <p>{t('unreachableBody')}</p>
           <Button

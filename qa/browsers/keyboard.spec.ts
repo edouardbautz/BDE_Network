@@ -117,40 +117,41 @@ test.describe('with the keyboard alone', () => {
     });
   }
 
-  test('the language and theme menus open with Enter, move with the arrows, choose, and close with Escape', async ({
+  test('the menu of the account opens with Enter, moves with the arrows, chooses the theme and the language, and closes with Escape', async ({
     as,
   }) => {
     const page = await as('member');
     await page.goto('/en/dashboard');
 
-    const theme = page.getByRole('button', { name: 'Light / Dark' });
-    await theme.focus();
+    const account = page.getByRole('button', { name: /QA member/ });
+    await account.focus();
     await page.keyboard.press('Enter');
-    await expect(page.getByRole('menuitem', { name: 'Dark' })).toBeVisible();
+    await expect(page.getByRole('menuitemradio', { name: 'Dark' })).toBeVisible();
     await page.keyboard.press('Escape');
-    await expect(page.getByRole('menuitem', { name: 'Dark' })).toBeHidden();
-    await focused(theme);
+    await expect(page.getByRole('menuitemradio', { name: 'Dark' })).toBeHidden();
+    await focused(account);
 
-    await theme.press('Enter');
-    await page.keyboard.press('ArrowDown');
+    // The arrows move through the entries (the profile, then the themes…); Enter chooses one of them.
+    await account.press('Enter');
+    const dark = page.getByRole('menuitemradio', { name: 'Dark' });
+    await dark.focus();
     await page.keyboard.press('Enter');
-    await expect(page.getByRole('menuitem', { name: 'Dark' })).toBeHidden();
+    await expect(dark).toBeHidden();
+    await expect(page.locator('html')).toHaveClass(/dark/);
 
-    const language = page.getByRole('button', { name: 'Language' });
-    await language.focus();
+    await account.press('Enter');
+    const french = page.getByRole('menuitemradio', { name: 'Français' });
+    await french.focus();
     await page.keyboard.press('Enter');
-    await expect(page.getByRole('menuitem', { name: 'Français' })).toBeVisible();
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Enter');
-    await expect(page).toHaveURL(/\/(fr|en)\/dashboard/);
+    await expect(page).toHaveURL(/\/fr\/dashboard/);
   });
 
-  test("the phone's drawer opens, keeps the focus inside, closes with Escape, and gives the focus back", async ({
+  test("the phone's sheet opens, keeps the focus inside, closes with Escape, and gives the focus back", async ({
     as,
   }) => {
     const page = await as('member', { viewport: { width: 390, height: 800 } });
     await page.goto('/en/dashboard');
-    const open = page.getByRole('button', { name: 'Open navigation menu' });
+    const open = page.getByRole('button', { name: 'More' });
     await open.focus();
     await page.keyboard.press('Enter');
     const drawer = page.getByRole('dialog');

@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/layout/page-header';
 import { ScrollableTable } from '@/components/scrollable-table';
 import { CircleCheck, Plus } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
@@ -68,88 +69,101 @@ export default async function RolesPage({
   );
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{t('page.title')}</h1>
-          <p className="text-muted-foreground max-w-2xl text-sm">{t('page.description')}</p>
-        </div>
-        <Button render={<Link href="/roles/new" />}>
-          <Plus data-icon="inline-start" />
-          {t('page.create')}
-        </Button>
+    <>
+      <PageHeader
+        title={t('page.title')}
+        actions={
+          <Button size="lg" render={<Link href="/roles/new" />}>
+            <Plus data-icon="inline-start" />
+            {t('page.create')}
+          </Button>
+        }
+      />
+      <p className="text-body text-muted-foreground -mt-2 mb-4 max-w-[68ch] sm:-mt-3 sm:mb-5">
+        {t('page.description')}
+      </p>
+      <div className="flex flex-col gap-3 sm:gap-4">
+        {saved && (
+          <Alert>
+            <CircleCheck />
+            <AlertDescription>{t(`saved.${saved}`)}</AlertDescription>
+          </Alert>
+        )}
+
+        <Card>
+          <CardContent>
+            <ScrollableTable label={t('page.title')}>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('list.columns.name')}</TableHead>
+                    <TableHead>{t('list.columns.rights')}</TableHead>
+                    <TableHead>{t('list.columns.members')}</TableHead>
+                    <TableHead className="text-right">{t('list.columns.actions')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {roles.map((role) => {
+                    const refusal = ruleManageRole(actor, roleFacts(role, modules));
+                    const shown = role.permissions
+                      .filter((key) => labels.has(key))
+                      .map((key) => labels.get(key));
+                    return (
+                      <TableRow key={role.id}>
+                        <TableCell className="whitespace-normal">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-semibold">{role.name}</span>
+                            {role.isDefault && (
+                              <Badge variant="secondary">{t('list.default')}</Badge>
+                            )}
+                          </div>
+                          {role.description && (
+                            <p className="text-muted-foreground mt-0.5 text-small">
+                              {role.description}
+                            </p>
+                          )}
+                        </TableCell>
+                        <TableCell
+                          className="text-muted-foreground max-w-xs whitespace-normal"
+                          data-label={t('list.columns.rights')}
+                        >
+                          {role.allPermissions ? (
+                            <Badge>{t('list.allPermissions')}</Badge>
+                          ) : shown.length > 0 ? (
+                            shown.join(', ')
+                          ) : (
+                            t('list.noRights')
+                          )}
+                        </TableCell>
+                        <TableCell
+                          className="text-muted-foreground"
+                          data-label={t('list.columns.members')}
+                        >
+                          {t('list.membersCount', { count: role._count.users })}
+                        </TableCell>
+                        <TableCell className="text-right whitespace-normal max-sm:text-left">
+                          <RoleActions
+                            roleId={role.id}
+                            roleName={role.name}
+                            isDefault={role.isDefault}
+                            memberCount={role._count.users}
+                            manageable={refusal === null}
+                            lockedReason={
+                              refusal === 'ownRole' ? 'own' : refusal === null ? null : 'above'
+                            }
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </ScrollableTable>
+          </CardContent>
+        </Card>
+
+        <p className="text-small text-muted-foreground">{t('list.defaultNote')}</p>
       </div>
-
-      {saved && (
-        <Alert>
-          <CircleCheck />
-          <AlertDescription>{t(`saved.${saved}`)}</AlertDescription>
-        </Alert>
-      )}
-
-      <Card>
-        <CardContent>
-          <ScrollableTable label={t('page.title')}>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('list.columns.name')}</TableHead>
-                  <TableHead>{t('list.columns.rights')}</TableHead>
-                  <TableHead>{t('list.columns.members')}</TableHead>
-                  <TableHead className="text-right">{t('list.columns.actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {roles.map((role) => {
-                  const refusal = ruleManageRole(actor, roleFacts(role, modules));
-                  const shown = role.permissions
-                    .filter((key) => labels.has(key))
-                    .map((key) => labels.get(key));
-                  return (
-                    <TableRow key={role.id}>
-                      <TableCell className="whitespace-normal">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-medium">{role.name}</span>
-                          {role.isDefault && <Badge variant="secondary">{t('list.default')}</Badge>}
-                        </div>
-                        {role.description && (
-                          <p className="text-muted-foreground mt-0.5 text-xs">{role.description}</p>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground max-w-xs whitespace-normal">
-                        {role.allPermissions ? (
-                          <Badge>{t('list.allPermissions')}</Badge>
-                        ) : shown.length > 0 ? (
-                          shown.join(', ')
-                        ) : (
-                          t('list.noRights')
-                        )}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {t('list.membersCount', { count: role._count.users })}
-                      </TableCell>
-                      <TableCell className="text-right whitespace-normal">
-                        <RoleActions
-                          roleId={role.id}
-                          roleName={role.name}
-                          isDefault={role.isDefault}
-                          memberCount={role._count.users}
-                          manageable={refusal === null}
-                          lockedReason={
-                            refusal === 'ownRole' ? 'own' : refusal === null ? null : 'above'
-                          }
-                        />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </ScrollableTable>
-        </CardContent>
-      </Card>
-
-      <p className="text-muted-foreground text-xs">{t('list.defaultNote')}</p>
-    </div>
+    </>
   );
 }

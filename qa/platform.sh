@@ -13,6 +13,7 @@
 # `--now` sets the clock of the application to the moment of the dataset (qa/fake-clock.cjs, which runs from there at the normal
 # speed): the dates to come, the day marked as today and the reminders are then the same whenever the platform is made.
 #
+# `QA_ACCENT=#E4572E` in the environment gives the platform that accent colour (default #0f766e): the pictures of a change of look are taken with several.
 # `--webhook` sends the notifications of the events to that address as Discord messages, so that a suite can make the other
 # side slow, deaf or absent (qa/resilience): the platform must not notice, except in its logs. The address must be https (the
 # platform refuses any other) and the suite's stand-in has a certificate nobody signed, so the application of this platform
@@ -75,7 +76,7 @@ bde:
   campus: 'Paris'
   timezone: 'Europe/Paris'
   defaultLocale: 'fr'
-  accentColor: '#0f766e'
+  accentColor: '${QA_ACCENT:-#0f766e}'
   logoPath: '/logo.svg'
 auth:
   owners:

@@ -11,6 +11,7 @@ import { reviewActorOf, statusChoices } from '@/lib/events/review';
 import { cancelHrefFor, defaultEventTimes, requestedEventDay } from '@/lib/events/defaults';
 import type { RawSearchParams } from '@/lib/events/search-params';
 import { createEvent } from '../actions';
+import { PageHeader } from '@/components/layout/page-header';
 import { pageTitle } from '@/lib/page-title';
 
 export const dynamic = 'force-dynamic';
@@ -44,8 +45,8 @@ export default async function NewEventPage({
   const status = access.canValidate ? 'DRAFT' : 'PROPOSED';
 
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold tracking-tight">{t('form.createTitle')}</h1>
+    <>
+      <PageHeader title={t('form.createTitle')} />
       <EventForm
         action={createEvent}
         initial={{
@@ -66,6 +67,6 @@ export default async function NewEventPage({
         cancelHref={cancelHrefFor(day)}
         isEditing={false}
       />
-    </div>
+    </>
   );
 }

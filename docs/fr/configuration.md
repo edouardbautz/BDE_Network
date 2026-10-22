@@ -180,7 +180,7 @@ exemple le login `votre-login-42` resté dans `auth.owners`, ou une adresse en `
 | `timezone`      | texte                | Fuseau horaire IANA, par exemple `"Europe/Paris"`.                                                                                        |
 | `defaultLocale` | `"fr"` ou `"en"`     | Langue des **messages envoyés** (e-mail, Discord, Slack). L'interface a sa propre langue : chacun la choisit avec le sélecteur de langue. |
 | `contactEmail`  | e-mail, facultatif   | Adresse affichée sur la page de confidentialité. Sans elle, la page renvoie vers un propriétaire ou un administrateur.                    |
-| `accentColor`   | couleur hexadécimale | Couleur principale de l'interface, par exemple `"#0f766e"`.                                                                               |
+| `accentColor`   | couleur hexadécimale | Couleur principale de l'interface, par exemple `"#2F5BEA"` (le défaut d'une nouvelle installation).                                       |
 | `logoPath`      | chemin               | Le logo. `"/logo.svg"` (par défaut) ou `"/api/logo?v=…"` pour un logo envoyé depuis Paramètres.                                           |
 
 ### `auth`

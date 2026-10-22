@@ -203,7 +203,7 @@ export function EventForm({
   const fieldError = (name: EventFormField) => {
     const message = error(name);
     return message ? (
-      <p id={`${name}-error`} className="text-destructive text-xs">
+      <p id={`${name}-error`} className="text-destructive text-small">
         {message}
       </p>
     ) : null;
@@ -232,7 +232,7 @@ export function EventForm({
         </Alert>
       )}
 
-      <p className="text-muted-foreground text-xs">{t('form.requiredLegend')}</p>
+      <p className="text-muted-foreground text-small">{t('form.requiredLegend')}</p>
 
       <Card>
         <CardContent className="grid gap-5 sm:grid-cols-2">
@@ -283,7 +283,7 @@ export function EventForm({
                 </option>
               ))}
             </NativeSelect>
-            <p className="text-muted-foreground text-xs">
+            <p className="text-muted-foreground text-small">
               {statusChoices.includes('CONFIRMED')
                 ? t('form.statusHelp')
                 : t('form.statusHelpProposer')}
@@ -320,7 +320,7 @@ export function EventForm({
             />
             {fieldError('endsAt')}
           </div>
-          <p className="text-muted-foreground text-xs sm:col-span-2">
+          <p className="text-muted-foreground text-small sm:col-span-2">
             {t('form.timeZoneHelp', { timeZone })}
           </p>
 
@@ -336,7 +336,7 @@ export function EventForm({
             error={error}
           />
           {isEditing && values.repeat !== 'NONE' && (
-            <p className="text-muted-foreground text-xs sm:col-span-2">{t('form.seriesHelp')}</p>
+            <p className="text-muted-foreground text-small sm:col-span-2">{t('form.seriesHelp')}</p>
           )}
 
           <div className="flex flex-col gap-1.5 sm:col-span-2">
@@ -368,24 +368,26 @@ export function EventForm({
           </div>
 
           <fieldset className="flex flex-col gap-2 sm:col-span-2">
-            <legend className="mb-1.5 text-sm font-medium">
+            <legend className="mb-1.5 text-body-strong">
               {t('form.inCharge')}{' '}
               <span className="text-muted-foreground font-normal">({t('form.optional')})</span>
             </legend>
-            <p className="text-muted-foreground text-xs">{t('form.inChargeHelp')}</p>
-            <ul className="grid max-h-56 gap-1 overflow-y-auto rounded-lg border p-2 sm:grid-cols-2">
+            <p className="text-muted-foreground text-small">{t('form.inChargeHelp')}</p>
+            <ul className="grid max-h-56 gap-1 overflow-y-auto rounded-lg bg-surface-2 p-2 sm:grid-cols-2">
               {members.map((member) => (
                 <li key={member.login}>
-                  <label className="hover:bg-muted flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm">
+                  <label className="hover:bg-surface-3 flex min-h-10 cursor-pointer items-center gap-3 rounded-sm px-2 py-1.5 text-body">
                     <input
                       type="checkbox"
                       name="assignees"
                       value={member.login}
                       defaultChecked={values.assigneeLogins.includes(member.login)}
-                      className="accent-primary size-4"
+                      className="accent-accent-fill size-5"
                     />
                     <span className="truncate">{member.name}</span>
-                    <span className="text-muted-foreground truncate text-xs">{member.login}</span>
+                    <span className="text-muted-foreground truncate text-small">
+                      {member.login}
+                    </span>
                   </label>
                 </li>
               ))}

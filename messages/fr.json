@@ -2,7 +2,8 @@
   "theme": {
     "light": "Clair",
     "dark": "Sombre",
-    "system": "Système"
+    "system": "Système",
+    "label": "Thème"
   },
   "language": {
     "label": "Langue"
@@ -162,7 +163,18 @@
     "skipToContent": "Aller au contenu",
     "settings": "Paramètres",
     "eventsReview": "À valider",
-    "eventsReviewCount": "{count, plural, one {# proposition à valider} other {# propositions à valider}}"
+    "eventsReviewCount": "{count, plural, one {# proposition à valider} other {# propositions à valider}}",
+    "more": "Plus",
+    "create": "Créer",
+    "rail": {
+      "dashboard": "Accueil",
+      "events": "Agenda",
+      "eventsReview": "À valider",
+      "members": "Membres",
+      "roles": "Rôles",
+      "auditLog": "Journal",
+      "settings": "Réglages"
+    }
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -171,6 +183,20 @@
       "title": "Aucun module activé",
       "description": "Le module Événements (calendrier du bureau, rappels, abonnement à l'agenda) est disponible mais pas activé. Un propriétaire peut l'activer dans Paramètres, section Modules.",
       "cta": "Gérer les membres"
+    },
+    "greeting": "Bonjour {name}",
+    "nextEvent": {
+      "today": "Aujourd'hui",
+      "tomorrow": "Demain",
+      "inDays": "Dans {count} jours",
+      "label": "Prochain événement",
+      "view": "Voir l'événement"
+    },
+    "shortcuts": {
+      "title": "Raccourcis"
+    },
+    "account": {
+      "profile": "Mon profil"
     }
   },
   "members": {
@@ -275,7 +301,8 @@
       "action": "Action",
       "target": "Cible"
     },
-    "empty": "Aucun événement enregistré."
+    "empty": "Aucun événement enregistré.",
+    "emptyHint": "Les actions des propriétaires et des membres autorisés apparaîtront ici."
   },
   "privacy": {
     "title": "Politique de confidentialité",
@@ -768,7 +795,8 @@
   },
   "confirmDialog": {
     "cancel": "Annuler",
-    "working": "En cours…"
+    "working": "En cours…",
+    "close": "Fermer"
   },
   "metadata": {
     "description": "Plateforme de gestion du {name}"
@@ -823,7 +851,11 @@
       "en": "English",
       "contactLabel": "Adresse de contact (facultatif)",
       "contactHelp": "Affichée sur la page de confidentialité : c'est là que les membres écrivent à propos de leurs données.",
-      "contactPlaceholder": "bureau@mon-ecole.fr"
+      "contactPlaceholder": "bureau@mon-ecole.fr",
+      "previewButton": "Bouton",
+      "previewLink": "Lien",
+      "previewCard": "Prochain événement",
+      "adjusted": "Votre couleur a été légèrement ajustée pour rester lisible sur les boutons."
     },
     "address": {
       "title": "Adresse de la plateforme",
@@ -978,7 +1010,7 @@
       "incomplete": "Il manque une réponse : revenez aux étapes précédentes.",
       "unknown": "Une erreur est survenue. Réessayez.",
       "name": "Le nom doit faire entre 1 et 60 caractères.",
-      "color": "Couleur invalide : écrivez-la comme #0f766e.",
+      "color": "Couleur invalide : écrivez-la comme #2F5BEA.",
       "timezone": "Fuseau horaire inconnu (exemple : Europe/Paris).",
       "address": "Adresse invalide. Exemples : https://bde.mon-ecole.fr ou http://localhost:3000.",
       "addressUnspecified": "0.0.0.0 n'est pas une adresse de site : c'est l'adresse sur laquelle le serveur écoute. Écrivez http://localhost:3000 pour un essai sur cet ordinateur, ou l'adresse de votre site (https://bde.mon-ecole.fr).",

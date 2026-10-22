@@ -175,7 +175,7 @@ start**: a missing or malformed value stops it from starting, with a message (in
 | `timezone`      | text              | An IANA time zone, for example `"Europe/Paris"`.                                                                                             |
 | `defaultLocale` | `"fr"` or `"en"`  | Language of the **messages sent** (email, Discord, Slack). The interface has its own language: everyone picks it with the language switcher. |
 | `contactEmail`  | email, optional   | Address shown on the privacy page. Without it, the page points to an owner or an administrator.                                              |
-| `accentColor`   | hexadecimal color | The interface's main color, for example `"#0f766e"`.                                                                                         |
+| `accentColor`   | hexadecimal color | The interface's main color, for example `"#2F5BEA"` (the default of a new installation).                                                     |
 | `logoPath`      | path              | The logo. `"/logo.svg"` (default) or `"/api/logo?v=…"` for a logo uploaded from Settings.                                                    |
 
 ### `auth`

@@ -6,7 +6,7 @@ bde:
   campus: 'Paris'
   timezone: 'Europe/Paris'
   defaultLocale: 'fr'
-  accentColor: '#0f766e'
+  accentColor: '#2F5BEA'
   logoPath: '/logo.svg'
 
 auth:

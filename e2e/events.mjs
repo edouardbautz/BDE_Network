@@ -305,7 +305,7 @@ async function run(screen, lang) {
     `a[href="${wanted.href}"]`,
     (text) =>
       document
-        .querySelector('li a[href*="/events/"][href*="occ="].font-medium')
+        .querySelector('li a[href*="/events/"][href*="occ="].font-bold')
         ?.textContent?.trim() === text,
     'the other date of the series was not selected',
     wanted.text,

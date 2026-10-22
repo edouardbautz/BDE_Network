@@ -35,11 +35,11 @@ export function CodeForm() {
   return (
     <form onSubmit={submit} className="flex flex-col gap-6" noValidate>
       <div className="flex flex-col items-center gap-2 text-center">
-        <div className="bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-full">
+        <div className="bg-accent-soft text-accent-ink flex size-14 items-center justify-center rounded-xl">
           <KeyRound className="size-5" aria-hidden="true" />
         </div>
-        <h2 className="text-lg font-semibold tracking-tight">{t('title')}</h2>
-        <p className="text-muted-foreground text-sm">{t('description')}</p>
+        <h2 className="text-title-3">{t('title')}</h2>
+        <p className="text-muted-foreground text-body">{t('description')}</p>
       </div>
 
       <Field id="setup-code" label={t('label')} error={failure ? text(failure) : null}>
@@ -53,7 +53,7 @@ export function CodeForm() {
           autoCapitalize="characters"
           spellCheck={false}
           maxLength={20}
-          className="text-center font-mono text-lg tracking-widest"
+          className="text-center font-mono text-title-3 tracking-widest"
           aria-invalid={failure !== null}
           aria-describedby={failure ? 'setup-code-error' : undefined}
         />
@@ -63,8 +63,8 @@ export function CodeForm() {
         {pending ? t('checking') : t('submit')}
       </Button>
 
-      <div className="bg-muted/50 flex flex-col gap-2 rounded-lg p-3 text-sm">
-        <p className="font-medium">{t('whereTitle')}</p>
+      <div className="bg-muted/50 flex flex-col gap-2 rounded-lg p-3 text-body">
+        <p className="font-semibold">{t('whereTitle')}</p>
         <ul className="text-muted-foreground list-disc space-y-1 pl-5">
           <li>{t('whereTerminal')}</li>
           <li>{t('whereLogs')}</li>

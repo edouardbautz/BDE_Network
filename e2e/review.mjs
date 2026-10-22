@@ -283,7 +283,7 @@ async function round(lang) {
     const counter = await alice.page.$eval('nav a[href$="/events/review"]', (el) =>
       el.innerText.trim(),
     );
-    if (!counter.startsWith(words.review) || !/\b1\b/.test(counter)) {
+    if (!counter.includes(words.review) || !/\b1\b/.test(counter)) {
       fail(
         `[${label}] the menu says "${counter.replace(/\n/g, ' ')}": expected "${words.review}" and 1`,
       );

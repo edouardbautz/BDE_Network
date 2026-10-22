@@ -1,5 +1,7 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { bdeConfigSchema } from './schema';
+import { bdeConfigSchema, DEFAULT_ACCENT } from './schema';
 
 const validConfig = {
   bde: {
@@ -188,5 +190,22 @@ describe('bdeConfigSchema', () => {
       });
       expect(result.success).toBe(false);
     });
+  });
+});
+
+describe('the accent colour', () => {
+  it('is #2F5BEA when nobody chose one (a new platform), and is the one written when somebody did', () => {
+    const { accentColor: _chosen, ...bdeWithout } = validConfig.bde;
+    void _chosen;
+    const without = bdeConfigSchema.parse({ ...validConfig, bde: bdeWithout });
+    expect(without.bde.accentColor).toBe(DEFAULT_ACCENT);
+    expect(DEFAULT_ACCENT).toBe('#2F5BEA');
+    // a platform that already has one keeps it
+    expect(bdeConfigSchema.parse(validConfig).bde.accentColor).toBe('#0f766e');
+  });
+
+  it('is #2F5BEA in the example configuration, which a new installation is made from', () => {
+    const example = readFileSync(join(process.cwd(), 'bde.config.example.yml'), 'utf8');
+    expect(example).toMatch(/accentColor:\s*'#2F5BEA'/);
   });
 });

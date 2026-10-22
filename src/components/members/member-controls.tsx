@@ -93,7 +93,7 @@ export function MemberRoleSelect({
       >
         <RoleOptions roles={roles} currentId={currentRoleId} />
       </NativeSelect>
-      {lock && <span className="text-muted-foreground text-xs">{t(`locked.${lock}`)}</span>}
+      {lock && <span className="text-muted-foreground text-small">{t(`locked.${lock}`)}</span>}
 
       <ConfirmDialog
         open={candidate !== null}

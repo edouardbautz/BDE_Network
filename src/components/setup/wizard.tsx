@@ -92,17 +92,17 @@ export function SetupWizard({
             {names.map((name, index) => (
               <div
                 key={name}
-                className={`h-1.5 flex-1 rounded-full ${index <= current ? 'bg-primary' : 'bg-muted'}`}
+                className={`h-1.5 flex-1 rounded-pill ${index <= current ? 'bg-accent-fill' : 'bg-surface-3'}`}
               />
             ))}
           </div>
-          <p className="text-muted-foreground text-xs" aria-hidden="true">
+          <p className="text-muted-foreground text-small" aria-hidden="true">
             {t('step', { current: current + 1, total: names.length })} · {names[current]}
           </p>
         </div>
       )}
 
-      <div ref={frame} tabIndex={-1} className="outline-none">
+      <div ref={frame} tabIndex={-1} className="">
         {done ? (
           <Done locale={locale} />
         ) : current === 0 ? (

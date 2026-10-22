@@ -29,7 +29,8 @@ test.describe('an owner', () => {
     // The menu lists them too, with the proposals waiting counted for those who validate.
     await page.goto('/en/dashboard');
     const menu = page.getByRole('navigation', { name: 'Navigation' });
-    for (const name of ['Dashboard', 'Events', 'Members', 'Roles', 'Audit log', 'Settings']) {
+    // what the rail prints under each icon: one short word
+    for (const name of ['Home', 'Events', 'Members', 'Roles', 'Log', 'Settings']) {
       await expect(menu.getByRole('link', { name, exact: true })).toBeVisible();
     }
     await expect(

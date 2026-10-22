@@ -1,5 +1,4 @@
 import {
-  ArrowLeft,
   CalendarPlus,
   CircleCheck,
   CircleX,
@@ -50,6 +49,7 @@ import {
   restoreOccurrence,
   setEventStatus,
 } from '../actions';
+import { PageHeader } from '@/components/layout/page-header';
 import { pageTitle } from '@/lib/page-title';
 
 export const dynamic = 'force-dynamic';
@@ -70,11 +70,13 @@ function DetailRow({
     // A description list only holds terms and descriptions (a group may be wrapped in a div, which then holds nothing
     // else): the icon sits inside the term, and the description is indented by the width of the icon and its gap.
     <div className="flex min-w-0 flex-col gap-0.5">
-      <dt className="text-muted-foreground flex items-center gap-3 text-xs">
-        <Icon className="size-4 shrink-0" aria-hidden />
+      <dt className="text-small text-muted-foreground flex items-center gap-3">
+        <span className="bg-accent-soft text-accent-ink flex size-7 shrink-0 items-center justify-center rounded-xs">
+          <Icon className="size-4" aria-hidden />
+        </span>
         {label}
       </dt>
-      <dd className="pl-7 text-sm break-words">{children}</dd>
+      <dd className="text-body pl-10 break-words">{children}</dd>
     </div>
   );
 }
@@ -175,425 +177,421 @@ export default async function EventDetailPage({
   );
 
   return (
-    <div className="flex flex-col gap-6">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="-ml-2 self-start"
-        render={<Link href="/events" />}
-      >
-        <ArrowLeft data-icon="inline-start" />
-        {t('detail.back')}
-      </Button>
+    <>
+      <PageHeader title={shown.title} back={{ href: '/events', label: t('detail.back') }} />
+      <div className="flex flex-col gap-3 sm:gap-4">
+        <EventNoticeAlert notice={readEventNotice(rawSearch.notice)} />
 
-      <EventNoticeAlert notice={readEventNotice(rawSearch.notice)} />
+        <div className="flex flex-col gap-3">
+          <div className="flex min-w-0 flex-col gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <CategoryBadge category={category} />
+              <Badge variant={shown.status === 'CONFIRMED' ? 'secondary' : 'outline'}>
+                {shown.status === 'PROPOSED' && <Clock data-icon="inline-start" aria-hidden />}
+                {t(`status.${shown.status}`)}
+              </Badge>
+              {isSeries && shown.edited && (
+                <Badge variant="outline">{t('detail.occurrenceEdited')}</Badge>
+              )}
+              {shown.cancelled && (
+                <Badge variant="destructive">{t('detail.occurrenceCancelled')}</Badge>
+              )}
+            </div>
+          </div>
 
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex min-w-0 flex-col gap-2">
-          <h1 className="text-2xl font-semibold tracking-tight break-words">{shown.title}</h1>
-          <div className="flex flex-wrap items-center gap-3">
-            <CategoryBadge category={category} />
-            <Badge variant={shown.status === 'CONFIRMED' ? 'secondary' : 'outline'}>
-              {shown.status === 'PROPOSED' && <Clock data-icon="inline-start" aria-hidden />}
-              {t(`status.${shown.status}`)}
-            </Badge>
-            {isSeries && shown.edited && (
-              <Badge variant="outline">{t('detail.occurrenceEdited')}</Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              render={<a href={`/api/events/${event.id}/ics?occ=${occurrence}`} download />}
+            >
+              <CalendarPlus data-icon="inline-start" />
+              {t('detail.addToCalendar')}
+            </Button>
+            {mayEdit && (
+              <Button
+                variant="secondary"
+                size="sm"
+                render={
+                  <Link
+                    href={
+                      isSeries && isValidator
+                        ? { pathname: `/events/${event.id}/edit`, query: { occ: occurrence } }
+                        : `/events/${event.id}/edit`
+                    }
+                  />
+                }
+              >
+                <Pencil data-icon="inline-start" />
+                {t('detail.edit')}
+              </Button>
             )}
-            {shown.cancelled && (
-              <Badge variant="destructive">{t('detail.occurrenceCancelled')}</Badge>
+            {isProposerOnly && mayEdit && shown.status === 'DRAFT' && (
+              <ActionButton
+                variant="default"
+                action={async () => {
+                  'use server';
+                  return setEventStatus(event.id, 'PROPOSED');
+                }}
+              >
+                <Send data-icon="inline-start" />
+                {t('detail.review.propose')}
+              </ActionButton>
+            )}
+            {isProposerOnly && mayEdit && shown.status === 'PROPOSED' && (
+              <ActionButton
+                variant="secondary"
+                action={async () => {
+                  'use server';
+                  return setEventStatus(event.id, 'DRAFT');
+                }}
+              >
+                <Undo2 data-icon="inline-start" />
+                {t('detail.review.withdraw')}
+              </ActionButton>
+            )}
+            {isValidator && (
+              <>
+                {shown.cancelled && (
+                  <ActionButton
+                    action={async () => {
+                      'use server';
+                      return restoreOccurrence(event.id, occurrence);
+                    }}
+                  >
+                    {t('detail.restoreDate')}
+                  </ActionButton>
+                )}
+                {shown.status === 'PROPOSED' && (
+                  // A proposal is answered, not toggled: approving publishes it, refusing says why (the whole event).
+                  <ConfirmDialog
+                    tone="destructive"
+                    triggerVariant="destructive"
+                    title={t('detail.review.refuseDialog.title')}
+                    description={t('detail.review.refuseDialog.body')}
+                    confirmLabel={t('detail.review.refuseDialog.confirm')}
+                    field={{
+                      label: t('detail.review.refuseDialog.comment'),
+                      hint: t('detail.review.refuseDialog.commentHint'),
+                      maxLength: REFUSAL_COMMENT_MAX_LENGTH,
+                      required: true,
+                    }}
+                    onConfirm={async (_choice, comment) => {
+                      'use server';
+                      return refuseEvent(event.id, comment);
+                    }}
+                  >
+                    <CircleX data-icon="inline-start" />
+                    {t('detail.review.refuse')}
+                  </ConfirmDialog>
+                )}
+                {shown.status !== 'CONFIRMED' ? (
+                  // Confirming shows the event to every member and may notify them: it asks first,
+                  // in the normal style (it is not destructive: going back to draft undoes it).
+                  isSeries ? (
+                    <ConfirmDialog
+                      tone="default"
+                      triggerVariant="default"
+                      title={
+                        shown.status === 'PROPOSED'
+                          ? t('detail.review.approveDialog.title')
+                          : t('detail.confirmDialog.title')
+                      }
+                      description={t('detail.confirmDialog.body')}
+                      confirmLabel={
+                        shown.status === 'PROPOSED'
+                          ? t('detail.review.approveDialog.confirm')
+                          : t('detail.confirmDialog.confirm')
+                      }
+                      choices={choices({
+                        occurrence: sentence(
+                          t('scope.occurrenceHint'),
+                          t('scope.confirmOccurrence'),
+                          noticeFor(shown.announcedAt !== null),
+                        ),
+                        following: sentence(
+                          followingHint,
+                          facts.drafts > 0 ? t('scope.draftNote', { count: facts.drafts }) : null,
+                          t('scope.confirmFollowing'),
+                          noticeFor(event.confirmationNotifiedAt !== null),
+                        ),
+                      })}
+                      onConfirm={async (scope) => {
+                        'use server';
+                        return setEventStatus(event.id, 'CONFIRMED', occurrence, scope);
+                      }}
+                    >
+                      <CircleCheck data-icon="inline-start" />
+                      {shown.status === 'PROPOSED'
+                        ? t('detail.review.approve')
+                        : t('detail.confirm')}
+                    </ConfirmDialog>
+                  ) : (
+                    <ConfirmDialog
+                      tone="default"
+                      triggerVariant="default"
+                      title={
+                        shown.status === 'PROPOSED'
+                          ? t('detail.review.approveDialog.title')
+                          : t('detail.confirmDialog.title')
+                      }
+                      description={confirmationText}
+                      confirmLabel={
+                        shown.status === 'PROPOSED'
+                          ? t('detail.review.approveDialog.confirm')
+                          : t('detail.confirmDialog.confirm')
+                      }
+                      onConfirm={async () => {
+                        'use server';
+                        return setEventStatus(event.id, 'CONFIRMED');
+                      }}
+                    >
+                      <CircleCheck data-icon="inline-start" />
+                      {shown.status === 'PROPOSED'
+                        ? t('detail.review.approve')
+                        : t('detail.confirm')}
+                    </ConfirmDialog>
+                  )
+                ) : isSeries ? (
+                  <ConfirmDialog
+                    tone="default"
+                    triggerVariant="secondary"
+                    title={t('scope.backToDraft.title')}
+                    description={t('scope.backToDraft.description')}
+                    confirmLabel={t('scope.backToDraft.confirm')}
+                    choices={choices({
+                      occurrence: t('scope.occurrenceHint'),
+                      following: followingHint,
+                    })}
+                    onConfirm={async (scope) => {
+                      'use server';
+                      return setEventStatus(event.id, 'DRAFT', occurrence, scope);
+                    }}
+                  >
+                    <Undo2 data-icon="inline-start" />
+                    {t('detail.backToDraft')}
+                  </ConfirmDialog>
+                ) : (
+                  <ActionButton
+                    variant="secondary"
+                    action={async () => {
+                      'use server';
+                      return setEventStatus(event.id, 'DRAFT');
+                    }}
+                  >
+                    <Undo2 data-icon="inline-start" />
+                    {t('detail.backToDraft')}
+                  </ActionButton>
+                )}
+              </>
             )}
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            render={<a href={`/api/events/${event.id}/ics?occ=${occurrence}`} download />}
-          >
-            <CalendarPlus data-icon="inline-start" />
-            {t('detail.addToCalendar')}
-          </Button>
-          {mayEdit && (
-            <Button
-              variant="outline"
-              size="sm"
-              render={
-                <Link
-                  href={
-                    isSeries && isValidator
-                      ? { pathname: `/events/${event.id}/edit`, query: { occ: occurrence } }
-                      : `/events/${event.id}/edit`
-                  }
-                />
-              }
-            >
-              <Pencil data-icon="inline-start" />
-              {t('detail.edit')}
-            </Button>
-          )}
-          {isProposerOnly && mayEdit && shown.status === 'DRAFT' && (
-            <ActionButton
-              variant="default"
-              action={async () => {
-                'use server';
-                return setEventStatus(event.id, 'PROPOSED');
-              }}
-            >
-              <Send data-icon="inline-start" />
-              {t('detail.review.propose')}
-            </ActionButton>
-          )}
-          {isProposerOnly && mayEdit && shown.status === 'PROPOSED' && (
-            <ActionButton
-              variant="secondary"
-              action={async () => {
-                'use server';
-                return setEventStatus(event.id, 'DRAFT');
-              }}
-            >
-              <Undo2 data-icon="inline-start" />
-              {t('detail.review.withdraw')}
-            </ActionButton>
-          )}
-          {isValidator && (
-            <>
-              {shown.cancelled && (
-                <ActionButton
-                  action={async () => {
-                    'use server';
-                    return restoreOccurrence(event.id, occurrence);
-                  }}
-                >
-                  {t('detail.restoreDate')}
-                </ActionButton>
-              )}
-              {shown.status === 'PROPOSED' && (
-                // A proposal is answered, not toggled: approving publishes it, refusing says why (the whole event).
-                <ConfirmDialog
-                  tone="destructive"
-                  triggerVariant="outline"
-                  title={t('detail.review.refuseDialog.title')}
-                  description={t('detail.review.refuseDialog.body')}
-                  confirmLabel={t('detail.review.refuseDialog.confirm')}
-                  field={{
-                    label: t('detail.review.refuseDialog.comment'),
-                    hint: t('detail.review.refuseDialog.commentHint'),
-                    maxLength: REFUSAL_COMMENT_MAX_LENGTH,
-                    required: true,
-                  }}
-                  onConfirm={async (_choice, comment) => {
-                    'use server';
-                    return refuseEvent(event.id, comment);
-                  }}
-                >
-                  <CircleX data-icon="inline-start" />
-                  {t('detail.review.refuse')}
-                </ConfirmDialog>
-              )}
-              {shown.status !== 'CONFIRMED' ? (
-                // Confirming shows the event to every member and may notify them: it asks first,
-                // in the normal style (it is not destructive: going back to draft undoes it).
-                isSeries ? (
-                  <ConfirmDialog
-                    tone="default"
-                    triggerVariant="default"
-                    title={
-                      shown.status === 'PROPOSED'
-                        ? t('detail.review.approveDialog.title')
-                        : t('detail.confirmDialog.title')
-                    }
-                    description={t('detail.confirmDialog.body')}
-                    confirmLabel={
-                      shown.status === 'PROPOSED'
-                        ? t('detail.review.approveDialog.confirm')
-                        : t('detail.confirmDialog.confirm')
-                    }
-                    choices={choices({
-                      occurrence: sentence(
-                        t('scope.occurrenceHint'),
-                        t('scope.confirmOccurrence'),
-                        noticeFor(shown.announcedAt !== null),
-                      ),
-                      following: sentence(
-                        followingHint,
-                        facts.drafts > 0 ? t('scope.draftNote', { count: facts.drafts }) : null,
-                        t('scope.confirmFollowing'),
-                        noticeFor(event.confirmationNotifiedAt !== null),
-                      ),
-                    })}
-                    onConfirm={async (scope) => {
-                      'use server';
-                      return setEventStatus(event.id, 'CONFIRMED', occurrence, scope);
-                    }}
-                  >
-                    <CircleCheck data-icon="inline-start" />
-                    {shown.status === 'PROPOSED' ? t('detail.review.approve') : t('detail.confirm')}
-                  </ConfirmDialog>
-                ) : (
-                  <ConfirmDialog
-                    tone="default"
-                    triggerVariant="default"
-                    title={
-                      shown.status === 'PROPOSED'
-                        ? t('detail.review.approveDialog.title')
-                        : t('detail.confirmDialog.title')
-                    }
-                    description={confirmationText}
-                    confirmLabel={
-                      shown.status === 'PROPOSED'
-                        ? t('detail.review.approveDialog.confirm')
-                        : t('detail.confirmDialog.confirm')
-                    }
-                    onConfirm={async () => {
-                      'use server';
-                      return setEventStatus(event.id, 'CONFIRMED');
-                    }}
-                  >
-                    <CircleCheck data-icon="inline-start" />
-                    {shown.status === 'PROPOSED' ? t('detail.review.approve') : t('detail.confirm')}
-                  </ConfirmDialog>
-                )
-              ) : isSeries ? (
-                <ConfirmDialog
-                  tone="default"
-                  triggerVariant="secondary"
-                  title={t('scope.backToDraft.title')}
-                  description={t('scope.backToDraft.description')}
-                  confirmLabel={t('scope.backToDraft.confirm')}
-                  choices={choices({
-                    occurrence: t('scope.occurrenceHint'),
-                    following: followingHint,
-                  })}
-                  onConfirm={async (scope) => {
-                    'use server';
-                    return setEventStatus(event.id, 'DRAFT', occurrence, scope);
-                  }}
-                >
-                  <Undo2 data-icon="inline-start" />
-                  {t('detail.backToDraft')}
-                </ConfirmDialog>
-              ) : (
-                <ActionButton
-                  variant="secondary"
-                  action={async () => {
-                    'use server';
-                    return setEventStatus(event.id, 'DRAFT');
-                  }}
-                >
-                  <Undo2 data-icon="inline-start" />
-                  {t('detail.backToDraft')}
-                </ActionButton>
-              )}
-            </>
-          )}
-        </div>
-      </div>
+        {event.status === 'PROPOSED' && (
+          <Alert>
+            <Clock />
+            <AlertTitle>{t('detail.review.proposedTitle')}</AlertTitle>
+            <AlertDescription>
+              {actor.login === event.authorLogin && !isValidator
+                ? t('detail.review.proposedAuthor')
+                : t('detail.review.proposedValidator', { author: event.authorLogin })}
+              {event.proposedAt &&
+                ` ${t('detail.review.proposedOn', { date: formatLongDate(event.proposedAt, locale, timeZone) })}`}
+            </AlertDescription>
+          </Alert>
+        )}
+        {event.status === 'DRAFT' && event.refusalComment && (
+          <Alert variant="destructive">
+            <CircleX />
+            <AlertTitle>
+              {t('detail.review.refusedTitle', {
+                reviewer: event.refusedByLogin ?? '',
+                date: event.refusedAt ? formatLongDate(event.refusedAt, locale, timeZone) : '',
+              })}
+            </AlertTitle>
+            <AlertDescription>
+              <p className="whitespace-pre-wrap">{event.refusalComment}</p>
+              <p>
+                {isValidator
+                  ? t('detail.review.refusedHintValidator', { author: event.authorLogin })
+                  : t('detail.review.refusedHintAuthor')}
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
+        {lockedBecause === 'published' && (
+          <Alert>
+            <CircleCheck />
+            <AlertTitle>{t('detail.review.lockedTitle')}</AlertTitle>
+            <AlertDescription>{t('detail.review.lockedBody')}</AlertDescription>
+          </Alert>
+        )}
 
-      {event.status === 'PROPOSED' && (
-        <Alert>
-          <Clock />
-          <AlertTitle>{t('detail.review.proposedTitle')}</AlertTitle>
-          <AlertDescription>
-            {actor.login === event.authorLogin && !isValidator
-              ? t('detail.review.proposedAuthor')
-              : t('detail.review.proposedValidator', { author: event.authorLogin })}
-            {event.proposedAt &&
-              ` ${t('detail.review.proposedOn', { date: formatLongDate(event.proposedAt, locale, timeZone) })}`}
-          </AlertDescription>
-        </Alert>
-      )}
-      {event.status === 'DRAFT' && event.refusalComment && (
-        <Alert variant="destructive">
-          <CircleX />
-          <AlertTitle>
-            {t('detail.review.refusedTitle', {
-              reviewer: event.refusedByLogin ?? '',
-              date: event.refusedAt ? formatLongDate(event.refusedAt, locale, timeZone) : '',
-            })}
-          </AlertTitle>
-          <AlertDescription>
-            <p className="whitespace-pre-wrap">{event.refusalComment}</p>
-            <p>
-              {isValidator
-                ? t('detail.review.refusedHintValidator', { author: event.authorLogin })
-                : t('detail.review.refusedHintAuthor')}
-            </p>
-          </AlertDescription>
-        </Alert>
-      )}
-      {lockedBecause === 'published' && (
-        <Alert>
-          <CircleCheck />
-          <AlertTitle>{t('detail.review.lockedTitle')}</AlertTitle>
-          <AlertDescription>{t('detail.review.lockedBody')}</AlertDescription>
-        </Alert>
-      )}
-
-      <Card>
-        <CardContent>
-          <dl className="flex flex-col gap-4">
-            <DetailRow icon={CalendarPlus} label={t('detail.when')}>
-              <span className="first-letter:uppercase">
-                {formatDateTimeRange(shown.start, shown.end, locale, timeZone)}
-              </span>
-            </DetailRow>
-            {repeatSummary && (
-              <DetailRow icon={Repeat} label={t('detail.repeats')}>
-                {summarizeRepeat(repeatSummary, tRepeat, locale)}
-              </DetailRow>
-            )}
-            {shown.location && (
-              <DetailRow icon={MapPin} label={t('detail.where')}>
-                {shown.location}
-              </DetailRow>
-            )}
-            <DetailRow icon={Users} label={t('detail.inCharge')}>
-              {shown.assignees.length > 0 ? (
-                shown.assignees.map((a) => a.user?.fullName ?? a.login).join(', ')
-              ) : (
-                <span className="text-muted-foreground">{t('detail.noneInCharge')}</span>
-              )}
-            </DetailRow>
-            {shown.description && (
-              <DetailRow icon={FileText} label={t('detail.description')}>
-                <span className="whitespace-pre-wrap">{shown.description}</span>
-              </DetailRow>
-            )}
-          </dl>
-          <p className="text-muted-foreground mt-6 border-t pt-4 text-xs">
-            {t('detail.meta', { author: event.authorLogin, schoolYear: event.schoolYear })}
-          </p>
-        </CardContent>
-      </Card>
-
-      {isSeries && (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{t('detail.occurrences.title')}</CardTitle>
-          </CardHeader>
           <CardContent>
-            {upcoming.length === 0 ? (
-              <p className="text-muted-foreground text-sm">{t('detail.occurrences.allPast')}</p>
-            ) : (
-              <ul className="divide-y">
-                {upcoming.slice(0, MAX_LISTED_OCCURRENCES).map((date) => {
-                  const key = date.originalStart.getTime();
-                  return (
-                    <li
-                      key={key}
-                      className="flex flex-wrap items-center justify-between gap-2 py-2"
-                    >
-                      <div className="flex min-w-0 flex-wrap items-center gap-2">
-                        <Link
-                          href={{ pathname: `/events/${event.id}`, query: { occ: key } }}
-                          className={cn(
-                            'rounded-sm text-sm outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50',
-                            date.cancelled && 'text-muted-foreground line-through',
-                            key === occurrence && 'font-medium',
-                          )}
-                        >
-                          <span className="first-letter:uppercase">
-                            {formatLongDate(date.start, locale, timeZone)}
-                          </span>{' '}
-                          · {formatTimeRange(date.start, date.end, locale, timeZone)}
-                        </Link>
-                        {date.cancelled && (
-                          <Badge variant="destructive">{t('detail.occurrenceCancelled')}</Badge>
-                        )}
-                        {date.status !== 'CONFIRMED' && (
-                          <Badge variant="outline">{t(`status.${date.status}`)}</Badge>
-                        )}
-                        {date.edited && (
-                          <Badge variant="outline">{t('detail.occurrenceEdited')}</Badge>
-                        )}
-                      </div>
-                      {isValidator && date.cancelled && (
-                        <ActionButton
-                          size="xs"
-                          action={async () => {
-                            'use server';
-                            return restoreOccurrence(event.id, key);
-                          }}
-                        >
-                          {t('detail.occurrences.restore')}
-                        </ActionButton>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-            {upcoming.length > MAX_LISTED_OCCURRENCES && (
-              <p className="text-muted-foreground mt-3 text-xs">
-                {t('detail.occurrences.truncated', {
-                  count: upcoming.length - MAX_LISTED_OCCURRENCES,
-                })}
-              </p>
-            )}
-            {pastCount > 0 && (
-              <p className="text-muted-foreground mt-3 text-xs">
-                {t('detail.occurrences.past', { count: pastCount })}
-              </p>
-            )}
-            <div className="mt-4 border-t pt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                render={<a href={`/api/events/${event.id}/ics`} download />}
-              >
-                <CalendarPlus data-icon="inline-start" />
-                {t('detail.addSeriesToCalendar')}
-              </Button>
-            </div>
+            <dl className="flex flex-col gap-4">
+              <DetailRow icon={CalendarPlus} label={t('detail.when')}>
+                <span className="first-letter:uppercase">
+                  {formatDateTimeRange(shown.start, shown.end, locale, timeZone)}
+                </span>
+              </DetailRow>
+              {repeatSummary && (
+                <DetailRow icon={Repeat} label={t('detail.repeats')}>
+                  {summarizeRepeat(repeatSummary, tRepeat, locale)}
+                </DetailRow>
+              )}
+              {shown.location && (
+                <DetailRow icon={MapPin} label={t('detail.where')}>
+                  {shown.location}
+                </DetailRow>
+              )}
+              <DetailRow icon={Users} label={t('detail.inCharge')}>
+                {shown.assignees.length > 0 ? (
+                  shown.assignees.map((a) => a.user?.fullName ?? a.login).join(', ')
+                ) : (
+                  <span className="text-muted-foreground">{t('detail.noneInCharge')}</span>
+                )}
+              </DetailRow>
+              {shown.description && (
+                <DetailRow icon={FileText} label={t('detail.description')}>
+                  <span className="whitespace-pre-wrap">{shown.description}</span>
+                </DetailRow>
+              )}
+            </dl>
+            <p className="text-small text-muted-foreground border-line mt-5 border-t pt-4">
+              {t('detail.meta', { author: event.authorLogin, schoolYear: event.schoolYear })}
+            </p>
           </CardContent>
         </Card>
-      )}
 
-      {mayDelete && (
-        <div>
-          {isSeries && isValidator ? (
-            <ConfirmDialog
-              title={t('scope.delete.title')}
-              description={t('scope.delete.description')}
-              confirmLabel={t('scope.delete.confirm')}
-              choices={choices({
-                occurrence: t('scope.delete.occurrenceHint'),
-                following: facts.isFirst
-                  ? t('scope.delete.followingFirstHint', { count: facts.total })
-                  : t('scope.delete.followingHint', { count: facts.following }),
-              })}
-              onConfirm={async (scope) => {
-                'use server';
-                if (scope === 'following') {
-                  return deleteFollowingDates(event.id, occurrence);
-                }
-                if (scope === 'occurrence') {
-                  return cancelOccurrence(event.id, occurrence);
-                }
-                throw new Error('Invalid scope');
-              }}
-            >
-              <Trash2 data-icon="inline-start" />
-              {t('scope.delete.button')}
-            </ConfirmDialog>
-          ) : (
-            <ConfirmDialog
-              title={t('detail.delete.title')}
-              description={t('detail.delete.warning')}
-              confirmLabel={t('detail.delete.confirm')}
-              onConfirm={async () => {
-                'use server';
-                await deleteEvent(event.id);
-              }}
-            >
-              <Trash2 data-icon="inline-start" />
-              {t('detail.delete.button')}
-            </ConfirmDialog>
-          )}
-        </div>
-      )}
-    </div>
+        {isSeries && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('detail.occurrences.title')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {upcoming.length === 0 ? (
+                <p className="text-muted-foreground text-body">{t('detail.occurrences.allPast')}</p>
+              ) : (
+                <ul>
+                  {upcoming.slice(0, MAX_LISTED_OCCURRENCES).map((date) => {
+                    const key = date.originalStart.getTime();
+                    return (
+                      <li
+                        key={key}
+                        className="border-line flex min-h-11 flex-wrap items-center justify-between gap-2 border-t py-2 first:border-t-0"
+                      >
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                          <Link
+                            href={{ pathname: `/events/${event.id}`, query: { occ: key } }}
+                            className={cn(
+                              'text-body rounded-xs hover:underline',
+                              date.cancelled && 'text-muted-foreground line-through',
+                              key === occurrence && 'font-bold',
+                            )}
+                          >
+                            <span className="first-letter:uppercase">
+                              {formatLongDate(date.start, locale, timeZone)}
+                            </span>{' '}
+                            · {formatTimeRange(date.start, date.end, locale, timeZone)}
+                          </Link>
+                          {date.cancelled && (
+                            <Badge variant="destructive">{t('detail.occurrenceCancelled')}</Badge>
+                          )}
+                          {date.status !== 'CONFIRMED' && (
+                            <Badge variant="outline">{t(`status.${date.status}`)}</Badge>
+                          )}
+                          {date.edited && (
+                            <Badge variant="outline">{t('detail.occurrenceEdited')}</Badge>
+                          )}
+                        </div>
+                        {isValidator && date.cancelled && (
+                          <ActionButton
+                            size="xs"
+                            action={async () => {
+                              'use server';
+                              return restoreOccurrence(event.id, key);
+                            }}
+                          >
+                            {t('detail.occurrences.restore')}
+                          </ActionButton>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              {upcoming.length > MAX_LISTED_OCCURRENCES && (
+                <p className="text-muted-foreground mt-3 text-small">
+                  {t('detail.occurrences.truncated', {
+                    count: upcoming.length - MAX_LISTED_OCCURRENCES,
+                  })}
+                </p>
+              )}
+              {pastCount > 0 && (
+                <p className="text-muted-foreground mt-3 text-small">
+                  {t('detail.occurrences.past', { count: pastCount })}
+                </p>
+              )}
+              <div className="border-line mt-4 border-t pt-4">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  render={<a href={`/api/events/${event.id}/ics`} download />}
+                >
+                  <CalendarPlus data-icon="inline-start" />
+                  {t('detail.addSeriesToCalendar')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {mayDelete && (
+          <div>
+            {isSeries && isValidator ? (
+              <ConfirmDialog
+                title={t('scope.delete.title')}
+                description={t('scope.delete.description')}
+                confirmLabel={t('scope.delete.confirm')}
+                choices={choices({
+                  occurrence: t('scope.delete.occurrenceHint'),
+                  following: facts.isFirst
+                    ? t('scope.delete.followingFirstHint', { count: facts.total })
+                    : t('scope.delete.followingHint', { count: facts.following }),
+                })}
+                onConfirm={async (scope) => {
+                  'use server';
+                  if (scope === 'following') {
+                    return deleteFollowingDates(event.id, occurrence);
+                  }
+                  if (scope === 'occurrence') {
+                    return cancelOccurrence(event.id, occurrence);
+                  }
+                  throw new Error('Invalid scope');
+                }}
+              >
+                <Trash2 data-icon="inline-start" />
+                {t('scope.delete.button')}
+              </ConfirmDialog>
+            ) : (
+              <ConfirmDialog
+                title={t('detail.delete.title')}
+                description={t('detail.delete.warning')}
+                confirmLabel={t('detail.delete.confirm')}
+                onConfirm={async () => {
+                  'use server';
+                  await deleteEvent(event.id);
+                }}
+              >
+                <Trash2 data-icon="inline-start" />
+                {t('detail.delete.button')}
+              </ConfirmDialog>
+            )}
+          </div>
+        )}
+      </div>
+    </>
   );
 }

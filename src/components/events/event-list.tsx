@@ -1,4 +1,4 @@
-import { CalendarDays, MapPin, Repeat, Users } from 'lucide-react';
+import { MapPin, Repeat, Users } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Badge } from '@/components/ui/badge';
 import { Link } from '@/i18n/navigation';
@@ -14,7 +14,7 @@ interface EventRowsProps {
   timeZone: string;
 }
 
-/** One event line: time, title (link to the detail page), category, place, people. */
+/** One event line: time, title (link to the detail page), category, place, people. Its separator is the hairline of the list. */
 export async function EventRow({
   occurrence,
   categories,
@@ -24,29 +24,31 @@ export async function EventRow({
   const category = resolveCategory(occurrence.categoryKey, categories);
 
   return (
-    <li className="flex flex-col gap-1 py-3 sm:flex-row sm:gap-4">
-      <p className="text-muted-foreground w-full shrink-0 text-sm tabular-nums sm:w-44">
+    <li className="border-line flex flex-col gap-1 border-t py-3.5 first:border-t-0 sm:flex-row sm:gap-4">
+      <p className="text-small text-muted-foreground tabular w-full shrink-0 sm:w-44">
         {formatTimeRange(occurrence.start, occurrence.end, locale, timeZone)}
       </p>
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <Link
             href={{
               pathname: `/events/${occurrence.eventId}`,
               query: { occ: occurrence.originalStart.getTime() },
             }}
-            className="rounded-sm font-medium outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="text-body-strong rounded-xs hover:underline"
           >
             {occurrence.title}
           </Link>
           {occurrence.status !== 'CONFIRMED' && (
-            <Badge variant="outline">{t(`status.${occurrence.status}`)}</Badge>
+            <Badge variant={occurrence.status === 'PROPOSED' ? 'warning' : 'outline'}>
+              {t(`status.${occurrence.status}`)}
+            </Badge>
           )}
           {occurrence.isRecurring && (
             <Repeat className="text-muted-foreground size-3.5" aria-label={t('recurring')} />
           )}
         </div>
-        <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+        <div className="text-small text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1">
           <CategoryBadge category={category} />
           {occurrence.location && (
             <span className="inline-flex items-center gap-1">
@@ -75,7 +77,7 @@ export async function EventList({ occurrences, categories, timeZone }: EventRows
   const days = [...byDay.keys()].sort();
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       {days.map((key) => {
         const dayOccurrences = (byDay.get(key) ?? []).filter((o) => !seen.has(o.key));
         dayOccurrences.forEach((o) => seen.add(o.key));
@@ -86,11 +88,11 @@ export async function EventList({ occurrences, categories, timeZone }: EventRows
           <section key={key} aria-labelledby={`day-${key}`}>
             <h2
               id={`day-${key}`}
-              className="text-muted-foreground border-b pb-2 text-sm font-medium first-letter:uppercase"
+              className="text-small text-muted-foreground font-bold first-letter:uppercase"
             >
               {formatDayHeading(day, locale)}
             </h2>
-            <ul className="divide-y">
+            <ul className="mt-1">
               {dayOccurrences.map((occurrence) => (
                 <EventRow
                   key={occurrence.key}
@@ -103,30 +105,6 @@ export async function EventList({ occurrences, categories, timeZone }: EventRows
           </section>
         );
       })}
-    </div>
-  );
-}
-
-/** Empty state shared by the list, the day panel and the dashboard block. */
-export function EmptyState({
-  title,
-  description,
-  action,
-}: {
-  title: string;
-  description?: string;
-  action?: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col items-center gap-3 py-10 text-center">
-      <div className="bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-full">
-        <CalendarDays className="size-5" />
-      </div>
-      <div className="flex flex-col gap-1">
-        <p className="text-sm font-medium">{title}</p>
-        {description && <p className="text-muted-foreground max-w-sm text-sm">{description}</p>}
-      </div>
-      {action}
     </div>
   );
 }

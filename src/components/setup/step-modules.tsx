@@ -41,15 +41,15 @@ export function StepModules({
       pending={pending}
       failure={failure}
     >
-      <div className="border-border flex items-start gap-3 rounded-lg border p-3">
-        <div className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-full">
+      <div className="bg-surface-2 flex items-start gap-3 rounded-lg p-3.5">
+        <div className="bg-accent-soft text-accent-ink flex size-9 shrink-0 items-center justify-center rounded-sm">
           <CalendarDays className="size-4" aria-hidden="true" />
         </div>
         <div className="flex-1">
-          <p id="setup-events-title" className="text-sm font-medium">
+          <p id="setup-events-title" className="text-body-strong">
             {t('eventsTitle')}
           </p>
-          <p className="text-muted-foreground text-sm">{t('eventsBody')}</p>
+          <p className="text-muted-foreground text-body">{t('eventsBody')}</p>
         </div>
         <Switch checked={events} onCheckedChange={setEvents} aria-labelledby="setup-events-title" />
       </div>

@@ -1,3 +1,4 @@
+import { DEFAULT_ACCENT } from '@/config/schema';
 import type { Address } from './validate';
 import type { Campus } from './fortytwo';
 import type { Channel, NotificationSettings } from './notifications';
@@ -83,8 +84,6 @@ export interface DraftView {
     smtp: { host: string; port: string; user: string; from: string; hasPassword: boolean };
   };
 }
-
-export const DEFAULT_ACCENT = '#0f766e';
 
 export function toView(draft: SetupDraft, defaults: { addressUrl: string }): DraftView {
   const notifications = draft.notifications;

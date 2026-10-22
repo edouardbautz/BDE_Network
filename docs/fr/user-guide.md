@@ -25,37 +25,40 @@ c'est normal.
 
 ## Une fois votre compte approuvé
 
-Vous arrivez sur le **tableau de bord** : votre rôle et les prochains événements.
+Vous arrivez sur le **tableau de bord** : le prochain événement, ceux qui suivent, des raccourcis et votre compte.
 
 ![Le tableau de bord](../images/fr/dashboard.webp)
 
 ### Se repérer
 
-Le menu est une **barre latérale à gauche**. Sur téléphone, il s'ouvre avec le bouton « ☰ » en haut. Il n'affiche
-que ce que **votre rôle** permet :
+Sur ordinateur et sur tablette, le menu est une **colonne d'icônes à gauche**, chacune avec son nom dessous. Sur
+téléphone, c'est une **barre en bas de l'écran** : Accueil, Agenda, un bouton rond **Créer**, Membres et **Plus** (le
+reste de la plateforme, votre profil, le thème, la langue et la déconnexion). Il n'affiche que ce que **votre rôle**
+permet :
 
-| Entrée              | Qui la voit                                                         |
-| ------------------- | ------------------------------------------------------------------- |
-| **Tableau de bord** | Tout le monde.                                                      |
-| **Événements**      | Ceux qui peuvent consulter les événements, si le module est activé. |
-| **Membres**         | Ceux qui ont le droit « Gérer les membres ».                        |
-| **Rôles**           | Ceux qui ont le droit « Gérer les rôles ».                          |
-| **Journal d'audit** | Les propriétaires.                                                  |
-| **Paramètres**      | Les propriétaires.                                                  |
+| Entrée                | Qui la voit                                                         |
+| --------------------- | ------------------------------------------------------------------- |
+| **Accueil**           | Tout le monde.                                                      |
+| **Agenda**            | Ceux qui peuvent consulter les événements, si le module est activé. |
+| **À valider**         | Ceux qui peuvent valider les événements (elle les compte).          |
+| **Membres**           | Ceux qui ont le droit « Gérer les membres ».                        |
+| **Rôles**             | Ceux qui ont le droit « Gérer les rôles ».                          |
+| **Journal** (d'audit) | Les propriétaires.                                                  |
+| **Réglages**          | Les propriétaires.                                                  |
 
-En bas de la barre latérale, vous trouvez votre nom et votre rôle (un clic ouvre **Mon profil** et la
-déconnexion), puis le sélecteur de langue et le bouton de thème. Le lien **Confidentialité** est en bas de la page.
+En bas de la colonne, votre **photo ronde ou vos initiales** ouvrent le menu de votre compte : votre nom et votre rôle,
+**Mon profil**, le thème, la langue et **Se déconnecter**. Sur téléphone, la même photo est en haut à droite de la page,
+et tout se trouve aussi sous **Plus**. Le lien **Confidentialité** est en bas de la page.
 
 ### Changer de langue
 
-L'interface existe en français et en anglais. Cliquez sur l'icône de langue, en bas de la barre latérale (et sur les
+L'interface existe en français et en anglais. Ouvrez le menu de votre compte (et utilisez l'icône de langue sur les
 pages publiques, comme la page de connexion), puis choisissez **Français** ou **English**. Vous restez sur la même
 page, et votre choix est retenu pour la prochaine visite.
 
 ### Changer de thème
 
-Le bouton soleil/lune, en bas de la barre latérale, choisit entre le thème **clair**, le thème **sombre**, ou le
-réglage de votre appareil.
+Le menu de votre compte choisit entre le thème **clair**, le thème **sombre**, ou le réglage de votre appareil.
 
 ### Les fenêtres de confirmation
 
@@ -148,7 +151,7 @@ données** au format JSON.
 
 ## Se déconnecter
 
-En bas de la barre latérale, cliquez sur votre nom, puis sur **Se déconnecter**.
+Ouvrez le menu de votre compte, puis cliquez sur **Se déconnecter**.
 
 ## Si quelque chose ne marche pas
 

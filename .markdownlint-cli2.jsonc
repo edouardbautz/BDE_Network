@@ -11,6 +11,8 @@
     "test-results/**",
     "playwright-report/**",
     "lighthouse-reports/**",
+    // the maintainer's own reference for a redesign (git-ignored, never in the repository)
+    "design-ref/**",
   ],
   "config": {
     "default": true,

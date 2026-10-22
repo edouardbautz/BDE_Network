@@ -1,5 +1,5 @@
 import { ScrollableTable } from '@/components/scrollable-table';
-import { CalendarSync, UserCheck, Users } from 'lucide-react';
+import { CalendarSync } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { getConfig } from '@/config';
 import { getEffectiveSession } from '@/lib/auth/session';
@@ -24,6 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeader } from '@/components/layout/page-header';
 import { pageTitle } from '@/lib/page-title';
 import {
   Table,
@@ -44,7 +45,7 @@ function MemberIdentity({ name, photoUrl }: { name: string; photoUrl: string | n
         {photoUrl ? <AvatarImage src={photoUrl} alt="" /> : null}
         <AvatarFallback>{initialsOf(name)}</AvatarFallback>
       </Avatar>
-      <span className="font-medium">{name}</span>
+      <span className="font-semibold">{name}</span>
     </div>
   );
 }
@@ -119,162 +120,179 @@ export default async function MembersPage({
   const active = users.filter((user) => user.status !== 'PENDING');
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-        {can(session.user, ROLES_MANAGE) && (
-          <Button variant="outline" size="sm" render={<Link href="/roles" />}>
-            {t('manageRoles')}
-          </Button>
+    <>
+      <PageHeader
+        title={t('title')}
+        actions={
+          can(session.user, ROLES_MANAGE) ? (
+            <Button variant="secondary" size="lg" render={<Link href="/roles" />}>
+              {t('manageRoles')}
+            </Button>
+          ) : undefined
+        }
+      />
+      <div className="flex flex-col gap-3 sm:gap-4">
+        {offerFeedRegeneration && (
+          <Alert>
+            <CalendarSync />
+            <AlertTitle>{t('feedRemoval.title', { member: removedLogin })}</AlertTitle>
+            <AlertDescription className="flex flex-col gap-3">
+              <p>{t('feedRemoval.description')}</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <ActionButton
+                  variant="default"
+                  action={async () => {
+                    'use server';
+                    return regenerateSharedCalendar(removedLogin);
+                  }}
+                >
+                  {t('feedRemoval.regenerate')}
+                </ActionButton>
+                <Button variant="ghost" size="sm" render={<Link href="/members" />}>
+                  {t('feedRemoval.later')}
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
         )}
-      </div>
 
-      {offerFeedRegeneration && (
-        <Alert>
-          <CalendarSync />
-          <AlertTitle>{t('feedRemoval.title', { member: removedLogin })}</AlertTitle>
-          <AlertDescription className="flex flex-col gap-3">
-            <p>{t('feedRemoval.description')}</p>
-            <div className="flex flex-wrap items-center gap-2">
-              <ActionButton
-                variant="default"
-                action={async () => {
-                  'use server';
-                  return regenerateSharedCalendar(removedLogin);
-                }}
-              >
-                {t('feedRemoval.regenerate')}
-              </ActionButton>
-              <Button variant="ghost" size="sm" render={<Link href="/members" />}>
-                {t('feedRemoval.later')}
-              </Button>
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <UserCheck className="text-muted-foreground size-4" />
-            {t('pendingSection')}
-          </CardTitle>
-          {pending.length > 0 && (
-            <Badge variant="secondary">{t('pendingCount', { count: pending.length })}</Badge>
-          )}
-        </CardHeader>
-        <CardContent>
-          {pending.length === 0 ? (
-            <p className="text-muted-foreground text-sm">{t('pendingEmpty')}</p>
-          ) : (
-            <ScrollableTable label={t('pendingSection')}>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('columns.name')}</TableHead>
-                    <TableHead>{t('columns.login')}</TableHead>
-                    <TableHead>{t('columns.campus')}</TableHead>
-                    <TableHead className="text-right">{t('columns.actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pending.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <MemberIdentity name={user.fullName} photoUrl={user.photoUrl} />
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{user.login}</TableCell>
-                      <TableCell className="text-muted-foreground">{user.campus}</TableCell>
-                      <TableCell className="whitespace-normal">
-                        {offeredFirst && (
-                          <PendingMemberActions
-                            userId={user.id}
-                            memberName={user.fullName}
-                            roles={choices}
-                            initialRoleId={offeredFirst.id}
-                          />
-                        )}
-                      </TableCell>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardTitle>{t('pendingSection')}</CardTitle>
+            {pending.length > 0 && (
+              <Badge variant="secondary">{t('pendingCount', { count: pending.length })}</Badge>
+            )}
+          </CardHeader>
+          <CardContent>
+            {pending.length === 0 ? (
+              <p className="text-body text-muted-foreground">{t('pendingEmpty')}</p>
+            ) : (
+              <ScrollableTable label={t('pendingSection')}>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('columns.name')}</TableHead>
+                      <TableHead>{t('columns.login')}</TableHead>
+                      <TableHead>{t('columns.campus')}</TableHead>
+                      <TableHead className="text-right">{t('columns.actions')}</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </ScrollableTable>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Users className="text-muted-foreground size-4" />
-            {t('activeSection')}
-          </CardTitle>
-          {active.length > 0 && <Badge variant="secondary">{active.length}</Badge>}
-        </CardHeader>
-        <CardContent>
-          {active.length === 0 ? (
-            <p className="text-muted-foreground text-sm">{t('empty')}</p>
-          ) : (
-            <ScrollableTable label={t('activeSection')}>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('columns.name')}</TableHead>
-                    <TableHead>{t('columns.login')}</TableHead>
-                    <TableHead>{t('columns.campus')}</TableHead>
-                    <TableHead>{t('columns.role')}</TableHead>
-                    <TableHead className="text-right">{t('columns.actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {active.map((user) => {
-                    const lock = lockOf(user);
-                    return (
+                  </TableHeader>
+                  <TableBody>
+                    {pending.map((user) => (
                       <TableRow key={user.id}>
                         <TableCell>
                           <MemberIdentity name={user.fullName} photoUrl={user.photoUrl} />
                         </TableCell>
-                        <TableCell className="text-muted-foreground">{user.login}</TableCell>
-                        <TableCell className="text-muted-foreground">{user.campus}</TableCell>
-                        <TableCell className="whitespace-normal">
-                          {user.status === 'MEMBER' && user.role ? (
-                            <MemberRoleSelect
-                              userId={user.id}
-                              memberName={user.fullName}
-                              currentRoleId={user.role.id}
-                              roles={choices}
-                              lock={lock}
-                            />
-                          ) : (
-                            <div className="flex flex-col gap-1">
-                              <Badge variant="secondary" className="self-start">
-                                {accountLabel({ status: user.status, roleName: null }, tRoles)}
-                              </Badge>
-                              <span className="text-muted-foreground text-xs">
-                                {t('ownerNote')}
-                              </span>
-                            </div>
-                          )}
+                        <TableCell
+                          className="text-muted-foreground"
+                          data-label={t('columns.login')}
+                        >
+                          {user.login}
                         </TableCell>
-                        <TableCell className="text-right">
-                          {user.status === 'MEMBER' && lock === null && (
-                            <RemoveMemberButton
+                        <TableCell
+                          className="text-muted-foreground"
+                          data-label={t('columns.campus')}
+                        >
+                          {user.campus}
+                        </TableCell>
+                        <TableCell className="whitespace-normal" data-label={t('columns.actions')}>
+                          {offeredFirst && (
+                            <PendingMemberActions
                               userId={user.id}
-                              login={user.login}
                               memberName={user.fullName}
+                              roles={choices}
+                              initialRoleId={offeredFirst.id}
                             />
                           )}
                         </TableCell>
                       </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </ScrollableTable>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollableTable>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardTitle>{t('activeSection')}</CardTitle>
+            {active.length > 0 && <Badge variant="secondary">{active.length}</Badge>}
+          </CardHeader>
+          <CardContent>
+            {active.length === 0 ? (
+              <p className="text-body text-muted-foreground">{t('empty')}</p>
+            ) : (
+              <ScrollableTable label={t('activeSection')}>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('columns.name')}</TableHead>
+                      <TableHead>{t('columns.login')}</TableHead>
+                      <TableHead>{t('columns.campus')}</TableHead>
+                      <TableHead>{t('columns.role')}</TableHead>
+                      <TableHead className="text-right">{t('columns.actions')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {active.map((user) => {
+                      const lock = lockOf(user);
+                      return (
+                        <TableRow key={user.id}>
+                          <TableCell>
+                            <MemberIdentity name={user.fullName} photoUrl={user.photoUrl} />
+                          </TableCell>
+                          <TableCell
+                            className="text-muted-foreground"
+                            data-label={t('columns.login')}
+                          >
+                            {user.login}
+                          </TableCell>
+                          <TableCell
+                            className="text-muted-foreground"
+                            data-label={t('columns.campus')}
+                          >
+                            {user.campus}
+                          </TableCell>
+                          <TableCell className="whitespace-normal" data-label={t('columns.role')}>
+                            {user.status === 'MEMBER' && user.role ? (
+                              <MemberRoleSelect
+                                userId={user.id}
+                                memberName={user.fullName}
+                                currentRoleId={user.role.id}
+                                roles={choices}
+                                lock={lock}
+                              />
+                            ) : (
+                              <div className="flex flex-col gap-1">
+                                <Badge variant="secondary" className="self-start">
+                                  {accountLabel({ status: user.status, roleName: null }, tRoles)}
+                                </Badge>
+                                <span className="text-muted-foreground text-small">
+                                  {t('ownerNote')}
+                                </span>
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right max-sm:text-left">
+                            {user.status === 'MEMBER' && lock === null && (
+                              <RemoveMemberButton
+                                userId={user.id}
+                                login={user.login}
+                                memberName={user.fullName}
+                              />
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </ScrollableTable>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }

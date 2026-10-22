@@ -211,7 +211,7 @@ export function RepeatFields({
   const fieldError = (field: RepeatField) => {
     const message = error(field);
     return message ? (
-      <p id={`${field}-error`} className="text-destructive text-xs">
+      <p id={`${field}-error`} className="text-destructive text-small">
         {message}
       </p>
     ) : null;
@@ -240,8 +240,8 @@ export function RepeatFields({
       </div>
 
       {preset === 'CUSTOM' && (
-        <fieldset className="flex flex-col gap-3 rounded-lg border p-3">
-          <legend className="px-1 text-sm font-medium">{t('customLegend')}</legend>
+        <fieldset className="flex flex-col gap-3 rounded-lg bg-surface-2 p-4">
+          <legend className="px-1 text-body-strong">{t('customLegend')}</legend>
 
           <div className="flex flex-wrap items-end gap-2">
             <div className="flex flex-col gap-1.5">
@@ -283,7 +283,7 @@ export function RepeatFields({
 
           {freq === 'WEEKLY' && (
             <fieldset className="flex flex-col gap-1.5">
-              <legend className="mb-1 text-sm">{t('weekdaysLegend')}</legend>
+              <legend className="mb-1 text-body">{t('weekdaysLegend')}</legend>
               <div className="flex flex-wrap gap-1.5" {...invalid('repeatWeekdays')}>
                 {WEEKDAYS.map((weekday) => (
                   <label key={weekday} className="cursor-pointer">
@@ -297,9 +297,9 @@ export function RepeatFields({
                     />
                     <span
                       className={cn(
-                        'border-input hover:bg-muted flex h-8 min-w-11 items-center justify-center rounded-lg border px-2 text-sm capitalize transition-colors',
-                        'peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:font-medium',
-                        'peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50',
+                        'bg-surface hover:bg-surface-3 text-small flex h-9 min-w-11 items-center justify-center rounded-pill px-3 capitalize transition-colors duration-(--dur-fast) max-sm:h-11',
+                        'peer-checked:bg-accent-soft peer-checked:font-extrabold peer-checked:text-accent-ink',
+                        'peer-focus-visible:outline-3 peer-focus-visible:outline-solid peer-focus-visible:outline-accent-ink peer-focus-visible:outline-offset-2',
                       )}
                     >
                       <span aria-hidden>{weekdayName(weekday, locale, 'short')}</span>
@@ -314,17 +314,17 @@ export function RepeatFields({
 
           {(freq === 'MONTHLY' || freq === 'YEARLY') && (
             <fieldset className="flex flex-col gap-1.5">
-              <legend className="mb-1 text-sm">{t('monthlyLegend')}</legend>
+              <legend className="mb-1 text-body">{t('monthlyLegend')}</legend>
               <input type="hidden" name="repeatMonthDay" value={monthDay} />
               {monthlyOptions.map(({ choice, label }) => (
-                <label key={choice} className="flex cursor-pointer items-center gap-2 text-sm">
+                <label key={choice} className="flex cursor-pointer items-center gap-2 text-body">
                   <input
                     type="radio"
                     name="repeatMonthly"
                     value={choice}
                     checked={monthly === choice}
                     onChange={() => setMonthly(choice)}
-                    className="accent-primary size-4"
+                    className="accent-accent-fill size-5"
                   />
                   <span className="first-letter:uppercase">{label}</span>
                 </label>
@@ -337,16 +337,16 @@ export function RepeatFields({
 
       {preset !== 'NONE' && (
         <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-sm font-medium">{t('endLegend')}</legend>
+          <legend className="mb-1 text-body-strong">{t('endLegend')}</legend>
           <div className="flex flex-wrap items-center gap-2">
-            <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <label className="flex cursor-pointer items-center gap-2 text-body">
               <input
                 type="radio"
                 name="repeatEnd"
                 value="until"
                 checked={end === 'until'}
                 onChange={() => setEnd('until')}
-                className="accent-primary size-4"
+                className="accent-accent-fill size-5"
               />
               {t('endUntil')}
             </label>
@@ -364,14 +364,14 @@ export function RepeatFields({
           </div>
           {end === 'until' && fieldError('recurrenceUntil')}
           <div className="flex flex-wrap items-center gap-2">
-            <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <label className="flex cursor-pointer items-center gap-2 text-body">
               <input
                 type="radio"
                 name="repeatEnd"
                 value="count"
                 checked={end === 'count'}
                 onChange={() => setEnd('count')}
-                className="accent-primary size-4"
+                className="accent-accent-fill size-5"
               />
               {t('endCount')}
             </label>
@@ -389,10 +389,10 @@ export function RepeatFields({
               className="w-24"
               {...invalid('repeatCount')}
             />
-            <span className="text-sm">{t('countUnit', { count: Number(count) || 1 })}</span>
+            <span className="text-body">{t('countUnit', { count: Number(count) || 1 })}</span>
           </div>
           {end === 'count' && fieldError('repeatCount')}
-          <p className="text-muted-foreground text-xs">{t('limit', { max: MAX_OCCURRENCES })}</p>
+          <p className="text-muted-foreground text-small">{t('limit', { max: MAX_OCCURRENCES })}</p>
         </fieldset>
       )}
 
@@ -430,12 +430,12 @@ export function RepeatFields({
           role="status"
           aria-live="polite"
           aria-label={t('previewTitle')}
-          className="bg-muted/50 flex flex-col gap-1 rounded-lg p-3 text-sm"
+          className="bg-surface-2 flex flex-col gap-1 rounded-lg p-4 text-body"
         >
           {sentence && planned && first ? (
             <>
-              <p className="font-medium">{sentence}</p>
-              <p className="text-muted-foreground text-xs">
+              <p className="font-semibold">{sentence}</p>
+              <p className="text-muted-foreground text-small">
                 {t('previewNext', {
                   dates: dates
                     .slice(0, PREVIEW_DATES)
@@ -446,7 +446,7 @@ export function RepeatFields({
               </p>
             </>
           ) : (
-            problem && <p className="text-muted-foreground text-xs">{tErrors(problem)}</p>
+            problem && <p className="text-muted-foreground text-small">{tErrors(problem)}</p>
           )}
         </div>
       )}

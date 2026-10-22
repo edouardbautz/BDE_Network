@@ -1,5 +1,6 @@
 'use client';
 
+import { DEFAULT_ACCENT } from '@/config/schema';
 import { useRef, useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { Plus, Undo2, X } from 'lucide-react';
@@ -56,7 +57,7 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
     setRows((all) => all.map((row) => (row.id === id ? { ...row, ...patch } : row)));
 
   function add() {
-    const color = PALETTE[rows.length % PALETTE.length] ?? PALETTE[0] ?? '#0f766e';
+    const color = PALETTE[rows.length % PALETTE.length] ?? PALETTE[0] ?? DEFAULT_ACCENT;
     setRows((all) => [...all, { id: nextId.current++, label: '', color, removed: false }]);
   }
 
@@ -94,10 +95,10 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
   return (
     <section aria-labelledby="settings-events" className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h2 id="settings-events" className="text-lg font-semibold tracking-tight">
+        <h2 id="settings-events" className="text-title-3">
           {t('title')}
         </h2>
-        <p className="text-muted-foreground text-sm">{t('description')}</p>
+        <p className="text-muted-foreground text-body">{t('description')}</p>
       </div>
 
       <form
@@ -109,7 +110,7 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
         noValidate
       >
         <div className="flex flex-col gap-2">
-          <p id="settings-events-categories" className="text-sm font-medium">
+          <p id="settings-events-categories" className="text-body-strong">
             {t('categories')}
           </p>
           <ul aria-labelledby="settings-events-categories" className="flex flex-col gap-2">
@@ -118,9 +119,9 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
                 <input
                   type="color"
                   aria-label={t('colorOf', { label: row.label || t('newCategory') })}
-                  value={/^#[0-9a-f]{6}$/i.test(row.color) ? row.color : '#0f766e'}
+                  value={/^#[0-9a-f]{6}$/i.test(row.color) ? row.color : DEFAULT_ACCENT}
                   onChange={(event) => update(row.id, { color: event.target.value })}
-                  className="border-input size-9 shrink-0 cursor-pointer rounded-lg border bg-transparent p-0.5"
+                  className="size-9 shrink-0 cursor-pointer rounded-pill bg-surface-2 p-1"
                 />
                 <Input
                   value={row.label}
@@ -131,7 +132,7 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
                   autoComplete="off"
                 />
                 {used(row) > 0 && (
-                  <span className="text-muted-foreground shrink-0 text-xs whitespace-nowrap">
+                  <span className="text-muted-foreground shrink-0 text-small whitespace-nowrap">
                     {t('usage', { count: used(row) })}
                   </span>
                 )}
@@ -148,9 +149,9 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
               </li>
             ))}
           </ul>
-          {active.length <= 1 && <p className="text-muted-foreground text-xs">{t('keepOne')}</p>}
+          {active.length <= 1 && <p className="text-muted-foreground text-small">{t('keepOne')}</p>}
           {failure?.field === 'categories' && (
-            <p role="alert" className="text-destructive text-sm">
+            <p role="alert" className="text-destructive text-body">
               {text(failure)}
             </p>
           )}
@@ -169,13 +170,13 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
         </div>
 
         {removed.length > 0 && (
-          <div className="border-border flex flex-col gap-3 rounded-lg border border-dashed p-3">
-            <p className="text-sm font-medium">{t('pendingTitle')}</p>
+          <div className="flex flex-col gap-3 rounded-lg bg-surface-2 p-3.5">
+            <p className="text-body-strong">{t('pendingTitle')}</p>
             <ul className="flex flex-col gap-3">
               {removed.map((row) => (
                 <li key={row.id} className="flex flex-col gap-2">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm line-through">{row.label}</span>
+                    <span className="text-body line-through">{row.label}</span>
                     <Button
                       type="button"
                       variant="ghost"
@@ -231,7 +232,7 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
         </Field>
 
         {failure && !failure.field && (
-          <p role="alert" className="text-destructive text-sm">
+          <p role="alert" className="text-destructive text-body">
             {text(failure)}
           </p>
         )}

@@ -4,36 +4,48 @@ import { isValidElement } from "react"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * The pill button of the "Galets" direction (docs/design.md, "Buttons"). The names of the variants are shadcn's, what they draw is
+ * the specification's: `default` is the primary (the accent), `secondary` and `outline` the secondary (surface-2, no border),
+ * `ghost` the quiet one, `destructive` the danger one (soft), `confirm` the solid danger of a confirmation dialog, `onAccent` the one
+ * that sits on an accent-filled card. A button is 44 px high on a phone, whatever its size.
+ */
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center gap-1.5 rounded-pill text-body-strong whitespace-nowrap select-none transition-[background-color,box-shadow,transform] duration-(--dur-fast) ease-(--ease-standard) active:duration-(--dur-instant) motion-safe:active:not-aria-[haspopup]:scale-[.98] disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-disabled disabled:shadow-none aria-disabled:cursor-not-allowed aria-disabled:bg-surface-2 aria-disabled:text-disabled [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
-        outline:
-          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+        default:
+          "bg-accent-fill text-accent-on accent-edge hover:bg-accent-fill-hover active:bg-accent-fill-pressed",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+          "bg-surface-2 text-ink hover:bg-surface-3 active:bg-surface-3 aria-expanded:bg-surface-3",
+        outline:
+          "bg-surface-2 text-ink hover:bg-surface-3 active:bg-surface-3 aria-expanded:bg-surface-3",
         ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+          "text-ink hover:bg-surface-2 active:bg-surface-3 aria-expanded:bg-surface-2",
         destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-danger-soft text-danger hover:bg-[color-mix(in_srgb,var(--danger-soft),black_4%)] active:bg-[color-mix(in_srgb,var(--danger-soft),black_4%)]",
+        confirm:
+          "bg-danger-fill text-on-danger hover:bg-[color-mix(in_srgb,var(--danger-fill),black_8%)] active:bg-[color-mix(in_srgb,var(--danger-fill),black_14%)]",
+        onAccent:
+          "bg-accent-on text-accent-fill hover:bg-accent-on/92 active:bg-accent-on/86",
+        link: "rounded-xs text-accent-ink underline-offset-3 hover:underline",
       },
       size: {
-        default:
-          "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
-        lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        icon: "size-8",
-        "icon-xs":
-          "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm":
-          "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
-        "icon-lg": "size-9",
+        default: "h-10 px-4.5 max-sm:h-11",
+        xs: "h-8 px-3 max-sm:h-11",
+        sm: "h-8 px-3.5 max-sm:h-11",
+        lg: "h-11 px-4.5",
+        icon: "size-9.5 max-sm:size-11",
+        "icon-xs": "size-8 max-sm:size-11",
+        "icon-sm": "size-8 max-sm:size-11",
+        "icon-lg": "size-11",
       },
     },
+    compoundVariants: [
+      // A link is text: no height, no padding.
+      { variant: "link", className: "h-auto px-0 max-sm:h-auto" },
+    ],
     defaultVariants: {
       variant: "default",
       size: "default",
