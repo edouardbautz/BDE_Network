@@ -1,0 +1,65 @@
+[
+  [
+    "weekly: the weeks are counted from the week of the date typed, not from the first day that fits",
+    "src/lib/events/repeat.ts",
+    "firstWeek + (offsets.some((offset) => firstWeek + offset >= firstDay) ? 0 : 7);",
+    "firstWeek;",
+    ["src/lib/events/repeat.test.ts", "src/lib/events/input.test.ts", "src/lib/events/repeat-input.test.ts"]
+  ],
+  [
+    "weekly: a first date that is a day of the rule is pushed to the next week",
+    "src/lib/events/repeat.ts",
+    "firstWeek + offset >= firstDay) ? 0 : 7);",
+    "firstWeek + offset > firstDay) ? 0 : 7);",
+    ["src/lib/events/repeat.test.ts"]
+  ],
+  [
+    "monthly: the months are counted from the month of the date typed",
+    "src/lib/events/repeat.ts",
+    "const firstMonth = first.year * 12 + first.month - 1 + (behind ? 1 : 0);",
+    "const firstMonth = first.year * 12 + first.month - 1;",
+    ["src/lib/events/repeat.test.ts"]
+  ],
+  [
+    "monthly: a day that is the first date itself counts as behind it",
+    "src/lib/events/repeat.ts",
+    "const firstMonth = first.year * 12 + first.month - 1 + (behind ? 1 : 0);",
+    "const firstMonth = first.year * 12 + first.month - 1 + (dayInMonth(first.year, first.month, rule.monthly) <= first.day ? 1 : 0);",
+    ["src/lib/events/repeat.test.ts"]
+  ],
+  [
+    "yearly: the years are counted from the year of the date typed",
+    "src/lib/events/repeat.ts",
+    "const year = first.year + (behind ? 1 : 0) + step * rule.interval;",
+    "const year = first.year + step * rule.interval;",
+    ["src/lib/events/repeat.test.ts"]
+  ],
+  [
+    "form: the button moves the start and leaves the end where it was",
+    "src/components/events/repeat-fields.tsx",
+    "formatLocalInput(planned.endsAt, timeZone),",
+    "endsAt,",
+    ["src/components/events/repeat-fields.test.tsx"]
+  ],
+  [
+    "form: the notice shows for a date that fits the rule",
+    "src/components/events/repeat-fields.tsx",
+    "const startsOn = moved && planned ? planned.startsAt : null;",
+    "const startsOn = planned ? planned.startsAt : null;",
+    ["src/components/events/repeat-fields.test.tsx"]
+  ],
+  [
+    "form: the notice is the assertive alert of an error",
+    "src/components/events/repeat-fields.tsx",
+    "<Alert role=\"status\">",
+    "<Alert>",
+    ["src/components/events/repeat-fields.test.tsx"]
+  ],
+  [
+    "form: the notice says the date typed is the date the series starts on",
+    "src/components/events/repeat-fields.tsx",
+    "first: formatWeekdayDayMonth(",
+    "first: formatDayMonth(",
+    ["src/components/events/repeat-fields.test.tsx"]
+  ]
+]

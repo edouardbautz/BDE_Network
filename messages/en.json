@@ -673,7 +673,8 @@
         "weekdaysLegend": "Days of the week",
         "monthlyLegend": "Which day",
         "previewTitle": "Preview",
-        "previewMoved": "The first date becomes {date}, the first day that fits this repetition.",
+        "startNotice": "{typed} does not match this rule: the series will start on {first}.",
+        "startNoticeAction": "Start on {date}",
         "previewNext": "Next dates: {dates}",
         "previewTotal": "{count, plural, one {# date in total} other {# dates in total}}"
       }

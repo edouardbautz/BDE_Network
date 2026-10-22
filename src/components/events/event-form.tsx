@@ -299,7 +299,7 @@ export function EventForm({
               id="startsAt"
               name="startsAt"
               type="datetime-local"
-              defaultValue={values.startsAt}
+              value={startsAt}
               onChange={(event) => setStartsAt(event.target.value)}
               {...field('startsAt', true)}
             />
@@ -314,7 +314,7 @@ export function EventForm({
               id="endsAt"
               name="endsAt"
               type="datetime-local"
-              defaultValue={values.endsAt}
+              value={endsAt}
               onChange={(event) => setEndsAt(event.target.value)}
               {...field('endsAt', true)}
             />
@@ -329,6 +329,10 @@ export function EventForm({
             startsAt={startsAt}
             endsAt={endsAt}
             timeZone={timeZone}
+            onStartChange={(start, end) => {
+              setStartsAt(start);
+              setEndsAt(end);
+            }}
             error={error}
           />
           {isEditing && values.repeat !== 'NONE' && (

@@ -166,19 +166,25 @@ Sous _Fin de la répétition_, choisissez l'une des deux façons :
 
 Dès qu'une répétition est choisie, le formulaire montre, sous les champs, **ce qu'elle va faire** avant tout
 enregistrement : la règle en une phrase (_Toutes les 2 semaines le lundi et le mercredi, 10 fois_), les **trois
-prochaines dates** et le **nombre de dates** au total. La même phrase figure sur la page de l'événement, dans les
+prochaines dates** et le **nombre de dates** au total. Quand la date de début saisie n'est pas un des jours de la règle,
+un encadré au-dessus dit quel jour la série commencera (voir plus bas). La même phrase figure sur la page de l'événement, dans les
 propositions à valider et dans les notifications. Si quelque chose ne va pas (une fin avant la première date, aucun
 jour coché…), l'aperçu dit quoi, avec les mêmes mots que le message sous le champ.
 
 ### Les règles à connaître
 
-- **La première date avance jusqu'à la première qui correspond.** Un événement saisi un samedi et répété _le lundi
-  et le mercredi_ commence un lundi : l'aperçu le dit (_La première date devient…_) et l'événement est enregistré avec
-  cette date.
-- **Les semaines commencent le lundi.** Avec _toutes les 2 semaines_, la semaine de la première date est la première
-  d'entre elles. Une série saisie le samedi 10 octobre et répétée toutes les 2 semaines le lundi et le mercredi
-  commence le lundi 19 octobre : la semaine du 5 octobre compte, mais son lundi et son mercredi sont avant le début,
-  et la semaine du 12 octobre est sautée.
+- **La série commence au premier jour qui correspond à la règle.** Un événement saisi le vendredi 23 octobre et
+  répété _toutes les 2 semaines le lundi et le mercredi_ commence le **lundi 26 octobre**. Le formulaire le dit dans un
+  encadré d'information au-dessus de l'aperçu (_Le 23 octobre ne correspond pas à cette règle : la série commencera le
+  lundi 26 octobre._), avec un bouton (_Commencer le 26 octobre_) qui change la date de début à votre place en gardant
+  l'heure et la durée ; si vous ne l'utilisez pas, l'événement est enregistré avec ce lundi quand même. Il en va de
+  même pour une règle mensuelle ou annuelle (_le 15_ saisi le 20 commence le 15 du mois suivant).
+- **Les semaines commencent le lundi, et l'intervalle se compte à partir de la première date de la série.** Avec
+  _toutes les 2 semaines_, la semaine de la première date est la première d'entre elles. La série du vendredi
+  ci-dessus donne les 26 et 28 octobre, puis les 9 et 11 novembre, puis les 23 et 25 novembre… De même, _tous les
+  2 mois_ compte les mois à partir du premier mois qui a ce jour, et _tous les 2 ans_ les années à partir de la
+  première année qui l'a. Une série dont la date de début est déjà un jour de la règle n'est pas touchée : elle garde
+  les dates qu'elle a toujours eues.
 - **Un jour que le mois n'a pas devient son dernier jour.** Un événement le 31 tombe le 30 avril, le 28 février… et le
   29 février il tombe le 28 les années qui n'en ont pas. Une série coupée un de ces jours garde son jour : les dates
   suivantes retombent le 31.

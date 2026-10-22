@@ -60,9 +60,11 @@ const WORDS = {
     custom: /^Toutes les 2 semaines le lundi et le mercredi, 10 fois$/,
     everyWeek: /^Toutes les semaines le lundi, jusqu'au /,
     total: (count) => `${count} dates au total`,
-    moved: 'La première date devient le lundi',
+    notice: 'ne correspond pas à cette règle : la série commencera le lundi',
+    startButton: 'Commencer le',
     tooMany: 'Cette série contient trop de dates (400 au maximum)',
     monday: 'lundi',
+    wednesday: 'mercredi',
     countRadio: 'Après',
   },
   en: {
@@ -74,9 +76,11 @@ const WORDS = {
     custom: /^Every 2 weeks on Monday and Wednesday, 10 times$/,
     everyWeek: /^Every week on Monday, until /,
     total: (count) => `${count} dates in total`,
-    moved: 'The first date becomes Monday',
+    notice: 'does not match this rule: the series will start on Monday',
+    startButton: 'Start on',
     tooMany: 'This series has too many dates (400 at most)',
     monday: 'Monday',
+    wednesday: 'Wednesday',
     countRadio: 'After',
   },
 };
@@ -195,13 +199,18 @@ async function run(lang) {
   const preview = () =>
     page.evaluate(
       () =>
-        document.querySelector('form [role="status"]')?.innerText.replace(/\s+/g, ' ').trim() ?? '',
+        document
+          .querySelector('form [role="status"][aria-label]')
+          ?.innerText.replace(/\s+/g, ' ')
+          .trim() ?? '',
     );
   const waitForPreview = async (needle, description) => {
     if (
       !(await waitFor(
         (value) =>
-          (document.querySelector('form [role="status"]')?.innerText ?? '').includes(value),
+          (document.querySelector('form [role="status"][aria-label]')?.innerText ?? '').includes(
+            value,
+          ),
         needle,
       ))
     ) {
@@ -254,7 +263,7 @@ async function run(lang) {
         `[${lang}] the list says ${JSON.stringify(options)}: expected "${words.weekly}" worded from the first date`,
       );
     }
-    if (await page.$('form [role="status"]'))
+    if (await page.$('form [role="status"][aria-label]'))
       fail(`[${lang}] a preview shows before a repetition is chosen`);
     await setValue('#repeat', 'WEEKLY');
     await setValue('#recurrenceUntil', dayKey(addDays(monday, 21)));
@@ -314,24 +323,64 @@ async function run(lang) {
     }
     step('custom: every 2 weeks on Monday and Wednesday, 10 times: previewed, saved and listed');
 
-    // ---- a first date that does not fit moves to the first that does ---------------------------------------------------
+    // ---- a first date that does not fit: the series starts on the first that does, and the form says so ------------------
+    // Friday, "every 2 weeks on Monday and Wednesday, 10 times": the weeks are counted from the Monday after, not from
+    // the week of the Friday (which would have started the series two weeks later).
     const movedTitle = `${PREFIX} moved ${lang} ${stamp}`;
-    await newEvent(movedTitle, addDays(monday, 5)); // a Saturday
+    const friday = addDays(monday, 4);
+    await newEvent(movedTitle, friday);
     await setValue('#repeat', 'CUSTOM');
     await page.waitForSelector('#repeatInterval');
-    await click('input[name="repeatWeekdays"][value="SA"]'); // off: it was the weekday of the first date
+    await click('input[name="repeatWeekdays"][value="FR"]'); // off: it was the weekday of the first date
     await click('input[name="repeatWeekdays"][value="MO"]');
-    await setValue('#recurrenceUntil', dayKey(addDays(monday, 40)));
-    await waitForPreview(words.moved, 'a Saturday with "Monday"');
+    await click('input[name="repeatWeekdays"][value="WE"]');
+    await setValue('#repeatInterval', '2');
+    await click('input[name="repeatEnd"][value="count"]');
+    await setValue('#repeatCount', '10');
+    await waitForPreview(words.total(10), 'ten dates from a Friday');
+    const notice = () =>
+      page.evaluate(
+        () =>
+          document
+            .querySelector('form [data-slot="alert"]')
+            ?.textContent?.replace(/\s+/g, ' ')
+            .trim() ?? '',
+      );
+    if (!(await notice()).includes(words.notice))
+      fail(`[${lang}] the notice says "${await notice()}", expected "${words.notice}"`);
+    // a notice, not the small grey text of the preview: it has a button that moves the date
+    await clickText(words.startButton, 'form');
+    const startedOn = await page.$eval('#startsAt', (el) => el.value);
+    const endedOn = await page.$eval('#endsAt', (el) => el.value);
+    const nextMonday = dayKey(addDays(monday, 7));
+    if (startedOn !== `${nextMonday}T18:00` || endedOn !== `${nextMonday}T20:00`) {
+      fail(
+        `[${lang}] the button left the dates at ${startedOn} → ${endedOn}, expected ${nextMonday}, 18:00 → 20:00`,
+      );
+    }
+    if (await notice())
+      fail(`[${lang}] the notice stays after the date was moved: "${await notice()}"`);
+    if ((await page.evaluate(() => document.activeElement?.id)) !== 'startsAt')
+      fail(`[${lang}] the focus did not go back to the date field`);
     const movedId = await send();
     const moved = await dates();
-    // a Saturday would not say Monday: the first date is the first Monday
-    if (!moved[0]?.label.toLowerCase().includes(words.monday.toLowerCase())) {
-      fail(`[${lang}] the first date is "${moved[0]?.label}", expected a Monday`);
+    if (moved.length !== 10) fail(`[${lang}] the series lists ${moved.length} dates, expected 10`);
+    // Monday, Wednesday, then Monday two weeks after the first
+    const labelsLower = moved.slice(0, 2).map((date) => date.label.toLowerCase());
+    if (
+      !labelsLower[0]?.includes(words.monday.toLowerCase()) ||
+      !labelsLower[1]?.includes(words.wednesday.toLowerCase())
+    ) {
+      fail(
+        `[${lang}] the first dates are "${moved[0]?.label}" and "${moved[1]?.label}", expected a Monday and a Wednesday`,
+      );
     }
+    const when = (occ) => new Date(/^\d+$/.test(occ) ? Number(occ) : occ);
+    const gap = Math.round((when(moved[2].occ) - when(moved[0].occ)) / 86_400_000);
+    if (gap !== 14) fail(`[${lang}] the third date is ${gap} days after the first, expected 14`);
     if (!movedId) fail(`[${lang}] no event`);
     step(
-      'a first date that does not fit moves to the first one that does, and the preview says so',
+      'a first date that does not fit: a notice says where the series starts, its button moves the date, the weeks are counted from there',
     );
 
     // ---- the limit of an event -----------------------------------------------------------------------------------------

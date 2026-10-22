@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import en from '../../../messages/en.json';
 import fr from '../../../messages/fr.json';
 import { NO_REPEAT, type RawRepeat, type RepeatField } from '@/lib/events/repeat-input';
@@ -14,12 +14,14 @@ function renderFields({
   values = NO_REPEAT,
   startsAt = '2026-10-10T20:00',
   endsAt = '2026-10-10T22:00',
+  onStartChange = () => {},
   error = () => null,
 }: {
   locale?: 'fr' | 'en';
   values?: RawRepeat;
   startsAt?: string;
   endsAt?: string;
+  onStartChange?: (startsAt: string, endsAt: string) => void;
   error?: (field: RepeatField) => string | null;
 } = {}) {
   const view = render(
@@ -30,6 +32,7 @@ function renderFields({
           startsAt={startsAt}
           endsAt={endsAt}
           timeZone="Europe/Paris"
+          onStartChange={onStartChange}
           error={error}
         />
       </form>
@@ -86,6 +89,7 @@ describe('RepeatFields — the list of choices', () => {
             startsAt="2026-10-14T20:00"
             endsAt="2026-10-14T22:00"
             timeZone="Europe/Paris"
+            onStartChange={() => {}}
             error={() => null}
           />
         </form>
@@ -187,19 +191,102 @@ describe('RepeatFields — the preview', () => {
     expect(preview).toHaveAttribute('aria-live', 'polite');
   });
 
-  it('says that the first date moves to the first one that fits the rule', () => {
-    const { choose } = renderFields();
-    choose('CUSTOM');
-    // the custom panel starts from the weekday of the first date (Saturday): ask for Monday instead
-    fireEvent.click(screen.getByRole('checkbox', { name: 'samedi' }));
-    fireEvent.click(screen.getByRole('checkbox', { name: 'lundi' }));
-    fireEvent.change(screen.getByLabelText('Date de fin (ce jour est inclus)'), {
-      target: { value: '2026-11-30' },
+  describe('when the date typed is not one of the days of the rule', () => {
+    // Friday 23 October 2026, "every 2 weeks on Monday and Wednesday, 10 times": the case met in a manual test.
+    const setUp = (extra: Parameters<typeof renderFields>[0] = {}) => {
+      const view = renderFields({
+        startsAt: '2026-10-23T20:00',
+        endsAt: '2026-10-23T22:00',
+        ...extra,
+      });
+      view.choose('CUSTOM');
+      fireEvent.change(screen.getByLabelText(/Répéter tous les/), { target: { value: '2' } });
+      fireEvent.click(screen.getByRole('checkbox', { name: 'vendredi' }));
+      fireEvent.click(screen.getByRole('checkbox', { name: 'lundi' }));
+      fireEvent.click(screen.getByRole('checkbox', { name: 'mercredi' }));
+      fireEvent.click(screen.getByRole('radio', { name: 'Après' }));
+      fireEvent.change(screen.getByLabelText("Nombre d'occurrences"), { target: { value: '10' } });
+      return view;
+    };
+
+    it('says it in a notice of the design system, with the day the series will start on', () => {
+      setUp();
+      const notice = screen
+        .getByText(/ne correspond pas à cette règle/)
+        .closest('[data-slot="alert"]');
+      expect(notice).not.toBeNull();
+      expect(notice).toHaveTextContent(
+        'Le 23 octobre ne correspond pas à cette règle : la série commencera le lundi 26 octobre.',
+      );
+      // not the small grey text of the preview: a status the reader is told about, politely
+      expect(notice).toHaveAttribute('role', 'status');
+      expect(screen.getByText(/ne correspond pas à cette règle/)).not.toHaveClass('text-xs');
+      expect(screen.getByRole('status', { name: 'Aperçu' })).not.toHaveTextContent(
+        /ne correspond pas/,
+      );
     });
 
-    expect(screen.getByRole('status', { name: 'Aperçu' })).toHaveTextContent(
-      'La première date devient le lundi 12 octobre 2026, premier jour qui correspond à cette répétition.',
-    );
+    it('counts the interval from that day: 26 and 28 October, then 9 and 11 November', () => {
+      setUp();
+      expect(screen.getByRole('status', { name: 'Aperçu' })).toHaveTextContent(
+        'Prochaines dates : lundi 26 octobre 2026 · mercredi 28 octobre 2026 · lundi 9 novembre 2026 · 10 dates au total',
+      );
+    });
+
+    it('offers to start on that day, and moves the end with it so the duration stays', () => {
+      const onStartChange = vi.fn();
+      setUp({ onStartChange });
+      fireEvent.click(screen.getByRole('button', { name: 'Commencer le 26 octobre' }));
+      expect(onStartChange).toHaveBeenCalledExactlyOnceWith('2026-10-26T20:00', '2026-10-26T22:00');
+    });
+
+    it('keeps the hour and the duration of an event that ends the next day', () => {
+      const onStartChange = vi.fn();
+      setUp({ onStartChange, startsAt: '2026-10-23T22:30', endsAt: '2026-10-24T02:00' });
+      fireEvent.click(screen.getByRole('button', { name: 'Commencer le 26 octobre' }));
+      expect(onStartChange).toHaveBeenCalledExactlyOnceWith('2026-10-26T22:30', '2026-10-27T02:00');
+    });
+
+    it('is gone once the date typed is one of the days of the rule', () => {
+      const view = setUp();
+      view.rerender(
+        <NextIntlClientProvider locale="fr" messages={fr}>
+          <form data-testid="form">
+            <RepeatFields
+              values={NO_REPEAT}
+              startsAt="2026-10-26T20:00"
+              endsAt="2026-10-26T22:00"
+              timeZone="Europe/Paris"
+              onStartChange={() => {}}
+              error={() => null}
+            />
+          </form>
+        </NextIntlClientProvider>,
+      );
+      expect(screen.queryByText(/ne correspond pas à cette règle/)).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^Commencer le/ })).not.toBeInTheDocument();
+    });
+
+    it('is not there for a date that fits, nor without a repetition', () => {
+      const { choose } = renderFields();
+      expect(screen.queryByText(/ne correspond pas à cette règle/)).not.toBeInTheDocument();
+      choose('WEEKLY');
+      expect(screen.queryByText(/ne correspond pas à cette règle/)).not.toBeInTheDocument();
+    });
+
+    it('is worded in English for an English page', () => {
+      renderFields({ locale: 'en', startsAt: '2026-10-23T20:00', endsAt: '2026-10-23T22:00' });
+      fireEvent.change(screen.getByLabelText('Repeat'), { target: { value: 'CUSTOM' } });
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Friday' }));
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Monday' }));
+      fireEvent.change(screen.getByLabelText('End date (this day is included)'), {
+        target: { value: '2026-12-31' },
+      });
+      expect(screen.getByText(/does not match this rule/)).toHaveTextContent(
+        'October 23 does not match this rule: the series will start on Monday, October 26.',
+      );
+      expect(screen.getByRole('button', { name: 'Start on October 26' })).toBeInTheDocument();
+    });
   });
 
   it('says what is wrong, in the language of the page, instead of dates', () => {

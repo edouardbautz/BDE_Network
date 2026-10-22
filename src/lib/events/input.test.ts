@@ -282,11 +282,11 @@ describe('parseEventInput', () => {
           weekdays: ['MO', 'WE'],
           count: 10,
         });
-        // The first date is a Saturday: the first Monday that counts is the one of the second week (the week of
-        // the first date, whose Monday and Wednesday are behind it, is the first of the "every 2 weeks"). The end is
-        // the start of the 10th date: Wednesday 16 December, 20:00 in winter time.
-        expect(result.ok && result.data.startsAt).toEqual(new Date('2026-10-19T18:00:00Z'));
-        expect(result.ok && result.data.recurrenceUntil).toEqual(new Date('2026-12-16T19:00:00Z'));
+        // The first date is a Saturday, and the Monday and the Wednesday of its week are behind it: the series starts on the
+        // next Monday (12 October) and the weeks are counted from that one: 12 and 14 October, then 26 and 28, 9 and 11
+        // November… The end is the start of the 10th date: Wednesday 9 December, 20:00 in winter time.
+        expect(result.ok && result.data.startsAt).toEqual(new Date('2026-10-12T18:00:00Z'));
+        expect(result.ok && result.data.recurrenceUntil).toEqual(new Date('2026-12-09T19:00:00Z'));
       });
 
       it.each(['0', '100', '-1', '1.5', 'abc', ''])(

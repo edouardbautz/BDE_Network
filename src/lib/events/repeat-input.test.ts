@@ -186,6 +186,29 @@ describe('planRepeat', () => {
     expect(result.ok && result.endsAt).toEqual(at(12).endsAt);
   });
 
+  it('counts every 2 weeks from the first date that fits: a Friday, with Monday and Wednesday, 10 times', () => {
+    // Friday 23 October: the series starts on Monday 26 and ends on the start of its 10th date, Wednesday 23 December
+    const friday = at(23);
+    const result = plan(
+      {
+        repeat: 'CUSTOM',
+        repeatFreq: 'WEEKLY',
+        repeatInterval: '2',
+        repeatWeekdays: ['MO', 'WE'],
+        repeatEnd: 'count',
+        repeatCount: '10',
+      },
+      friday,
+    );
+    expect(result.ok && result.startsAt).toEqual(at(26).startsAt);
+    expect(result.ok && result.endsAt).toEqual(at(26).endsAt);
+    const december = fromLocalDateTime(
+      { year: 2026, month: 12, day: 23, hour: 20, minute: 0 },
+      PARIS,
+    );
+    expect(result.ok && result.recurrenceUntil).toEqual(december);
+  });
+
   it('refuses an end before the first date that fits', () => {
     // the first date that fits is Monday 12; the end is Sunday 11
     expect(
