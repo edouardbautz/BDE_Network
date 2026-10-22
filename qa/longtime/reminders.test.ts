@@ -30,7 +30,7 @@ vi.mock('@/config', () => ({
     bde: { timezone: 'Europe/Paris', defaultLocale: 'fr' },
     modules: { enabled: ['events'] },
     events: { categories: [], reminderHour: 18 },
-    notifications: { eventReminder: 'discord' },
+    notifications: { eventReminder: ['discord'] },
   }),
 }));
 vi.mock('@/lib/prisma', () => ({

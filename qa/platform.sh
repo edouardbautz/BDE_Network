@@ -68,8 +68,8 @@ write_config() {
     events-disabled) modules='[]' ;;
     *) echo "unknown variant $VARIANT" >&2; exit 2 ;;
   esac
-  channel=none
-  [ -n "$WEBHOOK" ] && channel=discord
+  channels='[]'
+  [ -n "$WEBHOOK" ] && channels='[discord]'
   cat >"$1" <<EOF
 bde:
   name: 'BDE QA'
@@ -92,14 +92,14 @@ events:
     - { key: 'partenariat', label: 'Partenariat', color: '#2563eb' }
   reminderHour: 18
 notifications:
-  memberPending: 'none'
-  memberApproved: 'none'
-  memberRemoved: 'none'
-  eventConfirmed: '$channel'
-  eventReminder: '$channel'
-  eventProposed: '$channel'
-  eventApproved: '$channel'
-  eventRefused: '$channel'
+  memberPending: []
+  memberApproved: []
+  memberRemoved: []
+  eventConfirmed: $channels
+  eventReminder: $channels
+  eventProposed: $channels
+  eventApproved: $channels
+  eventRefused: $channels
 updates:
   check: false
 EOF

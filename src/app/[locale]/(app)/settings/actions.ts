@@ -30,7 +30,7 @@ import {
   realSleep,
   verifyCredentials,
 } from '@/lib/setup/fortytwo';
-import { parseChannelForTest, parseNotifications } from '@/lib/setup/notifications';
+import { parseChannelForTest } from '@/lib/setup/notifications';
 import { sendTestMessage } from '@/lib/setup/notify-test';
 import {
   redirectUrl,

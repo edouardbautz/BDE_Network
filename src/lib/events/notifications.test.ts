@@ -167,6 +167,31 @@ describe('notifyEventConfirmed', () => {
     ]);
   });
 
+  it('on Discord, Slack and e-mail at once: one message in each channel, each in its own presentation, and the claim taken once', async () => {
+    useChannel(['discord', 'slack', 'email']);
+    await notifyEventConfirmed('evt1');
+
+    expect(prisma.event.updateMany).toHaveBeenCalledTimes(1);
+    const posted = vi.mocked(notify).mock.calls;
+    expect(posted.map(([channel]) => channel).sort()).toEqual(['discord', 'slack']);
+    const [, message] = posted[0] ?? [];
+    // one message carries the three presentations; each adapter reads its own
+    expect(message?.discord?.embeds).toHaveLength(1);
+    expect(message?.slack?.blocks.length).toBeGreaterThan(0);
+    expect(message?.email?.html).toContain('Tournoi');
+    expect(notifyMany).toHaveBeenCalledWith('email', [
+      expect.objectContaining({ to: 'a@x.fr' }),
+      expect.objectContaining({ to: 'b@x.fr' }),
+    ]);
+  });
+
+  it('a channel that fails does not stop the others from announcing the event', async () => {
+    useChannel(['discord', 'email']);
+    vi.mocked(notify).mockRejectedValue(new Error('webhook responded with 500'));
+    await expect(notifyEventConfirmed('evt1')).resolves.toBeUndefined();
+    expect(notifyMany).toHaveBeenCalledTimes(1);
+  });
+
   it('on Discord, posts a card in the colour of the event category, with its facts', async () => {
     useChannel('discord');
     await notifyEventConfirmed('evt1');
