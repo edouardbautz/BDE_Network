@@ -129,6 +129,11 @@ sudo certbot --nginx -d votre-domaine.example
 L'en-tête `X-Forwarded-Proto` est important : c'est lui qui indique à l'application que la
 connexion est en HTTPS (cookies sécurisés, en-tête `Strict-Transport-Security`).
 
+**L'application ne limite pas le nombre de requêtes** (seul le code de l'installateur est protégé contre les essais). La
+connexion passe par 42 : il n'y a pas de mot de passe à deviner, mais rien n'empêche quelqu'un d'inonder le site. Si cela
+vous importe, limitez le débit dans le proxy (nginx a `limit_req` pour cela). Ce que l'application accepte sous charge fait
+partie de ses [contrôles de qualité](quality.md#ce-qui-nest-pas-couvert).
+
 ## Sans proxy HTTPS
 
 **Le plus simple reste d'installer Caddy** : trois lignes de configuration et un nom de domaine

@@ -8,6 +8,11 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **A page of the documentation says what is checked, how, and what it found** ([Quality](docs/en/quality.md), in English and in
+  French): the checks of every pull request and of the nightly run, what the suites do, the 22 defects the campaign has found and
+  fixed since 1.2.0 by kind, what it looked for and did not find, and, as clearly, what it does not cover (no rate limit in the
+  platform, the real 42 and chat services replaced by stand-ins…). The deployment guide now says that the platform does not limit
+  requests and that the reverse proxy is the place to do it.
 - **A walk through the interface is played as every kind of member, on a computer and on a phone, every night.** From the first
   page and from every page the person is shown, it follows every link, opens every menu and dialog, and fails on what a person
   would notice: a link to a page that does not exist or that sends a signed-in person to the login page, a page with no heading or

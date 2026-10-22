@@ -75,6 +75,7 @@ La documentation est en français et en anglais, avec les mêmes pages.
 | Régler Discord, Slack ou l'e-mail | [Notifications](docs/fr/notifications.md)                                                                          |
 | Modifier un réglage               | [Configuration](docs/fr/configuration.md)                                                                          |
 | Résoudre un problème              | [Problèmes fréquents](docs/fr/troubleshooting.md) · [FAQ](docs/fr/faq.md) · [Glossaire](docs/fr/glossary.md)       |
+| Savoir comment c'est vérifié      | [Qualité](docs/fr/quality.md)                                                                                      |
 | Contribuer                        | [Guide contributeur](docs/fr/contributing.md) · [Architecture](docs/architecture.md) (en anglais)                  |
 
 ## Feuille de route
