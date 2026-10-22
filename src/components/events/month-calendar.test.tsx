@@ -164,7 +164,8 @@ describe('MonthCalendar', () => {
     expect(more?.className).toContain('min-h-6');
 
     const waiting = chips.find((chip) => chip.getAttribute('title')?.startsWith('Waiting'));
-    expect(waiting?.className).toContain('border-dashed');
+    // not confirmed: italic on the darker surface (never a border, never a fade)
+    expect(waiting?.className).toContain('bg-surface-3');
     expect(waiting?.className).toContain('italic');
     // An opacity would lower the contrast of the time and the title below what is readable.
     for (const chip of chips) expect(chip.className).not.toMatch(/opacity-/);
@@ -211,7 +212,7 @@ describe('MonthCalendar', () => {
         status: 'DRAFT',
       }),
     ]);
-    expect(html).toMatch(/border-dashed[^"]*italic/);
+    expect(html).toMatch(/bg-surface-3[^"]*italic/);
   });
 
   it('lists the selected day under the grid for small screens, with an empty state otherwise', async () => {
@@ -225,7 +226,10 @@ describe('MonthCalendar', () => {
       ],
       '2026-10-10',
     );
-    expect(withEvent).toMatch(/<section class="md:hidden"[\s\S]*samedi 10 octobre[\s\S]*Tournoi/);
+    // the panel of the selected day: under the grid on a phone, beside it from lg
+    expect(withEvent).toMatch(
+      /<section[^>]*aria-labelledby="selected-day-heading"[\s\S]*samedi 10 octobre[\s\S]*Tournoi/,
+    );
 
     const empty = await renderCalendar([], '2026-10-11');
     expect(empty).toContain('calendar.dayEmpty');
@@ -254,7 +258,8 @@ describe('MonthCalendar', () => {
         categoryKey: 'removed',
       }),
     ]);
-    expect(html).toContain('border-muted-foreground/40');
+    // no colour of its own: the dot keeps the neutral one
+    expect(html).toMatch(/class="bg-muted-foreground size-1\.5 shrink-0 rounded-pill"(?! style)/);
   });
 });
 
@@ -277,7 +282,8 @@ describe('MonthCalendar, adding an event on a day', () => {
     expect(cell).toContain('group-focus-within/cell:opacity-100');
     expect(cell).toContain('focus-visible:opacity-100');
     expect(cell).toContain('pointer-coarse:opacity-100');
-    expect(cell).toContain('focus-visible:ring-3');
+    // it keeps the outline of the whole interface for the keyboard: nothing here switches it off
+    expect(cell).not.toContain('outline-none');
   });
 
   it('puts the "+" after the day link, so that the keyboard reaches the day first, then the "+", then its events', async () => {
@@ -299,7 +305,7 @@ describe('MonthCalendar, adding an event on a day', () => {
 
   it('adds an "add on this day" button to the panel of the selected day, for small screens', async () => {
     const html = await renderCalendar([], '2026-10-12', true);
-    const panel = html.slice(html.indexOf('<section class="md:hidden"'));
+    const panel = html.slice(html.indexOf('aria-labelledby="selected-day-heading"'));
     expect(panel).toContain('id="add-on-selected-day"');
     expect(panel).toContain('href="/events/new?date=2026-10-12"');
     expect(panel).toContain('calendar.addOnSelectedDay');

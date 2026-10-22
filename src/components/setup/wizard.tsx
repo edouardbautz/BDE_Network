@@ -102,7 +102,7 @@ export function SetupWizard({
         </div>
       )}
 
-      <div ref={frame} tabIndex={-1} className="outline-none">
+      <div ref={frame} tabIndex={-1} className="">
         {done ? (
           <Done locale={locale} />
         ) : current === 0 ? (

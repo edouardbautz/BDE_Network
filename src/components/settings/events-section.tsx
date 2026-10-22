@@ -1,5 +1,6 @@
 'use client';
 
+import { DEFAULT_ACCENT } from '@/config/schema';
 import { useRef, useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { Plus, Undo2, X } from 'lucide-react';
@@ -56,7 +57,7 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
     setRows((all) => all.map((row) => (row.id === id ? { ...row, ...patch } : row)));
 
   function add() {
-    const color = PALETTE[rows.length % PALETTE.length] ?? PALETTE[0] ?? '#0f766e';
+    const color = PALETTE[rows.length % PALETTE.length] ?? PALETTE[0] ?? DEFAULT_ACCENT;
     setRows((all) => [...all, { id: nextId.current++, label: '', color, removed: false }]);
   }
 
@@ -118,7 +119,7 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
                 <input
                   type="color"
                   aria-label={t('colorOf', { label: row.label || t('newCategory') })}
-                  value={/^#[0-9a-f]{6}$/i.test(row.color) ? row.color : '#0f766e'}
+                  value={/^#[0-9a-f]{6}$/i.test(row.color) ? row.color : DEFAULT_ACCENT}
                   onChange={(event) => update(row.id, { color: event.target.value })}
                   className="size-9 shrink-0 cursor-pointer rounded-pill bg-surface-2 p-1"
                 />

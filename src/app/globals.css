@@ -154,7 +154,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-:root {
+:root,
+.light {
   /* Neutrals (spec 2.1) */
   --bg: #eceef1;
   --surface: #ffffff;

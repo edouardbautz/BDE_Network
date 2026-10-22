@@ -29,10 +29,16 @@ export const EVENTS_MODULE_KEY = 'events';
  * what keeps a typo in `modules.enabled` from passing unnoticed (see config/env.ts). */
 export const KNOWN_MODULE_KEYS: readonly string[] = [EVENTS_MODULE_KEY];
 
+/**
+ * The accent of a platform nobody has chosen one for: the installer proposes it, the example configuration writes it. A platform
+ * that already has a colour keeps it (the configuration and the settings always carry one).
+ */
+export const DEFAULT_ACCENT = '#2F5BEA';
+
 const hexColor = z
   .string({ error: "la couleur d'accent doit être une chaîne de caractères" })
   .regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, {
-    message: 'doit être une couleur hexadécimale valide, par exemple "#0f766e"',
+    message: 'doit être une couleur hexadécimale valide, par exemple "#2F5BEA"',
   });
 
 const loginSlug = z
@@ -60,7 +66,7 @@ const bdeSection = z.object({
   defaultLocale: z.enum(SUPPORTED_LOCALES, {
     error: () => `la langue par défaut doit être l'une de : ${SUPPORTED_LOCALES.join(', ')}`,
   }),
-  accentColor: hexColor,
+  accentColor: hexColor.default(DEFAULT_ACCENT),
   // Where members write about their data (privacy page). Optional: without it the page sends them
   // to an administrator or owner.
   contactEmail: z.email({ message: 'doit être une adresse e-mail valide' }).optional(),

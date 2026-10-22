@@ -87,7 +87,7 @@ bouton **Retour**.
 
 | Étape             | Ce que vous indiquez                                                                     | Ce que fait la page                                                                                                                                                                                                                |
 | ----------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Votre BDE      | Le nom, la couleur, la langue des messages envoyés, une adresse de contact (facultative) | Montre un aperçu de la couleur.                                                                                                                                                                                                    |
+| 1. Votre BDE      | Le nom, la couleur, la langue des messages envoyés, une adresse de contact (facultative) | Montre la couleur en thème clair et en thème sombre.                                                                                                                                                                               |
 | 2. Adresse        | L'adresse de la plateforme                                                               | Propose celle que vous utilisez. Donne l'URL de redirection exacte à déclarer sur l'intra. Vous avertit si l'adresse n'est pas celle de votre navigateur, ou si elle commence par `http://` sur un vrai domaine. Refuse `0.0.0.0`. |
 | 3. Application 42 | L'**UID** et la **clé secrète**                                                          | Donne le pas à pas et l'URL à copier. Vérifie tout de suite les identifiants auprès de 42.                                                                                                                                         |
 | 4. Campus         | Les campus autorisés                                                                     | Propose la liste des campus 42 avec une recherche. En déduit le fuseau horaire.                                                                                                                                                    |
@@ -170,7 +170,7 @@ Une fois l'installation terminée, **la page d'installation disparaît pour touj
 
 Connectez-vous avec 42. Comme votre login est dans la liste des propriétaires, vous avez tous les droits.
 
-1. **Paramètres** (menu de gauche, propriétaires seulement) : tout ce que l'installateur a demandé se modifie ici,
+1. **Paramètres** (le menu, propriétaires seulement) : tout ce que l'installateur a demandé se modifie ici,
    section par section, et s'applique tout de suite. Voir [Configuration](configuration.md).
 
    ![La page Paramètres](../images/fr/settings.webp)

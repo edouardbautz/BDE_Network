@@ -35,7 +35,7 @@ export async function EventRow({
               pathname: `/events/${occurrence.eventId}`,
               query: { occ: occurrence.originalStart.getTime() },
             }}
-            className="text-body-strong rounded-xs outline-none hover:underline"
+            className="text-body-strong rounded-xs hover:underline"
           >
             {occurrence.title}
           </Link>

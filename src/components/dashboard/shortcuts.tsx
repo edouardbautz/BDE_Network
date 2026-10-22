@@ -32,7 +32,7 @@ export function Shortcuts({
             <Link
               href={item.href}
               className={cn(
-                'bg-surface elev-1 flex h-full min-h-22 flex-col items-start gap-2 rounded-xl px-3.5 py-3 outline-none sm:rounded-lg',
+                'bg-surface elev-1 flex h-full min-h-22 flex-col items-start gap-2 rounded-xl px-3.5 py-3 sm:rounded-lg',
                 'transition-[box-shadow,transform] duration-(--dur-fast) ease-(--ease-standard)',
                 'hover:elev-2 motion-safe:active:scale-[.99] focus-visible:outline-offset-3',
               )}

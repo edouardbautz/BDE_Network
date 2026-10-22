@@ -119,7 +119,7 @@ export async function MonthCalendar({
                             count: occurrences.length,
                           })}
                           className={cn(
-                            'text-small tabular flex size-6.5 items-center justify-center self-start rounded-pill font-bold outline-none',
+                            'text-small tabular flex size-6.5 items-center justify-center self-start rounded-pill font-bold ',
                             !day.inMonth && 'text-muted-foreground',
                             isToday && 'bg-accent-fill text-accent-on accent-edge',
                             isSelected &&
@@ -137,7 +137,7 @@ export async function MonthCalendar({
                               date: formatDayHeading(day, locale),
                             })}
                             title={t('calendar.addOnDayShort')}
-                            className="bg-surface text-ink elev-1 hover:bg-surface-3 absolute top-1 right-1 hidden size-6.5 items-center justify-center rounded-pill opacity-0 transition-opacity duration-(--dur-fast) outline-none group-focus-within/cell:opacity-100 [td:hover_&]:opacity-100 focus-visible:opacity-100 pointer-coarse:size-8 pointer-coarse:opacity-100 md:flex"
+                            className="bg-surface text-ink elev-1 hover:bg-surface-3 absolute top-1 right-1 hidden size-6.5 items-center justify-center rounded-pill opacity-0 transition-opacity duration-(--dur-fast) group-focus-within/cell:opacity-100 [td:hover_&]:opacity-100 focus-visible:opacity-100 pointer-coarse:size-8 pointer-coarse:opacity-100 md:flex"
                           >
                             <Plus className="size-4" aria-hidden="true" />
                           </Link>
@@ -162,7 +162,7 @@ export async function MonthCalendar({
                                   }`}
                                   className={cn(
                                     // 24 px at least: a target smaller than that, with others a few pixels away, is hard to hit (WCAG 2.5.8)
-                                    'text-micro flex min-h-6 min-w-0 items-center gap-1 rounded-xs px-1.75 py-0.75 font-bold outline-none',
+                                    'text-micro flex min-h-6 min-w-0 items-center gap-1 rounded-xs px-1.75 py-0.75 font-bold ',
                                     confirmed
                                       ? 'bg-accent-soft text-accent-ink hover:bg-accent-soft-hover'
                                       : 'bg-surface-3 text-ink italic',
@@ -189,7 +189,7 @@ export async function MonthCalendar({
                             <li>
                               <Link
                                 href={dayHref(day)}
-                                className="text-small text-muted-foreground hover:text-ink flex min-h-6 items-center rounded-xs px-1.75 outline-none"
+                                className="text-small text-muted-foreground hover:text-ink flex min-h-6 items-center rounded-xs px-1.75 "
                               >
                                 {t('calendar.more', { count: occurrences.length - MAX_CHIPS })}
                               </Link>
@@ -256,7 +256,7 @@ export async function MonthCalendar({
                       pathname: `/events/${occurrence.eventId}`,
                       query: { occ: occurrence.originalStart.getTime() },
                     }}
-                    className="bg-accent-soft hover:bg-accent-soft-hover flex flex-col gap-0.5 rounded-lg px-3.5 py-3 outline-none"
+                    className="bg-accent-soft hover:bg-accent-soft-hover flex flex-col gap-0.5 rounded-lg px-3.5 py-3 "
                   >
                     <span className="text-small text-muted-foreground tabular">
                       {formatTimeRange(occurrence.start, occurrence.end, locale, timeZone)}

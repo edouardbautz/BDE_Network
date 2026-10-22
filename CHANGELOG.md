@@ -8,6 +8,23 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Changed
 
+- **A new look for the whole platform, the "Galets" direction.** Cards without borders on three levels of background, titles in bold Manrope over calm text,
+  round buttons and fields, generous nested corners, one filled accent "moment" per screen (the next event on the dashboard, the selected day of the calendar, the
+  main action of a form). The navigation is a column of captioned icons on the left (a floating bar at the bottom of a phone, with a round Create button and a
+  "More" sheet); the account menu, at the foot of the column, now holds the profile, the theme, the language and sign-out. The dashboard is rebuilt around the next
+  event, the ones after it, shortcuts and the account. Under 640 px every table (members, roles, audit log) is a list: nothing scrolls sideways on a phone, and every
+  button is 44 px high there. Light and dark themes, `prefers-reduced-motion` and a visible keyboard focus everywhere (a ring in the ink of the accent; a test now
+  forbids `outline-none` on anything focusable).
+- **The accent colour is worked out for every theme.** The colour of the BDE is kept as it is whenever white or dark text reads at 4.5:1 on it (an orange or a
+  green takes dark text); otherwise it is darkened until white does, and the link or icon colour is pushed toward black or white until it reads 4.6:1 on its own tint,
+  in the light and in the dark theme. The settings page and the installer show a preview of the colour, light and dark, and say when it was adjusted. **New
+  installations start with `#2F5BEA`** (the installer, the example configuration and the schema); a platform that has a colour keeps it.
+- **The font is Manrope, served by the platform itself**: the file is fetched when the image is built, and no page asks Google (or anybody) for anything when it runs
+  (a test reads the source, a browser test watches what a page loads). Geist is gone; code and links to copy use the system's monospace.
+- The red of a confirmation button is a little darker in the dark theme (`#D34247`): white text on the specification's `#E5484D` was 3.9:1, under the 4.5:1 of WCAG AA.
+- Development tooling: `qa/design-preview.ts` takes pictures of a screen (light, dark, computer, tablet, phone, menus and sheets open), `QA_ACCENT` gives `qa/platform.sh` an
+  accent colour, the unused `select` and `tabs` primitives were removed, and `docs/design.md` is rewritten (tokens, accent algorithm, every component, what differs from the
+  original specification). The documentation and its screenshots follow the new interface.
 - **Worktrees of the quality tooling are made and removed by one script, which cannot reach what they borrow.** The mutation checks
   and the update suite work in a throwaway git worktree that links the project's `node_modules` into it; on Windows removing such
   a worktree with git followed the link and emptied the real `node_modules` (twice). `qa/worktree.mjs` removes every link as a

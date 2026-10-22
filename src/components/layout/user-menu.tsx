@@ -42,7 +42,7 @@ export async function UserMenu({ name, login, image, roleLabel, placement }: Use
       <DropdownMenuTrigger
         aria-label={name}
         className={cn(
-          'bg-surface elev-1 shrink-0 rounded-pill outline-none focus-visible:outline-offset-2',
+          'bg-surface elev-1 shrink-0 rounded-pill focus-visible:outline-offset-2',
           placement === 'rail' ? 'size-10.5' : 'size-11',
         )}
       >
@@ -94,7 +94,7 @@ export async function AccountSheetContent() {
     <div className="border-line mt-3 flex flex-col gap-1 border-t pt-3">
       <Link
         href="/profile"
-        className="text-body-strong hover:bg-surface-2 flex min-h-12 items-center gap-3 rounded-lg px-2 outline-none focus-visible:outline-offset-1"
+        className="text-body-strong hover:bg-surface-2 flex min-h-12 items-center gap-3 rounded-lg px-2 focus-visible:outline-offset-1"
       >
         <span className="bg-accent-soft text-accent-ink flex size-9 shrink-0 items-center justify-center rounded-sm">
           <UserRound aria-hidden="true" className="size-5" />
@@ -105,7 +105,7 @@ export async function AccountSheetContent() {
       <form action={signOutAction}>
         <button
           type="submit"
-          className="text-body-strong hover:bg-surface-2 flex min-h-12 w-full items-center gap-3 rounded-lg px-2 outline-none focus-visible:outline-offset-1"
+          className="text-body-strong hover:bg-surface-2 flex min-h-12 w-full items-center gap-3 rounded-lg px-2 focus-visible:outline-offset-1"
         >
           <span className="bg-surface-2 text-ink flex size-9 shrink-0 items-center justify-center rounded-sm">
             <LogOut aria-hidden="true" className="size-5" />

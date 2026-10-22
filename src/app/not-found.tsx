@@ -1,5 +1,6 @@
 import { SearchX } from 'lucide-react';
 import Link from 'next/link';
+import { pillButton } from '@/components/galets/styles';
 import { StatusCard } from '@/components/layout/status-card';
 import './globals.css';
 
@@ -17,10 +18,7 @@ export default function RootNotFound() {
           title="Page introuvable · Page not found"
           description="Cette page n'existe pas. / This page does not exist."
         >
-          <Link
-            href="/"
-            className="bg-primary text-primary-foreground h-8 rounded-lg px-2.5 text-sm leading-8 font-medium"
-          >
+          <Link href="/" className={pillButton({ size: 'lg' })}>
             Retour à l&apos;accueil · Back to home
           </Link>
         </StatusCard>

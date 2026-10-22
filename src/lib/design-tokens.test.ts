@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { deriveAccent } from './color';
@@ -17,7 +17,9 @@ const css = readFileSync(join(process.cwd(), 'src/app/globals.css'), 'utf8');
 
 /** The text of one block of tokens (`:root { … }` or `.dark { … }`), up to its closing brace. */
 function blockOf(selector: string): string {
-  const start = css.indexOf(`\n${selector} {`);
+  // the light theme is also a class, so that a box can force it inside a dark page (the preview of the accent)
+  const header = selector === ':root' ? ':root,\n.light' : selector;
+  const start = css.indexOf(`\n${header} {`);
   if (start < 0) throw new Error(`no ${selector} block in globals.css`);
   return css.slice(start, css.indexOf('\n}', start));
 }
@@ -172,5 +174,68 @@ describe('the page layout', () => {
   it('keeps one focus ring for every element, in the ink version of the accent', () => {
     const base = /@layer base\s*\{[\s\S]*?\n\}/.exec(css)?.[0] ?? '';
     expect(base).toMatch(/:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--accent-ink\)/);
+  });
+});
+
+/** The components of the interface, as text: what the rules of the design system are held against. */
+function componentFiles(): { file: string; text: string }[] {
+  const found: { file: string; text: string }[] = [];
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) walk(path);
+      else if (entry.name.endsWith('.tsx') && !entry.name.endsWith('.test.tsx'))
+        found.push({
+          file: path.replace(process.cwd(), '').replaceAll('\\', '/').replace(/^\//, ''),
+          text: readFileSync(path, 'utf8'),
+        });
+    }
+  };
+  walk(join(process.cwd(), 'src'));
+  return found;
+}
+
+describe('the components follow the design system', () => {
+  const files = componentFiles();
+
+  it('never switch the outline off on what takes the focus (a utility beats the ring of the base layer)', () => {
+    // Allowed: the text fields (their inset ring replaces it), and the panels of a dialog and a menu (focus is put there by code).
+    const allowed = new Set([
+      'src/components/ui/input.tsx',
+      'src/components/ui/dialog.tsx',
+      'src/components/ui/dropdown-menu.tsx',
+    ]);
+    const offenders = files
+      .filter(
+        ({ file, text }) => !allowed.has(file) && /(?<![\w:-])outline-none(?![\w-])/.test(text),
+      )
+      .map(({ file }) => file);
+    expect(offenders, 'a focus ring that nobody sees (WCAG 2.4.7)').toEqual([]);
+  });
+
+  it('write no colour of their own: the tokens are the colours', () => {
+    // Allowed: the choices a person is offered (the colours of the categories, the accent presets): data, not styling.
+    const allowed = new Set([
+      'src/components/settings/events-section.tsx',
+      'src/components/setup/step-identity.tsx',
+    ]);
+    const offenders = files
+      .filter(
+        ({ file, text }) =>
+          !allowed.has(file) && /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\boklch\(|\bhsl\(/.test(text),
+      )
+      .map(({ file }) => file);
+    expect(offenders).toEqual([]);
+  });
+
+  it('use no emoji and no font of their own', () => {
+    const offenders = files
+      .filter(
+        ({ text }) =>
+          /\p{Extended_Pictographic}/u.test(text.replace(/[→←↑↓·–—…✓✕⌘]/gu, '')) ||
+          /font-family|fonts\.googleapis|fonts\.gstatic/.test(text),
+      )
+      .map(({ file }) => file);
+    expect(offenders).toEqual([]);
   });
 });

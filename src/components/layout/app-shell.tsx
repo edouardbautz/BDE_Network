@@ -89,7 +89,7 @@ function Logo({
     <Link
       href="/dashboard"
       aria-label={bdeName}
-      className="bg-accent-fill text-accent-on accent-edge text-body-strong flex size-11.5 shrink-0 items-center justify-center overflow-hidden rounded-md font-extrabold outline-none focus-visible:outline-offset-3"
+      className="bg-accent-fill text-accent-on accent-edge text-body-strong flex size-11.5 shrink-0 items-center justify-center overflow-hidden rounded-md font-extrabold focus-visible:outline-offset-3"
     >
       {defaultLogo ? (
         <span aria-hidden="true">{initialsOf(bdeName)}</span>
@@ -148,22 +148,19 @@ function Rail({
             href={item.href}
             aria-current={isActive ? 'page' : undefined}
             className={cn(
-              'group flex w-18.5 flex-col items-center gap-1 rounded-lg px-2 py-2.5 text-center outline-none focus-visible:outline-offset-1',
+              'group relative flex w-18.5 flex-col items-center gap-1 rounded-lg px-2 py-2.5 text-center focus-visible:outline-offset-1',
               'transition-colors duration-(--dur-fast) ease-(--ease-standard)',
               isActive ? 'bg-accent-soft hover:bg-accent-soft-hover' : 'hover:bg-hover-on-bg',
             )}
           >
-            <span className="relative">
-              <Icon
-                aria-hidden="true"
-                strokeWidth={isActive ? 2.4 : 2}
-                className={cn(
-                  'size-5.75',
-                  isActive ? 'text-accent-ink' : 'text-muted-foreground group-hover:text-ink',
-                )}
-              />
-              <Counter item={item} className="absolute -top-2 -right-4" />
-            </span>
+            <Icon
+              aria-hidden="true"
+              strokeWidth={isActive ? 2.4 : 2}
+              className={cn(
+                'size-5.75',
+                isActive ? 'text-accent-ink' : 'text-muted-foreground group-hover:text-ink',
+              )}
+            />
             <span
               className={cn(
                 'text-micro',
@@ -172,6 +169,8 @@ function Rail({
             >
               {item.shortLabel}
             </span>
+            {/* After the name in the page, over the corner of the icon on the screen: the name comes first for a screen reader. */}
+            <Counter item={item} className="absolute top-1.5 left-1/2 ml-2" />
           </Link>
         );
       })}
@@ -195,7 +194,7 @@ function SheetRow({
     <Link
       href={href}
       onClick={onNavigate}
-      className="text-body-strong hover:bg-surface-2 flex min-h-12 items-center gap-3 rounded-lg px-2 outline-none focus-visible:outline-offset-1"
+      className="text-body-strong hover:bg-surface-2 flex min-h-12 items-center gap-3 rounded-lg px-2 focus-visible:outline-offset-1"
     >
       <span className="bg-accent-soft text-accent-ink flex size-9 shrink-0 items-center justify-center rounded-sm">
         <Icon aria-hidden="true" className="size-5" />
@@ -268,15 +267,13 @@ function TabBar({
         href={item.href}
         aria-current={isActive ? 'page' : undefined}
         className={cn(
-          'flex h-14.5 flex-col items-center justify-center gap-0.5 rounded-pill outline-none focus-visible:outline-offset-1',
+          'relative flex h-14.5 flex-col items-center justify-center gap-0.5 rounded-pill focus-visible:outline-offset-1',
           isActive ? 'text-accent-ink font-extrabold' : 'text-muted-foreground',
         )}
       >
-        <span className="relative">
-          <Icon aria-hidden="true" strokeWidth={isActive ? 2.4 : 2} className="size-6" />
-          <Counter item={item} className="absolute -top-1.5 -right-3" />
-        </span>
+        <Icon aria-hidden="true" strokeWidth={isActive ? 2.4 : 2} className="size-6" />
         <span className="text-micro">{item.shortLabel}</span>
+        <Counter item={item} className="absolute top-1.5 left-1/2 ml-2" />
       </Link>
     );
   };
@@ -293,7 +290,7 @@ function TabBar({
           <Sheet open={createOpen} onOpenChange={setCreateOpen}>
             <SheetTrigger
               aria-label={createLabel}
-              className="bg-accent-fill text-accent-on accent-edge mx-auto flex size-13.5 items-center justify-center rounded-pill outline-none active:bg-accent-fill-pressed focus-visible:outline-offset-3"
+              className="bg-accent-fill text-accent-on accent-edge mx-auto flex size-13.5 items-center justify-center rounded-pill active:bg-accent-fill-pressed focus-visible:outline-offset-3"
             >
               <Plus aria-hidden="true" className="size-7" />
             </SheetTrigger>
@@ -319,7 +316,7 @@ function TabBar({
         <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
           <SheetTrigger
             className={cn(
-              'text-muted-foreground flex h-14.5 flex-col items-center justify-center gap-0.5 rounded-pill outline-none focus-visible:outline-offset-1',
+              'text-muted-foreground flex h-14.5 flex-col items-center justify-center gap-0.5 rounded-pill focus-visible:outline-offset-1',
             )}
           >
             <Ellipsis aria-hidden="true" className="size-6" />

@@ -99,7 +99,7 @@ function Segmented<T extends string>({
             lang={option.lang}
             onClick={() => onChange(option.value)}
             className={cn(
-              'text-small h-11 min-w-11 rounded-pill px-3.5 outline-none focus-visible:outline-offset-1',
+              'text-small h-11 min-w-11 rounded-pill px-3.5 focus-visible:outline-offset-1',
               'transition-[background-color,box-shadow] duration-(--dur-base) ease-(--ease-standard)',
               option.value === value
                 ? 'bg-surface elev-1 text-ink font-bold'

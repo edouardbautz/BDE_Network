@@ -79,7 +79,7 @@ export async function UpcomingList({
                   pathname: `/events/${occurrence.eventId}`,
                   query: { occ: occurrence.originalStart.getTime() },
                 }}
-                className="hover:bg-surface-2 -mx-2 flex min-h-11 items-center gap-3 rounded-md px-2 py-2.5 outline-none focus-visible:outline-offset-1"
+                className="hover:bg-surface-2 -mx-2 flex min-h-11 items-center gap-3 rounded-md px-2 py-2.5 focus-visible:outline-offset-1"
               >
                 <DateTile date={occurrence.start} locale={locale} timeZone={timeZone} />
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5">

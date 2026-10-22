@@ -486,7 +486,7 @@ export default async function EventDetailPage({
                           <Link
                             href={{ pathname: `/events/${event.id}`, query: { occ: key } }}
                             className={cn(
-                              'text-body rounded-xs outline-none hover:underline',
+                              'text-body rounded-xs hover:underline',
                               date.cancelled && 'text-muted-foreground line-through',
                               key === occurrence && 'font-bold',
                             )}

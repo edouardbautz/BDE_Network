@@ -276,7 +276,7 @@ describe('renderProblemPage', () => {
 describe('the page looks like the app', () => {
   const css = readFileSync(new URL('../src/app/globals.css', import.meta.url), 'utf8');
   const block = (selector: string): string => {
-    const start = css.indexOf(`${selector} {`);
+    const start = css.indexOf(`${selector === ':root' ? ':root,\n.light' : selector} {`);
     return css.slice(start, css.indexOf('}', start));
   };
   const token = (scope: string, name: string): string | undefined =>

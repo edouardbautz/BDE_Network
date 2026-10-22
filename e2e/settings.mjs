@@ -342,10 +342,11 @@ try {
 
   // 5. the language switcher keeps the page
   await page.goto(`${base}/fr/settings`, { waitUntil: 'networkidle0' });
-  await page.click('aside button[aria-label="Langue"]');
-  await page.waitForSelector('[role="menuitem"]');
+  // the language is chosen in the menu of the account, at the foot of the rail
+  await page.click('aside button[aria-haspopup="menu"]');
+  await page.waitForSelector('[role="menuitemradio"]');
   await page.evaluate(() => {
-    [...document.querySelectorAll('[role="menuitem"]')]
+    [...document.querySelectorAll('[role="menuitemradio"]')]
       .find((i) => i.textContent.includes('English'))
       .click();
   });

@@ -9,7 +9,7 @@ export async function Footer() {
       <div className="text-small text-muted-foreground mx-auto w-full max-w-wide px-4 sm:px-7">
         <Link
           href="/privacy"
-          className="hover:text-ink rounded-xs underline underline-offset-4 outline-none focus-visible:outline-offset-2"
+          className="hover:text-ink rounded-xs underline underline-offset-4 focus-visible:outline-offset-2"
         >
           {t('privacy')}
         </Link>

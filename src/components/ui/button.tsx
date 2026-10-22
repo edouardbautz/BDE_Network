@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils"
  * that sits on an accent-filled card. A button is 44 px high on a phone, whatever its size.
  */
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center gap-1.5 rounded-pill text-body-strong whitespace-nowrap select-none transition-[background-color,box-shadow,transform] duration-(--dur-fast) ease-(--ease-standard) outline-none active:duration-(--dur-instant) motion-safe:active:not-aria-[haspopup]:scale-[.98] disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-disabled disabled:shadow-none aria-disabled:cursor-not-allowed aria-disabled:bg-surface-2 aria-disabled:text-disabled [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
+  "group/button inline-flex shrink-0 items-center justify-center gap-1.5 rounded-pill text-body-strong whitespace-nowrap select-none transition-[background-color,box-shadow,transform] duration-(--dur-fast) ease-(--ease-standard) active:duration-(--dur-instant) motion-safe:active:not-aria-[haspopup]:scale-[.98] disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-disabled disabled:shadow-none aria-disabled:cursor-not-allowed aria-disabled:bg-surface-2 aria-disabled:text-disabled [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
   {
     variants: {
       variant: {

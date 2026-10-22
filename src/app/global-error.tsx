@@ -1,6 +1,7 @@
 'use client';
 
 import { TriangleAlert } from 'lucide-react';
+import { pillButton } from '@/components/galets/styles';
 import { StatusCard } from '@/components/layout/status-card';
 import './globals.css';
 
@@ -27,24 +28,19 @@ export default function GlobalError({
           description="Une erreur est survenue de notre côté. Vos données n'ont pas été perdues. / An error occurred on our side. Your data has not been lost."
         >
           <div className="flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={reset}
-              className="bg-primary text-primary-foreground h-8 rounded-lg px-2.5 text-sm font-medium"
-            >
+            <button type="button" onClick={reset} className={pillButton({ size: 'lg' })}>
               Réessayer · Try again
             </button>
             {/* A plain link on purpose: a full page load, since the router may be what broke. */}
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <a
-              href="/"
-              className="border-border h-8 rounded-lg border px-2.5 text-sm leading-7 font-medium"
-            >
+            <a href="/" className={pillButton({ variant: 'secondary', size: 'lg' })}>
               Retour à l&apos;accueil · Back to home
             </a>
           </div>
           {error.digest && (
-            <p className="text-muted-foreground text-xs">Référence / Reference : {error.digest}</p>
+            <p className="text-small text-muted-foreground">
+              Référence / Reference : {error.digest}
+            </p>
           )}
         </StatusCard>
       </body>

@@ -45,7 +45,7 @@ export default async function SetupPage({ params }: { params: Promise<{ locale: 
       href="/setup"
       locale={other}
       lang={other}
-      className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 rounded-sm text-body underline underline-offset-4 outline-none focus-visible:ring-3"
+      className="text-muted-foreground hover:text-foreground rounded-sm text-body underline underline-offset-4"
     >
       {other === 'en' ? 'English' : 'Français'}
     </Link>

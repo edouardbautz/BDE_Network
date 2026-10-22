@@ -85,7 +85,7 @@ export default async function LoginPage({ params }: { params: Promise<{ locale: 
       </Card>
       <Link
         href="/privacy"
-        className="text-muted-foreground hover:text-foreground rounded-sm text-body underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+        className="text-muted-foreground hover:text-foreground rounded-sm text-body underline underline-offset-4"
       >
         {tNav('privacy')}
       </Link>

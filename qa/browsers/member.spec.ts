@@ -15,13 +15,13 @@ test.describe('a member', () => {
   }) => {
     const page = await as('member');
     await page.goto('/en/dashboard');
-    await expect(page.getByRole('heading', { name: 'Dashboard', level: 1 })).toBeVisible();
-    await expect(page.getByText('Welcome, QA member.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Hello QA', level: 1 })).toBeVisible();
 
-    const first = page.getByRole('main').getByRole('list').getByRole('link').first();
-    const title = (await first.textContent())?.trim() ?? '';
+    // The next event is the one filled with the accent: its title is a heading, and one button opens it.
+    const next = page.getByRole('article');
+    const title = (await next.getByRole('heading', { level: 2 }).textContent())?.trim() ?? '';
     expect(title).not.toBe('');
-    await first.click();
+    await next.getByRole('link', { name: 'View the event' }).click();
     await expect(page).toHaveURL(/\/en\/events\/[^/?]+/);
     await expect(page.getByRole('heading', { name: title, level: 1 })).toBeVisible();
 
@@ -96,13 +96,13 @@ test.describe('a member', () => {
     }
   });
 
-  test('changes the theme from the menu, and keeps it from one page to the next and after a reload', async ({
+  test('changes the theme from the menu of the account, and keeps it from one page to the next and after a reload', async ({
     as,
   }) => {
     const page = await as('member');
     await page.goto('/en/dashboard');
-    await page.getByRole('button', { name: 'Light / Dark' }).click();
-    await page.getByRole('menuitem', { name: 'Dark' }).click();
+    await page.getByRole('button', { name: /QA member/ }).click();
+    await page.getByRole('menuitemradio', { name: 'Dark' }).click();
     await expect(page.locator('html')).toHaveClass(/dark/);
 
     await page
@@ -114,8 +114,8 @@ test.describe('a member', () => {
     await page.reload();
     await expect(page.locator('html')).toHaveClass(/dark/);
 
-    await page.getByRole('button', { name: 'Light / Dark' }).click();
-    await page.getByRole('menuitem', { name: 'Light' }).click();
+    await page.getByRole('button', { name: /QA member/ }).click();
+    await page.getByRole('menuitemradio', { name: 'Light' }).click();
     await expect(page.locator('html')).not.toHaveClass(/dark/);
   });
 
@@ -176,15 +176,20 @@ test.describe('a member', () => {
     }
   });
 
-  test('reads the whole application on a phone, through the menu', async ({ as }) => {
+  test('reads the whole application on a phone, through the tab bar', async ({ as }) => {
     const page = await as('member', { viewport: { width: 390, height: 800 } });
     await page.goto('/en/dashboard');
-    await page.getByRole('button', { name: 'Open navigation menu' }).click();
-    const menu = page.getByRole('dialog');
-    await expect(menu).toBeVisible();
-    await menu.getByRole('link', { name: 'Events' }).click();
+    const tabs = page.getByRole('navigation', { name: 'Navigation' });
+    await expect(tabs.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
+    await tabs.getByRole('link', { name: 'Events' }).click();
     await expect(page).toHaveURL(/\/en\/events/);
-    await expect(menu).toBeHidden();
+    // the rest of the platform, and the account, are one tap away: behind "More"
+    await tabs.getByRole('button', { name: 'More' }).click();
+    const sheet = page.getByRole('dialog');
+    await expect(sheet.getByRole('link', { name: 'My profile' })).toBeVisible();
+    await expect(sheet.getByRole('radio', { name: 'Dark' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(sheet).toBeHidden();
     // With no choice made, a phone starts on the list; the calendar is one tap away and shows the day under the grid.
     await expect(page.getByRole('main').getByRole('link', { name: /.+/ }).first()).toBeVisible();
     await page

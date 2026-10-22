@@ -47,7 +47,7 @@ export async function ImpersonationBanner() {
         <form action={stopImpersonation}>
           <button
             type="submit"
-            className="rounded-pill bg-ink px-3.5 py-1.5 text-small text-bg outline-none transition-colors hover:opacity-90"
+            className="rounded-pill bg-ink px-3.5 py-1.5 text-small text-bg transition-colors hover:opacity-90"
           >
             {t('exit')}
           </button>
@@ -83,7 +83,7 @@ export async function ImpersonationBanner() {
         </select>
         <button
           type="submit"
-          className="bg-accent-fill text-accent-on hover:bg-accent-fill-hover rounded-pill px-3.5 py-1.5 text-small outline-none transition-colors"
+          className="bg-accent-fill text-accent-on hover:bg-accent-fill-hover rounded-pill px-3.5 py-1.5 text-small transition-colors"
         >
           {t('start')}
         </button>

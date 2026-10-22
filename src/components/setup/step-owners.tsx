@@ -131,7 +131,7 @@ export function StepOwners({
                   type="button"
                   onClick={() => setOwners(owners.filter((other) => other !== owner))}
                   aria-label={t('remove', { login: owner })}
-                  className="hover:bg-background focus-visible:ring-ring/50 rounded-full p-1 outline-none focus-visible:ring-3"
+                  className="hover:bg-background rounded-full p-1"
                 >
                   <X className="size-3" aria-hidden="true" />
                 </button>

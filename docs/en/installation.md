@@ -85,7 +85,7 @@ A language switcher lets you go from English to French. Each step has a progress
 
 | Step              | What you enter                                                                       | What the page does                                                                                                                                                                                                  |
 | ----------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Your BDE       | The name, the color, the language of the messages sent, a contact address (optional) | Shows a preview of the color.                                                                                                                                                                                       |
+| 1. Your BDE       | The name, the color, the language of the messages sent, a contact address (optional) | Shows what the color looks like, in the light and the dark theme.                                                                                                                                                   |
 | 2. Address        | The address of the platform                                                          | Suggests the one you are using. Gives the exact redirect URL to register on the intra. Warns you if the address is not the one of your browser, or if it starts with `http://` on a real domain. Refuses `0.0.0.0`. |
 | 3. 42 application | The **UID** and the **secret**                                                       | Gives the step by step and the URL to copy. Checks the credentials with 42 right away.                                                                                                                              |
 | 4. Campuses       | The allowed campuses                                                                 | Offers the list of 42 campuses with a search. Works out the time zone.                                                                                                                                              |
@@ -163,7 +163,7 @@ Once the installation is finished, **the installer disappears for good** and no 
 
 Sign in with 42. Since your login is in the owners' list, you have every right.
 
-1. **Settings** (left menu, owners only): everything the installer asked can be changed here, section by section,
+1. **Settings** (the menu, owners only): everything the installer asked can be changed here, section by section,
    and applies at once. See [Configuration](configuration.md).
 
    ![The Settings page](../images/en/settings.webp)

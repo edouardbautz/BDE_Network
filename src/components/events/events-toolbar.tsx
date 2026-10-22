@@ -48,7 +48,7 @@ export async function EventsToolbar({
         href={viewLink(view)}
         aria-current={selected ? 'page' : undefined}
         className={cn(
-          'text-small inline-flex h-9 items-center gap-1.5 rounded-pill px-4 outline-none max-sm:h-11',
+          'text-small inline-flex h-9 items-center gap-1.5 rounded-pill px-4 max-sm:h-11',
           'transition-[background-color,box-shadow] duration-(--dur-base) ease-(--ease-standard)',
           selected ? 'bg-surface elev-1 text-ink font-bold' : 'text-muted-foreground',
         )}

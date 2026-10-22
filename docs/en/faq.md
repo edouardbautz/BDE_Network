@@ -83,7 +83,7 @@ In **Settings**: the **Your BDE** section for the name and color, the **Logo** s
 
 ### How do I change the language?
 
-Each person picks the interface language with the language icon at the bottom of the sidebar. The language of the
+Each person picks the interface language in the menu of their account (their round picture, at the foot of the menu). The language of the
 **messages sent** (email, Discord, Slack) is the same for the whole BDE: **Your BDE** section of Settings.
 
 ## Events and calendars

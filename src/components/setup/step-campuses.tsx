@@ -166,7 +166,7 @@ export function StepCampuses({
                     <button
                       type="button"
                       onClick={() => add(campus.name)}
-                      className="hover:bg-surface-3 focus-visible:bg-surface-3 flex min-h-10 w-full items-center justify-between px-3 py-2 text-left text-body outline-none"
+                      className="hover:bg-surface-3 focus-visible:bg-surface-3 flex min-h-10 w-full items-center justify-between px-3 py-2 text-left text-body "
                     >
                       <span>{campus.name}</span>
                       <span className="text-muted-foreground text-small">{campus.country}</span>
@@ -193,7 +193,7 @@ export function StepCampuses({
                       type="button"
                       onClick={() => remove(name)}
                       aria-label={t('remove', { name })}
-                      className="hover:bg-background focus-visible:ring-ring/50 rounded-full p-1 outline-none focus-visible:ring-3"
+                      className="hover:bg-background rounded-full p-1"
                     >
                       <X className="size-3" aria-hidden="true" />
                     </button>

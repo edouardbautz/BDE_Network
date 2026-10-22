@@ -445,7 +445,11 @@ const SCENARIOS = [
         );
         await save.asElement().click();
         return await expectPage(
-          (wanted) => document.querySelector('aside')?.innerText.includes(wanted),
+          // the name of the BDE is the name of the logo link at the head of the rail (the rail itself prints initials)
+          (wanted) =>
+            [...document.querySelectorAll('aside a')].some(
+              (a) => a.getAttribute('aria-label') === wanted,
+            ),
           name,
           'identity',
         );

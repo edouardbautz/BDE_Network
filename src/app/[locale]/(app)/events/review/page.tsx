@@ -104,7 +104,7 @@ export default async function ReviewPage({
                               ? { query: { occ: first.originalStart.getTime() } }
                               : {}),
                           }}
-                          className="text-body-strong w-fit rounded-xs break-words outline-none hover:underline"
+                          className="text-body-strong w-fit rounded-xs break-words hover:underline"
                         >
                           {event.title}
                         </Link>

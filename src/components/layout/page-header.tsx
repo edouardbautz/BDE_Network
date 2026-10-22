@@ -62,7 +62,7 @@ export function PageHeader({ eyebrow, back, title, actions }: PageHeaderProps) {
         {back ? (
           <Link
             href={back.href}
-            className="text-small text-muted-foreground hover:text-ink inline-flex items-center gap-0.5 rounded-xs font-bold underline-offset-3 outline-none hover:underline"
+            className="text-small text-muted-foreground hover:text-ink inline-flex items-center gap-0.5 rounded-xs font-bold underline-offset-3 hover:underline"
           >
             <ChevronLeft aria-hidden="true" className="size-4" />
             {back.label}

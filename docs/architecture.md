@@ -80,7 +80,9 @@ src/
                            (`dialog.tsx` was written by hand in the same style: the CLI would overwrite
                            button.tsx and add a stray dependency)
     confirm-dialog.tsx     the one confirmation for destructive actions (see "Design system")
-    layout/                app-shell (sidebar + mobile drawer), footer, user-menu
+    layout/                app-shell (rail + tab bar), page-header, user-menu and account preferences, footer, status card
+    galets/                what the design system shares outside `ui/`: pill/card classes, empty state, spinner
+    dashboard/             the cards of the dashboard (next event, upcoming list, shortcuts, account)
     events/                calendar, list, form, toolbar, category badge (module UI)
     roles/                 role form (permission checkboxes), list actions, permission groups for the form
     members/               role menu, approve/refuse and remove controls of the members panel
@@ -102,7 +104,7 @@ src/
     roles/view.ts          what pages need to show the right choices (actor from a session, role facts) — display only
     branding/              the uploaded logo: what is accepted (image.ts), where it lives (storage.ts)
     public-address.ts      the platform's public address, in one place (see "The public address")
-    audit-log.ts, account-label.ts, health.ts, prisma.ts, color.ts, utils.ts
+    audit-log.ts, account-label.ts, health.ts, prisma.ts, color.ts (the accent), utils.ts (`cn`)
   types/next-auth.d.ts     Session/User/JWT module augmentation
   test/                    session fixtures, in-memory roles database, migration tests
   proxy.ts                  next-intl locale routing and the installer gate, Node.js runtime (called `middleware.ts` before Next.js 16)
@@ -1232,7 +1234,7 @@ start from the same three things, so that what one finds the others can replay.
   menu, what a member is never shown), `circuit` (a proposer proposes a weekly event, a validator approves it, a member reads
   it; a refusal with a comment; the confirmation dialog's focus, trap and Escape), `calendar` (French, the + of a day, the
   keyboard), `owner` (every page of the board; the logo's file input, preview, upload and reset; a file that is not an image),
-  and `watcher` (the watcher itself, see below). **No retry, ever**: a journey that fails now and then is a defect to find (see
+  `self-hosted` (nothing a page loads comes from outside the platform, and the font drawn is Manrope served by it), and `watcher` (the watcher itself, see below). **No retry, ever**: a journey that fails now and then is a defect to find (see
   "Browser tests that fail now and then"); `workers: 1`, because the journeys change the one database, and each makes events of
   its own, named after its engine.
   - **Every journey ends by asking what its pages raised** (`fixtures.ts`, a fixture every test uses): an exception, an error
@@ -1496,41 +1498,39 @@ gives calendar files with the data in them` guards that); the not-found page mar
 
 ## Design system
 
-Full spec (typography scale, color tokens + contrast rationale, spacing/radius scale, component
-and empty/loading-state conventions, accessibility rules): **`docs/design.md`**. Read it before
-touching layout or adding UI. The short version:
+The identity is the "Galets" direction. Full reference (tokens, the accent algorithm, every component, what differs from the original
+specification): **`docs/design.md`**. Read it before touching layout or adding UI. The short version:
 
-- One typeface (Geist, sans-serif only, wired through `--font-sans` in `src/app/globals.css`) —
-  never let that variable self-reference (`--font-sans: var(--font-sans)`), it silently falls
-  back to the browser's serif default with no error.
-- Neutral color scale is OKLCH hue `258` (a faint blue) at low chroma, three light/dark tokens
-  never touch pure black/white (`--background` < `--card`/`--sidebar` < `--popover` in dark
-  mode). Never hardcode a color — consume the semantic tokens (`bg-background`, `border-border`,
-  etc.); change the palette in one place, `globals.css`.
-- `bde.accentColor` (arbitrary per-fork hex, via `buildAccentStyle()` in `src/lib/color.ts`) is
-  reserved for primary actions and active states — never for large surfaces, and never as a
-  standalone text color on a neutral background (its contrast is only guaranteed against a solid
-  fill with `getContrastingTextColor`'s black/white pick, not against arbitrary backgrounds — the
-  default teal fails AA as text on the dark sidebar, 3.4:1). Active nav state = translucent
-  background + `foreground`-colored text + accent-colored icon/left bar, not accent-colored text.
-- Per-fork colors that are not the accent (events: `events.categories[].color`) are applied
-  inline as a dot, a left border or a translucent tint (`color-mix`), never as text color or a
-  large surface, so contrast always rests on the neutral `foreground` token.
-- **Every destructive or irreversible action asks through `ConfirmDialog`** (`src/components/confirm-dialog.tsx`,
-  built on `ui/dialog.tsx`): a dialog centered over the page — never a `<details>`, a popover or a block
-  that unfolds under the button (it ends up off screen). Title naming the action and its target, one
-  sentence (not repeating the title), a destructive action button with a precise verb, and Cancel;
-  `tone="default"` for a reversible change (a role change). The component guarantees focus on Cancel,
-  a focus trap, Escape / click outside to cancel, focus returned to the origin (`returnFocusRef` when
-  there is no trigger button), and a busy, non-repeatable confirm button while the action runs. From a
-  Server Component, `onConfirm` is an inline `'use server'` action. A new module's delete / cancel /
-  regenerate buttons use it; see "Confirmations" in `docs/design.md`.
-- Every list/table that can be empty renders an empty state (icon-in-muted-circle + title +
-  description [+ CTA]) — never a blank card. Every `(app)/` route ships a `loading.tsx` with
-  `Skeleton`s shaped like its real content, not a generic spinner.
-- Sidebar nav items are keyed by `NavItem['id']` mapped to a Lucide icon in `NAV_ICONS`
-  (`src/components/layout/app-shell.tsx`) — a new top-level module extends that type and table,
-  it doesn't inline an icon in JSX.
+- **Every value is a token** (`src/app/globals.css`): colours, sizes, radii, shadows, durations. A component writes none of its own; the
+  shadcn names (`--background`, `--primary`, `bg-muted`…) are aliases onto the tokens (`--bg`, `--surface`, `--surface-2`, `--ink`,
+  `--muted`, `--accent-*`…), so the primitives of `components/ui` follow the palette. `design-tokens.test.ts` holds it: the contrast table
+  on the real tokens, the radii and durations, and, over the source of every component, **no hex colour, no emoji, no font, no `outline-none`**.
+  Two traps met: `cn()` (`lib/utils.ts`) is extended with the custom type and shadow utilities, because `twMerge` takes `text-micro` for a
+  colour and silently drops `text-accent-on` (a counter was dark on the accent); and a utility `outline-none` beats the focus ring of the base
+  layer, so a link that carries it shows no focus.
+- One typeface, **Manrope**, loaded by `next/font` (downloaded when the image is built, served by the platform from `/_next/static/media/`:
+  no request to Google when it runs, `font-src 'self'`; `qa/browsers/self-hosted.spec.ts` and `self-hosted-assets.test.ts` hold it). Never let
+  `--font-sans` reference itself. Icons are Lucide (inline SVG), never an icon font.
+- **The accent** (`bde.accentColor`, any hex) is turned into five tokens per theme by `deriveAccent` (`lib/color.ts`: the colour is kept when white
+  or near-black text reaches 4.5:1 on it, else darkened; `ink` reaches 4.6:1 on its own tint). The server writes both themes on `<html>`
+  (`--accent-fill-l`, `--accent-fill-d`…), the CSS picks the one of the theme (`:root` / `.dark`; `.light` forces it in the settings preview): no
+  script, no flash. **One filled accent "moment" per screen**, plus the main button; never the accent for data, statuses or running text.
+  The default of a new installation is `#2F5BEA` (`DEFAULT_ACCENT`, `config/schema.ts`); a platform that has a colour keeps it. The settings page and the
+  installer preview it, light and dark (`AccentPreview`), and say when it was adjusted.
+- Per-fork colours that are not the accent (`events.categories[].color`) are a dot, never the text colour.
+- **The frame** (`components/layout`): a rail of 96 px from 640 px, a floating tab bar under it, a `PageHeader` on each page (title, actions; a back link for a thing that
+  belongs to a list). Nav items are keyed by `NavItem['id']` mapped to a Lucide icon in `NAV_ICONS`, with a short label (`nav.rail.*`): a new top-level module extends that type and
+  table, it does not inline an icon in JSX, and **no entry is invented for something the platform does not have**.
+- **Every destructive or irreversible action asks through `ConfirmDialog`** (`src/components/confirm-dialog.tsx`, built on `ui/dialog.tsx`): a dialog centered over the page
+  (a sheet at the bottom of a phone) — never a `<details>`, a popover or a block that unfolds under the button (it ends up off screen). Title naming the action and its target, one
+  sentence (not repeating the title), a solid danger button with a precise verb, and Cancel; `tone="default"` for a reversible change (a role change). The component guarantees
+  focus on Cancel, a focus trap, Escape / click outside to cancel, focus returned to the origin (`returnFocusRef` when there is no trigger button), and a busy, non-repeatable
+  confirm button while the action runs. From a Server Component, `onConfirm` is an inline `'use server'` action. A new module's delete / cancel / regenerate buttons use it; see
+  "Confirmations" in `docs/design.md`.
+- Every list/table that can be empty renders an empty state (`galets/empty-state.tsx`: icon tile + title + text [+ one action]) — never a blank card. Under 640 px a table is a list
+  (cells carry `data-label`). Every `(app)/` route ships a `loading.tsx` with `Skeleton`s shaped like its real content, not a generic spinner.
+- To look at a change of look: `QA_ACCENT=#E4572E sh qa/platform.sh up …` then `npx tsx qa/design-preview.ts --name <screen> --path <address> --as <persona> [--extras]`
+  (light and dark, computer, tablet and phone, the menu and the sheets open). The references of the visual suite are made again by `qa visual references`.
 
 ## Conventions
 

@@ -168,8 +168,8 @@
     "create": "Create",
     "rail": {
       "dashboard": "Home",
-      "events": "Calendar",
-      "eventsReview": "Review",
+      "events": "Events",
+      "eventsReview": "To validate",
       "members": "Members",
       "roles": "Roles",
       "auditLog": "Log",
@@ -851,7 +851,11 @@
       "en": "English",
       "contactLabel": "Contact address (optional)",
       "contactHelp": "Shown on the privacy page: this is where members write about their data.",
-      "contactPlaceholder": "board@my-school.org"
+      "contactPlaceholder": "board@my-school.org",
+      "previewButton": "Button",
+      "previewLink": "Link",
+      "previewCard": "Next event",
+      "adjusted": "Your colour was slightly adjusted to stay readable on buttons."
     },
     "address": {
       "title": "Address of the platform",
@@ -1006,7 +1010,7 @@
       "incomplete": "An answer is missing: go back to the previous steps.",
       "unknown": "Something went wrong. Try again.",
       "name": "The name must be between 1 and 60 characters.",
-      "color": "Invalid color: write it like #0f766e.",
+      "color": "Invalid color: write it like #2F5BEA.",
       "timezone": "Unknown time zone (example: Europe/Paris).",
       "address": "Invalid address. Examples: https://bde.my-school.org or http://localhost:3000.",
       "addressUnspecified": "0.0.0.0 is not a site address: it is the address the server listens on. Write http://localhost:3000 for a try-out on this computer, or your site's address (https://bde.my-school.org).",

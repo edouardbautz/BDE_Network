@@ -26,7 +26,7 @@ bde:
   defaultLocale: 'fr'
 
   # Couleur d'accent de l'interface, au format hexadécimal.
-  accentColor: '#0f766e'
+  accentColor: '#2F5BEA'
 
   # Chemin du logo, servi depuis le dossier /public (donc en commençant par "/").
   logoPath: '/logo.svg'

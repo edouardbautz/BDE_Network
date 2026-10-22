@@ -86,7 +86,7 @@ immédiat.
 
 ### Comment changer la langue ?
 
-Chaque personne choisit la langue de l'interface avec l'icône de langue, en bas de la barre latérale. La langue des
+Chaque personne choisit la langue de l'interface dans le menu de son compte (sa photo ronde, au pied du menu). La langue des
 **messages envoyés** (e-mail, Discord, Slack) est la même pour tout le BDE : section **Votre BDE** de Paramètres.
 
 ## Les événements et les agendas
