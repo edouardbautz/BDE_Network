@@ -4,7 +4,11 @@
     "src/lib/events/repeat.ts",
     "firstWeek + (offsets.some((offset) => firstWeek + offset >= firstDay) ? 0 : 7);",
     "firstWeek;",
-    ["src/lib/events/repeat.test.ts", "src/lib/events/input.test.ts", "src/lib/events/repeat-input.test.ts"]
+    [
+      "src/lib/events/repeat.test.ts",
+      "src/lib/events/input.test.ts",
+      "src/lib/events/repeat-input.test.ts"
+    ]
   ],
   [
     "weekly: a first date that is a day of the rule is pushed to the next week",
