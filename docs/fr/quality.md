@@ -7,7 +7,7 @@ ce qui est vérifié, à quelle fréquence, ce que les contrôles ont trouvé et
 Chaque phrase s'appuie sur un test ou un workflow du dépôt ; le détail technique est dans l'
 [architecture](../architecture.md#quality-campaign-qa-githubworkflowsqayml) (en anglais).
 
-Elle décrit le projet à la version 1.2.0 plus les changements depuis (voir le [CHANGELOG](../../CHANGELOG.md), en anglais).
+Elle décrit le projet à la version 1.3.0 (voir le [CHANGELOG](../../CHANGELOG.md), en anglais).
 
 ## Ce qui est vérifié, et quand
 

@@ -7,7 +7,7 @@ what is checked, how often, what the checks found, and, as important, **what the
 is backed by a test or a workflow of the repository; the technical detail is in the
 [architecture](../architecture.md#quality-campaign-qa-githubworkflowsqayml).
 
-It describes the project as of version 1.2.0 plus the changes since (see the [CHANGELOG](../../CHANGELOG.md)).
+It describes the project as of version 1.3.0 (see the [CHANGELOG](../../CHANGELOG.md)).
 
 ## What is checked, and when
 

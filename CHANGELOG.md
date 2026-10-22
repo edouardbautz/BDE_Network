@@ -6,6 +6,8 @@ All notable changes to this project are written here, in English. Format based o
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-22
+
 ### Added
 
 - **What the privacy policy promises is checked against the database.** Every column that can hold a person is read from the schema
@@ -778,7 +780,8 @@ Initial version (never tagged): the platform's foundation.
 - Docker Compose (production and development with hot reload), Dockerfile.
 - GitHub Actions CI (lint, format, typecheck, build, test) on ubuntu-latest and windows-latest.
 
-[Unreleased]: https://github.com/edouardbautz/BDE_Network/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/edouardbautz/BDE_Network/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/edouardbautz/BDE_Network/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/edouardbautz/BDE_Network/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/edouardbautz/BDE_Network/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/edouardbautz/BDE_Network/compare/v0.2.0...v1.0.0
