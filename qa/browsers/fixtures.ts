@@ -69,6 +69,15 @@ const CANCELLATION_WORDS = [
   /Minified React error #412|Connection closed/i,
 ];
 const RECENTLY_MS = 5000;
+/**
+ * WebKit does not always say which request a navigation cancelled: a fetch that the page started and that the navigation (or the
+ * closing of the page) cut short can raise "Load failed" / "due to access control checks" with no `requestfailed` and no `request`
+ * the page could have been waiting for (seen in CI, Linux, one journey in twenty, always on the line of a click that reloads the page
+ * or follows a link). So an error worded like a cancellation is also excused when the page left its document within
+ * `LEAVING_MS` after it (or just before: the engine can report the commit first). Anywhere else it is still a failure.
+ */
+const LEAVING_MS = 2000;
+const LEAVING_BEFORE_MS = 200;
 
 /**
  * WebKit leaves the rejection of a prefetch that the navigation interrupted unhandled, with its own wording: the address is the
@@ -114,6 +123,8 @@ export const test = base.extend<Fixtures>({
       const page = await context.newPage();
       const report = (what: string) => problems.list.push(`[${who}] ${page.url()}: ${what}`);
       const cancellations: number[] = [];
+      // When the page left its document (a navigation committed, the page closed): see LEAVING_MS.
+      const departures: number[] = [];
       // What is worded like a cancelled fetch is judged at the end, by its distance from a request that really was
       // cancelled: the engine can tell us about the error before it tells us about the request.
       const suspects: { at: number; what: string }[] = [];
@@ -126,7 +137,10 @@ export const test = base.extend<Fixtures>({
       };
       judgements.push(() => {
         for (const { at, what } of suspects.splice(0)) {
-          if (!cancellations.some((cancelled) => Math.abs(cancelled - at) < RECENTLY_MS)) {
+          const left = departures.some(
+            (departed) => departed - at >= -LEAVING_BEFORE_MS && departed - at < LEAVING_MS,
+          );
+          if (!left && !cancellations.some((cancelled) => Math.abs(cancelled - at) < RECENTLY_MS)) {
             problems.list.push(
               `${what} (and no request was cancelled around it; the page did, in order: ${trail.join(' | ') || 'nothing'})`,
             );
@@ -210,7 +224,7 @@ export const test = base.extend<Fixtures>({
       const started = Date.now();
       const note = (what: string) => {
         // (the prefetches Next.js makes by the dozen when a page is drawn would push everything else out of the list)
-        if (/GET S*_rsc=/.test(what)) return;
+        if (/GET [^ ]*_rsc=/.test(what)) return;
         trail.push(`+${Date.now() - started}ms ${what}`);
         if (trail.length > 40) trail.shift();
       };
@@ -235,9 +249,13 @@ export const test = base.extend<Fixtures>({
       page.on('framenavigated', (frame) => {
         if (frame !== page.mainFrame()) return;
         note(`navigated to ${frame.url().replace(baseURL ?? '', '')}`);
+        departures.push(Date.now());
         cancelWhatIsInFlight();
       });
-      page.on('close', cancelWhatIsInFlight);
+      page.on('close', () => {
+        departures.push(Date.now());
+        cancelWhatIsInFlight();
+      });
       page.on('requestfailed', (request) => {
         inFlight.delete(request);
         const reason = request.failure()?.errorText ?? '';

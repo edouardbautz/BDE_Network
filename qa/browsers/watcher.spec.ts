@@ -80,6 +80,8 @@ test.describe('the watcher of the journeys', () => {
     await expect(page.getByRole('button', { name: 'Sign in with 42' })).toBeVisible();
 
     // The engine's word for an aborted fetch, with nothing in flight and no navigation: a real failure, not an abort.
+    // (The page has been at rest for a while: the load that brought it here is not a departure "around" the error.)
+    await page.waitForTimeout(600);
     await page.evaluate(() => {
       setTimeout(() => {
         throw new TypeError('Load failed');
@@ -103,6 +105,18 @@ test.describe('the watcher of the journeys', () => {
       });
     });
     await page.waitForTimeout(300);
+    await page.goto('/en/privacy');
+    problems.judge();
+    expect(problems.list).toEqual([]);
+
+    // And with nothing seen in flight at all (the engine does not always tell), the page leaving right after is the evidence.
+    await page.waitForTimeout(600);
+    await page.evaluate(() => {
+      setTimeout(() => {
+        throw new TypeError('Load failed');
+      });
+    });
+    await page.waitForTimeout(100);
     await page.goto('/en/privacy');
     problems.judge();
     expect(problems.list).toEqual([]);
