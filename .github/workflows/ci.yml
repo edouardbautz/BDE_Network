@@ -412,13 +412,18 @@ jobs:
       - name: Test the QA dataset and the invariants on a real database
         run: npx vitest run qa
 
+      # The storage of the notification templates (SERIALIZABLE transactions, the guards of the migration, two saves at once): what a
+      # fake database cannot say. `scripts/workflows.test.ts` fails for any test that needs a database and that no job runs.
+      - name: Test the storage of the notification templates on a real database
+        run: npx vitest run src/lib/notifications/templates/service.db.test.ts
+
       # The same again in two other time zones of the machine that runs the tests: the columns hold UTC, and `pg` reads a `timestamp`
       # in the zone of the machine (see "Conventions" in docs/architecture.md).
       - name: The same, in two other time zones
         run: |
           for zone in Pacific/Auckland America/Los_Angeles; do
             echo "::group::$zone"
-            TZ="$zone" npx vitest run src/test/migrations qa || exit 1
+            TZ="$zone" npx vitest run src/test/migrations qa src/lib/notifications/templates/service.db.test.ts || exit 1
             echo "::endgroup::"
           done
 

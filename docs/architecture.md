@@ -1732,6 +1732,10 @@ specification): **`docs/design.md`**. Read it before touching layout or adding U
   looked for "Oct 16" at 01:00 on the 17th in Auckland); it reads the moment back instead. `TZ=Pacific/Auckland npm run test` works on every system, Windows
   included (`vitest.setup.ts`: Node on Windows ignores a `TZ` given at launch and only honours one assigned while it runs), but a child process the
   test starts does not inherit that on Windows: the arbiter is Linux, where CI runs it (a `node:22` container with the folder mounted does the same locally).
+- **A test that needs a database must be run by a job that has one.** It skips itself without `MIGRATION_TEST_DATABASE_URL`, so on a computer and in a job
+  without the database it passes by running nothing: `scripts/workflows.test.ts` lists every test file that reads that variable (or `qa/test-database`) and fails
+  for one that no `vitest run` of `ci.yml` (`migrations` job) or `qa.yml` names, directly or by its folder. It was found by reading the workflow: the storage of the
+  notification templates had a test (`service.db.test.ts`) that no job ran.
 - **No `any`** (`@typescript-eslint/no-explicit-any` is an error, not a warning).
 - Cross-platform: no `&&`/`||`/`$VAR`/`rm -rf`/`cp` in npm scripts — use `cross-env`, `rimraf`,
   or plain Node. LF line endings are enforced by `.gitattributes`. The exception is the server-side
