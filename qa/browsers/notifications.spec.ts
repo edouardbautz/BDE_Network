@@ -21,6 +21,13 @@ const ticked = (page: Page) => form(page).locator('input[type="checkbox"]:checke
 const tickable = (page: Page) =>
   form(page).locator('input[type="checkbox"]:not(:disabled)').count();
 
+/** The settings page, drawn and hydrated: a field filled before React has taken the page over loses what was typed (WebKit does it). */
+async function openSettings(page: Page) {
+  await page.goto('/en/settings');
+  await expect(page.getByRole('heading', { name: 'Who is told, and where' })).toBeVisible();
+  await atRest(page);
+}
+
 async function save(page: Page) {
   await form(page).getByRole('button', { name: 'Save' }).click();
   await expect(page.getByText('Saved', { exact: true })).toBeVisible();
@@ -29,7 +36,7 @@ async function save(page: Page) {
 
 /** Whatever happened, the platform is left with no channel set up, as it came. */
 async function leaveNoChannel(page: Page) {
-  await page.goto('/en/settings');
+  await openSettings(page);
   for (const name of ['Discord', 'Slack']) {
     const remove = form(page).getByRole('button', { name: `Remove ${name}` });
     if (await remove.isVisible()) await remove.click();
@@ -43,7 +50,7 @@ async function leaveNoChannel(page: Page) {
 test.describe('the table of notifications', () => {
   test('opens with nothing ticked, and a channel to set up before any box', async ({ as }) => {
     const page = await as('owner');
-    await page.goto('/en/settings');
+    await openSettings(page);
     await expect(page.getByRole('heading', { name: 'Who is told, and where' })).toBeVisible();
 
     await expect.poll(() => ticked(page)).toBe(0);
@@ -58,7 +65,7 @@ test.describe('the table of notifications', () => {
     as,
   }) => {
     const page = await as('owner');
-    await page.goto('/en/settings');
+    await openSettings(page);
     try {
       await form(page).getByLabel('Discord webhook address').fill(WEBHOOK);
       await form(page).getByLabel('Slack webhook address').fill(SLACK);
@@ -73,6 +80,7 @@ test.describe('the table of notifications', () => {
 
       await page.reload();
       await expect(page.getByRole('heading', { name: 'Who is told, and where' })).toBeVisible();
+      await atRest(page);
       await expect.poll(() => ticked(page)).toBe(9);
       await expect(page.getByRole('checkbox', { name: 'Event confirmed — Slack' })).toBeChecked();
       await expect(page.getByRole('checkbox', { name: 'Event confirmed — Discord' })).toBeChecked();
@@ -89,12 +97,13 @@ test.describe('the table of notifications', () => {
 
   test('refuses a wrong address under its field, and saves nothing', async ({ as }) => {
     const page = await as('owner');
-    await page.goto('/en/settings');
+    await openSettings(page);
     try {
       await form(page).getByLabel('Discord webhook address').fill('https://evil.example/x');
       await form(page).getByRole('button', { name: 'Save' }).click();
       await expect(form(page).getByRole('alert').first()).toBeVisible();
       await page.reload();
+      await atRest(page);
       await expect.poll(() => tickable(page)).toBe(0);
     } finally {
       await leaveNoChannel(page);
@@ -105,7 +114,7 @@ test.describe('the table of notifications', () => {
     as,
   }) => {
     const page = await as('owner', { viewport: { width: 390, height: 800 } });
-    await page.goto('/en/settings');
+    await openSettings(page);
     try {
       await form(page).getByLabel('Discord webhook address').fill(WEBHOOK);
       await form(page).getByRole('button', { name: 'Discord: check all' }).click();
