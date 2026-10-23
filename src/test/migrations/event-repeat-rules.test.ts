@@ -39,6 +39,9 @@ async function previousDatabase(): Promise<Client> {
   const client = new Client({ connectionString: url.toString() });
   await client.connect();
   clients.push(client);
+  // The columns are `timestamp` without a zone and hold UTC. A session in any other zone must change nothing: what the test
+  // writes and reads says its zone (below), and the migration is held to the same (it runs in this session).
+  await client.query(`SET TIME ZONE 'Asia/Kolkata'`);
 
   const previous = readdirSync(MIGRATIONS_DIR)
     .filter((entry) => /^\d{14}_/.test(entry) && entry < TARGET)
@@ -60,8 +63,9 @@ const addEvent = (client: Client, event: LegacyEvent) =>
   client.query(
     `INSERT INTO "Event" ("id", "title", "categoryKey", "status", "startsAt", "endsAt", "recurrence",
        "recurrenceUntil", "monthlyDay", "schoolYear", "authorLogin", "updatedAt")
-     VALUES ($1, 'Soirée', 'soiree', 'CONFIRMED', $2::timestamptz, $2::timestamptz + interval '2 hours',
-       $3::"EventRecurrence", $4::timestamptz, $5, '2026-2027', 'alice', now())`,
+     VALUES ($1, 'Soirée', 'soiree', 'CONFIRMED', ($2::timestamptz AT TIME ZONE 'UTC'),
+       ($2::timestamptz + interval '2 hours') AT TIME ZONE 'UTC',
+       $3::"EventRecurrence", ($4::timestamptz AT TIME ZONE 'UTC'), $5, '2026-2027', 'alice', now())`,
     [
       event.id,
       event.startsAt ?? '2027-01-31T17:00:00Z',
@@ -81,7 +85,10 @@ interface Stored {
 
 const stored = async (client: Client): Promise<Map<string, Stored>> => {
   const { rows } = await client.query<Stored>(
-    `SELECT "id", "repeat", "startsAt", "endsAt", "recurrenceUntil" FROM "Event" ORDER BY "id"`,
+    // `AT TIME ZONE 'UTC'` turns the column into the instant it holds: `pg` reads a `timestamp` in the zone of the machine, which
+    // moved every date by the offset of that zone (an hour in Paris in winter, the test passing only on a machine in UTC)
+    `SELECT "id", "repeat", ("startsAt" AT TIME ZONE 'UTC') AS "startsAt", ("endsAt" AT TIME ZONE 'UTC') AS "endsAt",
+       ("recurrenceUntil" AT TIME ZONE 'UTC') AS "recurrenceUntil" FROM "Event" ORDER BY "id"`,
   );
   return new Map(rows.map((row) => [row.id, row]));
 };
@@ -196,7 +203,8 @@ describeWithDatabase('event repeat rules migration', () => {
     const client = await previousDatabase();
     await addEvent(client, { id: 'weekly', recurrence: 'WEEKLY', until: '2027-06-30T22:00:00Z' });
     const { rows } = await client.query<Omit<Stored, 'repeat'>>(
-      `SELECT "id", "startsAt", "endsAt", "recurrenceUntil" FROM "Event"`,
+      `SELECT "id", ("startsAt" AT TIME ZONE 'UTC') AS "startsAt", ("endsAt" AT TIME ZONE 'UTC') AS "endsAt",
+         ("recurrenceUntil" AT TIME ZONE 'UTC') AS "recurrenceUntil" FROM "Event"`,
     );
     const before = rows[0];
     await client.query(migrationSql(TARGET));

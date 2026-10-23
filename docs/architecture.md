@@ -1722,6 +1722,12 @@ specification): **`docs/design.md`**. Read it before touching layout or adding U
   and **a scan of the repository fails on any other `git worktree add|remove`**. Mutation-checked (`qa/mutations/worktree.json`).
   When git itself fails on a path Windows finds too long (the cache of a Next.js build in a worktree: it deletes what it can and stops),
   the links being gone already, the script removes the folder with Node and prunes; with a link still there, or any other failure, it throws.
+- **A test holds in any time zone.** The runners of CI are in UTC and a developer's computer is not: CI plays the unit tests, and the tests
+  that need a database (`migrations` job), once more in `Pacific/Auckland` and in `America/Los_Angeles` (`TZ=… npm run test`). The trap met: the
+  database columns are `timestamp` without a zone and **hold UTC**, and `pg` reads such a column in the zone of the machine, so a test that read
+  one moved every date by the offset of its machine's zone (an hour in Paris in winter: `event-repeat-rules.test.ts` passed in CI and failed at
+  home, and the fault was the test's, not the product's: Prisma's adapter reads UTC). A test that reads or writes a `timestamp` column says its
+  zone (`("startsAt" AT TIME ZONE 'UTC')`, as `qa/invariants.ts` does) and runs in a session set to another zone (`SET TIME ZONE 'Asia/Kolkata'`).
 - **No `any`** (`@typescript-eslint/no-explicit-any` is an error, not a warning).
 - Cross-platform: no `&&`/`||`/`$VAR`/`rm -rf`/`cp` in npm scripts — use `cross-env`, `rimraf`,
   or plain Node. LF line endings are enforced by `.gitattributes`. The exception is the server-side
