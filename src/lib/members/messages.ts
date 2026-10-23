@@ -51,10 +51,13 @@ export function buildApprovedMessage(
   };
 }
 
-/** A member was removed: only ever sent to the team's channel. */
+/** A member was removed: only ever sent to the team's channel. The text says who did it, as the card does, when it is known. */
 export function buildRemovedMessage(member: MemberFacts, t: Translate): BuiltMessage {
+  const who = { name: member.fullName, login: member.login };
   return {
     subject: t('removed.subject', { name: member.fullName }),
-    body: t('removed.body', { name: member.fullName, login: member.login }),
+    body: member.actorName
+      ? t('removed.bodyBy', { ...who, actor: member.actorName })
+      : t('removed.body', who),
   };
 }

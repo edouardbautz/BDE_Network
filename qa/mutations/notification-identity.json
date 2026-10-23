@@ -40,5 +40,12 @@
     "pending: 0xc09036",
     "pending: 0xf59e0b",
     ["src/lib/notifications/colors.test.ts"]
+  ],
+  [
+    "removal: the plain text does not say who removed the member",
+    "src/lib/members/messages.ts",
+    "    body: member.actorName\n      ?",
+    "    body: false\n      ?",
+    ["src/lib/members/notifications.test.ts"]
   ]
 ]

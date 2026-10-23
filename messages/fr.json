@@ -252,7 +252,8 @@
       },
       "removed": {
         "subject": "Membre retiré : {name}",
-        "body": "{name} ({login}) a été retiré du BDE."
+        "body": "{name} ({login}) a été retiré du BDE.",
+        "bodyBy": "{name} ({login}) a été retiré du BDE par {actor}."
       },
       "embed": {
         "kind": {

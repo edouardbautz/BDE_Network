@@ -35,6 +35,8 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Changed
 
+- The plain text of a member removal now says who removed them ("… was removed from the BDE by Paula Martin."), as the card already did.
+
 - `notifications.<type>` of `bde.config.yml` and of the stored settings is a list (`[discord, email]`; `[]` for nothing). **The old
   form is still read**: `"discord"` is `[discord]`, `"none"` and a missing key are `[]`. Nothing is migrated or rewritten by the update
   (the update suite checks that each notification keeps its channel, from 1.0.0 to 1.4.0); the lists are written the next time the

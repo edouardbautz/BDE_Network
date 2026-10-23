@@ -412,6 +412,20 @@ describe('notifyMemberRemoved', () => {
     },
   );
 
+  it.each(['discord', 'slack'] as const)(
+    'says in the plain text who removed them, as the card does (%s)',
+    async (channel) => {
+      useChannels({ memberRemoved: channel });
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({ fullName: 'Paula Martin' } as never);
+
+      await notifyMemberRemoved(removed, 'pmartin');
+
+      expect(firstCall(vi.mocked(deliver))[1].body).toBe(
+        'Jean Dupont (jdupont) a été retiré du BDE par Paula Martin.',
+      );
+    },
+  );
+
   it('on Discord, a red card that says who removed them', async () => {
     useChannels({ memberRemoved: 'discord' });
     vi.mocked(prisma.user.findUnique).mockResolvedValue({ fullName: 'Paula Martin' } as never);

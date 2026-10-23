@@ -333,6 +333,10 @@ Impersonal sentences, neither "tu" nor "vous": "Create an event", "No task in pr
 ("18:30"), amounts "4 812,40 €" with a thin non-breaking space before the symbol. A count of registrations is "42 / 60 registered", or "42 registered" without a gauge (the platform has no registrations yet,
 so there is no gauge).
 
+**Who is addressed decides the form.** The interface is impersonal, as above. A message written to one identified person (the e-mail that
+tells a member their access is approved, "Bonjour {name}, votre demande d'accès a été approuvée") says **"vous"** in French: it is a letter to someone,
+not a screen. What is written to a team, such as a card in a chat channel, speaks about the person in the third person.
+
 ## Where it lives, and what differs from the original specification
 
 | What                               | Where                                                                                                                                                               |
