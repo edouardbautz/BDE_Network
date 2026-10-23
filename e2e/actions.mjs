@@ -3,6 +3,8 @@
 // covers: settings.saveIdentity, settings.saveLogo, settings.removeLogo, settings.saveModules, settings.checkOwner, settings.saveUpdates
 // covers: settings.addOwner, settings.removeOwner
 // covers: profile.regenerateMyCalendarToken
+// covers: notifications.saveTemplate, notifications.customizeChannel, notifications.resetTemplate, notifications.resetNotification
+// covers: notifications.restoreVersion, notifications.addMention, notifications.removeMention
 // covers: shared-calendar.enableSharedCalendar, shared-calendar.regenerateSharedCalendar, shared-calendar.disableSharedCalendar
 // End-to-end test of what the page shows AFTER an action that stays on it, for every such action of the platform
 // (members, roles, settings, profile, shared calendar, language, sign-out), in a real browser, on the real image.
@@ -237,6 +239,34 @@ async function chooseLanguage(name) {
       .find((item) => item.textContent.includes(wanted))
       .click();
   }, name);
+}
+
+// The templates of the notifications: written with SQL, as the page would, and always put back to none.
+const clearTemplates = () =>
+  sql(
+    `DELETE FROM "NotificationTemplateVersion"; DELETE FROM "NotificationTemplate"; DELETE FROM "NotificationMention"`,
+  );
+const putTemplate = (scope, content, version = 1) =>
+  sql(
+    `INSERT INTO "NotificationTemplate" (id, type, scope, content, version, "basedOnRevision", "updatedAt", "updatedByLogin") VALUES ('qa-tpl-${scope}', 'memberPending', '${scope}', '${content}'::jsonb, ${version}, 1, now(), '${OWNER}')`,
+  );
+const putVersion = (scope, version, content, action = 'save') =>
+  sql(
+    `INSERT INTO "NotificationTemplateVersion" (id, type, scope, version, content, "basedOnRevision", action, "authorLogin") VALUES ('qa-ver-${scope}-${version}', 'memberPending', '${scope}', ${version}, '${content}'::jsonb, 1, '${action}', '${OWNER}')`,
+  );
+/** Clicks a button of the dialog on top (a confirmation opened from another dialog is the last one in the page). */
+async function clickInTopDialog(label) {
+  const handle = await page.waitForFunction(
+    (wanted) => {
+      const dialogs = [...document.querySelectorAll('[role="dialog"]')];
+      return [...(dialogs.at(-1)?.querySelectorAll('button') ?? [])].find(
+        (el) => el.textContent?.trim().startsWith(wanted) && !el.disabled,
+      );
+    },
+    { timeout: 7000 },
+    label,
+  );
+  await handle.asElement().click();
 }
 
 const SCENARIOS = [
@@ -670,6 +700,172 @@ const SCENARIOS = [
         'bde-disable',
       );
       return [enabled, regenerated, disabled].find((state) => state !== 'ok') ?? 'ok';
+    },
+  },
+  {
+    name: 'notifications: save a template (the page keeps what was saved)',
+    async run({ id }) {
+      const words = `Bienvenue ${id}`;
+      clearTemplates();
+      try {
+        await goto('/notifications?type=memberPending');
+        await page.waitForSelector('#memberPending-all-eyebrow');
+        // the whole text is selected by the field itself (a triple click does not select it everywhere)
+        await page.$eval('#memberPending-all-eyebrow', (el) => {
+          el.focus();
+          el.select();
+        });
+        await page.type('#memberPending-all-eyebrow', words);
+        await click('Enregistrer', 'section[aria-labelledby="template-heading"]');
+        const saved = await expectPage(
+          () => !document.body.innerText.includes('Modifications non enregistrées'),
+          undefined,
+          'template-save',
+        );
+        if (saved !== 'ok') return saved;
+        // what is shown after loading the page again is what was written to the database
+        await goto('/notifications?type=memberPending');
+        const kept = await page.$eval('#memberPending-all-eyebrow', (el) => el.value);
+        const written = sql(
+          `SELECT count(*) FROM "NotificationTemplate" WHERE type = 'memberPending' AND scope = 'all'`,
+        );
+        if (kept !== words || written !== '1') {
+          console.error(
+            `  template saved? the page shows "${kept}" (wanted "${words}"), ${written} row(s)`,
+          );
+          return 'FAILED';
+        }
+        return 'ok';
+      } finally {
+        clearTemplates();
+      }
+    },
+  },
+  {
+    name: 'notifications: customise a channel, then go back to the common template (the page loads again)',
+    async run() {
+      clearTemplates();
+      try {
+        await goto('/notifications?type=memberPending&scope=slack');
+        await click('Personnaliser ce canal', 'section[aria-labelledby="template-heading"]');
+        await page.waitForSelector(dialog);
+        await Promise.all([
+          page.waitForNavigation({ waitUntil: 'networkidle0' }),
+          clickInTopDialog('Personnaliser ce canal'),
+        ]);
+        const customised = await expectPage(
+          () =>
+            document.body.innerText.includes('Ce canal a maintenant son propre modèle.') &&
+            document.body.innerText.includes('Slack a son propre modèle'),
+          undefined,
+          'template-customise',
+        );
+        if (customised !== 'ok') return customised;
+        await click('Revenir au modèle commun', 'section[aria-labelledby="template-heading"]');
+        await page.waitForSelector(dialog);
+        await Promise.all([
+          page.waitForNavigation({ waitUntil: 'networkidle0' }),
+          clickInTopDialog('Revenir au modèle commun'),
+        ]);
+        return await expectPage(
+          () => document.body.innerText.includes('Slack suit le modèle commun'),
+          undefined,
+          'template-back-to-common',
+        );
+      } finally {
+        clearTemplates();
+      }
+    },
+  },
+  {
+    name: 'notifications: put every channel back as the platform writes it',
+    async run() {
+      clearTemplates();
+      putTemplate('all', '{"eyebrow":"Hello"}');
+      putTemplate('discord', '{"footer":"Merci"}');
+      try {
+        await goto('/notifications?type=memberPending');
+        await click('Plus', 'section[aria-labelledby="template-heading"]');
+        await click('Tout remettre comme la plateforme');
+        await page.waitForSelector(dialog);
+        await Promise.all([
+          page.waitForNavigation({ waitUntil: 'networkidle0' }),
+          clickInTopDialog('Revenir au défaut'),
+        ]);
+        const shown = await expectPage(
+          () => document.body.innerText.includes('Tous les canaux sont revenus'),
+          undefined,
+          'template-reset-all',
+        );
+        const left = sql(`SELECT count(*) FROM "NotificationTemplate"`);
+        return shown === 'ok' && left === '0' ? 'ok' : shown === 'ok' ? 'FAILED' : shown;
+      } finally {
+        clearTemplates();
+      }
+    },
+  },
+  {
+    name: 'notifications: restore an older version from the history',
+    async run() {
+      clearTemplates();
+      putTemplate('all', '{"eyebrow":"Deux"}', 2);
+      putVersion('all', 1, '{"eyebrow":"Un"}');
+      putVersion('all', 2, '{"eyebrow":"Deux"}');
+      try {
+        await goto('/notifications?type=memberPending');
+        await click('Plus', 'section[aria-labelledby="template-heading"]');
+        await click('Historique des versions');
+        await page.waitForSelector(dialog);
+        await click('Restaurer', dialog);
+        await Promise.all([
+          page.waitForNavigation({ waitUntil: 'networkidle0' }),
+          clickInTopDialog('Restaurer'),
+        ]);
+        const shown = await expectPage(
+          () =>
+            document.body.innerText.includes('Version restaurée.') &&
+            document.querySelector('#memberPending-all-eyebrow')?.value === 'Un',
+          undefined,
+          'template-restore',
+        );
+        const now = sql(
+          `SELECT version || ':' || (content->>'eyebrow') FROM "NotificationTemplate" WHERE scope = 'all'`,
+        );
+        return shown === 'ok' && now === '3:Un' ? 'ok' : shown === 'ok' ? 'FAILED' : shown;
+      } finally {
+        clearTemplates();
+      }
+    },
+  },
+  {
+    name: 'notifications: add then remove somebody to mention (the list follows)',
+    async run({ id }) {
+      const name = `Equipe ${id}`;
+      clearTemplates();
+      putTemplate('discord', '{}');
+      try {
+        await goto('/notifications?type=memberPending&scope=discord');
+        await click('Mentionner', 'section[aria-labelledby="template-heading"]');
+        await click('Gérer les personnes et rôles');
+        await page.waitForSelector(dialog);
+        await page.type('#mention-label', name);
+        await page.type('#mention-id', '123456789012345678');
+        await click('Ajouter', dialog);
+        const added = await expectPage(
+          (who) => Boolean(document.querySelector(`button[aria-label="Retirer ${who}"]`)),
+          name,
+          'mention-add',
+        );
+        if (added !== 'ok') return added;
+        await page.click(`button[aria-label="Retirer ${name}"]`);
+        return await expectPage(
+          (who) => !document.querySelector(`button[aria-label="Retirer ${who}"]`),
+          name,
+          'mention-remove',
+        );
+      } finally {
+        clearTemplates();
+      }
     },
   },
   {

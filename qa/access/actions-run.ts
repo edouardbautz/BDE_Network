@@ -43,6 +43,7 @@ const FILE_OF: Record<string, RegExp> = {
   'shared-calendar': /shared-calendar\/actions\.ts$/,
   profile: /\(app\)\/profile\/actions\.ts$/,
   settings: /\(app\)\/settings\/actions\.ts$/,
+  notifications: /\(app\)\/notifications\/actions\.ts$/,
   setup: /\[locale\]\/setup\/actions\.ts$/,
   'dev-impersonation': /lib\/dev-impersonation-actions\.ts$/,
 };

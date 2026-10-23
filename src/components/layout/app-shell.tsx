@@ -3,6 +3,7 @@
 import type { ComponentProps, ReactNode } from 'react';
 import { useState } from 'react';
 import {
+  Bell,
   CalendarDays,
   ClipboardCheck,
   Ellipsis,
@@ -26,7 +27,15 @@ import {
 import { ShellContext } from './shell-context';
 
 export interface NavItem {
-  id: 'dashboard' | 'events' | 'eventsReview' | 'members' | 'roles' | 'auditLog' | 'settings';
+  id:
+    | 'dashboard'
+    | 'events'
+    | 'eventsReview'
+    | 'members'
+    | 'roles'
+    | 'notifications'
+    | 'auditLog'
+    | 'settings';
   href: string;
   /** The full name of the page. */
   label: string;
@@ -50,6 +59,7 @@ const NAV_ICONS: Record<NavItem['id'], typeof House> = {
   eventsReview: ClipboardCheck,
   members: Users,
   roles: ShieldCheck,
+  notifications: Bell,
   auditLog: ScrollText,
   settings: Settings,
 };

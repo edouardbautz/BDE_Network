@@ -173,8 +173,10 @@
       "members": "Membres",
       "roles": "Rôles",
       "auditLog": "Journal",
-      "settings": "Réglages"
-    }
+      "settings": "Réglages",
+      "notifications": "Messages"
+    },
+    "notifications": "Notifications"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -364,7 +366,8 @@
       },
       "reminder": {
         "subject": "Rappel : {title} a lieu demain",
-        "intro": "Rappel : cet événement a lieu demain."
+        "intro": "Rappel : cet événement a lieu demain.",
+        "subjectPattern": "Rappel : {title} a lieu {day}"
       },
       "location": "Lieu",
       "category": "Catégorie",
@@ -386,7 +389,8 @@
           "proposed": "Événement proposé",
           "approved": "Proposition approuvée",
           "refused": "Proposition refusée",
-          "test": "Message de test"
+          "test": "Message de test",
+          "reminderPattern": "Rappel · {day}"
         },
         "fields": {
           "when": "Quand",
@@ -1235,6 +1239,383 @@
       "commandUp": "Seconde commande : démarrer la nouvelle version",
       "backup": "La plateforme fait elle-même une copie de sa base avant de la modifier. Pour être tranquille, vous pouvez aussi lancer ./scripts/backup.sh avant.",
       "dismiss": "Masquer jusqu'à la prochaine version"
+    }
+  },
+  "templates": {
+    "page": {
+      "title": "Notifications",
+      "intro": "Personnaliser les messages que la plateforme envoie : les mots, les couleurs, les informations montrées et leur ordre, le bouton, l'objet des e-mails. Ce qui n'est pas modifié reste comme la plateforme l'écrit, et suit ses améliorations.",
+      "listLabel": "Notifications à personnaliser",
+      "groups": {
+        "events": "Événements",
+        "members": "Membres"
+      },
+      "customised": "Personnalisée",
+      "notSent": "Envoyée nulle part"
+    },
+    "channels": {
+      "discord": "Discord",
+      "slack": "Slack",
+      "email": "E-mail"
+    },
+    "types": {
+      "eventConfirmed": {
+        "name": "Événement confirmé",
+        "when": "Envoyée une seule fois à tous les membres, quand un événement est confirmé."
+      },
+      "eventReminder": {
+        "name": "Rappel d'événement",
+        "when": "Envoyée la veille, aux personnes en charge (ou à ceux qui valident s'il n'y en a pas)."
+      },
+      "eventProposed": {
+        "name": "Événement proposé",
+        "when": "Envoyée à ceux qui peuvent valider, quand un événement est proposé."
+      },
+      "eventApproved": {
+        "name": "Proposition approuvée",
+        "when": "Envoyée à l'auteur de la proposition, quand elle est approuvée."
+      },
+      "eventRefused": {
+        "name": "Proposition refusée",
+        "when": "Envoyée à l'auteur de la proposition, avec le commentaire, quand elle est refusée."
+      },
+      "memberPending": {
+        "name": "Demande d'accès en attente",
+        "when": "Envoyée aux propriétaires et à ceux qui gèrent les membres, quand quelqu'un demande l'accès."
+      },
+      "memberApproved": {
+        "name": "Demande approuvée",
+        "when": "Envoyée au membre par e-mail, et à l'équipe dans le salon, quand sa demande est approuvée."
+      },
+      "memberRemoved": {
+        "name": "Membre retiré",
+        "when": "Envoyée dans le salon, quand un membre est retiré. La personne retirée ne reçoit jamais d'e-mail."
+      }
+    },
+    "editor": {
+      "tabsLabel": "Canaux",
+      "tabs": {
+        "all": "Tous les canaux",
+        "discord": "Discord",
+        "slack": "Slack",
+        "email": "E-mail"
+      },
+      "unsavedTab": "Modifications non enregistrées",
+      "viewLabel": "Affichage",
+      "viewEdit": "Modifier",
+      "viewPreview": "Aperçu",
+      "following": "{channel} suit le modèle commun",
+      "followingHelp": "Ce canal envoie le message écrit pour tous les canaux. Pour le rendre différent, il faut le personnaliser : il part alors d'une copie du modèle commun et ne suit plus les modifications faites ensuite pour tous les canaux.",
+      "customise": "Personnaliser ce canal",
+      "customiseTitle": "Personnaliser {channel} ?",
+      "customiseDescription": "Ce canal partira d2019une copie du modèle commun et ne suivra plus ses modifications. Le retour au modèle commun est possible à tout moment.",
+      "customiseDescriptionDirty": "Ce canal partira d2019une copie du modèle commun enregistré. Les modifications non enregistrées de cette page seront perdues : mieux vaut enregistrer d'abord.",
+      "customised": "{channel} a son propre modèle : les modifications du modèle commun ne le concernent plus.",
+      "backToCommon": "Revenir au modèle commun",
+      "backToCommonTitle": "Revenir au modèle commun ?",
+      "backToCommonDescription": "Le modèle propre à {channel} est supprimé : ce canal suit de nouveau le modèle commun. Il reste dans l'historique.",
+      "ownMessage": "Ce canal a son propre message : le modèle commun ne s'y applique pas.",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "saved": "Modèle enregistré",
+      "nothingChanged": "Rien à enregistrer : le modèle est déjà celui-ci",
+      "unsaved": "Modifications non enregistrées",
+      "discard": "Annuler les modifications",
+      "more": "Plus",
+      "history": "Historique des versions",
+      "resetTab": "Revenir au message de la plateforme ({scope})",
+      "resetAll": "Tout remettre comme la plateforme (tous les canaux)",
+      "reset": "Revenir au défaut",
+      "resetTabTitle": "Revenir au message de la plateforme ({scope}) ?",
+      "resetTabDescription": "Les personnalisations de cet onglet sont supprimées : le message redevient celui que la plateforme écrit. La version précédente reste dans l'historique.",
+      "resetAllTitle": "Tout remettre comme la plateforme ?",
+      "resetAllDescription": "Toutes les personnalisations de cette notification, sur tous les canaux, sont supprimées. Les versions précédentes restent dans l'historique."
+    },
+    "sections": {
+      "header": "En-tête",
+      "above": "Message au-dessus de la carte",
+      "items": "Informations montrées",
+      "button": "Bouton",
+      "footer": "Pied du message",
+      "email": "E-mail"
+    },
+    "fields": {
+      "emoji": "Emoji du titre",
+      "eyebrow": "Petit texte au-dessus du titre",
+      "eyebrowHint": "Par exemple « Nouvel événement confirmé ».",
+      "title": "Titre",
+      "color": "Couleur de la barre",
+      "colorAutomatic": "Automatique (celle de la catégorie ou du type de message)",
+      "colorPick": "Choisir la couleur",
+      "above": "Texte au-dessus de la carte",
+      "aboveHint": "Le seul endroit où une mention prévient vraiment quelqu'un. Les titres, lieux et noms insérés par une variable ne mentionnent jamais personne.",
+      "buttonShow": "Montrer un bouton",
+      "buttonLabel": "Texte du bouton",
+      "buttonUrl": "Adresse du bouton",
+      "buttonUrlHint": "Vide : le bouton ouvre la page de l'événement ou du membre sur la plateforme. Sinon, une adresse https:// (un formulaire, un site).",
+      "footer": "Pied du message",
+      "subject": "Objet de l'e-mail",
+      "preheader": "Ligne d'aperçu dans la boîte de réception",
+      "preheaderHint": "Ce que le client mail montre après l'objet.",
+      "note": "Note en bas du message"
+    },
+    "field": {
+      "insertVariable": "Insérer une variable",
+      "bold": "Gras",
+      "italic": "Italique"
+    },
+    "items": {
+      "help": "Choisir les informations montrées, leur ordre et leur intitulé. Une phrase libre peut être ajoutée.",
+      "listLabel": "Informations du message",
+      "moveUp": "Monter : {name}",
+      "moveDown": "Descendre : {name}",
+      "remove": "Supprimer : {name}",
+      "addText": "Ajouter un texte",
+      "freeText": "Texte libre",
+      "textLabel": "Texte",
+      "summaryLabel": "Texte de la phrase",
+      "nameLabel": "Intitulé",
+      "emojiLabel": "Emoji",
+      "names": {
+        "when": "Date et heure",
+        "repeats": "Répétition",
+        "where": "Lieu",
+        "description": "Description",
+        "category": "Catégorie",
+        "assignees": "Membres en charge",
+        "proposedBy": "Proposé par",
+        "reviewedBy": "Traité par",
+        "reason": "Motif du refus",
+        "summary": "Phrase d'introduction",
+        "login": "Login",
+        "campus": "Campus",
+        "role": "Rôle",
+        "actedBy": "Par"
+      }
+    },
+    "variables": {
+      "title": {
+        "name": "titre",
+        "label": "Titre de l'événement"
+      },
+      "date": {
+        "name": "date",
+        "label": "Jour, en toutes lettres"
+      },
+      "time": {
+        "name": "heure",
+        "label": "Heure de début"
+      },
+      "end_time": {
+        "name": "fin",
+        "label": "Heure de fin"
+      },
+      "when": {
+        "name": "quand",
+        "label": "Date et heures ensemble"
+      },
+      "place": {
+        "name": "lieu",
+        "label": "Lieu"
+      },
+      "category": {
+        "name": "catégorie",
+        "label": "Catégorie de l'événement"
+      },
+      "assignees": {
+        "name": "responsables",
+        "label": "Membres en charge"
+      },
+      "repeat": {
+        "name": "répétition",
+        "label": "Phrase qui décrit la répétition"
+      },
+      "description": {
+        "name": "description",
+        "label": "Description de l'événement"
+      },
+      "link": {
+        "name": "lien",
+        "label": "Adresse de la page sur la plateforme"
+      },
+      "bde": {
+        "name": "bde",
+        "label": "Nom du BDE"
+      },
+      "day": {
+        "name": "jour",
+        "label": "« aujourd'hui » ou « demain »"
+      },
+      "author": {
+        "name": "auteur",
+        "label": "Qui a proposé"
+      },
+      "reviewer": {
+        "name": "valideur",
+        "label": "Qui a répondu à la proposition"
+      },
+      "comment": {
+        "name": "commentaire",
+        "label": "Motif du refus"
+      },
+      "name": {
+        "name": "nom",
+        "label": "Nom de la personne"
+      },
+      "login": {
+        "name": "login",
+        "label": "Login 42"
+      },
+      "campus": {
+        "name": "campus",
+        "label": "Campus"
+      },
+      "role": {
+        "name": "rôle",
+        "label": "Rôle du membre"
+      },
+      "actor": {
+        "name": "acteur",
+        "label": "Qui a approuvé ou retiré le membre"
+      }
+    },
+    "mentions": {
+      "insert": "Mentionner",
+      "everyone": "@everyone : tout le salon",
+      "here": "@here : les personnes en ligne",
+      "channel": "@channel : tout le canal",
+      "manage": "Gérer les personnes et rôles…",
+      "close": "Fermer",
+      "title": "Mentionner sur {platform}",
+      "platforms": {
+        "discord": "Discord",
+        "slack": "Slack"
+      },
+      "help": {
+        "discord": "Une mention vise un rôle ou une personne du serveur Discord. Ajouter ici ceux qui peuvent être mentionnés : un nom lisible, et l'identifiant que Discord donne (mode développeur, clic droit, « Copier l'identifiant »).",
+        "slack": "Une mention vise un groupe ou une personne de l'espace Slack. Ajouter ici ceux qui peuvent être mentionnés : un nom lisible, et l'identifiant que Slack donne (profil ou groupe, « Copier l'identifiant »)."
+      },
+      "kinds": {
+        "role": "Rôle",
+        "user": "Personne",
+        "group": "Groupe"
+      },
+      "kindLabel": "Type",
+      "nameLabel": "Nom affiché",
+      "idLabel": "Identifiant",
+      "idHint": {
+        "discord": "Des chiffres, 17 à 20.",
+        "slack": "Commence par U, W ou S, par exemple U01ABCDE2F3."
+      },
+      "listLabel": "Personnes et rôles mentionnables",
+      "empty": "Personne pour le moment.",
+      "add": "Ajouter",
+      "added": "Ajouté",
+      "remove": "Retirer {name}",
+      "removed": "Retiré",
+      "inUse": "Impossible : ce nom est encore utilisé par {where}. Le retirer d'abord du message."
+    },
+    "history": {
+      "title": "Historique : {scope}",
+      "description": "Les 50 dernières versions enregistrées. Restaurer une version en crée une nouvelle : rien n'est perdu.",
+      "listLabel": "Versions",
+      "loading": "Chargement…",
+      "failed": "Impossible de charger l'historique.",
+      "empty": "Aucune version enregistrée pour l'instant.",
+      "version": "Version {version}",
+      "current": "Actuelle",
+      "actions": {
+        "save": "Enregistrée",
+        "reset": "Retour au message de la plateforme",
+        "restore": "Restaurée depuis la version"
+      },
+      "resetEntry": "Le message de la plateforme, sans personnalisation.",
+      "restore": "Restaurer",
+      "restoreLabel": "Restaurer la version {version}",
+      "restoreTitle": "Restaurer la version {version} ?",
+      "restoreDescription": "Cette version devient la version actuelle, après une nouvelle vérification. La version actuelle reste dans l'historique.",
+      "restoreDirty": "Cette version devient la version actuelle. Les modifications non enregistrées de cette page seront perdues.",
+      "close": "Fermer"
+    },
+    "preview": {
+      "title": "Aperçu",
+      "on": "Aperçu sur",
+      "updating": "Mise à jour de l'aperçu…",
+      "updated": "Aperçu à jour",
+      "loading": "Préparation de l'aperçu…",
+      "invalid": "Le modèle contient une erreur : l'aperçu montre la dernière version valide.",
+      "failed": "L'aperçu n'a pas pu être préparé. Réessayer dans un instant.",
+      "disclaimer": "Aperçu avec un événement d'exemple. Discord, Slack et chaque messagerie dessinent à leur façon : le message de test montre le vrai rendu.",
+      "mailFrame": "Aperçu de l'e-mail"
+    },
+    "test": {
+      "send": "Envoyer un test sur {channel}",
+      "sending": "Envoi…",
+      "sent": "Test envoyé sur {channel}.",
+      "notConfigured": "{channel} n'est pas configuré : un propriétaire peut le faire dans les paramètres.",
+      "rateLimited": "Un test vient de partir. Réessayer dans {seconds} s.",
+      "failed": "Le test n'a pas pu être envoyé : {detail}",
+      "invalid": "Le modèle contient une erreur : corriger avant de tester.",
+      "liveMentions": "Prévenir vraiment les personnes mentionnées pendant ce test",
+      "liveTitle": "Mentionner vraiment les personnes ?",
+      "liveDescription": "Pendant les tests, les mentions sont écrites en clair et ne préviennent personne. En les activant, les personnes et rôles mentionnés recevront une notification, comme pour un vrai message.",
+      "liveConfirm": "Activer les mentions"
+    },
+    "banners": {
+      "fallbackTitle": "Le message de la plateforme a été envoyé à la place",
+      "fallback": "Le {date}, ce modèle n'a pas pu être utilisé ({reason}) : le message de la plateforme est parti à sa place. Corriger le modèle ou revenir au défaut.",
+      "outdatedTitle": "La plateforme a amélioré ce message",
+      "acknowledge": "C'est noté",
+      "acknowledgeTitle": "Marquer comme vu ?",
+      "acknowledgeDescription": "Le modèle reste tel quel. Cette alerte disparaît jusqu'à la prochaine amélioration.",
+      "conflictTitle": "Quelqu'un a enregistré avant",
+      "conflict": "Ce modèle a été modifié par quelqu'un d'autre pendant l'édition. Recharger la page pour voir sa version, puis refaire les changements.",
+      "reload": "Recharger",
+      "notTicked": "Cette notification n'est pas envoyée sur {channel} pour l'instant : un propriétaire peut cocher la case dans les paramètres."
+    },
+    "fallbackReasons": {
+      "invalid": "il contenait une erreur",
+      "render": "le message n'a pas pu être construit",
+      "unknown": "raison inconnue"
+    },
+    "revisions": {},
+    "notices": {
+      "customised": "Ce canal a maintenant son propre modèle.",
+      "reset": "Retour au message de la plateforme.",
+      "resetAll": "Tous les canaux sont revenus au message de la plateforme.",
+      "restored": "Version restaurée.",
+      "acknowledged": "Noté."
+    },
+    "codes": {
+      "required": "Ce champ ne peut pas être vide.",
+      "tooLong": "Trop long ({max} caractères au plus).",
+      "tooMany": "Trop d'éléments.",
+      "badColor": "Une couleur au format #rrggbb est attendue.",
+      "notAnEmoji": "Un seul emoji est attendu.",
+      "unknownField": "Champ inconnu.",
+      "invalid": "Valeur non valide.",
+      "badMention": "Mention non reconnue.",
+      "badUrl": "L'adresse doit commencer par https:// et mener à un site.",
+      "duplicateItem": "Cette information est déjà dans la liste.",
+      "emailOnly": "Ce champ n'existe que pour les e-mails.",
+      "mentionNotAllowed": "Les mentions ne sont possibles que dans le texte au-dessus de la carte.",
+      "mentionNeedsChannel": "Cette mention vise une personne ou un rôle précis : la personnaliser pour un canal (Discord ou Slack).",
+      "mentionNotForChannel": "Cette mention n'existe pas sur ce canal.",
+      "notForEmail": "Un e-mail n'a pas de message au-dessus de la carte.",
+      "textNotAllowed": "Pas de texte pour cette information.",
+      "tooManyTexts": "Trop de textes libres (8 au plus).",
+      "unknownItem": "Information inconnue : {item}.",
+      "unknownMention": "Cette mention n'est pas dans la liste : {mention}. L'ajouter d'abord.",
+      "unknownVariable": "Variable inconnue : {variable}.",
+      "badMentionKey": "Nom de mention non valide.",
+      "badMentionId": "L'identifiant n'a pas la forme attendue.",
+      "conflict": "Quelqu'un a modifié ce modèle entre-temps. Recharger la page.",
+      "channelNotForType": "Cette notification n'est pas envoyée sur ce canal.",
+      "mentionExists": "Un nom identique existe déjà.",
+      "mentionInUse": "Cette mention est encore utilisée.",
+      "notFound": "Introuvable : cela a peut-être déjà été modifié.",
+      "restoreInvalid": "Cette version n'est plus valable aujourd'hui : elle n'a pas été restaurée.",
+      "unknown": "Une erreur est survenue. Réessayer dans un instant."
     }
   }
 }

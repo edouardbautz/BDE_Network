@@ -52,10 +52,11 @@ droits un par un : un nouveau module n'apparaîtra alors dans ce rôle que si vo
 
 ## Les droits disponibles
 
-| Droit                 | Ce qu'il permet                                                                        |
-| --------------------- | -------------------------------------------------------------------------------------- |
-| **Gérer les membres** | Approuver ou refuser les demandes d'accès, retirer des membres et leur donner un rôle. |
-| **Gérer les rôles**   | Créer, modifier et supprimer des rôles, et choisir les droits de chacun.               |
+| Droit                               | Ce qu'il permet                                                                                                                                                                                                                           |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Gérer les membres**               | Approuver ou refuser les demandes d'accès, retirer des membres et leur donner un rôle.                                                                                                                                                    |
+| **Gérer les rôles**                 | Créer, modifier et supprimer des rôles, et choisir les droits de chacun.                                                                                                                                                                  |
+| **Personnaliser les notifications** | Changer ce que disent les cartes Discord, les messages Slack et les e-mails et leur apparence (page **Notifications**), et choisir qui ils mentionnent. Les canaux eux-mêmes (webhooks, serveur de messagerie) restent aux propriétaires. |
 
 Et, **pour chaque module activé** :
 

@@ -82,6 +82,7 @@ const validates = (who: PersonaKey, variant: PlatformVariant) =>
   can(who, 'events.validate', variant);
 const members = (who: PersonaKey) => can(who, 'members.manage');
 const roles = (who: PersonaKey) => can(who, 'roles.manage');
+const templates = (who: PersonaKey) => can(who, 'notifications.templates');
 const sharesCalendar = (who: PersonaKey, variant: PlatformVariant) =>
   can(who, 'events.shared_calendar', variant);
 
@@ -121,6 +122,138 @@ const INSTALLER = [
   'testNotification',
   'finishInstallation',
 ] as const;
+
+/** A template of the members' notifications, written as the page would, for the cases that need one to act on. */
+const TEMPLATE_ID = 'qa-template-prepared';
+const prepareTemplate = async (db: Queryable) => {
+  await db.query(
+    `INSERT INTO "NotificationTemplate" ("id", "type", "scope", "content", "version", "basedOnRevision", "updatedAt", "updatedByLogin") VALUES ($1, 'memberPending', 'all', '{"eyebrow":"Prepared"}'::jsonb, 2, 1, now(), 'qa-admin') ON CONFLICT DO NOTHING`,
+    [TEMPLATE_ID],
+  );
+  await db.query(
+    `INSERT INTO "NotificationTemplateVersion" ("id", "type", "scope", "version", "content", "basedOnRevision", "action", "authorLogin") VALUES ('qa-version-1', 'memberPending', 'all', 1, '{"eyebrow":"First"}'::jsonb, 1, 'save', 'qa-admin'), ('qa-version-2', 'memberPending', 'all', 2, '{"eyebrow":"Prepared"}'::jsonb, 1, 'save', 'qa-admin') ON CONFLICT DO NOTHING`,
+  );
+};
+const TEMPLATE_TABLES = [
+  'NotificationTemplate',
+  'NotificationTemplateVersion',
+  'AuditLog',
+] as const;
+
+const TEMPLATE_CASES: readonly ActionCase[] = [
+  {
+    action: 'notifications.saveTemplate',
+    label: 'write a template for all channels',
+    effect: TEMPLATE_TABLES,
+    allowed: templates,
+    args: () => [
+      {
+        type: 'memberPending',
+        scope: 'all',
+        content: { eyebrow: 'Written by the access matrix' },
+        expectedVersion: 0,
+      },
+    ],
+    strictThrow: true,
+  },
+  {
+    action: 'notifications.customizeChannel',
+    label: 'make a channel different from the others',
+    effect: TEMPLATE_TABLES,
+    allowed: templates,
+    args: () => [{ type: 'memberPending', channel: 'slack' }],
+    strictThrow: true,
+  },
+  {
+    action: 'notifications.resetTemplate',
+    label: 'put one tab back as the platform writes it',
+    effect: TEMPLATE_TABLES,
+    allowed: templates,
+    prepare: prepareTemplate,
+    args: () => [{ type: 'memberPending', scope: 'all' }],
+    strictThrow: true,
+  },
+  {
+    action: 'notifications.resetNotification',
+    label: 'put a whole notification back as the platform writes it',
+    effect: TEMPLATE_TABLES,
+    allowed: templates,
+    prepare: prepareTemplate,
+    args: () => [{ type: 'memberPending' }],
+    strictThrow: true,
+  },
+  {
+    action: 'notifications.restoreVersion',
+    label: 'restore an older version',
+    effect: TEMPLATE_TABLES,
+    allowed: templates,
+    prepare: prepareTemplate,
+    args: () => [{ type: 'memberPending', scope: 'all', version: 1 }],
+    strictThrow: true,
+  },
+  {
+    action: 'notifications.acknowledgeRevision',
+    label: 'mark the improvements of the platform as seen',
+    effect: ['NotificationTemplate', 'AuditLog'],
+    allowed: templates,
+    prepare: prepareTemplate,
+    args: () => [{ type: 'memberPending', scope: 'all' }],
+    strictThrow: true,
+  },
+  {
+    action: 'notifications.addMention',
+    label: 'add somebody to mention',
+    effect: ['NotificationMention', 'AuditLog'],
+    allowed: templates,
+    args: () => [
+      {
+        platform: 'discord',
+        kind: 'role',
+        key: 'qa-matrix',
+        label: 'Added by the access matrix',
+        externalId: '123456789012345678',
+      },
+    ],
+    strictThrow: true,
+  },
+  {
+    action: 'notifications.removeMention',
+    label: 'take somebody off the list to mention',
+    effect: ['NotificationMention', 'AuditLog'],
+    allowed: templates,
+    prepare: async (db) => {
+      await db.query(
+        `INSERT INTO "NotificationMention" ("id", "key", "platform", "kind", "label", "externalId", "createdByLogin") VALUES ('qa-mention-prepared', 'qa-prepared', 'discord', 'role', 'Prepared', '123456789012345678', 'qa-admin') ON CONFLICT DO NOTHING`,
+      );
+    },
+    args: () => [{ id: 'qa-mention-prepared' }],
+    strictThrow: true,
+  },
+  {
+    action: 'notifications.previewTemplate',
+    label: 'draw a notification with what is typed (reads only)',
+    allowed: templates,
+    args: () => [{ type: 'memberPending', channel: 'discord', drafts: {} }],
+    strictThrow: true,
+    control: 'answers',
+  },
+  {
+    action: 'notifications.sendTemplateTestMessage',
+    label: 'send a test message (no channel is set up on the platform: nothing leaves)',
+    allowed: templates,
+    args: () => [{ type: 'memberPending', channel: 'discord', drafts: {}, withMentions: false }],
+    strictThrow: true,
+    control: 'answers',
+  },
+  {
+    action: 'notifications.loadHistory',
+    label: 'read the versions of a template (reads only)',
+    allowed: templates,
+    args: () => [{ type: 'memberPending', scope: 'all' }],
+    strictThrow: true,
+    control: 'answers',
+  },
+];
 
 export const CASES: readonly ActionCase[] = [
   // ---- the members ----
@@ -380,6 +513,8 @@ export const CASES: readonly ActionCase[] = [
     allowed: (who, variant) => can(who, 'events.view', variant),
     args: () => [],
   },
+  // ---- the templates of the notifications: whoever holds the right to customise them ----
+  ...TEMPLATE_CASES,
   // ---- the settings: the owner's ----
   ...OWNER_ONLY_SETTINGS.map(([name, args]): ActionCase => ({
     action: `settings.${name}`,

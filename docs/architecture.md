@@ -548,6 +548,30 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
     the versions it wrote, the mentions it added), never what the templates say.
   - Tests: `templates/*.test.ts` (the text, the items, the catalog, and `render.test.ts`: what each field of a template changes in each channel and in no other), mutation-checked
     (`qa/mutations/notification-templates-engine.json`, and `notification-templates-storage.json` for the storage, the mentions and the resolution).
+  - **The editor** (`app/[locale]/(app)/notifications/`, `components/notifications/`, `templates/{draft,compose,defaults,editor-data,test-send,variable-names,mention-keys}.ts`). A page of its own
+    (menu entry "Notifications", the bell; `getTemplateEditor`, otherwise back to the dashboard), `?type=` picks the notification (those of the events only while the module is on), `?scope=` the tab,
+    `?notice=` the sentence after an action that loaded the page again. **One tab for all channels and one for each**; a channel in `sharedChannels(type)` **follows** the template for all of them until it is
+    customised (`customizeChannel`: a copy, which then stops following; "back to the common template" removes it), and the e-mail of an approved member, which speaks to that person, only ever has its own.
+    - **The form shows the platform's own words and stores only what differs** (`draft.ts`, pure, tested): `textOf` shows the BDE's text or the platform's; `withText`/`withEmoji`/`withButton`/`withItems` drop
+      what repeats the platform, so what was not touched keeps following the platform's improvements. The platform's words come from `defaults.ts` (patterns read from the very messages the builders use; `defaults.test.ts`
+      compares them with the builders' output, so a message changed alone cannot make the editor lie). The facts of a tab are listed in **that channel's own order** (`nativeOrder`) until the BDE moves one, which stores
+      `order: 'custom'`. Moving is a pair of buttons, never a drag (keyboard, screen reader, thumb); on a phone each row stacks (name and switch, fields, then buttons).
+    - **Variables are shown by name and stored by identifier** (`variable-names.ts`, `templates.variables.*`): the person reads `{titre}`, `{catégorie}`, the template holds `{title}`, `{category}`; both are understood when
+      typed; a test requires every name to be letters only and none to be mistaken for another identifier. Formatting is bold and italic, in free texts only.
+    - **The preview is the real notification** (`previewTemplate` → `composeDrafts` → `renderPreview`, the code that draws the real one, debounced 350 ms and ignoring stale answers); the browser only paints it
+      (`markup.tsx`, `preview-pane.tsx`: a Discord card and a Slack message are pictures, the e-mail is an `<iframe sandbox="">` that runs and follows nothing). A draft that is not valid says so with the places
+      (`issues`, one sentence per code under `templates.codes.*`), keeps the last good picture and cannot be tested; the server checks again at save.
+    - **Saving.** One tab, one save (`saveTemplate` with the version the editor read: another save first is a notice, "reload", never an overwrite). Actions that change what the page shows (customise, back to the common
+      template, reset, reset everything, restore a version, acknowledge a change of the platform) answer an `ActionTarget` to the same notification (`reload()` in `actions.ts`, rule 2 of "Navigation") and say what happened
+      in a `?notice=`; `e2e/actions.mjs` plays them. A page with something typed asks the browser before it is left.
+    - **The test message** (`test-send.ts`). Sent through the channel's real adapter with what is on screen, saved or not, marked as a test, **one per channel every ten seconds, a failed one counting too**, the e-mail to
+      the address of the person who asked. **Mentions are written as plain names (inert) unless the person turns them on and confirms**; a failure is a short reason with no address (`describeSendError`).
+    - **The directory of mentions** (`mention-tools.tsx`): names are made from the label (`mentionKeyFor`: no accents, hyphens, never taken), the identifier is checked by the service, and a name that a template
+      still uses cannot be removed (`mentionInUse`).
+    - Tests: `draft.test.ts`, `defaults.test.ts`, `compose.test.ts`, `test-send.test.ts`, `editor-data.test.ts`, `variable-names.test.ts` (with the real messages), `mention-keys.test.ts`, `template-editor.test.tsx`
+      (real French messages, mocked actions), `actions.test.ts` (every action refused without the right, input read again), `pages.test.tsx`; `qa/access` (the page and the 11 actions, as the nine personas),
+      `qa/browsers/templates.spec.ts` (three engines, a phone), the axe and visual suites (the page is in the matrix and in `visual.spec.ts`); mutation-checked
+      (`qa/mutations/notification-templates-editor.json`).
 - **The table** (`lib/setup/notification-matrix.ts`, pure and tested; `components/setup/notification-table.tsx`,
   `notification-channels.tsx`). The installer and the settings page share it: a panel per channel (what it needs, a badge, its own
   test, a **removal that is marked and only done by the Save button**) and a table of a row per type and a column per channel. **A
@@ -1383,8 +1407,8 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
     opened the menu, nor did any script; `user-menu.test.tsx` and the journey "opens the menu of their name… and signs out" do).
     **A component that only does something when it is opened, hovered or focused is tested opened, hovered or focused.**
 - **Visual regression** (`qa/browsers/visual.spec.ts`, the `visual` project of the Playwright config, the `visual` job of `qa.yml`, the
-  workflow `qa-visual-references.yml`). 19 pages × a computer and a phone × the light and the dark theme, plus 4 pages in French
-  (80 pictures), compared with `toHaveScreenshot` in **Chromium only** (`maxDiffPixelRatio` 0.2 %, animations off, the page
+  workflow `qa-visual-references.yml`). 20 pages × a computer and a phone × the light and the dark theme, plus 4 pages in French
+  (84 pictures), compared with `toHaveScreenshot` in **Chromium only** (`maxDiffPixelRatio` 0.2 %, animations off, the page
   waited out by `rest.ts`, which axe uses too), on a platform made with `--now 2026-10-16T12:00:00Z`: the page is the same today
   and in a month (checked: a second pass, then a platform made again from nothing, are 80/80 identical). A page of 300 rows is a
   picture of what the screen shows, not of the whole page. A change of look nobody meant is a picture that differs, with the

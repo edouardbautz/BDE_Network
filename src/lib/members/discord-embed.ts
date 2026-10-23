@@ -19,8 +19,12 @@ import { memberTemplateType, memberValues } from './template-values';
 
 export type MemberCardKind = 'pending' | 'approved' | 'removed';
 
-const KIND_ICON: Record<MemberCardKind, string> = { pending: '🙋', approved: '✅', removed: '👋' };
-const ICON = {
+export const KIND_ICON: Record<MemberCardKind, string> = {
+  pending: '🙋',
+  approved: '✅',
+  removed: '👋',
+};
+export const ICON = {
   login: '🪪',
   campus: '🏫',
   role: '🎭',

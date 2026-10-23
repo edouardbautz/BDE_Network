@@ -23,7 +23,7 @@ export interface ChannelCredentials {
 export type TestResult = { ok: true } | { ok: false; detail: string };
 
 /** What is said about a failure: a code or a short reason, never the address that was called. */
-function describe(error: unknown, secrets: readonly string[] = []): string {
+export function describeSendError(error: unknown, secrets: readonly string[] = []): string {
   if (!(error instanceof Error)) return 'unknown error';
   const code = (error as Error & { code?: unknown }).code;
   let text = `${typeof code === 'string' ? `${code}: ` : ''}${error.message}`;
@@ -62,6 +62,6 @@ export async function sendTestMessage(
     }
     return { ok: true };
   } catch (error) {
-    return { ok: false, detail: describe(error, secrets) };
+    return { ok: false, detail: describeSendError(error, secrets) };
   }
 }

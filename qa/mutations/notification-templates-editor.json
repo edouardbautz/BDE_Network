@@ -1,0 +1,126 @@
+[
+  [
+    "test message: a test is not paced",
+    "src/lib/notifications/templates/test-send.ts",
+    "if (last !== undefined && now - last < TEST_EVERY_MS) {",
+    "if (last !== undefined && now - last < 0) {",
+    ["src/lib/notifications/templates/test-send.test.ts"]
+  ],
+  [
+    "test message: a failed test does not count for the pause",
+    "src/lib/notifications/templates/test-send.ts",
+    "  clock().set(channel, now);",
+    "",
+    ["src/lib/notifications/templates/test-send.test.ts"]
+  ],
+  [
+    "test message: the mentions are live even when not asked for",
+    "src/lib/notifications/templates/test-send.ts",
+    ": withInertAbove(composed.template, directory, channel);",
+    ": composed.template;",
+    ["src/lib/notifications/templates/test-send.test.ts"]
+  ],
+  [
+    "drafts: an invalid draft is drawn all the same",
+    "src/lib/notifications/templates/compose.ts",
+    "if (issues.length > 0) return { ok: false, issues };",
+    "",
+    [
+      "src/lib/notifications/templates/compose.test.ts",
+      "src/app/[locale]/(app)/notifications/actions.test.ts"
+    ]
+  ],
+  [
+    "drafts: a mention of a test is written with the identifier, not the name",
+    "src/lib/notifications/templates/compose.ts",
+    "return `@${entry?.label ?? key ?? ''}`;",
+    "return `@${key ?? ''}`;",
+    ["src/lib/notifications/templates/compose.test.ts"]
+  ],
+  [
+    "variables: what is typed is not turned back into identifiers",
+    "src/lib/notifications/templates/variable-names.ts",
+    "return id === undefined ? match : `{${id}}`;",
+    "return match;",
+    [
+      "src/lib/notifications/templates/variable-names.test.ts",
+      "src/components/notifications/template-editor.test.tsx"
+    ]
+  ],
+  [
+    "mentions: the name of a mention may be longer than the directory accepts",
+    "src/lib/notifications/templates/mention-keys.ts",
+    ".slice(0, 36)",
+    ".slice(0, 80)",
+    ["src/lib/notifications/templates/mention-keys.test.ts"]
+  ],
+  [
+    "editor: the platform’s own words are stored as the BDE’s",
+    "src/lib/notifications/templates/draft.ts",
+    "if (value.trim() === '' || value === platform) delete next[field];",
+    "if (value.trim() === '') delete next[field];",
+    ["src/lib/notifications/templates/draft.test.ts"]
+  ],
+  [
+    "editor: the platform’s own emoji is stored as the BDE’s",
+    "src/lib/notifications/templates/draft.ts",
+    "if (value === defaults.emoji) delete next.emoji;",
+    "if (false) delete next.emoji;",
+    ["src/lib/notifications/templates/draft.test.ts"]
+  ],
+  [
+    "editor: every emoji of a fact is stored",
+    "src/lib/notifications/templates/draft.ts",
+    "if (row.emoji !== (fact?.emoji ?? '')) item.emoji = row.emoji;",
+    "item.emoji = row.emoji;",
+    ["src/lib/notifications/templates/draft.test.ts"]
+  ],
+  [
+    "editor: the last fact can be moved down off the list",
+    "src/lib/notifications/templates/draft.ts",
+    "if (target < 0 || target >= rows.length) return [...rows];",
+    "if (target < 0) return [...rows];",
+    ["src/lib/notifications/templates/draft.test.ts"]
+  ],
+  [
+    "actions: the preview is drawn for anybody",
+    "src/app/[locale]/(app)/notifications/actions.ts",
+    "export async function previewTemplate(input: unknown): Promise<Answer<{ preview: Preview }>> {\n  await requireTemplateEditor();",
+    "export async function previewTemplate(input: unknown): Promise<Answer<{ preview: Preview }>> {",
+    ["src/app/[locale]/(app)/notifications/actions.test.ts"]
+  ],
+  [
+    "actions: customising a channel says it was reset",
+    "src/app/[locale]/(app)/notifications/actions.ts",
+    "reload(parsed.type, parsed.channel, 'customised')",
+    "reload(parsed.type, parsed.channel, 'reset')",
+    ["src/app/[locale]/(app)/notifications/actions.test.ts"]
+  ],
+  [
+    "notice: any notice an address asks for is believed",
+    "src/lib/notifications/templates/notice.ts",
+    "return NOTICES.find((notice) => notice === one) ?? null;",
+    "return (one as Notice | undefined) ?? null;",
+    [
+      "src/lib/notifications/templates/notice.test.ts",
+      "src/app/[locale]/(app)/notifications/pages.test.tsx"
+    ]
+  ],
+  [
+    "editor data: a module that is off still lists its notifications",
+    "src/lib/notifications/templates/editor-data.ts",
+    "(type) => events || !type.startsWith('event'),",
+    "() => true,",
+    [
+      "src/lib/notifications/templates/editor-data.test.ts",
+      "src/app/[locale]/(app)/notifications/pages.test.tsx"
+    ]
+  ],
+  [
+    "page: anybody gets the page",
+    "src/app/[locale]/(app)/notifications/page.tsx",
+    "if (!editor) {",
+    "if (false) {",
+    ["src/app/[locale]/(app)/notifications/pages.test.tsx"]
+  ]
+]

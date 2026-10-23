@@ -49,10 +49,11 @@ module then only shows up in that role if you tick it.
 
 ## The rights
 
-| Right              | What it allows                                                          |
-| ------------------ | ----------------------------------------------------------------------- |
-| **Manage members** | Approve or reject access requests, remove members and give them a role. |
-| **Manage roles**   | Create, edit and delete roles, and choose the rights of each.           |
+| Right                       | What it allows                                                                                                                                                                                                    |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Manage members**          | Approve or reject access requests, remove members and give them a role.                                                                                                                                           |
+| **Manage roles**            | Create, edit and delete roles, and choose the rights of each.                                                                                                                                                     |
+| **Customise notifications** | Change what the Discord cards, Slack messages and e-mails say and how they look (the **Notifications** page), and choose whom they mention. The channels themselves (webhooks, mail server) stay with the owners. |
 
 And, **for each module that is on**:
 

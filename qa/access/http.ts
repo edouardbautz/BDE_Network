@@ -121,6 +121,9 @@ const TABLES = [
   'EventOccurrenceAssignee',
   'EventReminder',
   'BdeCalendarFeed',
+  'NotificationTemplate',
+  'NotificationTemplateVersion',
+  'NotificationMention',
   'PlatformSettings',
 ] as const;
 

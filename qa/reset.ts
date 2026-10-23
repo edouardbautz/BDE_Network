@@ -12,6 +12,9 @@ export async function resetDatabase(db: Queryable, options: DatasetOptions = {})
   await db.query(`
     BEGIN;
     DELETE FROM "AuditLog";
+    DELETE FROM "NotificationTemplateVersion";
+    DELETE FROM "NotificationTemplate";
+    DELETE FROM "NotificationMention";
     DELETE FROM "EventReminder";
     DELETE FROM "EventOccurrenceAssignee";
     DELETE FROM "EventOccurrence";
