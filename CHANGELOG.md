@@ -31,6 +31,7 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Changed
 
+- Development only: the tests now pass on a computer in any time zone (one of the migration tests read dates in the zone of the machine and failed anywhere but in UTC), and CI plays them again in two other zones.
 - The cards, Slack messages and e-mails of the notifications are written down as reference files (every kind, both languages, a complete
   case, a bare one, one longer than any limit, a hostile one) that the tests hold to the byte: **without a template the messages are exactly the
   same as before.**

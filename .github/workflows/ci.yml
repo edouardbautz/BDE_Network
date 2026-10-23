@@ -57,6 +57,18 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: npm run test:coverage
 
+      # The tests hold on any computer, whatever its time zone: the runners are in UTC, a developer's is not, and a test that read a
+      # date in the zone of the machine passed here and failed there (event-repeat-rules.test.ts). One zone ahead of UTC across the
+      # date line and one behind, with the clock changes of the two hemispheres.
+      - name: Test, in two other time zones
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          for zone in Pacific/Auckland America/Los_Angeles; do
+            echo "::group::$zone"
+            TZ="$zone" npm run test || exit 1
+            echo "::endgroup::"
+          done
+
       - name: Coverage report
         if: always() && matrix.os == 'ubuntu-latest' && hashFiles('coverage/coverage-summary.json') != ''
         run: node scripts/coverage-report.mjs >> "$GITHUB_STEP_SUMMARY"
@@ -399,6 +411,16 @@ jobs:
       # must accept the dataset, and every invariant must see the corruption it is meant to see.
       - name: Test the QA dataset and the invariants on a real database
         run: npx vitest run qa
+
+      # The same again in two other time zones of the machine that runs the tests: the columns hold UTC, and `pg` reads a `timestamp`
+      # in the zone of the machine (see "Conventions" in docs/architecture.md).
+      - name: The same, in two other time zones
+        run: |
+          for zone in Pacific/Auckland America/Los_Angeles; do
+            echo "::group::$zone"
+            TZ="$zone" npx vitest run src/test/migrations qa || exit 1
+            echo "::endgroup::"
+          done
 
       - name: Apply every migration to an empty database
         run: npx prisma migrate deploy

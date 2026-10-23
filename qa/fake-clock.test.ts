@@ -33,9 +33,11 @@ describe('the clock of a QA platform', () => {
     expect(seen.now - BASE).toBeGreaterThanOrEqual(0);
     expect(seen.now - BASE).toBeLessThan(10_000);
     expect(seen.made - BASE).toBeLessThan(10_000);
-    // `Date()` is the text of that moment (the day is the 16th in every time zone of the world but a few).
-    expect(seen.text).toContain('2026');
-    expect(seen.text).toMatch(/Oct 1[56]/);
+    // `Date()` is the text of that moment, in the zone of the machine: read back, it is that moment to the second (the text has no
+    // milliseconds), whatever the zone. (It used to look for "Oct 15" or "Oct 16" in the text, which is wrong east of UTC+11.)
+    const text = Date.parse(seen.text);
+    expect(text - BASE).toBeGreaterThan(-1_000);
+    expect(text - BASE).toBeLessThan(10_000);
   });
 
   it('runs at the normal speed from there', async () => {
