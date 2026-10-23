@@ -11,8 +11,8 @@ import { PAYLOADS, unescaped, violations } from './injection';
  *    or an older version would have put it, and the page where it is edited is opened as the owner: nothing may come out as a tag the
  *    browser would build, and the page must still work;
  *  - **drawn**: the same text goes through the preview of every channel (the server draws it with the code that draws the real
- *    notification): what comes back is text. The e-mail, which is HTML, is built like a browser would build it and must hold no
- *    handler, no `javascript:` address and nothing that loads from elsewhere;
+ *    notification) and none may fail. The e-mail, which is HTML built by the server, is read like a browser would read it and must
+ *    hold no tag the text made, no handler, no `javascript:` address and nothing that loads from elsewhere;
  *  - **forged**: the action that writes a template, called from another site, writes nothing.
  *
  * What a person writes in a template on purpose (a link in the button, a mention) is not an attack and is not played here: the
@@ -38,9 +38,6 @@ export function documentsOf(body: string): string[] {
     }
   });
 }
-
-/** What is left of the answer once its e-mail documents are taken out: the rest is codes and drawn text. */
-export const withoutDocuments = (body: string): string => body.replace(DOCUMENT, '');
 
 export async function checkTemplates(platform: Platform, report: Report): Promise<void> {
   const manifest = readManifest();
@@ -133,10 +130,8 @@ export async function checkTemplates(platform: Platform, report: Report): Promis
             bad.push(`${channel} ${call.status}`);
             continue;
           }
-          // what a draft that is not valid answers is codes, and what a valid one answers is drawn text
-          if (unescaped(withoutDocuments(call.text), [payload]).length > 0) {
-            bad.push(`${channel}: ${payload.slice(0, 30)} as typed`);
-          }
+          // What a Discord card or a Slack message holds is data: the text as typed, which the page draws as text (React escapes it, and
+          // the stored case above reads the page). The e-mail is HTML, built by the server: that is what must hold nothing.
           for (const html of documentsOf(call.text)) {
             if (unescaped(html, [payload]).length > 0) {
               bad.push(`email: ${payload.slice(0, 30)} as typed`);
@@ -148,7 +143,7 @@ export async function checkTemplates(platform: Platform, report: Report): Promis
       }
       report.check(
         'templates',
-        `drawn: the preview of every channel turns ${PAYLOADS.length} hostile texts into text`,
+        `drawn: the preview of every channel answers for ${PAYLOADS.length} hostile texts, and the e-mail holds none of them as markup`,
         bad.length === 0,
         bad.slice(0, 3).join(' | '),
       );

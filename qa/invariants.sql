@@ -110,27 +110,6 @@ UNION ALL
 SELECT 'an_author_id_is_the_account_of_the_author_login', e."id"
 FROM "Event" e JOIN "User" u ON u."id" = e."authorId" WHERE u."login" <> e."authorLogin"
 
--- ---- the templates of the notifications ----
-UNION ALL
-SELECT 'a_template_has_its_version_in_the_history', t."id"
-FROM "NotificationTemplate" t
-WHERE NOT EXISTS (
-  SELECT 1 FROM "NotificationTemplateVersion" v
-  WHERE v."type" = t."type" AND v."scope" = t."scope" AND v."version" = t."version"
-)
-UNION ALL
-SELECT 'a_template_is_for_a_channel_its_notification_is_sent_on', "id"
-FROM "NotificationTemplate" WHERE "type" = 'memberRemoved' AND "scope" = 'email'
-UNION ALL
-SELECT 'a_template_author_id_is_the_account_of_the_author_login', t."id"
-FROM "NotificationTemplate" t JOIN "User" u ON u."id" = t."updatedById" WHERE u."login" <> t."updatedByLogin"
-UNION ALL
-SELECT 'a_version_author_id_is_the_account_of_the_author_login', v."id"
-FROM "NotificationTemplateVersion" v JOIN "User" u ON u."id" = v."authorId" WHERE u."login" <> v."authorLogin"
-UNION ALL
-SELECT 'a_version_that_is_not_a_reset_holds_a_template', "id"
-FROM "NotificationTemplateVersion" WHERE "content" IS NULL AND "action" <> 'reset'
-
 -- ---- the audit trail ----
 UNION ALL
 SELECT 'an_audit_entry_names_its_author_and_its_action', id

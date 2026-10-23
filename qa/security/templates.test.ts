@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { documentsOf, withoutDocuments } from './templates';
+import { documentsOf } from './templates';
 
 const HTML = '<!doctype html>\n<html><body><p>Bonjour</p></body>\n</html>';
 
@@ -16,10 +16,5 @@ describe('the e-mail documents in the answer of an action', () => {
 
   it('finds none in an answer that holds only codes', () => {
     expect(documentsOf('1:{"ok":false,"code":"invalid"}\n')).toEqual([]);
-  });
-
-  it('leaves the rest of the answer, which is what is read as drawn text', () => {
-    const body = `1:{"ok":true}\n2:T40,${HTML}\n`;
-    expect(withoutDocuments(body)).toBe('1:{"ok":true}\n2:T40,\n');
   });
 });

@@ -24,6 +24,7 @@ export interface Violation {
 
 // (the columns are `timestamp` without a zone, in UTC: `pg` would read them in the zone of the machine, so they are converted)
 const SQL = readFileSync(join(__dirname, 'invariants.sql'), 'utf8');
+const TEMPLATES_SQL = readFileSync(join(__dirname, 'invariants-templates.sql'), 'utf8');
 
 export async function checkInvariants(
   db: Queryable,
@@ -78,8 +79,16 @@ export async function checkInvariants(
     }
   }
 
-  // Every template is one the engine accepts, over the directory of people a BDE can mention: what is saved is checked again when
-  // it is used, but a row the engine refuses is a notification that falls back on the platform's own.
+  // The templates of the notifications, in a database that has the tables (one of an older version does not). Every template is one
+  // the engine accepts, over the directory of people a BDE can mention: what is saved is checked again when it is used, but a row the
+  // engine refuses is a notification that falls back on the platform's own.
+  const { rows: present } = await db.query(
+    `SELECT to_regclass('public."NotificationTemplate"') IS NOT NULL AS there`,
+  );
+  if (present[0]?.there !== true) return violations;
+  for (const row of (await db.query(TEMPLATES_SQL)).rows) {
+    violations.push({ invariant: String(row.invariant), detail: String(row.detail) });
+  }
   const { rows: people } = await db.query(
     `SELECT "key", "platform", "kind", "label", "externalId" FROM "NotificationMention"`,
   );

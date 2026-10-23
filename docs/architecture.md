@@ -1237,7 +1237,7 @@ start from the same three things, so that what one finds the others can replay.
   written. It also holds a BDE that customised its notifications (`TEMPLATES`, `MENTIONS`: a template for all channels with a button, a channel with
   a mention and a free text, an e-mail, a Slack message, a history with a reset and a restore, written by accounts of the dataset). `npx tsx qa/cli.ts load --database <url>` writes it, `sql` prints it. Only the persona `qa-owner` is an OWNER
   (the others would be demoted at the next start, `reconcileOwnerAccounts`).
-- **The invariants** (`qa/invariants.sql`, `qa/invariants.ts`): what must be true of the database after any scenario —
+- **The invariants** (`qa/invariants.sql`, `qa/invariants-templates.sql` for the notification templates, run only on a database that has those tables: the update suite looks at an older one after the way back, `qa/invariants.ts`): what must be true of the database after any scenario —
   one default role, a member has a role and nobody else does, a rule is a rule, a series and its end come together, the
   school year is the one of the start, a refusal is a draft with its three fields, a cut series' first row exists, every
   date a cancellation, a date of its own or a reminder refers to is a date of its series (checked with the engine), no
