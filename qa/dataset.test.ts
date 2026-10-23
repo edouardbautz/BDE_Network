@@ -231,6 +231,26 @@ describeWithDatabase('the dataset in a real database, and the invariants over it
         'a_member_in_charge_is_the_account_of_that_login',
       ],
       [
+        'a template whose current version is not in its history',
+        `UPDATE "NotificationTemplate" SET "version" = 9 WHERE id = 'qa-template-1'`,
+        'a_template_has_its_version_in_the_history',
+      ],
+      [
+        'a template for a channel its notification is not sent on',
+        `INSERT INTO "NotificationTemplate" (id, type, scope, content, version, "basedOnRevision", "updatedAt", "updatedByLogin") VALUES ('bad-tpl', 'memberRemoved', 'email', '{}', 1, 1, now(), 'x')`,
+        'a_template_is_for_a_channel_its_notification_is_sent_on',
+      ],
+      [
+        'a template written under another login than the account that wrote it',
+        `UPDATE "NotificationTemplate" SET "updatedByLogin" = 'someone-else' WHERE id = 'qa-template-1'`,
+        'a_template_author_id_is_the_account_of_the_author_login',
+      ],
+      [
+        'a version that holds nothing and is not a reset',
+        `UPDATE "NotificationTemplateVersion" SET "content" = NULL WHERE id = 'qa-template-version-1-1'`,
+        'a_version_that_is_not_a_reset_holds_a_template',
+      ],
+      [
         'a second default role',
         `UPDATE "Role" SET "isDefault" = TRUE WHERE id = 'role-admin'`,
         'one_default_role',
@@ -242,6 +262,13 @@ describeWithDatabase('the dataset in a real database, and the invariants over it
       } catch (error) {
         expect(String(error)).toMatch(/violates|duplicate key|check constraint/i);
       }
+    });
+
+    it('a template the engine refuses: an unknown variable, a mention that is not in the directory', async () => {
+      const found = await corrupt(`
+        UPDATE "NotificationTemplate" SET "content" = '{"title":"{nothing}"}' WHERE id = 'qa-template-1';
+        UPDATE "NotificationTemplate" SET "content" = '{"above":"{@role:nobody}"}' WHERE id = 'qa-template-2';`);
+      expect(found).toContain('a_template_is_valid_for_the_engine');
     });
 
     it('a date that the series does not have, in a cancellation, a date of its own and a reminder', async () => {

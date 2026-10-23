@@ -48,13 +48,16 @@ chose dans cette documentation.
 
 ## Les messages
 
-| Mot              | Sens                                                                                                          |
-| ---------------- | ------------------------------------------------------------------------------------------------------------- |
-| **Notification** | Un message envoyé par la plateforme : événement confirmé, rappel, demande d'accès, membre approuvé ou retiré. |
-| **Canal**        | Où part la notification : e-mail, Discord ou Slack (aucun, un ou plusieurs, **pour chaque type**).            |
-| **Webhook**      | L'adresse secrète d'un salon Discord ou Slack, qui permet à la plateforme d'y écrire.                         |
-| **Carte**        | Le message mis en forme que la plateforme poste sur Discord ou Slack.                                         |
-| **Rappel**       | La notification envoyée la veille d'un événement, à l'**heure du rappel** réglée dans Paramètres.             |
+| Mot              | Sens                                                                                                                                     |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Notification** | Un message envoyé par la plateforme : événement confirmé, rappel, demande d'accès, membre approuvé ou retiré.                            |
+| **Canal**        | Où part la notification : e-mail, Discord ou Slack (aucun, un ou plusieurs, **pour chaque type**).                                       |
+| **Webhook**      | L'adresse secrète d'un salon Discord ou Slack, qui permet à la plateforme d'y écrire.                                                    |
+| **Carte**        | Le message mis en forme que la plateforme poste sur Discord ou Slack.                                                                    |
+| **Modèle**       | Ce qu'un BDE a changé des mots, de l'apparence et des informations d'une notification : seul ce qui est changé est gardé.                |
+| **Variable**     | Un mot entre accolades, comme `{titre}`, qu'un modèle remplace par ce qui est propre à un message.                                       |
+| **Mention**      | Un `@everyone`, `@here`, un rôle, un groupe ou une personne écrit dans un modèle : la seule façon pour un message de prévenir quelqu'un. |
+| **Rappel**       | La notification envoyée la veille d'un événement, à l'**heure du rappel** réglée dans Paramètres.                                        |
 
 ## L'exploitation
 

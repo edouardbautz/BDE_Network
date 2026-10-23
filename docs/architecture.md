@@ -1234,9 +1234,10 @@ start from the same three things, so that what one finds the others can replay.
   every frequency, series cut in two, drafts, proposals, refusals, dates that were cancelled, edited, moved or reminded
   — and the audit trail of all of it, as SQL. **Deterministic** (a seeded generator: the same options give the same SQL, a
   failure can be replayed) and built with the real series engine (`repeat.ts`), so it is what the application would have
-  written. `npx tsx qa/cli.ts load --database <url>` writes it, `sql` prints it. Only the persona `qa-owner` is an OWNER
+  written. It also holds a BDE that customised its notifications (`TEMPLATES`, `MENTIONS`: a template for all channels with a button, a channel with
+  a mention and a free text, an e-mail, a Slack message, a history with a reset and a restore, written by accounts of the dataset). `npx tsx qa/cli.ts load --database <url>` writes it, `sql` prints it. Only the persona `qa-owner` is an OWNER
   (the others would be demoted at the next start, `reconcileOwnerAccounts`).
-- **The invariants** (`qa/invariants.sql`, `qa/invariants.ts`): what must be true of the database after any scenario —
+- **The invariants** (`qa/invariants.sql`, `qa/invariants-templates.sql` for the notification templates, run only on a database that has those tables: the update suite looks at an older one after the way back, `qa/invariants.ts`): what must be true of the database after any scenario —
   one default role, a member has a role and nobody else does, a rule is a rule, a series and its end come together, the
   school year is the one of the start, a refusal is a draft with its three fields, a cut series' first row exists, every
   date a cancellation, a date of its own or a reminder refers to is a date of its series (checked with the engine), no
@@ -1329,7 +1330,11 @@ start from the same three things, so that what one finds the others can replay.
   redirect; `callbackUrl` and addresses like `//evil.example` never leave the platform. `limits`: 300 requests at a time of
   each wrong kind, bodies of 1 and 20 MB, headers far too large: no server error, and the platform answers a member
   afterwards; **there is no rate limit** outside the installer (the reverse proxy of the BDE is the place, see
-  `docs/en/deployment.md`) and the suite writes down what it accepted. `logs`, last: none of the secrets met during the
+  `docs/en/deployment.md`) and the suite writes down what it accepted. `templates`: the notification templates attacked three ways
+  (`qa/security/templates.ts`) — a template and a directory of mentions full of the hostile corpus **stored** in the database, the page that edits them opened as the owner on two tabs;
+  the same text **drawn** by the preview of every channel (what comes back is text, and the e-mail built like a browser would build it has no handler, no `javascript:` address, nothing that
+  loads from elsewhere); and the action that writes a template **forged** from another site or a sandbox (refused, nothing written, with the control that it works from its own origin), or
+  called by somebody who may not write one. `logs`, last: none of the secrets met during the
   run (the signing secret, the 42 secret, the database password, every calendar link and cookie) is in the logs, and no
   error is there that an attack should not have caused (the framework's own refusals are listed in `REFUSALS`). The
   detectors have unit tests (`detectors.test.ts`: what each must catch and what it must leave alone): a check that cannot
@@ -1514,9 +1519,10 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
   viewing (and written in the audit log), the members and events identical, **each calendar file saying the same thing line by line**
   (every UID, date, hour and cancellation: a differential test against the old algorithm, with no date computed by hand), the
   invariants of the database, the copy the platform made by itself, the settings imported into the database, **each notification keeping its channel** (the configuration of every version before 1.5.0 names one channel per notification: the settings page of the version under test must tick exactly those boxes, `NOTIFICATION_BOXES`), the old session
-  cookies still signing people in, and the treasurer able to validate while the reader still cannot; (6) a backup of the new version
-  and its restore (the row written after the backup is gone, the platform answers); (7) **the way back**: the copy the platform made
-  (`restore.sh --pre-update`) or the backup made before (`restore.sh <archive> --no-start`, for 1.1.0 and from 1.3.0 on), `git checkout` of the old
+  cookies still signing people in, the treasurer able to validate while the reader still cannot, **the notification templates' tables there and empty** (every notification is still the platform's own: the
+  golden files hold the bytes), the page where they are customised open for the owner and refused to a role that was not given the right; (6) a backup of the new version
+  and its restore (the row written after the backup is gone, the platform answers, **a template with its version and the person it mentions come back**); (7) **the way back**: the copy the platform made
+  (`restore.sh --pre-update`) or the backup made before (`restore.sh <archive> --no-start`, for 1.1.0 alone: every other version has a copy, the notification templates being a migration), `git checkout` of the old
   tag, `docker compose up -d`, and the old version gives the same calendar files as before the update. The platform is made with the
   published image's file mounted for 1.1.0 and later, a QA-only choice: what is held here is the data, the migrations and the way back,
   not the baking of the configuration into an image (that is the `docker image` job).

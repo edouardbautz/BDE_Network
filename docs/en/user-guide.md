@@ -109,7 +109,9 @@ A role that is still given to members cannot be deleted: give those members anot
 
 The BDE can receive an alert when someone asks for access, when a request is approved (the member then receives an
 email) and when a member is removed (a message in the Discord or Slack channel, never an email). An owner sets this up
-in **Settings**, Notifications section. See [Notifications](notifications.md).
+in **Settings**, Notifications section. See [Notifications](notifications.md). Owners, and members whose role allows it,
+can also change what the messages say and how they look, from the **Notifications** page
+([Customising the messages](notifications.md#customising-the-messages)).
 
 ### The audit log (owners)
 

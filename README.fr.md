@@ -28,7 +28,8 @@ partagé entre deux instances.
 - **Synchronisation d'agenda.** Un lien personnel pour chaque membre, et **un lien pour tout le BDE** à coller une
   fois dans un agenda partagé.
 - **Notifications** par e-mail, Discord ou Slack : un événement confirmé, un rappel la veille, une demande d'accès,
-  une approbation, un retrait. Sur Discord et Slack, des cartes lisibles.
+  une approbation, un retrait. Sur Discord et Slack, des cartes lisibles. **Chaque message est personnalisable** (mots,
+  couleurs, informations montrées, bouton, mentions) depuis un éditeur avec aperçu en direct.
 - **Journal d'audit** des actions sensibles, **export RGPD** de ses propres données, une page de confidentialité.
 - **Français et anglais**, thèmes clair et sombre, votre couleur et votre logo, utilisable sur téléphone.
 - **Simple à exploiter.** Docker seulement, migrations appliquées au démarrage, scripts de sauvegarde et de

@@ -113,7 +113,9 @@ Un rôle encore donné à des membres ne peut pas être supprimé : donnez d'abo
 
 Le BDE peut recevoir une alerte quand quelqu'un demande l'accès, quand une demande est approuvée (le membre reçoit
 alors un e-mail) et quand un membre est retiré (un message dans le salon Discord ou Slack, jamais d'e-mail). Un
-propriétaire règle cela dans **Paramètres**, section Notifications. Voir [Notifications](notifications.md).
+propriétaire règle cela dans **Paramètres**, section Notifications. Voir [Notifications](notifications.md). Les
+propriétaires, et les membres dont le rôle le permet, peuvent aussi changer ce que disent les messages et leur
+apparence, depuis la page **Notifications** ([Personnaliser les messages](notifications.md#personnaliser-les-messages)).
 
 ### Le journal d'audit (propriétaires)
 

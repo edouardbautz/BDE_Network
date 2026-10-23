@@ -371,6 +371,76 @@ async function shootLanguage(browser, lang) {
     log('settings.webp');
     await shootSection(t.settings.events.title, 'settings-events.webp');
 
+    // The editor of the notifications: a Discord message made different from the others, as a BDE would write it.
+    const board = lang === 'fr' ? 'Le Bureau' : 'The board';
+    const quoted = (value) => value.replace(/'/g, "''");
+    const written = JSON.stringify({
+      emoji: '🥳',
+      eyebrow: lang === 'fr' ? 'Nouvelle soirée au BDE' : 'New party at the BDE',
+      above:
+        lang === 'fr'
+          ? '{@role:bureau} une nouvelle date vient de tomber !'
+          : '{@role:bureau} a new date just dropped!',
+      items: {
+        order: 'custom',
+        list: [
+          { id: 'when', enabled: true },
+          { id: 'where', enabled: true },
+          { id: 'description', enabled: true },
+          { id: 'category', enabled: false },
+          { id: 'assignees', enabled: false },
+          { id: 'repeats', enabled: false },
+          {
+            id: 'text:demo01',
+            enabled: true,
+            text:
+              lang === 'fr'
+                ? '**Venez nombreux**, entrée libre !'
+                : '**Come in numbers**, free entry!',
+          },
+        ],
+      },
+      button: {
+        enabled: true,
+        label: lang === 'fr' ? "Je m'inscris" : 'Sign me up',
+        url: 'https://forms.mon-ecole.fr/inscription',
+      },
+    });
+    sql(
+      `INSERT INTO "NotificationMention" (id, key, platform, kind, label, "externalId", "createdByLogin") VALUES ('demo-mention', 'bureau', 'discord', 'role', '${board}', '123456789012345678', 'demo-owner')`,
+    );
+    sql(
+      `INSERT INTO "NotificationTemplate" (id, type, scope, content, version, "basedOnRevision", "updatedAt", "updatedByLogin") VALUES ('demo-template', 'eventConfirmed', 'discord', '${quoted(written)}'::jsonb, 1, 1, now(), 'demo-owner')`,
+    );
+    sql(
+      `INSERT INTO "NotificationTemplateVersion" (id, type, scope, version, content, "basedOnRevision", action, "authorLogin") VALUES ('demo-template-v1', 'eventConfirmed', 'discord', 1, '${quoted(written)}'::jsonb, 1, 'save', 'demo-owner')`,
+    );
+    await page.setViewport({ width: 1280, height: 1100 });
+    await open('/notifications?type=eventConfirmed&scope=discord', { settle: 2000 });
+    await save('notification-editor.webp');
+    log('notification-editor.webp');
+    await page.setViewport({
+      width: 390,
+      height: 844,
+      deviceScaleFactor: 2,
+      isMobile: true,
+      hasTouch: true,
+    });
+    await open('/notifications?type=eventConfirmed&scope=discord', { settle: 2000 });
+    await click(t.templates.editor.viewPreview);
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    // the card itself, not the head of the page
+    await page.evaluate(() => {
+      const card = document.querySelector('[data-testid="preview-discord"]');
+      if (card) window.scrollTo(0, card.getBoundingClientRect().top + window.scrollY - 110);
+    });
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await save('notification-editor-mobile.webp');
+    log('notification-editor-mobile.webp');
+    sql(
+      `DELETE FROM "NotificationTemplateVersion"; DELETE FROM "NotificationTemplate"; DELETE FROM "NotificationMention"`,
+    );
+
     await page.setViewport({ width: 1280, height: 800 });
     await open('/audit-log');
     await save('audit-log.webp');

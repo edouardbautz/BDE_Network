@@ -317,6 +317,40 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
       copies.out.slice(0, 200) || '(no copy)',
     );
 
+    // The notification templates came with this update: their tables are there and hold nothing (every notification is still the
+    // platform's own, byte for byte: the golden files hold that), the page where they are customised opens for the owner and for
+    // the Admin role, and a role that was not given the right is turned away like any other page.
+    const tables = await stack.database((db) =>
+      db.query(
+        `SELECT (SELECT count(*) FROM "NotificationTemplate")::int AS templates, (SELECT count(*) FROM "NotificationTemplateVersion")::int AS versions, (SELECT count(*) FROM "NotificationMention")::int AS mentions`,
+      ),
+    );
+    check(
+      'the tables of the notification templates are there and empty: every notification is still the platform’s own',
+      Number(tables.rows[0]?.templates) === 0 &&
+        Number(tables.rows[0]?.versions) === 0 &&
+        Number(tables.rows[0]?.mentions) === 0,
+      JSON.stringify(tables.rows[0]),
+    );
+    const customise = await page(stack, '/en/notifications', OLD.owner);
+    check(
+      'the owner opens the page where the notifications are customised',
+      customise.status === 200 &&
+        !isNotFound(customise.body) &&
+        customise.body.includes('Notifications to customise'),
+      `${customise.status} ${customise.location ?? ''}`,
+    );
+    const noCustomise = await page(
+      stack,
+      '/en/notifications',
+      proposals ? CURRENT.proposer : OLD.reader,
+    );
+    check(
+      'a role that was not given the right to customise notifications is turned away',
+      isDenied(noCustomise),
+      `${noCustomise.status} ${noCustomise.location ?? ''}`,
+    );
+
     const owner = await page(stack, '/en/settings', OLD.owner);
     check(
       'the settings were copied into the database, and the owner reads them',
@@ -396,6 +430,18 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
     );
 
     // ---- 4. a backup of the new version, and its restore --------------------------------------------------------------
+    // A BDE that customised its notifications on the new version: the backup holds it, and so does the restore.
+    await stack.database(async (db) => {
+      await db.query(
+        `INSERT INTO "NotificationMention" ("id","key","platform","kind","label","externalId","createdByLogin") VALUES ('upg-mention','bureau','discord','role','Le Bureau','123456789012345678','qa-owner')`,
+      );
+      await db.query(
+        `INSERT INTO "NotificationTemplate" ("id","type","scope","content","version","basedOnRevision","updatedAt","updatedByLogin") VALUES ('upg-template','eventConfirmed','discord','{"above":"{@role:bureau} à vos agendas !","title":"{title} · {place}"}'::jsonb,1,1,now(),'qa-owner')`,
+      );
+      await db.query(
+        `INSERT INTO "NotificationTemplateVersion" ("id","type","scope","version","content","basedOnRevision","action","authorLogin") VALUES ('upg-template-v1','eventConfirmed','discord',1,'{"above":"{@role:bureau} à vos agendas !","title":"{title} · {place}"}'::jsonb,1,'save','qa-owner')`,
+      );
+    });
     const second = stack.script('backup.sh');
     check(
       'a backup of the new version is made, with the keys',
@@ -441,6 +487,18 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
         const extra = await stack.database((db) =>
           db.query(`SELECT count(*)::int AS n FROM "AuditLog" WHERE "id" = 'upg-after-backup'`),
         );
+        const kept = await stack.database((db) =>
+          db.query(
+            `SELECT (SELECT "content"->>'above' FROM "NotificationTemplate" WHERE "id" = 'upg-template') AS above, (SELECT count(*)::int FROM "NotificationTemplateVersion" WHERE "id" = 'upg-template-v1') AS versions, (SELECT "label" FROM "NotificationMention" WHERE "id" = 'upg-mention') AS mention`,
+          ),
+        );
+        check(
+          'a template, its version and the person it mentions are in the backup, and come back with the restore',
+          kept.rows[0]?.above === '{@role:bureau} à vos agendas !' &&
+            Number(kept.rows[0]?.versions) === 1 &&
+            kept.rows[0]?.mention === 'Le Bureau',
+          JSON.stringify(kept.rows[0]),
+        );
         check(
           'the restore puts the database back exactly as it was at the backup',
           problems.length === 0 && Number(extra.rows[0]?.n) === 0,
@@ -455,9 +513,15 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
       );
     }
 
+    await stack.database(async (db) => {
+      await db.query(`DELETE FROM "NotificationTemplateVersion" WHERE "id" = 'upg-template-v1'`);
+      await db.query(`DELETE FROM "NotificationTemplate" WHERE "id" = 'upg-template'`);
+      await db.query(`DELETE FROM "NotificationMention" WHERE "id" = 'upg-mention'`);
+    });
+
     // ---- 5. the way back: the copy the platform made, then the old version ------------------------------------------------
-    // The platform keeps a copy of its own only when it migrates; 1.1.0's cannot be put back by `--pre-update`, and from 1.3.0 on there is none.
-    const fromArchive = from === '1.1.0' || proposals;
+    // The platform keeps a copy of its own when it migrates, which every version does now; 1.1.0's cannot be put back by `--pre-update`.
+    const fromArchive = from === '1.1.0';
     const rolledBack = fromArchive
       ? stack.script('restore.sh', join('backups', backupFile ?? 'missing'), '--no-start', '--yes')
       : stack.script('restore.sh', '--pre-update', '--yes');
