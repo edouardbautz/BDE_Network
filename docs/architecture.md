@@ -1507,9 +1507,9 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
     charge; a proposal, the proposal of a series, a refusal with its multi-line comment, drafts, and a draft series with one date
     confirmed alone. A test reads the fixture with the engine of the repository (every series has the dates its comment names, a counted
     series ends on the start of its last date) and, on a migrated PostgreSQL, against the invariants; the run checks them on the old
-    platform too, and that a validator's calendar file holds drafts and proposals while a proposer's is a member's. There is nothing to
-    migrate, so what is held is different: no conversion of the roles, **no copy made by the platform** (asserted: it makes none when
-    nothing is pending), the proposals still listed for the validator, the refusal comment read whole by its author, the shared calendar
+    platform too, and that a validator's calendar file holds drafts and proposals while a proposer's is a member's. Only the tables of the
+    notification templates are new, so what is held is different: no conversion of the roles, the copy the platform makes by itself
+    before applying them, the proposals still listed for the validator, the refusal comment read whole by its author, the shared calendar
     still managed by its holder and refused to a proposer (a refusal that is a streamed redirect counts, `isDenied`), and the way back
     by the backup. The suite compares the old release with the code under test, so on the day of a release, 1.4.0 is held to 1.4.0
     plus whatever came after.

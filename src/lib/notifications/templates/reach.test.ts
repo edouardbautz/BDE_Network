@@ -75,7 +75,7 @@ describe('where the button leads', () => {
     expect(JSON.stringify(slack.blocks)).toContain(FORM);
     expect(JSON.stringify(slack.blocks)).not.toContain('events/e1');
     const mail = buildEventEmail('confirmed', EVENT, te, 'en', TZ, BRAND, undefined, ctx(BUTTON));
-    expect(mail.html).toContain(`href="${FORM}"`.replace('&', '&amp;'));
+    expect(mail.html).toContain(`href="${FORM}"`.replaceAll('&', '&amp;'));
     expect(mail.html).not.toContain('events/e1?');
     expect(mail.text).toContain(FORM);
   });
