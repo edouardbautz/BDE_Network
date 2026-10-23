@@ -88,12 +88,10 @@ export function buildMemberEmbed(
         break;
       }
       case 'role':
-        // What the member holds (or held): only once there is a role to speak of.
-        if (kind !== 'pending') {
-          fields.push(
-            ...field(named(emoji(ICON.role), label(t('embed.fields.role'))), member.roleName),
-          );
-        }
+        // What the member holds (or held): only the types that say who they are now have it (`ITEMS`).
+        fields.push(
+          ...field(named(emoji(ICON.role), label(t('embed.fields.role'))), member.roleName),
+        );
         break;
       case 'actedBy':
         if (kind === 'approved') {

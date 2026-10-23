@@ -78,8 +78,8 @@ ${text(value, 400)}`,
         column(t('embed.fields.campus'), member.campus);
         break;
       case 'role':
-        // What the member holds (or held): only once there is a role to speak of.
-        if (kind !== 'pending') column(t('embed.fields.role'), member.roleName);
+        // What the member holds (or held): only the types that say who they are now have it (`ITEMS`).
+        column(t('embed.fields.role'), member.roleName);
         break;
       case 'actedBy':
         if (kind === 'approved') column(t('embed.fields.approvedBy'), member.actorName);
