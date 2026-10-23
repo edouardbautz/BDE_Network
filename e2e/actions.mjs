@@ -710,7 +710,11 @@ const SCENARIOS = [
       try {
         await goto('/notifications?type=memberPending');
         await page.waitForSelector('#memberPending-all-eyebrow');
-        await page.click('#memberPending-all-eyebrow', { clickCount: 3 });
+        // the whole text is selected by the field itself (a triple click does not select it everywhere)
+        await page.$eval('#memberPending-all-eyebrow', (el) => {
+          el.focus();
+          el.select();
+        });
         await page.type('#memberPending-all-eyebrow', words);
         await click('Enregistrer', 'section[aria-labelledby="template-heading"]');
         const saved = await expectPage(
