@@ -17,14 +17,16 @@ vi.mock('@/lib/prisma', () => ({
 const { getConfig } = await import('@/config');
 const { notify, notifyMany } = await import('@/lib/notifications');
 const { prisma } = await import('@/lib/prisma');
+const { notificationsConfig } = await import('@/test/notifications');
 const { deliver, notifyEventConfirmed } = await import('./notifications');
 
 type Channel = 'email' | 'discord' | 'slack' | 'none';
+type Channels = Channel | Channel[];
 
-function useChannel(channel: Channel) {
+function useChannel(channel: Channels) {
   vi.mocked(getConfig).mockReturnValue({
     bde: { name: 'BDE Test', logoPath: '/logo.svg', timezone: 'Europe/Paris', defaultLocale: 'fr' },
-    notifications: { eventConfirmed: channel, eventReminder: channel },
+    notifications: notificationsConfig({ eventConfirmed: channel, eventReminder: channel }),
     events: { categories: [{ key: 'sport', label: 'Sport', color: '#16a34a' }], reminderHour: 18 },
   } as unknown as ReturnType<typeof getConfig>);
 }
@@ -35,7 +37,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.spyOn(console, 'error').mockImplementation(() => undefined);
   // By default every email goes through.
-  vi.mocked(notifyMany).mockImplementation(async (_event, messages) =>
+  vi.mocked(notifyMany).mockImplementation(async (_channel, messages) =>
     messages.map(() => ({ ok: true as const })),
   );
 });
@@ -43,7 +45,7 @@ beforeEach(() => {
 describe('deliver', () => {
   it('sends nothing when the channel is "none"', async () => {
     useChannel('none');
-    await expect(deliver('eventConfirmed', message, ['a@x.fr'])).resolves.toEqual({
+    await expect(deliver('eventConfirmed', message, ['a@x.fr'])).resolves.toMatchObject({
       sent: 0,
       failed: 0,
     });
@@ -54,7 +56,7 @@ describe('deliver', () => {
     useChannel('email');
     await deliver('eventConfirmed', message, ['a@x.fr', 'b@x.fr']);
 
-    expect(notifyMany).toHaveBeenCalledExactlyOnceWith('eventConfirmed', [
+    expect(notifyMany).toHaveBeenCalledExactlyOnceWith('email', [
       { ...message, to: 'a@x.fr' },
       { ...message, to: 'b@x.fr' },
     ]);
@@ -71,7 +73,7 @@ describe('deliver', () => {
 
     const result = await deliver('eventConfirmed', message, ['a@x.fr', 'bad@x.fr', 'c@x.fr']);
 
-    expect(result).toEqual({ sent: 2, failed: 1 });
+    expect(result).toMatchObject({ sent: 2, failed: 1 });
     expect(console.error).toHaveBeenCalledTimes(1);
   });
 
@@ -81,7 +83,7 @@ describe('deliver', () => {
       { ok: false, error: new Error('SMTP down') },
       { ok: false, error: new Error('SMTP down') },
     ]);
-    await expect(deliver('eventReminder', message, ['a@x.fr', 'b@x.fr'])).resolves.toEqual({
+    await expect(deliver('eventReminder', message, ['a@x.fr', 'b@x.fr'])).resolves.toMatchObject({
       sent: 0,
       failed: 2,
     });
@@ -93,14 +95,17 @@ describe('deliver', () => {
       useChannel(channel);
       await deliver('eventConfirmed', message, ['a@x.fr', 'b@x.fr']);
       expect(notify).toHaveBeenCalledTimes(1);
-      expect(notify).toHaveBeenCalledWith('eventConfirmed', message);
+      expect(notify).toHaveBeenCalledWith(channel, message);
     },
   );
 
   it('does not throw when a webhook post fails', async () => {
     useChannel('discord');
     vi.mocked(notify).mockRejectedValue(new Error('webhook responded with 500'));
-    await expect(deliver('eventConfirmed', message, [])).resolves.toEqual({ sent: 0, failed: 1 });
+    await expect(deliver('eventConfirmed', message, [])).resolves.toMatchObject({
+      sent: 0,
+      failed: 1,
+    });
     expect(notifyMany).not.toHaveBeenCalled();
   });
 
@@ -108,7 +113,7 @@ describe('deliver', () => {
     vi.mocked(getConfig).mockImplementation(() => {
       throw new Error('config broken');
     });
-    await expect(deliver('eventConfirmed', message, ['a@x.fr'])).resolves.toEqual({
+    await expect(deliver('eventConfirmed', message, ['a@x.fr'])).resolves.toMatchObject({
       sent: 0,
       failed: 0,
     });
@@ -156,10 +161,35 @@ describe('notifyEventConfirmed', () => {
       where: { status: { in: ['MEMBER', 'OWNER'] } },
       select: { email: true },
     });
-    expect(notifyMany).toHaveBeenCalledWith('eventConfirmed', [
+    expect(notifyMany).toHaveBeenCalledWith('email', [
       expect.objectContaining({ to: 'a@x.fr' }),
       expect.objectContaining({ to: 'b@x.fr' }),
     ]);
+  });
+
+  it('on Discord, Slack and e-mail at once: one message in each channel, each in its own presentation, and the claim taken once', async () => {
+    useChannel(['discord', 'slack', 'email']);
+    await notifyEventConfirmed('evt1');
+
+    expect(prisma.event.updateMany).toHaveBeenCalledTimes(1);
+    const posted = vi.mocked(notify).mock.calls;
+    expect(posted.map(([channel]) => channel).sort()).toEqual(['discord', 'slack']);
+    const [, message] = posted[0] ?? [];
+    // one message carries the three presentations; each adapter reads its own
+    expect(message?.discord?.embeds).toHaveLength(1);
+    expect(message?.slack?.blocks.length).toBeGreaterThan(0);
+    expect(message?.email?.html).toContain('Tournoi');
+    expect(notifyMany).toHaveBeenCalledWith('email', [
+      expect.objectContaining({ to: 'a@x.fr' }),
+      expect.objectContaining({ to: 'b@x.fr' }),
+    ]);
+  });
+
+  it('a channel that fails does not stop the others from announcing the event', async () => {
+    useChannel(['discord', 'email']);
+    vi.mocked(notify).mockRejectedValue(new Error('webhook responded with 500'));
+    await expect(notifyEventConfirmed('evt1')).resolves.toBeUndefined();
+    expect(notifyMany).toHaveBeenCalledTimes(1);
   });
 
   it('on Discord, posts a card in the colour of the event category, with its facts', async () => {
@@ -185,7 +215,7 @@ describe('notifyEventConfirmed', () => {
         timezone: 'Europe/Paris',
         defaultLocale: 'fr',
       },
-      notifications: { eventConfirmed: 'discord', eventReminder: 'email' },
+      notifications: notificationsConfig({ eventConfirmed: 'discord', eventReminder: 'email' }),
       events: {
         categories: [{ key: 'sport', label: 'Sport', color: '#16a34a' }],
         reminderHour: 18,
@@ -294,7 +324,7 @@ describe('notifyEventConfirmed', () => {
           timezone: 'Europe/Paris',
           defaultLocale: 'fr',
         },
-        notifications: { eventConfirmed: 'email', eventReminder: 'discord' },
+        notifications: notificationsConfig({ eventConfirmed: 'email', eventReminder: 'discord' }),
         events: {
           categories: [{ key: 'sport', label: 'Sport', color: '#16a34a' }],
           reminderHour: 18,
@@ -368,7 +398,7 @@ describe('notifyEventConfirmed', () => {
           timezone: 'Europe/Paris',
           defaultLocale: 'fr',
         },
-        notifications: { eventConfirmed: 'slack', eventReminder: 'discord' },
+        notifications: notificationsConfig({ eventConfirmed: 'slack', eventReminder: 'discord' }),
         events: {
           categories: [{ key: 'sport', label: 'Sport', color: '#16a34a' }],
           reminderHour: 18,

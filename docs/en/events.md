@@ -354,8 +354,8 @@ Calendar**, then paste the link.
 
 ## Notifications
 
-The channel (email, Discord, Slack or none) and its settings are chosen in **Settings**, **Notifications** section,
-with a test message. For messages to contain a link to the event, set the address of the platform (**Address of the
+The channels (email, Discord, Slack: none, one or several for each notification) and their settings are chosen in
+**Settings**, **Notifications** section, with a test message for each channel. For messages to contain a link to the event, set the address of the platform (**Address of the
 platform** section): without it, messages go out without a link.
 
 | Notification                        | When                                                                                                                           | Who receives it                                                                        |

@@ -165,7 +165,7 @@ page and its log names the case and the path it checked. If a **folder** named `
 
 - **"The configuration is invalid … events"**: a files-driven installation turned the module on without an `events`
   section or without a category. In a normal installation, categories are set in **Settings**.
-- **A reminder did not go out.** Check that the channel is not "none", that the server was running from the reminder
+- **A reminder did not go out.** Check that a box is ticked for the reminder (Settings, Notifications), that the server was running from the reminder
   hour on, and that the members in charge exist (for email). Look for `[events]` in the logs.
 - **The calendar link does not update.** That is the refresh rhythm of your calendar app: Google can take several
   hours.

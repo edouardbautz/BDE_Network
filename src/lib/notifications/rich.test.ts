@@ -1,3 +1,4 @@
+import { notificationsConfig } from '@/test/notifications';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/config', () => ({ getConfig: vi.fn() }));
@@ -11,10 +12,10 @@ const { withRichMessage } = await import('./rich');
 
 type Channel = 'email' | 'discord' | 'slack' | 'none';
 
-function setChannel(channel: Channel) {
+function setChannel(channel: Channel | Exclude<Channel, 'none'>[]) {
   vi.mocked(getConfig).mockReturnValue({
     bde: { name: 'BDE Nice', logoPath: '/logo.svg' },
-    notifications: { eventConfirmed: channel },
+    notifications: notificationsConfig({ eventConfirmed: channel }),
   } as unknown as ReturnType<typeof getConfig>);
 }
 
@@ -92,5 +93,59 @@ describe('withRichMessage', () => {
 
     setChannel('discord');
     expect((await withRichMessage('eventConfirmed', message, discordOnly)).discord).toBeDefined();
+  });
+
+  describe('several channels at once', () => {
+    it('adds the presentation of every channel ticked, and builds only those', async () => {
+      setChannel(['discord', 'email']);
+      const b = builders();
+      const out = await withRichMessage('eventConfirmed', message, b);
+
+      expect(out.discord).toBeDefined();
+      expect(out.email).toEqual({ html: '<p>', text: 'p' });
+      expect(out).not.toHaveProperty('slack');
+      expect(b.slack).not.toHaveBeenCalled();
+    });
+
+    it('all three at once', async () => {
+      setChannel(['discord', 'slack', 'email']);
+      const out = await withRichMessage('eventConfirmed', message, builders());
+      expect(out.discord).toBeDefined();
+      expect(out.slack).toBeDefined();
+      expect(out.email).toBeDefined();
+    });
+
+    it('a presentation that cannot be built does not take the others with it: the channel falls back to the plain message', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      setChannel(['discord', 'slack', 'email']);
+      const b = builders();
+      b.discord.mockImplementation(() => {
+        throw new Error('a card with a bug');
+      });
+
+      const out = await withRichMessage('eventConfirmed', message, b);
+
+      expect(out).not.toHaveProperty('discord'); // Discord sends the plain subject and body
+      expect(out.slack).toBeDefined();
+      expect(out.email).toBeDefined();
+      expect(out.subject).toBe('Sujet');
+      expect(console.error).toHaveBeenCalledTimes(1);
+    });
+
+    it('even when every presentation fails, the message goes out plain', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      setChannel(['discord', 'slack', 'email']);
+      const broken = () => {
+        throw new Error('bug');
+      };
+
+      await expect(
+        withRichMessage('eventConfirmed', message, {
+          discord: broken,
+          email: broken,
+          slack: broken,
+        }),
+      ).resolves.toEqual(message);
+    });
   });
 });

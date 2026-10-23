@@ -27,6 +27,8 @@ const VALIDATOR_CODES = [
   'email',
   'secretChars',
   'campus',
+  'channelNotConfigured',
+  'removedNotEmailed',
 ];
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -51,7 +53,7 @@ describe.each(Object.entries(catalogs))('setup messages (%s)', (_lang, catalog) 
     const missing = actionCodes.filter((code) => !elsewhere.has(code) && !errors[code]);
     expect(missing).toEqual([]);
     expect(actionCodes.length).toBeGreaterThan(30);
-    expect((catalog.notifications as Record<string, string>).testFailed).toBeTruthy();
+    expect((catalog.notifications as unknown as Record<string, string>).testFailed).toBeTruthy();
   });
 
   it('has one name for each of the 8 steps, and no empty message', () => {

@@ -14,9 +14,7 @@ const mocks = vi.hoisted(() => ({
   listCampuses: vi.fn(),
   checkLogin: vi.fn(),
   applicationToken: vi.fn(),
-  sendDiscordTest: vi.fn(),
-  sendSlackTest: vi.fn(),
-  sendTestMail: vi.fn(),
+  sendTestMessage: vi.fn(),
   revalidatePath: vi.fn(),
   startScheduler: vi.fn(),
   stopScheduler: vi.fn(),
@@ -30,7 +28,15 @@ vi.mock('next-intl/server', () => ({
   getTranslations: async () => (key: string, values?: Record<string, string>) =>
     `${key}${values ? JSON.stringify(values) : ''}`,
 }));
-vi.mock('@/config', () => ({ getConfig: () => ({ bde: { name: 'BDE Test' } }) }));
+vi.mock('@/config', () => ({
+  getConfig: () => ({
+    bde: { name: 'BDE Test', timezone: 'Europe/Paris', accentColor: '#2F5BEA' },
+  }),
+}));
+vi.mock('@/lib/public-address', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/public-address')>()),
+  registeredAddress: () => 'https://bde.exemple.fr',
+}));
 vi.mock('@/lib/events/scheduler', () => ({
   startEventReminderScheduler: mocks.startScheduler,
   stopEventReminderScheduler: mocks.stopScheduler,
@@ -49,7 +55,7 @@ vi.mock('@/lib/settings/runtime', () => ({ setting: (key: string) => mocks.saved
 vi.mock('@/lib/settings/update', () => ({
   updateSettings: mocks.updateSettings,
   savedNotifications: (values: Record<string, string>) => ({
-    mode: 'none',
+    matrix: {},
     ...(values.DISCORD_WEBHOOK_URL && { discordWebhook: values.DISCORD_WEBHOOK_URL }),
   }),
 }));
@@ -61,9 +67,7 @@ vi.mock('@/lib/setup/fortytwo', async (importOriginal) => ({
 }));
 vi.mock('@/lib/setup/notify-test', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/setup/notify-test')>()),
-  sendDiscordTest: mocks.sendDiscordTest,
-  sendSlackTest: mocks.sendSlackTest,
-  sendTestMail: mocks.sendTestMail,
+  sendTestMessage: mocks.sendTestMessage,
 }));
 
 const actions = await import('./actions');
@@ -211,7 +215,10 @@ describe('a change', () => {
   });
 
   it('notifications: what the form sent goes to the update untouched, which validates it', async () => {
-    const input = { mode: 'discord', discordWebhook: 'https://discord.com/api/webhooks/1/x' };
+    const input = {
+      matrix: { memberPending: ['discord'] },
+      discordWebhook: 'https://discord.com/api/webhooks/1/x',
+    };
     await actions.saveNotifications(input);
     expect(mocks.updateSettings).toHaveBeenCalledWith(
       { section: 'notifications', notifications: input },
@@ -385,41 +392,67 @@ describe('the owners', () => {
 
 describe('a test notification', () => {
   const webhook = 'https://discord.com/api/webhooks/123456789/secret-part';
+  const matrix = {};
 
-  it('goes through what was typed, with the name of the BDE', async () => {
-    mocks.sendDiscordTest.mockResolvedValue({ ok: true });
+  it('goes through ONE channel, with what was typed for it, the name of the BDE and its address', async () => {
+    mocks.sendTestMessage.mockResolvedValue({ ok: true });
     expect(
       await actions.testNotification(
-        { mode: 'discord', discordWebhook: webhook },
-        { locale: 'fr' },
+        { matrix, discordWebhook: webhook, slackWebhook: 'not a webhook' },
+        { locale: 'fr', channel: 'discord' },
       ),
     ).toEqual({ ok: true });
-    expect(mocks.sendDiscordTest).toHaveBeenCalledWith(
-      expect.any(Function),
-      webhook,
-      expect.stringContaining('BDE Test'),
+    expect(mocks.sendTestMessage).toHaveBeenCalledWith(
+      'discord',
+      { discordWebhook: webhook },
+      expect.objectContaining({
+        name: 'BDE Test',
+        locale: 'fr',
+        timeZone: 'Europe/Paris',
+        accent: '#2F5BEA',
+        appUrl: 'https://bde.exemple.fr',
+        installed: true,
+      }),
+      undefined,
     );
   });
 
   it('uses the saved webhook when the field is left empty (the page never has it)', async () => {
     mocks.saved = { DISCORD_WEBHOOK_URL: webhook };
-    mocks.sendDiscordTest.mockResolvedValue({ ok: true });
-    await actions.testNotification({ mode: 'discord', discordWebhook: '' }, { locale: 'fr' });
-    expect(mocks.sendDiscordTest).toHaveBeenCalledWith(
-      expect.any(Function),
-      webhook,
-      expect.any(String),
+    mocks.sendTestMessage.mockResolvedValue({ ok: true });
+    await actions.testNotification(
+      { matrix, discordWebhook: '' },
+      { locale: 'fr', channel: 'discord' },
+    );
+    expect(mocks.sendTestMessage).toHaveBeenCalledWith(
+      'discord',
+      { discordWebhook: webhook },
+      expect.anything(),
+      undefined,
     );
   });
 
   it('says why it failed, without the webhook', async () => {
-    mocks.sendDiscordTest.mockResolvedValue({ ok: false, detail: 'HTTP 404' });
+    mocks.sendTestMessage.mockResolvedValue({ ok: false, detail: 'HTTP 404' });
     const result = await actions.testNotification(
-      { mode: 'discord', discordWebhook: webhook },
-      { locale: 'en' },
+      { matrix, discordWebhook: webhook },
+      { locale: 'en', channel: 'discord' },
     );
     expect(result).toEqual({ ok: false, code: 'testFailed', detail: 'HTTP 404' });
     expect(JSON.stringify(result)).not.toContain('secret-part');
+  });
+
+  it('refuses a channel that has nothing typed or saved, and one that does not exist', async () => {
+    expect(
+      await actions.testNotification({ matrix }, { locale: 'fr', channel: 'slack' }),
+    ).toMatchObject({ ok: false });
+    expect(
+      await actions.testNotification(
+        { matrix, discordWebhook: webhook },
+        { locale: 'fr', channel: 'carrier-pigeon' },
+      ),
+    ).toMatchObject({ ok: false, code: 'invalid' });
+    expect(mocks.sendTestMessage).not.toHaveBeenCalled();
   });
 
   it('needs an address to write to for e-mail', async () => {
@@ -431,15 +464,24 @@ describe('a test notification', () => {
       from: 'bde@exemple.fr',
     };
     expect(
-      await actions.testNotification({ mode: 'email', smtp }, { locale: 'fr', to: 'nope' }),
+      await actions.testNotification(
+        { matrix, smtp },
+        { locale: 'fr', channel: 'email', to: 'nope' },
+      ),
     ).toMatchObject({ ok: false, code: 'email', field: 'testTo' });
-    mocks.sendTestMail.mockResolvedValue({ ok: true });
+    mocks.sendTestMessage.mockResolvedValue({ ok: true });
     expect(
       await actions.testNotification(
-        { mode: 'email', smtp },
-        { locale: 'fr', to: 'me@exemple.fr' },
+        { matrix, smtp },
+        { locale: 'fr', channel: 'email', to: 'me@exemple.fr' },
       ),
     ).toEqual({ ok: true });
+    expect(mocks.sendTestMessage).toHaveBeenCalledWith(
+      'email',
+      { smtp: expect.objectContaining({ host: 'smtp.exemple.fr' }) },
+      expect.anything(),
+      'me@exemple.fr',
+    );
   });
 });
 

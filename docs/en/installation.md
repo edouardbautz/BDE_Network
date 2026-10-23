@@ -91,15 +91,16 @@ A language switcher lets you go from English to French. Each step has a progress
 | 4. Campuses       | The allowed campuses                                                                 | Offers the list of 42 campuses with a search. Works out the time zone.                                                                                                                                              |
 | 5. Owners         | The owners' 42 logins                                                                | Checks that each login exists on the intra.                                                                                                                                                                         |
 | 6. Modules        | The Events module (on by default)                                                    |                                                                                                                                                                                                                     |
-| 7. Notifications  | One channel: Discord, Slack, email or none                                           | With a webhook or an SMTP server, a button sends a test message.                                                                                                                                                    |
+| 7. Notifications  | The channels you use (Discord, Slack, email), then what goes through which           | With a webhook or an SMTP server, a button sends a test message.                                                                                                                                                    |
 | 8. Summary        |                                                                                      | Shows everything (secrets stay hidden). **Install the platform** saves.                                                                                                                                             |
 
 Your answers stay in memory during the installation: reloading the page loses nothing. Secrets (42 secret, SMTP
 password, webhooks) **never go back to the browser** and are **encrypted** in the database. The session key and the
 database password are **created automatically**: you never see them.
 
-At step 7, a single channel serves **every** notification (except that removing a member never sends an email). To
-choose a channel for each type of notification, see [Configuration](configuration.md#notifications).
+At step 7, set up the channels you use (each has its own test), then tick, in a table, which notification goes
+through which channel: none, one or several. Nothing ticked sends nothing, and you can change it all later in Settings.
+See [Notifications](notifications.md#one-notification-several-channels).
 
 ### Create the application on the 42 intra
 

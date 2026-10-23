@@ -1,5 +1,5 @@
 import { getConfig } from '@/config';
-import type { NotificationEvent } from '@/config/schema';
+import { channelsFor, type NotificationEvent } from '@/config/schema';
 import type { EmailModel } from './email-layout';
 import { resolveLogoUrl } from './sender';
 import type { EmailContent, NotificationMessage } from './types';
@@ -25,7 +25,7 @@ export async function withEmailContent(
   message: Omit<NotificationMessage, 'to'>,
   build: (brand: EmailModel['brand']) => EmailContent,
 ): Promise<Omit<NotificationMessage, 'to'>> {
-  if (getConfig().notifications[event] !== 'email') {
+  if (!channelsFor(getConfig(), event).includes('email')) {
     return message;
   }
 

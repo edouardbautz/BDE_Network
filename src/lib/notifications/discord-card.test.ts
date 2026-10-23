@@ -1,3 +1,4 @@
+import { notificationsConfig } from '@/test/notifications';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/config', () => ({ getConfig: vi.fn() }));
@@ -16,7 +17,7 @@ type Channel = 'email' | 'discord' | 'slack' | 'none';
 
 function useChannel(channel: Channel) {
   vi.mocked(getConfig).mockReturnValue({
-    notifications: { eventConfirmed: channel },
+    notifications: notificationsConfig({ eventConfirmed: channel }),
   } as unknown as ReturnType<typeof getConfig>);
 }
 
@@ -61,7 +62,7 @@ describe('withDiscordCard', () => {
 
   it('reads the channel of the event it is given, not another', async () => {
     vi.mocked(getConfig).mockReturnValue({
-      notifications: { eventConfirmed: 'slack', eventReminder: 'discord' },
+      notifications: notificationsConfig({ eventConfirmed: 'slack', eventReminder: 'discord' }),
     } as unknown as ReturnType<typeof getConfig>);
 
     expect((await withDiscordCard('eventReminder', message, () => embed)).discord).toBeDefined();

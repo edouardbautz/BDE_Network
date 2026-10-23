@@ -1,5 +1,5 @@
 import { getConfig } from '@/config';
-import type { NotificationEvent } from '@/config/schema';
+import { channelsFor, type NotificationEvent } from '@/config/schema';
 import type { DiscordEmbed } from './discord-embed';
 import { discordSender, type DiscordSender } from './sender';
 import type { NotificationMessage } from './types';
@@ -31,7 +31,7 @@ export async function withDiscordCard(
   message: Omit<NotificationMessage, 'to'>,
   card: () => DiscordEmbed,
 ): Promise<Omit<NotificationMessage, 'to'>> {
-  if (getConfig().notifications[event] !== 'discord') {
+  if (!channelsFor(getConfig(), event).includes('discord')) {
     return message;
   }
 

@@ -473,16 +473,43 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
 
 ## Notifications
 
+- **Several channels per notification, independent** (`src/config/schema.ts`, `lib/notifications/deliver.ts`, `lib/setup/notification*.ts`,
+  `components/setup/step-notifications.tsx`). `notifications.<type>` is a **list** of channels among `NOTIFICATION_CHANNELS`
+  (`discord`, `slack`, `email`), written once and in that order; `[]` sends nothing (there is no `none` channel, no adapter that
+  does nothing). **The schema still reads the old value** (`'discord'` is `['discord']`, `'none'` and a missing key are `[]`, in
+  `readNotifications`): a `bde.config.yml`, and the `config` JSON of a settings row written by 1.0.0 to 1.4.0, keep their meaning with
+  no migration and no rewrite (the update suite ticks them: `NOTIFICATION_BOXES`); the lists are written the next time the settings
+  page saves. **Every reader goes through `channelsFor(config, event)`**, which also drops the e-mail of `memberRemoved` (the person
+  removed is never written to: an older file could list it). `deliver()` sends on **every** channel of the list at the same time
+  (`Promise.all` over channels that each catch their own error): a webhook that is down never holds back the e-mails or the other
+  channel, cancels nothing already sent, and the result says what happened on each (`channels: { discord: { sent, failed } }`); the
+  caller stays in `after()`. The presentation of each channel is isolated the same way (`rich.ts`, `isolated()`): a card that cannot be
+  built leaves the message plain for that channel, the others untouched. One message carries the presentations of all its channels
+  (`discord`, `slack`, `email`), and each adapter reads its own; what differs by audience is the e-mail's own (`EmailContent.subject`:
+  `memberApproved` speaks to the member by e-mail and informs the team on a chat channel, from one notification).
+- **The table** (`lib/setup/notification-matrix.ts`, pure and tested; `components/setup/notification-table.tsx`,
+  `notification-channels.tsx`). The installer and the settings page share it: a panel per channel (what it needs, a badge, its own
+  test, a **removal that is marked and only done by the Save button**) and a table of a row per type and a column per channel. **A
+  box is only tickable for a channel that is configured** (saved and not removed, or typed), the e-mail box of `memberRemoved` does
+  not exist, a column has a shortcut (which ticks only the boxes that can be ticked, in the rows shown: the events rows are hidden
+  while the module is off and keep what they hold), and under 640 px the `Table` primitive is a list whose boxes are lines of 44
+  px. The server does not trust the page: `parseNotifications` (`lib/setup/notifications.ts`) refuses a box on a channel that is not
+  set up (`channelNotConfigured`) and the removed member's e-mail (`removedNotEmailed`), keeps a blank field's saved secret, and
+  forgets a removed channel's; `updateSettings` audits the types that changed (`channels: { type: { from, to } }`), never a secret.
+- **The test message** (`lib/setup/notify-test.ts`, `lib/notifications/test-message.ts`). One test per channel, through what is typed
+  or saved for that channel only (`parseChannelForTest`: a typo in another channel does not stop it), by **the adapter a real
+  notification uses** (constructed with the typed webhook or server) and with **the real card or e-mail** of an invented event, kind
+  `test` of the event builders: the person sees their channel as it will look, with the name, the colour and (installed) the logo. A
+  failure is a short reason, with no address and no secret.
 - `src/lib/notifications/`: `NotificationAdapter` interface, adapters for email (nodemailer/SMTP),
-  Discord webhook, Slack webhook, and a no-op `none`. `notify(event, message)` picks the adapter
-  from the channel configured per event in `bde.config.yml`'s `notifications` section. The events
+  Discord webhook and Slack webhook. `notify(channel, message)` and `notifyMany(channel, messages)` send through one channel. The events
   module sends `eventConfirmed` / `eventReminder` and, for the proposal circuit, `eventProposed` / `eventApproved` /
   `eventRefused`; `src/lib/members/notifications.ts` sends
   `memberPending` (new account created in the `signIn` callback → owners and holders of
   `members.manage` by email, or the chat channel), `memberApproved` (email goes to the member, chat
   gets a team message) and `memberRemoved` (**chat only, never an email to the removed member**: the
   `email` channel sends nothing). Notification keys added after the first release must default to
-  `"none"` in the Zod schema so old configs keep validating. Callers must treat notification as
+  an empty list in the Zod schema so old configs keep validating. Callers must treat notification as
   best-effort: run it in `after()`, never let it throw into the action that triggered it. The shared
   `deliver()` (`src/lib/notifications/deliver.ts`) sends an email batch over **one SMTP connection**
   (`notifyMany` → `EmailAdapter.sendMany`), isolates failures per recipient and only logs; text builders are pure (`members/messages.ts`, `events/messages.ts`) and use
@@ -504,7 +531,7 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
   BDE's name and logo as `author`, its logo as the thumbnail of a card without a picture of its own — an event; a member
   keeps their 42 photo — and neither logo when Discord cannot fetch it); a new card follows this layout and leaves the
   signature to it. `withDiscordCard` (`discord-card.ts`) adds the card to
-  a message **only when the event's channel is Discord** — email and Slack never build one and keep their
+  a message **only when Discord is one of the event's channels** — email and Slack never build one and keep their
   plain `subject`/`body`, which Discord also falls back to. The adapter neutralizes **every text of the card**
   (`neutralizeEmbedForDiscord`) and always sends `allowed_mentions: { parse: [] }`. The sender (`sender.ts`)
   is `bde.name` + an avatar Discord must be able to fetch: `bde.logoPath` if it is a PNG/JPEG/GIF/WebP, else
@@ -514,7 +541,7 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
   (`ctx.actor.login`), the row being deleted before the message goes out.
 - **Slack cards** (`docs/en/notifications.md`, Block Kit). Built like the Discord ones (`events/slack-blocks.ts`,
   `members/slack-blocks.ts`, the shared parts in `notifications/slack-blocks.ts`) and chosen with the others by
-  `withRichMessage` (`notifications/rich.ts`: only the builder of the event's channel is ever called). **The
+  `withRichMessage` (`notifications/rich.ts`: only the builders of the event's channels are ever called). **The
   message is `{ attachments: [{ color, fallback, blocks }] }` and has no top-level `text`**: Slack shows a message's
   `text` in the channel above the card, which would say everything twice; the summary for push notifications is
   the attachment's `fallback` (a test forbids a top-level `text`). A member's text in a `mrkdwn` field goes through
@@ -526,7 +553,7 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
 - **Designed e-mails** (`docs/en/notifications.md`). On the `email` channel a notification carries an
   `EmailContent` (`html` + `text` + optional `.ics`) next to its plain `subject`/`body`: built by
   `events/email.ts` / `members/email.ts` from the one layout `notifications/email-layout.ts` (`renderEmail`, a
-  pure function of a model) and added by `withEmailContent` **only when the event's channel is e-mail**. The
+  pure function of a model) and added by `withEmailContent` **only when e-mail is one of the event's channels**. The
   layout is for the worst clients, not browsers: tables, inline styles, `bgcolor`, a VML button for desktop
   Outlook, a hidden preheader, a `<style>` only for dark mode / narrow screens. **Everything inserted goes
   through `escapeHtml` / `httpUrl` / `normalizeHex` in that file** (never concatenate a member's text into the
@@ -717,7 +744,7 @@ recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`)
     the author). `refuseEvent` answers a notice, not an error, when somebody answered first (`?notice=alreadyReviewed`).
   - **Notifications** (`eventProposed` → the owners and holders of `events.validate` by e-mail, or the chat channel;
     `eventApproved` and `eventRefused` → the author by e-mail, or the chat channel, never the person who gave the answer).
-    They are `optional` and `none` by default, take the channel the installer or the settings page chose, and count in
+    They are `optional` and empty by default, take the channels the installer or the settings page chose, and count in
     `env.ts` like the other events notifications. `announceReview` (`notifications.ts`) re-reads the event and **sends nothing when
     the notice is stale** (a proposal withdrawn or answered meanwhile): unlike the confirmation there is no once-only claim,
     because a proposal can be made again after a refusal, so the transition itself (in the transaction) is what triggers
@@ -1234,7 +1261,7 @@ start from the same three things, so that what one finds the others can replay.
   menu, what a member is never shown), `circuit` (a proposer proposes a weekly event, a validator approves it, a member reads
   it; a refusal with a comment; the confirmation dialog's focus, trap and Escape), `calendar` (French, the + of a day, the
   keyboard), `owner` (every page of the board; the logo's file input, preview, upload and reset; a file that is not an image),
-  `self-hosted` (nothing a page loads comes from outside the platform, and the font drawn is Manrope served by it), and `watcher` (the watcher itself, see below). **No retry, ever**: a journey that fails now and then is a defect to find (see
+  `notifications` (the table of the settings page: no box before a channel is set up, the shortcut of a column, two channels saved and found again, a refused address, and on a phone a list that does not scroll sideways with boxes of 44 px, which each journey leaves without a channel), `self-hosted` (nothing a page loads comes from outside the platform, and the font drawn is Manrope served by it), and `watcher` (the watcher itself, see below). **No retry, ever**: a journey that fails now and then is a defect to find (see
   "Browser tests that fail now and then"); `workers: 1`, because the journeys change the one database, and each makes events of
   its own, named after its engine.
   - **Every journey ends by asking what its pages raised** (`fixtures.ts`, a fixture every test uses): an exception, an error
@@ -1393,7 +1420,7 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
   tested): every migration applied, no row lost, the roles identical except `events.manage` becoming validating, proposing and
   viewing (and written in the audit log), the members and events identical, **each calendar file saying the same thing line by line**
   (every UID, date, hour and cancellation: a differential test against the old algorithm, with no date computed by hand), the
-  invariants of the database, the copy the platform made by itself, the settings imported into the database, the old session
+  invariants of the database, the copy the platform made by itself, the settings imported into the database, **each notification keeping its channel** (the configuration of every version before 1.5.0 names one channel per notification: the settings page of the version under test must tick exactly those boxes, `NOTIFICATION_BOXES`), the old session
   cookies still signing people in, and the treasurer able to validate while the reader still cannot; (6) a backup of the new version
   and its restore (the row written after the backup is gone, the platform answers); (7) **the way back**: the copy the platform made
   (`restore.sh --pre-update`) or the backup made before (`restore.sh <archive> --no-start`, for 1.1.0 and from 1.3.0 on), `git checkout` of the old

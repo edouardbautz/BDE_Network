@@ -1,5 +1,5 @@
 import { getConfig } from '@/config';
-import type { NotificationEvent } from '@/config/schema';
+import { channelsFor, type NotificationEvent } from '@/config/schema';
 import { deliver as deliverNotification, type DeliveryResult } from '@/lib/notifications/deliver';
 import { emailsOfHolders } from '@/lib/notifications/recipients';
 import { withRichMessage } from '@/lib/notifications/rich';
@@ -285,8 +285,8 @@ async function announceReview(
   const key = REVIEW_NOTIFICATION[kind];
   try {
     const config = getConfig();
-    const channel = config.notifications[key];
-    if (channel === 'none') return;
+    const channels = channelsFor(config, key);
+    if (channels.length === 0) return;
 
     const event = await prisma.event.findUnique({
       where: { id: eventId },
@@ -333,7 +333,7 @@ async function announceReview(
     // Only an e-mail has recipients (a chat channel is one message for the team). The validators are told of a
     // proposal; the author of an answer, unless they gave it themselves (a validator who answers their own event).
     let recipients: string[] = [];
-    if (channel === 'email') {
+    if (channels.includes('email')) {
       const authorEmail =
         event.author?.email && event.authorLogin !== actorLogin ? [event.author.email] : [];
       recipients = kind === 'proposed' ? await emailsOfHolders(EVENTS_VALIDATE) : authorEmail;

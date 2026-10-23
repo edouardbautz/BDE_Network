@@ -34,7 +34,7 @@ vide pour garder celui qui est enregistré.
 | **Propriétaires**            | Les logins 42 des propriétaires.                                                                                                                                      |
 | **Modules**                  | Activer ou désactiver le module Événements.                                                                                                                           |
 | **Événements**               | Les catégories et l'heure du rappel de la veille (si le module est activé).                                                                                           |
-| **Notifications**            | Le canal (Discord, Slack, e-mail ou aucun), ses réglages, et un message de test.                                                                                      |
+| **Notifications**            | Les canaux (Discord, Slack, e-mail), ce qui passe par lequel, et un message de test pour chaque canal.                                                                |
 | **Nouvelles versions**       | Prévenir ou non les propriétaires quand une nouvelle version de la plateforme est publiée (activé par défaut).                                                        |
 
 ![La section Événements de la page Paramètres](../images/fr/settings-events.webp)
@@ -99,9 +99,11 @@ Une personne retirée de la liste devient un membre avec le **rôle par défaut*
 
 ### Les notifications
 
-Dans Paramètres, **un seul canal** sert pour toutes les notifications. Le choisir réécrit le canal de chacune des
-cinq, sauf le retrait d'un membre, qui n'envoie jamais d'e-mail. Les réglages d'un canal que vous quittez sont
-conservés : y revenir les retrouve. Voir [Notifications](notifications.md).
+Dans Paramètres, chaque canal (Discord, Slack, e-mail) se configure dans son panneau, avec son message de test, puis
+un **tableau** dit quelle notification passe par quel canal : une ligne par notification, une colonne par canal,
+**aucune, une ou plusieurs cases** par ligne. Une case ne se coche que pour un canal configuré ; le retrait d'un membre
+n'a jamais de case e-mail. Retirer un canal oublie ses réglages et décoche ses cases. Voir
+[Notifications](notifications.md).
 
 ### Nouvelles versions
 
@@ -153,8 +155,6 @@ Pour un déploiement piloté par des fichiers, ou pour repartir de `bde.config.y
    fichiers (le journal le dit). Si les fichiers sont incomplets, elle l'ignore et garde la base.
 3. **Retirez `BDE_REIMPORT=1`**, puis `docker compose up -d`. Tant qu'il reste, chaque démarrage écrase ce qui a été
    modifié depuis l'application.
-
-C'est aussi la façon de choisir **un canal par type de notification**, ce que la page Paramètres ne propose pas.
 
 ### Reprendre seulement les valeurs de `.env`
 
@@ -221,8 +221,19 @@ disparu s'affiche quand même, sans couleur.
 
 ### `notifications`
 
-Section **facultative** : une clé absente vaut `"none"` (désactivée). Chaque type de notification a son canal :
-`"email"`, `"discord"`, `"slack"` ou `"none"`.
+Section **facultative** : une clé absente ne prévient personne. Chaque type de notification a une **liste** de canaux,
+parmi `discord`, `slack` et `email` : `[]` n'envoie rien, `[discord]` publie dans Discord, `[discord, email]` fait les deux
+(les canaux sont indépendants : l'un en panne n'arrête pas l'autre). La page Paramètres écrit ces listes pour vous.
+
+```yaml
+notifications:
+  memberPending: [email]
+  eventConfirmed: [discord, slack, email]
+  eventReminder: []
+```
+
+Avant la version 1.5.0, une notification avait **un seul** canal (`"email"`, `"discord"`, `"slack"`) ou `"none"`. Cette forme
+est **toujours lue** (`"discord"` vaut `[discord]`, `"none"` vaut `[]`) : aucun fichier ni réglage enregistré n'est à modifier.
 
 | Notification     | Quand                             | Qui est prévenu                                                                                                   |
 | ---------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
@@ -236,7 +247,7 @@ Section **facultative** : une clé absente vaut `"none"` (désactivée). Chaque 
 | `eventRefused`   | une proposition est refusée       | E-mail : **son auteur**, avec le commentaire. Discord ou Slack : le salon.                                        |
 
 Les messages sont envoyés **après** l'action. Un envoi qui échoue (webhook indisponible, serveur SMTP en panne)
-est écrit dans les journaux et ne bloque jamais l'approbation ni le retrait. Si le canal choisi n'est pas
+est écrit dans les journaux et ne bloque jamais l'approbation ni le retrait. Si un canal de la liste n'est pas
 configuré (par exemple `email` sans serveur SMTP), la plateforme démarre quand même et l'avertit : l'alerte ne
 partira pas.
 

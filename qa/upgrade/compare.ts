@@ -137,3 +137,30 @@ export function sameCounts(
 ): string[] {
   return diffCounts(before, after, []);
 }
+
+/**
+ * The boxes ticked in a page, by their accessible name ("Event confirmed — Discord"): what the settings page shows of the
+ * table of notifications. Read from the HTML the server sent, the way a browser would draw it.
+ */
+export function tickedBoxes(html: string): string[] {
+  const decode = (text: string) =>
+    text
+      .replace(/&#x27;|&#39;/g, "'")
+      .replace(/&quot;/g, '"')
+      .replace(/&amp;/g, '&');
+  const ticked: string[] = [];
+  for (const [tag] of html.matchAll(/<input\b[^>]*>/g)) {
+    if (!/\btype="checkbox"/.test(tag) || !/\schecked(=""|\s|\/|>)/.test(tag)) continue;
+    const label = /\baria-label="([^"]*)"/.exec(tag)?.[1];
+    if (label !== undefined) ticked.push(decode(label));
+  }
+  return ticked.sort();
+}
+
+/** What differs between the boxes expected and the boxes ticked: the missing and the unexpected, by name. */
+export function diffBoxes(expected: readonly string[], seen: readonly string[]): string[] {
+  const problems: string[] = [];
+  for (const name of expected) if (!seen.includes(name)) problems.push(`not ticked: ${name}`);
+  for (const name of seen) if (!expected.includes(name)) problems.push(`ticked by itself: ${name}`);
+  return problems;
+}

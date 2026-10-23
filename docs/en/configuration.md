@@ -32,7 +32,7 @@ The page never sends a secret back to the browser: leave the field empty to keep
 | **Owners**                  | The owners' 42 logins.                                                                                                                            |
 | **Modules**                 | Turn the Events module on or off.                                                                                                                 |
 | **Events**                  | The categories and the hour of the day-before reminder (if the module is on).                                                                     |
-| **Notifications**           | The channel (Discord, Slack, email or none), its settings, and a test message.                                                                    |
+| **Notifications**           | The channels (Discord, Slack, email), what goes through which, and a test message for each channel.                                               |
 | **New versions**            | Whether owners are told when a new version of the platform is published (on by default).                                                          |
 
 ![The Events section of the Settings page](../images/en/settings-events.webp)
@@ -96,9 +96,10 @@ A person removed from the list becomes a member with the **default role**.
 
 ### Notifications
 
-In Settings, **a single channel** serves every notification. Choosing it rewrites the channel of each of the five,
-except that removing a member never sends an email. The settings of a channel you leave are kept: coming back finds
-them again. See [Notifications](notifications.md).
+In Settings, each channel (Discord, Slack, email) is set up in its own panel, with its own test message, then a
+**table** says which notification goes through which channel: a row per notification, a column per channel, **none, one
+or several boxes** per row. A box can only be ticked for a channel that is set up; removing a member never has an email
+box. Removing a channel forgets its settings and clears its boxes. See [Notifications](notifications.md).
 
 ### New versions
 
@@ -148,8 +149,6 @@ For a files-driven deployment, or to start over from `bde.config.yml` and `.env`
    files (the log says so). If the files are incomplete, it ignores them and keeps the database.
 3. **Remove `BDE_REIMPORT=1`**, then `docker compose up -d`. As long as it stays, every start overwrites what was
    changed from the application.
-
-This is also the way to choose **one channel per type of notification**, which the Settings page does not offer.
 
 ### Take only the values of `.env`
 
@@ -216,8 +215,19 @@ with no color.
 
 ### `notifications`
 
-An **optional** section: a missing key means `"none"` (off). Each type of notification has its channel: `"email"`,
-`"discord"`, `"slack"` or `"none"`.
+An **optional** section: a missing key means no notification. Each type of notification has a **list** of channels,
+among `discord`, `slack` and `email`: `[]` sends nothing, `[discord]` posts in Discord, `[discord, email]` does both
+(the channels are independent: one that is down does not stop the other). The Settings page writes these lists for you.
+
+```yaml
+notifications:
+  memberPending: [email]
+  eventConfirmed: [discord, slack, email]
+  eventReminder: []
+```
+
+Before version 1.5.0 a notification had **one** channel (`"email"`, `"discord"`, `"slack"`) or `"none"`. That form is
+**still read** (`"discord"` is `[discord]`, `"none"` is `[]`): no file and no stored setting needs editing.
 
 | Notification     | When                         | Who is notified                                                                                  |
 | ---------------- | ---------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -231,8 +241,8 @@ An **optional** section: a missing key means `"none"` (off). Each type of notifi
 | `eventRefused`   | a proposal is refused        | Email: **its author**, with the comment. Discord or Slack: the channel.                          |
 
 Messages are sent **after** the action. A send that fails (webhook unavailable, mail server down) is written to the
-logs and never blocks the approval or the removal. If the chosen channel is not set up (for example `email` without
-an SMTP server), the platform still starts and warns: the alert will not go out.
+logs and never blocks the approval or the removal. If a channel of the list is not set up (for example `email` without
+an SMTP server), the platform still starts and warns: the alert will not go out on that channel.
 
 **Message safety.** They contain text typed by members (42 profile name, event title…). `@everyone`, `@here`,
 `@channel`, `<!channel>`, `<@…>` and `<url|text>` links are made harmless: they show as plain text and notify

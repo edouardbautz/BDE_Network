@@ -1,3 +1,4 @@
+import { notificationsConfig } from '@/test/notifications';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
@@ -71,7 +72,7 @@ beforeEach(() => {
   vi.spyOn(console, 'error').mockImplementation(() => undefined);
   vi.mocked(getConfig).mockReturnValue({
     bde: { name: 'BDE Test', logoPath: '/logo.svg', timezone: 'Europe/Paris', defaultLocale: 'fr' },
-    notifications: { eventConfirmed: 'email', eventReminder: 'email' },
+    notifications: notificationsConfig({ eventConfirmed: 'email', eventReminder: 'email' }),
     events: { categories: [{ key: 'sport', label: 'Sport', color: '#16a34a' }], reminderHour: 18 },
   } as unknown as ReturnType<typeof getConfig>);
   vi.mocked(notifyMany).mockImplementation(async (_event, messages) =>

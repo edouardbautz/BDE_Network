@@ -124,9 +124,12 @@ const signInAs = async (login) => {
 const clickButton = async (label, within) => {
   const handle = await page.evaluateHandle(
     (wanted, scope) => {
-      const root = scope
-        ? (document.querySelector(scope)?.closest('form, section') ?? document)
-        : document;
+      const scoped = scope ? document.querySelector(scope) : null;
+      // a dialog is searched itself (it sits at the end of the page, outside any form: the whole page would hold earlier buttons of the
+      // same name, such as the "Retirer" of a channel)
+      const root = scoped?.matches('[role="dialog"]')
+        ? scoped
+        : (scoped?.closest('form, section') ?? document);
       return [...root.querySelectorAll('button')].find(
         (el) => el.textContent?.trim().startsWith(wanted) && !el.disabled,
       );
@@ -331,6 +334,69 @@ try {
   await page.reload({ waitUntil: 'networkidle0' });
   if (await page.$('[aria-label="Nom de la catégorie 5"]')) fail('the category is still there');
   step('a category is taken out only after a confirmation');
+
+  // 3b. the notifications: a table of boxes, a column that can be ticked once its channel is set up, several channels at once
+  const SLACK = 'https://hooks.slack.com/services/T123/B456/e2eslacksecret';
+  // the boxes of the notifications form only: other sections of the page have boxes of their own
+  const countBoxes = (selector) =>
+    page.evaluate(
+      (wanted) =>
+        document
+          .querySelector('#setup-notification-channels')
+          .closest('form')
+          .querySelectorAll(wanted).length,
+      selector,
+    );
+  const ticked = () => countBoxes('input[type="checkbox"]:checked');
+  const enabledBoxes = () => countBoxes('input[type="checkbox"]:not(:disabled)');
+  const reloadNotifications = async () => {
+    await page.reload({ waitUntil: 'networkidle0' });
+    await waitText('Qui est prévenu, et où');
+  };
+  const saveNotifications = async () => {
+    const answered = page.waitForResponse(
+      (r) => r.request().method() === 'POST' && r.url().includes('/settings'),
+    );
+    await page.evaluate(() => {
+      const form = document.querySelector('#setup-notification-channels').closest('form');
+      [...form.querySelectorAll('button')]
+        .find((b) => b.textContent.trim().startsWith('Enregistrer'))
+        .click();
+    });
+    await answered;
+    await page.waitForNetworkIdle({ idleTime: 500 });
+  };
+
+  await page.goto(`${base}/fr/settings`, { waitUntil: 'networkidle0' });
+  await waitText('Qui est prévenu, et où');
+  // the installer ticked Discord for the eight notifications; only the Discord column can be ticked
+  if ((await ticked()) !== 8) fail(`${await ticked()} boxes ticked after the installation, not 8`);
+  if ((await enabledBoxes()) !== 8) fail('a box of a channel that is not set up can be ticked');
+  await page.type('#setup-slack', SLACK);
+  if ((await enabledBoxes()) !== 8 + 8) fail('typing a Slack address did not open its column');
+  await clickButton('Slack : tout cocher');
+  if ((await ticked()) !== 16) fail(`${await ticked()} boxes ticked with two columns, not 16`);
+  await saveNotifications();
+  await reloadNotifications();
+  if ((await ticked()) !== 16) fail('the two channels are not there after a reload');
+  if ((await text()).includes('e2eslacksecret')) fail('the Slack address is shown back');
+  await shot('notifications-two-channels');
+  step(
+    'two channels ticked at once, saved, and still there after a reload (the address is never shown back)',
+  );
+
+  await clickButton('Discord : tout décocher');
+  await saveNotifications();
+  await reloadNotifications();
+  if ((await ticked()) !== 8) fail('clearing the Discord column did not leave the Slack one');
+  step('a column is cleared with its shortcut, and the other one stays');
+
+  await clickButton('Retirer Slack');
+  await saveNotifications();
+  await reloadNotifications();
+  if ((await ticked()) !== 0) fail('a removed channel left boxes ticked');
+  if ((await enabledBoxes()) !== 8) fail('the removed channel can still be ticked');
+  step('a channel is removed: its settings are forgotten and its boxes cleared');
 
   // 4. the 42 application: a wrong secret is refused, the real one saved without leaving the page
   await clear('#setup-secret');

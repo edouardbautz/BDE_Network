@@ -2,7 +2,6 @@ import { validateEnvironment } from '@/config/env';
 import { bdeConfigSchema, type BdeConfig } from '@/config/schema';
 import type { SettingValues } from '@/lib/settings/runtime';
 import type { SetupDraft } from './draft';
-import type { Channel } from './notifications';
 
 /** The event categories a BDE starts with (the ones of the example configuration); editable later. */
 export const DEFAULT_CATEGORIES = [
@@ -11,21 +10,6 @@ export const DEFAULT_CATEGORIES = [
   { key: 'wei', label: 'WEI', color: '#ea580c' },
   { key: 'partenariat', label: 'Partenariat', color: '#2563eb' },
 ];
-
-/** The channel of every notification, for one channel chosen for all. */
-export function notificationChannels(channel: Channel) {
-  return {
-    memberPending: channel,
-    memberApproved: channel,
-    // Nobody is written to when a member is removed: the e-mail channel does nothing for it.
-    memberRemoved: channel === 'email' ? ('none' as const) : channel,
-    eventConfirmed: channel,
-    eventReminder: channel,
-    eventProposed: channel,
-    eventApproved: channel,
-    eventRefused: channel,
-  };
-}
 
 export type Installation =
   | { ok: true; config: BdeConfig; values: SettingValues }
@@ -78,7 +62,6 @@ export function buildInstallation(
     return { ok: false, reason: 'incomplete' };
   }
 
-  const channel = notifications.mode;
   const candidate = {
     bde: {
       name,
@@ -92,7 +75,7 @@ export function buildInstallation(
     auth: { owners, allowedCampuses: campuses },
     modules: { enabled: events ? ['events'] : [] },
     ...(events ? { events: { categories: DEFAULT_CATEGORIES, reminderHour: 18 } } : {}),
-    notifications: notificationChannels(channel),
+    notifications: notifications.matrix,
   };
 
   const parsed = bdeConfigSchema.safeParse(candidate);
@@ -109,13 +92,9 @@ export function buildInstallation(
     FORTYTWO_CLIENT_ID: clientId,
     FORTYTWO_CLIENT_SECRET: clientSecret,
   };
-  if (channel === 'discord' && notifications.discordWebhook) {
-    values.DISCORD_WEBHOOK_URL = notifications.discordWebhook;
-  }
-  if (channel === 'slack' && notifications.slackWebhook) {
-    values.SLACK_WEBHOOK_URL = notifications.slackWebhook;
-  }
-  if (channel === 'email' && notifications.smtp) {
+  if (notifications.discordWebhook) values.DISCORD_WEBHOOK_URL = notifications.discordWebhook;
+  if (notifications.slackWebhook) values.SLACK_WEBHOOK_URL = notifications.slackWebhook;
+  if (notifications.smtp) {
     const { host, port, user, password, from } = notifications.smtp;
     values.SMTP_HOST = host;
     values.SMTP_PORT = String(port);

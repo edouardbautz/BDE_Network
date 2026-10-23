@@ -168,7 +168,7 @@ corriger » et son journal nomme le cas et le chemin vérifié. Si un **dossier*
 
 - **« La configuration est invalide … events »** : une installation par fichiers a activé le module sans section
   `events` ou sans catégorie. Dans une installation normale, les catégories se règlent dans **Paramètres**.
-- **Un rappel n'est pas parti.** Vérifiez que le canal n'est pas « aucun », que le serveur tournait à partir de
+- **Un rappel n'est pas parti.** Vérifiez qu'une case est cochée pour le rappel (Paramètres, Notifications), que le serveur tournait à partir de
   l'heure du rappel, et que les membres en charge existent (pour l'e-mail). Cherchez `[events]` dans les journaux.
 - **Le lien d'agenda ne se met pas à jour.** C'est le rythme de rafraîchissement de votre application d'agenda :
   Google peut mettre plusieurs heures.

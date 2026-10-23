@@ -1,3 +1,4 @@
+import { notificationsConfig } from '@/test/notifications';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToHtml } from '@/test/render-server';
@@ -57,7 +58,7 @@ vi.mock('@/config', () => ({
   getConfig: vi.fn(() => ({
     bde: { timezone: 'Europe/Paris', name: 'BDE Test' },
     modules: { enabled: ['events'] },
-    notifications: { eventConfirmed: 'email' },
+    notifications: notificationsConfig({ eventConfirmed: 'email' }),
     events: {
       categories: [
         { key: 'soiree', label: 'Soirée', color: '#db2777' },

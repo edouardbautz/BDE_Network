@@ -33,8 +33,11 @@ function payloadOf(message: NotificationMessage): Record<string, unknown> {
 }
 
 export class DiscordAdapter implements NotificationAdapter {
+  /** `webhookUrl`: the address to post to, when it is not the one of the settings (the test of a channel not saved yet). */
+  constructor(private readonly webhookUrl?: string) {}
+
   async send(message: NotificationMessage): Promise<void> {
-    const webhookUrl = setting('DISCORD_WEBHOOK_URL');
+    const webhookUrl = this.webhookUrl ?? setting('DISCORD_WEBHOOK_URL');
     if (!webhookUrl) {
       throw new Error(
         'DiscordAdapter: DISCORD_WEBHOOK_URL must be set in .env to send Discord notifications',

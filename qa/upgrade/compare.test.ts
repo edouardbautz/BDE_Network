@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   diffCounts,
+  diffBoxes,
   diffFeeds,
   diffRoles,
   migratedPermissions,
   parseFeed,
   sameCounts,
+  tickedBoxes,
 } from './compare';
 
 const ics = (...events: string[]) =>
@@ -124,5 +126,33 @@ describe('diffCounts and sameCounts', () => {
   it('is strict after a restore', () => {
     expect(sameCounts({ AuditLog: 3 }, { AuditLog: 4 }).length).toBe(1);
     expect(sameCounts({ AuditLog: 3 }, { AuditLog: 3 })).toEqual([]);
+  });
+});
+
+describe('tickedBoxes and diffBoxes: the table of notifications as the page draws it', () => {
+  const page = `
+    <input type="checkbox" aria-label="Event confirmed — Discord" checked="" class="x"/>
+    <input type="checkbox" aria-label="Event confirmed — Slack" disabled="" class="x"/>
+    <input class="x" aria-label="Request &#x27;approved&#x27; — E-mail" type="checkbox" checked=""/>
+    <input type="text" aria-label="Not a box" checked=""/>
+    <input type="checkbox" class="x" checked="" aria-label="Access request waiting — E-mail" />
+    <input type="checkbox" aria-label="Member removed — Discord"/>`;
+
+  it('lists the boxes that are ticked, by name, sorted, and nothing else', () => {
+    expect(tickedBoxes(page)).toEqual([
+      'Access request waiting — E-mail',
+      'Event confirmed — Discord',
+      "Request 'approved' — E-mail",
+    ]);
+  });
+
+  it('is empty when nothing is ticked, or when there is no table', () => {
+    expect(tickedBoxes('<input type="checkbox" aria-label="a — b"/>')).toEqual([]);
+    expect(tickedBoxes('<p>no box</p>')).toEqual([]);
+  });
+
+  it('says what is missing and what ticked itself', () => {
+    expect(diffBoxes(['a', 'b'], ['b', 'a'])).toEqual([]);
+    expect(diffBoxes(['a', 'b'], ['b', 'c'])).toEqual(['not ticked: a', 'ticked by itself: c']);
   });
 });

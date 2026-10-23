@@ -3,7 +3,8 @@ import { z } from 'zod';
 
 export const SUPPORTED_LOCALES = ['fr', 'en'] as const;
 
-export const NOTIFICATION_CHANNELS = ['email', 'discord', 'slack', 'none'] as const;
+/** The channels a notification can go through, in the order the tables and the files write them. */
+export const NOTIFICATION_CHANNELS = ['discord', 'slack', 'email'] as const;
 
 /**
  * Notification events wired at this stage of the project. Business modules
@@ -92,27 +93,55 @@ const modulesSection = z.object({
   enabled: z.array(z.string().trim().min(1)).default([]),
 });
 
-const notificationChannel = (event: (typeof NOTIFICATION_EVENTS)[number]) =>
-  z.enum(NOTIFICATION_CHANNELS, {
-    error: () =>
-      `le canal choisi pour "${event}" doit être l'un de : ${NOTIFICATION_CHANNELS.join(', ')}`,
-  });
+/**
+ * What a notification is sent through is a LIST of channels (none, one, or several at once). Before 1.5.0 it was one channel,
+ * "none" meant nothing: those values are read as they were meant (`'discord'` is `['discord']`, `'none'` is `[]`, a key left
+ * out is `[]`), so a `bde.config.yml` and the settings already stored keep their meaning without being edited. A list is
+ * written once, in the order of `NOTIFICATION_CHANNELS`, each channel at most once.
+ */
+function readChannels(value: unknown): unknown {
+  if (value === undefined || value === null || value === 'none') return [];
+  if (typeof value === 'string') return [value];
+  return value;
+}
 
-// Every notification defaults to "none": a BDE that has not set up e-mail, Discord or Slack
+const readNotifications = (value: unknown): unknown => {
+  const given =
+    typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
+  return Object.fromEntries(
+    NOTIFICATION_EVENTS.map((event) => [event, readChannels(given[event])]),
+  );
+};
+
+const notificationChannels = (event: (typeof NOTIFICATION_EVENTS)[number]) =>
+  z
+    .array(
+      z.enum(NOTIFICATION_CHANNELS, {
+        error: () =>
+          `les canaux choisis pour "${event}" doivent être parmi : ${NOTIFICATION_CHANNELS.join(', ')} (ou "none" pour aucun)`,
+      }),
+      {
+        error: () =>
+          `les canaux choisis pour "${event}" doivent être une liste (ou "none" pour aucun)`,
+      },
+    )
+    .transform((channels) => NOTIFICATION_CHANNELS.filter((channel) => channels.includes(channel)));
+
+// Every notification defaults to nothing: a BDE that has not set up e-mail, Discord or Slack
 // (most, at first) writes nothing, and an older bde.config.yml keeps validating without edits.
-const optionalNotificationChannel = (event: (typeof NOTIFICATION_EVENTS)[number]) =>
-  notificationChannel(event).default('none');
-
-const notificationsSection = z.object({
-  memberPending: optionalNotificationChannel('memberPending'),
-  memberApproved: optionalNotificationChannel('memberApproved'),
-  memberRemoved: optionalNotificationChannel('memberRemoved'),
-  eventConfirmed: optionalNotificationChannel('eventConfirmed'),
-  eventReminder: optionalNotificationChannel('eventReminder'),
-  eventProposed: optionalNotificationChannel('eventProposed'),
-  eventApproved: optionalNotificationChannel('eventApproved'),
-  eventRefused: optionalNotificationChannel('eventRefused'),
-});
+const notificationsSection = z.preprocess(
+  readNotifications,
+  z.object({
+    memberPending: notificationChannels('memberPending'),
+    memberApproved: notificationChannels('memberApproved'),
+    memberRemoved: notificationChannels('memberRemoved'),
+    eventConfirmed: notificationChannels('eventConfirmed'),
+    eventReminder: notificationChannels('eventReminder'),
+    eventProposed: notificationChannels('eventProposed'),
+    eventApproved: notificationChannels('eventApproved'),
+    eventRefused: notificationChannels('eventRefused'),
+  }),
+);
 
 const updatesSection = z.object({
   // Whether the owners are told when a newer version of the platform is published (a request to GitHub that
@@ -157,7 +186,7 @@ export const bdeConfigSchema = z
     modules: modulesSection,
     events: eventsSection.optional(),
     // The whole section is optional too: absent means every notification is off.
-    notifications: notificationsSection.prefault({}),
+    notifications: notificationsSection,
     updates: updatesSection.prefault({}),
   })
   .superRefine((config, ctx) => {
@@ -175,3 +204,16 @@ export type EventCategory = z.infer<typeof eventCategory>;
 export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
 export type NotificationEvent = (typeof NOTIFICATION_EVENTS)[number];
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
+
+/**
+ * The channels a notification really goes through: what the configuration lists, except that the e-mail of `memberRemoved` is
+ * never sent (the person removed is not written to; an older configuration could list it, and it stayed without effect).
+ */
+export function channelsFor(
+  config: Pick<BdeConfig, 'notifications'>,
+  event: NotificationEvent,
+): NotificationChannel[] {
+  return config.notifications[event].filter(
+    (channel) => !(event === 'memberRemoved' && channel === 'email'),
+  );
+}

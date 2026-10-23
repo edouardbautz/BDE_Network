@@ -379,7 +379,8 @@
           "reminderToday": "Rappel · aujourd'hui",
           "proposed": "Événement proposé",
           "approved": "Proposition approuvée",
-          "refused": "Proposition refusée"
+          "refused": "Proposition refusée",
+          "test": "Message de test"
         },
         "fields": {
           "when": "Quand",
@@ -397,7 +398,8 @@
         "action": "Voir l'événement",
         "calendarNote": "Le fichier joint ajoute l'événement à votre agenda.",
         "footer": "Vous recevez ce message parce que vous êtes membre de {bde}.",
-        "reviewAction": "Examiner la proposition"
+        "reviewAction": "Examiner la proposition",
+        "footerTest": "Ceci est un message de test envoyé depuis les réglages de {bde}."
       },
       "slack": {
         "action": "Voir l'événement",
@@ -493,7 +495,8 @@
         "title": "Confirmer cet événement ?",
         "body": "L'événement devient visible de tous les membres.",
         "notifyEmail": "Les membres seront prévenus par e-mail.",
-        "notifyChat": "Un message sera publié dans le salon {channel}.",
+        "notifyChat": "Un message sera publié sur {channels}.",
+        "notifyBoth": "Les membres seront prévenus par e-mail, et un message sera publié sur {channels}.",
         "alreadyNotified": "Les membres ont déjà été prévenus de cet événement : ils ne le seront pas une seconde fois.",
         "confirm": "Confirmer l'événement"
       },
@@ -936,15 +939,24 @@
     },
     "notifications": {
       "title": "Notifications",
-      "description": "La plateforme peut prévenir le bureau : nouvelle demande d'accès, événement confirmé, rappels. Choisissez un canal ; vous pourrez le changer plus tard.",
-      "none": "Aucune pour l'instant",
-      "noneBody": "Rien n'est envoyé.",
-      "discord": "Discord",
-      "discordBody": "Un message dans un salon de votre serveur.",
-      "slack": "Slack",
-      "slackBody": "Un message dans un canal de votre espace de travail.",
-      "email": "E-mail",
-      "emailBody": "Des e-mails envoyés par votre serveur d'envoi (SMTP).",
+      "description": "La plateforme peut prévenir le bureau et les membres : nouvelle demande d'accès, événement confirmé, rappels. Configurez les canaux que vous utilisez, puis cochez ce qui part où. Vous pourrez tout changer plus tard.",
+      "channelsTitle": "Canaux",
+      "channelsHelp": "Un canal doit être configuré pour pouvoir être coché dans le tableau. Chaque canal est indépendant : si l’un est en panne, les autres envoient quand même.",
+      "channelNames": {
+        "discord": "Discord",
+        "slack": "Slack",
+        "email": "E-mail"
+      },
+      "channelBodies": {
+        "discord": "Un message dans un salon de votre serveur.",
+        "slack": "Un message dans un canal de votre espace de travail.",
+        "email": "Des e-mails envoyés par votre serveur d'envoi (SMTP)."
+      },
+      "configured": "Configuré",
+      "notConfigured": "Non configuré",
+      "removeChannel": "Retirer {channel}",
+      "removalPending": "{channel} sera retiré à l’enregistrement : ses cases seront décochées.",
+      "undoRemoval": "Garder {channel}",
       "discordLabel": "Adresse du webhook Discord",
       "discordHelp": "Dans Discord : Paramètres du salon, Intégrations, Webhooks, Nouveau webhook, puis « Copier l'URL du webhook ».",
       "slackLabel": "Adresse du webhook Slack",
@@ -956,13 +968,57 @@
       "smtpPassword": "Mot de passe (facultatif)",
       "smtpFrom": "Adresse d'expéditeur",
       "passwordKept": "Mot de passe déjà enregistré : laissez vide pour le garder.",
-      "testTitle": "Tester",
-      "testHelp": "Le test est facultatif, mais recommandé : vous voyez le message arriver.",
       "testTo": "Envoyer le test à",
-      "testButton": "Envoyer un message de test",
+      "testButton": "Envoyer un test sur {channel}",
       "testing": "Envoi…",
-      "testOk": "Message envoyé : vérifiez qu'il est bien arrivé.",
-      "testFailed": "L'envoi a échoué ({detail})."
+      "testOk": "Test envoyé sur {channel} : vérifiez qu’il est bien arrivé. C’est la vraie présentation, avec un événement inventé.",
+      "testFailed": "L'envoi a échoué ({detail}).",
+      "matrixTitle": "Qui est prévenu, et où",
+      "matrixHelp": "Une ligne par notification, une colonne par canal. Une ligne sans case cochée n’envoie rien.",
+      "typeColumn": "Notification",
+      "shortcuts": "Raccourcis",
+      "checkColumn": "{channel} : tout cocher",
+      "uncheckColumn": "{channel} : tout décocher",
+      "clearAll": "Tout décocher",
+      "types": {
+        "groups": {
+          "members": "Membres",
+          "events": "Événements"
+        },
+        "memberRemovedNoEmail": "Jamais d'e-mail",
+        "memberPending": {
+          "name": "Demande d'accès en attente",
+          "hint": "Prévient les propriétaires et ceux qui peuvent la valider."
+        },
+        "memberApproved": {
+          "name": "Demande approuvée",
+          "hint": "Prévient le membre par e-mail, et l'équipe dans le salon."
+        },
+        "memberRemoved": {
+          "name": "Membre retiré",
+          "hint": "Un message dans le salon : la personne retirée ne reçoit jamais d'e-mail."
+        },
+        "eventConfirmed": {
+          "name": "Événement confirmé",
+          "hint": "Prévient tous les membres, une seule fois par événement."
+        },
+        "eventReminder": {
+          "name": "Rappel d'événement",
+          "hint": "La veille, aux personnes en charge (ou à ceux qui valident s'il n'y en a pas)."
+        },
+        "eventProposed": {
+          "name": "Événement proposé",
+          "hint": "Prévient ceux qui peuvent le valider."
+        },
+        "eventApproved": {
+          "name": "Proposition approuvée",
+          "hint": "Prévient son auteur."
+        },
+        "eventRefused": {
+          "name": "Proposition refusée",
+          "hint": "Prévient son auteur, avec le commentaire."
+        }
+      }
     },
     "summary": {
       "title": "Récapitulatif",
@@ -988,7 +1044,9 @@
       "install": "Installer la plateforme",
       "installing": "Installation…",
       "incomplete": "Il manque une réponse : revenez aux étapes précédentes.",
-      "invalid": "Ces réglages ne forment pas une plateforme valable ({detail})."
+      "invalid": "Ces réglages ne forment pas une plateforme valable ({detail}).",
+      "notificationTypes": "{count, plural, one {# type} other {# types}}",
+      "notificationsNone": "Aucune pour l’instant"
     },
     "done": {
       "title": "Plateforme installée",
@@ -999,8 +1057,12 @@
       "tipBackup": "Sauvegardez le volume « secrets » avec ./scripts/backup.sh : sans lui, les secrets enregistrés ne peuvent plus être déchiffrés après une restauration."
     },
     "test": {
-      "message": "Message de test de l'installation de {name}. Si vous le lisez, les notifications fonctionnent !",
-      "subject": "Test de {name}"
+      "message": "Message de test de {name}. Si vous le lisez, ce canal fonctionne.",
+      "subject": "Test de {name}",
+      "sampleTitle": "Soirée jeux (exemple)",
+      "sampleDescription": "Voici l'apparence des notifications de {name}. Aucun événement n'a été créé.",
+      "sampleLocation": "Salle commune",
+      "sampleCategory": "Exemple"
     },
     "errors": {
       "wrong": "Ce code n'est pas le bon. Vérifiez le dernier code affiché par le serveur.",
@@ -1052,7 +1114,9 @@
       "categoryDuplicate": "Deux catégories portent le même nom.",
       "categoryLast": "Gardez au moins une catégorie.",
       "categoryInUse": "Des événements utilisent encore « {detail} » : choisissez la catégorie où les déplacer.",
-      "tooManyCategories": "Il y a déjà 30 catégories, c'est le maximum."
+      "tooManyCategories": "Il y a déjà 30 catégories, c'est le maximum.",
+      "channelNotConfigured": "Une case est cochée pour un canal qui n'est pas configuré : configurez-le d'abord, ou décochez ses cases.",
+      "removedNotEmailed": "La personne retirée ne reçoit jamais d'e-mail : décochez cette case, le message va dans le salon."
     }
   },
   "settings": {

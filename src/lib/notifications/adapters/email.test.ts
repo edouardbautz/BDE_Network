@@ -184,6 +184,41 @@ describe('EmailAdapter', () => {
     expect(data).toContain('Rendez-vous');
   });
 
+  it('uses the subject of the designed e-mail when it has its own, and the plain one otherwise', async () => {
+    const adapter = new EmailAdapter();
+    await adapter.send({
+      to: 'alice@example.org',
+      subject: 'Demande approuvée : Alice',
+      body: 'Pour l’équipe',
+      email: { subject: 'Votre accès est validé', html: '<p>Bienvenue</p>', text: 'Bienvenue' },
+    });
+    await adapter.send({
+      to: 'bob@example.org',
+      subject: 'Sujet commun',
+      body: 'Corps',
+      email: { html: '<p>Corps</p>', text: 'Corps' },
+    });
+
+    const subjectOf = (index: number) =>
+      decodeMimeWords(/^Subject: (.*)$/m.exec(smtp.deliveries[index]?.data ?? '')?.[1] ?? '');
+    expect(subjectOf(0)).toBe('Votre accès est validé');
+    expect(subjectOf(1)).toBe('Sujet commun');
+  });
+
+  it('sends through the server it is given (a test of a channel not saved yet), not the one of the settings', async () => {
+    delete process.env.SMTP_HOST;
+    await new EmailAdapter({
+      host: '127.0.0.1',
+      port: smtp.port,
+      from: 'Test <test@example.org>',
+      user: 'tester',
+      password: 'typed-pass',
+    }).send({ to: 'alice@example.org', subject: 'Test', body: 'Corps' });
+
+    expect(smtp.deliveries[0]?.mailFrom).toBe('test@example.org');
+    expect(smtp.deliveries[0]?.credentials).toEqual({ user: 'tester', password: 'typed-pass' });
+  });
+
   it('authenticates when SMTP_USER is set', async () => {
     process.env.SMTP_USER = 'mailer';
     process.env.SMTP_PASSWORD = 's3cret';

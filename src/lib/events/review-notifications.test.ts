@@ -1,3 +1,4 @@
+import { notificationsConfig } from '@/test/notifications';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
@@ -31,14 +32,18 @@ const { notifyEventApproved, notifyEventProposed, notifyEventRefused } =
 
 type Channel = 'email' | 'discord' | 'slack' | 'none';
 
-function useChannels(channels: Partial<Record<'proposed' | 'approved' | 'refused', Channel>>) {
+function useChannels(
+  channels: Partial<
+    Record<'proposed' | 'approved' | 'refused', Channel | Exclude<Channel, 'none'>[]>
+  >,
+) {
   vi.mocked(getConfig).mockReturnValue({
     bde: { name: 'BDE Test', logoPath: '/logo.svg', timezone: 'Europe/Paris', defaultLocale: 'fr' },
-    notifications: {
+    notifications: notificationsConfig({
       eventProposed: channels.proposed ?? 'none',
       eventApproved: channels.approved ?? 'none',
       eventRefused: channels.refused ?? 'none',
-    },
+    }),
     events: { categories: [{ key: 'sport', label: 'Sport', color: '#16a34a' }], reminderHour: 18 },
   } as unknown as ReturnType<typeof getConfig>);
 }
@@ -103,6 +108,18 @@ describe('a proposal (eventProposed)', () => {
       expect(message.email?.html).toContain('email.reviewAction'); // the button asks to examine it
       expect(message).not.toHaveProperty('discord');
     }
+  });
+
+  it('on a chat and by e-mail at once: the card for the team and the message to each validator, from one proposal', async () => {
+    useChannels({ proposed: ['discord', 'email'] });
+    await notifyEventProposed('evt1');
+
+    expect(emails().map((message) => message.to)).toEqual(['v1@x.fr', 'v2@x.fr']);
+    expect(notify).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(notify).mock.calls[0]?.[0]).toBe('discord');
+    expect(embed()?.title).toBe('📝  Tournoi');
+    // the same message carries both presentations
+    expect(vi.mocked(notify).mock.calls[0]?.[1].email?.html).toContain('>Tournoi</h1>');
   });
 
   it('puts no calendar file in it: the event is not published', async () => {

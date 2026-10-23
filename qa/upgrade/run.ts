@@ -7,17 +7,19 @@ import { tableCell } from '../markdown';
 import { forgeSessionCookie, SESSION_COOKIE } from '../personas';
 import { Report } from '../security/core';
 import {
+  diffBoxes,
   diffCounts,
   diffFeeds,
   diffRoles,
   parseFeed,
   sameCounts,
+  tickedBoxes,
   type FeedEvent,
   type RoleFacts,
 } from './compare';
 import { COUNTED_TABLES, fixtureSql, OCCURRENCE_TABLES, OLD } from './fixture';
 import { CURRENT, fixtureSqlCurrent } from './fixture-proposals';
-import { AUTH_SECRET, run, Stack } from './stack';
+import { AUTH_SECRET, NOTIFICATION_BOXES, run, Stack } from './stack';
 import { addWorktree, removeWorktree } from '../worktree.mjs';
 
 /**
@@ -322,6 +324,14 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
       'the settings were copied into the database, and the owner reads them',
       owner.status === 200 && /Settings stored in the database/.test(owner.body),
       `${owner.status}`,
+    );
+    // What every version before 1.5.0 wrote, one channel per notification, is read as boxes of the table: the same notifications go
+    // to the same channels, no other box is ticked, and the owner sees it. (Nothing of it is rewritten by the update.)
+    const boxes = diffBoxes(NOTIFICATION_BOXES, tickedBoxes(owner.body));
+    check(
+      'each notification keeps its channel: the settings page ticks the boxes that the old configuration named, and no other',
+      boxes.length === 0,
+      boxes.join('; ') || `${NOTIFICATION_BOXES.length} boxes`,
     );
     const member = await page(stack, '/en/dashboard', proposals ? CURRENT.member : OLD.member);
     check(

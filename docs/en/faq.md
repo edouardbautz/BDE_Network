@@ -137,10 +137,11 @@ next dates before anything is saved. See [Events that repeat](events.md#events-t
 No. Without a channel, the platform sends nothing. **Discord** is the easiest to set up: a webhook takes two clicks.
 See [Notifications](notifications.md).
 
-### Can I choose a different channel for each notification?
+### Can a notification go through several channels, or a different one for each type?
 
-Not in the Settings page: it applies a single channel to every notification. One channel per type is possible with the
-configuration files (see [Configuration](configuration.md#replace-the-settings-with-files)).
+Yes, both. In **Settings**, **Notifications** section, a table has a row per notification and a column per channel:
+tick the boxes you want (Discord **and** email for the access requests, only Slack for the reminders…). A row with no
+box ticked sends nothing. See [Notifications](notifications.md#one-notification-several-channels).
 
 ### Why does the removed person not get an email?
 

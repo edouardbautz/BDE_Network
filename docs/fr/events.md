@@ -367,8 +367,8 @@ calendrier avec abonnement**, puis collez le lien.
 
 ## Notifications
 
-Le canal (e-mail, Discord, Slack ou aucun) et ses réglages se choisissent dans **Paramètres**, section
-**Notifications**, avec un message de test. Pour que les messages contiennent un lien vers l'événement,
+Les canaux (e-mail, Discord, Slack : aucun, un ou plusieurs pour chaque notification) et leurs réglages se choisissent
+dans **Paramètres**, section **Notifications**, avec un message de test pour chaque canal. Pour que les messages contiennent un lien vers l'événement,
 renseignez l'adresse de la plateforme (section **Adresse de la plateforme**) : sans elle, les messages partent sans lien.
 
 | Notification                        | Quand                                                                                                                                                         | Qui la reçoit                                                                               |

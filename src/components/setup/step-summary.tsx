@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
+import { NOTIFICATION_CHANNELS } from '@/config/schema';
+import { countFor } from '@/lib/setup/notification-matrix';
 import { finishInstallation, type ActionFailure } from '@/app/[locale]/setup/actions';
 import type { DraftView } from '@/lib/setup/draft';
 import { StepFrame, type StepProps } from './step-frame';
@@ -9,6 +11,19 @@ import { StepFrame, type StepProps } from './step-frame';
 export function StepSummary({ view, run, onNext, onBack }: StepProps & { view: DraftView }) {
   const t = useTranslations('setup.summary');
   const tNotifications = useTranslations('setup.notifications');
+  // "Discord (4 types), E-mail (2 types)": what goes where, in a line; or that nothing is sent.
+  const used = NOTIFICATION_CHANNELS.filter(
+    (channel) => countFor(view.notifications.matrix, channel) > 0,
+  );
+  const notificationsSummary =
+    used.length > 0
+      ? used
+          .map(
+            (channel) =>
+              `${tNotifications(`channelNames.${channel}`)} (${t('notificationTypes', { count: countFor(view.notifications.matrix, channel) })})`,
+          )
+          .join(', ')
+      : t('notificationsNone');
   const tIdentity = useTranslations('setup.identity');
   const [failure, setFailure] = useState<ActionFailure | null>(null);
   const [pending, start] = useTransition();
@@ -51,7 +66,7 @@ export function StepSummary({ view, run, onNext, onBack }: StepProps & { view: D
     [t('timezone'), view.timezone],
     [t('owners'), view.owners.join(', ')],
     [t('events'), view.events ? t('on') : t('off')],
-    [t('notifications'), tNotifications(view.notifications.mode)],
+    [t('notifications'), notificationsSummary],
   ];
 
   return (

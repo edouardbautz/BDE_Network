@@ -1,3 +1,4 @@
+import { notificationsConfig } from '@/test/notifications';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/config', () => ({ getConfig: vi.fn() }));
@@ -7,63 +8,73 @@ const { getConfig } = await import('@/config');
 const { notify, notifyMany } = await import('./index');
 const { deliver } = await import('./deliver');
 
-type Channel = 'email' | 'discord' | 'slack' | 'none';
+type Channel = 'email' | 'discord' | 'slack';
 
-function useChannel(channel: Channel) {
+function useChannels(channels: Channel[], event = 'memberPending') {
   vi.mocked(getConfig).mockReturnValue({
-    notifications: { memberPending: channel },
+    notifications: notificationsConfig({ [event]: channels }),
   } as unknown as ReturnType<typeof getConfig>);
 }
 
 const message = { subject: 'Sujet', body: 'Corps' };
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  vi.mocked(notify).mockResolvedValue(undefined);
+  vi.mocked(notifyMany).mockImplementation(async (_channel, messages) =>
+    messages.map(() => ({ ok: true as const })),
+  );
 });
 
 describe('deliver', () => {
-  it('sends nothing on the "none" channel', async () => {
-    useChannel('none');
+  it('sends nothing when no channel is ticked for the notification', async () => {
+    useChannels([]);
 
     await expect(deliver('memberPending', message, ['a@x.fr'], '[t]')).resolves.toEqual({
       sent: 0,
       failed: 0,
+      channels: {},
     });
     expect(notify).not.toHaveBeenCalled();
+    expect(notifyMany).not.toHaveBeenCalled();
   });
 
   it.each(['discord', 'slack'] as const)(
     'posts once to the %s channel, whatever the recipients',
     async (channel) => {
-      useChannel(channel);
+      useChannels([channel]);
 
       const result = await deliver('memberPending', message, ['a@x.fr', 'b@x.fr'], '[t]');
 
-      expect(result).toEqual({ sent: 1, failed: 0 });
-      expect(notify).toHaveBeenCalledExactlyOnceWith('memberPending', message);
+      expect(result).toEqual({
+        sent: 1,
+        failed: 0,
+        channels: { [channel]: { sent: 1, failed: 0 } },
+      });
+      expect(notify).toHaveBeenCalledExactlyOnceWith(channel, message);
     },
   );
 
   it.each(['discord', 'slack'] as const)(
     'a failing %s webhook is logged with the caller prefix, not thrown',
     async (channel) => {
-      useChannel(channel);
+      useChannels([channel]);
       vi.mocked(notify).mockRejectedValue(new Error('webhook responded with 500'));
 
-      await expect(deliver('memberPending', message, [], '[members]')).resolves.toEqual({
+      await expect(deliver('memberPending', message, [], '[members]')).resolves.toMatchObject({
         sent: 0,
         failed: 1,
       });
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('[members] memberPending'),
+        expect.stringContaining(`[members] memberPending: ${channel}`),
         expect.any(Error),
       );
     },
   );
 
   it('sends all the emails in one batch and keeps going when one fails', async () => {
-    useChannel('email');
+    useChannels(['email']);
     vi.mocked(notifyMany).mockResolvedValue([
       { ok: true },
       { ok: false, error: new Error('550 mailbox unavailable') },
@@ -72,8 +83,12 @@ describe('deliver', () => {
 
     const result = await deliver('memberPending', message, ['a@x.fr', 'bad@x.fr', 'c@x.fr'], '[t]');
 
-    expect(result).toEqual({ sent: 2, failed: 1 });
-    expect(notifyMany).toHaveBeenCalledExactlyOnceWith('memberPending', [
+    expect(result).toMatchObject({
+      sent: 2,
+      failed: 1,
+      channels: { email: { sent: 2, failed: 1 } },
+    });
+    expect(notifyMany).toHaveBeenCalledExactlyOnceWith('email', [
       { ...message, to: 'a@x.fr' },
       { ...message, to: 'bad@x.fr' },
       { ...message, to: 'c@x.fr' },
@@ -86,10 +101,10 @@ describe('deliver', () => {
   });
 
   it('reports nothing sent when there is no recipient', async () => {
-    useChannel('email');
+    useChannels(['email']);
     vi.mocked(notifyMany).mockResolvedValue([]);
 
-    await expect(deliver('memberPending', message, [], '[t]')).resolves.toEqual({
+    await expect(deliver('memberPending', message, [], '[t]')).resolves.toMatchObject({
       sent: 0,
       failed: 0,
     });
@@ -103,7 +118,98 @@ describe('deliver', () => {
     await expect(deliver('memberPending', message, ['a@x.fr'], '[t]')).resolves.toEqual({
       sent: 0,
       failed: 0,
+      channels: {},
     });
     expect(console.error).toHaveBeenCalled();
+  });
+
+  describe('several channels at once', () => {
+    it('sends on every channel ticked: the team channels once, the e-mails to each recipient', async () => {
+      useChannels(['discord', 'slack', 'email']);
+
+      const result = await deliver('memberPending', message, ['a@x.fr', 'b@x.fr'], '[t]');
+
+      expect(result).toEqual({
+        sent: 4,
+        failed: 0,
+        channels: {
+          discord: { sent: 1, failed: 0 },
+          slack: { sent: 1, failed: 0 },
+          email: { sent: 2, failed: 0 },
+        },
+      });
+      expect(
+        vi
+          .mocked(notify)
+          .mock.calls.map(([channel]) => channel)
+          .sort(),
+      ).toEqual(['discord', 'slack']);
+      expect(notifyMany).toHaveBeenCalledExactlyOnceWith('email', [
+        { ...message, to: 'a@x.fr' },
+        { ...message, to: 'b@x.fr' },
+      ]);
+    });
+
+    it('a channel that fails does not stop the others, nor cancel what already went', async () => {
+      useChannels(['discord', 'slack', 'email']);
+      vi.mocked(notify).mockImplementation(async (channel) => {
+        if (channel === 'discord') throw new Error('webhook responded with 500');
+      });
+
+      const result = await deliver('memberPending', message, ['a@x.fr'], '[t]');
+
+      expect(result.channels).toEqual({
+        discord: { sent: 0, failed: 1 },
+        slack: { sent: 1, failed: 0 },
+        email: { sent: 1, failed: 0 },
+      });
+      expect(notify).toHaveBeenCalledWith('slack', message);
+      expect(notifyMany).toHaveBeenCalledTimes(1);
+      expect(console.error).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not throw when every channel fails, and says so for each', async () => {
+      useChannels(['discord', 'slack', 'email']);
+      vi.mocked(notify).mockRejectedValue(new Error('down'));
+      vi.mocked(notifyMany).mockRejectedValue(new Error('SMTP down'));
+
+      await expect(deliver('memberPending', message, ['a@x.fr'], '[t]')).resolves.toEqual({
+        sent: 0,
+        failed: 3,
+        channels: {
+          discord: { sent: 0, failed: 1 },
+          slack: { sent: 0, failed: 1 },
+          email: { sent: 0, failed: 1 },
+        },
+      });
+    });
+
+    it('sends on the channels at the same time: one that is slow does not hold the others back', async () => {
+      useChannels(['discord', 'slack']);
+      let releaseDiscord: () => void = () => undefined;
+      vi.mocked(notify).mockImplementation((channel) =>
+        channel === 'discord'
+          ? new Promise<void>((resolve) => {
+              releaseDiscord = resolve;
+            })
+          : Promise.resolve(),
+      );
+
+      const delivery = deliver('memberPending', message, [], '[t]');
+      // Discord has not answered, and Slack has already been asked.
+      await vi.waitFor(() => expect(notify).toHaveBeenCalledWith('slack', message));
+      expect(notify).toHaveBeenCalledWith('discord', message);
+      releaseDiscord();
+      await expect(delivery).resolves.toMatchObject({ sent: 2, failed: 0 });
+    });
+
+    it('never writes by e-mail to a member who was removed, whatever the configuration lists', async () => {
+      useChannels(['discord', 'email'], 'memberRemoved');
+
+      const result = await deliver('memberRemoved', message, ['gone@x.fr'], '[t]');
+
+      expect(result.channels).toEqual({ discord: { sent: 1, failed: 0 } });
+      expect(notifyMany).not.toHaveBeenCalled();
+    });
   });
 });

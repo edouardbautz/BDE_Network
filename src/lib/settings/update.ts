@@ -1,13 +1,20 @@
 import { validateEnvironment } from '@/config/env';
-import { EVENTS_MODULE_KEY, bdeConfigSchema, type BdeConfig } from '@/config/schema';
+import {
+  EVENTS_MODULE_KEY,
+  NOTIFICATION_EVENTS,
+  bdeConfigSchema,
+  channelsFor,
+  type BdeConfig,
+} from '@/config/schema';
 import { DEFAULT_LOGO_PATH, logoVersionOf } from '@/lib/branding/storage';
 import type { PrismaClient } from '@/generated/prisma/client';
 import { logAuditEvent } from '@/lib/audit-log';
 import { prisma } from '@/lib/prisma';
-import { DEFAULT_CATEGORIES, notificationChannels } from '@/lib/setup/install';
+import { DEFAULT_CATEGORIES } from '@/lib/setup/install';
 import {
+  emptyMatrix,
   parseNotifications,
-  type Channel,
+  type NotificationMatrix,
   type NotificationSettings,
 } from '@/lib/setup/notifications';
 import * as validate from '@/lib/setup/validate';
@@ -126,21 +133,27 @@ export function savedNotifications(values: SettingValues): NotificationSettings 
         }
       : undefined;
   return {
-    mode: 'none',
+    matrix: emptyMatrix(),
     ...(values.DISCORD_WEBHOOK_URL && { discordWebhook: values.DISCORD_WEBHOOK_URL }),
     ...(values.SLACK_WEBHOOK_URL && { slackWebhook: values.SLACK_WEBHOOK_URL }),
     ...(smtp && { smtp }),
   };
 }
 
-/** The channel the configuration sends its notifications through. */
-export function channelOf(config: BdeConfig): Channel {
-  const n = config.notifications;
-  return (
-    [n.eventConfirmed, n.memberPending, n.memberApproved, n.eventReminder].find(
-      (channel) => channel !== 'none',
-    ) ?? 'none'
+/** The types of notification whose channels differ, with the channels before and after (for the audit log). */
+function changedChannels(before: NotificationMatrix, after: NotificationMatrix) {
+  return Object.fromEntries(
+    NOTIFICATION_EVENTS.filter((event) => before[event].join() !== after[event].join()).map(
+      (event) => [event, { from: before[event], to: after[event] }],
+    ),
   );
+}
+
+/** What each type of notification is sent through, as the page shows it: the lists of the configuration. */
+export function settingsMatrix(config: BdeConfig): NotificationMatrix {
+  return Object.fromEntries(
+    NOTIFICATION_EVENTS.map((event) => [event, channelsFor(config, event)]),
+  ) as NotificationMatrix;
 }
 
 function apply(change: SettingsChange, state: State, actor: SettingsActor): Applied | Failure {
@@ -439,12 +452,15 @@ function apply(change: SettingsChange, state: State, actor: SettingsActor): Appl
     case 'notifications': {
       const parsed = parseNotifications(change.notifications, savedNotifications(values));
       if (!parsed.ok) return fail(parsed.code, parsed.field ? { field: parsed.field } : {});
-      const { mode, discordWebhook, slackWebhook, smtp } = parsed.value;
+      const { matrix, discordWebhook, slackWebhook, smtp } = parsed.value;
 
-      // The settings of a channel that is not chosen are kept: switching back finds them again.
+      // What the channels hold is exactly what the page sent back: a blank field kept what was saved (see
+      // parseNotifications), and a channel that was removed is gone.
       const next: SettingValues = { ...values };
       if (discordWebhook) next.DISCORD_WEBHOOK_URL = discordWebhook;
+      else delete next.DISCORD_WEBHOOK_URL;
       if (slackWebhook) next.SLACK_WEBHOOK_URL = slackWebhook;
+      else delete next.SLACK_WEBHOOK_URL;
       if (smtp) {
         next.SMTP_HOST = smtp.host;
         next.SMTP_PORT = String(smtp.port);
@@ -453,18 +469,29 @@ function apply(change: SettingsChange, state: State, actor: SettingsActor): Appl
         else delete next.SMTP_USER;
         if (smtp.password) next.SMTP_PASSWORD = smtp.password;
         else delete next.SMTP_PASSWORD;
+      } else {
+        for (const key of [
+          'SMTP_HOST',
+          'SMTP_PORT',
+          'SMTP_USER',
+          'SMTP_PASSWORD',
+          'SMTP_FROM',
+        ] as const) {
+          delete next[key];
+        }
       }
 
       const changedSecrets = (
         ['DISCORD_WEBHOOK_URL', 'SLACK_WEBHOOK_URL', 'SMTP_PASSWORD'] as const
       ).filter((key) => next[key] !== values[key]);
       return {
-        config: { ...config, notifications: notificationChannels(mode) },
+        config: { ...config, notifications: matrix },
         values: next,
         audit: {
           action: 'settings.notifications.update',
           metadata: {
-            channel: { from: channelOf(config), to: mode },
+            // for each type of notification that changed, the channels before and after
+            channels: changedChannels(settingsMatrix(config), matrix),
             // which secret changed, never what it is
             changedSecrets,
           },

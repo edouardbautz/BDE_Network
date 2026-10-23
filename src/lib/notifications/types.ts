@@ -4,6 +4,9 @@ import type { SlackPayload } from './slack-blocks';
 /** An e-mail: the HTML, the same content as text for the clients that do not show HTML, and the
  * calendar file some e-mails carry. */
 export interface EmailContent {
+  /** The subject of the mail when it is not the one of the plain message (an e-mail that speaks to the person it is about,
+   * where the chat channels say it to the team). */
+  subject?: string;
   html: string;
   text: string;
   /** An iCalendar file: mail clients then offer "add to calendar". */

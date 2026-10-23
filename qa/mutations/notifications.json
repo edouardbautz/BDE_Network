@@ -1,0 +1,134 @@
+[
+  [
+    "delivery: a channel that fails stops the whole delivery",
+    "src/lib/notifications/deliver.ts",
+    "        console.error(`${logPrefix} ${event}: ${channel} notification failed`, error);",
+    "        console.error(`${logPrefix} ${event}: ${channel} notification failed`, error);\n        throw error;",
+    ["src/lib/notifications/deliver.test.ts"]
+  ],
+  [
+    "delivery: only the first channel of the list is sent",
+    "src/lib/notifications/deliver.ts",
+    "    channels.map(async (channel) => {",
+    "    channels.slice(0, 1).map(async (channel) => {",
+    ["src/lib/notifications/deliver.test.ts"]
+  ],
+  [
+    "channels: the e-mail of a removed member is sent",
+    "src/config/schema.ts",
+    "    (channel) => !(event === 'memberRemoved' && channel === 'email'),",
+    "    () => true,",
+    ["src/config/schema.test.ts", "src/lib/notifications/deliver.test.ts"]
+  ],
+  [
+    "presentation: a card that cannot be built takes the delivery down",
+    "src/lib/notifications/rich.ts",
+    "    return message;\n  }\n}",
+    "    throw error;\n  }\n}",
+    ["src/lib/notifications/rich.test.ts"]
+  ],
+  [
+    "schema: the old \"none\" is not read as no channel",
+    "src/config/schema.ts",
+    "  if (value === undefined || value === null || value === 'none') return [];",
+    "  if (value === undefined || value === null) return [];",
+    ["src/config/schema.test.ts", "src/lib/settings/update.test.ts"]
+  ],
+  [
+    "schema: the old single channel loses its channel",
+    "src/config/schema.ts",
+    "  if (typeof value === 'string') return [value];",
+    "  if (typeof value === 'string') return [];",
+    [
+      "src/config/schema.test.ts",
+      "src/lib/settings/settings-support.test.ts",
+      "src/lib/settings/update.test.ts"
+    ]
+  ],
+  [
+    "server: a box on a channel that is not set up is accepted",
+    "src/lib/setup/notifications.ts",
+    "      if (!isConfigured(credentials, channel)) return failure('channelNotConfigured', 'matrix');",
+    "      if (false) return failure('channelNotConfigured', 'matrix');",
+    ["src/lib/setup/notifications.test.ts", "src/lib/settings/update.test.ts"]
+  ],
+  [
+    "server: the e-mail of a removed member is accepted",
+    "src/lib/setup/notifications.ts",
+    "    if (event === 'memberRemoved' && ticked.includes('email')) {",
+    "    if (false) {",
+    ["src/lib/setup/notifications.test.ts", "src/lib/settings/update.test.ts"]
+  ],
+  [
+    "server: removing a channel keeps its settings",
+    "src/lib/setup/notifications.ts",
+    "  const keep = !input.removed?.includes(channel);",
+    "  const keep = true;",
+    ["src/lib/setup/notifications.test.ts", "src/lib/settings/update.test.ts"]
+  ],
+  [
+    "settings: a removed channel's address stays in the row",
+    "src/lib/settings/update.ts",
+    "      else delete next.DISCORD_WEBHOOK_URL;",
+    "      else next.DISCORD_WEBHOOK_URL = values.DISCORD_WEBHOOK_URL;",
+    ["src/lib/settings/update.test.ts"]
+  ],
+  [
+    "table: a removed member has an e-mail box",
+    "src/lib/setup/notification-matrix.ts",
+    "  !(event === 'memberRemoved' && channel === 'email');",
+    "  true;",
+    [
+      "src/lib/setup/notification-matrix.test.ts",
+      "src/components/setup/step-notifications.test.tsx"
+    ]
+  ],
+  [
+    "table: a box can be ticked before its channel is set up",
+    "src/lib/setup/notification-matrix.ts",
+    "): boolean => isOffered(event, channel) && configured[channel];",
+    "): boolean => isOffered(event, channel);",
+    [
+      "src/lib/setup/notification-matrix.test.ts",
+      "src/components/setup/step-notifications.test.tsx"
+    ]
+  ],
+  [
+    "table: the shortcut of a column clears everything it touches by ticking",
+    "src/lib/setup/notification-matrix.ts",
+    "    if (isTickable(event, channel, configured)) next = setCell(next, event, channel, on);",
+    "    if (isTickable(event, channel, configured)) next = setCell(next, event, channel, true);",
+    [
+      "src/lib/setup/notification-matrix.test.ts",
+      "src/components/setup/step-notifications.test.tsx"
+    ]
+  ],
+  [
+    "environment: only the first channel of a list is checked",
+    "src/config/env.ts",
+    "      for (const channel of config.notifications[event]) channels.add(channel);",
+    "      channels.add(config.notifications[event][0] as string);",
+    ["src/config/env.test.ts"]
+  ],
+  [
+    "e-mail: the designed subject is ignored",
+    "src/lib/notifications/adapters/email.ts",
+    "            subject: email?.subject ?? message.subject,",
+    "            subject: message.subject,",
+    ["src/lib/notifications/adapters/email.test.ts"]
+  ],
+  [
+    "confirmation: an e-mail and a chat are told as the e-mail alone",
+    "src/lib/events/confirmation-notice.ts",
+    "(chat.length > 0 ? 'notifyBoth' : 'notifyEmail')",
+    "(chat.length > 0 ? 'notifyEmail' : 'notifyEmail')",
+    ["src/lib/events/confirmation-notice.test.ts"]
+  ],
+  [
+    "test message: the test of one channel also posts to the others",
+    "src/lib/setup/notify-test.ts",
+    "    if (channel === 'discord' && credentials.discordWebhook) {",
+    "    if (credentials.discordWebhook) {",
+    ["src/lib/setup/notify-test.test.ts"]
+  ]
+]

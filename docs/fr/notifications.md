@@ -3,10 +3,12 @@
 # Notifications
 
 La plateforme peut prévenir le BDE par **e-mail**, par un salon **Discord**, par un salon **Slack**, ou pas du
-tout. **Discord est le plus simple à mettre en place.**
+tout, et **chaque type de notification peut passer par plusieurs de ces canaux à la fois** (par exemple Discord et
+e-mail). **Discord est le plus simple à mettre en place.**
 
-Le canal et ses réglages (adresse du webhook, serveur e-mail) se choisissent dans **Paramètres**, section
-**Notifications**, avec un message de test. Ils s'appliquent tout de suite.
+Les canaux (adresse du webhook, serveur e-mail) et **ce qui passe par lequel** se choisissent dans **Paramètres**,
+section **Notifications**, et dans l'installateur, à l'étape 7. Ils s'appliquent tout de suite. Voir
+[Une notification, plusieurs canaux](#une-notification-plusieurs-canaux).
 
 | Notification                                | Quand                             | Qui est prévenu                                                                                              |
 | ------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------ |
@@ -19,11 +21,38 @@ Le canal et ses réglages (adresse du webhook, serveur e-mail) se choisissent da
 | **Proposition approuvée** (`eventApproved`) | une proposition est approuvée     | E-mail : son auteur. Discord ou Slack : le salon.                                                            |
 | **Proposition refusée** (`eventRefused`)    | une proposition est refusée       | E-mail : son auteur, avec le commentaire du validateur. Discord ou Slack : le salon.                         |
 
-Dans Paramètres, **un seul canal** sert pour toutes les notifications. Pour un canal par type de notification, voir
-[Configuration](configuration.md#remplacer-les-réglages-par-les-fichiers).
+Sur chaque canal coché, la notification part comme le tableau ci-dessus le dit : un e-mail aux personnes
+concernées, un message dans le salon pour Discord ou Slack.
 
-Les messages sont envoyés **après** l'action. Un envoi qui échoue n'empêche jamais l'action : il est écrit dans les
-journaux du serveur (`docker compose logs app`).
+Les messages sont envoyés **après** l'action. **Chaque canal part de son côté** : un salon Discord en panne ne retient
+jamais les e-mails ni le message Slack, et n'annule rien de ce qui est déjà parti. Un envoi qui échoue n'empêche pas
+non plus l'action : il est écrit dans les journaux du serveur (`docker compose logs app`), avec le nom du canal.
+
+## Une notification, plusieurs canaux
+
+Dans **Paramètres**, section **Notifications** (et dans l'installateur), deux blocs :
+
+1. **Canaux.** Un panneau pour Discord, Slack et l'e-mail, avec ce qu'il demande (l'adresse du webhook, le serveur
+   e-mail), un badge **Configuré** ou **Non configuré** et son **test**. Le test envoie la **vraie carte ou le vrai
+   e-mail**, avec un événement inventé (« Soirée jeux (exemple) ») marqué « Message de test », par ce qui est tapé dans
+   le panneau, enregistré ou non : vous voyez à quoi ressemblera votre canal, avec le nom, le logo et la couleur de
+   votre BDE. **Retirer** oublie les réglages d'un canal et décoche ses cases (quand vous enregistrez).
+2. **Qui est prévenu, et où.** Un tableau avec **une ligne par notification** et **une colonne par canal**. Cochez une
+   case pour envoyer cette notification par ce canal ; cochez-en plusieurs sur une ligne pour l'envoyer par plusieurs.
+   Une ligne **sans case cochée n'envoie rien**.
+   - Une case ne se coche que si son **canal est configuré**. Avant, sa colonne est grisée et dit « Non configuré ».
+   - Les **raccourcis** au-dessus du tableau cochent (ou décochent) toute une colonne en un clic : « Discord : tout
+     cocher ». « Tout décocher » vide le tableau.
+   - **Membre retiré** n'a pas de case e-mail : la personne retirée ne reçoit jamais rien.
+   - Les lignes du module Événements ne s'affichent que si le module est activé (ce qu'elles contiennent est conservé).
+   - Sur téléphone, chaque notification est un bloc dont les cases sont les unes sous les autres, d'au moins 44 px de
+     haut : rien ne défile sur le côté.
+
+![Le tableau des notifications : une ligne par notification, une colonne par canal](../images/fr/notifications.webp)
+
+Une configuration écrite avant la version 1.5.0, avec **un canal par notification**, est lue comme elle était voulue :
+`discord` devient la case Discord cochée, `none` aucune case. Rien ne se perd, et rien ne change tant que vous
+n'enregistrez pas depuis Paramètres (voir [Configuration](configuration.md#notifications)).
 
 Les textes sont écrits dans la langue des messages choisie dans **Paramètres**, section Votre BDE.
 

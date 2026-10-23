@@ -3,7 +3,17 @@ import type { NotificationAdapter, NotificationMessage, SendOutcome } from '../t
 import { setting } from '@/lib/settings/runtime';
 import { SMTP_TIMEOUTS } from '../timeouts';
 
-function smtpSettings() {
+/** The mail server, as the settings hold it or as the test of a server not saved yet gives it. */
+export interface SmtpConnection {
+  host: string;
+  port: number;
+  from: string;
+  user?: string;
+  password?: string;
+}
+
+function smtpSettings(given?: SmtpConnection): SmtpConnection {
+  if (given) return given;
   const host = setting('SMTP_HOST');
   const port = setting('SMTP_PORT');
   const from = setting('SMTP_FROM');
@@ -13,10 +23,19 @@ function smtpSettings() {
       'EmailAdapter: SMTP_HOST, SMTP_PORT and SMTP_FROM must be set in .env to send email notifications',
     );
   }
-  return { host, port: Number(port), from };
+  return {
+    host,
+    port: Number(port),
+    from,
+    user: setting('SMTP_USER') || undefined,
+    password: setting('SMTP_PASSWORD') || undefined,
+  };
 }
 
 export class EmailAdapter implements NotificationAdapter {
+  /** `smtp`: the server to use when it is not the one of the settings (the test of a channel not saved yet). */
+  constructor(private readonly smtp?: SmtpConnection) {}
+
   async send(message: NotificationMessage): Promise<void> {
     const [outcome] = await this.sendMany([message]);
     if (outcome && !outcome.ok) {
@@ -30,9 +49,9 @@ export class EmailAdapter implements NotificationAdapter {
    * other over it; one that fails (a refused address) does not stop the others.
    */
   async sendMany(messages: NotificationMessage[]): Promise<SendOutcome[]> {
-    let settings: ReturnType<typeof smtpSettings>;
+    let settings: SmtpConnection;
     try {
-      settings = smtpSettings();
+      settings = smtpSettings(this.smtp);
     } catch (error) {
       return messages.map(() => ({ ok: false, error }));
     }
@@ -53,9 +72,7 @@ export class EmailAdapter implements NotificationAdapter {
           host: settings.host,
           port: settings.port,
           secure: settings.port === 465,
-          auth: setting('SMTP_USER')
-            ? { user: setting('SMTP_USER'), pass: setting('SMTP_PASSWORD') }
-            : undefined,
+          auth: settings.user ? { user: settings.user, pass: settings.password } : undefined,
           pool: true,
           maxConnections: 1,
           ...SMTP_TIMEOUTS,
@@ -66,7 +83,7 @@ export class EmailAdapter implements NotificationAdapter {
           await transport.sendMail({
             from: settings.from,
             to: message.to,
-            subject: message.subject,
+            subject: email?.subject ?? message.subject,
             text: email?.text ?? message.body,
             ...(email && { html: email.html }),
             // Sent as the calendar part of the message, which mail clients turn into an "add to

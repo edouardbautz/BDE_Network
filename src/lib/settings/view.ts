@@ -4,7 +4,7 @@ import { logoVersionOf } from '@/lib/branding/storage';
 import { prisma } from '@/lib/prisma';
 import type { DraftView } from '@/lib/setup/draft';
 import { setting } from './runtime';
-import { channelOf } from './update';
+import { settingsMatrix } from './update';
 
 /**
  * The settings as the settings page shows them: the same shape as what the installer shows of its draft (the
@@ -29,10 +29,10 @@ export function settingsView(): DraftView {
     owners: config.auth.owners,
     events: config.modules.enabled.includes('events'),
     notifications: {
-      mode: channelOf(config),
-      // What is saved for a channel is kept when another one is chosen: switching back finds it again.
+      matrix: settingsMatrix(config),
       hasDiscordWebhook: Boolean(setting('DISCORD_WEBHOOK_URL')),
       hasSlackWebhook: Boolean(setting('SLACK_WEBHOOK_URL')),
+      hasSmtp: Boolean(setting('SMTP_HOST') && setting('SMTP_PORT') && setting('SMTP_FROM')),
       smtp: {
         host: setting('SMTP_HOST') ?? '',
         port: setting('SMTP_PORT') ?? '587',

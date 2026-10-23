@@ -1,5 +1,5 @@
 import { getConfig } from '@/config';
-import type { NotificationEvent } from '@/config/schema';
+import { channelsFor, type NotificationEvent } from '@/config/schema';
 import type { EmailModel } from './email-layout';
 import { resolveLogoUrl } from './sender';
 import type { SlackPayload } from './slack-blocks';
@@ -25,7 +25,7 @@ export async function withSlackBlocks(
   message: Omit<NotificationMessage, 'to'>,
   build: (brand: EmailModel['brand']) => SlackPayload,
 ): Promise<Omit<NotificationMessage, 'to'>> {
-  if (getConfig().notifications[event] !== 'slack') {
+  if (!channelsFor(getConfig(), event).includes('slack')) {
     return message;
   }
 

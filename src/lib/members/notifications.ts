@@ -1,4 +1,5 @@
 import { getConfig } from '@/config';
+import { channelsFor, type NotificationChannel } from '@/config/schema';
 import { deliver } from '@/lib/notifications/deliver';
 import { withRichMessage } from '@/lib/notifications/rich';
 import { getNotificationTranslate } from '@/lib/notifications/translate';
@@ -43,15 +44,20 @@ function appLink(locale: string, path = ''): string | null {
 }
 
 /** Who did it, for the channels whose messages say so (the cards of Discord and Slack). */
-function actorNameFor(channel: string, actorLogin: string | undefined): Promise<string | null> {
-  return channel === 'discord' || channel === 'slack' ? nameOf(actorLogin) : Promise.resolve(null);
+function actorNameFor(
+  channels: readonly NotificationChannel[],
+  actorLogin: string | undefined,
+): Promise<string | null> {
+  return channels.some((channel) => channel !== 'email')
+    ? nameOf(actorLogin)
+    : Promise.resolve(null);
 }
 
 /** A new account is waiting for approval: tells whoever can approve it. */
 export async function notifyMemberPending(userId: string): Promise<void> {
   try {
     const config = getConfig();
-    if (config.notifications.memberPending === 'none') return;
+    if (channelsFor(config, 'memberPending').length === 0) return;
 
     const member = await prisma.user.findUnique({
       where: { id: userId },
@@ -77,12 +83,12 @@ export async function notifyMemberPending(userId: string): Promise<void> {
   }
 }
 
-/** A request was approved: tells the member by email, or the team on a chat channel. */
+/** A request was approved: tells the member by email, and the team on the chat channels. */
 export async function notifyMemberApproved(userId: string, actorLogin?: string): Promise<void> {
   try {
     const config = getConfig();
-    const channel = config.notifications.memberApproved;
-    if (channel === 'none') return;
+    const channels = channelsFor(config, 'memberApproved');
+    if (channels.length === 0) return;
 
     const member = await prisma.user.findUnique({
       where: { id: userId },
@@ -100,19 +106,12 @@ export async function notifyMemberApproved(userId: string, actorLogin?: string):
 
     const locale = config.bde.defaultLocale;
     const t = await translate(locale);
-    const actorName = await actorNameFor(channel, actorLogin);
+    const actorName = await actorNameFor(channels, actorLogin);
     const roleName = member.role.name;
     const facts = { ...member, roleName, actorName };
     const message = await withRichMessage(
       'memberApproved',
-      buildApprovedMessage(
-        member,
-        roleName,
-        channel === 'email' ? 'member' : 'team',
-        t,
-        appLink(locale),
-        config.bde.name,
-      ),
+      buildApprovedMessage(member, roleName, t),
       {
         discord: () => buildMemberEmbed('approved', facts, t, appLink(locale, '/members')),
         email: (brand) => buildApprovedEmail(member, roleName, t, appLink(locale), brand, locale),
@@ -126,16 +125,16 @@ export async function notifyMemberApproved(userId: string, actorLogin?: string):
   }
 }
 
-/** A member was removed: a message in the team's chat channel, and nothing else. The removed
+/** A member was removed: a message in the team's chat channels, and nothing else. The removed
  * person is never emailed, so the `email` channel sends nothing for this event. */
 export async function notifyMemberRemoved(member: MemberFacts, actorLogin?: string): Promise<void> {
   try {
     const config = getConfig();
-    const channel = config.notifications.memberRemoved;
-    if (channel === 'none' || channel === 'email') return;
+    const channels = channelsFor(config, 'memberRemoved');
+    if (channels.length === 0) return;
 
     const t = await translate(config.bde.defaultLocale);
-    const facts = { ...member, actorName: await actorNameFor(channel, actorLogin) };
+    const facts = { ...member, actorName: await actorNameFor(channels, actorLogin) };
     const message = await withRichMessage('memberRemoved', buildRemovedMessage(member, t), {
       discord: () => buildMemberEmbed('removed', facts, t, null),
       slack: (brand) => buildMemberSlack('removed', facts, t, null, brand),

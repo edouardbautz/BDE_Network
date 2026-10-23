@@ -2,6 +2,7 @@ import { CalendarCheck, CircleCheck, CircleX, ClipboardCheck, Repeat } from 'luc
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { getConfig } from '@/config';
+import { channelsFor } from '@/config/schema';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { CategoryBadge } from '@/components/events/category-badge';
 import { EmptyState } from '@/components/galets/empty-state';
@@ -11,7 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Link } from '@/i18n/navigation';
 import { getEventsAccess } from '@/lib/events/access';
 import { resolveCategory } from '@/lib/events/categories';
-import { confirmationNotice } from '@/lib/events/confirmation-notice';
+import { chatNames, confirmationNotice } from '@/lib/events/confirmation-notice';
 import { formatDateTimeRange, formatLongDate } from '@/lib/events/format';
 import { readEventNotice } from '@/lib/events/notice';
 import { listProposals } from '@/lib/events/queries';
@@ -50,7 +51,7 @@ export default async function ReviewPage({
   const tRepeat = tRepeatSummary as unknown as RepeatTranslate;
   const config = getConfig();
   const timeZone = config.bde.timezone;
-  const channel = config.notifications.eventConfirmed;
+  const confirmationChannels = channelsFor(config, 'eventConfirmed');
 
   return (
     <>
@@ -80,15 +81,15 @@ export default async function ReviewPage({
                   const repeatSummary = summaryInputOf(event, timeZone);
                   const dates = resolveOccurrences(event, timeZone).filter((d) => !d.cancelled);
                   const first = dates[0];
-                  const notice = confirmationNotice(channel, event.confirmationNotifiedAt !== null);
-                  const noticeText =
-                    notice === 'notifyChat'
-                      ? t('detail.confirmDialog.notifyChat', {
-                          channel: channel === 'slack' ? 'Slack' : 'Discord',
-                        })
-                      : notice
-                        ? t(`detail.confirmDialog.${notice}`)
-                        : null;
+                  const notice = confirmationNotice(
+                    confirmationChannels,
+                    event.confirmationNotifiedAt !== null,
+                  );
+                  const noticeText = notice
+                    ? t(`detail.confirmDialog.${notice.key}`, {
+                        channels: chatNames(notice, locale),
+                      })
+                    : null;
                   const author = event.author?.fullName ?? event.authorLogin;
 
                   return (

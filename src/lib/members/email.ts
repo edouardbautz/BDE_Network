@@ -45,16 +45,22 @@ export function buildApprovedEmail(
 ): EmailContent {
   const lead = t('approved.memberIntro', { name: member.fullName });
 
-  return renderEmail({
-    lang: locale,
-    preheader: lead,
-    brand,
-    accent: hex(MEMBER_COLORS.approved),
-    eyebrow: t('embed.kind.approved'),
-    heading: t('approved.memberSubject', { bde: brand.name }),
-    lead,
-    fields: [{ label: t('embed.fields.role'), value: roleName }],
-    ...(appUrl && { action: { label: t('approved.memberLink'), url: appUrl } }),
-    footer: t('email.footerRequester', { bde: brand.name }),
-  });
+  const subject = t('approved.memberSubject', { bde: brand.name });
+
+  return {
+    ...renderEmail({
+      lang: locale,
+      preheader: lead,
+      brand,
+      accent: hex(MEMBER_COLORS.approved),
+      eyebrow: t('embed.kind.approved'),
+      heading: subject,
+      lead,
+      fields: [{ label: t('embed.fields.role'), value: roleName }],
+      ...(appUrl && { action: { label: t('approved.memberLink'), url: appUrl } }),
+      footer: t('email.footerRequester', { bde: brand.name }),
+    }),
+    // The mail speaks to the member; the chat channels, from the same notification, inform the team.
+    subject,
+  };
 }

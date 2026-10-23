@@ -141,7 +141,7 @@ développement, jamais en production.
 
 En développement, aucun e-mail ne sort de votre machine : la plateforme les envoie à
 [Mailpit](https://mailpit.axllent.org), qui les garde et les affiche sur <http://localhost:8025> (rendu HTML, version
-texte, fichier `.ics`, test de compatibilité des messageries). Mettez le canal d'une notification sur `email` dans
+texte, fichier `.ics`, test de compatibilité des messageries). Listez `email` pour une notification (`eventConfirmed: [email]`) dans
 votre `bde.config.local.yml`, puis redémarrez, et déclenchez-la (confirmez un événement, approuvez un membre…).
 `APP_URL=http://localhost:3000` dans `.env` fait apparaître le logo.
 
