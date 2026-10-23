@@ -1,0 +1,117 @@
+name: browsers stress
+
+# The journeys of qa/browsers/ played many times in one engine against a platform made by qa/platform.sh, to tell a journey that
+# fails one time in twenty from one that always passes. A journey that fails now and then is never "retried until green": it is
+# run here until it either holds for every round or shows what goes wrong (the trace and the screenshot of each failure are kept,
+# round by round, as an artifact). The rounds follow one another on the same platform, as the files of the real run do, so a
+# journey that leaves the platform changed shows in the round after. Run it by hand (Actions → browsers stress → Run workflow)
+# after touching a journey, the watcher or what they click; it also runs on a pull request that changes it. See "Browser tests
+# that fail now and then" in docs/architecture.md.
+on:
+  workflow_dispatch:
+    inputs:
+      engine:
+        description: The engine to play (chromium, firefox or webkit)
+        default: webkit
+      rounds:
+        description: How many times the files are played
+        default: '20'
+      files:
+        description: 'The files to play, separated by spaces (empty: every file of the engine)'
+        default: 'qa/browsers/owner.spec.ts qa/browsers/notifications.spec.ts qa/browsers/templates.spec.ts'
+  pull_request:
+    paths:
+      - '.github/workflows/browsers-stress.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  stress:
+    name: ${{ inputs.engine || 'webkit' }} (shard ${{ matrix.shard }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        # Each shard is a platform of its own, played ROUNDS times: a failure that comes one time in twenty is seen
+        # three times in sixty.
+        shard: [1, 2, 3]
+    env:
+      ENGINE: ${{ inputs.engine || 'webkit' }}
+      ROUNDS: ${{ inputs.rounds || '20' }}
+      FILES: ${{ inputs.files || 'qa/browsers/owner.spec.ts qa/browsers/notifications.spec.ts qa/browsers/templates.spec.ts' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Build the production image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          load: true
+          tags: bde-network
+          cache-from: type=gha,scope=qa-image
+          cache-to: type=gha,mode=max,scope=qa-image
+
+      - name: Start the platform with the QA dataset
+        run: sh qa/platform.sh up --image bde-network
+
+      - name: Install the browser
+        run: npx playwright install --with-deps "$ENGINE"
+
+      - name: Play the files, ${{ inputs.rounds || '20' }} times
+        run: |
+          eval "$(sh qa/platform.sh env)"
+          failures=0
+          mkdir -p "$RUNNER_TEMP/stress"
+          for round in $(seq 1 "$ROUNDS"); do
+            # Each round keeps its own traces and screenshots; the list reporter says which journey failed and how.
+            # (FILES is a list of words on purpose: it is typed by whoever starts the workflow, never run as a command.)
+            # shellcheck disable=SC2086
+            if CI=true PW_OUTPUT_DIR="$RUNNER_TEMP/stress/round-$round" npx playwright test -c qa/browsers \
+                --project="$ENGINE" --reporter=list $FILES > "$RUNNER_TEMP/round.log" 2>&1; then
+              echo "round $round: ok"
+            else
+              failures=$((failures + 1))
+              echo "round $round: FAILED"
+              grep -E '✘|Error:|exception:|request failed' "$RUNNER_TEMP/round.log" | head -8 | cut -c1-400
+              cp "$RUNNER_TEMP/round.log" "$RUNNER_TEMP/stress/round-$round.log"
+            fi
+          done
+          echo "$ENGINE: $((ROUNDS - failures)) of $ROUNDS rounds passed"
+          [ "$failures" = 0 ]
+
+      - name: Evidence of the failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stress-${{ inputs.engine || 'webkit' }}-${{ matrix.shard }}
+          path: ${{ runner.temp }}/stress
+          if-no-files-found: ignore
+
+      - name: Keep the logs of the platform
+        if: always()
+        run: sh qa/platform.sh logs > "$RUNNER_TEMP/platform.log" || true
+
+      - name: Keep the logs of the platform (upload)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stress-platform-logs-${{ inputs.engine || 'webkit' }}-${{ matrix.shard }}
+          path: ${{ runner.temp }}/platform.log
+          if-no-files-found: ignore
+
+      - name: Stop the platform
+        if: always()
+        run: sh qa/platform.sh down
