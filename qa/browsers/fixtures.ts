@@ -209,8 +209,10 @@ export const test = base.extend<Fixtures>({
       const trail: string[] = [];
       const started = Date.now();
       const note = (what: string) => {
+        // (the prefetches Next.js makes by the dozen when a page is drawn would push everything else out of the list)
+        if (/GET S*_rsc=/.test(what)) return;
         trail.push(`+${Date.now() - started}ms ${what}`);
-        if (trail.length > 24) trail.shift();
+        if (trail.length > 40) trail.shift();
       };
       const shown = (request: Request) =>
         `${request.method()} ${request

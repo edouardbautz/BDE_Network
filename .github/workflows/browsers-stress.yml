@@ -87,7 +87,7 @@ jobs:
             else
               failures=$((failures + 1))
               echo "round $round: FAILED"
-              grep -E '✘|Error:|exception:|request failed' "$RUNNER_TEMP/round.log" | head -8 | cut -c1-400
+              grep -E '✘|Error:|exception:|request failed' "$RUNNER_TEMP/round.log" | head -8 | cut -c1-2500
               cp "$RUNNER_TEMP/round.log" "$RUNNER_TEMP/stress/round-$round.log"
             fi
           done
