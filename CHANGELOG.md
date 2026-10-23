@@ -6,12 +6,9 @@ All notable changes to this project are written here, in English. Format based o
 
 ## [Unreleased]
 
-### Added
+## [1.5.0] - 2026-10-23
 
-- **Notifications look like the platform.** The e-mails use the grounds, inks and rounded corners of the interface (light and dark), the
-  button is a pill in the **color of the BDE** worked out as on the platform (the bar keeps the color of what the message is about),
-  and the cards of a request, an approval and a removal take the warning, success and danger colors of the interface. The wording of an
-  access request is one word everywhere: it is **approved** (or refused), no longer sometimes "validated".
+### Added
 
 - **A notification can go through several channels at once.** Each type of notification (an access request, a confirmed event, a
   reminder, a proposal…) now has a **list** of channels among Discord, Slack and e-mail, instead of one: Discord **and** e-mail for the
@@ -25,7 +22,6 @@ All notable changes to this project are written here, in English. Format based o
   it blocks the action that caused the notification, and the logs name the channel that failed.
 - **The test message tests one channel, and shows what it will look like.** One test per channel, through what is typed in its panel
   (saved or not), sends the **real card or e-mail** with an invented event marked "Test message", with the BDE's name, color and logo.
-
 - **The update suite starts from 1.3.0 and 1.4.0 too**, with the data of a board that has used what they brought: roles that only propose, that
   validate and that manage the shared calendar; series with advanced rules (every two weeks on Monday and Wednesday ten times across the change of
   clock, the second Saturday, the last day of the month, every year); a series cut in two with a cancelled date and a moved one; a proposal, the
@@ -35,8 +31,12 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Changed
 
+- **Notifications look like the platform.** The e-mails use the grounds, inks and rounded corners of the interface (light and dark), the
+  button is a pill in the **color of the BDE** worked out as on the platform (the bar keeps the color of what the message is about),
+  and the cards of a request, an approval and a removal take the warning, success and danger colors of the interface. The pictures of the
+  documentation show them.
+- The wording of an access request is one word everywhere: it is **approved** (or refused), no longer sometimes "validated" or "declined".
 - The plain text of a member removal now says who removed them ("… was removed from the BDE by Paula Martin."), as the card already did.
-
 - `notifications.<type>` of `bde.config.yml` and of the stored settings is a list (`[discord, email]`; `[]` for nothing). **The old
   form is still read**: `"discord"` is `[discord]`, `"none"` and a missing key are `[]`. Nothing is migrated or rewritten by the update
   (the update suite checks that each notification keeps its channel, from 1.0.0 to 1.4.0); the lists are written the next time the
@@ -861,7 +861,8 @@ Initial version (never tagged): the platform's foundation.
 - Docker Compose (production and development with hot reload), Dockerfile.
 - GitHub Actions CI (lint, format, typecheck, build, test) on ubuntu-latest and windows-latest.
 
-[Unreleased]: https://github.com/edouardbautz/BDE_Network/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/edouardbautz/BDE_Network/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/edouardbautz/BDE_Network/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/edouardbautz/BDE_Network/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/edouardbautz/BDE_Network/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/edouardbautz/BDE_Network/compare/v1.1.0...v1.2.0
