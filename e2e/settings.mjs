@@ -337,9 +337,18 @@ try {
 
   // 3b. the notifications: a table of boxes, a column that can be ticked once its channel is set up, several channels at once
   const SLACK = 'https://hooks.slack.com/services/T123/B456/e2eslacksecret';
-  const ticked = () => page.$$eval('input[type="checkbox"]:checked', (boxes) => boxes.length);
-  const enabledBoxes = () =>
-    page.$$eval('input[type="checkbox"]:not(:disabled)', (boxes) => boxes.length);
+  // the boxes of the notifications form only: other sections of the page have boxes of their own
+  const countBoxes = (selector) =>
+    page.evaluate(
+      (wanted) =>
+        document
+          .querySelector('#setup-notification-channels')
+          .closest('form')
+          .querySelectorAll(wanted).length,
+      selector,
+    );
+  const ticked = () => countBoxes('input[type="checkbox"]:checked');
+  const enabledBoxes = () => countBoxes('input[type="checkbox"]:not(:disabled)');
   const reloadNotifications = async () => {
     await page.reload({ waitUntil: 'networkidle0' });
     await waitText('Qui est prévenu, et où');
