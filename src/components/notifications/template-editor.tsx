@@ -564,8 +564,8 @@ export function TemplateEditor({ data, initialScope, notice, testable }: Templat
                   choices={choices}
                   error={errorFor('title')}
                 />
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor={`${prefix}-color-auto`}>{t('fields.color')}</Label>
+                <fieldset className="flex flex-col gap-2">
+                  <legend className="text-body-strong mb-1">{t('fields.color')}</legend>
                   <div className="flex flex-wrap items-center gap-3">
                     <Switch
                       id={`${prefix}-color-auto`}
@@ -573,9 +573,8 @@ export function TemplateEditor({ data, initialScope, notice, testable }: Templat
                       onCheckedChange={(automatic) =>
                         edit((content) => withColor(content, automatic ? null : data.bde.accent))
                       }
-                      aria-label={t('fields.colorAutomatic')}
                     />
-                    <span className="text-body">{t('fields.colorAutomatic')}</span>
+                    <Label htmlFor={`${prefix}-color-auto`}>{t('fields.colorAutomatic')}</Label>
                     {colour !== undefined && (
                       <input
                         type="color"
@@ -593,7 +592,7 @@ export function TemplateEditor({ data, initialScope, notice, testable }: Templat
                       {errorFor('color')}
                     </p>
                   )}
-                </div>
+                </fieldset>
               </section>
 
               {canHaveAbove && (
