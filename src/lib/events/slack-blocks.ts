@@ -14,7 +14,7 @@ import type { TemplateContext } from '@/lib/notifications/templates/types';
 import { truncate } from '@/lib/notifications/text';
 import { KIND_LABEL_KEY, actionLabelKey, type EventCardKind } from './card-kind';
 import { formatDateTime, whenLine, type NotificationEventData, type Translate } from './messages';
-import { eventValues, templateTypeOf } from './template-values';
+import { eventAbove, eventValues, templateTypeOf } from './template-values';
 import { isSameLocalDay } from './time';
 
 /** How much of the event's description a message shows: it is a notice, the page has the rest. */
@@ -156,22 +156,25 @@ ${value}`,
     }
   }
 
+  const buttonUrl = template?.button?.url ?? data.url;
   const buttonLabel = say(template?.button?.label ?? t(actionLabelKey(kind, 'slack')));
   const blocks: SlackBlock[] = [
     { type: 'context', elements: [{ type: 'mrkdwn', text: `*${kindLabel}*` }] },
     { type: 'header', text: { type: 'plain_text', text: named(template?.emoji, title) } },
     ...top,
     ...(columns.length > 0 ? [{ type: 'section' as const, fields: columns }] : []),
-    ...(data.url && template?.button?.enabled !== false
-      ? [slackButton(buttonLabel, data.url)]
+    ...(buttonUrl && template?.button?.enabled !== false
+      ? [slackButton(buttonLabel, buttonUrl)]
       : []),
     slackFooter(brand, template?.footer !== undefined ? say(template.footer) : undefined),
   ];
 
+  const above = eventAbove('slack', kind, data, t, locale, timeZone, context);
   const where = data.location ? ` · ${truncate(data.location, 60)}` : '';
   return {
     fallback: `${kindLabel} : ${truncate(title, 120)} — ${whenLine(data, locale, timeZone)}${where}`,
     color: normalizeHex(template?.color ?? data.categoryColor),
+    ...(above && { above: above.text }),
     blocks,
   };
 }

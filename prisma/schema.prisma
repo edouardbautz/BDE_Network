@@ -61,11 +61,13 @@ model User {
   updatedAt   DateTime   @updatedAt
   lastLoginAt DateTime?
 
-  auditLogEntries      AuditLog[]                @relation("AuditLogActor")
-  authoredEvents       Event[]                   @relation("EventAuthor")
-  assignedEvents       EventAssignee[]
-  assignedOccurrences  EventOccurrenceAssignee[]
-  cancelledOccurrences EventCancellation[]
+  auditLogEntries              AuditLog[]                    @relation("AuditLogActor")
+  authoredEvents               Event[]                       @relation("EventAuthor")
+  assignedEvents               EventAssignee[]
+  assignedOccurrences          EventOccurrenceAssignee[]
+  cancelledOccurrences         EventCancellation[]
+  notificationTemplates        NotificationTemplate[]        @relation("NotificationTemplateEditor")
+  notificationTemplateVersions NotificationTemplateVersion[] @relation("NotificationTemplateVersionAuthor")
 
   /// Secret token of this member's personal .ics subscription feed (events
   /// module). Regenerable from the profile page; null until first generated.
@@ -109,13 +111,13 @@ enum EventStatus {
 /// Authorship follows the AuditLog pattern: authorLogin is plain text so the
 /// history survives the author's account being removed.
 model Event {
-  id                     String          @id @default(cuid())
+  id                     String      @id @default(cuid())
   title                  String
   description            String?
   location               String?
   /// Key of a category defined in bde.config.yml (events.categories)
   categoryKey            String
-  status                 EventStatus     @default(DRAFT)
+  status                 EventStatus @default(DRAFT)
   /// UTC. For a series, the first occurrence.
   startsAt               DateTime
   /// UTC. endsAt - startsAt is the duration of every occurrence.
@@ -144,9 +146,9 @@ model Event {
   refusedAt              DateTime?
   authorLogin            String
   authorId               String?
-  author                 User?           @relation("EventAuthor", fields: [authorId], references: [id], onDelete: SetNull)
-  createdAt              DateTime        @default(now())
-  updatedAt              DateTime        @updatedAt
+  author                 User?       @relation("EventAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
 
   assignees     EventAssignee[]
   cancellations EventCancellation[]
@@ -269,4 +271,73 @@ model PlatformSettings {
   source      String
   installedAt DateTime
   updatedAt   DateTime @updatedAt
+}
+
+/// What a BDE changed of one notification: the current version. Without a row for a (type, scope) the notification is the
+/// platform's own (src/lib/notifications/templates). The content is validated by src/lib/notifications/templates/schema.ts when it
+/// is saved and again when it is used: a content that is no longer valid is not used, the platform's own is sent instead.
+model NotificationTemplate {
+  id                 String    @id @default(cuid())
+  /// A key of `notifications` of the configuration: eventConfirmed, eventReminder, memberPending...
+  type               String
+  /// "all" (shared by every channel) or one channel: "discord", "slack", "email". A CHECK of the migration.
+  scope              String
+  content            Json
+  /// Counts the saves of this (type, scope) from 1; NotificationTemplateVersion keeps each.
+  version            Int
+  /// The revision of the platform's own notification this was written over (templates/revisions.ts): when the
+  /// platform's changes, the editor says so, and what the BDE wrote is never replaced.
+  basedOnRevision    Int
+  updatedAt          DateTime  @updatedAt
+  /// Plain text, like every author: the history stays readable after the account is removed.
+  updatedByLogin     String
+  updatedById        String?
+  updatedBy          User?     @relation("NotificationTemplateEditor", fields: [updatedById], references: [id], onDelete: SetNull)
+  /// The last time a send found this content unusable and sent the platform's own instead, and why: for the editor to say.
+  lastFallbackAt     DateTime?
+  lastFallbackReason String?
+
+  @@unique([type, scope])
+}
+
+/// Append-only history of NotificationTemplate: one row for each save, reset or restore, never edited. At most 50 are kept
+/// for a (type, scope).
+model NotificationTemplateVersion {
+  id              String   @id @default(cuid())
+  type            String
+  scope           String
+  version         Int
+  /// Null for a reset: back to the platform's own.
+  content         Json?
+  basedOnRevision Int
+  /// "save", "reset" or "restore:<version>".
+  action          String
+  authorLogin     String
+  authorId        String?
+  author          User?    @relation("NotificationTemplateVersionAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt       DateTime @default(now())
+
+  @@unique([type, scope, version])
+  @@index([type, scope, createdAt])
+  @@index([authorId])
+}
+
+/// A person, a role or a group of Discord or Slack that a template can mention, under a name a BDE can read: the
+/// template says `{@role:bureau}`, this row says which role that is. Without it nobody could write a mention correctly.
+model NotificationMention {
+  id             String   @id @default(cuid())
+  /// The name templates use: lower-case words and numbers joined by dashes. A CHECK of the migration.
+  key            String
+  /// "discord" or "slack". A CHECK of the migration.
+  platform       String
+  /// "role" or "user" on Discord, "group" or "user" on Slack. A CHECK of the migration.
+  kind           String
+  /// What the BDE calls it: "Bureau".
+  label          String
+  /// The identifier of the platform: a Discord snowflake, a Slack U… or S… identifier.
+  externalId     String
+  createdByLogin String
+  createdAt      DateTime @default(now())
+
+  @@unique([platform, key])
 }

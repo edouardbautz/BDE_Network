@@ -5,12 +5,15 @@ import { withEmailContent } from './email-card';
 import type { EmailModel } from './email-layout';
 import { withSlackBlocks } from './slack-card';
 import type { SlackPayload } from './slack-blocks';
+import type { RenderedAbove } from './templates/mentions';
 import type { EmailContent, NotificationMessage } from './types';
 
 /** How each channel presents a notification. Only the builders of the channels the event is set to are ever called:
  * e-mail, Discord and Slack each pay only for their own. */
 export interface RichBuilders {
   discord?: () => DiscordEmbed;
+  /** The message above the Discord card, when the template has one (the only text that may ping). */
+  discordAbove?: () => RenderedAbove | undefined;
   email?: (brand: EmailModel['brand']) => EmailContent;
   slack?: (brand: EmailModel['brand']) => SlackPayload;
 }
@@ -41,11 +44,13 @@ async function isolated(
 export async function withRichMessage(
   event: NotificationEvent,
   message: Plain,
-  { discord, email, slack }: RichBuilders,
+  { discord, discordAbove, email, slack }: RichBuilders,
 ): Promise<Plain> {
   let rich = message;
   if (discord) {
-    rich = await isolated(event, 'Discord', rich, () => withDiscordCard(event, rich, discord));
+    rich = await isolated(event, 'Discord', rich, () =>
+      withDiscordCard(event, rich, discord, discordAbove),
+    );
   }
   if (email) {
     rich = await isolated(event, 'e-mail', rich, () => withEmailContent(event, rich, email));

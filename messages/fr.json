@@ -749,6 +749,12 @@
           "description": "Approuver ou refuser les demandes d'accès, retirer des membres et leur attribuer un rôle."
         }
       },
+      "notifications": {
+        "templates": {
+          "label": "Personnaliser les notifications",
+          "description": "Changer ce que disent les cartes, les messages Slack et les e-mails et leur apparence, et choisir qui ils mentionnent."
+        }
+      },
       "roles": {
         "manage": {
           "label": "Gérer les rôles",

@@ -755,6 +755,12 @@
           "description": "Create, edit and delete roles, and choose the rights of each."
         }
       },
+      "notifications": {
+        "templates": {
+          "label": "Customise notifications",
+          "description": "Change what the cards, Slack messages and e-mails say and how they look, and choose whom they mention."
+        }
+      },
       "events": {
         "view": {
           "label": "View events",

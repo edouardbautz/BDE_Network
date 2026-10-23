@@ -1,0 +1,150 @@
+[
+  [
+    "mentions: what a variable stands for is not defused",
+    "src/lib/notifications/templates/mentions.ts",
+    "parts.push({ text: defuse(values[match[4]] ?? ''), cuttable: true });",
+    "parts.push({ text: values[match[4]] ?? '', cuttable: true });",
+    [
+      "src/lib/notifications/templates/mentions.test.ts",
+      "src/lib/notifications/templates/reach.test.ts"
+    ]
+  ],
+  [
+    "mentions: a mention only typed as text is not defused",
+    "src/lib/notifications/templates/mentions.ts",
+    "if (index > last) parts.push({ text: defuse(source.slice(last, index)), cuttable: true });",
+    "if (index > last) parts.push({ text: source.slice(last, index), cuttable: true });",
+    [
+      "src/lib/notifications/templates/mentions.test.ts",
+      "src/lib/notifications/templates/reach.test.ts"
+    ]
+  ],
+  [
+    "mentions: a name the directory does not know still pings",
+    "src/lib/notifications/templates/mentions.ts",
+    "if (!entry || entry.platform !== platform || entry.kind !== token.kind) return undefined;",
+    "if (!entry) return undefined;",
+    [
+      "src/lib/notifications/templates/mentions.test.ts",
+      "src/lib/notifications/templates/reach.test.ts"
+    ]
+  ],
+  [
+    "mentions: @here and @everyone do not say they ping",
+    "src/lib/notifications/templates/mentions.ts",
+    "if (token.kind === 'everyone' || token.kind === 'here') mentions.everyone = true;",
+    "if (token.kind === 'everyone' || token.kind === 'here') mentions.everyone = false;",
+    [
+      "src/lib/notifications/templates/mentions.test.ts",
+      "src/lib/notifications/templates/reach.test.ts"
+    ]
+  ],
+  [
+    "Discord adapter: everyone is always allowed",
+    "src/lib/notifications/adapters/discord.ts",
+    "parse: above.mentions.everyone ? ['everyone'] : [],",
+    "parse: ['everyone'],",
+    ["src/lib/notifications/adapters/webhooks.test.ts"]
+  ],
+  [
+    "Discord adapter: the roles of the template are not allowed",
+    "src/lib/notifications/adapters/discord.ts",
+    "roles: above.mentions.roles,",
+    "roles: [],",
+    ["src/lib/notifications/adapters/webhooks.test.ts"]
+  ],
+  [
+    "schema: a mention is accepted in any text",
+    "src/lib/notifications/templates/schema.ts",
+    "if (value.includes('{@')) issue(path, 'mentionNotAllowed');",
+    "",
+    ["src/lib/notifications/templates/schema.test.ts"]
+  ],
+  [
+    "schema: a button may lead to an address that is not https",
+    "src/lib/notifications/templates/schema.ts",
+    "url.protocol === 'https:' && url.hostname.includes('.')",
+    "(url.protocol === 'https:' || url.protocol === 'http:') && url.hostname.includes('.')",
+    ["src/lib/notifications/templates/schema.test.ts"]
+  ],
+  [
+    "schema: the template for all channels may mention a role",
+    "src/lib/notifications/templates/schema.ts",
+    "all: new Set(['everyone', 'here']),",
+    "all: new Set(['everyone', 'here', 'role', 'user', 'group']),",
+    ["src/lib/notifications/templates/schema.test.ts"]
+  ],
+  [
+    "service: a save over a newer version goes through",
+    "src/lib/notifications/templates/service.ts",
+    "if ((current?.version ?? 0) !== input.expectedVersion) return fail('conflict');",
+    "",
+    ["src/lib/notifications/templates/service.test.ts"]
+  ],
+  [
+    "service: the history grows without end",
+    "src/lib/notifications/templates/service.ts",
+    "version: { lte: input.version - HISTORY_KEPT }",
+    "version: { lte: input.version - 100000 }",
+    ["src/lib/notifications/templates/service.test.ts"]
+  ],
+  [
+    "service: somebody a template mentions can be taken away",
+    "src/lib/notifications/templates/service.ts",
+    "if (users.length > 0) return fail('mentionInUse', { detail: users.join(', ') });",
+    "",
+    ["src/lib/notifications/templates/service.test.ts"]
+  ],
+  [
+    "service: a channel customised from the shared template keeps the message above an e-mail",
+    "src/lib/notifications/templates/service.ts",
+    "if (channel === 'email') delete copy.above;",
+    "",
+    ["src/lib/notifications/templates/service.test.ts"]
+  ],
+  [
+    "service: a version number is reused after a reset",
+    "src/lib/notifications/templates/service.ts",
+    "return (last._max.version ?? 0) + 1;",
+    "return 1;",
+    ["src/lib/notifications/templates/service.test.ts"]
+  ],
+  [
+    "resolve: a template that is not valid is used all the same",
+    "src/lib/notifications/templates/resolve.ts",
+    "if (unusable) {",
+    "if (false as boolean) {",
+    ["src/lib/notifications/templates/resolve.test.ts"]
+  ],
+  [
+    "resolve: a build that fails with the template is not built again without it",
+    "src/lib/notifications/templates/resolve.ts",
+    "return make({ ...base, mentions: directory });\n      }\n    },",
+    "throw error;\n      }\n    },",
+    ["src/lib/notifications/templates/resolve.test.ts"]
+  ],
+  [
+    "catalog: the shared template reaches the e-mail of an approved member",
+    "src/lib/notifications/templates/catalog.ts",
+    "return type === 'memberApproved' ? ['discord', 'slack'] : channelsOfType(type);",
+    "return channelsOfType(type);",
+    [
+      "src/lib/notifications/templates/resolve.test.ts",
+      "src/lib/notifications/templates/apply.test.ts"
+    ]
+  ],
+  [
+    "access: anybody may customise the notifications",
+    "src/lib/notifications/templates/access.ts",
+    "return session && can(session.user, NOTIFICATIONS_TEMPLATES) ? session : null;",
+    "return session ?? null;",
+    ["src/lib/notifications/templates/access.test.ts"]
+  ],
+  [
+    "export: every account’s templates are exported",
+    "src/app/api/me/export/route.ts",
+    "where: { updatedById: userId },",
+    "where: {},",
+    ["src/app/api/me/export/route.test.ts"]
+  ]
+]

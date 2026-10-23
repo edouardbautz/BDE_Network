@@ -1,6 +1,7 @@
 import { getConfig } from '@/config';
 import { channelsFor, type NotificationEvent } from '@/config/schema';
 import type { DiscordEmbed } from './discord-embed';
+import type { RenderedAbove } from './templates/mentions';
 import { discordSender, type DiscordSender } from './sender';
 import type { NotificationMessage } from './types';
 
@@ -30,6 +31,7 @@ export async function withDiscordCard(
   event: NotificationEvent,
   message: Omit<NotificationMessage, 'to'>,
   card: () => DiscordEmbed,
+  above?: () => RenderedAbove | undefined,
 ): Promise<Omit<NotificationMessage, 'to'>> {
   if (!channelsFor(getConfig(), event).includes('discord')) {
     return message;
@@ -40,6 +42,7 @@ export async function withDiscordCard(
     ...message,
     discord: {
       embeds: [signCard(card(), sender)],
+      ...(above && { above: above() }),
       username: sender.username,
       avatarUrl: sender.avatarUrl,
     },

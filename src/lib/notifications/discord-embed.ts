@@ -6,6 +6,7 @@
  * What each notification says lives next to it (events/discord-embed.ts, members/discord-embed.ts).
  */
 
+import type { RenderedAbove } from './templates/mentions';
 import { truncate } from './text';
 
 export interface DiscordEmbedField {
@@ -34,6 +35,8 @@ export interface DiscordEmbed {
 /** What is posted to the webhook: the cards, and who they appear to come from. */
 export interface DiscordPayload {
   embeds: DiscordEmbed[];
+  /** The message above the cards, with the mentions the BDE's template spells: the only text that may ping (see `templates/mentions.ts`). */
+  above?: RenderedAbove;
   /** The sender's name (the BDE's), overriding the webhook's own. */
   username?: string;
   /** The sender's picture: a public PNG, JPEG, GIF or WebP, never an SVG. */

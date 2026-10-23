@@ -9,6 +9,7 @@ import { PERSONAS, type PersonaKey, type PlatformVariant } from '../personas';
 export type Right =
   | 'members.manage'
   | 'roles.manage'
+  | 'notifications.templates'
   | 'events.view'
   | 'events.propose'
   | 'events.validate'
@@ -17,6 +18,7 @@ export type Right =
 const EVERY_RIGHT: readonly Right[] = [
   'members.manage',
   'roles.manage',
+  'notifications.templates',
   'events.view',
   'events.propose',
   'events.validate',

@@ -13,7 +13,7 @@ import type { TemplateContext } from '@/lib/notifications/templates/types';
 import { truncate } from '@/lib/notifications/text';
 import type { Translate } from '@/lib/notifications/translate';
 import type { MemberFacts } from './messages';
-import { memberTemplateType, memberValues } from './template-values';
+import { memberAbove, memberTemplateType, memberValues } from './template-values';
 
 export type MemberSlackKind = 'pending' | 'approved' | 'removed';
 
@@ -95,7 +95,8 @@ ${text(value, 400)}`,
 
   const kindLabel = say(template?.eyebrow ?? t(`embed.kind.${kind}`));
   const title = say(template?.title ?? '{name}');
-  const showButton = (template?.button?.enabled ?? kind === 'pending') && membersUrl;
+  const buttonUrl = template?.button?.url ?? membersUrl;
+  const showButton = (template?.button?.enabled ?? kind === 'pending') && buttonUrl;
   const buttonLabel = say(
     template?.button?.label ??
       t(kind === 'pending' ? 'slack.pendingAction' : 'embed.action.members'),
@@ -109,13 +110,15 @@ ${text(value, 400)}`,
     },
     ...top,
     { type: 'section', fields },
-    ...(showButton ? [slackButton(buttonLabel, membersUrl)] : []),
+    ...(showButton ? [slackButton(buttonLabel, buttonUrl)] : []),
     slackFooter(brand, template?.footer !== undefined ? say(template.footer) : undefined),
   ];
 
+  const above = memberAbove('slack', member, membersUrl, context);
   return {
     fallback: `${kindLabel} : ${truncate(title, 120)}`,
     color: normalizeHex(template?.color ?? `#${MEMBER_COLORS[kind].toString(16).padStart(6, '0')}`),
+    ...(above && { above: above.text }),
     blocks,
   };
 }

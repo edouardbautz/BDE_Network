@@ -13,6 +13,8 @@ import { eventInclude } from './include';
 import { resolveOccurrences, seriesKeyOf, type ResolvedOccurrence } from './series';
 import { summarizeRepeat, summaryInputOf } from './repeat-summary';
 import { buildEventSlack } from './slack-blocks';
+import { eventAbove } from './template-values';
+import { templatesFor } from '@/lib/notifications/templates/resolve';
 import {
   buildConfirmationMessage,
   buildReviewMessage,
@@ -154,22 +156,36 @@ async function announce(
     updatedAt: date.updatedAt,
   }));
 
+  const templates = await templatesFor('eventConfirmed');
   const message = await withRichMessage(
     'eventConfirmed',
     buildConfirmationMessage(data, translate, locale, timeZone),
     {
-      discord: () => buildEventEmbed('confirmed', data, translate, timeZone),
-      email: (brand) =>
-        buildEventEmail(
-          'confirmed',
-          data,
-          translate,
-          locale,
-          timeZone,
-          brand,
-          buildEventIcs(seriesKeyOf(event), calendarDates, config.bde.name),
+      discord: () =>
+        templates.build('discord', (context) =>
+          buildEventEmbed('confirmed', data, translate, timeZone, undefined, context),
         ),
-      slack: (brand) => buildEventSlack('confirmed', data, translate, locale, timeZone, brand),
+      discordAbove: () =>
+        templates.build('discord', (context) =>
+          eventAbove('discord', 'confirmed', data, translate, locale, timeZone, context),
+        ),
+      email: (brand) =>
+        templates.build('email', (context) =>
+          buildEventEmail(
+            'confirmed',
+            data,
+            translate,
+            locale,
+            timeZone,
+            brand,
+            buildEventIcs(seriesKeyOf(event), calendarDates, config.bde.name),
+            context,
+          ),
+        ),
+      slack: (brand) =>
+        templates.build('slack', (context) =>
+          buildEventSlack('confirmed', data, translate, locale, timeZone, brand, context),
+        ),
     },
   );
 
@@ -320,13 +336,27 @@ async function announceReview(
       },
     };
     const translate = await getTranslate(locale);
+    const templates = await templatesFor(key);
     const message = await withRichMessage(
       key,
       buildReviewMessage(kind, data, translate, locale, timeZone),
       {
-        discord: () => buildEventEmbed(kind, data, translate, timeZone),
-        email: (brand) => buildEventEmail(kind, data, translate, locale, timeZone, brand),
-        slack: (brand) => buildEventSlack(kind, data, translate, locale, timeZone, brand),
+        discord: () =>
+          templates.build('discord', (context) =>
+            buildEventEmbed(kind, data, translate, timeZone, undefined, context),
+          ),
+        discordAbove: () =>
+          templates.build('discord', (context) =>
+            eventAbove('discord', kind, data, translate, locale, timeZone, context),
+          ),
+        email: (brand) =>
+          templates.build('email', (context) =>
+            buildEventEmail(kind, data, translate, locale, timeZone, brand, undefined, context),
+          ),
+        slack: (brand) =>
+          templates.build('slack', (context) =>
+            buildEventSlack(kind, data, translate, locale, timeZone, brand, context),
+          ),
       },
     );
 

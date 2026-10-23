@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { renderAbove, directoryKey, type MentionDirectory } from '../templates/mentions';
 import { DiscordAdapter } from './discord';
 import { SlackAdapter } from './slack';
 
@@ -109,6 +110,75 @@ describe('DiscordAdapter with cards', () => {
     });
 
     expect(posted().allowed_mentions).toEqual({ parse: [] });
+  });
+
+  describe('with a message above the cards, written by the BDE', () => {
+    const directory: MentionDirectory = {
+      [directoryKey('discord', 'bureau')]: {
+        platform: 'discord',
+        kind: 'role',
+        label: 'Bureau',
+        externalId: '123456789012345678',
+      },
+    };
+
+    it('posts it as the content of the message, and allows exactly the mentions it spells', async () => {
+      await new DiscordAdapter().send({
+        subject: 's',
+        body: 'b',
+        discord: {
+          embeds: [card()],
+          above: renderAbove('{@here} {@role:bureau} news', {}, 'discord', directory),
+        },
+      });
+
+      expect(posted().content).toBe('@here <@&123456789012345678> news');
+      expect(posted().allowed_mentions).toEqual({
+        parse: ['everyone'],
+        roles: ['123456789012345678'],
+        users: [],
+      });
+    });
+
+    it('allows nobody when the message above mentions nobody, and no everyone unless it says so', async () => {
+      await new DiscordAdapter().send({
+        subject: 's',
+        body: 'b',
+        discord: {
+          embeds: [card()],
+          above: renderAbove('hello {@role:bureau}', {}, 'discord', directory),
+        },
+      });
+
+      expect(posted().allowed_mentions).toEqual({
+        parse: [],
+        roles: ['123456789012345678'],
+        users: [],
+      });
+    });
+
+    it('still defuses every text of the card itself, mentions of the template or not', async () => {
+      await new DiscordAdapter().send({
+        subject: 's',
+        body: 'b',
+        discord: {
+          embeds: [card({ title: '@everyone <@123>', description: '<@&456> @here' })],
+          above: renderAbove('{@everyone}', {}, 'discord', directory),
+        },
+      });
+
+      const [embed] = posted().embeds as Array<{ title: string; description: string }>;
+      expect(embed?.title).not.toContain('@everyone');
+      expect(embed?.title).not.toContain('<@123>');
+      expect(embed?.description).not.toContain('<@&456>');
+      expect(embed?.description).not.toContain('@here');
+      expect(posted().content).toBe('@everyone');
+    });
+
+    it('has no content without it: the cards alone, as always', async () => {
+      await new DiscordAdapter().send({ subject: 's', body: 'b', discord: { embeds: [card()] } });
+      expect(posted()).not.toHaveProperty('content');
+    });
   });
 
   it('defuses mentions in every text of the card: title, description, fields, footer and sender name', async () => {
@@ -268,6 +338,20 @@ describe('SlackAdapter with cards', () => {
     expect(posted()).not.toHaveProperty('text');
     expect(posted()).not.toHaveProperty('blocks');
     expect(JSON.stringify(posted())).not.toContain('Sujet');
+  });
+
+  it('posts the message the BDE wrote above the card as the text, with its mentions, and nothing else of its own', async () => {
+    await send(
+      card({
+        above: renderAbove('{@channel} {@here} news {title}', { title: '<!everyone>' }, 'slack')
+          ?.text,
+      }),
+    );
+
+    expect(posted().text).toBe('<!channel> <!here> news &lt;!everyone&gt;');
+    expect(Object.keys(posted()).sort()).toEqual(['attachments', 'text']);
+    // what is in the card is still made harmless
+    expect(JSON.stringify(attachments())).not.toContain('<!channel>');
   });
 
   it('puts the summary for notifications in the attachment fallback', async () => {

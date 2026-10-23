@@ -129,7 +129,8 @@ ${data.review.comment}`;
 
   const eyebrow = say(template?.eyebrow ?? t(KIND_LABEL_KEY[kind]));
   const actionLabel = say(template?.button?.label ?? t(actionLabelKey(kind, 'email')));
-  const showButton = data.url && template?.button?.enabled !== false;
+  const buttonUrl = template?.button?.url ?? data.url;
+  const showButton = buttonUrl && template?.button?.enabled !== false;
   const note =
     template?.note !== undefined ? say(template.note) : ics ? t('email.calendarNote') : '';
   const rendered = renderEmail({
@@ -145,7 +146,7 @@ ${data.review.comment}`;
     ...(lead && { lead }),
     ...(paragraphs.length > 0 && { paragraphs }),
     fields,
-    ...(showButton && data.url && { action: { label: actionLabel, url: data.url } }),
+    ...(showButton && { action: { label: actionLabel, url: buttonUrl } }),
     ...(note && { note }),
     footer:
       template?.footer !== undefined

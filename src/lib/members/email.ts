@@ -56,7 +56,8 @@ export function buildPendingEmail(
     }
   }
 
-  const showButton = (template?.button?.enabled ?? true) && membersUrl;
+  const buttonUrl = template?.button?.url ?? membersUrl;
+  const showButton = (template?.button?.enabled ?? true) && buttonUrl;
   const rendered = renderEmail({
     lang: locale,
     preheader:
@@ -72,7 +73,7 @@ export function buildPendingEmail(
     ...(member.photoUrl && { avatarUrl: member.photoUrl }),
     fields,
     ...(showButton && {
-      action: { label: say(template?.button?.label ?? t('pending.link')), url: membersUrl },
+      action: { label: say(template?.button?.label ?? t('pending.link')), url: buttonUrl },
     }),
     ...(template?.note !== undefined && template.note !== '' && { note: say(template.note) }),
     footer:
@@ -130,7 +131,8 @@ export function buildApprovedEmail(
     template?.subject !== undefined
       ? say(template.subject)
       : t('approved.memberSubject', { bde: brand.name });
-  const showButton = (template?.button?.enabled ?? true) && appUrl;
+  const buttonUrl = template?.button?.url ?? appUrl;
+  const showButton = (template?.button?.enabled ?? true) && buttonUrl;
 
   return {
     ...renderEmail({
@@ -150,7 +152,7 @@ export function buildApprovedEmail(
       ...(paragraphs.length > 0 && { paragraphs }),
       fields,
       ...(showButton && {
-        action: { label: say(template?.button?.label ?? t('approved.memberLink')), url: appUrl },
+        action: { label: say(template?.button?.label ?? t('approved.memberLink')), url: buttonUrl },
       }),
       ...(template?.note !== undefined && template.note !== '' && { note: say(template.note) }),
       footer:

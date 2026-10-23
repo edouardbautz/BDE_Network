@@ -1,4 +1,5 @@
 import type { NotificationEvent } from '@/config/schema';
+import type { MentionDirectory } from './mentions';
 
 /**
  * The template of a notification: what a BDE changes of how a card, a Slack message or an e-mail looks.
@@ -83,7 +84,14 @@ export interface TemplateContent {
     enabled?: boolean;
     /** Absent: the platform's label for that channel. */
     label?: string;
+    /** Where the button leads: an `https` address of the BDE's choosing. Absent: the page of the notification (the event, the members). */
+    url?: string;
   };
+  /**
+   * Discord and Slack only: a message above the card, the one place a mention is read (`mentions.ts`). May hold variables and
+   * `{@everyone}`, `{@here}`, `{@channel}` (Slack), `{@role:bureau}`, `{@user:paula}`, `{@group:bureau}`. Absent: nothing above the card.
+   */
+  above?: string;
   /** The footer line. Absent: the platform's own. */
   footer?: string;
   /** E-mail only: the subject. May hold variables. */
@@ -101,4 +109,6 @@ export interface TemplateContext {
   bdeName?: string;
   /** The language the dates of the variables are written in: the BDE's. */
   locale?: string;
+  /** The people, roles and groups the BDE can mention, by the name its templates use. */
+  mentions?: MentionDirectory;
 }

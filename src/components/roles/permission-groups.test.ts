@@ -95,6 +95,7 @@ describe('buildPermissionGroups', () => {
     );
     expect(lockedKeys).toEqual([
       'roles.manage',
+      'notifications.templates',
       'events.propose',
       'events.validate',
       'events.shared_calendar',
