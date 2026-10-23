@@ -124,9 +124,12 @@ const signInAs = async (login) => {
 const clickButton = async (label, within) => {
   const handle = await page.evaluateHandle(
     (wanted, scope) => {
-      const root = scope
-        ? (document.querySelector(scope)?.closest('form, section') ?? document)
-        : document;
+      const scoped = scope ? document.querySelector(scope) : null;
+      // a dialog is searched itself (it sits at the end of the page, outside any form: the whole page would hold earlier buttons of the
+      // same name, such as the "Retirer" of a channel)
+      const root = scoped?.matches('[role="dialog"]')
+        ? scoped
+        : (scoped?.closest('form, section') ?? document);
       return [...root.querySelectorAll('button')].find(
         (el) => el.textContent?.trim().startsWith(wanted) && !el.disabled,
       );

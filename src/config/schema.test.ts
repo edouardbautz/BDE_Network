@@ -143,6 +143,32 @@ describe('bdeConfigSchema', () => {
     expect(result.success).toBe(false);
   });
 
+  it('says which notification and which channels when a channel does not exist', () => {
+    const result = bdeConfigSchema.safeParse({
+      ...validConfig,
+      notifications: { eventReminder: ['discord', 'carrier-pigeon'] },
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const message = result.error.issues[0]!.message;
+      expect(message).toContain('"eventReminder"');
+      expect(message).toContain('discord, slack, email');
+    }
+  });
+
+  it('says which notification when its channels are not a list', () => {
+    const result = bdeConfigSchema.safeParse({
+      ...validConfig,
+      notifications: { memberRemoved: { discord: true } },
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const message = result.error.issues[0]!.message;
+      expect(message).toContain('"memberRemoved"');
+      expect(message).toContain('une liste');
+    }
+  });
+
   it('rejects an invalid accent color', () => {
     const result = bdeConfigSchema.safeParse({
       ...validConfig,
