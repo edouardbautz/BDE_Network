@@ -429,6 +429,12 @@ async function shootLanguage(browser, lang) {
     await open('/notifications?type=eventConfirmed&scope=discord', { settle: 2000 });
     await click(t.templates.editor.viewPreview);
     await new Promise((resolve) => setTimeout(resolve, 800));
+    // the card itself, not the head of the page
+    await page.evaluate(() => {
+      const card = document.querySelector('[data-testid="preview-discord"]');
+      if (card) window.scrollTo(0, card.getBoundingClientRect().top + window.scrollY - 110);
+    });
+    await new Promise((resolve) => setTimeout(resolve, 500));
     await save('notification-editor-mobile.webp');
     log('notification-editor-mobile.webp');
     sql(
