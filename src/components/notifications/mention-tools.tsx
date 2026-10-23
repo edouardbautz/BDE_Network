@@ -141,7 +141,9 @@ function DirectoryDialog({
       const key = mentionKeyFor(label, new Set(entries.map((entry) => entry.key)));
       const result = await addMention({ platform, kind, key, label: label.trim(), externalId });
       if (!result.ok) {
-        setError(tCodes.has(result.code) ? tCodes(result.code) : tCodes('unknown'));
+        // a refusal of the fields names the field's own problem; any other, the code
+        const code = result.issues?.[0]?.code ?? result.code;
+        setError(tCodes.has(code) ? tCodes(code) : tCodes('unknown'));
         return;
       }
       onMentionsChange([

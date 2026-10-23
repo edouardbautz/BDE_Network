@@ -156,6 +156,22 @@ describe('the directory of a platform', () => {
     );
   });
 
+  it('says what is wrong with the identifier, in the field’s own words', async () => {
+    actions.addMention.mockResolvedValue({
+      ok: false,
+      code: 'invalid',
+      issues: [{ path: 'externalId', code: 'badMentionId' }],
+    });
+    render(<Harness scope="discord" initial={[]} />);
+    const dialog = await openDirectory();
+    fireEvent.change(within(dialog).getByLabelText('Nom affiché'), { target: { value: 'Nobody' } });
+    fireEvent.change(within(dialog).getByLabelText('Identifiant'), { target: { value: '12' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Ajouter' }));
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+      "L'identifiant n'a pas la forme attendue.",
+    );
+  });
+
   it('takes somebody off, unless a template still mentions them', async () => {
     actions.removeMention.mockResolvedValueOnce({
       ok: false,

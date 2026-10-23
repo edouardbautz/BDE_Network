@@ -722,12 +722,16 @@ const SCENARIOS = [
         // what is shown after loading the page again is what was written to the database
         await goto('/notifications?type=memberPending');
         const kept = await page.$eval('#memberPending-all-eyebrow', (el) => el.value);
-        return kept === words &&
-          sql(
-            `SELECT count(*) FROM "NotificationTemplate" WHERE type = 'memberPending' AND scope = 'all'`,
-          ) === '1'
-          ? 'ok'
-          : 'FAILED';
+        const written = sql(
+          `SELECT count(*) FROM "NotificationTemplate" WHERE type = 'memberPending' AND scope = 'all'`,
+        );
+        if (kept !== words || written !== '1') {
+          console.error(
+            `  template saved? the page shows "${kept}" (wanted "${words}"), ${written} row(s)`,
+          );
+          return 'FAILED';
+        }
+        return 'ok';
       } finally {
         clearTemplates();
       }
