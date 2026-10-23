@@ -135,7 +135,7 @@ export async function notifyMemberRemoved(member: MemberFacts, actorLogin?: stri
 
     const t = await translate(config.bde.defaultLocale);
     const facts = { ...member, actorName: await actorNameFor(channels, actorLogin) };
-    const message = await withRichMessage('memberRemoved', buildRemovedMessage(member, t), {
+    const message = await withRichMessage('memberRemoved', buildRemovedMessage(facts, t), {
       discord: () => buildMemberEmbed('removed', facts, t, null),
       slack: (brand) => buildMemberSlack('removed', facts, t, null, brand),
     });
