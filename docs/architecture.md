@@ -1728,6 +1728,10 @@ specification): **`docs/design.md`**. Read it before touching layout or adding U
   one moved every date by the offset of its machine's zone (an hour in Paris in winter: `event-repeat-rules.test.ts` passed in CI and failed at
   home, and the fault was the test's, not the product's: Prisma's adapter reads UTC). A test that reads or writes a `timestamp` column says its
   zone (`("startsAt" AT TIME ZONE 'UTC')`, as `qa/invariants.ts` does) and runs in a session set to another zone (`SET TIME ZONE 'Asia/Kolkata'`).
+  A second one: a test that reads the **text** of a date (`Date()`, `toString()`) and looks for a day in it fails east of UTC+11 (`qa/fake-clock.test.ts`
+  looked for "Oct 16" at 01:00 on the 17th in Auckland); it reads the moment back instead. `TZ=Pacific/Auckland npm run test` works on every system, Windows
+  included (`vitest.setup.ts`: Node on Windows ignores a `TZ` given at launch and only honours one assigned while it runs), but a child process the
+  test starts does not inherit that on Windows: the arbiter is Linux, where CI runs it (a `node:22` container with the folder mounted does the same locally).
 - **No `any`** (`@typescript-eslint/no-explicit-any` is an error, not a warning).
 - Cross-platform: no `&&`/`||`/`$VAR`/`rm -rf`/`cp` in npm scripts — use `cross-env`, `rimraf`,
   or plain Node. LF line endings are enforced by `.gitattributes`. The exception is the server-side
