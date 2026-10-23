@@ -14,14 +14,23 @@ function payloadOf(message: NotificationMessage): Record<string, unknown> {
   const noMention = { parse: [] };
 
   if (message.discord && message.discord.embeds.length > 0) {
-    const { embeds, username, avatarUrl } = message.discord;
+    const { embeds, username, avatarUrl, above } = message.discord;
     return {
       ...(username && { username: neutralizeForDiscord(username) }),
       ...(avatarUrl && { avatar_url: avatarUrl }),
+      // The message above the cards is made harmless by the template, which spells the mentions the BDE asked for: Discord is told
+      // exactly those and no others.
+      ...(above && { content: above.text }),
       embeds: embeds
         .slice(0, MAX_EMBEDS)
         .map((embed) => fitEmbed(neutralizeEmbedForDiscord(embed))),
-      allowed_mentions: noMention,
+      allowed_mentions: above
+        ? {
+            parse: above.mentions.everyone ? ['everyone'] : [],
+            roles: above.mentions.roles,
+            users: above.mentions.users,
+          }
+        : noMention,
     };
   }
 

@@ -1,5 +1,6 @@
 import { PLATFORM_NAME } from './platform';
 import { defuseMentions, neutralizeForSlack, ZERO_WIDTH_SPACE } from './sanitize';
+import type { TrustedText } from './templates/mentions';
 import { httpUrl, truncate } from './text';
 
 /**
@@ -43,6 +44,8 @@ export interface SlackPayload {
   fallback: string;
   /** Colour of the bar at the card's side, a hex colour. */
   color: string;
+  /** The message above the card, with the mentions the BDE's template spells: the only text that may ping (see `templates/mentions.ts`). */
+  above?: TrustedText;
   blocks: SlackBlock[];
 }
 
@@ -165,6 +168,7 @@ export function fitSlackPayload(payload: SlackPayload): SlackPayload {
   return {
     fallback: plain(payload.fallback, SLACK_LIMITS.fallback).text,
     color: payload.color,
+    ...(payload.above && { above: payload.above }),
     blocks: payload.blocks
       .map(fitBlock)
       .filter((block): block is SlackBlock => block !== undefined)

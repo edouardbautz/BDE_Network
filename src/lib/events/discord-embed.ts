@@ -163,10 +163,11 @@ export function buildEventEmbed(
 
   // The link the title already makes, as a line of its own when the BDE asks for it.
   const link = httpUrl(data.url);
-  if (template?.button?.enabled === true && link) {
+  const buttonLink = httpUrl(template?.button?.url ?? data.url);
+  if (template?.button?.enabled === true && buttonLink) {
     const label = say(template.button.label ?? t(actionLabelKey(kind, 'slack')));
     // A closing parenthesis would end the link early.
-    blocks.push([`${ICON.button}  [${label}](${link.replace(/\)/g, '%29')})`]);
+    blocks.push([`${ICON.button}  [${label}](${buttonLink.replace(/\)/g, '%29')})`]);
   }
 
   const eyebrow = say(template?.eyebrow ?? t(KIND_LABEL_KEY[kind]));

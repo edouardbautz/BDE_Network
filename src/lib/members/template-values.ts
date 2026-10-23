@@ -1,3 +1,9 @@
+import {
+  renderAbove,
+  type MentionPlatform,
+  type RenderedAbove,
+} from '@/lib/notifications/templates/mentions';
+import type { TemplateContext } from '@/lib/notifications/templates/types';
 import type { MemberFacts } from './messages';
 
 /** The type of notification a kind of member card belongs to: the key of `notifications` in the configuration. */
@@ -29,4 +35,19 @@ export function memberValues(
     bde: bdeName,
     link: link ?? '',
   };
+}
+
+/** The message above the card of a member notification for one platform, when the template has one: the only text that may ping. */
+export function memberAbove(
+  platform: MentionPlatform,
+  member: MemberFacts,
+  link: string | null,
+  context: TemplateContext,
+): RenderedAbove | undefined {
+  return renderAbove(
+    context.template?.above,
+    memberValues(member, context.bdeName, link),
+    platform,
+    context.mentions,
+  );
 }

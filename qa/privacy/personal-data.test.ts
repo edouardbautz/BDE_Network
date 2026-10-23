@@ -52,6 +52,26 @@ const PERSON_COLUMNS: Record<string, Column> = {
   'EventOccurrenceAssignee.login': user('events.datesInChargeOf', 'prisma.eventOccurrenceAssignee'),
   'EventCancellation.cancelledById': user('events.cancelledDates', 'cancelledById: userId'),
   'EventCancellation.cancelledByLogin': user('events.cancelledDates', 'cancelledById: userId'),
+  'NotificationTemplate.updatedById': user(
+    'notifications.templatesEdited',
+    'prisma.notificationTemplate',
+  ),
+  'NotificationTemplate.updatedByLogin': user(
+    'notifications.templatesEdited',
+    'prisma.notificationTemplate',
+  ),
+  'NotificationTemplateVersion.authorId': user(
+    'notifications.templateVersions',
+    'prisma.notificationTemplateVersion',
+  ),
+  'NotificationTemplateVersion.authorLogin': user(
+    'notifications.templateVersions',
+    'prisma.notificationTemplateVersion',
+  ),
+  'NotificationMention.createdByLogin': user(
+    'notifications.mentionsAdded',
+    'createdByLogin: user.login',
+  ),
 };
 
 /** A text column that is a person: a login (`login`, `authorLogin`…), an e-mail, a name, a picture, a campus, a token. */

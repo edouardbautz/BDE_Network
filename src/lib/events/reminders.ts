@@ -11,6 +11,8 @@ import { deliver, getTranslate, repeatSummaryFor, toNotificationData } from './n
 import { VISIBLE_WITHOUT_DRAFTS } from './include';
 import { resolveOccurrences } from './series';
 import { buildEventSlack } from './slack-blocks';
+import { eventAbove } from './template-values';
+import { templatesFor } from '@/lib/notifications/templates/resolve';
 import { addDays, fromLocalDateTime, isSameLocalDay, toLocalDateTime } from './time';
 
 const HOUR_MS = 3_600_000;
@@ -136,13 +138,27 @@ export async function runReminderTick(now: Date = new Date()): Promise<ReminderT
       // Normally tomorrow's; today's when the server was down at the usual time and this goes out late.
       const day = isSameLocalDay(occurrence.start, now, timeZone) ? 'today' : 'tomorrow';
       const data = toNotificationData(event, occurrence, locale, repeat);
+      const templates = await templatesFor('eventReminder');
       const message = await withRichMessage(
         'eventReminder',
         buildReminderMessage(data, translate, locale, timeZone, day),
         {
-          discord: () => buildEventEmbed(day, data, translate, timeZone, now),
-          email: (brand) => buildEventEmail(day, data, translate, locale, timeZone, brand),
-          slack: (brand) => buildEventSlack(day, data, translate, locale, timeZone, brand),
+          discord: () =>
+            templates.build('discord', (context) =>
+              buildEventEmbed(day, data, translate, timeZone, now, context),
+            ),
+          discordAbove: () =>
+            templates.build('discord', (context) =>
+              eventAbove('discord', day, data, translate, locale, timeZone, context),
+            ),
+          email: (brand) =>
+            templates.build('email', (context) =>
+              buildEventEmail(day, data, translate, locale, timeZone, brand, undefined, context),
+            ),
+          slack: (brand) =>
+            templates.build('slack', (context) =>
+              buildEventSlack(day, data, translate, locale, timeZone, brand, context),
+            ),
         },
       );
       const assigneeEmails = occurrence.assignees.flatMap((a) =>

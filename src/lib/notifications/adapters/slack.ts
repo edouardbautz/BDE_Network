@@ -6,15 +6,16 @@ import { WEBHOOK_TIMEOUT_MS } from '../timeouts';
 
 /** What is posted to the webhook for this message: the card (blocks under a colour bar) when the
  * notification has one, the plain subject and body otherwise. The summary for notifications goes in the
- * attachment's `fallback` and the message has no `text` of its own: with a `text`, Slack shows it in
- * the channel above the card, and the card then says everything twice. Every
+ * attachment's `fallback` and the message has no `text` of its own, except the one the BDE wrote above the card:
+ * with any other `text`, Slack shows it in the channel above the card, and the card then says everything twice. Every
  * text is made harmless and cut to Slack's limits first, so nothing a member typed can ping a
  * channel, and a long title can never get the message refused. */
 function payloadOf(message: NotificationMessage): Record<string, unknown> {
   if (message.slack) {
-    const { fallback, color, blocks } = fitSlackPayload(message.slack);
+    const { fallback, color, blocks, above } = fitSlackPayload(message.slack);
     if (blocks.length > 0) {
-      return { attachments: [{ color, fallback, blocks }] };
+      // The message above the card is the BDE's own (see `templates/mentions.ts`), already made harmless: it is the one `text.
+      return { ...(above && { text: above }), attachments: [{ color, fallback, blocks }] };
     }
   }
 

@@ -141,7 +141,7 @@ SECURITY.md                  private vulnerability reporting; .github/ has issue
 
 `User`, `UserStatus` (enum), `Role`, `AuditLog`, `PlatformSettings` (see "Settings in the database"), plus the events module's `Event`,
 `EventAssignee`, `EventCancellation`, `EventOccurrence` (+ `EventOccurrenceAssignee`), `EventReminder`,
-`BdeCalendarFeed` (see "Events module"). Finances and
+`BdeCalendarFeed` (see "Events module"), and the notification templates' `NotificationTemplate`, `NotificationTemplateVersion` and `NotificationMention` (see "Notifications"). Finances and
 meetings do not exist yet.
 
 - **`UserStatus`**: `OWNER | MEMBER | PENDING`. OWNER comes only from the list of owners in the platform's
@@ -495,7 +495,7 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
   proves for an empty template and for a template that lists every fact in its native order. So a BDE only writes down what it wants
   different, and what it did not touch follows the platform when a later version improves it. The builders of the three channels
   (`events/discord-embed.ts`, `slack-blocks.ts`, `email.ts`, `members/…`) take `context: { template?, bdeName?, locale? }` as their last
-  argument; nothing stores or loads a template yet.
+  argument. The senders (`events/notifications.ts`, `reminders.ts`, `members/notifications.ts`) get them from `templatesFor(type)` (below).
   - **Items.** What a notification shows is a list of items (`ItemId`: `when`, `where`, `description`, `category`, `assignees`, `repeats`, the proposal
     circuit's `proposedBy`, `reviewedBy`, `reason`, a member's `summary`, `login`, `campus`, `role`, `actedBy`, and the free texts `text:<key>`), the set
     depending on the type (`catalog.ts`: `ITEMS`, `nativeOrder`, `VARIABLES`). **Each channel has its own native order, and they differ** (Discord leads with
@@ -514,8 +514,40 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
   - **A channel's template starts as a copy of the shared one** (`cascade`: the channel's field over the shared one, field by field, then the platform's): customising a channel keeps what
     was shared at that moment, and the two no longer move together. The e-mail of an approved member speaks to that person while the chat channels inform the team: it is its own
     message and the shared template does not reach it (`sharedChannels`), and nobody writes to a removed member (`channelsOfType`).
+  - **Storage** (`NotificationTemplate`, `NotificationTemplateVersion`, `NotificationMention`; migration `20261023120000_notification_templates`). **No row is the platform's
+    own**, so nothing is written for a BDE that customised nothing and the migration holds no data: a template exists exactly when a person saved one, for a (type, scope)
+    where the scope is `all` or one channel. The history is append-only (a version for each save, reset and restore, the last 50 kept, `version` counted by the
+    history so a number is never reused after a reset), `basedOnRevision` records the platform's revision the template was written over (`revisions.ts`: what the BDE wrote is never replaced
+    when the platform changes, the editor says what changed and the BDE decides; a variable is never removed and an item never changes meaning in a minor version),
+    and CHECKs of the migration hold what Prisma cannot (the scopes, the shape of a mention's name and of a Discord or Slack identifier, which kind belongs to which platform).
+    The authors are plain-text logins next to a `SetNull` key, like `AuditLog`.
+  - **Writing** (`service.ts`, no page yet). Every operation (`saveTemplate`, `customizeChannel`, `resetTemplate`, `resetType`, `restoreVersion`, `acknowledgeRevision`, `addMention`,
+    `removeMention`) runs in one SERIALIZABLE transaction with its audit entry (retried, then a `conflict`: two saves at the same time once both went through, found by
+    `service.db.test.ts` on a real PostgreSQL), validates again what it is given with `validateTemplate` (`schema.ts`: the same function the editor will use, every refusal a
+    code and a place, `items.list.2.label`), refuses a save over a version the editor did not see (`expectedVersion`), writes nothing when nothing changed, and answers a code
+    for what happens to somebody who did nothing wrong. A restore **checks the old version again** (a mention deleted since would make it unusable). A mention cannot be
+    deleted while a template spells it. The audit entry says who, which notification and scope, the fields that changed, the mentions the template reaches and the address of its button
+    (both reach other people), never the text. The in-memory fake (`test/fake-templates-db.ts`) serves the unit tests; the real database serves `service.db.test.ts`, which
+    runs in the `migrations` job.
+  - **Sending** (`resolve.ts`). `templatesFor(type)` reads the rows and the directory when a notification is sent and gives each channel its context: the channel's template over the
+    shared one over the platform's, field by field. **A template that cannot be used is not used and the platform's own is sent**: a content that is no longer valid
+    (checked again with `validateTemplate`, the directory of the moment), one half of which is (nothing is half applied), a build that throws (`build` builds again without the template),
+    the database being unreachable. The reason is logged and noted on the row (`lastFallbackAt`, `lastFallbackReason`, at most hourly) for the editor to say. A notification is never lost
+    to a template.
+  - **Mentions** (`mentions.ts`, **non-negotiable**). A mention is the only way a message of the platform ever pings, and it is written by the BDE in a template. **Only the message above the
+    card (`above`) can ping** (Discord does not notify for a mention inside a card): `renderAbove` writes it for a platform, defusing every word typed in the template and everything a variable
+    stands for, and writing in Discord's or Slack's markup only the mentions the template spells (`{@everyone}`, `{@here}`, `{@channel}`, `{@role:bureau}`, `{@user:paula}`,
+    `{@group:bureau}`, the names standing for identifiers of the BDE's directory). What comes out is a `TrustedText` that the adapters post as it is and are given by nothing else
+    (`DiscordPayload.above`, `SlackPayload.above`), with, for Discord, the list of whom it may ping (`allowed_mentions`: everyone only if the template says `@everyone` or `@here`, plus the
+    listed roles and users, which must still be in the text after it was cut to 2000 characters). Everything else in a card is neutralized by the adapters, as before, whether a template is applied or not.
+    A template for all channels may only mention everyone and here (an identifier belongs to a platform: customise the channel), and no other field of a template may hold a mention
+    (`validateTemplate`: `mentionNotAllowed`). The button's own address (`button.url`) is `https` only, with a host and no credentials, and audited.
+  - **The permission** `notifications.templates` (core, in the registry) is the only way in: the generic escalation rules of `roles/` apply unchanged (nobody grants it without holding it). `requireTemplateEditor` is the
+    gate of every action (`templates/access.ts`). The settings of the channels themselves (the webhooks, the mail server) stay the owners'.
+  - **Privacy.** The columns that can hold a person are classified in `qa/privacy/personal-data.test.ts` and the personal export lists what the account did (the notifications it customised and
+    the versions it wrote, the mentions it added), never what the templates say.
   - Tests: `templates/*.test.ts` (the text, the items, the catalog, and `render.test.ts`: what each field of a template changes in each channel and in no other), mutation-checked
-    (`qa/mutations/notification-templates-engine.json`).
+    (`qa/mutations/notification-templates-engine.json`, and `notification-templates-storage.json` for the storage, the mentions and the resolution).
 - **The table** (`lib/setup/notification-matrix.ts`, pure and tested; `components/setup/notification-table.tsx`,
   `notification-channels.tsx`). The installer and the settings page share it: a panel per channel (what it needs, a badge, its own
   test, a **removal that is marked and only done by the Save button**) and a table of a row per type and a column per channel. **A
@@ -544,7 +576,7 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
   (`notifyMany` → `EmailAdapter.sendMany`), isolates failures per recipient and only logs; text builders are pure (`members/messages.ts`, `events/messages.ts`) and use
   `getNotificationTranslate`. **Texts sent to Discord/Slack are neutralized in the adapters**
   (`sanitize.ts`: `@everyone`/`@here`/`@channel`, `<!channel>`, `<@id>`, Slack `<url|text>`; Discord
-  also sends `allowed_mentions: { parse: [] }`) — every caller gets it, a new adapter must do the same.
+  also sends `allowed_mentions: { parse: [] }`) — every caller gets it, a new adapter must do the same (the one exception is the message above a card, `TrustedText`, see "Mentions").
   A member-notification channel that is not set up in `.env` is a **startup warning, not an error**
   (`env.ts`): those keys sat in every config before they sent anything.
 - **Discord cards** (`docs/en/notifications.md`). On the `discord` channel a notification is an _embed_, built
@@ -1475,9 +1507,9 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
     charge; a proposal, the proposal of a series, a refusal with its multi-line comment, drafts, and a draft series with one date
     confirmed alone. A test reads the fixture with the engine of the repository (every series has the dates its comment names, a counted
     series ends on the start of its last date) and, on a migrated PostgreSQL, against the invariants; the run checks them on the old
-    platform too, and that a validator's calendar file holds drafts and proposals while a proposer's is a member's. There is nothing to
-    migrate, so what is held is different: no conversion of the roles, **no copy made by the platform** (asserted: it makes none when
-    nothing is pending), the proposals still listed for the validator, the refusal comment read whole by its author, the shared calendar
+    platform too, and that a validator's calendar file holds drafts and proposals while a proposer's is a member's. Only the tables of the
+    notification templates are new, so what is held is different: no conversion of the roles, the copy the platform makes by itself
+    before applying them, the proposals still listed for the validator, the refusal comment read whole by its author, the shared calendar
     still managed by its holder and refused to a proposer (a refusal that is a streamed redirect counts, `isDenied`), and the way back
     by the backup. The suite compares the old release with the code under test, so on the day of a release, 1.4.0 is held to 1.4.0
     plus whatever came after.

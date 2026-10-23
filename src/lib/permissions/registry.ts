@@ -21,6 +21,8 @@ export const CORE_SECTION = 'core';
 
 export const MEMBERS_MANAGE = 'members.manage';
 export const ROLES_MANAGE = 'roles.manage';
+/** Writing the templates of the notifications: what they say and how they look, and who they mention (see `lib/notifications/templates`). */
+export const NOTIFICATIONS_TEMPLATES = 'notifications.templates';
 
 /** The events module's own rights (see MODULE_EXTRA_PERMISSIONS), named once for the code that checks them. */
 export const EVENTS_PROPOSE = `${EVENTS_MODULE_KEY}.propose`;
@@ -71,6 +73,7 @@ export function permissionDefinitions(enabledModules: readonly string[]): Permis
   const definitions: PermissionDefinition[] = [
     { key: MEMBERS_MANAGE, section: CORE_SECTION, implies: [] },
     { key: ROLES_MANAGE, section: CORE_SECTION, implies: [] },
+    { key: NOTIFICATIONS_TEMPLATES, section: CORE_SECTION, implies: [] },
   ];
 
   for (const moduleKey of new Set(enabledModules)) {

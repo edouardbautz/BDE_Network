@@ -43,9 +43,9 @@ const flag = (name: string): string | undefined => {
 const VERSIONS = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0'] as const;
 
 /**
- * From 1.3.0 on the schema is the one of today (the proposal circuit and the repeat rules, no migration after them): the old
- * version holds the data of `fixture-proposals.ts`, the update has nothing to migrate, so there is no conversion of the roles and
- * the platform makes no copy of its own; the way back is the backup the operator made. Before, the data is that of `fixture.ts`.
+ * From 1.3.0 on the schema has the proposal circuit and the repeat rules: the old version holds the data of `fixture-proposals.ts`
+ * and there is no conversion of the roles to check; only the notification templates' tables are new. Before, the data is that of
+ * `fixture.ts`. Every version is updated with at least one migration to apply, so the platform makes its copy of the database first.
  */
 const holdsProposals = (from: (typeof VERSIONS)[number]) => from === '1.3.0' || from === '1.4.0';
 
@@ -312,10 +312,8 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
     );
     const copies = stack.compose('exec', '-T', 'app', 'ls', '/backups');
     check(
-      proposals
-        ? 'the platform made no copy of its own: there was nothing to migrate'
-        : 'the platform made a copy of the database by itself before applying the migrations',
-      /pre-update_/.test(copies.out) === !proposals,
+      'the platform made a copy of the database by itself before applying the migrations',
+      /pre-update_/.test(copies.out),
       copies.out.slice(0, 200) || '(no copy)',
     );
 

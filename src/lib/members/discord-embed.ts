@@ -120,13 +120,14 @@ export function buildMemberEmbed(
   }
 
   const link = httpUrl(membersUrl);
-  if ((template?.button?.enabled ?? kind === 'pending') && link) {
+  const buttonLink = httpUrl(template?.button?.url ?? membersUrl);
+  if ((template?.button?.enabled ?? kind === 'pending') && buttonLink) {
     // A closing parenthesis would end the link early.
     const buttonLabel = say(
       template?.button?.label ??
         t(kind === 'pending' ? 'embed.action.pending' : 'embed.action.members'),
     );
-    blocks.push([`${ICON.action}  [${buttonLabel}](${link.replace(/\)/g, '%29')})`]);
+    blocks.push([`${ICON.action}  [${buttonLabel}](${buttonLink.replace(/\)/g, '%29')})`]);
   }
 
   const lines: string[] = [kindLine(say(template?.eyebrow ?? t(`embed.kind.${kind}`))), BLANK_LINE];

@@ -10,6 +10,9 @@ vi.mock('@/lib/prisma', () => ({
     eventAssignee: { findMany: vi.fn() },
     eventOccurrenceAssignee: { findMany: vi.fn() },
     eventCancellation: { findMany: vi.fn() },
+    notificationTemplate: { findMany: vi.fn() },
+    notificationTemplateVersion: { findMany: vi.fn() },
+    notificationMention: { findMany: vi.fn() },
   },
 }));
 
@@ -53,6 +56,32 @@ beforeEach(() => {
       event: { title: 'Jeux' },
     },
   ] as never);
+  vi.mocked(prisma.notificationTemplate.findMany).mockResolvedValue([
+    {
+      type: 'eventConfirmed',
+      scope: 'discord',
+      version: 3,
+      updatedAt: new Date('2026-10-20T10:00:00Z'),
+    },
+  ] as never);
+  vi.mocked(prisma.notificationTemplateVersion.findMany).mockResolvedValue([
+    {
+      type: 'eventConfirmed',
+      scope: 'discord',
+      version: 3,
+      action: 'save',
+      createdAt: new Date('2026-10-20T10:00:00Z'),
+    },
+  ] as never);
+  vi.mocked(prisma.notificationMention.findMany).mockResolvedValue([
+    {
+      platform: 'discord',
+      kind: 'role',
+      key: 'bureau',
+      label: 'Bureau',
+      createdAt: new Date('2026-10-19T10:00:00Z'),
+    },
+  ] as never);
   vi.mocked(prisma.eventAssignee.findMany).mockResolvedValue([
     { event: { title: 'Soirée', startsAt: new Date('2026-10-10T18:00:00Z') } },
   ] as never);
@@ -71,6 +100,40 @@ describe('GET /api/me/export', () => {
 
     mockSession.mockResolvedValue(effectiveFor('MEMBER', 'alice', 'u1'));
     expect((await GET()).headers.get('cache-control')).toBe('private, no-store');
+  });
+
+  it('lists what the member did to the notifications, and only that: never what a template says', async () => {
+    const body = JSON.parse(await (await GET()).text());
+
+    expect(body.notifications.templatesEdited).toEqual([
+      {
+        type: 'eventConfirmed',
+        scope: 'discord',
+        version: 3,
+        updatedAt: '2026-10-20T10:00:00.000Z',
+      },
+    ]);
+    expect(body.notifications.templateVersions[0]).toMatchObject({ action: 'save', version: 3 });
+    expect(body.notifications.mentionsAdded).toEqual([
+      {
+        platform: 'discord',
+        kind: 'role',
+        key: 'bureau',
+        label: 'Bureau',
+        createdAt: '2026-10-19T10:00:00.000Z',
+      },
+    ]);
+    // every query is made for this account alone
+    expect(prisma.notificationTemplate.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { updatedById: 'u1' } }),
+    );
+    expect(prisma.notificationTemplateVersion.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { authorId: 'u1' } }),
+    );
+    expect(prisma.notificationMention.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { createdByLogin: 'alice' } }),
+    );
+    expect(JSON.stringify(body)).not.toContain('"content"');
   });
 
   it("includes the member's events data but never the secret calendar token", async () => {

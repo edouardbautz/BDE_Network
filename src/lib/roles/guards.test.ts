@@ -67,6 +67,17 @@ describe('ruleGrant — nobody grants a permission they do not hold', () => {
     expect(ruleGrant(actor([]), set(['roles.manage']))).toBe('cannotGrant');
   });
 
+  it("refuses the right to customise the notifications to somebody who does not hold it: it reaches other people's chats", () => {
+    const templates = 'notifications.templates';
+    expect(ruleGrant(actor(['members.manage', 'roles.manage']), set([templates]))).toBe(
+      'cannotGrant',
+    );
+    expect(ruleGrant(actor([templates]), set([templates]))).toBeNull();
+    expect(ruleManageRole(actor(['roles.manage']), role('r-templates', [templates]))).toBe(
+      'cannotManageRole',
+    );
+  });
+
   it('refuses "all permissions" to anyone who does not hold all, even with every permission listed', () => {
     expect(ruleGrant(actor(EVERYTHING), set(EVERYTHING, true))).toBe('cannotGrant');
     expect(ruleGrant(admin, set(EVERYTHING, true))).toBeNull();

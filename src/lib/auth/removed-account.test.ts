@@ -152,6 +152,9 @@ vi.mock('@/lib/prisma', () => {
     eventAssignee: { findMany: vi.fn(async () => []) },
     eventOccurrenceAssignee: { findMany: vi.fn(async () => []) },
     eventCancellation: { findMany: vi.fn(async () => []) },
+    notificationTemplate: { findMany: vi.fn(async () => []) },
+    notificationTemplateVersion: { findMany: vi.fn(async () => []) },
+    notificationMention: { findMany: vi.fn(async () => []) },
     eventReminder: { findMany: vi.fn(async () => []) },
   };
   // A series is changed in a transaction: here the same stand-in database is the "transaction".

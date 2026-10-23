@@ -9,6 +9,8 @@ import { prisma } from '@/lib/prisma';
 import { buildMemberEmbed } from './discord-embed';
 import { buildApprovedEmail, buildPendingEmail } from './email';
 import { buildMemberSlack } from './slack-blocks';
+import { memberAbove } from './template-values';
+import { templatesFor } from '@/lib/notifications/templates/resolve';
 import {
   buildApprovedMessage,
   buildPendingMessage,
@@ -68,13 +70,27 @@ export async function notifyMemberPending(userId: string): Promise<void> {
     const locale = config.bde.defaultLocale;
     const t = await translate(locale);
     const membersUrl = appLink(locale, '/members');
+    const templates = await templatesFor('memberPending');
     const message = await withRichMessage(
       'memberPending',
       buildPendingMessage(member, t, membersUrl),
       {
-        discord: () => buildMemberEmbed('pending', member, t, membersUrl),
-        email: (brand) => buildPendingEmail(member, t, membersUrl, brand, locale),
-        slack: (brand) => buildMemberSlack('pending', member, t, membersUrl, brand),
+        discord: () =>
+          templates.build('discord', (context) =>
+            buildMemberEmbed('pending', member, t, membersUrl, undefined, context),
+          ),
+        discordAbove: () =>
+          templates.build('discord', (context) =>
+            memberAbove('discord', member, membersUrl, context),
+          ),
+        email: (brand) =>
+          templates.build('email', (context) =>
+            buildPendingEmail(member, t, membersUrl, brand, locale, context),
+          ),
+        slack: (brand) =>
+          templates.build('slack', (context) =>
+            buildMemberSlack('pending', member, t, membersUrl, brand, context),
+          ),
       },
     );
     await deliver('memberPending', message, await emailsOfHolders(MEMBERS_MANAGE), LOG_PREFIX);
@@ -109,14 +125,28 @@ export async function notifyMemberApproved(userId: string, actorLogin?: string):
     const actorName = await actorNameFor(channels, actorLogin);
     const roleName = member.role.name;
     const facts = { ...member, roleName, actorName };
+    const templates = await templatesFor('memberApproved');
+    const membersUrl = appLink(locale, '/members');
     const message = await withRichMessage(
       'memberApproved',
       buildApprovedMessage(member, roleName, t),
       {
-        discord: () => buildMemberEmbed('approved', facts, t, appLink(locale, '/members')),
-        email: (brand) => buildApprovedEmail(member, roleName, t, appLink(locale), brand, locale),
+        discord: () =>
+          templates.build('discord', (context) =>
+            buildMemberEmbed('approved', facts, t, membersUrl, undefined, context),
+          ),
+        discordAbove: () =>
+          templates.build('discord', (context) =>
+            memberAbove('discord', facts, membersUrl, context),
+          ),
+        email: (brand) =>
+          templates.build('email', (context) =>
+            buildApprovedEmail(member, roleName, t, appLink(locale), brand, locale, context),
+          ),
         slack: (brand) =>
-          buildMemberSlack('approved', facts, t, appLink(locale, '/members'), brand),
+          templates.build('slack', (context) =>
+            buildMemberSlack('approved', facts, t, membersUrl, brand, context),
+          ),
       },
     );
     await deliver('memberApproved', message, [member.email], LOG_PREFIX);
@@ -135,9 +165,18 @@ export async function notifyMemberRemoved(member: MemberFacts, actorLogin?: stri
 
     const t = await translate(config.bde.defaultLocale);
     const facts = { ...member, actorName: await actorNameFor(channels, actorLogin) };
+    const templates = await templatesFor('memberRemoved');
     const message = await withRichMessage('memberRemoved', buildRemovedMessage(facts, t), {
-      discord: () => buildMemberEmbed('removed', facts, t, null),
-      slack: (brand) => buildMemberSlack('removed', facts, t, null, brand),
+      discord: () =>
+        templates.build('discord', (context) =>
+          buildMemberEmbed('removed', facts, t, null, undefined, context),
+        ),
+      discordAbove: () =>
+        templates.build('discord', (context) => memberAbove('discord', facts, null, context)),
+      slack: (brand) =>
+        templates.build('slack', (context) =>
+          buildMemberSlack('removed', facts, t, null, brand, context),
+        ),
     });
     await deliver('memberRemoved', message, [], LOG_PREFIX);
   } catch (error) {

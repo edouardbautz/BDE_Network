@@ -11,6 +11,7 @@ import {
   isKnownStatus,
   MEMBERS_MANAGE,
   normalizePermissions,
+  NOTIFICATIONS_TEMPLATES,
   permissionDefinitions,
   resolvePermissionSet,
   ROLES_MANAGE,
@@ -25,22 +26,28 @@ const asStatus = (value: unknown) => value as UserStatus;
 const set = (keys: string[], all = false): PermissionSet => ({ all, keys: new Set(keys) });
 
 describe('the permission registry', () => {
-  it('lets the two core permissions stand alone: neither implies anything', () => {
+  it('lets the core permissions stand alone: none implies anything', () => {
     const core = permissionDefinitions([]);
     expect(core.map((definition) => [definition.key, definition.implies])).toEqual([
       [MEMBERS_MANAGE, []],
       [ROLES_MANAGE, []],
+      [NOTIFICATIONS_TEMPLATES, []],
     ]);
   });
 
-  it('has the two core permissions when no module is enabled', () => {
-    expect(activePermissionKeys([])).toEqual([MEMBERS_MANAGE, ROLES_MANAGE]);
+  it('has the core permissions when no module is enabled', () => {
+    expect(activePermissionKeys([])).toEqual([
+      MEMBERS_MANAGE,
+      ROLES_MANAGE,
+      NOTIFICATIONS_TEMPLATES,
+    ]);
   });
 
   it('gives every enabled module view and manage, plus what the module declares', () => {
     expect(activePermissionKeys(['finance'])).toEqual([
       'members.manage',
       'roles.manage',
+      'notifications.templates',
       'finance.view',
       'finance.manage',
     ]);
@@ -50,6 +57,7 @@ describe('the permission registry', () => {
     expect(activePermissionKeys(['events'])).toEqual([
       'members.manage',
       'roles.manage',
+      'notifications.templates',
       'events.view',
       'events.propose',
       'events.validate',
@@ -61,6 +69,7 @@ describe('the permission registry', () => {
     expect(activePermissionKeys(['finance'])).toEqual([
       'members.manage',
       'roles.manage',
+      'notifications.templates',
       'finance.view',
       'finance.manage',
     ]);

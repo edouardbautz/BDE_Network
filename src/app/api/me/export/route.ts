@@ -24,6 +24,8 @@ export async function GET() {
     assignedEvents,
     assignedDates,
     cancelledDates,
+    templatesEdited,
+    templateVersions,
   ] = await Promise.all([
     prisma.user.findUniqueOrThrow({
       where: { id: userId },
@@ -74,6 +76,18 @@ export async function GET() {
       select: { occurrenceStart: true, createdAt: true, event: { select: { title: true } } },
       orderBy: { createdAt: 'desc' },
     }),
+    // What the person did to the notifications of the BDE: which they customised and when. What the templates say is the BDE's, not
+    // the person's, and is left out; so is who else edited them.
+    prisma.notificationTemplate.findMany({
+      where: { updatedById: userId },
+      select: { type: true, scope: true, version: true, updatedAt: true },
+      orderBy: { updatedAt: 'desc' },
+    }),
+    prisma.notificationTemplateVersion.findMany({
+      where: { authorId: userId },
+      select: { type: true, scope: true, version: true, action: true, createdAt: true },
+      orderBy: { createdAt: 'desc' },
+    }),
   ]);
 
   // The proposals this person refused are recorded under their login (the text a validator wrote is theirs). The login comes
@@ -83,6 +97,15 @@ export async function GET() {
         where: { refusedByLogin: user.login },
         select: { title: true, refusedAt: true, refusalComment: true },
         orderBy: { refusedAt: 'desc' },
+      })
+    : [];
+
+  // The people, roles and groups this person added to what the notifications can mention: recorded under their login too.
+  const mentionsAdded = user.login
+    ? await prisma.notificationMention.findMany({
+        where: { createdByLogin: user.login },
+        select: { platform: true, kind: true, key: true, label: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
       })
     : [];
 
@@ -110,6 +133,7 @@ export async function GET() {
         })),
         refusedProposals,
       },
+      notifications: { templatesEdited, templateVersions, mentionsAdded },
     },
     null,
     2,

@@ -1,3 +1,9 @@
+import {
+  renderAbove,
+  type MentionPlatform,
+  type RenderedAbove,
+} from '@/lib/notifications/templates/mentions';
+import type { TemplateContext } from '@/lib/notifications/templates/types';
 import { truncate } from '@/lib/notifications/text';
 import type { EventCardKind } from './card-kind';
 import { whenLine, type NotificationEventData, type Translate } from './messages';
@@ -56,4 +62,22 @@ export function eventValues(
     reviewer: data.review?.reviewerName ?? '',
     comment: data.review?.comment ?? '',
   };
+}
+
+/** The message above the card of an event for one platform, when the template has one: the only text that may ping. */
+export function eventAbove(
+  platform: MentionPlatform,
+  kind: EventCardKind,
+  data: NotificationEventData,
+  t: Translate,
+  locale: string,
+  timeZone: string,
+  context: TemplateContext,
+): RenderedAbove | undefined {
+  return renderAbove(
+    context.template?.above,
+    eventValues(kind, data, t, locale, timeZone, context.bdeName),
+    platform,
+    context.mentions,
+  );
 }
