@@ -438,7 +438,7 @@ describe('more of the editor', () => {
 
   it('chooses a colour, and goes back to automatic', async () => {
     renderEditor();
-    const automatic = screen.getByRole('switch', { name: 'Couleur de la barre' });
+    const automatic = await screen.findByRole('switch', { name: 'Couleur de la barre' });
     expect(screen.queryByLabelText('Choisir la couleur')).toBeNull();
     fireEvent.click(automatic);
     const picker = await screen.findByLabelText('Choisir la couleur');
@@ -447,7 +447,7 @@ describe('more of the editor', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(actions.saveTemplate).toHaveBeenCalled());
     expect(actions.saveTemplate.mock.calls[0]![0].content).toEqual({ color: '#112233' });
-    fireEvent.click(screen.getByRole('switch', { name: 'Couleur de la barre' }));
+    fireEvent.click(await screen.findByRole('switch', { name: 'Couleur de la barre' }));
     expect(screen.queryByLabelText('Choisir la couleur')).toBeNull();
   });
 
@@ -462,7 +462,7 @@ describe('more of the editor', () => {
     expect(actions.saveTemplate.mock.calls[0]![0].content).toEqual({
       button: { label: 'Y aller', url: 'https://forms.example.fr/x' },
     });
-    fireEvent.click(screen.getByRole('switch', { name: 'Montrer un bouton' }));
+    fireEvent.click(await screen.findByRole('switch', { name: 'Montrer un bouton' }));
     expect(screen.queryByLabelText('Texte du bouton')).toBeNull();
   });
 
