@@ -66,6 +66,12 @@ const SHOTS: Shot[] = [
   { name: 'role-form', who: 'owner', path: '/en/roles/new', full: true },
   { name: 'audit-log', who: 'owner', path: '/en/audit-log' },
   { name: 'settings', who: 'owner', path: '/en/settings' },
+  {
+    name: 'notifications',
+    who: 'owner',
+    path: '/en/notifications?type=eventConfirmed',
+    full: true,
+  },
   { name: 'profile', who: 'member', path: '/en/profile', full: true },
 ];
 

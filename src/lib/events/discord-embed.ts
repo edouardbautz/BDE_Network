@@ -21,7 +21,7 @@ import { toLocalDateTime } from './time';
 const DESCRIPTION_PREVIEW = 350;
 
 /** One icon in front of the title of each kind of card, and of each line of facts. */
-const KIND_ICON: Record<EventCardKind, string> = {
+export const KIND_ICON: Record<EventCardKind, string> = {
   confirmed: '🎉',
   tomorrow: '⏰',
   today: '🔔',
@@ -30,7 +30,7 @@ const KIND_ICON: Record<EventCardKind, string> = {
   refused: '⛔',
   test: '🧪',
 };
-const ICON = {
+export const ICON = {
   when: '📅',
   where: '📍',
   category: '🏷️',

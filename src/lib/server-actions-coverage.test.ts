@@ -30,6 +30,11 @@ const EXEMPT: Record<string, string> = {
   'settings.saveNotifications':
     'a section of the settings page that answers like saveIdentity (same `answer()`)',
   'settings.testNotification': 'sends a test message: nothing on the page changes',
+  'notifications.acknowledgeRevision':
+    'loads the page again like resetTemplate (same `reload()`); the notice it clears only exists once the platform improves a message, and none has yet',
+  'notifications.previewTemplate': 'reads only: draws the notification, writes nothing',
+  'notifications.sendTemplateTestMessage': 'sends a test message: nothing on the page changes',
+  'notifications.loadHistory': 'reads only: lists the versions in a dialog',
   'dev-impersonation.startImpersonation':
     'development only (refused in production, see isDevImpersonationEnabled)',
   'dev-impersonation.stopImpersonation':

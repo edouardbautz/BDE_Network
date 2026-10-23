@@ -9,6 +9,7 @@ import {
   canManageSettings,
   canViewAuditLog,
   MEMBERS_MANAGE,
+  NOTIFICATIONS_TEMPLATES,
   ROLES_MANAGE,
 } from '@/lib/permissions';
 import { accountLabel } from '@/lib/account-label';
@@ -85,6 +86,14 @@ export default async function AppLayout({
   }
   if (can(session.user, ROLES_MANAGE)) {
     navItems.push({ id: 'roles', href: '/roles', label: t('roles'), shortLabel: t('rail.roles') });
+  }
+  if (can(session.user, NOTIFICATIONS_TEMPLATES)) {
+    navItems.push({
+      id: 'notifications',
+      href: '/notifications',
+      label: t('notifications'),
+      shortLabel: t('rail.notifications'),
+    });
   }
   if (canViewAuditLog(session.user)) {
     navItems.push({

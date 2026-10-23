@@ -122,7 +122,3 @@ export const VARIABLES = {
 } as const satisfies Record<TemplateType, readonly string[]>;
 
 export type VariableId = (typeof VARIABLES)[TemplateType][number];
-
-export function variablesOf(type: TemplateType): readonly string[] {
-  return VARIABLES[type];
-}

@@ -289,6 +289,26 @@ export const PAGES: readonly RouteSpec[] = [
     ],
   },
   {
+    route: '/notifications',
+    probes: [
+      {
+        label: 'the notifications',
+        path: at('/notifications'),
+        expect: (who) => inApp(who, () => (can(who, 'notifications.templates') ? ok : denied)),
+      },
+      {
+        label: 'a notification of the members, on its Slack tab',
+        path: at('/notifications?type=memberRemoved&scope=slack'),
+        expect: (who) => inApp(who, () => (can(who, 'notifications.templates') ? ok : denied)),
+      },
+      {
+        label: 'a notification that does not exist (the first one is shown)',
+        path: at('/notifications?type=nothing'),
+        expect: (who) => inApp(who, () => (can(who, 'notifications.templates') ? ok : denied)),
+      },
+    ],
+  },
+  {
     route: '/roles/[id]',
     probes: [
       {
