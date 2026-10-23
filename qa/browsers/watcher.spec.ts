@@ -108,8 +108,16 @@ test.describe('the watcher of the journeys', () => {
     await page.goto('/en/privacy');
     problems.judge();
     expect(problems.list).toEqual([]);
+  });
 
-    // And with nothing seen in flight at all (the engine does not always tell), the page leaving right after is the evidence.
+  test('lets through the same word when the page leaves right after it, even if no request was seen in flight', async ({
+    as,
+    problems,
+  }) => {
+    // A page of its own: nothing cancelled earlier can excuse it. The engine does not always tell which request a navigation cut
+    // short, so the page leaving its document just after the error is the evidence.
+    const page = await as('anonymous');
+    await page.goto('/en/privacy');
     await page.waitForTimeout(600);
     await page.evaluate(() => {
       setTimeout(() => {
