@@ -93,7 +93,7 @@ src/
                            see "Navigation"; the rest comes from `intl-navigation.ts`)
   lib/
     auth/                  NextAuth config + 42 OAuth provider
-    notifications/         NotificationAdapter + email/discord/slack/none adapters
+    notifications/         NotificationAdapter + email/discord/slack adapters, the templates of what a BDE changes (`templates/`)
     events/                events module domain: time, repeat rules (`repeat*.ts`, see "Repeat rules"), recurrence, series (dates of their own), series-operations
                            (cutting a series), ics, access, review (the rules of the proposal circuit), queries, actions
                            helpers, notifications, reminders, scheduler (see "Events module")
@@ -487,6 +487,35 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
   built leaves the message plain for that channel, the others untouched. One message carries the presentations of all its channels
   (`discord`, `slack`, `email`), and each adapter reads its own; what differs by audience is the e-mail's own (`EmailContent.subject`:
   `memberApproved` speaks to the member by e-mail and informs the team on a chat channel, from one notification).
+- **Templates: what a BDE changes, over what the platform sends** (`src/lib/notifications/templates/`). A template (`TemplateContent`) is
+  **a set of changes, every field optional, and an absent field means "as the platform does it for that channel"**: its own title icon, its own
+  order of facts, its own button label. A template that says nothing renders exactly the notification as it has always been, which
+  `golden.test.ts` holds to the byte (the files of `notifications/__golden__/`: every kind of every channel, in both languages, for a complete
+  case, a bare one, one longer than any limit and a hostile one; a change of look is a change of these files, read by a person) and
+  proves for an empty template and for a template that lists every fact in its native order. So a BDE only writes down what it wants
+  different, and what it did not touch follows the platform when a later version improves it. The builders of the three channels
+  (`events/discord-embed.ts`, `slack-blocks.ts`, `email.ts`, `members/…`) take `context: { template?, bdeName?, locale? }` as their last
+  argument; nothing stores or loads a template yet.
+  - **Items.** What a notification shows is a list of items (`ItemId`: `when`, `where`, `description`, `category`, `assignees`, `repeats`, the proposal
+    circuit's `proposedBy`, `reviewedBy`, `reason`, a member's `summary`, `login`, `campus`, `role`, `actedBy`, and the free texts `text:<key>`), the set
+    depending on the type (`catalog.ts`: `ITEMS`, `nativeOrder`, `VARIABLES`). **Each channel has its own native order, and they differ** (Discord leads with
+    the date and the place as headings, Slack with the description, an e-mail lists the facts in a table), so `items.order` is `native` (the BDE
+    switched facts on and off, each channel keeps its order) or `custom` (the BDE's order, applied **within what each channel can order**: Discord orders its headings
+    and its fields each on their own, Slack its top sections and its columns). An item that is not in the list is not shown, which is how a fact a later version adds does not
+    appear in a template that predates it. `resolveItems` is the one function that decides; a builder loops over its result and routes each item to the place its channel
+    gives it.
+  - **Text.** A text of a template holds words, `{variables}` (`VARIABLES` per type, replaced by `eventValues` / `memberValues`) and, **in the free texts only**,
+    `**bold**` and `_italic_`, turned into each channel's markup (`toDiscord`, `toSlack`, an e-mail's `<strong>` and `<em>`). `{{` and `}}` write a brace. **Only what is
+    typed in the template is read as a variable or as formatting**: what a variable stands for comes from members, is put in as plain text and never read again (`text.test.ts`).
+    Titles, labels, footers and subjects are plain: no formatting there, a subject is text for the mail client and not HTML.
+  - **"Absent" means different things, on purpose**: no `emoji` is the channel's own (Discord has one for each fact, Slack and e-mail none) and `''` is none; no
+    `button.enabled` is what the channel does (a button in Slack and e-mail, a link line in a Discord card for a request); no `preheader` is built from the kind, the date and the place;
+    no `note` is the note about the calendar file when one is attached; no `color` is automatic (the category's, or the kind's for a member).
+  - **A channel's template starts as a copy of the shared one** (`cascade`: the channel's field over the shared one, field by field, then the platform's): customising a channel keeps what
+    was shared at that moment, and the two no longer move together. The e-mail of an approved member speaks to that person while the chat channels inform the team: it is its own
+    message and the shared template does not reach it (`sharedChannels`), and nobody writes to a removed member (`channelsOfType`).
+  - Tests: `templates/*.test.ts` (the text, the items, the catalog, and `render.test.ts`: what each field of a template changes in each channel and in no other), mutation-checked
+    (`qa/mutations/notification-templates-engine.json`).
 - **The table** (`lib/setup/notification-matrix.ts`, pure and tested; `components/setup/notification-table.tsx`,
   `notification-channels.tsx`). The installer and the settings page share it: a panel per channel (what it needs, a badge, its own
   test, a **removal that is marked and only done by the Save button**) and a table of a row per type and a column per channel. **A

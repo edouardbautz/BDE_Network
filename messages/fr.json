@@ -274,7 +274,8 @@
           "removedBy": "Retiré par"
         },
         "action": {
-          "pending": "Approuver ou refuser"
+          "pending": "Approuver ou refuser",
+          "members": "Voir les membres"
         }
       },
       "email": {
@@ -374,6 +375,10 @@
         "intro": "Rappel : cet événement a lieu aujourd'hui."
       },
       "embed": {
+        "day": {
+          "tomorrow": "demain",
+          "today": "aujourd'hui"
+        },
         "kind": {
           "confirmed": "Nouvel événement confirmé",
           "reminderTomorrow": "Rappel · demain",

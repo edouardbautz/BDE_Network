@@ -14,3 +14,4 @@ qa-rules/*.ts
 qa-rules/*.tsx
 mutation-report
 .stryker-tmp
+src/lib/notifications/__golden__

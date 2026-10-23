@@ -8,9 +8,13 @@ import {
   type SlackBlock,
   type SlackPayload,
 } from '@/lib/notifications/slack-blocks';
+import { resolveItems, withEmoji } from '@/lib/notifications/templates/apply';
+import { renderPlain, renderSegments, toSlack } from '@/lib/notifications/templates/text';
+import type { TemplateContext } from '@/lib/notifications/templates/types';
 import { truncate } from '@/lib/notifications/text';
 import { KIND_LABEL_KEY, actionLabelKey, type EventCardKind } from './card-kind';
 import { formatDateTime, whenLine, type NotificationEventData, type Translate } from './messages';
+import { eventValues, templateTypeOf } from './template-values';
 import { isSameLocalDay } from './time';
 
 /** How much of the event's description a message shows: it is a notice, the page has the rest. */
@@ -22,6 +26,9 @@ const REASON_PREVIEW = 1000;
 /** A member's text for a `mrkdwn` field, cut first and then escaped (never cut in the middle of an
  * escape), so `<!channel>` and `<@U123>` come out as text. */
 const text = (value: string, max: number) => neutralizeForSlack(truncate(value, max));
+
+/** The title with its emoji in front, when the BDE chose one (a Slack heading has none of its own). */
+const named = (emoji: string | undefined, title: string) => (emoji ? `${emoji}  ${title}` : title);
 
 /** "Saturday, October 10th 8:00 PM → 11:00 PM", each reader seeing their own time zone. The fallback
  * text is what a client that cannot render the date shows. */
@@ -46,6 +53,9 @@ function whenValue(data: NotificationEventData, locale: string, timeZone: string
  * heading, the facts in columns (when across the full width, then place, category, people in charge
  * and repetition two by two), dates in Slack's own markup, a button to the event and a footer with the
  * BDE's logo. `text` is what a phone's notification shows instead of all that.
+ *
+ * `context.template` changes what the BDE wants different (texts, colour, which facts and in which order, the button);
+ * without it the message is the one the platform has always sent.
  */
 export function buildEventSlack(
   kind: EventCardKind,
@@ -54,67 +64,114 @@ export function buildEventSlack(
   locale: string,
   timeZone: string,
   brand: EmailModel['brand'],
+  context: TemplateContext = {},
 ): SlackPayload {
-  const kindLabel = t(KIND_LABEL_KEY[kind]);
+  const { template } = context;
+  const values = eventValues(kind, data, t, locale, timeZone, context.bdeName ?? brand.name);
+  const say = (source: string) => renderPlain(source, values);
+  const kindLabel = say(template?.eyebrow ?? t(KIND_LABEL_KEY[kind]));
+  const title = say(template?.title ?? '{title}');
   const description = data.description?.trim();
 
   const column = (label: string, value: string) => ({
     type: 'mrkdwn' as const,
-    text: `*${label}*\n${value}`,
+    text: `*${label}*
+${value}`,
   });
-  const columns = [
-    ...(data.location ? [column(t('embed.fields.where'), text(data.location, 400))] : []),
-    column(t('embed.fields.category'), text(data.categoryLabel, 400)),
-    // The whole team reads a channel: the message says who it is about.
-    ...(data.review
-      ? [
-          column(t('embed.fields.proposedBy'), text(data.review.authorName, 400)),
-          ...(data.review.reviewerName
-            ? [
-                column(
-                  t(kind === 'approved' ? 'embed.fields.approvedBy' : 'embed.fields.refusedBy'),
-                  text(data.review.reviewerName, 400),
-                ),
-              ]
-            : []),
-        ]
-      : []),
-    ...(data.assigneeNames.length > 0
-      ? [column(t('embed.fields.inCharge'), text(data.assigneeNames.join(', '), 400))]
-      : []),
-    ...(data.repeat ? [column(t('embed.fields.repeats'), text(data.repeat, 400))] : []),
-  ];
+  // The top of the message (what was written, the date) and the columns (the other facts) are ordered each on its own.
+  const top: SlackBlock[] = [];
+  const columns: Array<ReturnType<typeof column>> = [];
 
+  for (const item of resolveItems(template, 'slack', templateTypeOf(kind))) {
+    const label = (fallback: string) => withEmoji(item.emoji, say(item.label ?? fallback));
+    switch (item.id) {
+      case 'reason':
+        // The reason of a refusal comes first: it is what the author opens the message for.
+        if (kind === 'refused' && data.review?.comment) {
+          top.push({
+            type: 'section',
+            text: column(
+              label(t('embed.fields.reason')),
+              text(data.review.comment, REASON_PREVIEW),
+            ),
+          });
+        }
+        break;
+      case 'description':
+        if (description) {
+          top.push({
+            type: 'section',
+            text: { type: 'mrkdwn', text: text(description, DESCRIPTION_PREVIEW) },
+          });
+        }
+        break;
+      case 'when':
+        top.push({
+          type: 'section',
+          text: column(label(t('embed.fields.when')), whenValue(data, locale, timeZone)),
+        });
+        break;
+      case 'where':
+        if (data.location) {
+          columns.push(column(label(t('embed.fields.where')), text(data.location, 400)));
+        }
+        break;
+      case 'category':
+        columns.push(column(label(t('embed.fields.category')), text(data.categoryLabel, 400)));
+        break;
+      case 'proposedBy':
+        // The whole team reads a channel: the message says who it is about.
+        if (data.review) {
+          columns.push(
+            column(label(t('embed.fields.proposedBy')), text(data.review.authorName, 400)),
+          );
+        }
+        break;
+      case 'reviewedBy':
+        if (data.review?.reviewerName) {
+          columns.push(
+            column(
+              label(t(kind === 'approved' ? 'embed.fields.approvedBy' : 'embed.fields.refusedBy')),
+              text(data.review.reviewerName, 400),
+            ),
+          );
+        }
+        break;
+      case 'assignees':
+        if (data.assigneeNames.length > 0) {
+          columns.push(
+            column(label(t('embed.fields.inCharge')), text(data.assigneeNames.join(', '), 400)),
+          );
+        }
+        break;
+      case 'repeats':
+        if (data.repeat)
+          columns.push(column(label(t('embed.fields.repeats')), text(data.repeat, 400)));
+        break;
+      default:
+        if (item.custom && item.text) {
+          const written = toSlack(renderSegments(item.text, values)).trim();
+          if (written) top.push({ type: 'section', text: { type: 'mrkdwn', text: written } });
+        }
+    }
+  }
+
+  const buttonLabel = say(template?.button?.label ?? t(actionLabelKey(kind, 'slack')));
   const blocks: SlackBlock[] = [
     { type: 'context', elements: [{ type: 'mrkdwn', text: `*${kindLabel}*` }] },
-    { type: 'header', text: { type: 'plain_text', text: data.title } },
-    // The reason of a refusal comes first: it is what the author opens the message for.
-    ...(kind === 'refused' && data.review?.comment
-      ? [
-          {
-            type: 'section' as const,
-            text: column(t('embed.fields.reason'), text(data.review.comment, REASON_PREVIEW)),
-          },
-        ]
+    { type: 'header', text: { type: 'plain_text', text: named(template?.emoji, title) } },
+    ...top,
+    ...(columns.length > 0 ? [{ type: 'section' as const, fields: columns }] : []),
+    ...(data.url && template?.button?.enabled !== false
+      ? [slackButton(buttonLabel, data.url)]
       : []),
-    ...(description
-      ? [
-          {
-            type: 'section' as const,
-            text: { type: 'mrkdwn' as const, text: text(description, DESCRIPTION_PREVIEW) },
-          },
-        ]
-      : []),
-    { type: 'section', text: column(t('embed.fields.when'), whenValue(data, locale, timeZone)) },
-    { type: 'section', fields: columns },
-    ...(data.url ? [slackButton(t(actionLabelKey(kind, 'slack')), data.url)] : []),
-    slackFooter(brand),
+    slackFooter(brand, template?.footer !== undefined ? say(template.footer) : undefined),
   ];
 
   const where = data.location ? ` · ${truncate(data.location, 60)}` : '';
   return {
-    fallback: `${kindLabel} : ${truncate(data.title, 120)} — ${whenLine(data, locale, timeZone)}${where}`,
-    color: normalizeHex(data.categoryColor),
+    fallback: `${kindLabel} : ${truncate(title, 120)} — ${whenLine(data, locale, timeZone)}${where}`,
+    color: normalizeHex(template?.color ?? data.categoryColor),
     blocks,
   };
 }

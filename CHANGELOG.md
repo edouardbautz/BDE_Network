@@ -6,6 +6,12 @@ All notable changes to this project are written here, in English. Format based o
 
 ## [Unreleased]
 
+### Changed
+
+- Development only, nothing visible: the cards, Slack messages and e-mails of the notifications are now written down as reference files (every kind, both languages, a complete
+  case, a bare one, one longer than any limit, a hostile one) that the tests hold to the byte, and their builders can apply a template of changes (texts, colour, which facts and
+  in which order, the button) over what they send, ready for the editor that will let a BDE write one. Without a template the output is exactly the same as before.
+
 ## [1.5.0] - 2026-10-23
 
 ### Added
