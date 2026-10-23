@@ -1,0 +1,1132 @@
+{
+  "full/pending": {
+    "discord": {
+      "title": "🙋  Camille Martin",
+      "url": "https://bde.example.fr/en/members",
+      "color": 12619830,
+      "description": "-# NEW ACCESS REQUEST\n​\n### 🪪  cmartin\n🏫  Nice\n​\n> Camille Martin is asking for access to the platform.\n​\n👉  [Approve or refuse](https://bde.example.fr/en/members)",
+      "thumbnail": {
+        "url": "https://cdn.intra.42.fr/users/cmartin.jpg"
+      },
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "New access request : Camille Martin",
+      "color": "#c09036",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*New access request*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Camille Martin"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "Camille Martin is asking for access to the platform."
+          },
+          "accessory": {
+            "type": "image",
+            "image_url": "https://cdn.intra.42.fr/users/cmartin.jpg",
+            "alt_text": "Camille Martin"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*42 login*\ncmartin"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Campus*\nNice"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Approve or refuse"
+              },
+              "url": "https://bde.example.fr/en/members"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nNEW ACCESS REQUEST\n\nCamille Martin\n\nCamille Martin is asking for access to the platform.\n\n42 login : cmartin\nCampus : Nice\n\nApprove or refuse the request : https://bde.example.fr/en/members\n\n--\nYou are receiving this message because you can manage the members of BDE Nice.\nBDE_Network\n",
+      "html": "<!doctype html>\n<html lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:o=\"urn:schemas-microsoft-com:office:office\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n<meta name=\"x-apple-disable-message-reformatting\">\n<meta name=\"format-detection\" content=\"telephone=no,date=no,address=no,email=no,url=no\">\n<meta name=\"color-scheme\" content=\"light dark\">\n<meta name=\"supported-color-schemes\" content=\"light dark\">\n<title>Camille Martin</title>\n<!--[if mso]><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><style>table,td{font-family:Arial,sans-serif}</style><![endif]-->\n<style>\n    body,table,td,a{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}\n    table,td{mso-table-lspace:0;mso-table-rspace:0}\n    img{-ms-interpolation-mode:bicubic;border:0;outline:none;text-decoration:none}\n    a{color:inherit}\n    @media (max-width:620px){\n      .px{padding-left:20px!important;padding-right:20px!important}\n      .h1{font-size:24px!important;line-height:30px!important}\n      .stack{display:block!important;width:100%!important;padding-left:0!important;padding-right:0!important}\n      .label{padding-bottom:0!important}\n      .value{padding-top:2px!important;border-top:0!important}\n      .btn{display:block!important;text-align:center!important}\n    }\n    @media (prefers-color-scheme:dark){\n      .bg-page{background-color:#0e1012!important}\n      .bg-card{background-color:#181b1f!important}\n      .t-main{color:#eceef1!important}\n      .t-muted{color:#9aa1ab!important}\n      .rule{border-color:#2a2f36!important}\n      .logo{border:1px solid #6b7385!important}\n    }\n    [data-ogsc] .t-main{color:#eceef1!important}\n    [data-ogsc] .t-muted{color:#9aa1ab!important}\n    [data-ogsb] .bg-page{background-color:#0e1012!important}\n    [data-ogsb] .bg-card{background-color:#181b1f!important}\n    [data-ogsb] .rule{border-color:#2a2f36!important}\n    [data-ogsc] .logo{border:1px solid #6b7385!important}\n</style>\n</head>\n<body class=\"bg-page\" bgcolor=\"#eceef1\" style=\"margin:0;padding:0;width:100%;background-color:#eceef1\">\n<div style=\"display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all\">Camille Martin is asking for access to the platform.&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</div>\n<table role=\"presentation\" class=\"bg-page\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#eceef1\" style=\"background-color:#eceef1\"><tr><td align=\"center\" style=\"padding:28px 12px\">\n<!--[if mso]><table role=\"presentation\" width=\"600\" align=\"center\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td><![endif]-->\n<table role=\"presentation\" class=\"bg-card\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#ffffff\" style=\"max-width:600px;background-color:#ffffff;border-radius:24px\">\n<tr><td bgcolor=\"#c09036\" height=\"6\" style=\"height:6px;line-height:6px;font-size:6px;background-color:#c09036;border-radius:24px 24px 0 0\">&nbsp;</td></tr>\n<tr><td class=\"px\" style=\"padding:26px 36px 0\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td valign=\"middle\" width=\"40\" style=\"width:40px\"><img class=\"logo\" src=\"https://bde.example.fr/logo.png\" width=\"40\" height=\"40\" alt=\"\" style=\"display:block;width:40px;height:40px;border-radius:12px\"></td><td class=\"t-main\" style=\"font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;line-height:20px;color:#14161a;padding-left:12px\" valign=\"middle\">BDE Nice</td></tr></table></td></tr>\n<tr><td class=\"px\" style=\"padding:26px 36px 0\">\n<img src=\"https://cdn.intra.42.fr/users/cmartin.jpg\" width=\"64\" height=\"64\" alt=\"\" style=\"display:block;width:64px;height:64px;border-radius:32px;margin-bottom:16px\">\n<div class=\"t-muted\" style=\"font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5a606a\">New access request</div>\n<h1 class=\"h1 t-main\" style=\"margin:8px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:26px;line-height:32px;font-weight:800;color:#14161a\">Camille Martin</h1>\n<p class=\"t-main\" style=\"margin:14px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:23px;color:#14161a\">Camille Martin is asking for access to the platform.</p>\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:20px\"><tr>\n<td class=\"stack label t-muted rule\" width=\"130\" valign=\"top\" style=\"width:130px;padding:12px 12px 12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#5a606a\">42 login</td>\n<td class=\"stack value t-main rule\" valign=\"top\" style=\"padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:600;color:#14161a\">cmartin</td>\n</tr>\n<tr>\n<td class=\"stack label t-muted rule\" width=\"130\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;width:130px;padding:12px 12px 12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#5a606a\">Campus</td>\n<td class=\"stack value t-main rule\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:600;color:#14161a\">Nice</td>\n</tr></table>\n<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:28px\"><tr><td align=\"center\" bgcolor=\"#2f5bea\" style=\"background-color:#2f5bea;border-radius:999px\">\n<!--[if mso]><v:roundrect xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:w=\"urn:schemas-microsoft-com:office:word\" href=\"https://bde.example.fr/en/members\" arcsize=\"50%\" stroke=\"f\" fillcolor=\"#2f5bea\" style=\"height:46px;v-text-anchor:middle;width:354px\"><w:anchorlock/><center style=\"font-family:Arial,sans-serif;font-size:15px;font-weight:bold;color:#ffffff\">Approve or refuse the request</center></v:roundrect><![endif]-->\n<!--[if !mso]><!--><a class=\"btn\" href=\"https://bde.example.fr/en/members\" style=\"display:inline-block;padding:13px 28px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;line-height:20px;color:#ffffff;text-decoration:none;border-radius:999px;background-color:#2f5bea\">Approve or refuse the request</a><!--<![endif]-->\n</td></tr></table>\n\n</td></tr>\n<tr><td class=\"px\" style=\"padding:30px 36px 28px\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td class=\"rule t-muted\" style=\"border-top:1px solid #e6e8ec;padding-top:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#5a606a\">You are receiving this message because you can manage the members of BDE Nice.<br>BDE_Network</td></tr></table></td></tr>\n</table>\n<!--[if mso]></td></tr></table><![endif]-->\n</td></tr></table>\n</body>\n</html>\n"
+    }
+  },
+  "full/approved": {
+    "discord": {
+      "title": "✅  Camille Martin",
+      "url": "https://bde.example.fr/en/members",
+      "color": 3842159,
+      "description": "-# REQUEST APPROVED\n​\n### 🪪  cmartin\n🏫  Nice\n​\n> Camille Martin joined the BDE.\n​",
+      "fields": [
+        {
+          "name": "🎭  Role",
+          "value": "Trésorier",
+          "inline": true
+        },
+        {
+          "name": "🤝  Approved by",
+          "value": "Paula Martin",
+          "inline": true
+        }
+      ],
+      "thumbnail": {
+        "url": "https://cdn.intra.42.fr/users/cmartin.jpg"
+      },
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Request approved : Camille Martin",
+      "color": "#3aa06f",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Request approved*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Camille Martin"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "Camille Martin joined the BDE."
+          },
+          "accessory": {
+            "type": "image",
+            "image_url": "https://cdn.intra.42.fr/users/cmartin.jpg",
+            "alt_text": "Camille Martin"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*42 login*\ncmartin"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Campus*\nNice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Role*\nTrésorier"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Approved by*\nPaula Martin"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "subject": "Your access to BDE Nice is approved",
+      "text": "BDE Nice\nREQUEST APPROVED\n\nYour access to BDE Nice is approved\n\nHello Camille Martin, your access request has been approved.\n\nRole : Trésorier\n\nSign in : https://bde.example.fr/en\n\n--\nYou are receiving this message because you asked for access to BDE Nice.\nBDE_Network\n",
+      "html": "<!doctype html>\n<html lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:o=\"urn:schemas-microsoft-com:office:office\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n<meta name=\"x-apple-disable-message-reformatting\">\n<meta name=\"format-detection\" content=\"telephone=no,date=no,address=no,email=no,url=no\">\n<meta name=\"color-scheme\" content=\"light dark\">\n<meta name=\"supported-color-schemes\" content=\"light dark\">\n<title>Your access to BDE Nice is approved</title>\n<!--[if mso]><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><style>table,td{font-family:Arial,sans-serif}</style><![endif]-->\n<style>\n    body,table,td,a{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}\n    table,td{mso-table-lspace:0;mso-table-rspace:0}\n    img{-ms-interpolation-mode:bicubic;border:0;outline:none;text-decoration:none}\n    a{color:inherit}\n    @media (max-width:620px){\n      .px{padding-left:20px!important;padding-right:20px!important}\n      .h1{font-size:24px!important;line-height:30px!important}\n      .stack{display:block!important;width:100%!important;padding-left:0!important;padding-right:0!important}\n      .label{padding-bottom:0!important}\n      .value{padding-top:2px!important;border-top:0!important}\n      .btn{display:block!important;text-align:center!important}\n    }\n    @media (prefers-color-scheme:dark){\n      .bg-page{background-color:#0e1012!important}\n      .bg-card{background-color:#181b1f!important}\n      .t-main{color:#eceef1!important}\n      .t-muted{color:#9aa1ab!important}\n      .rule{border-color:#2a2f36!important}\n      .logo{border:1px solid #6b7385!important}\n    }\n    [data-ogsc] .t-main{color:#eceef1!important}\n    [data-ogsc] .t-muted{color:#9aa1ab!important}\n    [data-ogsb] .bg-page{background-color:#0e1012!important}\n    [data-ogsb] .bg-card{background-color:#181b1f!important}\n    [data-ogsb] .rule{border-color:#2a2f36!important}\n    [data-ogsc] .logo{border:1px solid #6b7385!important}\n</style>\n</head>\n<body class=\"bg-page\" bgcolor=\"#eceef1\" style=\"margin:0;padding:0;width:100%;background-color:#eceef1\">\n<div style=\"display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all\">Hello Camille Martin, your access request has been approved.&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</div>\n<table role=\"presentation\" class=\"bg-page\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#eceef1\" style=\"background-color:#eceef1\"><tr><td align=\"center\" style=\"padding:28px 12px\">\n<!--[if mso]><table role=\"presentation\" width=\"600\" align=\"center\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td><![endif]-->\n<table role=\"presentation\" class=\"bg-card\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#ffffff\" style=\"max-width:600px;background-color:#ffffff;border-radius:24px\">\n<tr><td bgcolor=\"#3aa06f\" height=\"6\" style=\"height:6px;line-height:6px;font-size:6px;background-color:#3aa06f;border-radius:24px 24px 0 0\">&nbsp;</td></tr>\n<tr><td class=\"px\" style=\"padding:26px 36px 0\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td valign=\"middle\" width=\"40\" style=\"width:40px\"><img class=\"logo\" src=\"https://bde.example.fr/logo.png\" width=\"40\" height=\"40\" alt=\"\" style=\"display:block;width:40px;height:40px;border-radius:12px\"></td><td class=\"t-main\" style=\"font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;line-height:20px;color:#14161a;padding-left:12px\" valign=\"middle\">BDE Nice</td></tr></table></td></tr>\n<tr><td class=\"px\" style=\"padding:26px 36px 0\">\n\n<div class=\"t-muted\" style=\"font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5a606a\">Request approved</div>\n<h1 class=\"h1 t-main\" style=\"margin:8px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:26px;line-height:32px;font-weight:800;color:#14161a\">Your access to BDE Nice is approved</h1>\n<p class=\"t-main\" style=\"margin:14px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:23px;color:#14161a\">Hello Camille Martin, your access request has been approved.</p>\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:20px\"><tr>\n<td class=\"stack label t-muted rule\" width=\"130\" valign=\"top\" style=\"width:130px;padding:12px 12px 12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#5a606a\">Role</td>\n<td class=\"stack value t-main rule\" valign=\"top\" style=\"padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:600;color:#14161a\">Trésorier</td>\n</tr></table>\n<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:28px\"><tr><td align=\"center\" bgcolor=\"#2f5bea\" style=\"background-color:#2f5bea;border-radius:999px\">\n<!--[if mso]><v:roundrect xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:w=\"urn:schemas-microsoft-com:office:word\" href=\"https://bde.example.fr/en\" arcsize=\"50%\" stroke=\"f\" fillcolor=\"#2f5bea\" style=\"height:46px;v-text-anchor:middle;width:190px\"><w:anchorlock/><center style=\"font-family:Arial,sans-serif;font-size:15px;font-weight:bold;color:#ffffff\">Sign in</center></v:roundrect><![endif]-->\n<!--[if !mso]><!--><a class=\"btn\" href=\"https://bde.example.fr/en\" style=\"display:inline-block;padding:13px 28px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;line-height:20px;color:#ffffff;text-decoration:none;border-radius:999px;background-color:#2f5bea\">Sign in</a><!--<![endif]-->\n</td></tr></table>\n\n</td></tr>\n<tr><td class=\"px\" style=\"padding:30px 36px 28px\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td class=\"rule t-muted\" style=\"border-top:1px solid #e6e8ec;padding-top:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#5a606a\">You are receiving this message because you asked for access to BDE Nice.<br>BDE_Network</td></tr></table></td></tr>\n</table>\n<!--[if mso]></td></tr></table><![endif]-->\n</td></tr></table>\n</body>\n</html>\n"
+    }
+  },
+  "full/removed": {
+    "discord": {
+      "title": "👋  Camille Martin",
+      "color": 14309193,
+      "description": "-# MEMBER REMOVED\n​\n### 🪪  cmartin\n🏫  Nice\n​\n> Camille Martin was removed from the BDE.\n​",
+      "fields": [
+        {
+          "name": "🎭  Role",
+          "value": "Trésorier",
+          "inline": true
+        },
+        {
+          "name": "🚪  Removed by",
+          "value": "Paula Martin",
+          "inline": true
+        }
+      ],
+      "thumbnail": {
+        "url": "https://cdn.intra.42.fr/users/cmartin.jpg"
+      },
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Member removed : Camille Martin",
+      "color": "#da5749",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Member removed*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Camille Martin"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "Camille Martin was removed from the BDE."
+          },
+          "accessory": {
+            "type": "image",
+            "image_url": "https://cdn.intra.42.fr/users/cmartin.jpg",
+            "alt_text": "Camille Martin"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*42 login*\ncmartin"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Campus*\nNice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Role*\nTrésorier"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Removed by*\nPaula Martin"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "full/plain": {
+    "pending": {
+      "subject": "New access request: Camille Martin",
+      "body": "Camille Martin (cmartin, campus Nice) is asking for access to the BDE platform.\nApprove or refuse the request : https://bde.example.fr/en/members"
+    },
+    "approved": {
+      "subject": "Request approved: Camille Martin",
+      "body": "Camille Martin (cmartin) joined the BDE with the role Trésorier."
+    },
+    "removed": {
+      "subject": "Member removed: Camille Martin",
+      "body": "Camille Martin (cmartin) was removed from the BDE by Paula Martin."
+    }
+  },
+  "bare/pending": {
+    "discord": {
+      "title": "🙋  Camille Martin",
+      "url": "https://bde.example.fr/en/members",
+      "color": 12619830,
+      "description": "-# NEW ACCESS REQUEST\n​\n### 🪪  cmartin\n​\n> Camille Martin is asking for access to the platform.\n​\n👉  [Approve or refuse](https://bde.example.fr/en/members)",
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "New access request : Camille Martin",
+      "color": "#c09036",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*New access request*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Camille Martin"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "Camille Martin is asking for access to the platform."
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*42 login*\ncmartin"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Approve or refuse"
+              },
+              "url": "https://bde.example.fr/en/members"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nNEW ACCESS REQUEST\n\nCamille Martin\n\nCamille Martin is asking for access to the platform.\n\n42 login : cmartin\n\nApprove or refuse the request : https://bde.example.fr/en/members\n\n--\nYou are receiving this message because you can manage the members of BDE Nice.\nBDE_Network\n",
+      "html": {
+        "sha256": "ff74e4d81b490c322f48fb3feff4eae909012c38c4e4c0738e6a428f7cd0d2ca",
+        "length": 7512
+      }
+    }
+  },
+  "bare/approved": {
+    "discord": {
+      "title": "✅  Camille Martin",
+      "url": "https://bde.example.fr/en/members",
+      "color": 3842159,
+      "description": "-# REQUEST APPROVED\n​\n### 🪪  cmartin\n​\n> Camille Martin joined the BDE.",
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Request approved : Camille Martin",
+      "color": "#3aa06f",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Request approved*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Camille Martin"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "Camille Martin joined the BDE."
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*42 login*\ncmartin"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "subject": "Your access to BDE Nice is approved",
+      "text": "BDE Nice\nREQUEST APPROVED\n\nYour access to BDE Nice is approved\n\nHello Camille Martin, your access request has been approved.\n\nRole : Membre\n\nSign in : https://bde.example.fr/en\n\n--\nYou are receiving this message because you asked for access to BDE Nice.\nBDE_Network\n",
+      "html": {
+        "sha256": "4be12e5666645df6bb52968c59cf787feb5ed242c9386df582c29132418a58f4",
+        "length": 7497
+      }
+    }
+  },
+  "bare/removed": {
+    "discord": {
+      "title": "👋  Camille Martin",
+      "color": 14309193,
+      "description": "-# MEMBER REMOVED\n​\n### 🪪  cmartin\n​\n> Camille Martin was removed from the BDE.",
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Member removed : Camille Martin",
+      "color": "#da5749",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Member removed*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Camille Martin"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "Camille Martin was removed from the BDE."
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*42 login*\ncmartin"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "bare/plain": {
+    "pending": {
+      "subject": "New access request: Camille Martin",
+      "body": "Camille Martin (cmartin, campus ) is asking for access to the BDE platform.\nApprove or refuse the request : https://bde.example.fr/en/members"
+    },
+    "approved": {
+      "subject": "Request approved: Camille Martin",
+      "body": "Camille Martin (cmartin) joined the BDE with the role Membre."
+    },
+    "removed": {
+      "subject": "Member removed: Camille Martin",
+      "body": "Camille Martin (cmartin) was removed from the BDE."
+    }
+  },
+  "hostile/pending": {
+    "discord": {
+      "title": "🙋  @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+      "url": "https://bde.example.fr/en/members",
+      "color": 12619830,
+      "description": "-# NEW ACCESS REQUEST\n​\n### 🪪  cmartin\n🏫  @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n​\n> @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_ is asking for access to the platform.\n​\n👉  [Approve or refuse](https://bde.example.fr/en/members)",
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "New access request : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+      "color": "#c09036",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*New access request*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_ is asking for access to the platform."
+          },
+          "accessory": {
+            "type": "image",
+            "image_url": "javascript:alert(1)",
+            "alt_text": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*42 login*\ncmartin"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Campus*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Approve or refuse"
+              },
+              "url": "https://bde.example.fr/en/members"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nNEW ACCESS REQUEST\n\n@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\n@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_ is asking for access to the platform.\n\n42 login : cmartin\nCampus : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\nApprove or refuse the request : https://bde.example.fr/en/members\n\n--\nYou are receiving this message because you can manage the members of BDE Nice.\nBDE_Network\n",
+      "html": {
+        "sha256": "71368bc7143f3dab24818410edac20cb6c864acbb840159fb4dcbcebb8659a10",
+        "length": 8846
+      }
+    }
+  },
+  "hostile/approved": {
+    "discord": {
+      "title": "✅  @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+      "url": "https://bde.example.fr/en/members",
+      "color": 3842159,
+      "description": "-# REQUEST APPROVED\n​\n### 🪪  cmartin\n🏫  @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n​\n> @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_ joined the BDE.\n​",
+      "fields": [
+        {
+          "name": "🎭  Role",
+          "value": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+          "inline": true
+        },
+        {
+          "name": "🤝  Approved by",
+          "value": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+          "inline": true
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Request approved : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+      "color": "#3aa06f",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Request approved*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_ joined the BDE."
+          },
+          "accessory": {
+            "type": "image",
+            "image_url": "javascript:alert(1)",
+            "alt_text": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*42 login*\ncmartin"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Campus*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Role*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Approved by*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "subject": "Your access to BDE Nice is approved",
+      "text": "BDE Nice\nREQUEST APPROVED\n\nYour access to BDE Nice is approved\n\nHello @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_, your access request has been approved.\n\nRole : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\nSign in : https://bde.example.fr/en\n\n--\nYou are receiving this message because you asked for access to BDE Nice.\nBDE_Network\n",
+      "html": {
+        "sha256": "92429425a67530a28844b409bf1190a08b26fb2a183874fddea55b22f17bed02",
+        "length": 8047
+      }
+    }
+  },
+  "hostile/removed": {
+    "discord": {
+      "title": "👋  @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+      "color": 14309193,
+      "description": "-# MEMBER REMOVED\n​\n### 🪪  cmartin\n🏫  @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n​\n> @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_ was removed from the BDE.\n​",
+      "fields": [
+        {
+          "name": "🎭  Role",
+          "value": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+          "inline": true
+        },
+        {
+          "name": "🚪  Removed by",
+          "value": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+          "inline": true
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Member removed : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+      "color": "#da5749",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Member removed*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_ was removed from the BDE."
+          },
+          "accessory": {
+            "type": "image",
+            "image_url": "javascript:alert(1)",
+            "alt_text": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*42 login*\ncmartin"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Campus*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Role*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Removed by*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "hostile/plain": {
+    "pending": {
+      "subject": "New access request: @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+      "body": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_ (cmartin, campus @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_) is asking for access to the BDE platform.\nApprove or refuse the request : https://bde.example.fr/en/members"
+    },
+    "approved": {
+      "subject": "Request approved: @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+      "body": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_ (cmartin) joined the BDE with the role @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_."
+    },
+    "removed": {
+      "subject": "Member removed: @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+      "body": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_ (cmartin) was removed from the BDE by @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_."
+    }
+  },
+  "longer/pending": {
+    "discord": {
+      "title": "🙋  Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.",
+      "url": "https://bde.example.fr/en/members",
+      "color": 12619830,
+      "description": "-# NEW ACCESS REQUEST\n​\n### 🪪  cmartin\n🏫  Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\n​\n> Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. is asking for access to the platform.\n​\n👉  [Approve or refuse](https://bde.example.fr/en/members)",
+      "thumbnail": {
+        "url": "https://cdn.intra.42.fr/users/cmartin.jpg"
+      },
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "New access request : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…",
+      "color": "#c09036",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*New access request*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long."
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très… is asking for access to the platform."
+          },
+          "accessory": {
+            "type": "image",
+            "image_url": "https://cdn.intra.42.fr/users/cmartin.jpg",
+            "alt_text": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long."
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*42 login*\ncmartin"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Campus*\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Approve or refuse"
+              },
+              "url": "https://bde.example.fr/en/members"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nNEW ACCESS REQUEST\n\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\n\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. is asking for access to the platform.\n\n42 login : cmartin\nCampus : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\n\nApprove or refuse the request : https://bde.example.fr/en/members\n\n--\nYou are receiving this message because you can manage the members of BDE Nice.\nBDE_Network\n",
+      "html": {
+        "sha256": "4bc2e6f7d2b8f70f1073b0f8b47dfb9516caf8564c20122849b035fb9c03565d",
+        "length": 15377
+      }
+    }
+  },
+  "longer/approved": {
+    "discord": {
+      "title": "✅  Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.",
+      "url": "https://bde.example.fr/en/members",
+      "color": 3842159,
+      "description": "-# REQUEST APPROVED\n​\n### 🪪  cmartin\n🏫  Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\n​\n> Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. joined the BDE.\n​",
+      "fields": [
+        {
+          "name": "🎭  Role",
+          "value": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.",
+          "inline": true
+        },
+        {
+          "name": "🤝  Approved by",
+          "value": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.",
+          "inline": true
+        }
+      ],
+      "thumbnail": {
+        "url": "https://cdn.intra.42.fr/users/cmartin.jpg"
+      },
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Request approved : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…",
+      "color": "#3aa06f",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Request approved*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long."
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très… joined the BDE."
+          },
+          "accessory": {
+            "type": "image",
+            "image_url": "https://cdn.intra.42.fr/users/cmartin.jpg",
+            "alt_text": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long."
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*42 login*\ncmartin"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Campus*\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Role*\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Approved by*\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "subject": "Your access to BDE Nice is approved",
+      "text": "BDE Nice\nREQUEST APPROVED\n\nYour access to BDE Nice is approved\n\nHello Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long., your access request has been approved.\n\nRole : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\n\nSign in : https://bde.example.fr/en\n\n--\nYou are receiving this message because you asked for access to BDE Nice.\nBDE_Network\n",
+      "html": {
+        "sha256": "b8bf8b2b6a8a396f812143b13fc309183b9e4ec12d577f3f3c826825766f4418",
+        "length": 11866
+      }
+    }
+  },
+  "longer/removed": {
+    "discord": {
+      "title": "👋  Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.",
+      "color": 14309193,
+      "description": "-# MEMBER REMOVED\n​\n### 🪪  cmartin\n🏫  Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\n​\n> Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. was removed from the BDE.\n​",
+      "fields": [
+        {
+          "name": "🎭  Role",
+          "value": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.",
+          "inline": true
+        },
+        {
+          "name": "🚪  Removed by",
+          "value": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.",
+          "inline": true
+        }
+      ],
+      "thumbnail": {
+        "url": "https://cdn.intra.42.fr/users/cmartin.jpg"
+      },
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Member removed : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…",
+      "color": "#da5749",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Member removed*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long."
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très… was removed from the BDE."
+          },
+          "accessory": {
+            "type": "image",
+            "image_url": "https://cdn.intra.42.fr/users/cmartin.jpg",
+            "alt_text": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long."
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*42 login*\ncmartin"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Campus*\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Role*\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Removed by*\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "longer/plain": {
+    "pending": {
+      "subject": "New access request: Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.",
+      "body": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. (cmartin, campus Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.) is asking for access to the BDE platform.\nApprove or refuse the request : https://bde.example.fr/en/members"
+    },
+    "approved": {
+      "subject": "Request approved: Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.",
+      "body": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. (cmartin) joined the BDE with the role Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.."
+    },
+    "removed": {
+      "subject": "Member removed: Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.",
+      "body": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. (cmartin) was removed from the BDE by Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.."
+    }
+  }
+}
