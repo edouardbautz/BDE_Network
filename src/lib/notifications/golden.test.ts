@@ -223,8 +223,6 @@ async function memberOutputs(locale: 'fr' | 'en', context?: TemplateContext) {
 }
 
 describe.each(['fr', 'en'] as const)('the notifications as they are sent (%s)', (locale) => {
-  const url = (path: string) => `https://bde.example.fr/${locale}${path}`;
-
   it('the cards, messages and e-mails of the events', async () => {
     await expect(JSON.stringify(await eventOutputs(locale), null, 2)).toMatchFileSnapshot(
       `./__golden__/events-${locale}.json`,
