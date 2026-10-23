@@ -161,7 +161,7 @@ const TEMPLATE_CASES: readonly ActionCase[] = [
     label: 'make a channel different from the others',
     effect: TEMPLATE_TABLES,
     allowed: templates,
-    args: () => [{ type: 'memberPending', channel: 'slack' }],
+    args: () => [{ type: 'memberPending', channel: 'discord' }],
     strictThrow: true,
   },
   {

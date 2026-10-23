@@ -28,7 +28,8 @@ between instances.
 - **Calendar sync.** A personal link for each member, and **one link for the whole BDE** to paste once into a shared
   calendar.
 - **Notifications** by email, Discord or Slack: an event confirmed, a reminder the day before, an access request, an
-  approval, a removal. On Discord and Slack, readable cards.
+  approval, a removal. On Discord and Slack, readable cards. **Every message can be customised** (words, colours, information
+  shown, button, mentions) from an editor with a live preview.
 - **Audit log** of sensitive actions, **GDPR** export of one's own data, a privacy page.
 - **French and English**, light and dark themes, your color and logo, usable on a phone.
 - **Easy to run.** Docker only, migrations applied at start, backup and restore scripts, a health check, and a guide

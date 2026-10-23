@@ -24,6 +24,9 @@ const LOGIN_MAY_STAY = new Set([
   'EventAssignee.login',
   'EventOccurrenceAssignee.login',
   'EventCancellation.cancelledByLogin',
+  'NotificationTemplate.updatedByLogin',
+  'NotificationTemplateVersion.authorLogin',
+  'NotificationMention.createdByLogin',
 ]);
 
 describe.skipIf(!ADMIN_URL)('what is left of a person once their account is removed', () => {
@@ -124,6 +127,18 @@ describe.skipIf(!ADMIN_URL)('what is left of a person once their account is remo
     };
     const rowsBefore = await kept();
     expect(rowsBefore['Event.authorLogin'], 'events they wrote').toBeGreaterThan(0);
+    expect(
+      rowsBefore['NotificationTemplate.updatedByLogin'],
+      'templates they wrote',
+    ).toBeGreaterThan(0);
+    expect(
+      rowsBefore['NotificationTemplateVersion.authorLogin'],
+      'versions they wrote',
+    ).toBeGreaterThan(0);
+    expect(
+      rowsBefore['NotificationMention.createdByLogin'],
+      'people they added to the mentions',
+    ).toBeGreaterThan(0);
 
     await database.client.query(`DELETE FROM "User" WHERE "id" = $1`, [before.id]);
 
@@ -156,6 +171,8 @@ describe.skipIf(!ADMIN_URL)('what is left of a person once their account is remo
        UNION ALL SELECT 'Event.authorId', count(*)::int FROM "Event" e WHERE "authorId" IS NOT NULL AND NOT EXISTS (SELECT 1 FROM "User" u WHERE u."id" = e."authorId")
        UNION ALL SELECT 'EventAssignee.userId', count(*)::int FROM "EventAssignee" x WHERE "userId" IS NOT NULL AND NOT EXISTS (SELECT 1 FROM "User" u WHERE u."id" = x."userId")
        UNION ALL SELECT 'EventOccurrenceAssignee.userId', count(*)::int FROM "EventOccurrenceAssignee" x WHERE "userId" IS NOT NULL AND NOT EXISTS (SELECT 1 FROM "User" u WHERE u."id" = x."userId")
+       UNION ALL SELECT 'NotificationTemplate.updatedById', count(*)::int FROM "NotificationTemplate" x WHERE "updatedById" IS NOT NULL AND NOT EXISTS (SELECT 1 FROM "User" u WHERE u."id" = x."updatedById")
+       UNION ALL SELECT 'NotificationTemplateVersion.authorId', count(*)::int FROM "NotificationTemplateVersion" x WHERE "authorId" IS NOT NULL AND NOT EXISTS (SELECT 1 FROM "User" u WHERE u."id" = x."authorId")
        UNION ALL SELECT 'EventCancellation.cancelledById', count(*)::int FROM "EventCancellation" x WHERE "cancelledById" IS NOT NULL AND NOT EXISTS (SELECT 1 FROM "User" u WHERE u."id" = x."cancelledById")`,
     );
     expect(rows.filter((row) => Number(row.n) > 0)).toEqual([]);

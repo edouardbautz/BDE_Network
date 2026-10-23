@@ -47,13 +47,16 @@ The words of the platform, as they appear in the interface. One word always mean
 
 ## Messages
 
-| Word             | Meaning                                                                                              |
-| ---------------- | ---------------------------------------------------------------------------------------------------- |
-| **Notification** | A message the platform sends: event confirmed, reminder, access request, member approved or removed. |
-| **Channel**      | Where the notification goes: email, Discord or Slack (none, one or several, **for each type**).      |
-| **Webhook**      | The secret address of a Discord or Slack channel, which lets the platform write in it.               |
-| **Card**         | The formatted message the platform posts on Discord or Slack.                                        |
-| **Reminder**     | The notification sent the day before an event, at the **reminder hour** set in Settings.             |
+| Word             | Meaning                                                                                                        |
+| ---------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Notification** | A message the platform sends: event confirmed, reminder, access request, member approved or removed.           |
+| **Channel**      | Where the notification goes: email, Discord or Slack (none, one or several, **for each type**).                |
+| **Webhook**      | The secret address of a Discord or Slack channel, which lets the platform write in it.                         |
+| **Card**         | The formatted message the platform posts on Discord or Slack.                                                  |
+| **Reminder**     | The notification sent the day before an event, at the **reminder hour** set in Settings.                       |
+| **Template**     | What a BDE changed of a notification's wording, look and information: only what it changed is kept.            |
+| **Variable**     | A word between braces, such as `{title}`, that a template replaces with what is specific to a message.         |
+| **Mention**      | A `@everyone`, `@here`, role, group or person written in a template, the only way a message notifies somebody. |
 
 ## Running it
 

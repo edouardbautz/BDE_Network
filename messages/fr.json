@@ -329,7 +329,7 @@
     },
     "retention": {
       "title": "Durée de conservation",
-      "description": "Vos données sont conservées tant que vous êtes membre du BDE. Lorsqu'un administrateur vous retire du bureau, votre compte est supprimé ; certains enregistrements historiques (comme le journal d'audit) conservent votre login en texte, sans lien vers un compte, à des fins de traçabilité. Les événements que vous avez créés ou dont vous étiez en charge conservent votre login en texte (le module Événements, s'il est activé)."
+      "description": "Vos données sont conservées tant que vous êtes membre du BDE. Lorsqu'un administrateur vous retire du bureau, votre compte est supprimé ; certains enregistrements historiques (comme le journal d'audit) conservent votre login en texte, sans lien vers un compte, à des fins de traçabilité. Les événements que vous avez créés ou dont vous étiez en charge conservent votre login en texte (le module Événements, s'il est activé). Il en va de même pour les modèles de notification que vous avez modifiés (leurs versions successives) et les personnes que vous avez ajoutées à la liste des mentions."
     },
     "rights": {
       "title": "Vos droits",

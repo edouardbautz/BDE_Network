@@ -56,6 +56,135 @@ Settings (see [Configuration](configuration.md#notifications-1)).
 
 Texts are written in the language of the messages chosen in **Settings**, Your BDE section.
 
+## Customising the messages
+
+The words, the colours, the information shown and its order, the button and the subject of e-mails can all be changed,
+for each notification and each channel, from the **Notifications** page of the menu. No code, nothing to restart: a
+change applies to the next message sent.
+
+Who can do it: the owners, and the members whose role has the **Customise notifications** right (see
+[Roles and rights](roles.md)). The channels themselves (webhook addresses, mail server) stay with the owners, in
+**Settings**.
+
+![The editor: a Discord message made different from the others, with its preview](../images/en/notification-editor.webp)
+
+### The page
+
+- On the left, **the list of notifications** (those of the Events module only show while it is on). Each shows where it
+  goes and a **Customised** badge when you changed it.
+- A tab **All channels** and one per channel. What you write in **All channels** applies to every channel that
+  follows it. A channel that needs something different is **customised**: it starts from a copy of the common
+  template and no longer follows later changes made for all channels. **Back to the common template** undoes that.
+  The e-mail to an approved member speaks to that person alone, so it always has a template of its own.
+- On the right, **the preview**, drawn by the platform with an example event and the very code that writes the
+  real message. A Discord card and a Slack message are pictures of the real thing: the test message (below) shows the
+  real result.
+- On a phone, fields and preview are two views of the same page (**Edit** and **Preview**), the fields of each row stack,
+  and nothing scrolls sideways.
+
+![The editor on a phone: the preview of the same message](../images/en/notification-editor-mobile.webp)
+
+### What can be changed
+
+| Section                    | What you can do                                                                                                                                                                                               |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Header**                 | The small text above the title, the title, the emoji in front of it (Discord), the colour of the bar (automatic: the category's or the kind of message's).                                                    |
+| **Message above the card** | A text above the card (Discord and Slack), with [mentions](#mentions).                                                                                                                                        |
+| **Information shown**      | Switch each fact on or off, move it up or down with the arrows, rename it, give it an emoji (Discord), and add up to 8 free texts. Each channel keeps its own order until you move one.                       |
+| **Button**                 | Show it or not, change its text, give it an address of your own (`https://` only). Without an address it opens the page of the event or the member on the platform. On Discord it is a link line in the card. |
+| **Footer**                 | The line at the bottom of the card or the e-mail.                                                                                                                                                             |
+| **E-mail** (E-mail tab)    | The subject, the line shown in the inbox after the subject, and a note at the bottom.                                                                                                                         |
+
+The fields show **what the platform writes by itself** until you write your own. Only what you changed is stored: the
+rest keeps following the platform (see [When the platform improves a message](#when-the-platform-improves-a-message)).
+
+**Variables** put what is specific to a message in a text: choose **Insert a variable** under a field, or type
+the name between braces, for example `{title}`. They are shown by name in the language of the interface (`{titre}`,
+`{catégorie}` in French) and are written the same way whichever language you type. Bold (`**text**`) and italic
+(`_text_`) work in free texts.
+
+| Variable                                         | What it stands for                                                                                   |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `{title}` `{place}` `{category}` `{description}` | The event's title, place, category and description.                                                  |
+| `{date}` `{time}` `{end_time}` `{when}`          | The day written out, the start time, the end time, and date and times together.                      |
+| `{assignees}` `{repeat}` `{link}` `{bde}`        | The members in charge, the sentence that describes a repetition, the page's address, the BDE's name. |
+| `{day}`                                          | "today" or "tomorrow" (reminders only).                                                              |
+| `{author}` `{reviewer}` `{comment}`              | Who proposed, who answered, the reason for a refusal (proposals only).                               |
+| `{name}` `{login}` `{campus}` `{role}` `{actor}` | A member's name, 42 login, campus and role, and who approved or removed them.                        |
+
+A notification only offers the variables it has (a reminder has `{day}`, a member has no `{place}`).
+
+### Mentions
+
+A mention is written in **the message above the card**, and only there: Discord does not notify for a mention inside
+a card. **Mention** inserts one:
+
+- `@everyone` and `@here` (Discord and Slack) and `@channel` (Slack only);
+- the **people, roles and groups** you put in the list of the channel, with **Manage people and roles…**: a readable
+  name ("The board") and the identifier the platform gives it. On Discord, turn on developer mode (Settings,
+  Advanced), then right-click a role or a person and choose _Copy ID_. On Slack, a member's identifier is in their
+  profile (_Copy member ID_), and a group's starts with `S`. Templates only ever write the name.
+
+What a **variable** stands for (a title, a place, a name typed by a member) **never mentions anybody**, whatever it
+contains: only what you wrote yourself in the template can. A name still used in a template cannot be removed from
+the list. A template for all channels can only mention `@everyone` and `@here`: people belong to one platform, so
+customise the channel first.
+
+### Trying it
+
+**Send a test on Discord** (or Slack, or E-mail) sends the notification **as it is on screen, saved or not**, through the channel's real
+connection, marked "Test message", with the example event. The e-mail goes to **your own address**.
+
+- A test is limited to **one every ten seconds per channel**.
+- In a test, **mentions are written as plain names and notify nobody**. To notify for real, turn on the switch under the preview and confirm.
+- A channel that is not set up cannot be tested: the page says so, and an owner sets it up in **Settings**.
+
+### Saving, history, going back
+
+- **Save** saves the tab you are on. A template with an error (an unknown variable, a text too long, an address that
+  is not `https://`) is refused with the place of the problem, and the preview says so as you type. Somebody else
+  saving the same template first is told to you: reload to see their version rather than overwrite it.
+- **More** opens the **version history** (the last 50 versions of the tab). **Restoring** a version creates a new one:
+  nothing is lost, and it is checked again like any other.
+- **Back to the platform's message** (a tab) and **Reset everything** (all channels of a notification) return to what
+  the platform writes by itself. They ask first, and stay in the history.
+- Every change is written in the **audit log** (who, what, which version), never the text itself.
+
+If a saved template cannot be used when a message goes out (for example it no longer matches what the platform accepts), **the
+platform's own message is sent instead**, so a notification is never lost, and the page of that notification says
+so, with the date and the reason, until you fix it.
+
+### When the platform improves a message
+
+A template only holds what you changed, so a later version of the platform that improves its messages improves
+everything you did not touch. **What you wrote is never replaced.** When a message you modified has been improved,
+the page tells you what changed, and you decide: adapt your template, or mark it as seen. Variables are never removed
+in a minor version.
+
+### Limits
+
+| Part                               | At most                       |
+| ---------------------------------- | ----------------------------- |
+| Small text, name of a fact         | 80, 40 characters             |
+| Title, footer, subject, inbox line | 200, 200, 150, 200 characters |
+| Free text                          | 500 characters, 8 of them     |
+| Introductory sentence (members)    | 300 characters                |
+| Button text, button address        | 60, 500 characters            |
+| Note under an e-mail               | 300 characters                |
+| Message above the card             | 1000 characters               |
+| Facts in the list                  | 24                            |
+
+Discord and Slack have their own limits: the platform cuts what goes over them, as it always did.
+
+### Good to know
+
+- Templates live in **the database**: the backup of `scripts/backup.sh` holds them, and `restore.sh` puts them back
+  (see [Upgrading](upgrading.md) and [Deployment](deployment.md)).
+- A template keeps the **login** of whoever wrote it (and of whoever added a person to the list of mentions), as
+  plain text, even after that account is removed. See the privacy policy.
+- Nothing typed in a template can inject code into a message: every text is escaped for the channel it goes to, links
+  in the button must be `https://`, and the e-mail preview is shown in a frame that runs nothing.
+
 ## Setting up Discord
 
 1. In Discord, open the channel's settings: **Integrations** → **Webhooks** → **New webhook**.

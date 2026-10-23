@@ -56,6 +56,143 @@ n'enregistrez pas depuis Paramètres (voir [Configuration](configuration.md#noti
 
 Les textes sont écrits dans la langue des messages choisie dans **Paramètres**, section Votre BDE.
 
+## Personnaliser les messages
+
+Les mots, les couleurs, les informations montrées et leur ordre, le bouton et l'objet des e-mails peuvent se
+changer, pour chaque notification et chaque canal, depuis la page **Notifications** du menu. Pas de code, rien à
+redémarrer : un changement s'applique au prochain message envoyé.
+
+Qui peut le faire : les propriétaires, et les membres dont le rôle a le droit **Personnaliser les notifications**
+(voir [Rôles et droits](roles.md)). Les canaux eux-mêmes (adresses des webhooks, serveur e-mail) restent aux
+propriétaires, dans **Paramètres**.
+
+![L'éditeur : un message Discord rendu différent des autres, avec son aperçu](../images/fr/notification-editor.webp)
+
+### La page
+
+- À gauche, **la liste des notifications** (celles du module Événements ne s'affichent que s'il est activé). Chacune
+  dit où elle part et porte un badge **Personnalisée** quand vous l'avez modifiée.
+- Un onglet **Tous les canaux** et un par canal. Ce que vous écrivez dans **Tous les canaux** s'applique à chaque
+  canal qui le suit. Un canal qui a besoin d'autre chose est **personnalisé** : il part d'une copie du modèle commun
+  et ne suit plus les modifications faites ensuite pour tous les canaux. **Revenir au modèle commun** annule cela.
+  L'e-mail d'un membre approuvé s'adresse à cette personne seule : il a donc toujours son propre modèle.
+- À droite, **l'aperçu**, dessiné par la plateforme avec un événement d'exemple et le code même qui écrit le vrai
+  message. Une carte Discord et un message Slack sont des images de la réalité : le message de test (plus bas) montre
+  le vrai rendu.
+- Sur téléphone, les champs et l'aperçu sont deux affichages de la même page (**Modifier** et **Aperçu**), les champs
+  de chaque ligne s'empilent, et rien ne défile sur le côté.
+
+![L'éditeur sur téléphone : l'aperçu du même message](../images/fr/notification-editor-mobile.webp)
+
+### Ce qui peut changer
+
+| Section                           | Ce que vous pouvez faire                                                                                                                                                                                                             |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **En-tête**                       | Le petit texte au-dessus du titre, le titre, l'emoji devant lui (Discord), la couleur de la barre (automatique : celle de la catégorie ou du type de message).                                                                       |
+| **Message au-dessus de la carte** | Un texte au-dessus de la carte (Discord et Slack), avec des [mentions](#les-mentions).                                                                                                                                               |
+| **Informations montrées**         | Activer ou masquer chaque information, la monter ou la descendre avec les flèches, la renommer, lui donner un emoji (Discord), et ajouter jusqu'à 8 textes libres. Chaque canal garde son ordre tant que vous n'en déplacez pas une. |
+| **Bouton**                        | Le montrer ou non, changer son texte, lui donner une adresse à vous (`https://` uniquement). Sans adresse, il ouvre la page de l'événement ou du membre sur la plateforme. Sur Discord, c'est une ligne de lien dans la carte.       |
+| **Pied du message**               | La ligne en bas de la carte ou de l'e-mail.                                                                                                                                                                                          |
+| **E-mail** (onglet E-mail)        | L'objet, la ligne affichée dans la boîte de réception après l'objet, et une note en bas du message.                                                                                                                                  |
+
+Les champs montrent **ce que la plateforme écrit d'elle-même** tant que vous n'écrivez pas le vôtre. Seul ce que vous
+avez changé est enregistré : le reste continue de suivre la plateforme (voir
+[Quand la plateforme améliore un message](#quand-la-plateforme-améliore-un-message)).
+
+Les **variables** mettent dans un texte ce qui est propre à un message : choisir **Insérer une variable** sous un
+champ, ou taper le nom entre accolades, par exemple `{titre}`. Elles s'affichent par leur nom dans la langue de
+l'interface (`{titre}`, `{catégorie}`) et s'écrivent de la même façon quelle que soit la langue dans laquelle vous
+tapez. Le gras (`**texte**`) et l'italique (`_texte_`) fonctionnent dans les textes libres.
+
+| Variable                                         | Ce qu'elle représente                                                                            |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `{titre}` `{lieu}` `{catégorie}` `{description}` | Le titre, le lieu, la catégorie et la description de l'événement.                                |
+| `{date}` `{heure}` `{fin}` `{quand}`             | Le jour en toutes lettres, l'heure de début, l'heure de fin, la date et les heures ensemble.     |
+| `{responsables}` `{répétition}` `{lien}` `{bde}` | Les membres en charge, la phrase qui décrit une répétition, l'adresse de la page, le nom du BDE. |
+| `{jour}`                                         | « aujourd'hui » ou « demain » (rappels uniquement).                                              |
+| `{auteur}` `{valideur}` `{commentaire}`          | Qui a proposé, qui a répondu, le motif d'un refus (propositions uniquement).                     |
+| `{nom}` `{login}` `{campus}` `{rôle}` `{acteur}` | Le nom d'un membre, son login 42, son campus et son rôle, et qui l'a approuvé ou retiré.         |
+
+Une notification ne propose que les variables qu'elle a (un rappel a `{jour}`, un membre n'a pas de `{lieu}`).
+
+### Les mentions
+
+Une mention s'écrit dans **le message au-dessus de la carte**, et seulement là : Discord ne prévient pas pour une
+mention à l'intérieur d'une carte. **Mentionner** en insère une :
+
+- `@everyone` et `@here` (Discord et Slack) et `@channel` (Slack uniquement) ;
+- les **personnes, rôles et groupes** que vous mettez dans la liste du canal, avec **Gérer les personnes et rôles…** :
+  un nom lisible (« Le Bureau ») et l'identifiant que la plateforme lui donne. Sur Discord, activez le mode
+  développeur (Paramètres, Avancés), puis faites un clic droit sur un rôle ou une personne et choisissez _Copier
+  l'identifiant_. Sur Slack, l'identifiant d'un membre est dans son profil (_Copier l'identifiant du membre_), et celui
+  d'un groupe commence par `S`. Les modèles n'écrivent jamais que le nom.
+
+Ce que représente une **variable** (un titre, un lieu, un nom saisi par un membre) **ne mentionne jamais personne**,
+quoi qu'il contienne : seul ce que vous avez écrit vous-même dans le modèle le peut. Un nom encore utilisé dans un
+modèle ne peut pas être retiré de la liste. Un modèle pour tous les canaux ne peut mentionner que `@everyone` et
+`@here` : les personnes appartiennent à une plateforme, il faut donc d'abord personnaliser le canal.
+
+### L'essayer
+
+**Envoyer un test sur Discord** (ou Slack, ou E-mail) envoie la notification **telle qu'elle est à l'écran,
+enregistrée ou non**, par la vraie connexion du canal, marquée « Message de test », avec l'événement d'exemple.
+L'e-mail part vers **votre propre adresse**.
+
+- Un test est limité à **un toutes les dix secondes par canal**.
+- Dans un test, **les mentions sont écrites en clair et ne préviennent personne**. Pour prévenir pour de vrai,
+  activez l'interrupteur sous l'aperçu et confirmez.
+- Un canal qui n'est pas configuré ne peut pas être testé : la page le dit, et un propriétaire le configure dans
+  **Paramètres**.
+
+### Enregistrer, historique, revenir en arrière
+
+- **Enregistrer** enregistre l'onglet où vous êtes. Un modèle avec une erreur (une variable inconnue, un texte trop
+  long, une adresse qui n'est pas en `https://`) est refusé avec l'endroit du problème, et l'aperçu le dit pendant
+  que vous tapez. Si quelqu'un d'autre a enregistré le même modèle avant vous, la page vous le dit : recharger pour
+  voir sa version plutôt que l'écraser.
+- **Plus** ouvre l'**historique des versions** (les 50 dernières de l'onglet). **Restaurer** une version en crée une
+  nouvelle : rien n'est perdu, et elle est revérifiée comme n'importe quelle autre.
+- **Revenir au message de la plateforme** (un onglet) et **Tout remettre comme la plateforme** (tous les canaux
+  d'une notification) reviennent à ce que la plateforme écrit d'elle-même. Ils demandent confirmation, et restent
+  dans l'historique.
+- Chaque changement est écrit dans le **journal d'audit** (qui, quoi, quelle version), jamais le texte lui-même.
+
+Si un modèle enregistré ne peut pas être utilisé au moment d'un envoi (par exemple parce qu'il ne correspond plus à
+ce que la plateforme accepte), **le message de la plateforme part à sa place** : une notification n'est donc jamais
+perdue, et la page de cette notification le dit, avec la date et la raison, jusqu'à ce que vous corrigiez.
+
+### Quand la plateforme améliore un message
+
+Un modèle ne contient que ce que vous avez changé : une version plus récente de la plateforme qui améliore ses
+messages améliore donc tout ce que vous n'avez pas touché. **Ce que vous avez écrit n'est jamais remplacé.** Quand un
+message que vous avez modifié a été amélioré, la page vous dit ce qui a changé, et vous décidez : adapter votre
+modèle, ou le marquer comme vu. Les variables ne sont jamais retirées dans une version mineure.
+
+### Limites
+
+| Élément                            | Au plus                       |
+| ---------------------------------- | ----------------------------- |
+| Petit texte, nom d'une information | 80, 40 caractères             |
+| Titre, pied, objet, ligne d'aperçu | 200, 200, 150, 200 caractères |
+| Texte libre                        | 500 caractères, 8 au plus     |
+| Phrase d'introduction (membres)    | 300 caractères                |
+| Texte du bouton, adresse du bouton | 60, 500 caractères            |
+| Note sous un e-mail                | 300 caractères                |
+| Message au-dessus de la carte      | 1000 caractères               |
+| Informations dans la liste         | 24                            |
+
+Discord et Slack ont leurs propres limites : la plateforme coupe ce qui les dépasse, comme elle l'a toujours fait.
+
+### À savoir
+
+- Les modèles sont dans **la base de données** : la sauvegarde de `scripts/backup.sh` les contient, et `restore.sh` les
+  remet (voir [Mise à jour](upgrading.md) et [Déploiement](deployment.md)).
+- Un modèle garde le **login** de celui qui l'a écrit (et de celui qui a ajouté une personne à la liste des
+  mentions), en texte, même après la suppression de ce compte. Voir la politique de confidentialité.
+- Rien de ce qui est tapé dans un modèle ne peut injecter de code dans un message : chaque texte est échappé pour le
+  canal où il part, les liens du bouton doivent être en `https://`, et l'aperçu de l'e-mail s'affiche dans un cadre
+  qui n'exécute rien.
+
 ## Configurer Discord
 
 1. Dans Discord, ouvrez les paramètres du salon : **Intégrations** → **Webhooks** → **Nouveau webhook**.

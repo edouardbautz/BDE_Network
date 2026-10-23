@@ -6,11 +6,38 @@ All notable changes to this project are written here, in English. Format based o
 
 ## [Unreleased]
 
+### Added
+
+- **Every notification can be customised, with a live preview.** A new **Notifications** page (a bell in the menu) lets the owners, and
+  the members whose role has the new **Customise notifications** right, change what the Discord cards, Slack messages and e-mails
+  say and how they look: the small text, the title, the emoji, the colour, which facts are shown, in which order and under which name,
+  free texts, the button (its words and an `https://` address of its own), the footer, and for e-mails the subject, the inbox line and a
+  note. Words that vary (the title, the place, the name of a member…) are inserted from a list of **variables** shown in the language
+  of the interface. A tab **All channels** and one per channel: a channel follows the common template until it is customised, and can go
+  back to it. What the platform writes by itself is shown in every field and **only what was changed is kept**, so the rest keeps
+  following the platform's improvements, and what a BDE wrote is never replaced.
+- **Mentions that only the BDE can write.** The message above a card can mention `@everyone`, `@here` (and `@channel` on Slack) and the people,
+  roles and groups of a list the BDE keeps for each platform. Only what is written in the template notifies: a title, a place or a name
+  typed by a member never does, whatever it contains.
+- **Safety nets.** A test message per channel, with the notification as it is on screen (saved or not), marked as a test, one every ten
+  seconds, with the mentions written as plain names unless the person turns them on and confirms; a history of the last 50 versions of each
+  tab with a restore; a way back to the platform's own message for a tab or for a whole notification; every change in the audit log
+  (never the text); and, if a saved template cannot be used when a message goes out, **the platform's own message is sent instead** and
+  the page says so.
+- **Quality.** The new page and its 11 actions are in the access matrix, the attacks on the running image play hostile text through
+  the stored templates, the previews of every channel and the action that writes a template called from another site, the update suite
+  checks the new tables, the right and the page (and a template through backup and restore), and the quality dataset holds templates,
+  mentions and their history, with the invariants and the erasure test over them.
+
 ### Changed
 
-- Development only, nothing visible: the cards, Slack messages and e-mails of the notifications are now written down as reference files (every kind, both languages, a complete
-  case, a bare one, one longer than any limit, a hostile one) that the tests hold to the byte, and their builders can apply a template of changes (texts, colour, which facts and
-  in which order, the button) over what they send, ready for the editor that will let a BDE write one. Without a template the output is exactly the same as before.
+- The cards, Slack messages and e-mails of the notifications are written down as reference files (every kind, both languages, a complete
+  case, a bare one, one longer than any limit, a hostile one) that the tests hold to the byte: **without a template the messages are exactly the
+  same as before.**
+- The privacy policy says that the notification templates a person edited, their versions and the people they added to the list of mentions
+  keep their login as plain text, like the audit log. The personal export lists them (never what the templates say).
+- A new migration adds the tables of the templates, the versions and the mentions; a copy of the database is therefore made before the update,
+  from every version, as for any migration.
 
 ## [1.5.0] - 2026-10-23
 

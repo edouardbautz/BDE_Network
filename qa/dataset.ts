@@ -247,6 +247,246 @@ class Script {
   }
 }
 
+// ---- the templates of the notifications ----------------------------------------------------------------------------------
+
+interface TemplateFixture {
+  type: string;
+  scope: string;
+  /** The versions kept, oldest first: what made each, and what it held (null: a return to the platform's own). */
+  versions: { action: string; content: object | null; by: string }[];
+}
+
+/** The people a template can mention, as a BDE would have put them in its directory. */
+const MENTIONS = [
+  ['discord', 'role', 'bureau', 'Le Bureau', '123456789012345678', 'qa-owner'],
+  ['discord', 'user', 'paula', 'Paula', '223456789012345678', 'qa-validator'],
+  ['slack', 'group', 'bureau', 'Le Bureau', 'S01ABCDE2F3', 'qa-owner'],
+] as const;
+
+/**
+ * What a BDE that has customised its notifications holds: a template for all channels with a button of its own, a channel that left
+ * it with a mention above the card and a free text, an e-mail with its own subject, a Slack message, a template of the members, a
+ * history with a return to the platform's own and a restore. All of it is valid for the engine of the repository (the invariants
+ * say so), and written by accounts of the dataset so that the removal of an account is played over it.
+ */
+const TEMPLATES: readonly TemplateFixture[] = [
+  {
+    type: 'eventConfirmed',
+    scope: 'all',
+    versions: [
+      { action: 'save', content: { title: '{title}' }, by: 'qa-owner' },
+      { action: 'reset', content: null, by: 'qa-owner' },
+      {
+        action: 'save',
+        content: {
+          eyebrow: 'Nouvelle soirée au BDE',
+          title: '{title} · {place}',
+          color: '#7c3aed',
+          button: {
+            enabled: true,
+            label: "Je m'inscris",
+            url: 'https://forms.example.fr/inscription',
+          },
+          footer: 'Le BDE vous attend',
+        },
+        by: 'qa-validator',
+      },
+    ],
+  },
+  {
+    type: 'eventConfirmed',
+    scope: 'discord',
+    versions: [
+      {
+        action: 'save',
+        content: {
+          above: '{@role:bureau} nouvelle date !',
+          emoji: '🎉',
+          items: {
+            order: 'custom',
+            list: [
+              { id: 'when', enabled: true },
+              { id: 'where', enabled: true, label: 'Où ça ?', emoji: '📍' },
+              { id: 'description', enabled: true },
+              { id: 'category', enabled: false },
+              { id: 'assignees', enabled: false },
+              { id: 'repeats', enabled: false },
+              { id: 'text:a1b2c3', enabled: true, text: '**Venez nombreux** !' },
+            ],
+          },
+        },
+        by: 'qa-owner',
+      },
+      {
+        action: 'restore:1',
+        content: {
+          above: '{@role:bureau} nouvelle date !',
+          emoji: '🎉',
+          items: {
+            order: 'custom',
+            list: [
+              { id: 'when', enabled: true },
+              { id: 'where', enabled: true, label: 'Où ça ?', emoji: '📍' },
+              { id: 'description', enabled: true },
+              { id: 'category', enabled: false },
+              { id: 'assignees', enabled: false },
+              { id: 'repeats', enabled: false },
+              { id: 'text:a1b2c3', enabled: true, text: '**Venez nombreux** !' },
+            ],
+          },
+        },
+        by: 'qa-validator',
+      },
+    ],
+  },
+  {
+    type: 'eventReminder',
+    scope: 'email',
+    versions: [
+      {
+        action: 'save',
+        content: {
+          subject: 'Rappel : {title} {day}',
+          preheader: 'Ne manquez pas {title}',
+          note: "Pensez à vous inscrire avant l'événement.",
+        },
+        by: 'qa-validator',
+      },
+    ],
+  },
+  {
+    type: 'memberPending',
+    scope: 'slack',
+    versions: [
+      {
+        action: 'save',
+        content: { above: '{@here}', title: 'Nouvelle demande de {name}' },
+        by: 'qa-owner',
+      },
+    ],
+  },
+  {
+    type: 'memberRemoved',
+    scope: 'all',
+    versions: [
+      { action: 'save', content: { footer: 'Merci pour votre engagement' }, by: 'qa-owner' },
+    ],
+  },
+];
+
+function addTemplates(context: Context): void {
+  const person = (login: string) => context.people.find((candidate) => candidate.login === login);
+  const at = (days: number) => new Date(context.now.getTime() - days * 86_400_000);
+
+  context.script.insert(
+    'NotificationMention',
+    ['id', 'key', 'platform', 'kind', 'label', 'externalId', 'createdByLogin', 'createdAt'],
+    MENTIONS.map(([platform, kind, key, label, externalId, by], index) => [
+      `qa-mention-${index + 1}`,
+      key,
+      platform,
+      kind,
+      label,
+      externalId,
+      by,
+      at(30),
+    ]),
+  );
+  for (const [platform, , key, , , by] of MENTIONS) {
+    context.audit.push({
+      id: nextId(context, 'qa-aud'),
+      actorLogin: by,
+      actorId: person(by)?.id ?? null,
+      action: 'notification_mention.add',
+      targetType: 'NotificationMention',
+      targetId: `${platform}:${key}`,
+      targetLabel: `${platform}:${key}`,
+      metadata: { platform, key },
+      createdAt: at(30),
+    });
+  }
+
+  const templates: Value[][] = [];
+  const versions: Value[][] = [];
+  for (const [index, fixture] of TEMPLATES.entries()) {
+    const last = fixture.versions[fixture.versions.length - 1]!;
+    const id = `qa-template-${index + 1}`;
+    templates.push([
+      id,
+      fixture.type,
+      fixture.scope,
+      sqlJson(last.content),
+      fixture.versions.length,
+      1,
+      at(10 - index),
+      last.by,
+      person(last.by)?.id ?? null,
+    ]);
+    for (const [number, version] of fixture.versions.entries()) {
+      const createdAt = at(20 - number * 3 - index);
+      versions.push([
+        `qa-template-version-${index + 1}-${number + 1}`,
+        fixture.type,
+        fixture.scope,
+        number + 1,
+        version.content ? sqlJson(version.content) : null,
+        1,
+        version.action,
+        version.by,
+        person(version.by)?.id ?? null,
+        createdAt,
+      ]);
+      context.audit.push({
+        id: nextId(context, 'qa-aud'),
+        actorLogin: version.by,
+        actorId: person(version.by)?.id ?? null,
+        action:
+          version.action === 'reset'
+            ? 'notification_template.reset'
+            : version.action.startsWith('restore')
+              ? 'notification_template.restore'
+              : 'notification_template.update',
+        targetType: 'NotificationTemplate',
+        targetId: `${fixture.type}:${fixture.scope}`,
+        targetLabel: `${fixture.type} · ${fixture.scope}`,
+        metadata: { type: fixture.type, scope: fixture.scope, version: number + 1 },
+        createdAt,
+      });
+    }
+  }
+  context.script.insert(
+    'NotificationTemplate',
+    [
+      'id',
+      'type',
+      'scope',
+      'content',
+      'version',
+      'basedOnRevision',
+      'updatedAt',
+      'updatedByLogin',
+      'updatedById',
+    ],
+    templates,
+  );
+  context.script.insert(
+    'NotificationTemplateVersion',
+    [
+      'id',
+      'type',
+      'scope',
+      'version',
+      'content',
+      'basedOnRevision',
+      'action',
+      'authorLogin',
+      'authorId',
+      'createdAt',
+    ],
+    versions,
+  );
+}
+
 // ---- the people -----------------------------------------------------------------------------------------------------
 
 interface Person {
@@ -987,6 +1227,7 @@ export function buildDataset(options: DatasetOptions = {}): Dataset {
   }
   addFixtureEvents(context);
   for (const row of context.events) auditEvent(context, row);
+  addTemplates(context);
 
   script.insert(
     'Event',
