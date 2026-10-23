@@ -12,12 +12,14 @@ import { atRest } from './rest';
 const WEBHOOK = 'https://discord.com/api/webhooks/123456789/qa-browsers-secret';
 const SLACK = 'https://hooks.slack.com/services/T123/B456/qabrowsers';
 
-const ticked = (page: Page) => page.locator('input[type="checkbox"]:checked').count();
-const tickable = (page: Page) => page.locator('input[type="checkbox"]:not(:disabled)').count();
-
 /** The form of the notifications: the settings page holds one form per section, each with its own Save button. */
 const form = (page: Page) =>
   page.locator('form', { has: page.getByRole('heading', { name: 'Who is told, and where' }) });
+
+// the boxes of the table only: other sections of the page have boxes of their own
+const ticked = (page: Page) => form(page).locator('input[type="checkbox"]:checked').count();
+const tickable = (page: Page) =>
+  form(page).locator('input[type="checkbox"]:not(:disabled)').count();
 
 async function save(page: Page) {
   await form(page).getByRole('button', { name: 'Save' }).click();
@@ -44,9 +46,9 @@ test.describe('the table of notifications', () => {
     await page.goto('/en/settings');
     await expect(page.getByRole('heading', { name: 'Who is told, and where' })).toBeVisible();
 
-    expect(await ticked(page)).toBe(0);
+    await expect.poll(() => ticked(page)).toBe(0);
     // no box can be ticked: every channel is still to be set up
-    expect(await tickable(page)).toBe(0);
+    await expect.poll(() => tickable(page)).toBe(0);
     await expect(form(page).getByRole('button', { name: 'Discord: check all' })).toBeDisabled();
     // the e-mail of a member who was removed does not exist
     await expect(page.getByRole('checkbox', { name: 'Member removed — E-mail' })).toHaveCount(0);
@@ -60,10 +62,10 @@ test.describe('the table of notifications', () => {
     try {
       await form(page).getByLabel('Discord webhook address').fill(WEBHOOK);
       await form(page).getByLabel('Slack webhook address').fill(SLACK);
-      expect(await tickable(page)).toBe(8 + 8);
+      await expect.poll(() => tickable(page)).toBe(8 + 8);
 
       await form(page).getByRole('button', { name: 'Discord: check all' }).click();
-      expect(await ticked(page)).toBe(8);
+      await expect.poll(() => ticked(page)).toBe(8);
       await expect(form(page).getByRole('button', { name: 'Discord: clear all' })).toBeVisible();
 
       await page.getByRole('checkbox', { name: 'Event confirmed — Slack' }).check();
@@ -71,7 +73,7 @@ test.describe('the table of notifications', () => {
 
       await page.reload();
       await expect(page.getByRole('heading', { name: 'Who is told, and where' })).toBeVisible();
-      expect(await ticked(page)).toBe(9);
+      await expect.poll(() => ticked(page)).toBe(9);
       await expect(page.getByRole('checkbox', { name: 'Event confirmed — Slack' })).toBeChecked();
       await expect(page.getByRole('checkbox', { name: 'Event confirmed — Discord' })).toBeChecked();
       await expect(
@@ -93,7 +95,7 @@ test.describe('the table of notifications', () => {
       await form(page).getByRole('button', { name: 'Save' }).click();
       await expect(form(page).getByRole('alert').first()).toBeVisible();
       await page.reload();
-      expect(await tickable(page)).toBe(0);
+      await expect.poll(() => tickable(page)).toBe(0);
     } finally {
       await leaveNoChannel(page);
     }
