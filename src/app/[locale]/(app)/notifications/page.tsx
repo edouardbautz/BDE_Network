@@ -73,8 +73,8 @@ export default async function NotificationsPage({
       <PageHeader title={t('page.title')} />
       <p className="text-muted-foreground text-body mb-6 max-w-3xl">{t('page.intro')}</p>
 
-      <div className="grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
-        <nav aria-label={t('page.listLabel')} className="flex flex-col gap-5">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
+        <nav aria-label={t('page.listLabel')} className="flex min-w-0 flex-col gap-5">
           {groups
             .filter((group) => group.types.length > 0)
             .map((group) => (

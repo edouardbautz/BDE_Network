@@ -6,7 +6,7 @@ export default function NotificationsLoading() {
     <>
       <PageHeaderSkeleton eyebrow={false} />
       <Skeleton className="mb-6 h-4 w-full max-w-xl" />
-      <div className="grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
         <div className="flex flex-col gap-2">
           {Array.from({ length: 6 }).map((_, index) => (
             <Skeleton key={index} className="h-14 w-full rounded-lg" />

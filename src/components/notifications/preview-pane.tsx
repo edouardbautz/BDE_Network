@@ -1,6 +1,6 @@
 'use client';
 
-import type { CSSProperties } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import type { DiscordEmbed } from '@/lib/notifications/discord-embed';
 import type { SlackBlock, SlackPayload } from '@/lib/notifications/slack-blocks';
@@ -24,19 +24,46 @@ interface PreviewProps {
 const decimalToCss = (value: number | undefined): string | undefined =>
   value === undefined ? undefined : `#${value.toString(16).padStart(6, '0')}`;
 
+/** A picture of the BDE or the platform: when the address does not answer (a local installation, a private network), it is left out, never drawn broken. */
+function Picture({
+  src,
+  alt,
+  className,
+  fallback = null,
+}: {
+  src: string;
+  alt: string;
+  className: string;
+  fallback?: ReactNode;
+}) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <>{fallback}</>;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- a plain address, drawn as the platform would post it
+    <img src={src} alt={alt} className={className} onError={() => setFailed(true)} />
+  );
+}
+
 function Sender({ name, logoUrl }: { name: string; logoUrl?: string }) {
+  const initial = (
+    <span
+      aria-hidden="true"
+      className="bg-accent-fill text-accent-on flex size-8 items-center justify-center rounded-pill text-small font-semibold"
+    >
+      {name.slice(0, 1).toUpperCase()}
+    </span>
+  );
   return (
     <div className="flex items-center gap-2">
       {logoUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- the BDE's own picture, a plain address
-        <img src={logoUrl} alt="" className="size-8 rounded-pill object-cover" />
+        <Picture
+          src={logoUrl}
+          alt=""
+          className="size-8 rounded-pill object-cover"
+          fallback={initial}
+        />
       ) : (
-        <span
-          aria-hidden="true"
-          className="bg-accent-fill text-accent-on flex size-8 items-center justify-center rounded-pill text-small font-semibold"
-        >
-          {name.slice(0, 1).toUpperCase()}
-        </span>
+        initial
       )}
       <span className="text-body-strong">{name}</span>
     </div>
@@ -70,8 +97,7 @@ function DiscordCard({
             {embed.author && (
               <div className="text-small flex items-center gap-1.5 font-semibold">
                 {embed.author.icon_url && (
-                  // eslint-disable-next-line @next/next/no-img-element -- the BDE's own picture, a plain address
-                  <img src={embed.author.icon_url} alt="" className="size-5 rounded-pill" />
+                  <Picture src={embed.author.icon_url} alt="" className="size-5 rounded-pill" />
                 )}
                 {embed.author.name}
               </div>
@@ -86,8 +112,7 @@ function DiscordCard({
             )}
           </div>
           {embed.thumbnail && (
-            // eslint-disable-next-line @next/next/no-img-element -- a picture of the platform or the BDE
-            <img
+            <Picture
               src={embed.thumbnail.url}
               alt=""
               className="size-14 shrink-0 rounded-md object-cover"
@@ -152,8 +177,7 @@ function SlackBlocks({ blocks, labels }: { blocks: SlackBlock[]; labels: Mention
               >
                 {block.elements.map((element, i) =>
                   element.type === 'image' ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- the BDE's own picture, a plain address
-                    <img
+                    <Picture
                       key={i}
                       src={element.image_url}
                       alt={element.alt_text}

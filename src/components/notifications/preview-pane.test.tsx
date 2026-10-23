@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { Preview } from '@/lib/notifications/templates/preview';
@@ -69,6 +69,28 @@ describe('a Discord card', () => {
       embed: { title: 'T' },
     });
     expect(screen.getByTestId('preview-discord').querySelectorAll('p')).toHaveLength(0);
+  });
+});
+
+describe('a picture that does not load', () => {
+  it('is left out, never drawn broken, and the BDE falls back on its initial', () => {
+    const view = show(
+      {
+        channel: 'discord',
+        embed: {
+          author: { name: 'BDE Nice', icon_url: 'https://bde.example.fr/logo.png' },
+          thumbnail: { url: 'https://bde.example.fr/logo.png' },
+          title: 'T',
+        },
+      },
+      {},
+      'https://bde.example.fr/logo.png',
+    );
+    const pictures = [...view.container.querySelectorAll('img')];
+    expect(pictures).toHaveLength(3);
+    for (const picture of pictures) fireEvent.error(picture);
+    expect(view.container.querySelectorAll('img')).toHaveLength(0);
+    expect(screen.getByText('B')).toBeInTheDocument();
   });
 });
 
