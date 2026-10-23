@@ -274,7 +274,8 @@
           "removedBy": "Removed by"
         },
         "action": {
-          "pending": "Approve or refuse"
+          "pending": "Approve or refuse",
+          "members": "View the members"
         }
       },
       "email": {
@@ -374,6 +375,10 @@
         "intro": "Reminder: this event takes place today."
       },
       "embed": {
+        "day": {
+          "tomorrow": "tomorrow",
+          "today": "today"
+        },
         "kind": {
           "confirmed": "New event confirmed",
           "reminderTomorrow": "Reminder · tomorrow",

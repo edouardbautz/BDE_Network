@@ -19,6 +19,8 @@ import {
   type MemberFacts,
 } from '@/lib/members/messages';
 import { buildMemberSlack } from '@/lib/members/slack-blocks';
+import { ITEMS } from './templates/catalog';
+import type { TemplateContext, TemplateType } from './templates/types';
 import { getNotificationTranslate } from './translate';
 
 /**
@@ -144,43 +146,87 @@ const MEMBER_CASES: Record<string, MemberFacts> = {
   },
 };
 
+/** Every card, message and e-mail of the events, for every case and kind. `context` is what a BDE's template would add. */
+async function eventOutputs(locale: 'fr' | 'en', context?: TemplateContext) {
+  const t = await getNotificationTranslate(locale, 'events.notifications');
+  const out: Record<string, unknown> = {};
+  for (const [name, base] of Object.entries(EVENT_CASES)) {
+    for (const kind of EVENT_KINDS) {
+      const data = withReview(kind, {
+        ...base,
+        ...(base.url && { url: base.url.replace('/fr/', `/${locale}/`) }),
+      });
+      const brand = name === 'bare' ? BARE_BRAND : BRAND;
+      const email = buildEventEmail(
+        kind,
+        data,
+        t,
+        locale,
+        PARIS,
+        brand,
+        kind === 'confirmed' ? { filename: 'e.ics', content: 'BEGIN:VCALENDAR' } : undefined,
+        context,
+      );
+      out[`${name}/${kind}`] = {
+        discord: buildEventEmbed(kind, data, t, PARIS, NOW, context),
+        slack: buildEventSlack(kind, data, t, locale, PARIS, brand, context),
+        email: cut(email, name === 'full' && (kind === 'confirmed' || kind === 'refused')),
+      };
+    }
+  }
+  return out;
+}
+
+/** The same for the members. */
+async function memberOutputs(locale: 'fr' | 'en', context?: TemplateContext) {
+  const t = await getNotificationTranslate(locale, 'members.notifications');
+  const url = (path: string) => `https://bde.example.fr/${locale}${path}`;
+  const out: Record<string, unknown> = {};
+  for (const [name, member] of Object.entries(MEMBER_CASES)) {
+    const brand = name === 'bare' ? BARE_BRAND : BRAND;
+    for (const kind of ['pending', 'approved', 'removed'] as const) {
+      const link = kind === 'removed' ? null : url('/members');
+      const entry: Record<string, unknown> = {
+        discord: buildMemberEmbed(kind, member, t, link, NOW, context),
+        slack: buildMemberSlack(kind, member, t, link, brand, context),
+      };
+      if (kind === 'pending') {
+        entry.email = cut(
+          buildPendingEmail(member, t, link, brand, locale, context),
+          name === 'full',
+        );
+      }
+      if (kind === 'approved') {
+        entry.email = cut(
+          buildApprovedEmail(
+            member,
+            member.roleName ?? 'Membre',
+            t,
+            url(''),
+            brand,
+            locale,
+            context,
+          ),
+          name === 'full',
+        );
+      }
+      out[`${name}/${kind}`] = entry;
+    }
+    // the plain texts do not follow a template: they are what every channel falls back to
+    out[`${name}/plain`] = {
+      pending: buildPendingMessage(member, t, url('/members')),
+      approved: buildApprovedMessage(member, member.roleName ?? 'Membre', t),
+      removed: buildRemovedMessage(member, t),
+    };
+  }
+  return out;
+}
+
 describe.each(['fr', 'en'] as const)('the notifications as they are sent (%s)', (locale) => {
   const url = (path: string) => `https://bde.example.fr/${locale}${path}`;
 
   it('the cards, messages and e-mails of the events', async () => {
-    const t = await getNotificationTranslate(locale, 'events.notifications');
-    const out: Record<string, unknown> = {};
-    for (const [name, base] of Object.entries(EVENT_CASES)) {
-      for (const kind of EVENT_KINDS) {
-        const data = withReview(kind, {
-          ...base,
-          ...(base.url && { url: base.url.replace('/fr/', `/${locale}/`) }),
-        });
-        const full = name === 'full' && (kind === 'confirmed' || kind === 'refused');
-        const email = buildEventEmail(
-          kind,
-          data,
-          t,
-          locale,
-          PARIS,
-          name === 'bare' ? BARE_BRAND : BRAND,
-          kind === 'confirmed' ? { filename: 'e.ics', content: 'BEGIN:VCALENDAR' } : undefined,
-        );
-        out[`${name}/${kind}`] = {
-          discord: buildEventEmbed(kind, data, t, PARIS, NOW),
-          slack: buildEventSlack(
-            kind,
-            data,
-            t,
-            locale,
-            PARIS,
-            name === 'bare' ? BARE_BRAND : BRAND,
-          ),
-          email: cut(email, full),
-        };
-      }
-    }
-    await expect(JSON.stringify(out, null, 2)).toMatchFileSnapshot(
+    await expect(JSON.stringify(await eventOutputs(locale), null, 2)).toMatchFileSnapshot(
       `./__golden__/events-${locale}.json`,
     );
   });
@@ -204,36 +250,32 @@ describe.each(['fr', 'en'] as const)('the notifications as they are sent (%s)', 
   });
 
   it('the cards, messages and e-mails of the members', async () => {
-    const t = await getNotificationTranslate(locale, 'members.notifications');
-    const out: Record<string, unknown> = {};
-    for (const [name, member] of Object.entries(MEMBER_CASES)) {
-      const brand = name === 'bare' ? BARE_BRAND : BRAND;
-      for (const kind of ['pending', 'approved', 'removed'] as const) {
-        const link = kind === 'removed' ? null : url('/members');
-        const entry: Record<string, unknown> = {
-          discord: buildMemberEmbed(kind, member, t, link, NOW),
-          slack: buildMemberSlack(kind, member, t, link, brand),
-        };
-        if (kind === 'pending') {
-          entry.email = cut(buildPendingEmail(member, t, link, brand, locale), name === 'full');
-        }
-        if (kind === 'approved') {
-          entry.email = cut(
-            buildApprovedEmail(member, member.roleName ?? 'Membre', t, url(''), brand, locale),
-            name === 'full',
-          );
-        }
-        out[`${name}/${kind}`] = entry;
-      }
-      out[`${name}/plain`] = {
-        pending: buildPendingMessage(member, t, url('/members')),
-        approved: buildApprovedMessage(member, member.roleName ?? 'Membre', t),
-        removed: buildRemovedMessage(member, t),
-      };
-    }
-    await expect(JSON.stringify(out, null, 2)).toMatchFileSnapshot(
+    await expect(JSON.stringify(await memberOutputs(locale), null, 2)).toMatchFileSnapshot(
       `./__golden__/members-${locale}.json`,
     );
+  });
+
+  it('a template that says nothing changes nothing, whatever the channel, the kind or the text', async () => {
+    const empty: TemplateContext = { template: {}, bdeName: 'BDE Nice', locale };
+    expect(await eventOutputs(locale, empty)).toEqual(await eventOutputs(locale));
+    expect(await memberOutputs(locale, empty)).toEqual(await memberOutputs(locale));
+  });
+
+  it('nor does a template that lists every fact in the order the channel shows them', async () => {
+    // an explicit list is the BDE saying "these, as they are": the same notification
+    const list = (type: TemplateType) => ({
+      items: {
+        order: 'native' as const,
+        list: ITEMS[type].map((id) => ({ id, enabled: true })),
+      },
+    });
+    const t = await getNotificationTranslate(locale, 'events.notifications');
+    const data = withReview('refused', EVENT_CASES.full!);
+    const plain = buildEventEmbed('refused', data, t, PARIS, NOW);
+    const listed = buildEventEmbed('refused', data, t, PARIS, NOW, {
+      template: list('eventRefused'),
+    });
+    expect(listed).toEqual(plain);
   });
 });
 

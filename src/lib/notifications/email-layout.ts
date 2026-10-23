@@ -1,6 +1,7 @@
 import { deriveAccent } from '@/lib/color';
 import { EMAIL_TOKENS, normalizeHex } from './colors';
 import { PLATFORM_NAME } from './platform';
+import type { Segment } from './templates/text';
 import { httpUrl } from './text';
 
 /**
@@ -36,6 +37,8 @@ export interface EmailModel {
   heading: string;
   /** A paragraph under the heading. New lines are kept. */
   lead?: string;
+  /** More paragraphs under the lead, with bold and italic: the free texts of a template. */
+  paragraphs?: Segment[][];
   /** A person's picture, above the heading (the member a message is about). */
   avatarUrl?: string;
   fields: EmailField[];
@@ -80,6 +83,18 @@ export function escapeHtml(text: string): string {
 /** Text with its line breaks kept, escaped. */
 function multiline(text: string): string {
   return escapeHtml(text.replace(/\r\n?/g, '\n')).replace(/\n/g, '<br>');
+}
+
+/** A text with its bold and italic as HTML: escaped like any text, line breaks kept. */
+function richHtml(segments: readonly Segment[]): string {
+  return segments
+    .map((segment) => {
+      let html = multiline(segment.text);
+      if (segment.italic) html = `<em>${html}</em>`;
+      if (segment.bold) html = `<strong>${html}</strong>`;
+      return html;
+    })
+    .join('');
 }
 
 /** Characters that push the body text out of the inbox preview, after the preheader. */
@@ -166,6 +181,12 @@ export function renderEmail(model: EmailModel): RenderedEmail {
   const buttonAccent = normalizeHex(model.brand.accent ?? model.accent);
   const avatarUrl = httpUrl(model.avatarUrl);
   const action = model.action && httpUrl(model.action.url) ? model.action : undefined;
+  const paragraphsHtml = (model.paragraphs ?? [])
+    .map(
+      (paragraph) =>
+        `\n<p class="t-main" style="margin:14px 0 0;font-family:${FONT};font-size:15px;line-height:23px;color:${LIGHT.text}">${richHtml(paragraph)}</p>`,
+    )
+    .join('');
 
   const html = `<!doctype html>
 <html lang="${escapeHtml(model.lang)}" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
@@ -193,7 +214,7 @@ export function renderEmail(model: EmailModel): RenderedEmail {
 ${avatarUrl ? `<img src="${escapeHtml(avatarUrl)}" width="64" height="64" alt="" style="display:block;width:64px;height:64px;border-radius:32px;margin-bottom:16px">` : ''}
 <div class="t-muted" style="font-family:${FONT};font-size:12px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${LIGHT.muted}">${escapeHtml(model.eyebrow)}</div>
 <h1 class="h1 t-main" style="margin:8px 0 0;font-family:${FONT};font-size:26px;line-height:32px;font-weight:800;color:${LIGHT.text}">${escapeHtml(model.heading)}</h1>
-${model.lead ? `<p class="t-main" style="margin:14px 0 0;font-family:${FONT};font-size:15px;line-height:23px;color:${LIGHT.text}">${multiline(model.lead)}</p>` : ''}
+${model.lead ? `<p class="t-main" style="margin:14px 0 0;font-family:${FONT};font-size:15px;line-height:23px;color:${LIGHT.text}">${multiline(model.lead)}</p>` : ''}${paragraphsHtml}
 ${model.fields.length > 0 ? fieldRows(model.fields) : ''}
 ${action ? buttonHtml(action, buttonAccent) : ''}
 ${model.note ? `<p class="t-muted" style="margin:16px 0 0;font-family:${FONT};font-size:13px;line-height:19px;color:${LIGHT.muted}">${multiline(model.note)}</p>` : ''}
@@ -212,6 +233,10 @@ ${model.note ? `<p class="t-muted" style="margin:16px 0 0;font-family:${FONT};fo
     '',
     model.heading,
     ...(model.lead ? ['', model.lead] : []),
+    ...(model.paragraphs ?? []).flatMap((paragraph) => [
+      '',
+      paragraph.map((segment) => segment.text).join(''),
+    ]),
     ...(model.fields.length > 0
       ? ['', ...model.fields.map((field) => `${field.label} : ${field.value}`)]
       : []),

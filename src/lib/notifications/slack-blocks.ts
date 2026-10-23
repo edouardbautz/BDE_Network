@@ -172,15 +172,21 @@ export function fitSlackPayload(payload: SlackPayload): SlackPayload {
   };
 }
 
-/** The BDE's logo (when Slack can fetch it) and name, then the platform's, in the footer. */
-export function slackFooter(brand: { name: string; logoUrl?: string }): SlackBlock {
+/** The BDE's logo (when Slack can fetch it) and name, then the platform's, in the footer; `text` replaces the words. */
+export function slackFooter(brand: { name: string; logoUrl?: string }, text?: string): SlackBlock {
   return {
     type: 'context',
     elements: [
       ...(brand.logoUrl
         ? [{ type: 'image' as const, image_url: brand.logoUrl, alt_text: brand.name }]
         : []),
-      { type: 'mrkdwn', text: `${neutralizeForSlack(brand.name)} · ${PLATFORM_NAME}` },
+      {
+        type: 'mrkdwn',
+        text:
+          text !== undefined
+            ? neutralizeForSlack(text)
+            : `${neutralizeForSlack(brand.name)} · ${PLATFORM_NAME}`,
+      },
     ],
   };
 }
