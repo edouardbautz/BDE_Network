@@ -1,4 +1,4 @@
-import { test as base, expect, type Page } from '@playwright/test';
+import { test as base, expect, type Page, type Request } from '@playwright/test';
 import { SESSION_COOKIE, forgeSessionCookie, persona, type PersonaKey } from '../personas';
 
 export { expect };
@@ -6,6 +6,11 @@ export { expect };
 /** What a page raised that nobody should see. */
 export interface Problems {
   list: string[];
+  /**
+   * Judges now what was held back until the end (an error worded like a cancelled fetch: see `suspect`). The journey does it by
+   * itself when it ends; the tests of the watcher do it to see the verdict. What was judged is not judged twice.
+   */
+  judge(): void;
 }
 
 interface Fixtures {
@@ -64,6 +69,15 @@ const CANCELLATION_WORDS = [
   /Minified React error #412|Connection closed/i,
 ];
 const RECENTLY_MS = 5000;
+/**
+ * WebKit does not always say which request a navigation cancelled: a fetch that the page started and that the navigation (or the
+ * closing of the page) cut short can raise "Load failed" / "due to access control checks" with no `requestfailed` and no `request`
+ * the page could have been waiting for (seen in CI, Linux, one journey in twenty, always on the line of a click that reloads the page
+ * or follows a link). So an error worded like a cancellation is also excused when the page left its document within
+ * `LEAVING_MS` after it (or just before: the engine can report the commit first). Anywhere else it is still a failure.
+ */
+const LEAVING_MS = 2000;
+const LEAVING_BEFORE_MS = 200;
 
 /**
  * WebKit leaves the rejection of a prefetch that the navigation interrupted unhandled, with its own wording: the address is the
@@ -75,7 +89,7 @@ const INTERRUPTED_PREFETCH = /[?&]_rsc=[\w-]+ due to access control checks\.?$/;
 
 export const test = base.extend<Fixtures>({
   problems: async ({}, use) => {
-    const problems: Problems = { list: [] };
+    const problems: Problems = { list: [], judge: () => {} };
     await use(problems);
     // Said after the test, so that a journey that already failed keeps its own message first.
     expect(problems.list, 'the pages raised errors').toEqual([]);
@@ -84,6 +98,9 @@ export const test = base.extend<Fixtures>({
   as: async ({ browser, baseURL, problems }, use) => {
     const contexts: { close(): Promise<void> }[] = [];
     const judgements: (() => void)[] = [];
+    problems.judge = () => {
+      for (const judge of judgements) judge();
+    };
     await use(async (who, options = {}) => {
       const account = persona(who);
       const context = await browser.newContext({
@@ -106,6 +123,8 @@ export const test = base.extend<Fixtures>({
       const page = await context.newPage();
       const report = (what: string) => problems.list.push(`[${who}] ${page.url()}: ${what}`);
       const cancellations: number[] = [];
+      // When the page left its document (a navigation committed, the page closed): see LEAVING_MS.
+      const departures: number[] = [];
       // What is worded like a cancelled fetch is judged at the end, by its distance from a request that really was
       // cancelled: the engine can tell us about the error before it tells us about the request.
       const suspects: { at: number; what: string }[] = [];
@@ -117,9 +136,14 @@ export const test = base.extend<Fixtures>({
         return true;
       };
       judgements.push(() => {
-        for (const { at, what } of suspects) {
-          if (!cancellations.some((cancelled) => Math.abs(cancelled - at) < RECENTLY_MS)) {
-            problems.list.push(`${what} (and no request was cancelled around it)`);
+        for (const { at, what } of suspects.splice(0)) {
+          const left = departures.some(
+            (departed) => departed - at >= -LEAVING_BEFORE_MS && departed - at < LEAVING_MS,
+          );
+          if (!left && !cancellations.some((cancelled) => Math.abs(cancelled - at) < RECENTLY_MS)) {
+            problems.list.push(
+              `${what} (and no request was cancelled around it; the page did, in order: ${trail.join(' | ') || 'nothing'})`,
+            );
           }
         }
       });
@@ -188,8 +212,54 @@ export const test = base.extend<Fixtures>({
         report(`console error: ${text}`);
       });
       // A request that failed otherwise than by being cancelled (the next click, a page left), or a server error.
+      // A request that is still in flight when a navigation replaces the document is cancelled by it, and that is how an engine can word
+      // what it raises: WebKit says `Load request cancelled` (a `requestfailed`) on one system and, on another, only an exception of
+      // the page ("Fetch API cannot load … due to access control checks", `TypeError: Load failed`) with no `requestfailed` at all.
+      // The navigation is the evidence, so it counts as a cancellation: the request was really there, and the page really left. (A
+      // journey that clicks right after a debounced request of the page, a preview, met it one time in ten in WebKit.)
+      const inFlight = new Set<Request>();
+      // What the network and the navigations did, with their times: written under the verdict of a suspect that nothing excused,
+      // because "no request was cancelled" is what this is about and a bare sentence does not say what the engine did instead.
+      const trail: string[] = [];
+      const started = Date.now();
+      const note = (what: string) => {
+        // (the prefetches Next.js makes by the dozen when a page is drawn would push everything else out of the list)
+        if (/GET [^ ]*_rsc=/.test(what)) return;
+        trail.push(`+${Date.now() - started}ms ${what}`);
+        if (trail.length > 40) trail.shift();
+      };
+      const shown = (request: Request) =>
+        `${request.method()} ${request
+          .url()
+          .replace(baseURL ?? '', '')
+          .slice(0, 70)}`;
+      page.on('request', (request) => {
+        inFlight.add(request);
+        note(`request ${shown(request)}`);
+      });
+      page.on('requestfinished', (request) => {
+        inFlight.delete(request);
+        note(`finished ${shown(request)}`);
+      });
+      const cancelWhatIsInFlight = () => {
+        const cancelled = [...inFlight].filter((request) => !request.isNavigationRequest());
+        if (cancelled.length > 0) cancellations.push(Date.now());
+        inFlight.clear();
+      };
+      page.on('framenavigated', (frame) => {
+        if (frame !== page.mainFrame()) return;
+        note(`navigated to ${frame.url().replace(baseURL ?? '', '')}`);
+        departures.push(Date.now());
+        cancelWhatIsInFlight();
+      });
+      page.on('close', () => {
+        departures.push(Date.now());
+        cancelWhatIsInFlight();
+      });
       page.on('requestfailed', (request) => {
+        inFlight.delete(request);
         const reason = request.failure()?.errorText ?? '';
+        note(`failed ${shown(request)} (${reason})`);
         if (CANCELLED_REQUEST.test(reason)) {
           cancellations.push(Date.now());
           return;

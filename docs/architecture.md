@@ -1214,6 +1214,16 @@ rounds. The races found this way in the scripts themselves: the settings script 
 confirmed removal (the dialog closes at once), and `e2e/settings.mjs`/`events.mjs` take `LATENCY_MS`, `TIMEZONE` and
 `CPU_THROTTLE` to reproduce a slow server, another time zone and a slow processor.
 
+The Playwright journeys have their own stress workflow, **`.github/workflows/browsers-stress.yml`** (Actions → browsers stress → Run
+workflow: `engine`, `rounds`, `files` or `all`; also run on a pull request that touches it): three shards, each a platform of its
+own made from the image, each playing the files `rounds` times, so a defect that comes one time in twenty is seen three times in
+sixty. It keeps, for each failed round, the whole log, the trace and the screenshot. Two lessons from its first runs, both about
+the watcher and the cleanups of the journeys, not the product: (1) an engine can raise the word for an aborted fetch without a
+`requestfailed` (the departure rule above); (2) a `finally` that asks the page what it shows with `isVisible()` / `isEnabled()` /
+`count()` is a race, because those answer at once and do not wait: a cleanup first waits for the page to be drawn and at rest, then
+asks, and a journey that depends on the platform starting clean says so (the logo journey first expects the default logo), so that
+a leftover is named instead of failing somewhere else.
+
 ## Quality campaign (`qa/`, `.github/workflows/qa.yml`)
 
 The platform is checked well beyond its unit tests before real BDEs rely on it. The campaign is a set of suites that all
@@ -1377,7 +1387,14 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
     Playwright's own tracer reads the images of the page again with `fetch`, which `connect-src 'self'` refuses for the `blob:`
     preview of a file just chosen: let through for that one directive and that one address (no violation without a trace:
     checked). Anything else is a failure. **Never widen these to "the errors that come before a navigation"** (see the
-    hydration section).
+    hydration section). (4) The same cancellation words when the page **left its document** (a main-frame navigation committed,
+    or the page closed) within 2 s after the error, or 200 ms before it (`LEAVING_MS` in `fixtures.ts`). WebKit does not always say
+    which request a navigation cut short: in CI (Linux), one journey in about twenty that clicks right after something the page
+    started, the page raised `TypeError: Load failed` / `Fetch API cannot load … due to access control checks` with no
+    `requestfailed` and no request the page could have been waiting for (the watcher's trail, written under any suspect it cannot
+    excuse, showed it: the requests all `finished`, then a navigation). Nothing in flight and no departure is still a failure
+    (`watcher.spec.ts` tests both, and a mutation of the rule fails it). It was the product's console noise, never a visitor's:
+    nobody can confirm a dialog in the 350 ms of the editor's debounced preview.
   - **Traps met writing it.** Role queries skip what is `aria-hidden`, and a dialog hides the page behind it: after "Approve" the
     row vanishes from the tree while the dialog is open, so "the row is gone" is true at once; wait for the real page drawn again
     (rule 2 of "Navigation": the action loads the page, and the loading skeleton has no row either). Code run inside

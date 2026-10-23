@@ -71,6 +71,65 @@ test.describe('the watcher of the journeys', () => {
     problems.list.length = 0;
   });
 
+  test('lets through what an engine raises for a request that a navigation cancelled, and only that', async ({
+    as,
+    problems,
+  }) => {
+    const page = await as('anonymous');
+    await page.goto('/en');
+    await expect(page.getByRole('button', { name: 'Sign in with 42' })).toBeVisible();
+
+    // The engine's word for an aborted fetch, with nothing in flight and no navigation: a real failure, not an abort.
+    // (The page has been at rest for a while: the load that brought it here is not a departure "around" the error.)
+    await page.waitForTimeout(600);
+    await page.evaluate(() => {
+      setTimeout(() => {
+        throw new TypeError('Load failed');
+      });
+    });
+    await expect.poll(() => page.evaluate(() => true)).toBe(true);
+    await page.waitForTimeout(300);
+    problems.judge();
+    expect(
+      problems.list.filter((line) => /Load failed.*no request was cancelled/.test(line)),
+    ).toHaveLength(1);
+    problems.list.length = 0;
+
+    // The same word while a request of the page is in flight, when the page leaves: the navigation cancelled it, which is all
+    // the engine says (WebKit, on some systems, gives no `requestfailed` for it). Nothing is reported.
+    await page.route('**/api/stays-in-flight', () => new Promise(() => {}));
+    await page.evaluate(() => {
+      void fetch('/api/stays-in-flight').catch(() => undefined);
+      setTimeout(() => {
+        throw new TypeError('Load failed');
+      });
+    });
+    await page.waitForTimeout(300);
+    await page.goto('/en/privacy');
+    problems.judge();
+    expect(problems.list).toEqual([]);
+  });
+
+  test('lets through the same word when the page leaves right after it, even if no request was seen in flight', async ({
+    as,
+    problems,
+  }) => {
+    // A page of its own: nothing cancelled earlier can excuse it. The engine does not always tell which request a navigation cut
+    // short, so the page leaving its document just after the error is the evidence.
+    const page = await as('anonymous');
+    await page.goto('/en/privacy');
+    await page.waitForTimeout(600);
+    await page.evaluate(() => {
+      setTimeout(() => {
+        throw new TypeError('Load failed');
+      });
+    });
+    await page.waitForTimeout(100);
+    await page.goto('/en/privacy');
+    problems.judge();
+    expect(problems.list).toEqual([]);
+  });
+
   test('sees a server error', async ({ as, problems }) => {
     const page = await as('anonymous');
     await page.goto('/en');

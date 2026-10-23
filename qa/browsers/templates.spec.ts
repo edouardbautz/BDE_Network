@@ -23,6 +23,8 @@ async function putBack(page: Page) {
   await open(page);
   await page.getByRole('button', { name: 'More' }).click();
   const all = page.getByRole('menuitem', { name: /Reset everything/ });
+  // the menu is open before it is asked whether an entry is enabled: that answer is given at once and does not wait
+  await expect(all).toBeVisible();
   if (await all.isEnabled()) {
     await all.click();
     await page.getByRole('dialog').getByRole('button', { name: 'Back to default' }).click();
