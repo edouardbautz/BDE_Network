@@ -17,7 +17,7 @@ on:
         description: How many times the files are played
         default: '20'
       files:
-        description: 'The files to play, separated by spaces (empty: every file of the engine)'
+        description: 'The files to play, separated by spaces, or `all` for every file of the engine'
         default: 'qa/browsers/owner.spec.ts qa/browsers/notifications.spec.ts qa/browsers/templates.spec.ts'
   pull_request:
     paths:
@@ -30,7 +30,7 @@ jobs:
   stress:
     name: ${{ inputs.engine || 'webkit' }} (shard ${{ matrix.shard }})
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 150
     strategy:
       fail-fast: false
       matrix:
@@ -78,9 +78,11 @@ jobs:
           for round in $(seq 1 "$ROUNDS"); do
             # Each round keeps its own traces and screenshots; the list reporter says which journey failed and how.
             # (FILES is a list of words on purpose: it is typed by whoever starts the workflow, never run as a command.)
+            files="$FILES"
+            [ "$files" = all ] && files=""
             # shellcheck disable=SC2086
             if CI=true PW_OUTPUT_DIR="$RUNNER_TEMP/stress/round-$round" npx playwright test -c qa/browsers \
-                --project="$ENGINE" --reporter=list $FILES > "$RUNNER_TEMP/round.log" 2>&1; then
+                --project="$ENGINE" --reporter=list $files > "$RUNNER_TEMP/round.log" 2>&1; then
               echo "round $round: ok"
             else
               failures=$((failures + 1))
