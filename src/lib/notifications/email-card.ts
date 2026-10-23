@@ -12,7 +12,7 @@ export async function emailBrand(): Promise<EmailModel['brand']> {
   const logoUrl = await resolveLogoUrl(registeredAddress() ?? undefined, bde.logoPath, {
     requirePublic: false,
   });
-  return { name: bde.name, ...(logoUrl && { logoUrl }) };
+  return { name: bde.name, accent: bde.accentColor, ...(logoUrl && { logoUrl }) };
 }
 
 /**

@@ -180,7 +180,7 @@ Comme sur Discord, chaque notification est une **carte** (Block Kit).
   _Catégorie_, _Membres en charge_, _Répétition_ en colonnes.
 - **Des dates au format Slack** : chaque lecteur les voit dans son fuseau horaire, avec « aujourd'hui » ou « demain »
   quand c'est le cas. Slack n'a pas de compte à rebours.
-- **Un bouton** « Voir l'événement » (ou « Valider ou refuser » pour une demande d'accès).
+- **Un bouton** « Voir l'événement » (ou « Approuver ou refuser » pour une demande d'accès).
 - **Un pied** avec le logo du BDE (s'il est public, comme pour Discord), son nom et `BDE_Network`.
 - **Pour un membre** : la photo 42 à côté du message, le rôle, et **qui** a approuvé ou retiré.
 - **Une notification lisible sur téléphone** : un résumé (« Nouvel événement confirmé : Soirée de rentrée — samedi
@@ -200,8 +200,9 @@ HTML.
 _Confirmation d'un événement. À gauche en mode clair, à droite le même e-mail en mode sombre._
 
 - **L'en-tête** : le logo du BDE et son nom (le nom seul, sans logo accessible).
-- **Une barre et un bouton de la couleur de la catégorie** ; le texte du bouton est noir ou blanc selon la couleur,
-  pour rester lisible.
+- **Une barre de la couleur de la catégorie** (ambre, vert ou rouge pour une demande, une approbation, un retrait) et **un
+  bouton arrondi de la couleur de votre BDE**, comme sur la plateforme ; le texte du bouton est noir ou blanc selon la
+  couleur, pour rester lisible. La page, la carte et le texte suivent la palette claire ou sombre de la plateforme.
 - **Les lignes** _Quand_, _Répétition_, _Lieu_, _Catégorie_ (avec sa pastille de couleur) et _Membres en charge_, puis
   **un bouton** vers la page concernée (l'événement, ou la page _Membres_). Sans adresse de la plateforme, il n'y a
   pas de bouton.

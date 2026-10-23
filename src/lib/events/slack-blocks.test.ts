@@ -54,7 +54,7 @@ describe('buildEventSlack', () => {
   });
 
   it('uses the neutral grey for a category that has no colour any more', () => {
-    expect(build({ categoryColor: null }).color).toBe('#6b7280');
+    expect(build({ categoryColor: null }).color).toBe('#7a818b');
   });
 
   it('lays the blocks out in this order: kind, title, description, when, facts, button, footer', () => {

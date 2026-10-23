@@ -41,9 +41,9 @@ const types = (blocks: SlackBlock[]) => blocks.map((block) => block.type);
 
 describe('buildMemberSlack', () => {
   it.each([
-    ['pending', '#f59e0b'],
-    ['approved', '#10b981'],
-    ['removed', '#ef4444'],
+    ['pending', '#c09036'],
+    ['approved', '#3aa06f'],
+    ['removed', '#da5749'],
   ] as const)('gives the %s message its own colour, the same as on Discord', (kind, color) => {
     expect(build(kind).color).toBe(color);
   });
@@ -116,7 +116,7 @@ describe('buildMemberSlack', () => {
       elements: [
         {
           type: 'button',
-          text: { type: 'plain_text', text: 'Valider ou refuser' },
+          text: { type: 'plain_text', text: 'Approuver ou refuser' },
           url: 'https://bde.example.fr/fr/members',
         },
       ],

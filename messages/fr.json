@@ -240,10 +240,10 @@
       "pending": {
         "subject": "Nouvelle demande d'accès : {name}",
         "intro": "{name} ({login}, campus {campus}) demande l'accès à la plateforme du BDE.",
-        "link": "Valider ou refuser la demande"
+        "link": "Approuver ou refuser la demande"
       },
       "approved": {
-        "memberSubject": "Votre accès à {bde} est validé",
+        "memberSubject": "Votre accès à {bde} est approuvé",
         "memberIntro": "Bonjour {name}, votre demande d'accès a été approuvée.",
         "memberRole": "Votre rôle : {role}.",
         "memberLink": "Se connecter",
@@ -281,7 +281,7 @@
         "footerRequester": "Vous recevez ce message parce que vous avez demandé l'accès à {bde}."
       },
       "slack": {
-        "pendingAction": "Valider ou refuser"
+        "pendingAction": "Approuver ou refuser"
       }
     },
     "rejectWarning": "La demande est supprimée. La personne pourra la refaire en se reconnectant.",
@@ -740,7 +740,7 @@
       "members": {
         "manage": {
           "label": "Gérer les membres",
-          "description": "Valider ou refuser les demandes d'accès, retirer des membres et leur attribuer un rôle."
+          "description": "Approuver ou refuser les demandes d'accès, retirer des membres et leur attribuer un rôle."
         }
       },
       "roles": {

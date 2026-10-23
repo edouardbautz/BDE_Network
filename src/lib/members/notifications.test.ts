@@ -127,7 +127,7 @@ describe('notifyMemberPending', () => {
     await notifyMemberPending('u1');
 
     const embed = firstCall(vi.mocked(deliver))[1].discord?.embeds[0];
-    expect(embed?.color).toBe(0xf59e0b);
+    expect(embed?.color).toBe(0xc09036);
     expect(embed?.url).toBe('https://bde.exemple.fr/fr/members');
     // The login and the campus are headings of the description; a request has no field.
     expect(embed?.description).toContain('### 🪪  jdupont');
@@ -152,7 +152,7 @@ describe('notifyMemberPending', () => {
     const [, message, to] = firstCall(vi.mocked(deliver));
     expect(to).toEqual(['owner@x.fr']);
     expect(message.subject).toBe("Nouvelle demande d'accès : Jean Dupont");
-    expect(message.email?.html).toContain('<td bgcolor="#f59e0b" height="6"');
+    expect(message.email?.html).toContain('<td bgcolor="#c09036" height="6"');
     expect(message.email?.html).toContain('src="https://cdn.intra.42.fr/u.jpg" width="64"');
     expect(message.email?.html).toContain('href="https://bde.exemple.fr/fr/members"');
     expect(message).not.toHaveProperty('discord');
@@ -180,7 +180,7 @@ describe('notifyMemberPending', () => {
     await notifyMemberPending('u1');
 
     const slack = firstCall(vi.mocked(deliver))[1].slack;
-    expect(slack?.color).toBe('#f59e0b');
+    expect(slack?.color).toBe('#c09036');
     expect(slack?.fallback).toBe("Nouvelle demande d'accès : Jean Dupont");
     const json = JSON.stringify(slack?.blocks);
     expect(json).toContain('https://cdn.intra.42.fr/u.jpg');
@@ -251,7 +251,7 @@ describe('notifyMemberApproved', () => {
     );
     // The mail speaks to the member, with its own subject; the plain message every channel falls back to is the team's.
     const message = firstCall(vi.mocked(deliver))[1];
-    expect(message.email?.subject).toBe('Votre accès à BDE Test est validé');
+    expect(message.email?.subject).toBe('Votre accès à BDE Test est approuvé');
     expect(message.email?.text).toContain('Trésorier');
     expect(prisma.user.findMany).not.toHaveBeenCalled();
   });
@@ -264,7 +264,7 @@ describe('notifyMemberApproved', () => {
 
     expect(deliver).toHaveBeenCalledTimes(1);
     const message = firstCall(vi.mocked(deliver))[1];
-    expect(message.email?.subject).toBe('Votre accès à BDE Test est validé');
+    expect(message.email?.subject).toBe('Votre accès à BDE Test est approuvé');
     expect(message.discord?.embeds).toHaveLength(1);
     expect(message.slack).toBeUndefined();
     expect(message.subject).toBe('Demande approuvée : Jean Dupont');
@@ -300,7 +300,7 @@ describe('notifyMemberApproved', () => {
     const card = firstCall(vi.mocked(deliver))[1].discord;
     expect(card?.username).toBe('BDE Test');
     const embed = card?.embeds[0];
-    expect(embed?.color).toBe(0x10b981);
+    expect(embed?.color).toBe(0x3aa06f);
     expect(embed?.title).toBe('✅  Jean Dupont');
     expect(embed?.thumbnail?.url).toBe('https://cdn.intra.42.fr/u.jpg');
     expect(embed?.fields).toEqual(
@@ -323,7 +323,7 @@ describe('notifyMemberApproved', () => {
 
     const [, message, to] = firstCall(vi.mocked(deliver));
     expect(to).toEqual(['jean@x.fr']);
-    expect(message.email?.html).toContain('<td bgcolor="#10b981" height="6"');
+    expect(message.email?.html).toContain('<td bgcolor="#3aa06f" height="6"');
     expect(message.email?.text).toContain('Rôle : Trésorier');
     expect(message.email?.html).toContain('href="https://bde.exemple.fr/fr"');
     expect(message.email?.html).not.toContain('width="64"');
@@ -339,7 +339,7 @@ describe('notifyMemberApproved', () => {
     await notifyMemberApproved('u1', 'pmartin');
 
     const slack = firstCall(vi.mocked(deliver))[1].slack;
-    expect(slack?.color).toBe('#10b981');
+    expect(slack?.color).toBe('#3aa06f');
     const json = JSON.stringify(slack?.blocks);
     expect(json).toContain('*Rôle*\\nTrésorier');
     expect(json).toContain('*Approuvé par*\\nPaula Martin');
@@ -419,7 +419,7 @@ describe('notifyMemberRemoved', () => {
     await notifyMemberRemoved({ ...removed, roleName: 'Membre' }, 'pmartin');
 
     const embed = firstCall(vi.mocked(deliver))[1].discord?.embeds[0];
-    expect(embed?.color).toBe(0xef4444);
+    expect(embed?.color).toBe(0xda5749);
     expect(embed?.fields).toEqual(
       expect.arrayContaining([{ name: '🚪  Retiré par', value: 'Paula Martin', inline: true }]),
     );
@@ -432,7 +432,7 @@ describe('notifyMemberRemoved', () => {
     await notifyMemberRemoved({ ...removed, roleName: 'Membre' }, 'pmartin');
 
     const slack = firstCall(vi.mocked(deliver))[1].slack;
-    expect(slack?.color).toBe('#ef4444');
+    expect(slack?.color).toBe('#da5749');
     expect(JSON.stringify(slack?.blocks)).toContain('*Retiré par*\\nPaula Martin');
     expect(JSON.stringify(slack?.blocks)).not.toContain('"type":"actions"');
   });

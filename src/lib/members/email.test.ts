@@ -30,10 +30,11 @@ describe('buildPendingEmail', () => {
     url: string | null = 'https://bde.example.fr/fr/members',
   ) => buildPendingEmail({ ...member, ...over }, t, url, brand, 'fr');
 
-  it('has an amber bar and button', () => {
+  it('has an amber bar, and a button in the colour of the BDE', () => {
     const { html } = mail();
-    expect(html).toContain('<td bgcolor="#f59e0b" height="6"');
-    expect(html).toMatch(/<a class="btn"[^>]*color:#000000/);
+    expect(html).toContain('<td bgcolor="#c09036" height="6"');
+    // this brand has no colour of its own: the button falls back on the bar's, with the text that reads on it
+    expect(html).toMatch(/<a class="btn"[^>]*color:#111111/);
   });
 
   it('names the person, with their 42 photo above the heading', () => {
@@ -60,7 +61,7 @@ describe('buildPendingEmail', () => {
   it('has a button to the page where the request is decided, and none without APP_URL', () => {
     expect(mail().html).toContain('href="https://bde.example.fr/fr/members"');
     expect(mail().text).toContain(
-      'Valider ou refuser la demande : https://bde.example.fr/fr/members',
+      'Approuver ou refuser la demande : https://bde.example.fr/fr/members',
     );
     expect(mail({}, null).html).not.toContain('class="btn"');
   });
@@ -86,12 +87,12 @@ describe('buildApprovedEmail', () => {
     buildApprovedEmail(member, 'Trésorier', t, url, brand, 'fr');
 
   it('has a green bar and button', () => {
-    expect(mail().html).toContain('<td bgcolor="#10b981" height="6"');
+    expect(mail().html).toContain('<td bgcolor="#3aa06f" height="6"');
   });
 
   it('welcomes the person to the BDE, with the role they hold', () => {
     const { text } = mail();
-    expect(text).toContain('Votre accès à BDE Nice est validé');
+    expect(text).toContain('Votre accès à BDE Nice est approuvé');
     expect(text).toContain("Bonjour Camille Martin, votre demande d'accès a été approuvée.");
     expect(text).toContain('Rôle : Trésorier');
   });

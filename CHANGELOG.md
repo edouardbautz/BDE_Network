@@ -8,6 +8,11 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **Notifications look like the platform.** The e-mails use the grounds, inks and rounded corners of the interface (light and dark), the
+  button is a pill in the **color of the BDE** worked out as on the platform (the bar keeps the color of what the message is about),
+  and the cards of a request, an approval and a removal take the warning, success and danger colors of the interface. The wording of an
+  access request is one word everywhere: it is **approved** (or refused), no longer sometimes "validated".
+
 - **A notification can go through several channels at once.** Each type of notification (an access request, a confirmed event, a
   reminder, a proposal…) now has a **list** of channels among Discord, Slack and e-mail, instead of one: Discord **and** e-mail for the
   access requests, only Slack for the reminders, nothing for the rest. In **Settings** and in the installer, the _Notifications_ form is
