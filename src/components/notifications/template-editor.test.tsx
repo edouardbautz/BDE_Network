@@ -118,7 +118,11 @@ function renderEditor(
 ) {
   const locale = extra.locale ?? 'fr';
   return render(
-    <NextIntlClientProvider locale={locale} messages={locale === 'fr' ? fr : en}>
+    <NextIntlClientProvider
+      locale={locale}
+      messages={locale === 'fr' ? fr : en}
+      timeZone="Europe/Paris"
+    >
       <TemplateEditor
         data={data}
         initialScope={extra.initialScope ?? 'all'}
@@ -369,7 +373,7 @@ describe('what the page tells about the template', () => {
       dataWith({
         all: {
           ...scope({ title: 'x' }),
-          fallback: { at: '2026-10-21T09:00:00.000Z', reason: 'invalid' },
+          fallback: { at: '2026-10-21T09:00:00.000Z', reason: 'title:unknownVariable' },
         },
       }),
     );
@@ -608,7 +612,7 @@ describe('more of the editor', () => {
 
   it('says what happened after an action that loaded the page again', () => {
     render(
-      <NextIntlClientProvider locale="fr" messages={fr}>
+      <NextIntlClientProvider locale="fr" messages={fr} timeZone="Europe/Paris">
         <TemplateEditor
           data={dataWith()}
           initialScope="all"
@@ -618,6 +622,18 @@ describe('more of the editor', () => {
       </NextIntlClientProvider>,
     );
     expect(screen.getByText('Version restaurée.')).toBeInTheDocument();
+  });
+
+  it('says the message could not be built when that was the reason', () => {
+    renderEditor(
+      dataWith({
+        all: {
+          ...scope({}),
+          fallback: { at: '2026-10-21T09:00:00.000Z', reason: 'render:failed' },
+        },
+      }),
+    );
+    expect(screen.getByText(/n'a pas pu être construit/)).toBeInTheDocument();
   });
 
   it('says why a template was not used, even for a reason it does not know', () => {

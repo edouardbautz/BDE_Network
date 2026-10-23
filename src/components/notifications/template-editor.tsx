@@ -75,6 +75,10 @@ function emptyRecord<T>(make: (scope: Scope) => T): Record<Scope, T> {
   return Object.fromEntries(SCOPES.map((scope) => [scope, make(scope)])) as Record<Scope, T>;
 }
 
+/** What the platform recorded about a send that could not use the template (`path:code`, or `render:failed`), as a sentence of the messages. */
+const fallbackKind = (reason: string): 'invalid' | 'render' | 'unknown' =>
+  reason === 'render:failed' ? 'render' : /^[\w.]*:[A-Za-z]+$/.test(reason) ? 'invalid' : 'unknown';
+
 /** The first segment of a path of an issue (`items.list.2.label` → `items`, `button.url` → `button.url`). */
 const rootOf = (path: string) => (path.startsWith('button.') ? path : path.split('.')[0]!);
 
@@ -377,9 +381,7 @@ export function TemplateEditor({ data, initialScope, notice, testable }: Templat
                 dateStyle: 'medium',
                 timeStyle: 'short',
               }),
-              reason: t.has(`fallbackReasons.${scopeState.fallback.reason}`)
-                ? t(`fallbackReasons.${scopeState.fallback.reason}`)
-                : t('fallbackReasons.unknown'),
+              reason: t(`fallbackReasons.${fallbackKind(scopeState.fallback.reason)}`),
             })}
           </AlertDescription>
         </Alert>

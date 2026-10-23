@@ -1575,7 +1575,7 @@
     },
     "fallbackReasons": {
       "invalid": "il contenait une erreur",
-      "database": "la base de données ne répondait pas",
+      "render": "le message n'a pas pu être construit",
       "unknown": "raison inconnue"
     },
     "revisions": {},

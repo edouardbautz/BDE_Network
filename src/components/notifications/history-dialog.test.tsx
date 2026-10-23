@@ -43,7 +43,7 @@ const ENTRIES = [
 function show(over: { currentVersion?: number; dirty?: boolean } = {}) {
   const onOpenChange = vi.fn();
   render(
-    <NextIntlClientProvider locale="fr" messages={fr}>
+    <NextIntlClientProvider locale="fr" messages={fr} timeZone="Europe/Paris">
       <HistoryDialog
         open
         onOpenChange={onOpenChange}
