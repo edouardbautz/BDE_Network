@@ -558,6 +558,14 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
   Outlook, a hidden preheader, a `<style>` only for dark mode / narrow screens. **Everything inserted goes
   through `escapeHtml` / `httpUrl` / `normalizeHex` in that file** (never concatenate a member's text into the
   HTML elsewhere). The logo is `resolveLogoUrl(…, { requirePublic: false })` (a mail client loads it itself).
+  **The look is the interface's, written out** (a mail client has no stylesheet of ours): the grounds and inks of each theme are
+  `EMAIL_TOKENS` (`notifications/colors.ts`: `--bg`, `--surface`, `--ink`, `--muted`, `--line` of the light and the dark theme), the
+  corners are the radii of the interface (card 24, logo 12, a pill for the button), the **button is the BDE's colour** worked out by
+  `deriveAccent` as on the platform (`brand.accent`: kept when white or near-black text reads on it at 4.5:1, else darkened), and the
+  **bar says what the message is about** (the category of an event, the status of a member notification). The status colours of the
+  cards (`MEMBER_COLORS`: request, approval, removal) are the `--warning`, `--success` and `--danger` tokens halfway between their light
+  and dark values, so that the bar reads on both themes of Discord and Slack. `colors.test.ts` reads `globals.css` and fails when
+  one of them drifts. One word per thing in the texts: an access request is **approved** or refused (the glossary), never "validated".
   A confirmation attaches the `.ics` through nodemailer's `icalEvent` (every occurrence to come, same UIDs as the
   feeds); a reminder does not. `memberRemoved` never sends an e-mail. In development `docker-compose.dev.yml`
   points `SMTP_*` at Mailpit (<http://localhost:8025>) unless `DEV_SMTP_*` say otherwise.

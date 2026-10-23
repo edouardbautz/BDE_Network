@@ -1,0 +1,44 @@
+[
+  [
+    "e-mail: the button takes the colour of the bar, not the BDE's",
+    "src/lib/notifications/email-layout.ts",
+    "const buttonAccent = normalizeHex(model.brand.accent ?? model.accent);",
+    "const buttonAccent = normalizeHex(model.accent);",
+    ["src/lib/notifications/email-layout.test.ts", "src/lib/members/email.test.ts"]
+  ],
+  [
+    "e-mail: the button colour is not worked out for contrast",
+    "src/lib/notifications/email-layout.ts",
+    "const { fill, on } = deriveAccent(brandAccent, 'light');",
+    "const { fill, on } = { fill: brandAccent, on: '#ffffff' };",
+    ["src/lib/notifications/email-layout.test.ts"]
+  ],
+  [
+    "e-mail: the Outlook button is not a pill",
+    "src/lib/notifications/email-layout.ts",
+    "arcsize=\"50%\"",
+    "arcsize=\"17%\"",
+    ["src/lib/notifications/email-layout.test.ts"]
+  ],
+  [
+    "e-mail: the card has the old radius",
+    "src/lib/notifications/email-layout.ts",
+    "const RADIUS = { card: 24, logo: 12 };",
+    "const RADIUS = { card: 12, logo: 9 };",
+    ["src/lib/notifications/email-layout.test.ts"]
+  ],
+  [
+    "palette: the dark page of an e-mail drifts from the token",
+    "src/lib/notifications/colors.ts",
+    "page: '#0e1012'",
+    "page: '#0f1115'",
+    ["src/lib/notifications/colors.test.ts"]
+  ],
+  [
+    "palette: a pending request takes the old amber",
+    "src/lib/notifications/colors.ts",
+    "pending: 0xc09036",
+    "pending: 0xf59e0b",
+    ["src/lib/notifications/colors.test.ts"]
+  ]
+]

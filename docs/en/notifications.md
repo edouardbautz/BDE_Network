@@ -94,7 +94,7 @@ reader's theme._
   three shades stay readable on Discord's light and dark themes.
 - **A clickable title** to the page concerned (the event, or the _Members_ page), with no duplicate preview card.
   Without the address of the platform, the title is simply not a link.
-- **An access request ends with "👉 Approve or decline"**, a link to the _Members_ page (only when the address of the
+- **An access request ends with "👉 Approve or refuse"**, a link to the _Members_ page (only when the address of the
   platform is set).
 - **Discord-format dates**: each reader sees them **in their own time zone and language**, with a countdown ("in 3
   days") that updates by itself.
@@ -193,8 +193,9 @@ An email is a real formatted page, with a **text version** for mail apps that do
 _An event confirmation. On the left in light mode, on the right the same email in dark mode._
 
 - **The header**: the BDE's logo and name (the name alone if no logo can be reached).
-- **A bar and a button in the category's color**; the button's text is black or white depending on the color, to stay
-  readable.
+- **A bar in the category's color** (amber, green or red for a request, an approval, a removal) and **a rounded button in your
+  BDE's color**, as on the platform; the button's text is black or white depending on the color, to stay readable. The page,
+  the card and the text follow the light or the dark palette of the platform.
 - **The lines** _When_, _Repeats_, _Where_, _Category_ (with its color dot) and _Members in charge_, then **a
   button** to the page concerned (the event, or the _Members_ page). Without the address of the platform, there is no
   button.

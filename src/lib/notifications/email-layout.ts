@@ -1,5 +1,5 @@
-import { getContrastingTextColor } from '@/lib/color';
-import { normalizeHex } from './colors';
+import { deriveAccent } from '@/lib/color';
+import { EMAIL_TOKENS, normalizeHex } from './colors';
 import { PLATFORM_NAME } from './platform';
 import { httpUrl } from './text';
 
@@ -27,8 +27,9 @@ export interface EmailModel {
   /** `fr` or `en`: the language of the e-mail, for screen readers and hyphenation. */
   lang: string;
   preheader: string;
-  brand: { name: string; logoUrl?: string };
-  /** The colour of the bar and of the button, a hex colour. */
+  /** The BDE: its name, its logo when a client can load it, and its colour (which colours the button, as everywhere on the platform). */
+  brand: { name: string; logoUrl?: string; accent?: string };
+  /** The colour of the bar, a hex colour: the category of an event, the kind of a member notification. */
   accent: string;
   /** Small line above the heading: what kind of message this is. */
   eyebrow: string;
@@ -52,12 +53,16 @@ export interface RenderedEmail {
 const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 
 const LIGHT = {
-  page: '#eef0f3',
-  card: '#ffffff',
-  text: '#1f2430',
-  muted: '#6b7280',
-  rule: '#e5e7eb',
+  page: EMAIL_TOKENS.light.page,
+  card: EMAIL_TOKENS.light.card,
+  text: EMAIL_TOKENS.light.ink,
+  muted: EMAIL_TOKENS.light.muted,
+  rule: EMAIL_TOKENS.light.line,
 };
+const DARK = EMAIL_TOKENS.dark;
+
+/** The corners of the card and of the logo, and the pill of the button: the radii of the interface. */
+const RADIUS = { card: 24, logo: 12 };
 
 const HTML_ESCAPES: Record<string, string> = {
   '&': '&amp;',
@@ -98,18 +103,18 @@ function styles(): string {
       .btn{display:block!important;text-align:center!important}
     }
     @media (prefers-color-scheme:dark){
-      .bg-page{background-color:#0f1115!important}
-      .bg-card{background-color:#1a1d23!important}
-      .t-main{color:#eceef1!important}
-      .t-muted{color:#9aa3af!important}
-      .rule{border-color:#2a2f38!important}
+      .bg-page{background-color:${DARK.page}!important}
+      .bg-card{background-color:${DARK.card}!important}
+      .t-main{color:${DARK.ink}!important}
+      .t-muted{color:${DARK.muted}!important}
+      .rule{border-color:${DARK.line}!important}
       .logo{border:1px solid #6b7385!important}
     }
-    [data-ogsc] .t-main{color:#eceef1!important}
-    [data-ogsc] .t-muted{color:#9aa3af!important}
-    [data-ogsb] .bg-page{background-color:#0f1115!important}
-    [data-ogsb] .bg-card{background-color:#1a1d23!important}
-    [data-ogsb] .rule{border-color:#2a2f38!important}
+    [data-ogsc] .t-main{color:${DARK.ink}!important}
+    [data-ogsc] .t-muted{color:${DARK.muted}!important}
+    [data-ogsb] .bg-page{background-color:${DARK.page}!important}
+    [data-ogsb] .bg-card{background-color:${DARK.card}!important}
+    [data-ogsb] .rule{border-color:${DARK.line}!important}
     [data-ogsc] .logo{border:1px solid #6b7385!important}`;
 }
 
@@ -118,7 +123,7 @@ function logoHtml(brand: EmailModel['brand']): string {
   const logoUrl = httpUrl(brand.logoUrl);
   const nameCell = `<td class="t-main" style="font-family:${FONT};font-size:16px;font-weight:700;line-height:20px;color:${LIGHT.text};padding-left:${logoUrl ? 12 : 0}px" valign="middle">${name}</td>`;
   const logoCell = logoUrl
-    ? `<td valign="middle" width="40" style="width:40px"><img class="logo" src="${escapeHtml(logoUrl)}" width="40" height="40" alt="" style="display:block;width:40px;height:40px;border-radius:9px"></td>`
+    ? `<td valign="middle" width="40" style="width:40px"><img class="logo" src="${escapeHtml(logoUrl)}" width="40" height="40" alt="" style="display:block;width:40px;height:40px;border-radius:${RADIUS.logo}px"></td>`
     : '';
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>${logoCell}${nameCell}</tr></table>`;
 }
@@ -137,20 +142,28 @@ function fieldRows(fields: EmailField[]): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:20px">${rows.join('\n')}</table>`;
 }
 
-function buttonHtml(action: { label: string; url: string }, accent: string): string {
+/**
+ * The button: a pill in the colour of the BDE, worked out as on the platform (`deriveAccent`: kept when white or near-black text
+ * reads on it at 4.5:1, darkened until white does), never the colour of the bar, which says what the message is about.
+ */
+function buttonHtml(action: { label: string; url: string }, brandAccent: string): string {
   const url = escapeHtml(httpUrl(action.url) ?? '');
   const label = escapeHtml(action.label);
-  const color = getContrastingTextColor(accent);
+  const { fill, on } = deriveAccent(brandAccent, 'light');
+  const color = on.toLowerCase();
+  const accent = fill.toLowerCase();
   const width = outlookButtonWidth(action.label);
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:28px"><tr><td align="center" bgcolor="${accent}" style="background-color:${accent};border-radius:8px">
-<!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${url}" arcsize="17%" stroke="f" fillcolor="${accent}" style="height:46px;v-text-anchor:middle;width:${width}px"><w:anchorlock/><center style="font-family:Arial,sans-serif;font-size:15px;font-weight:bold;color:${color}">${label}</center></v:roundrect><![endif]-->
-<!--[if !mso]><!--><a class="btn" href="${url}" style="display:inline-block;padding:13px 28px;font-family:${FONT};font-size:15px;font-weight:700;line-height:20px;color:${color};text-decoration:none;border-radius:8px;background-color:${accent}">${label}</a><!--<![endif]-->
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:28px"><tr><td align="center" bgcolor="${accent}" style="background-color:${accent};border-radius:999px">
+<!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${url}" arcsize="50%" stroke="f" fillcolor="${accent}" style="height:46px;v-text-anchor:middle;width:${width}px"><w:anchorlock/><center style="font-family:Arial,sans-serif;font-size:15px;font-weight:bold;color:${color}">${label}</center></v:roundrect><![endif]-->
+<!--[if !mso]><!--><a class="btn" href="${url}" style="display:inline-block;padding:13px 28px;font-family:${FONT};font-size:15px;font-weight:700;line-height:20px;color:${color};text-decoration:none;border-radius:999px;background-color:${accent}">${label}</a><!--<![endif]-->
 </td></tr></table>`;
 }
 
 /** The e-mail as HTML (for every client) and as text (for those that show only text). */
 export function renderEmail(model: EmailModel): RenderedEmail {
   const accent = normalizeHex(model.accent);
+  // The button is the BDE's colour; a message with no brand colour (a test) falls back on the bar's.
+  const buttonAccent = normalizeHex(model.brand.accent ?? model.accent);
   const avatarUrl = httpUrl(model.avatarUrl);
   const action = model.action && httpUrl(model.action.url) ? model.action : undefined;
 
@@ -173,8 +186,8 @@ export function renderEmail(model: EmailModel): RenderedEmail {
 <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all">${escapeHtml(model.preheader)}${PREHEADER_FILLER}</div>
 <table role="presentation" class="bg-page" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${LIGHT.page}" style="background-color:${LIGHT.page}"><tr><td align="center" style="padding:28px 12px">
 <!--[if mso]><table role="presentation" width="600" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
-<table role="presentation" class="bg-card" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${LIGHT.card}" style="max-width:600px;background-color:${LIGHT.card};border-radius:12px">
-<tr><td bgcolor="${accent}" height="6" style="height:6px;line-height:6px;font-size:6px;background-color:${accent};border-radius:12px 12px 0 0">&nbsp;</td></tr>
+<table role="presentation" class="bg-card" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${LIGHT.card}" style="max-width:600px;background-color:${LIGHT.card};border-radius:${RADIUS.card}px">
+<tr><td bgcolor="${accent}" height="6" style="height:6px;line-height:6px;font-size:6px;background-color:${accent};border-radius:${RADIUS.card}px ${RADIUS.card}px 0 0">&nbsp;</td></tr>
 <tr><td class="px" style="padding:26px 36px 0">${logoHtml(model.brand)}</td></tr>
 <tr><td class="px" style="padding:26px 36px 0">
 ${avatarUrl ? `<img src="${escapeHtml(avatarUrl)}" width="64" height="64" alt="" style="display:block;width:64px;height:64px;border-radius:32px;margin-bottom:16px">` : ''}
@@ -182,7 +195,7 @@ ${avatarUrl ? `<img src="${escapeHtml(avatarUrl)}" width="64" height="64" alt=""
 <h1 class="h1 t-main" style="margin:8px 0 0;font-family:${FONT};font-size:26px;line-height:32px;font-weight:800;color:${LIGHT.text}">${escapeHtml(model.heading)}</h1>
 ${model.lead ? `<p class="t-main" style="margin:14px 0 0;font-family:${FONT};font-size:15px;line-height:23px;color:${LIGHT.text}">${multiline(model.lead)}</p>` : ''}
 ${model.fields.length > 0 ? fieldRows(model.fields) : ''}
-${action ? buttonHtml(action, accent) : ''}
+${action ? buttonHtml(action, buttonAccent) : ''}
 ${model.note ? `<p class="t-muted" style="margin:16px 0 0;font-family:${FONT};font-size:13px;line-height:19px;color:${LIGHT.muted}">${multiline(model.note)}</p>` : ''}
 </td></tr>
 <tr><td class="px" style="padding:30px 36px 28px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="rule t-muted" style="border-top:1px solid ${LIGHT.rule};padding-top:16px;font-family:${FONT};font-size:12px;line-height:18px;color:${LIGHT.muted}">${multiline(model.footer)}<br>${escapeHtml(PLATFORM_NAME)}</td></tr></table></td></tr>

@@ -34,9 +34,9 @@ const names = (embed: ReturnType<typeof build>) => embed.fields?.map((field) => 
 
 describe('buildMemberEmbed', () => {
   it.each([
-    ['pending', 0xf59e0b],
-    ['approved', 0x10b981],
-    ['removed', 0xef4444],
+    ['pending', 0xc09036],
+    ['approved', 0x3aa06f],
+    ['removed', 0xda5749],
   ] as const)('gives the %s card its own colour', (kind, color) => {
     expect(build(kind).color).toBe(color);
   });

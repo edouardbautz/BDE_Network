@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import { EMAIL_TOKENS } from './colors';
 import { escapeHtml, renderEmail, type EmailModel } from './email-layout';
+
+const { dark, light } = EMAIL_TOKENS;
 
 const model: EmailModel = {
   lang: 'fr',
   preheader: 'Samedi 10 octobre · Foyer',
-  brand: { name: 'BDE Nice', logoUrl: 'https://bde.example.fr/logo.png' },
+  brand: { name: 'BDE Nice', logoUrl: 'https://bde.example.fr/logo.png', accent: '#2f5bea' },
   accent: '#db2777',
   eyebrow: 'Nouvel événement',
   heading: 'Soirée de rentrée',
@@ -54,11 +57,11 @@ describe('renderEmail: the HTML', () => {
     expect(out).toContain('<meta name="supported-color-schemes" content="light dark">');
     expect(out).toContain('@media (prefers-color-scheme:dark)');
     expect(out).toContain('[data-ogsc]'); // Outlook.com
-    expect(out).toContain('[data-ogsb] .bg-page{background-color:#0f1115!important}');
-    expect(out).toContain('[data-ogsb] .bg-card{background-color:#1a1d23!important}');
-    expect(out).toContain('[data-ogsb] .rule{border-color:#2a2f38!important}');
-    expect(out).toContain('.bg-card{background-color:#1a1d23!important}');
-    expect(out).toContain('.t-main{color:#eceef1!important}');
+    expect(out).toContain(`[data-ogsb] .bg-page{background-color:${dark.page}!important}`);
+    expect(out).toContain(`[data-ogsb] .bg-card{background-color:${dark.card}!important}`);
+    expect(out).toContain(`[data-ogsb] .rule{border-color:${dark.line}!important}`);
+    expect(out).toContain(`.bg-card{background-color:${dark.card}!important}`);
+    expect(out).toContain(`.t-main{color:${dark.ink}!important}`);
   });
 
   it('puts a thin light outline round the logo in dark mode only', () => {
@@ -76,9 +79,10 @@ describe('renderEmail: the HTML', () => {
 
   it('does not rely on the style element for what matters: colours are inline too', () => {
     const out = html();
-    expect(out).toContain('bgcolor="#ffffff"');
-    expect(out).toContain('background-color:#ffffff');
-    expect(out).toMatch(/<h1 [^>]*style="[^"]*color:#1f2430/);
+    expect(out).toContain(`bgcolor="${light.card}"`);
+    expect(out).toContain(`background-color:${light.card}`);
+    expect(out).toContain(`bgcolor="${light.page}"`);
+    expect(out).toMatch(new RegExp(`<h1 [^>]*style="[^"]*color:${light.ink}`));
   });
 
   it('is built of tables, for the clients that render with a word processor', () => {
@@ -97,28 +101,49 @@ describe('renderEmail: the HTML', () => {
     expect(out).not.toContain('.label{padding-bottom:0!important;border-top:0');
   });
 
-  it('shows the colour of what it is about on the top bar and the button', () => {
+  it('shows the colour of what it is about on the top bar, and the colour of the BDE on the button', () => {
     const out = html({ accent: '#16a34a' });
     expect(out).toContain('<td bgcolor="#16a34a" height="6"');
-    expect(out).toContain('background-color:#16a34a;border-radius:8px');
+    expect(out).toContain('background-color:#2f5bea;border-radius:999px'); // a pill, in the colour of the BDE
     expect(out).not.toContain('bgcolor="#db2777"'); // the dot of the category keeps its own colour
+  });
+
+  it('draws the card and the logo with the radii of the interface', () => {
+    const out = html();
+    expect(out).toContain('border-radius:24px">');
+    expect(out).toContain('border-radius:24px 24px 0 0');
+    expect(out).toMatch(/<img class="logo"[^>]*border-radius:12px/);
+  });
+
+  it('falls back on the colour of the bar for the button when the BDE has none (a message with no brand colour)', () => {
+    const out = html({ accent: '#16a34a', brand: { name: 'BDE Nice' } });
+    expect(out).toContain('background-color:#16a34a;border-radius:999px');
   });
 
   it('uses the neutral grey when the colour is not a colour', () => {
     const out = html({ accent: 'red;x' });
-    expect(out).toContain('<td bgcolor="#6b7280" height="6"');
+    expect(out).toContain('<td bgcolor="#7a818b" height="6"');
   });
 
-  it('writes the button text in black or white, whichever reads on the colour', () => {
-    expect(html({ accent: '#f59e0b' })).toMatch(/<a class="btn"[^>]*color:#000000/);
-    expect(html({ accent: '#1e3a8a' })).toMatch(/<a class="btn"[^>]*color:#ffffff/);
+  it('writes the button text in near black or white, as on the platform, whichever reads at 4.5:1 on the colour of the BDE', () => {
+    const brand = (accent: string) => ({ brand: { name: 'BDE Nice', accent } });
+    expect(html(brand('#f0b429'))).toMatch(/<a class="btn"[^>]*color:#111111/);
+    expect(html(brand('#1e3a8a'))).toMatch(/<a class="btn"[^>]*color:#ffffff/);
+  });
+
+  it('darkens a colour that no text reads on, as the platform does, rather than keep a button nobody can read', () => {
+    // #787878 reads neither white nor near black at 4.5:1: the platform darkens it until white does
+    const out = html({ brand: { name: 'BDE Nice', accent: '#787878' } });
+    expect(out).toMatch(/<a class="btn"[^>]*color:#ffffff/);
+    expect(out).not.toContain('background-color:#787878;border-radius:999px');
   });
 
   it('has a button for Outlook on Windows too, which draws it itself', () => {
     const out = html();
     expect(out).toContain('<v:roundrect');
     expect(out).toContain('href="https://bde.example.fr/fr/events/1?occ=2"');
-    expect(out).toContain('fillcolor="#db2777"');
+    expect(out).toContain('fillcolor="#2f5bea"');
+    expect(out).toContain('arcsize="50%"');
     expect(out).toContain('<w:anchorlock/>');
   });
 
@@ -187,7 +212,7 @@ describe('renderEmail: the HTML', () => {
     const rows = out.split('<tr>\n<td class="stack label').slice(1);
     expect(rows).toHaveLength(2);
     expect(rows[0]).not.toContain('border-top:1px');
-    expect(rows[1]).toContain('border-top:1px solid #e5e7eb');
+    expect(rows[1]).toContain(`border-top:1px solid ${light.line}`);
   });
 
   it('draws no table of fields when there are none', () => {

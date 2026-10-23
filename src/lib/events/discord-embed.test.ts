@@ -46,7 +46,7 @@ describe('buildEventEmbed', () => {
   });
 
   it('uses the neutral grey for a category that has no colour any more', () => {
-    expect(build({ categoryColor: null }).color).toBe(0x6b7280);
+    expect(build({ categoryColor: null }).color).toBe(0x7a818b);
   });
 
   it('has no link at all without APP_URL, or with an address that is not http', () => {

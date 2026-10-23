@@ -190,7 +190,7 @@ describe('EmailAdapter', () => {
       to: 'alice@example.org',
       subject: 'Demande approuvée : Alice',
       body: 'Pour l’équipe',
-      email: { subject: 'Votre accès est validé', html: '<p>Bienvenue</p>', text: 'Bienvenue' },
+      email: { subject: 'Votre accès est approuvé', html: '<p>Bienvenue</p>', text: 'Bienvenue' },
     });
     await adapter.send({
       to: 'bob@example.org',
@@ -201,7 +201,7 @@ describe('EmailAdapter', () => {
 
     const subjectOf = (index: number) =>
       decodeMimeWords(/^Subject: (.*)$/m.exec(smtp.deliveries[index]?.data ?? '')?.[1] ?? '');
-    expect(subjectOf(0)).toBe('Votre accès est validé');
+    expect(subjectOf(0)).toBe('Votre accès est approuvé');
     expect(subjectOf(1)).toBe('Sujet commun');
   });
 

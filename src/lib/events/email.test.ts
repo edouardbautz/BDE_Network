@@ -49,7 +49,7 @@ describe('buildEventEmail', () => {
 
   it('uses the neutral grey for a category that has no colour any more', () => {
     const { html } = mail({ categoryColor: null });
-    expect(html).toContain('<td bgcolor="#6b7280" height="6"');
+    expect(html).toContain('<td bgcolor="#7a818b" height="6"');
     expect(html).not.toContain('&#9679;'); // and no dot either
   });
 

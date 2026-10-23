@@ -80,6 +80,6 @@ export async function buildTestMessage(
     return { ...message, slack: buildEventSlack('test', data, t, locale, timeZone, brand) };
   }
 
-  const brand = context.installed ? await emailBrand() : { name };
+  const brand = context.installed ? await emailBrand() : { name, accent: context.accent };
   return { ...message, email: buildEventEmail('test', data, t, locale, timeZone, brand) };
 }
