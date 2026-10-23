@@ -127,7 +127,9 @@ export const test = base.extend<Fixtures>({
       judgements.push(() => {
         for (const { at, what } of suspects.splice(0)) {
           if (!cancellations.some((cancelled) => Math.abs(cancelled - at) < RECENTLY_MS)) {
-            problems.list.push(`${what} (and no request was cancelled around it)`);
+            problems.list.push(
+              `${what} (and no request was cancelled around it; the page did, in order: ${trail.join(' | ') || 'nothing'})`,
+            );
           }
         }
       });
@@ -202,20 +204,42 @@ export const test = base.extend<Fixtures>({
       // The navigation is the evidence, so it counts as a cancellation: the request was really there, and the page really left. (A
       // journey that clicks right after a debounced request of the page, a preview, met it one time in ten in WebKit.)
       const inFlight = new Set<Request>();
-      page.on('request', (request) => inFlight.add(request));
-      page.on('requestfinished', (request) => inFlight.delete(request));
+      // What the network and the navigations did, with their times: written under the verdict of a suspect that nothing excused,
+      // because "no request was cancelled" is what this is about and a bare sentence does not say what the engine did instead.
+      const trail: string[] = [];
+      const started = Date.now();
+      const note = (what: string) => {
+        trail.push(`+${Date.now() - started}ms ${what}`);
+        if (trail.length > 24) trail.shift();
+      };
+      const shown = (request: Request) =>
+        `${request.method()} ${request
+          .url()
+          .replace(baseURL ?? '', '')
+          .slice(0, 70)}`;
+      page.on('request', (request) => {
+        inFlight.add(request);
+        note(`request ${shown(request)}`);
+      });
+      page.on('requestfinished', (request) => {
+        inFlight.delete(request);
+        note(`finished ${shown(request)}`);
+      });
       const cancelWhatIsInFlight = () => {
         const cancelled = [...inFlight].filter((request) => !request.isNavigationRequest());
         if (cancelled.length > 0) cancellations.push(Date.now());
         inFlight.clear();
       };
       page.on('framenavigated', (frame) => {
-        if (frame === page.mainFrame()) cancelWhatIsInFlight();
+        if (frame !== page.mainFrame()) return;
+        note(`navigated to ${frame.url().replace(baseURL ?? '', '')}`);
+        cancelWhatIsInFlight();
       });
       page.on('close', cancelWhatIsInFlight);
       page.on('requestfailed', (request) => {
         inFlight.delete(request);
         const reason = request.failure()?.errorText ?? '';
+        note(`failed ${shown(request)} (${reason})`);
         if (CANCELLED_REQUEST.test(reason)) {
           cancellations.push(Date.now());
           return;
