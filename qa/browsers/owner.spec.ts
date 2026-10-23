@@ -79,22 +79,25 @@ test.describe('an owner', () => {
       expect(served.headers()['x-content-type-options']).toBe('nosniff');
       expect(served.headers()['content-security-policy']).toBe("default-src 'none'; sandbox");
     } finally {
-      // Whatever happened above, the platform is left with the logo it came with.
+      // Whatever happened above, the platform is left with the logo it came with. The page is drawn and at rest before it is
+      // asked what it shows: `isVisible()` answers at once and does not wait, and an answer given too early ("no button to go
+      // back") left the uploaded logo in place for the journey that follows, which then failed on a logo it never uploaded.
       await page.goto('/en/settings');
-      const back = page
-        .getByRole('region', { name: 'Logo' })
-        .getByRole('button', { name: 'Back to the default logo' });
+      const logo = page.getByRole('region', { name: 'Logo' });
+      await expect(logo).toBeVisible();
+      await atRest(page);
+      const back = logo.getByRole('button', { name: 'Back to the default logo' });
       if (await back.isVisible()) {
         await back.click();
         await page
           .getByRole('dialog')
           .getByRole('button', { name: 'Back to the default logo' })
           .click();
-        await expect(
-          page
-            .getByRole('region', { name: 'Logo' })
-            .getByText('The logo that comes with the platform'),
-        ).toBeVisible();
+        await expect(logo.getByText('The logo that comes with the platform')).toBeVisible();
+        // what the platform holds, not what this page shows: read again
+        await atRest(page);
+        await page.reload();
+        await expect(logo.getByText('The logo that comes with the platform')).toBeVisible();
       }
     }
   });
@@ -103,6 +106,8 @@ test.describe('an owner', () => {
     const page = await as('owner');
     await page.goto('/en/settings');
     const region = page.getByRole('region', { name: 'Logo' });
+    // The platform starts with the logo it came with: if not, the journey before this one left its own (and says so here).
+    await expect(region.getByText('The logo that comes with the platform')).toBeVisible();
     await region.locator('input[type=file]').setInputFiles({
       name: 'logo.png',
       mimeType: 'image/png',

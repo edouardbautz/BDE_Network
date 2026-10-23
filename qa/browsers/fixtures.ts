@@ -1,4 +1,4 @@
-import { test as base, expect, type Page } from '@playwright/test';
+import { test as base, expect, type Page, type Request } from '@playwright/test';
 import { SESSION_COOKIE, forgeSessionCookie, persona, type PersonaKey } from '../personas';
 
 export { expect };
@@ -6,6 +6,11 @@ export { expect };
 /** What a page raised that nobody should see. */
 export interface Problems {
   list: string[];
+  /**
+   * Judges now what was held back until the end (an error worded like a cancelled fetch: see `suspect`). The journey does it by
+   * itself when it ends; the tests of the watcher do it to see the verdict. What was judged is not judged twice.
+   */
+  judge(): void;
 }
 
 interface Fixtures {
@@ -75,7 +80,7 @@ const INTERRUPTED_PREFETCH = /[?&]_rsc=[\w-]+ due to access control checks\.?$/;
 
 export const test = base.extend<Fixtures>({
   problems: async ({}, use) => {
-    const problems: Problems = { list: [] };
+    const problems: Problems = { list: [], judge: () => {} };
     await use(problems);
     // Said after the test, so that a journey that already failed keeps its own message first.
     expect(problems.list, 'the pages raised errors').toEqual([]);
@@ -84,6 +89,9 @@ export const test = base.extend<Fixtures>({
   as: async ({ browser, baseURL, problems }, use) => {
     const contexts: { close(): Promise<void> }[] = [];
     const judgements: (() => void)[] = [];
+    problems.judge = () => {
+      for (const judge of judgements) judge();
+    };
     await use(async (who, options = {}) => {
       const account = persona(who);
       const context = await browser.newContext({
@@ -117,7 +125,7 @@ export const test = base.extend<Fixtures>({
         return true;
       };
       judgements.push(() => {
-        for (const { at, what } of suspects) {
+        for (const { at, what } of suspects.splice(0)) {
           if (!cancellations.some((cancelled) => Math.abs(cancelled - at) < RECENTLY_MS)) {
             problems.list.push(`${what} (and no request was cancelled around it)`);
           }
@@ -188,7 +196,25 @@ export const test = base.extend<Fixtures>({
         report(`console error: ${text}`);
       });
       // A request that failed otherwise than by being cancelled (the next click, a page left), or a server error.
+      // A request that is still in flight when a navigation replaces the document is cancelled by it, and that is how an engine can word
+      // what it raises: WebKit says `Load request cancelled` (a `requestfailed`) on one system and, on another, only an exception of
+      // the page ("Fetch API cannot load … due to access control checks", `TypeError: Load failed`) with no `requestfailed` at all.
+      // The navigation is the evidence, so it counts as a cancellation: the request was really there, and the page really left. (A
+      // journey that clicks right after a debounced request of the page, a preview, met it one time in ten in WebKit.)
+      const inFlight = new Set<Request>();
+      page.on('request', (request) => inFlight.add(request));
+      page.on('requestfinished', (request) => inFlight.delete(request));
+      const cancelWhatIsInFlight = () => {
+        const cancelled = [...inFlight].filter((request) => !request.isNavigationRequest());
+        if (cancelled.length > 0) cancellations.push(Date.now());
+        inFlight.clear();
+      };
+      page.on('framenavigated', (frame) => {
+        if (frame === page.mainFrame()) cancelWhatIsInFlight();
+      });
+      page.on('close', cancelWhatIsInFlight);
       page.on('requestfailed', (request) => {
+        inFlight.delete(request);
         const reason = request.failure()?.errorText ?? '';
         if (CANCELLED_REQUEST.test(reason)) {
           cancellations.push(Date.now());
