@@ -95,7 +95,7 @@ describe('what a message can mention', () => {
 });
 
 describe('the directory of a platform', () => {
-  const openDirectory = async (scope: 'discord' | 'slack' = 'discord') => {
+  const openDirectory = async () => {
     open();
     fireEvent.click(await screen.findByRole('menuitem', { name: /Gérer les personnes/ }));
     return screen.findByRole('dialog');
@@ -111,7 +111,7 @@ describe('the directory of a platform', () => {
 
   it('says so when nobody is there yet', async () => {
     render(<Harness scope="slack" initial={[]} />);
-    const dialog = await openDirectory('slack');
+    const dialog = await openDirectory();
     expect(dialog).toHaveTextContent('Personne pour le moment.');
   });
 
