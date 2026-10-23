@@ -48,6 +48,8 @@ In **Settings**, **Notifications** section (and in the installer), two blocks:
    - On a phone, each notification is a block with its boxes one under the other, each at least 44 px high: nothing
      scrolls sideways.
 
+![The table of notifications: a row per notification, a column per channel](../images/en/notifications.webp)
+
 A configuration written before version 1.5.0, with **one channel per notification**, is read as it was meant:
 `discord` becomes the Discord box ticked, `none` no box. Nothing is lost, and nothing changes until you save from
 Settings (see [Configuration](configuration.md#notifications-1)).

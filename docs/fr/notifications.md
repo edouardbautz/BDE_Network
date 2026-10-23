@@ -48,6 +48,8 @@ Dans **Paramètres**, section **Notifications** (et dans l'installateur), deux b
    - Sur téléphone, chaque notification est un bloc dont les cases sont les unes sous les autres, d'au moins 44 px de
      haut : rien ne défile sur le côté.
 
+![Le tableau des notifications : une ligne par notification, une colonne par canal](../images/fr/notifications.webp)
+
 Une configuration écrite avant la version 1.5.0, avec **un canal par notification**, est lue comme elle était voulue :
 `discord` devient la case Discord cochée, `none` aucune case. Rien ne se perd, et rien ne change tant que vous
 n'enregistrez pas depuis Paramètres (voir [Configuration](configuration.md#notifications)).
