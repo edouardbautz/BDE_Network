@@ -1,11 +1,13 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 import { getLocale } from 'next-intl/server';
 import { getPathname } from '@/i18n/navigation';
 import type { ActionTarget } from '@/lib/action-target';
 import { requireIntraPublisher, requireIntraRequester } from '@/lib/events/access';
 import { auditIntraAction } from '@/lib/events/intra-audit';
+import { notifyIntraAnswered, notifyIntraRequested } from '@/lib/events/intra-notifications';
 import { parseIntraUrl } from '@/lib/events/intra-request';
 import {
   markRequestUpdated,
@@ -56,6 +58,17 @@ function requireEventId(value: unknown): string {
   return value;
 }
 
+/** Tells whoever it concerns after the response (the author and the BDE's room, or the staff). Never throws, never delays the answer. */
+function afterResponse(what: string, work: () => Promise<void>): void {
+  after(async () => {
+    try {
+      await work();
+    } catch (error) {
+      console.error(`[events] ${what} notice failed`, error);
+    }
+  });
+}
+
 /** "Published on the intra": the staff has copied the event into the intra's form. `url` is the address of the event there (optional). */
 export async function publishOnIntra(
   eventId: string,
@@ -87,6 +100,9 @@ export async function publishOnIntra(
   if (!outcome) return { href: await addressOf(withNotice(id, 'busy')) };
   if (!outcome.ok) return { href: await addressOf(withNotice(id, outcome.notice)) };
 
+  afterResponse('intraPublished', () =>
+    notifyIntraAnswered('published', id, actorOf(access).login),
+  );
   revalidatePath('/events');
   return { href: await addressOf('/events/intra') };
 }
@@ -141,6 +157,7 @@ export async function refuseOnIntra(eventId: string, comment: string): Promise<A
   if (!outcome) return { href: await addressOf(withNotice(id, 'busy')) };
   if (!outcome.ok) return { href: await addressOf(withNotice(id, outcome.notice)) };
 
+  afterResponse('intraRefused', () => notifyIntraAnswered('refused', id, actorOf(access).login));
   revalidatePath('/events');
   return { href: await addressOf('/events/intra') };
 }
@@ -181,6 +198,7 @@ export async function requestOnIntra(
     };
   }
 
+  afterResponse('intraRequested', () => notifyIntraRequested(id, actorOf(access).login));
   revalidatePath('/events');
   return { href: await addressOf(returnTo === 'event' ? `/events/${id}` : `/events/intra/${id}`) };
 }

@@ -4,14 +4,15 @@ import { EmailAdapter } from './adapters/email';
 import { SlackAdapter } from './adapters/slack';
 import type { NotificationAdapter, NotificationMessage, SendOutcome } from './types';
 
-function getAdapter(channel: NotificationChannel): NotificationAdapter {
+/** `webhookUrl`: a webhook other than the one of the settings (the staff's room); the e-mail has none. */
+function getAdapter(channel: NotificationChannel, webhookUrl?: string): NotificationAdapter {
   switch (channel) {
     case 'email':
       return new EmailAdapter();
     case 'discord':
-      return new DiscordAdapter();
+      return new DiscordAdapter(webhookUrl);
     case 'slack':
-      return new SlackAdapter();
+      return new SlackAdapter(webhookUrl);
   }
 }
 
@@ -24,8 +25,9 @@ function getAdapter(channel: NotificationChannel): NotificationAdapter {
 export async function notify(
   channel: NotificationChannel,
   message: NotificationMessage,
+  options: { webhookUrl?: string } = {},
 ): Promise<void> {
-  await getAdapter(channel).send(message);
+  await getAdapter(channel, options.webhookUrl).send(message);
 }
 
 /**

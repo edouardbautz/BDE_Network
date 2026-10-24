@@ -35,6 +35,15 @@ const EVENTS_NOTIFICATIONS = [
   'eventRefused',
 ] as const;
 
+/** The ones about publishing on the intra count too, once the platform publishes there. */
+const INTRA_NOTIFICATIONS = [
+  'intraRequested',
+  'intraChanged',
+  'intraCancelled',
+  'intraPublished',
+  'intraRefused',
+] as const;
+
 /**
  * Notifications about members. Their channels were already in every config before they sent
  * anything (the example even had `memberPending: email`), so a channel that is not set up is
@@ -62,6 +71,11 @@ function channelsInUse(config: BdeConfig): Set<string> {
   if (config.modules.enabled.includes(EVENTS_MODULE_KEY)) {
     for (const event of EVENTS_NOTIFICATIONS) {
       for (const channel of config.notifications[event]) channels.add(channel);
+    }
+    if (config.events?.intraPublication) {
+      for (const event of INTRA_NOTIFICATIONS) {
+        for (const channel of config.notifications[event]) channels.add(channel);
+      }
     }
   }
   return channels;

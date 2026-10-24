@@ -14,6 +14,24 @@ export interface ReviewFacts {
   comment: string | null;
 }
 
+/** What a message about the publication on the intra says besides the event (see `intra-facts.ts`, which makes it). */
+export interface IntraFacts {
+  /** Who asked for the publication (the person who confirmed the event, or asked again), by name. */
+  requestedByName: string | null;
+  /** Who changed or took back the event, or the staff member who answered, by name. */
+  actorName: string | null;
+  /** The reason the staff gave for a refusal. */
+  comment: string | null;
+  /** Why the request was taken back, as a sentence. */
+  cause: string | null;
+  /** The address of the event on the intra, when the staff gave one. */
+  intraUrl: string | null;
+  /** The fields of the intra's form, as `label: value` (for a request). */
+  fields: { label: string; value: string }[];
+  /** What changed since the event was published, one line each (for a change). */
+  changes: string[];
+}
+
 export interface NotificationEventData {
   eventId: string;
   title: string;
@@ -31,6 +49,8 @@ export interface NotificationEventData {
   url: string | null;
   /** Only in the messages of the proposal circuit. */
   review?: ReviewFacts;
+  /** Only in the messages about the publication on the intra. */
+  intra?: IntraFacts;
 }
 
 export interface BuiltMessage {
@@ -117,6 +137,48 @@ export function buildReviewMessage(
   }
   lines.push(...detailLines(data, t, locale, timeZone));
   return { subject: t(`${kind}.subject`, { title: data.title }), body: lines.join('\n') };
+}
+
+/**
+ * The five messages about the publication on the intra: the staff asked (`intraRequested`), told that an event changed
+ * (`intraChanged`) or was taken back (`intraCancelled`); the author told it was published or refused. The plain text a channel
+ * falls back on: the sentence, what is specific to the kind, then the date and the place.
+ */
+export function buildIntraMessage(
+  kind: 'intraRequested' | 'intraChanged' | 'intraCancelled' | 'intraPublished' | 'intraRefused',
+  data: NotificationEventData,
+  t: Translate,
+  locale: string,
+  timeZone: string,
+): BuiltMessage {
+  const facts = data.intra;
+  const lines = [
+    t(`intra.${kind}.intro`, {
+      requester: facts?.requestedByName ?? '',
+      actor: facts?.actorName ?? '',
+    }),
+    '',
+  ];
+  if (kind === 'intraRefused' && facts?.comment) {
+    lines.push(`${t('embed.fields.reason')} :`, facts.comment, '');
+  }
+  if (kind === 'intraCancelled' && facts?.cause) {
+    lines.push(`${t('embed.fields.reason')} : ${facts.cause}`, '');
+  }
+  if (kind === 'intraChanged' && facts && facts.changes.length > 0) {
+    lines.push(`${t('embed.fields.changes')} :`, ...facts.changes, '');
+  }
+  if (kind === 'intraRequested' && facts && facts.fields.length > 0) {
+    lines.push(...facts.fields.map((field) => `${field.label} : ${field.value}`), '');
+  }
+  lines.push(whenLine(data, locale, timeZone));
+  if (data.repeat) lines.push(data.repeat);
+  if (data.location) lines.push(`${t('location')} : ${data.location}`);
+  if (kind === 'intraPublished' && facts?.intraUrl) {
+    lines.push(`${t('embed.fields.intraLink')} : ${facts.intraUrl}`);
+  }
+  if (data.url) lines.push(`${t('link')} : ${data.url}`);
+  return { subject: t(`intra.${kind}.subject`, { title: data.title }), body: lines.join('\n') };
 }
 
 /** Which day a reminder talks about: the day after it is sent, or the same day when the server was

@@ -7,6 +7,18 @@ export const SUPPORTED_LOCALES = ['fr', 'en'] as const;
 export const NOTIFICATION_CHANNELS = ['discord', 'slack', 'email'] as const;
 
 /**
+ * The notifications about the publication of the events on the intra (only while `events.intraPublication` is on): the first three tell
+ * the school's staff, the last two tell the author of the event and the BDE's room.
+ */
+export const INTRA_NOTIFICATION_EVENTS = [
+  'intraRequested',
+  'intraChanged',
+  'intraCancelled',
+  'intraPublished',
+  'intraRefused',
+] as const;
+
+/**
  * Notification events wired at this stage of the project. Business modules
  * (events, finances, meetings...) will add their own keys here as they land.
  */
@@ -19,6 +31,7 @@ export const NOTIFICATION_EVENTS = [
   'eventProposed',
   'eventApproved',
   'eventRefused',
+  ...INTRA_NOTIFICATION_EVENTS,
 ] as const;
 
 /** Module keys that ship with the platform. `modules.enabled` is free-form on
@@ -140,6 +153,11 @@ const notificationsSection = z.preprocess(
     eventProposed: notificationChannels('eventProposed'),
     eventApproved: notificationChannels('eventApproved'),
     eventRefused: notificationChannels('eventRefused'),
+    intraRequested: notificationChannels('intraRequested'),
+    intraChanged: notificationChannels('intraChanged'),
+    intraCancelled: notificationChannels('intraCancelled'),
+    intraPublished: notificationChannels('intraPublished'),
+    intraRefused: notificationChannels('intraRefused'),
   }),
 );
 

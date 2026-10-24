@@ -535,6 +535,14 @@ describe('the sections', () => {
       eventApproved: [],
       eventRefused: [],
     };
+    // what a platform holds for the notifications about the intra when nothing was ticked for them (a page may leave them out)
+    const noIntra = {
+      intraRequested: [],
+      intraChanged: [],
+      intraCancelled: [],
+      intraPublished: [],
+      intraRefused: [],
+    };
     const save = (notifications: unknown, db: ReturnType<typeof fakeDb>['db']) =>
       run({ section: 'notifications', notifications }, db);
 
@@ -552,6 +560,7 @@ describe('the sections', () => {
 
       expect(getRuntimeSettings()?.config.notifications).toEqual({
         ...none,
+        ...noIntra,
         memberPending: ['discord'],
         eventConfirmed: ['discord'],
       });
@@ -564,6 +573,38 @@ describe('the sections', () => {
         changedSecrets: ['DISCORD_WEBHOOK_URL'],
       });
       expect(JSON.stringify([state.audit, state.row])).not.toContain('secret-part');
+    });
+
+    it('the notifications about the intra: saved with the others, and kept when a page that does not know them saves', async () => {
+      const { db, state } = fakeDb();
+      await save(
+        {
+          matrix: { ...none, ...noIntra, intraRequested: ['discord'], intraPublished: ['discord'] },
+          discordWebhook: discord,
+        },
+        db,
+      );
+      expect(getRuntimeSettings()?.config.notifications.intraRequested).toEqual(['discord']);
+      expect(state.audit[0]?.metadata).toMatchObject({
+        channels: {
+          intraRequested: { from: [], to: ['discord'] },
+          intraPublished: { from: [], to: ['discord'] },
+        },
+      });
+
+      // a page drawn before they existed sends eight keys: what was saved for the others is not erased
+      await save({ matrix: { ...none, memberPending: ['discord'] } }, db);
+      const lists = getRuntimeSettings()?.config.notifications;
+      expect(lists?.memberPending).toEqual(['discord']);
+      expect(lists?.intraRequested).toEqual(['discord']);
+      expect(lists?.intraPublished).toEqual(['discord']);
+    });
+
+    it('refuses a box of the intra ticked for a channel that is not set up, like any other', async () => {
+      const { db } = fakeDb();
+      expect(
+        await save({ matrix: { ...none, ...noIntra, intraChanged: ['slack'] } }, db),
+      ).toMatchObject({ ok: false, code: 'channelNotConfigured' });
     });
 
     it('several channels for one notification, each with its own settings', async () => {
@@ -598,7 +639,7 @@ describe('the sections', () => {
       await save({ matrix: { ...none, memberPending: ['discord'] }, discordWebhook: discord }, db);
       // every box cleared: no notification, the channel is still there to be ticked again
       await save({ matrix: none }, db);
-      expect(getRuntimeSettings()?.config.notifications).toEqual(none);
+      expect(getRuntimeSettings()?.config.notifications).toEqual({ ...none, ...noIntra });
       expect(setting('DISCORD_WEBHOOK_URL')).toBe(discord);
       // …a blank field keeps the address, so the box can be ticked without typing it again
       expect(

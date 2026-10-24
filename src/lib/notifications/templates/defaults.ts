@@ -1,9 +1,9 @@
-import type { EventCardKind } from '@/lib/events/card-kind';
 import { ICON as EVENT_ICON, KIND_ICON as EVENT_KIND_ICON } from '@/lib/events/discord-embed';
 import { ICON as MEMBER_ICON, KIND_ICON as MEMBER_KIND_ICON } from '@/lib/members/discord-embed';
 import { PLATFORM_NAME } from '../platform';
 import { getNotificationRaw } from '../translate';
 import type { ChannelDefaults, ItemDefault } from './defaults-shape';
+import { EVENT_KIND_OF } from './kinds';
 import type { TemplateChannel, TemplateType } from './types';
 
 /**
@@ -16,14 +16,6 @@ import type { TemplateChannel, TemplateType } from './types';
 const EVENTS = 'events.notifications';
 const MEMBERS = 'members.notifications';
 
-/** The card kind a type is drawn as (the reminder of tomorrow stands for both reminders: its words say `{day}`). */
-const KIND: Record<string, EventCardKind> = {
-  eventConfirmed: 'confirmed',
-  eventReminder: 'tomorrow',
-  eventProposed: 'proposed',
-  eventApproved: 'approved',
-  eventRefused: 'refused',
-};
 const MEMBER_KIND = {
   memberPending: 'pending',
   memberApproved: 'approved',
@@ -36,6 +28,11 @@ const EVENT_SUBJECT: Record<string, string> = {
   eventProposed: 'proposed.subject',
   eventApproved: 'approved.subject',
   eventRefused: 'refused.subject',
+  intraRequested: 'intra.intraRequested.subject',
+  intraChanged: 'intra.intraChanged.subject',
+  intraCancelled: 'intra.intraCancelled.subject',
+  intraPublished: 'intra.intraPublished.subject',
+  intraRefused: 'intra.intraRefused.subject',
 };
 
 /** What the platform says, in the language of the BDE, for a type and a channel. */
@@ -48,7 +45,9 @@ export async function describeDefaults(
   const footer =
     channel === 'discord' ? PLATFORM_NAME : channel === 'slack' ? `{bde} · ${PLATFORM_NAME}` : '';
 
-  const eventKind = KIND[type];
+  const eventKind = EVENT_KIND_OF[type];
+  const staffType =
+    type === 'intraRequested' || type === 'intraChanged' || type === 'intraCancelled';
   if (eventKind) {
     const field = (key: string) => raw(EVENTS, `embed.fields.${key}`);
     const withEmoji = async (key: string, icon: string): Promise<ItemDefault> => ({
@@ -68,7 +67,20 @@ export async function describeDefaults(
         EVENT_ICON.reviewer,
       ),
       reason: await withEmoji('reason', EVENT_ICON.reason),
+      requestedBy: await withEmoji('requestedBy', EVENT_ICON.requestedBy),
+      changes: await withEmoji('changes', EVENT_ICON.changes),
+      intraFields: await withEmoji('intraFields', EVENT_ICON.intraFields),
+      intraLink: await withEmoji('intraLink', EVENT_ICON.intraLink),
     };
+    if (type === 'intraChanged') {
+      items.actedBy = await withEmoji('changedBy', EVENT_ICON.reviewer);
+    } else if (type === 'intraCancelled') {
+      items.actedBy = await withEmoji('cancelledBy', EVENT_ICON.reviewer);
+    } else if (type === 'intraPublished') {
+      items.actedBy = await withEmoji('publishedBy', EVENT_ICON.reviewer);
+    } else if (type === 'intraRefused') {
+      items.actedBy = await withEmoji('refusedBy', EVENT_ICON.reviewer);
+    }
     return {
       eyebrow: await raw(
         EVENTS,
@@ -76,9 +88,19 @@ export async function describeDefaults(
       ),
       title: '{title}',
       emoji: channel === 'discord' ? EVENT_KIND_ICON[eventKind] : '',
-      footer: channel === 'email' ? await raw(EVENTS, 'email.footer') : footer,
+      footer:
+        channel === 'email'
+          ? await raw(EVENTS, staffType ? 'email.staffFooter' : 'email.footer')
+          : footer,
       button: {
-        label: await raw(EVENTS, type === 'eventProposed' ? 'slack.reviewAction' : 'slack.action'),
+        label: await raw(
+          EVENTS,
+          staffType
+            ? 'slack.staffAction'
+            : type === 'eventProposed'
+              ? 'slack.reviewAction'
+              : 'slack.action',
+        ),
         native: channel !== 'discord',
       },
       ...(channel === 'email' && {

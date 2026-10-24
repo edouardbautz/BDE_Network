@@ -1,4 +1,3 @@
-import type { EventCardKind } from '@/lib/events/card-kind';
 import { buildEventEmbed } from '@/lib/events/discord-embed';
 import { buildEventEmail } from '@/lib/events/email';
 import { buildEventSlack } from '@/lib/events/slack-blocks';
@@ -15,7 +14,8 @@ import { fitSlackPayload, type SlackPayload } from '../slack-blocks';
 import { getNotificationTranslate } from '../translate';
 import type { EmailContent } from '../types';
 import { channelsOfType } from './catalog';
-import type { MentionDirectory, RenderedAbove } from './mentions';
+import { EVENT_KIND_OF } from './kinds';
+import type { MentionDirectory, RenderedAbove, StaffMentionIds } from './mentions';
 import { sampleEvent, sampleMember } from './samples';
 import type { TemplateChannel, TemplateContent, TemplateType } from './types';
 
@@ -37,6 +37,8 @@ export interface PreviewOptions {
   /** The platform's address, so that there is a button to show. */
   appUrl?: string | null;
   mentions?: MentionDirectory;
+  /** Who `{@staff}` stands for in a message to the staff: an example in the editor, the real people in a test that pings. */
+  staff?: StaffMentionIds;
   now?: Date;
 }
 
@@ -44,14 +46,6 @@ export type Preview =
   | { channel: 'discord'; embed: DiscordEmbed; above?: RenderedAbove }
   | { channel: 'slack'; message: SlackPayload }
   | { channel: 'email'; mail: EmailContent };
-
-const EVENT_KIND: Record<string, EventCardKind> = {
-  eventConfirmed: 'confirmed',
-  eventReminder: 'tomorrow',
-  eventProposed: 'proposed',
-  eventApproved: 'approved',
-  eventRefused: 'refused',
-};
 
 const MEMBER_KIND = {
   memberPending: 'pending',
@@ -76,14 +70,23 @@ export async function renderPreview(
     accent: options.accent,
     ...(options.logoUrl && { logoUrl: options.logoUrl }),
   };
-  const context = { ...(template && { template }), bdeName, locale, mentions: options.mentions };
+  const context = {
+    ...(template && { template }),
+    bdeName,
+    locale,
+    mentions: options.mentions,
+    ...(options.staff && { staff: options.staff }),
+  };
   const sender = { username: bdeName, avatarUrl: options.logoUrl };
   const link = (path: string) => (options.appUrl ? `${options.appUrl}/${locale}${path}` : null);
 
-  const eventKind = EVENT_KIND[type];
+  const eventKind = EVENT_KIND_OF[type];
   if (eventKind) {
     const t = await getNotificationTranslate(locale, 'events.notifications');
-    const data = { ...sampleEvent(locale, now, type), url: link('/events/sample') };
+    const data = {
+      ...sampleEvent(locale, now, type, t, timeZone),
+      url: link(type.startsWith('intra') ? '/events/intra' : '/events/sample'),
+    };
     if (channel === 'discord') {
       const embed = signCard(buildEventEmbed(eventKind, data, t, timeZone, now, context), sender);
       return {

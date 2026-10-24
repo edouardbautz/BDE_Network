@@ -32,6 +32,8 @@ type MentionPlatform = 'discord' | 'slack';
 interface MentionToolsProps {
   /** The tab: a template for all channels can only mention everybody (the people belong to one platform). */
   scope: 'all' | TemplateChannel;
+  /** The message speaks to the school's staff: `{@staff}` can be written (the people who gave their id on their profile). */
+  staff?: boolean;
   mentions: MentionView[];
   onMentionsChange: (mentions: MentionView[]) => void;
   /** Inserts the text of a mention where the cursor is. */
@@ -51,6 +53,7 @@ const KINDS: Record<MentionPlatform, Array<MentionView['kind']>> = {
  */
 export function MentionTools({
   scope,
+  staff = false,
   mentions,
   onMentionsChange,
   onInsert,
@@ -76,6 +79,9 @@ export function MentionTools({
             {t('everyone')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onInsert('{@here}')}>{t('here')}</DropdownMenuItem>
+          {staff && (
+            <DropdownMenuItem onClick={() => onInsert('{@staff}')}>{t('staff')}</DropdownMenuItem>
+          )}
           {scope === 'slack' && (
             <DropdownMenuItem onClick={() => onInsert('{@channel}')}>
               {t('channel')}

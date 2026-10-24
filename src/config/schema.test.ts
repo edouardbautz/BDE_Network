@@ -68,6 +68,11 @@ describe('bdeConfigSchema', () => {
         eventProposed: [],
         eventApproved: [],
         eventRefused: [],
+        intraRequested: [],
+        intraChanged: [],
+        intraCancelled: [],
+        intraPublished: [],
+        intraRefused: [],
       });
     }
   });

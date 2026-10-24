@@ -52,7 +52,7 @@ export function inertMentions(
   platform: 'discord' | 'slack',
 ): string {
   return source.replace(
-    /\{@(everyone|here|channel)\}|\{@(role|user|group):([a-z0-9]+(?:-[a-z0-9]+)*)\}/g,
+    /\{@(everyone|here|channel|staff)\}|\{@(role|user|group):([a-z0-9]+(?:-[a-z0-9]+)*)\}/g,
     (_match, word: string | undefined, _kind: string | undefined, key: string | undefined) => {
       if (word) return `@${word}`;
       const entry = key ? directory[`${platform}:${key}`] : undefined;

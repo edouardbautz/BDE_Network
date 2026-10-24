@@ -1,6 +1,7 @@
 import { getConfig } from '@/config';
 import type { IntraRequest, Prisma } from '@/generated/prisma/client';
 import { eventInclude } from './include';
+import type { IntraCause } from './intra-facts';
 import { intraPublicationEnabled } from './intra-config';
 import {
   hashContent,
@@ -10,6 +11,7 @@ import {
   sameContent,
   type IntraContent,
 } from './intra-request';
+import { resolveOccurrences } from './series';
 
 // What the database does about the requests to publish on the intra (see "The staff publishes on the intra" in
 // docs/architecture.md). Every function takes the transaction of its caller (`inSeriesTransaction`: SERIALIZABLE, retried), reads
@@ -34,8 +36,17 @@ export type IntraOutcome =
       before: IntraContent;
       after: IntraContent;
     }
-  /** The request is gone because the event is no longer to be published (draft, deleted, no date left). `published`: it was on the intra. */
-  | { kind: 'withdrawn'; eventId: string; title: string; published: IntraContent | null };
+  /**
+   * The request is gone because the event is no longer to be published (draft, deleted, no date left: `cause`). `published`: what the intra
+   * held, when it was on the intra (the staff is told only then).
+   */
+  | {
+      kind: 'withdrawn';
+      eventId: string;
+      title: string;
+      cause: IntraCause;
+      published: IntraContent | null;
+    };
 
 /** Why an answer was not taken, as the notice the page shows (`events.intra.notices.*`). */
 export type IntraNotice =
@@ -93,11 +104,18 @@ export async function syncIntraRequest(
 
   if (!readiness.ok) {
     await tx.intraRequest.delete({ where: { id: request.id } });
+    // Back to draft when no date is confirmed any more; "no date left" when some are, and every one of them is cancelled.
+    const cause: IntraCause = resolveOccurrences(event, timeZone()).some(
+      (date) => date.status === 'CONFIRMED',
+    )
+      ? 'dates'
+      : 'draft';
     return [
       {
         kind: 'withdrawn',
         eventId,
         title: event.title,
+        cause,
         published: isOnIntra(request.status) ? publishedOf(request) : null,
       },
     ];
@@ -146,6 +164,7 @@ export async function withdrawIntraRequest(tx: Tx, eventId: string): Promise<Int
       kind: 'withdrawn',
       eventId,
       title: event.title,
+      cause: 'deleted',
       published: isOnIntra(request.status) ? publishedOf(request) : null,
     },
   ];

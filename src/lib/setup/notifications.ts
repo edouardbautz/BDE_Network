@@ -1,6 +1,7 @@
 import '../zod-config';
 import { z } from 'zod';
 import {
+  INTRA_NOTIFICATION_EVENTS,
   NOTIFICATION_CHANNELS,
   NOTIFICATION_EVENTS,
   type NotificationChannel,
@@ -43,12 +44,19 @@ const text = z.string().max(500);
 const channelList = z.array(z.enum(NOTIFICATION_CHANNELS)).max(NOTIFICATION_CHANNELS.length);
 
 const notificationsSchema = z.object({
-  /** One list of channels per type of notification, all the types written. */
+  /**
+   * One list of channels per type of notification, all the types written. The ones about the intra may be left out (a page drawn
+   * before they existed does not know them): what is saved for them is then kept.
+   */
   matrix: z.object(
-    Object.fromEntries(NOTIFICATION_EVENTS.map((event) => [event, channelList])) as Record<
-      NotificationEvent,
-      typeof channelList
-    >,
+    Object.fromEntries(
+      NOTIFICATION_EVENTS.map((event) => [
+        event,
+        (INTRA_NOTIFICATION_EVENTS as readonly string[]).includes(event)
+          ? channelList.optional()
+          : channelList,
+      ]),
+    ) as Record<NotificationEvent, typeof channelList>,
   ),
   /** Blank: keep the one saved before (unless the channel is removed). */
   discordWebhook: text.optional(),
@@ -190,7 +198,7 @@ export function parseNotifications(
 
   const matrix = emptyMatrix();
   for (const event of NOTIFICATION_EVENTS) {
-    const ticked = parsed.data.matrix[event];
+    const ticked = parsed.data.matrix[event] ?? before?.matrix[event] ?? [];
     if (event === 'memberRemoved' && ticked.includes('email')) {
       return failure('removedNotEmailed', 'matrix');
     }

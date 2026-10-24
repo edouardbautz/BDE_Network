@@ -72,6 +72,7 @@ const view = (patch: Partial<DraftView> = {}): DraftView => ({
   timezone: '',
   owners: [],
   events: true,
+  intra: false,
   notifications: {
     matrix: emptyMatrix(),
     hasDiscordWebhook: false,

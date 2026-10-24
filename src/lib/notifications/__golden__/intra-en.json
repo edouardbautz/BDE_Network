@@ -1,0 +1,2073 @@
+{
+  "full/intraRequested": {
+    "discord": {
+      "title": "📥  Soirée de rentrée",
+      "url": "https://bde.example.fr/en/events/intra/evt1",
+      "color": 14362487,
+      "description": "-# PUBLICATION REQUESTED ON THE INTRA\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​\n### 📍  Foyer du campus\n​\n> DJ set, photomaton et buffet.\n> Entrée libre pour les membres.\n​",
+      "fields": [
+        {
+          "name": "📋  For the intra's form",
+          "value": "Organizer's login : cmartin\nAvailable for : Both\nMaximum number of people : 80\nWaiting list : Yes\nKind : Association\nDelay before unsubscribing (hours) : 24\nKeywords : bde, soirée"
+        },
+        {
+          "name": "📨  Requested by",
+          "value": "Paula Martin",
+          "inline": true
+        },
+        {
+          "name": "🔁  Repeats",
+          "value": "Chaque semaine le samedi, jusqu’au 15 décembre 2026"
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Publication requested on the intra : Soirée de rentrée — Saturday, October 10, 2026 at 8:00 PM → 11:30 PM · Foyer du campus",
+      "color": "#db2777",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Publication requested on the intra*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Soirée de rentrée"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "DJ set, photomaton et buffet.\nEntrée libre pour les membres."
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*When*\n<!date^1791655200^{date_long_pretty} {time}|Saturday, October 10, 2026 at 8:00 PM> → <!date^1791667800^{time}|11:30 PM>"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*For the intra's form*\nOrganizer's login : cmartin\nAvailable for : Both\nMaximum number of people : 80\nWaiting list : Yes\nKind : Association\nDelay before unsubscribing (hours) : 24\nKeywords : bde, soirée"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Where*\nFoyer du campus"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Requested by*\nPaula Martin"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Repeats*\nChaque semaine le samedi, jusqu’au 15 décembre 2026"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Open on the platform"
+              },
+              "url": "https://bde.example.fr/en/events/intra/evt1"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nPUBLICATION REQUESTED ON THE INTRA\n\nSoirée de rentrée\n\nDJ set, photomaton et buffet.\nEntrée libre pour les membres.\n\nWhen : Saturday, October 10, 2026 at 8:00 PM → 11:30 PM\nRepeats : Chaque semaine le samedi, jusqu’au 15 décembre 2026\nWhere : Foyer du campus\nOrganizer's login : cmartin\nAvailable for : Both\nMaximum number of people : 80\nWaiting list : Yes\nKind : Association\nDelay before unsubscribing (hours) : 24\nKeywords : bde, soirée\nRequested by : Paula Martin\n\nOpen on the platform : https://bde.example.fr/en/events/intra/evt1\n\n--\nYou are receiving this message because you publish the events of BDE Nice on the intra.\nBDE_Network\n",
+      "html": "<!doctype html>\n<html lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:o=\"urn:schemas-microsoft-com:office:office\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n<meta name=\"x-apple-disable-message-reformatting\">\n<meta name=\"format-detection\" content=\"telephone=no,date=no,address=no,email=no,url=no\">\n<meta name=\"color-scheme\" content=\"light dark\">\n<meta name=\"supported-color-schemes\" content=\"light dark\">\n<title>Soirée de rentrée</title>\n<!--[if mso]><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><style>table,td{font-family:Arial,sans-serif}</style><![endif]-->\n<style>\n    body,table,td,a{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}\n    table,td{mso-table-lspace:0;mso-table-rspace:0}\n    img{-ms-interpolation-mode:bicubic;border:0;outline:none;text-decoration:none}\n    a{color:inherit}\n    @media (max-width:620px){\n      .px{padding-left:20px!important;padding-right:20px!important}\n      .h1{font-size:24px!important;line-height:30px!important}\n      .stack{display:block!important;width:100%!important;padding-left:0!important;padding-right:0!important}\n      .label{padding-bottom:0!important}\n      .value{padding-top:2px!important;border-top:0!important}\n      .btn{display:block!important;text-align:center!important}\n    }\n    @media (prefers-color-scheme:dark){\n      .bg-page{background-color:#0e1012!important}\n      .bg-card{background-color:#181b1f!important}\n      .t-main{color:#eceef1!important}\n      .t-muted{color:#9aa1ab!important}\n      .rule{border-color:#2a2f36!important}\n      .logo{border:1px solid #6b7385!important}\n    }\n    [data-ogsc] .t-main{color:#eceef1!important}\n    [data-ogsc] .t-muted{color:#9aa1ab!important}\n    [data-ogsb] .bg-page{background-color:#0e1012!important}\n    [data-ogsb] .bg-card{background-color:#181b1f!important}\n    [data-ogsb] .rule{border-color:#2a2f36!important}\n    [data-ogsc] .logo{border:1px solid #6b7385!important}\n</style>\n</head>\n<body class=\"bg-page\" bgcolor=\"#eceef1\" style=\"margin:0;padding:0;width:100%;background-color:#eceef1\">\n<div style=\"display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all\">Publication requested on the intra · Saturday, October 10 at 8:00 PM · Foyer du campus&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</div>\n<table role=\"presentation\" class=\"bg-page\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#eceef1\" style=\"background-color:#eceef1\"><tr><td align=\"center\" style=\"padding:28px 12px\">\n<!--[if mso]><table role=\"presentation\" width=\"600\" align=\"center\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td><![endif]-->\n<table role=\"presentation\" class=\"bg-card\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#ffffff\" style=\"max-width:600px;background-color:#ffffff;border-radius:24px\">\n<tr><td bgcolor=\"#db2777\" height=\"6\" style=\"height:6px;line-height:6px;font-size:6px;background-color:#db2777;border-radius:24px 24px 0 0\">&nbsp;</td></tr>\n<tr><td class=\"px\" style=\"padding:26px 36px 0\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td valign=\"middle\" width=\"40\" style=\"width:40px\"><img class=\"logo\" src=\"https://bde.example.fr/logo.png\" width=\"40\" height=\"40\" alt=\"\" style=\"display:block;width:40px;height:40px;border-radius:12px\"></td><td class=\"t-main\" style=\"font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;line-height:20px;color:#14161a;padding-left:12px\" valign=\"middle\">BDE Nice</td></tr></table></td></tr>\n<tr><td class=\"px\" style=\"padding:26px 36px 0\">\n\n<div class=\"t-muted\" style=\"font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5a606a\">Publication requested on the intra</div>\n<h1 class=\"h1 t-main\" style=\"margin:8px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:26px;line-height:32px;font-weight:800;color:#14161a\">Soirée de rentrée</h1>\n<p class=\"t-main\" style=\"margin:14px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:23px;color:#14161a\">DJ set, photomaton et buffet.<br>Entrée libre pour les membres.</p>\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:20px\"><tr>\n<td class=\"stack label t-muted rule\" width=\"130\" valign=\"top\" style=\"width:130px;padding:12px 12px 12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#5a606a\">When</td>\n<td class=\"stack value t-main rule\" valign=\"top\" style=\"padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:600;color:#14161a\">Saturday, October 10, 2026 at 8:00 PM → 11:30 PM</td>\n</tr>\n<tr>\n<td class=\"stack label t-muted rule\" width=\"130\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;width:130px;padding:12px 12px 12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#5a606a\">Repeats</td>\n<td class=\"stack value t-main rule\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:600;color:#14161a\">Chaque semaine le samedi, jusqu’au 15 décembre 2026</td>\n</tr>\n<tr>\n<td class=\"stack label t-muted rule\" width=\"130\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;width:130px;padding:12px 12px 12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#5a606a\">Where</td>\n<td class=\"stack value t-main rule\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:600;color:#14161a\">Foyer du campus</td>\n</tr>\n<tr>\n<td class=\"stack label t-muted rule\" width=\"130\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;width:130px;padding:12px 12px 12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#5a606a\">Organizer&#39;s login</td>\n<td class=\"stack value t-main rule\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:600;color:#14161a\">cmartin</td>\n</tr>\n<tr>\n<td class=\"stack label t-muted rule\" width=\"130\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;width:130px;padding:12px 12px 12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#5a606a\">Available for</td>\n<td class=\"stack value t-main rule\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:600;color:#14161a\">Both</td>\n</tr>\n<tr>\n<td class=\"stack label t-muted rule\" width=\"130\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;width:130px;padding:12px 12px 12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#5a606a\">Maximum number of people</td>\n<td class=\"stack value t-main rule\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:600;color:#14161a\">80</td>\n</tr>\n<tr>\n<td class=\"stack label t-muted rule\" width=\"130\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;width:130px;padding:12px 12px 12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#5a606a\">Waiting list</td>\n<td class=\"stack value t-main rule\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:600;color:#14161a\">Yes</td>\n</tr>\n<tr>\n<td class=\"stack label t-muted rule\" width=\"130\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;width:130px;padding:12px 12px 12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#5a606a\">Kind</td>\n<td class=\"stack value t-main rule\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:600;color:#14161a\">Association</td>\n</tr>\n<tr>\n<td class=\"stack label t-muted rule\" width=\"130\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;width:130px;padding:12px 12px 12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#5a606a\">Delay before unsubscribing (hours)</td>\n<td class=\"stack value t-main rule\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:600;color:#14161a\">24</td>\n</tr>\n<tr>\n<td class=\"stack label t-muted rule\" width=\"130\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;width:130px;padding:12px 12px 12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#5a606a\">Keywords</td>\n<td class=\"stack value t-main rule\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:600;color:#14161a\">bde, soirée</td>\n</tr>\n<tr>\n<td class=\"stack label t-muted rule\" width=\"130\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;width:130px;padding:12px 12px 12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#5a606a\">Requested by</td>\n<td class=\"stack value t-main rule\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:600;color:#14161a\">Paula Martin</td>\n</tr></table>\n<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:28px\"><tr><td align=\"center\" bgcolor=\"#2f5bea\" style=\"background-color:#2f5bea;border-radius:999px\">\n<!--[if mso]><v:roundrect xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:w=\"urn:schemas-microsoft-com:office:word\" href=\"https://bde.example.fr/en/events/intra/evt1\" arcsize=\"50%\" stroke=\"f\" fillcolor=\"#2f5bea\" style=\"height:46px;v-text-anchor:middle;width:264px\"><w:anchorlock/><center style=\"font-family:Arial,sans-serif;font-size:15px;font-weight:bold;color:#ffffff\">Open on the platform</center></v:roundrect><![endif]-->\n<!--[if !mso]><!--><a class=\"btn\" href=\"https://bde.example.fr/en/events/intra/evt1\" style=\"display:inline-block;padding:13px 28px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;line-height:20px;color:#ffffff;text-decoration:none;border-radius:999px;background-color:#2f5bea\">Open on the platform</a><!--<![endif]-->\n</td></tr></table>\n\n</td></tr>\n<tr><td class=\"px\" style=\"padding:30px 36px 28px\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td class=\"rule t-muted\" style=\"border-top:1px solid #e6e8ec;padding-top:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#5a606a\">You are receiving this message because you publish the events of BDE Nice on the intra.<br>BDE_Network</td></tr></table></td></tr>\n</table>\n<!--[if mso]></td></tr></table><![endif]-->\n</td></tr></table>\n</body>\n</html>\n"
+    }
+  },
+  "full/intraChanged": {
+    "discord": {
+      "title": "🔄  Soirée de rentrée",
+      "url": "https://bde.example.fr/en/events/intra/evt1",
+      "color": 14362487,
+      "description": "-# EVENT CHANGED: UPDATE THE INTRA\n​\n### 🔄  What changed\n> Name: Soirée de rentrée (avant) → Soirée de rentrée\n> Description: Soirée de rentrée (avant) → Soirée de rentrée\n> Location: Soirée de rentrée (avant) → Soirée de rentrée\n> Maximum number of people: 60 → 80\n> Date to remove: 03/10/2026 20:00 → 23:30\n> Date to add: 17/10/2026 20:00 → 23:30\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​\n### 📍  Foyer du campus\n​",
+      "fields": [
+        {
+          "name": "🛡️  Changed by",
+          "value": "Paula Martin",
+          "inline": true
+        },
+        {
+          "name": "🔁  Repeats",
+          "value": "Chaque semaine le samedi, jusqu’au 15 décembre 2026"
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Event changed: update the intra : Soirée de rentrée — Saturday, October 10, 2026 at 8:00 PM → 11:30 PM · Foyer du campus",
+      "color": "#db2777",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Event changed: update the intra*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Soirée de rentrée"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*What changed*\nName: Soirée de rentrée (avant) → Soirée de rentrée\nDescription: Soirée de rentrée (avant) → Soirée de rentrée\nLocation: Soirée de rentrée (avant) → Soirée de rentrée\nMaximum number of people: 60 → 80\nDate to remove: 03/10/2026 20:00 → 23:30\nDate to add: 17/10/2026 20:00 → 23:30"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*When*\n<!date^1791655200^{date_long_pretty} {time}|Saturday, October 10, 2026 at 8:00 PM> → <!date^1791667800^{time}|11:30 PM>"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Where*\nFoyer du campus"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Changed by*\nPaula Martin"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Repeats*\nChaque semaine le samedi, jusqu’au 15 décembre 2026"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Open on the platform"
+              },
+              "url": "https://bde.example.fr/en/events/intra/evt1"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nEVENT CHANGED: UPDATE THE INTRA\n\nSoirée de rentrée\n\nWhat changed :\n\nName: Soirée de rentrée (avant) → Soirée de rentrée\n\nDescription: Soirée de rentrée (avant) → Soirée de rentrée\n\nLocation: Soirée de rentrée (avant) → Soirée de rentrée\n\nMaximum number of people: 60 → 80\n\nDate to remove: 03/10/2026 20:00 → 23:30\n\nDate to add: 17/10/2026 20:00 → 23:30\n\nWhen : Saturday, October 10, 2026 at 8:00 PM → 11:30 PM\nRepeats : Chaque semaine le samedi, jusqu’au 15 décembre 2026\nWhere : Foyer du campus\nChanged by : Paula Martin\n\nOpen on the platform : https://bde.example.fr/en/events/intra/evt1\n\n--\nYou are receiving this message because you publish the events of BDE Nice on the intra.\nBDE_Network\n",
+      "html": "<!doctype html>\n<html lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:o=\"urn:schemas-microsoft-com:office:office\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n<meta name=\"x-apple-disable-message-reformatting\">\n<meta name=\"format-detection\" content=\"telephone=no,date=no,address=no,email=no,url=no\">\n<meta name=\"color-scheme\" content=\"light dark\">\n<meta name=\"supported-color-schemes\" content=\"light dark\">\n<title>Soirée de rentrée</title>\n<!--[if mso]><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><style>table,td{font-family:Arial,sans-serif}</style><![endif]-->\n<style>\n    body,table,td,a{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}\n    table,td{mso-table-lspace:0;mso-table-rspace:0}\n    img{-ms-interpolation-mode:bicubic;border:0;outline:none;text-decoration:none}\n    a{color:inherit}\n    @media (max-width:620px){\n      .px{padding-left:20px!important;padding-right:20px!important}\n      .h1{font-size:24px!important;line-height:30px!important}\n      .stack{display:block!important;width:100%!important;padding-left:0!important;padding-right:0!important}\n      .label{padding-bottom:0!important}\n      .value{padding-top:2px!important;border-top:0!important}\n      .btn{display:block!important;text-align:center!important}\n    }\n    @media (prefers-color-scheme:dark){\n      .bg-page{background-color:#0e1012!important}\n      .bg-card{background-color:#181b1f!important}\n      .t-main{color:#eceef1!important}\n      .t-muted{color:#9aa1ab!important}\n      .rule{border-color:#2a2f36!important}\n      .logo{border:1px solid #6b7385!important}\n    }\n    [data-ogsc] .t-main{color:#eceef1!important}\n    [data-ogsc] .t-muted{color:#9aa1ab!important}\n    [data-ogsb] .bg-page{background-color:#0e1012!important}\n    [data-ogsb] .bg-card{background-color:#181b1f!important}\n    [data-ogsb] .rule{border-color:#2a2f36!important}\n    [data-ogsc] .logo{border:1px solid #6b7385!important}\n</style>\n</head>\n<body class=\"bg-page\" bgcolor=\"#eceef1\" style=\"margin:0;padding:0;width:100%;background-color:#eceef1\">\n<div style=\"display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all\">Event changed: update the intra · Saturday, October 10 at 8:00 PM · Foyer du campus&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</div>\n<table role=\"presentation\" class=\"bg-page\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#eceef1\" style=\"background-color:#eceef1\"><tr><td align=\"center\" style=\"padding:28px 12px\">\n<!--[if mso]><table role=\"presentation\" width=\"600\" align=\"center\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td><![endif]-->\n<table role=\"presentation\" class=\"bg-card\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#ffffff\" style=\"max-width:600px;background-color:#ffffff;border-radius:24px\">\n<tr><td bgcolor=\"#db2777\" height=\"6\" style=\"height:6px;line-height:6px;font-size:6px;background-color:#db2777;border-radius:24px 24px 0 0\">&nbsp;</td></tr>\n<tr><td class=\"px\" style=\"padding:26px 36px 0\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td valign=\"middle\" width=\"40\" style=\"width:40px\"><img class=\"logo\" src=\"https://bde.example.fr/logo.png\" width=\"40\" height=\"40\" alt=\"\" style=\"display:block;width:40px;height:40px;border-radius:12px\"></td><td class=\"t-main\" style=\"font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;line-height:20px;color:#14161a;padding-left:12px\" valign=\"middle\">BDE Nice</td></tr></table></td></tr>\n<tr><td class=\"px\" style=\"padding:26px 36px 0\">\n\n<div class=\"t-muted\" style=\"font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5a606a\">Event changed: update the intra</div>\n<h1 class=\"h1 t-main\" style=\"margin:8px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:26px;line-height:32px;font-weight:800;color:#14161a\">Soirée de rentrée</h1>\n\n<p class=\"t-main\" style=\"margin:14px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:23px;color:#14161a\"><strong>What changed :</strong></p>\n<p class=\"t-main\" style=\"margin:14px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:23px;color:#14161a\">Name: Soirée de rentrée (avant) → Soirée de rentrée</p>\n<p class=\"t-main\" style=\"margin:14px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:23px;color:#14161a\">Description: Soirée de rentrée (avant) → Soirée de rentrée</p>\n<p class=\"t-main\" style=\"margin:14px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:23px;color:#14161a\">Location: Soirée de rentrée (avant) → Soirée de rentrée</p>\n<p class=\"t-main\" style=\"margin:14px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:23px;color:#14161a\">Maximum number of people: 60 → 80</p>\n<p class=\"t-main\" style=\"margin:14px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:23px;color:#14161a\">Date to remove: 03/10/2026 20:00 → 23:30</p>\n<p class=\"t-main\" style=\"margin:14px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:23px;color:#14161a\">Date to add: 17/10/2026 20:00 → 23:30</p>\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:20px\"><tr>\n<td class=\"stack label t-muted rule\" width=\"130\" valign=\"top\" style=\"width:130px;padding:12px 12px 12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#5a606a\">When</td>\n<td class=\"stack value t-main rule\" valign=\"top\" style=\"padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:600;color:#14161a\">Saturday, October 10, 2026 at 8:00 PM → 11:30 PM</td>\n</tr>\n<tr>\n<td class=\"stack label t-muted rule\" width=\"130\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;width:130px;padding:12px 12px 12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#5a606a\">Repeats</td>\n<td class=\"stack value t-main rule\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:600;color:#14161a\">Chaque semaine le samedi, jusqu’au 15 décembre 2026</td>\n</tr>\n<tr>\n<td class=\"stack label t-muted rule\" width=\"130\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;width:130px;padding:12px 12px 12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#5a606a\">Where</td>\n<td class=\"stack value t-main rule\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:600;color:#14161a\">Foyer du campus</td>\n</tr>\n<tr>\n<td class=\"stack label t-muted rule\" width=\"130\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;width:130px;padding:12px 12px 12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#5a606a\">Changed by</td>\n<td class=\"stack value t-main rule\" valign=\"top\" style=\"border-top:1px solid #e6e8ec;padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:20px;font-weight:600;color:#14161a\">Paula Martin</td>\n</tr></table>\n<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:28px\"><tr><td align=\"center\" bgcolor=\"#2f5bea\" style=\"background-color:#2f5bea;border-radius:999px\">\n<!--[if mso]><v:roundrect xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:w=\"urn:schemas-microsoft-com:office:word\" href=\"https://bde.example.fr/en/events/intra/evt1\" arcsize=\"50%\" stroke=\"f\" fillcolor=\"#2f5bea\" style=\"height:46px;v-text-anchor:middle;width:264px\"><w:anchorlock/><center style=\"font-family:Arial,sans-serif;font-size:15px;font-weight:bold;color:#ffffff\">Open on the platform</center></v:roundrect><![endif]-->\n<!--[if !mso]><!--><a class=\"btn\" href=\"https://bde.example.fr/en/events/intra/evt1\" style=\"display:inline-block;padding:13px 28px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;line-height:20px;color:#ffffff;text-decoration:none;border-radius:999px;background-color:#2f5bea\">Open on the platform</a><!--<![endif]-->\n</td></tr></table>\n\n</td></tr>\n<tr><td class=\"px\" style=\"padding:30px 36px 28px\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td class=\"rule t-muted\" style=\"border-top:1px solid #e6e8ec;padding-top:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#5a606a\">You are receiving this message because you publish the events of BDE Nice on the intra.<br>BDE_Network</td></tr></table></td></tr>\n</table>\n<!--[if mso]></td></tr></table><![endif]-->\n</td></tr></table>\n</body>\n</html>\n"
+    }
+  },
+  "full/intraCancelled": {
+    "discord": {
+      "title": "🗑️  Soirée de rentrée",
+      "url": "https://bde.example.fr/en/events/intra/evt1",
+      "color": 14362487,
+      "description": "-# EVENT TAKEN BACK: REMOVE IT FROM THE INTRA\n​\n### 💬  Reason\n> The event was deleted.\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​\n### 📍  Foyer du campus\n​",
+      "fields": [
+        {
+          "name": "🛡️  Taken back by",
+          "value": "Paula Martin",
+          "inline": true
+        },
+        {
+          "name": "🔁  Repeats",
+          "value": "Chaque semaine le samedi, jusqu’au 15 décembre 2026"
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Event taken back: remove it from the intra : Soirée de rentrée — Saturday, October 10, 2026 at 8:00 PM → 11:30 PM · Foyer du campus",
+      "color": "#db2777",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Event taken back: remove it from the intra*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Soirée de rentrée"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*Reason*\nThe event was deleted."
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*When*\n<!date^1791655200^{date_long_pretty} {time}|Saturday, October 10, 2026 at 8:00 PM> → <!date^1791667800^{time}|11:30 PM>"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Where*\nFoyer du campus"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Taken back by*\nPaula Martin"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Repeats*\nChaque semaine le samedi, jusqu’au 15 décembre 2026"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Open on the platform"
+              },
+              "url": "https://bde.example.fr/en/events/intra/evt1"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nEVENT TAKEN BACK: REMOVE IT FROM THE INTRA\n\nSoirée de rentrée\n\nReason :\nThe event was deleted.\n\nWhen : Saturday, October 10, 2026 at 8:00 PM → 11:30 PM\nRepeats : Chaque semaine le samedi, jusqu’au 15 décembre 2026\nWhere : Foyer du campus\nTaken back by : Paula Martin\n\nOpen on the platform : https://bde.example.fr/en/events/intra/evt1\n\n--\nYou are receiving this message because you publish the events of BDE Nice on the intra.\nBDE_Network\n",
+      "html": {
+        "sha256": "6dd96b946634f898ce141db85ebc109de1012aaae542597494e0c2c135e4d1c2",
+        "length": 9567
+      }
+    }
+  },
+  "full/intraPublished": {
+    "discord": {
+      "title": "📢  Soirée de rentrée",
+      "url": "https://bde.example.fr/en/events/intra/evt1",
+      "color": 14362487,
+      "description": "-# EVENT PUBLISHED ON THE INTRA\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​\n### 📍  Foyer du campus\n​",
+      "fields": [
+        {
+          "name": "🛡️  Published by",
+          "value": "Paula Martin",
+          "inline": true
+        },
+        {
+          "name": "🔁  Repeats",
+          "value": "Chaque semaine le samedi, jusqu’au 15 décembre 2026"
+        },
+        {
+          "name": "🔗  On the intra",
+          "value": "https://profile.intra.42.fr/events/12345"
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Event published on the intra : Soirée de rentrée — Saturday, October 10, 2026 at 8:00 PM → 11:30 PM · Foyer du campus",
+      "color": "#db2777",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Event published on the intra*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Soirée de rentrée"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*When*\n<!date^1791655200^{date_long_pretty} {time}|Saturday, October 10, 2026 at 8:00 PM> → <!date^1791667800^{time}|11:30 PM>"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Where*\nFoyer du campus"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Published by*\nPaula Martin"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Repeats*\nChaque semaine le samedi, jusqu’au 15 décembre 2026"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*On the intra*\nhttps://profile.intra.42.fr/events/12345"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "View the event"
+              },
+              "url": "https://bde.example.fr/en/events/intra/evt1"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nEVENT PUBLISHED ON THE INTRA\n\nSoirée de rentrée\n\nWhen : Saturday, October 10, 2026 at 8:00 PM → 11:30 PM\nRepeats : Chaque semaine le samedi, jusqu’au 15 décembre 2026\nWhere : Foyer du campus\nPublished by : Paula Martin\nOn the intra : https://profile.intra.42.fr/events/12345\n\nView the event : https://bde.example.fr/en/events/intra/evt1\n\n--\nYou are receiving this message because you are a member of BDE Nice.\nBDE_Network\n",
+      "html": {
+        "sha256": "c73e951dd58ef5fcb0058ca58cd490b55b417564f363cb0f8a3acac50b814788",
+        "length": 9891
+      }
+    }
+  },
+  "full/intraRefused": {
+    "discord": {
+      "title": "⛔  Soirée de rentrée",
+      "url": "https://bde.example.fr/en/events/intra/evt1",
+      "color": 14362487,
+      "description": "-# PUBLICATION REFUSED ON THE INTRA\n​\n### 💬  Reason\n> La salle est prise ce soir-là.\n> Merci d’en choisir une autre.\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​\n### 📍  Foyer du campus\n​",
+      "fields": [
+        {
+          "name": "🛡️  Refused by",
+          "value": "Paula Martin",
+          "inline": true
+        },
+        {
+          "name": "🔁  Repeats",
+          "value": "Chaque semaine le samedi, jusqu’au 15 décembre 2026"
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Publication refused on the intra : Soirée de rentrée — Saturday, October 10, 2026 at 8:00 PM → 11:30 PM · Foyer du campus",
+      "color": "#db2777",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Publication refused on the intra*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Soirée de rentrée"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*Reason*\nLa salle est prise ce soir-là.\nMerci d’en choisir une autre."
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*When*\n<!date^1791655200^{date_long_pretty} {time}|Saturday, October 10, 2026 at 8:00 PM> → <!date^1791667800^{time}|11:30 PM>"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Where*\nFoyer du campus"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Refused by*\nPaula Martin"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Repeats*\nChaque semaine le samedi, jusqu’au 15 décembre 2026"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "View the event"
+              },
+              "url": "https://bde.example.fr/en/events/intra/evt1"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nPUBLICATION REFUSED ON THE INTRA\n\nSoirée de rentrée\n\nReason :\nLa salle est prise ce soir-là.\nMerci d’en choisir une autre.\n\nWhen : Saturday, October 10, 2026 at 8:00 PM → 11:30 PM\nRepeats : Chaque semaine le samedi, jusqu’au 15 décembre 2026\nWhere : Foyer du campus\nRefused by : Paula Martin\n\nView the event : https://bde.example.fr/en/events/intra/evt1\n\n--\nYou are receiving this message because you are a member of BDE Nice.\nBDE_Network\n",
+      "html": {
+        "sha256": "cf5243860b3e51bdbcebd1190bf4674d35c8aebd49520feeda299df614716338",
+        "length": 9554
+      }
+    }
+  },
+  "bare/intraRequested": {
+    "discord": {
+      "title": "📥  Soirée de rentrée",
+      "color": 8028555,
+      "description": "-# PUBLICATION REQUESTED ON THE INTRA\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​",
+      "fields": [
+        {
+          "name": "📋  For the intra's form",
+          "value": "Organizer's login : cmartin\nAvailable for : Both\nMaximum number of people : 80\nWaiting list : Yes\nKind : Association\nDelay before unsubscribing (hours) : 24\nKeywords : bde, soirée"
+        },
+        {
+          "name": "📨  Requested by",
+          "value": "Paula Martin",
+          "inline": true
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Publication requested on the intra : Soirée de rentrée — Saturday, October 10, 2026 at 8:00 PM → 11:30 PM",
+      "color": "#7a818b",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Publication requested on the intra*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Soirée de rentrée"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*When*\n<!date^1791655200^{date_long_pretty} {time}|Saturday, October 10, 2026 at 8:00 PM> → <!date^1791667800^{time}|11:30 PM>"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*For the intra's form*\nOrganizer's login : cmartin\nAvailable for : Both\nMaximum number of people : 80\nWaiting list : Yes\nKind : Association\nDelay before unsubscribing (hours) : 24\nKeywords : bde, soirée"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Requested by*\nPaula Martin"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nPUBLICATION REQUESTED ON THE INTRA\n\nSoirée de rentrée\n\nWhen : Saturday, October 10, 2026 at 8:00 PM → 11:30 PM\nOrganizer's login : cmartin\nAvailable for : Both\nMaximum number of people : 80\nWaiting list : Yes\nKind : Association\nDelay before unsubscribing (hours) : 24\nKeywords : bde, soirée\nRequested by : Paula Martin\n\n--\nYou are receiving this message because you publish the events of BDE Nice on the intra.\nBDE_Network\n",
+      "html": {
+        "sha256": "02c37151099d08ecedf8bb4378387d4235fe6b4797ff53514880d51e4a4cd2b9",
+        "length": 10905
+      }
+    }
+  },
+  "bare/intraChanged": {
+    "discord": {
+      "title": "🔄  Soirée de rentrée",
+      "color": 8028555,
+      "description": "-# EVENT CHANGED: UPDATE THE INTRA\n​\n### 🔄  What changed\n> Name: Soirée de rentrée (avant) → Soirée de rentrée\n> Description: Soirée de rentrée (avant) → Soirée de rentrée\n> Location: Soirée de rentrée (avant) → Soirée de rentrée\n> Maximum number of people: 60 → 80\n> Date to remove: 03/10/2026 20:00 → 23:30\n> Date to add: 17/10/2026 20:00 → 23:30\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​",
+      "fields": [
+        {
+          "name": "🛡️  Changed by",
+          "value": "Paula Martin",
+          "inline": true
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Event changed: update the intra : Soirée de rentrée — Saturday, October 10, 2026 at 8:00 PM → 11:30 PM",
+      "color": "#7a818b",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Event changed: update the intra*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Soirée de rentrée"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*What changed*\nName: Soirée de rentrée (avant) → Soirée de rentrée\nDescription: Soirée de rentrée (avant) → Soirée de rentrée\nLocation: Soirée de rentrée (avant) → Soirée de rentrée\nMaximum number of people: 60 → 80\nDate to remove: 03/10/2026 20:00 → 23:30\nDate to add: 17/10/2026 20:00 → 23:30"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*When*\n<!date^1791655200^{date_long_pretty} {time}|Saturday, October 10, 2026 at 8:00 PM> → <!date^1791667800^{time}|11:30 PM>"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Changed by*\nPaula Martin"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nEVENT CHANGED: UPDATE THE INTRA\n\nSoirée de rentrée\n\nWhat changed :\n\nName: Soirée de rentrée (avant) → Soirée de rentrée\n\nDescription: Soirée de rentrée (avant) → Soirée de rentrée\n\nLocation: Soirée de rentrée (avant) → Soirée de rentrée\n\nMaximum number of people: 60 → 80\n\nDate to remove: 03/10/2026 20:00 → 23:30\n\nDate to add: 17/10/2026 20:00 → 23:30\n\nWhen : Saturday, October 10, 2026 at 8:00 PM → 11:30 PM\nChanged by : Paula Martin\n\n--\nYou are receiving this message because you publish the events of BDE Nice on the intra.\nBDE_Network\n",
+      "html": {
+        "sha256": "e9d04a6058b0cbf34cf6afde40c10e792d8c79d64f477209bcd3fe20de4ecb37",
+        "length": 8491
+      }
+    }
+  },
+  "bare/intraCancelled": {
+    "discord": {
+      "title": "🗑️  Soirée de rentrée",
+      "color": 8028555,
+      "description": "-# EVENT TAKEN BACK: REMOVE IT FROM THE INTRA\n​\n### 💬  Reason\n> The event was deleted.\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​",
+      "fields": [
+        {
+          "name": "🛡️  Taken back by",
+          "value": "Paula Martin",
+          "inline": true
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Event taken back: remove it from the intra : Soirée de rentrée — Saturday, October 10, 2026 at 8:00 PM → 11:30 PM",
+      "color": "#7a818b",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Event taken back: remove it from the intra*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Soirée de rentrée"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*Reason*\nThe event was deleted."
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*When*\n<!date^1791655200^{date_long_pretty} {time}|Saturday, October 10, 2026 at 8:00 PM> → <!date^1791667800^{time}|11:30 PM>"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Taken back by*\nPaula Martin"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nEVENT TAKEN BACK: REMOVE IT FROM THE INTRA\n\nSoirée de rentrée\n\nReason :\nThe event was deleted.\n\nWhen : Saturday, October 10, 2026 at 8:00 PM → 11:30 PM\nTaken back by : Paula Martin\n\n--\nYou are receiving this message because you publish the events of BDE Nice on the intra.\nBDE_Network\n",
+      "html": {
+        "sha256": "44bf8f082cbcce5c440861ec1316914be52b7a382f454155b6674669dd6a73a5",
+        "length": 7146
+      }
+    }
+  },
+  "bare/intraPublished": {
+    "discord": {
+      "title": "📢  Soirée de rentrée",
+      "color": 8028555,
+      "description": "-# EVENT PUBLISHED ON THE INTRA\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​",
+      "fields": [
+        {
+          "name": "🛡️  Published by",
+          "value": "Paula Martin",
+          "inline": true
+        },
+        {
+          "name": "🔗  On the intra",
+          "value": "https://profile.intra.42.fr/events/12345"
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Event published on the intra : Soirée de rentrée — Saturday, October 10, 2026 at 8:00 PM → 11:30 PM",
+      "color": "#7a818b",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Event published on the intra*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Soirée de rentrée"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*When*\n<!date^1791655200^{date_long_pretty} {time}|Saturday, October 10, 2026 at 8:00 PM> → <!date^1791667800^{time}|11:30 PM>"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Published by*\nPaula Martin"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*On the intra*\nhttps://profile.intra.42.fr/events/12345"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nEVENT PUBLISHED ON THE INTRA\n\nSoirée de rentrée\n\nWhen : Saturday, October 10, 2026 at 8:00 PM → 11:30 PM\nPublished by : Paula Martin\nOn the intra : https://profile.intra.42.fr/events/12345\n\n--\nYou are receiving this message because you are a member of BDE Nice.\nBDE_Network\n",
+      "html": {
+        "sha256": "b1ea7445ad2ccbbb2e42d417aed7ea06be59f9907608f41f6d07afd565943c42",
+        "length": 7482
+      }
+    }
+  },
+  "bare/intraRefused": {
+    "discord": {
+      "title": "⛔  Soirée de rentrée",
+      "color": 8028555,
+      "description": "-# PUBLICATION REFUSED ON THE INTRA\n​\n### 💬  Reason\n> La salle est prise ce soir-là.\n> Merci d’en choisir une autre.\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​",
+      "fields": [
+        {
+          "name": "🛡️  Refused by",
+          "value": "Paula Martin",
+          "inline": true
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Publication refused on the intra : Soirée de rentrée — Saturday, October 10, 2026 at 8:00 PM → 11:30 PM",
+      "color": "#7a818b",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Publication refused on the intra*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Soirée de rentrée"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*Reason*\nLa salle est prise ce soir-là.\nMerci d’en choisir une autre."
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*When*\n<!date^1791655200^{date_long_pretty} {time}|Saturday, October 10, 2026 at 8:00 PM> → <!date^1791667800^{time}|11:30 PM>"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Refused by*\nPaula Martin"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nPUBLICATION REFUSED ON THE INTRA\n\nSoirée de rentrée\n\nReason :\nLa salle est prise ce soir-là.\nMerci d’en choisir une autre.\n\nWhen : Saturday, October 10, 2026 at 8:00 PM → 11:30 PM\nRefused by : Paula Martin\n\n--\nYou are receiving this message because you are a member of BDE Nice.\nBDE_Network\n",
+      "html": {
+        "sha256": "27c865b0085a42f431200a9e3bda93b9b68f855bff827b37db51c2be13259ecf",
+        "length": 7145
+      }
+    }
+  },
+  "longer/intraRequested": {
+    "discord": {
+      "title": "📥  Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.",
+      "url": "https://bde.example.fr/en/events/intra/evt1",
+      "color": 14362487,
+      "description": "-# PUBLICATION REQUESTED ON THE INTRA\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791840600:F>  ·  <t:1791655200:R>\n​\n### 📍  Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\n​\n> Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte…\n​",
+      "fields": [
+        {
+          "name": "📋  For the intra's form",
+          "value": "Organizer's login : cmartin\nAvailable for : Both\nMaximum number of people : 80\nWaiting list : Yes\nKind : Association\nDelay before unsubscribing (hours) : 24\nKeywords : bde, soirée"
+        },
+        {
+          "name": "📨  Requested by",
+          "value": "Paula Martin",
+          "inline": true
+        },
+        {
+          "name": "🔁  Repeats",
+          "value": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long."
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Publication requested on the intra : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très… — Saturday, October 10, 2026 at 8:00 PM → Monday, October 12, 2026 at 11:30 PM · Un texte très long. Un texte très long. Un texte très…",
+      "color": "#db2777",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Publication requested on the intra*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long."
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte…"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*When*\n<!date^1791655200^{date_long_pretty} {time}|Saturday, October 10, 2026 at 8:00 PM> → <!date^1791840600^{date_long_pretty} {time}|Monday, October 12, 2026 at 11:30 PM>"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*For the intra's form*\nOrganizer's login : cmartin\nAvailable for : Both\nMaximum number of people : 80\nWaiting list : Yes\nKind : Association\nDelay before unsubscribing (hours) : 24\nKeywords : bde, soirée"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Where*\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Requested by*\nPaula Martin"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Repeats*\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Open on the platform"
+              },
+              "url": "https://bde.example.fr/en/events/intra/evt1"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nPUBLICATION REQUESTED ON THE INTRA\n\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\n\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\n\nWhen : Saturday, October 10, 2026 at 8:00 PM → Monday, October 12, 2026 at 11:30 PM\nRepeats : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\nWhere : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\nOrganizer's login : cmartin\nAvailable for : Both\nMaximum number of people : 80\nWaiting list : Yes\nKind : Association\nDelay before unsubscribing (hours) : 24\nKeywords : bde, soirée\nRequested by : Paula Martin\n\nOpen on the platform : https://bde.example.fr/en/events/intra/evt1\n\n--\nYou are receiving this message because you publish the events of BDE Nice on the intra.\nBDE_Network\n",
+      "html": {
+        "sha256": "a431acf93a1051b87f62efa6c91d3ab51f996ec6b58403e94685ca9cb0dca430",
+        "length": 21010
+      }
+    }
+  },
+  "longer/intraChanged": {
+    "discord": {
+      "title": "🔄  Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.",
+      "url": "https://bde.example.fr/en/events/intra/evt1",
+      "color": 14362487,
+      "description": "-# EVENT CHANGED: UPDATE THE INTRA\n​\n### 🔄  What changed\n> Name: Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très… → Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\n> Description: Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très… → Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\n> Location: Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très… → Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\n> Maximum number of people: 60 → 80\n> Date to remove: 03/10/2026 20:00 → 23:30\n> Date to add: 17/10/2026 20:00 → 23:30\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791840600:F>  ·  <t:1791655200:R>\n​\n### 📍  Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\n​",
+      "fields": [
+        {
+          "name": "🛡️  Changed by",
+          "value": "Paula Martin",
+          "inline": true
+        },
+        {
+          "name": "🔁  Repeats",
+          "value": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long."
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Event changed: update the intra : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très… — Saturday, October 10, 2026 at 8:00 PM → Monday, October 12, 2026 at 11:30 PM · Un texte très long. Un texte très long. Un texte très…",
+      "color": "#db2777",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Event changed: update the intra*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long."
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*What changed*\nName: Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très… → Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\nDescription: Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très… → Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\nLocation: Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très… → Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\nMaximum number of people: 60 → 80\nDate to remove: 03/10/2026 20:00 → 23:30\nDate to add: 17/10/2026 20:00 → 23:30"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*When*\n<!date^1791655200^{date_long_pretty} {time}|Saturday, October 10, 2026 at 8:00 PM> → <!date^1791840600^{date_long_pretty} {time}|Monday, October 12, 2026 at 11:30 PM>"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Where*\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Changed by*\nPaula Martin"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Repeats*\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Open on the platform"
+              },
+              "url": "https://bde.example.fr/en/events/intra/evt1"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nEVENT CHANGED: UPDATE THE INTRA\n\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\n\nWhat changed :\n\nName: Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très… → Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\n\nDescription: Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très… → Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\n\nLocation: Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très… → Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\n\nMaximum number of people: 60 → 80\n\nDate to remove: 03/10/2026 20:00 → 23:30\n\nDate to add: 17/10/2026 20:00 → 23:30\n\nWhen : Saturday, October 10, 2026 at 8:00 PM → Monday, October 12, 2026 at 11:30 PM\nRepeats : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\nWhere : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\nChanged by : Paula Martin\n\nOpen on the platform : https://bde.example.fr/en/events/intra/evt1\n\n--\nYou are receiving this message because you publish the events of BDE Nice on the intra.\nBDE_Network\n",
+      "html": {
+        "sha256": "ab37685db36e335b12e55a7ef5de37e26c78e4b358694d130252a38f49b22fad",
+        "length": 18618
+      }
+    }
+  },
+  "longer/intraCancelled": {
+    "discord": {
+      "title": "🗑️  Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.",
+      "url": "https://bde.example.fr/en/events/intra/evt1",
+      "color": 14362487,
+      "description": "-# EVENT TAKEN BACK: REMOVE IT FROM THE INTRA\n​\n### 💬  Reason\n> The event was deleted.\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791840600:F>  ·  <t:1791655200:R>\n​\n### 📍  Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\n​",
+      "fields": [
+        {
+          "name": "🛡️  Taken back by",
+          "value": "Paula Martin",
+          "inline": true
+        },
+        {
+          "name": "🔁  Repeats",
+          "value": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long."
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Event taken back: remove it from the intra : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très… — Saturday, October 10, 2026 at 8:00 PM → Monday, October 12, 2026 at 11:30 PM · Un texte très long. Un texte très long. Un texte très…",
+      "color": "#db2777",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Event taken back: remove it from the intra*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long."
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*Reason*\nThe event was deleted."
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*When*\n<!date^1791655200^{date_long_pretty} {time}|Saturday, October 10, 2026 at 8:00 PM> → <!date^1791840600^{date_long_pretty} {time}|Monday, October 12, 2026 at 11:30 PM>"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Where*\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Taken back by*\nPaula Martin"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Repeats*\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Open on the platform"
+              },
+              "url": "https://bde.example.fr/en/events/intra/evt1"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nEVENT TAKEN BACK: REMOVE IT FROM THE INTRA\n\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\n\nReason :\nThe event was deleted.\n\nWhen : Saturday, October 10, 2026 at 8:00 PM → Monday, October 12, 2026 at 11:30 PM\nRepeats : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\nWhere : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\nTaken back by : Paula Martin\n\nOpen on the platform : https://bde.example.fr/en/events/intra/evt1\n\n--\nYou are receiving this message because you publish the events of BDE Nice on the intra.\nBDE_Network\n",
+      "html": {
+        "sha256": "7f70d8d1099472080b5e29a5b057468633b576bcc5938497139822bbf8453a6f",
+        "length": 16475
+      }
+    }
+  },
+  "longer/intraPublished": {
+    "discord": {
+      "title": "📢  Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.",
+      "url": "https://bde.example.fr/en/events/intra/evt1",
+      "color": 14362487,
+      "description": "-# EVENT PUBLISHED ON THE INTRA\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791840600:F>  ·  <t:1791655200:R>\n​\n### 📍  Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\n​",
+      "fields": [
+        {
+          "name": "🛡️  Published by",
+          "value": "Paula Martin",
+          "inline": true
+        },
+        {
+          "name": "🔁  Repeats",
+          "value": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long."
+        },
+        {
+          "name": "🔗  On the intra",
+          "value": "https://profile.intra.42.fr/events/12345"
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Event published on the intra : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très… — Saturday, October 10, 2026 at 8:00 PM → Monday, October 12, 2026 at 11:30 PM · Un texte très long. Un texte très long. Un texte très…",
+      "color": "#db2777",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Event published on the intra*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long."
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*When*\n<!date^1791655200^{date_long_pretty} {time}|Saturday, October 10, 2026 at 8:00 PM> → <!date^1791840600^{date_long_pretty} {time}|Monday, October 12, 2026 at 11:30 PM>"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Where*\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Published by*\nPaula Martin"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Repeats*\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*On the intra*\nhttps://profile.intra.42.fr/events/12345"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "View the event"
+              },
+              "url": "https://bde.example.fr/en/events/intra/evt1"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nEVENT PUBLISHED ON THE INTRA\n\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\n\nWhen : Saturday, October 10, 2026 at 8:00 PM → Monday, October 12, 2026 at 11:30 PM\nRepeats : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\nWhere : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\nPublished by : Paula Martin\nOn the intra : https://profile.intra.42.fr/events/12345\n\nView the event : https://bde.example.fr/en/events/intra/evt1\n\n--\nYou are receiving this message because you are a member of BDE Nice.\nBDE_Network\n",
+      "html": {
+        "sha256": "46642f2d7963f26c61bd63098eb7679266ea50407d1f0fe93071e320bd6fb5ca",
+        "length": 16799
+      }
+    }
+  },
+  "longer/intraRefused": {
+    "discord": {
+      "title": "⛔  Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.",
+      "url": "https://bde.example.fr/en/events/intra/evt1",
+      "color": 14362487,
+      "description": "-# PUBLICATION REFUSED ON THE INTRA\n​\n### 💬  Reason\n> La salle est prise ce soir-là.\n> Merci d’en choisir une autre.\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791840600:F>  ·  <t:1791655200:R>\n​\n### 📍  Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\n​",
+      "fields": [
+        {
+          "name": "🛡️  Refused by",
+          "value": "Paula Martin",
+          "inline": true
+        },
+        {
+          "name": "🔁  Repeats",
+          "value": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long."
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Publication refused on the intra : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très… — Saturday, October 10, 2026 at 8:00 PM → Monday, October 12, 2026 at 11:30 PM · Un texte très long. Un texte très long. Un texte très…",
+      "color": "#db2777",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Publication refused on the intra*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long."
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*Reason*\nLa salle est prise ce soir-là.\nMerci d’en choisir une autre."
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*When*\n<!date^1791655200^{date_long_pretty} {time}|Saturday, October 10, 2026 at 8:00 PM> → <!date^1791840600^{date_long_pretty} {time}|Monday, October 12, 2026 at 11:30 PM>"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Where*\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Refused by*\nPaula Martin"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Repeats*\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "View the event"
+              },
+              "url": "https://bde.example.fr/en/events/intra/evt1"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nPUBLICATION REFUSED ON THE INTRA\n\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\n\nReason :\nLa salle est prise ce soir-là.\nMerci d’en choisir une autre.\n\nWhen : Saturday, October 10, 2026 at 8:00 PM → Monday, October 12, 2026 at 11:30 PM\nRepeats : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\nWhere : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\nRefused by : Paula Martin\n\nView the event : https://bde.example.fr/en/events/intra/evt1\n\n--\nYou are receiving this message because you are a member of BDE Nice.\nBDE_Network\n",
+      "html": {
+        "sha256": "6ac74fed1c31c2208d710cd1aae49e4956927cf22a77f936df676c1c88cd1ced",
+        "length": 16462
+      }
+    }
+  },
+  "hostile/intraRequested": {
+    "discord": {
+      "title": "📥  @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+      "color": 14362487,
+      "description": "-# PUBLICATION REQUESTED ON THE INTRA\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​\n### 📍  @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n​\n> @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n​",
+      "fields": [
+        {
+          "name": "📋  For the intra's form",
+          "value": "Organizer's login : cmartin\nAvailable for : Both\nMaximum number of people : 80\nWaiting list : Yes\nKind : Association\nDelay before unsubscribing (hours) : 24\nKeywords : bde, soirée"
+        },
+        {
+          "name": "📨  Requested by",
+          "value": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+          "inline": true
+        },
+        {
+          "name": "🔁  Repeats",
+          "value": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_"
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Publication requested on the intra : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_ — Saturday, October 10, 2026 at 8:00 PM → 11:30 PM · @everyone <!channel> <@123> <b>x</b>…",
+      "color": "#db2777",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Publication requested on the intra*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*When*\n<!date^1791655200^{date_long_pretty} {time}|Saturday, October 10, 2026 at 8:00 PM> → <!date^1791667800^{time}|11:30 PM>"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*For the intra's form*\nOrganizer's login : cmartin\nAvailable for : Both\nMaximum number of people : 80\nWaiting list : Yes\nKind : Association\nDelay before unsubscribing (hours) : 24\nKeywords : bde, soirée"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Where*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Requested by*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Repeats*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Open on the platform"
+              },
+              "url": "javascript:alert(1)"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nPUBLICATION REQUESTED ON THE INTRA\n\n@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\n@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\nWhen : Saturday, October 10, 2026 at 8:00 PM → 11:30 PM\nRepeats : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\nWhere : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\nOrganizer's login : cmartin\nAvailable for : Both\nMaximum number of people : 80\nWaiting list : Yes\nKind : Association\nDelay before unsubscribing (hours) : 24\nKeywords : bde, soirée\nRequested by : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\n--\nYou are receiving this message because you publish the events of BDE Nice on the intra.\nBDE_Network\n",
+      "html": {
+        "sha256": "48f96cc3f1a67648d180a034cb2b7c5f50e3185cb24c58ad1336adfcc730b19d",
+        "length": 13240
+      }
+    }
+  },
+  "hostile/intraChanged": {
+    "discord": {
+      "title": "🔄  @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+      "color": 14362487,
+      "description": "-# EVENT CHANGED: UPDATE THE INTRA\n​\n### 🔄  What changed\n> Name: @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_ (avant) → @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n> Description: @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_ (avant) → @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n> Location: @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_ (avant) → @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n> Maximum number of people: 60 → 80\n> Date to remove: 03/10/2026 20:00 → 23:30\n> Date to add: 17/10/2026 20:00 → 23:30\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​\n### 📍  @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n​",
+      "fields": [
+        {
+          "name": "🛡️  Changed by",
+          "value": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+          "inline": true
+        },
+        {
+          "name": "🔁  Repeats",
+          "value": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_"
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Event changed: update the intra : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_ — Saturday, October 10, 2026 at 8:00 PM → 11:30 PM · @everyone <!channel> <@123> <b>x</b>…",
+      "color": "#db2777",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Event changed: update the intra*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*What changed*\nName: @​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_ (avant) → @​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_\nDescription: @​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_ (avant) → @​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_\nLocation: @​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_ (avant) → @​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_\nMaximum number of people: 60 → 80\nDate to remove: 03/10/2026 20:00 → 23:30\nDate to add: 17/10/2026 20:00 → 23:30"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*When*\n<!date^1791655200^{date_long_pretty} {time}|Saturday, October 10, 2026 at 8:00 PM> → <!date^1791667800^{time}|11:30 PM>"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Where*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Changed by*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Repeats*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Open on the platform"
+              },
+              "url": "javascript:alert(1)"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nEVENT CHANGED: UPDATE THE INTRA\n\n@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\nWhat changed :\n\nName: @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_ (avant) → @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\nDescription: @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_ (avant) → @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\nLocation: @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_ (avant) → @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\nMaximum number of people: 60 → 80\n\nDate to remove: 03/10/2026 20:00 → 23:30\n\nDate to add: 17/10/2026 20:00 → 23:30\n\nWhen : Saturday, October 10, 2026 at 8:00 PM → 11:30 PM\nRepeats : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\nWhere : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\nChanged by : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\n--\nYou are receiving this message because you publish the events of BDE Nice on the intra.\nBDE_Network\n",
+      "html": {
+        "sha256": "11b5bf9253b2f27c614b638a7d1ce500fda1403bf401f04af70b65ac0569dd7a",
+        "length": 11172
+      }
+    }
+  },
+  "hostile/intraCancelled": {
+    "discord": {
+      "title": "🗑️  @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+      "color": 14362487,
+      "description": "-# EVENT TAKEN BACK: REMOVE IT FROM THE INTRA\n​\n### 💬  Reason\n> The event was deleted.\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​\n### 📍  @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n​",
+      "fields": [
+        {
+          "name": "🛡️  Taken back by",
+          "value": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+          "inline": true
+        },
+        {
+          "name": "🔁  Repeats",
+          "value": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_"
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Event taken back: remove it from the intra : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_ — Saturday, October 10, 2026 at 8:00 PM → 11:30 PM · @everyone <!channel> <@123> <b>x</b>…",
+      "color": "#db2777",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Event taken back: remove it from the intra*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*Reason*\nThe event was deleted."
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*When*\n<!date^1791655200^{date_long_pretty} {time}|Saturday, October 10, 2026 at 8:00 PM> → <!date^1791667800^{time}|11:30 PM>"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Where*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Taken back by*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Repeats*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Open on the platform"
+              },
+              "url": "javascript:alert(1)"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nEVENT TAKEN BACK: REMOVE IT FROM THE INTRA\n\n@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\nReason :\nThe event was deleted.\n\nWhen : Saturday, October 10, 2026 at 8:00 PM → 11:30 PM\nRepeats : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\nWhere : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\nTaken back by : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\n--\nYou are receiving this message because you publish the events of BDE Nice on the intra.\nBDE_Network\n",
+      "html": {
+        "sha256": "f5c25532649bf678309a5d348095e36ef535673fec5e762f05e98956426a08b9",
+        "length": 9173
+      }
+    }
+  },
+  "hostile/intraPublished": {
+    "discord": {
+      "title": "📢  @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+      "color": 14362487,
+      "description": "-# EVENT PUBLISHED ON THE INTRA\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​\n### 📍  @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n​",
+      "fields": [
+        {
+          "name": "🛡️  Published by",
+          "value": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+          "inline": true
+        },
+        {
+          "name": "🔁  Repeats",
+          "value": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_"
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Event published on the intra : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_ — Saturday, October 10, 2026 at 8:00 PM → 11:30 PM · @everyone <!channel> <@123> <b>x</b>…",
+      "color": "#db2777",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Event published on the intra*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*When*\n<!date^1791655200^{date_long_pretty} {time}|Saturday, October 10, 2026 at 8:00 PM> → <!date^1791667800^{time}|11:30 PM>"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Where*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Published by*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Repeats*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*On the intra*\njavascript:alert(1)"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "View the event"
+              },
+              "url": "javascript:alert(1)"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nEVENT PUBLISHED ON THE INTRA\n\n@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\nWhen : Saturday, October 10, 2026 at 8:00 PM → 11:30 PM\nRepeats : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\nWhere : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\nPublished by : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\nOn the intra : javascript:alert(1)\n\n--\nYou are receiving this message because you are a member of BDE Nice.\nBDE_Network\n",
+      "html": {
+        "sha256": "243d2ea1c1249a02e7868b8813cb2eecf11a57f755a11df13a1575f9b8bf8dd7",
+        "length": 9488
+      }
+    }
+  },
+  "hostile/intraRefused": {
+    "discord": {
+      "title": "⛔  @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+      "color": 14362487,
+      "description": "-# PUBLICATION REFUSED ON THE INTRA\n​\n### 💬  Reason\n> @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​\n### 📍  @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n​",
+      "fields": [
+        {
+          "name": "🛡️  Refused by",
+          "value": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
+          "inline": true
+        },
+        {
+          "name": "🔁  Repeats",
+          "value": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_"
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Publication refused on the intra : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_ — Saturday, October 10, 2026 at 8:00 PM → 11:30 PM · @everyone <!channel> <@123> <b>x</b>…",
+      "color": "#db2777",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Publication refused on the intra*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*Reason*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*When*\n<!date^1791655200^{date_long_pretty} {time}|Saturday, October 10, 2026 at 8:00 PM> → <!date^1791667800^{time}|11:30 PM>"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Where*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Refused by*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Repeats*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "View the event"
+              },
+              "url": "javascript:alert(1)"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nPUBLICATION REFUSED ON THE INTRA\n\n@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\nReason :\n@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\nWhen : Saturday, October 10, 2026 at 8:00 PM → 11:30 PM\nRepeats : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\nWhere : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\nRefused by : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\n--\nYou are receiving this message because you are a member of BDE Nice.\nBDE_Network\n",
+      "html": {
+        "sha256": "7684ee8f77c45ebd37ce84339a266541aca941fcd725500ed17476a4d075ac5c",
+        "length": 9235
+      }
+    }
+  }
+}

@@ -87,6 +87,12 @@ notifications:
   eventProposed: [] # un événement est proposé : prévient ceux qui peuvent le valider
   eventApproved: [] # une proposition est approuvée : e-mail à son auteur, et message dans le salon
   eventRefused: [] # une proposition est refusée, avec le commentaire : e-mail à son auteur, et message dans le salon
+  # Publication des événements sur l'intra (module "events" et `intraPublication` activés). Optionnels : [] par défaut.
+  intraRequested: [] # une publication est demandée au staff de l'école : e-mail à ceux qui peuvent publier, et message dans le salon du staff
+  intraChanged: [] # un événement déjà sur l'intra a changé (l'ancienne et la nouvelle valeur) : le staff est prévenu
+  intraCancelled: [] # un événement qui était sur l'intra repasse en brouillon, est supprimé ou n'a plus de date : le staff est prévenu
+  intraPublished: [] # le staff a publié l'événement sur l'intra : e-mail à son auteur, et message dans le salon
+  intraRefused: [] # le staff a refusé la demande, avec la raison : e-mail à l'auteur, et message dans le salon
 
 
 # Facultatif. Prévenir les propriétaires (bandeau du tableau de bord et de la page Paramètres) quand une nouvelle

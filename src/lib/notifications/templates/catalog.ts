@@ -15,6 +15,13 @@ export const ITEMS: Record<TemplateType, readonly ItemId[]> = {
   eventProposed: [...EVENT_BASE, 'proposedBy'],
   eventApproved: [...EVENT_BASE, 'proposedBy', 'reviewedBy'],
   eventRefused: ['reason', ...EVENT_BASE, 'proposedBy', 'reviewedBy'],
+  // Publishing on the intra: the staff is asked (with the fields of the intra's form), told what changed or that it was taken back, and
+  // the author is told it was published or refused. A category and the members in charge mean nothing to the staff.
+  intraRequested: ['when', 'repeats', 'where', 'description', 'intraFields', 'requestedBy'],
+  intraChanged: ['changes', 'when', 'repeats', 'where', 'actedBy'],
+  intraCancelled: ['reason', 'when', 'repeats', 'where', 'actedBy'],
+  intraPublished: ['when', 'repeats', 'where', 'intraLink', 'actedBy'],
+  intraRefused: ['reason', 'when', 'repeats', 'where', 'actedBy'],
   memberPending: ['summary', 'login', 'campus'],
   memberApproved: ['summary', 'login', 'campus', 'role', 'actedBy'],
   memberRemoved: ['summary', 'login', 'campus', 'role', 'actedBy'],
@@ -28,36 +35,51 @@ export const ITEMS: Record<TemplateType, readonly ItemId[]> = {
 const EVENT_NATIVE: Record<TemplateChannel, readonly ItemId[]> = {
   discord: [
     'reason',
+    'changes',
     'when',
     'where',
     'description',
+    'intraFields',
     'category',
     'proposedBy',
     'reviewedBy',
+    'requestedBy',
+    'actedBy',
     'assignees',
     'repeats',
+    'intraLink',
   ],
   slack: [
     'reason',
+    'changes',
     'description',
     'when',
     'where',
+    'intraFields',
     'category',
     'proposedBy',
     'reviewedBy',
+    'requestedBy',
+    'actedBy',
     'assignees',
     'repeats',
+    'intraLink',
   ],
   email: [
     'reason',
+    'changes',
     'description',
     'when',
     'repeats',
     'where',
+    'intraFields',
     'category',
     'assignees',
     'proposedBy',
     'reviewedBy',
+    'requestedBy',
+    'actedBy',
+    'intraLink',
   ],
 };
 
@@ -69,7 +91,10 @@ const MEMBER_NATIVE: Record<TemplateChannel, readonly ItemId[]> = {
 
 /** What a channel shows of the items of a type: its own order, restricted to what the type has and the channel shows. */
 export function nativeOrder(channel: TemplateChannel, type: TemplateType): ItemId[] {
-  const own = type.startsWith('event') ? EVENT_NATIVE[channel] : MEMBER_NATIVE[channel];
+  const own =
+    type.startsWith('event') || type.startsWith('intra')
+      ? EVENT_NATIVE[channel]
+      : MEMBER_NATIVE[channel];
   const known = new Set<ItemId>(ITEMS[type]);
   const order = own.filter((id) => known.has(id));
   // The e-mail to the approved member is about their own access: the sentence and their role, nothing else.
@@ -116,6 +141,11 @@ export const VARIABLES = {
   eventProposed: [...EVENT_VARIABLES, 'author'],
   eventApproved: [...EVENT_VARIABLES, 'author', 'reviewer'],
   eventRefused: [...EVENT_VARIABLES, 'author', 'reviewer', 'comment'],
+  intraRequested: [...EVENT_VARIABLES, 'requester'],
+  intraChanged: [...EVENT_VARIABLES, 'editor'],
+  intraCancelled: [...EVENT_VARIABLES, 'editor', 'cause'],
+  intraPublished: [...EVENT_VARIABLES, 'answerer', 'intra_link'],
+  intraRefused: [...EVENT_VARIABLES, 'answerer', 'comment'],
   memberPending: ['name', 'login', 'campus', 'bde', 'link'],
   memberApproved: ['name', 'login', 'campus', 'role', 'actor', 'bde', 'link'],
   memberRemoved: ['name', 'login', 'campus', 'role', 'actor', 'bde'],

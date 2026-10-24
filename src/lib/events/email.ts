@@ -11,7 +11,8 @@ import {
 import type { TemplateContext } from '@/lib/notifications/templates/types';
 import { truncate } from '@/lib/notifications/text';
 import { whenLine, type NotificationEventData, type Translate } from './messages';
-import { KIND_LABEL_KEY, actionLabelKey, type EventCardKind } from './card-kind';
+import { KIND_LABEL_KEY, STAFF_KINDS, actionLabelKey, type EventCardKind } from './card-kind';
+import { intraParts } from './intra-card';
 import { buildIcs, icsFilename, occurrenceUid } from './ics';
 import { eventValues, templateTypeOf } from './template-values';
 
@@ -53,6 +54,7 @@ export function buildEventEmail(
   const values = eventValues(kind, data, t, locale, timeZone, context.bdeName ?? brand.name);
   const say = (source: string) => renderPlain(source, values);
   const description = data.description?.trim();
+  const parts = intraParts(kind, data, t);
 
   let lead: string | undefined;
   const paragraphs: Segment[][] = [];
@@ -66,7 +68,32 @@ export function buildEventEmail(
         if (lead === undefined && kind === 'refused' && data.review?.comment) {
           lead = `${label(t('embed.fields.reason'))} :
 ${data.review.comment}`;
+        } else if (lead === undefined && parts.reason) {
+          lead = `${label(parts.reason.label)} :
+${parts.reason.text}`;
         }
+        break;
+      case 'changes':
+        if (parts.changes) {
+          paragraphs.push([{ text: `${label(parts.changes.label)} :`, bold: true }]);
+          for (const line of parts.changes.lines) paragraphs.push([{ text: line }]);
+        }
+        break;
+      case 'intraFields':
+        for (const line of parts.fields?.lines ?? []) {
+          fields.push({ label: line.label, value: line.value });
+        }
+        break;
+      case 'requestedBy':
+        if (parts.requestedBy) {
+          fields.push({ label: label(parts.requestedBy.label), value: parts.requestedBy.name });
+        }
+        break;
+      case 'actedBy':
+        if (parts.actor) fields.push({ label: label(parts.actor.label), value: parts.actor.name });
+        break;
+      case 'intraLink':
+        if (parts.link) fields.push({ label: label(parts.link.label), value: parts.link.url });
         break;
       case 'description':
         if (lead === undefined && description) lead = truncate(description, DESCRIPTION_PREVIEW);
@@ -151,7 +178,14 @@ ${data.review.comment}`;
     footer:
       template?.footer !== undefined
         ? say(template.footer)
-        : t(kind === 'test' ? 'email.footerTest' : 'email.footer', { bde: brand.name }),
+        : t(
+            kind === 'test'
+              ? 'email.footerTest'
+              : STAFF_KINDS.includes(kind)
+                ? 'email.staffFooter'
+                : 'email.footer',
+            { bde: brand.name },
+          ),
   });
 
   return {

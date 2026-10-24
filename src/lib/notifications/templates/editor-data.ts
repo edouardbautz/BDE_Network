@@ -6,6 +6,7 @@ import { getNotificationTranslate } from '../translate';
 import { channelsOfType, ITEMS, nativeOrder, sharedChannels, VARIABLES } from './catalog';
 import { describeDefaults } from './defaults';
 import { commonDefaults, type ChannelDefaults } from './defaults-shape';
+import { EVENT_KIND_OF, INTRA_TYPES } from './kinds';
 import { sampleEvent, sampleMember } from './samples';
 import type { TemplateScope } from './schema';
 import { changesSince } from './revisions';
@@ -58,11 +59,12 @@ export interface EditorData {
 }
 
 /** The notifications the page lists: those of the events only while the module is on. */
-export function listedTypes(modules: readonly string[]): TemplateType[] {
+export function listedTypes(modules: readonly string[], intra = false): TemplateType[] {
   const events = modules.includes(EVENTS_MODULE_KEY);
-  return (Object.keys(ITEMS) as TemplateType[]).filter(
-    (type) => events || !type.startsWith('event'),
-  );
+  return (Object.keys(ITEMS) as TemplateType[]).filter((type) => {
+    if (INTRA_TYPES.includes(type)) return events && intra;
+    return events || !type.startsWith('event');
+  });
 }
 
 /** For each notification of the list, the scopes a BDE customised: a dot in the list. */
@@ -117,15 +119,13 @@ export async function loadEditorData(type: TemplateType): Promise<EditorData> {
 
   // The example values the variables stand for, as the platform would write them for the first channel's example.
   const now = new Date();
-  const values = type.startsWith('event')
+  const eventKind = EVENT_KIND_OF[type];
+  const eventsT = await getNotificationTranslate(locale, 'events.notifications');
+  const values = eventKind
     ? eventValues(
-        type === 'eventReminder'
-          ? 'tomorrow'
-          : type === 'eventConfirmed'
-            ? 'confirmed'
-            : (type.slice(5).toLowerCase() as 'proposed'),
-        sampleEvent(locale, now, type),
-        await getNotificationTranslate(locale, 'events.notifications'),
+        eventKind,
+        sampleEvent(locale, now, type, eventsT, config.bde.timezone),
+        eventsT,
         locale,
         config.bde.timezone,
         config.bde.name,

@@ -7,7 +7,8 @@ import { truncate } from '../text';
  *
  * - **Only the message above the card can ping.** Discord does not notify for a mention inside a card, and Slack's is not
  *   reliable there: the template has one text above the card (`TemplateContent.above`), and it is the only place a mention is read.
- * - **Only what the template spells as a mention is one.** `{@everyone}`, `{@here}`, `{@channel}` (Slack), and `{@role:bureau}`,
+ * - **Only what the template spells as a mention is one.** `{@everyone}`, `{@here}`, `{@channel}` (Slack), `{@staff}` (the school's staff,
+ *   in the messages for it: the people who gave their Discord or Slack id on their profile, never a name typed here), and `{@role:bureau}`,
  *   `{@user:paula}`, `{@group:bureau}`, whose names stand for an identifier of the platform in the BDE's directory
  *   (`NotificationMention`). A mention typed as plain text (`@everyone`), and everything a variable stands for (a title, a place,
  *   a name), comes out defused, as every text sent to a chat has always been.
@@ -37,6 +38,12 @@ export type MentionDirectory = Readonly<Record<string, MentionEntry>>;
 
 export const directoryKey = (platform: MentionPlatform, key: string) => `${platform}:${key}`;
 
+/** The ids of the people `{@staff}` stands for, by platform (those who gave them on their profile). */
+export interface StaffMentionIds {
+  discord: readonly string[];
+  slack: readonly string[];
+}
+
 export interface AllowedMentions {
   /** `@everyone` or `@here` is in the text. */
   everyone: boolean;
@@ -51,16 +58,16 @@ export interface RenderedAbove {
 
 /** A mention as a template spells it. */
 export type MentionToken =
-  { kind: 'everyone' | 'here' | 'channel' } | { kind: MentionKind; key: string };
+  { kind: 'everyone' | 'here' | 'channel' | 'staff' } | { kind: MentionKind; key: string };
 
 const TOKEN =
-  /\{\{|\}\}|\{@(everyone|here|channel)\}|\{@(role|user|group):([a-z0-9]+(?:-[a-z0-9]+)*)\}|\{([a-z][a-z0-9_]*)\}/g;
+  /\{\{|\}\}|\{@(everyone|here|channel|staff)\}|\{@(role|user|group):([a-z0-9]+(?:-[a-z0-9]+)*)\}|\{([a-z][a-z0-9_]*)\}/g;
 
 /** The mentions written in a text, in order. */
 export function mentionsIn(source: string): MentionToken[] {
   const found: MentionToken[] = [];
   for (const match of source.matchAll(TOKEN)) {
-    if (match[1]) found.push({ kind: match[1] as 'everyone' | 'here' | 'channel' });
+    if (match[1]) found.push({ kind: match[1] as 'everyone' | 'here' | 'channel' | 'staff' });
     else if (match[2]) found.push({ kind: match[2] as MentionKind, key: match[3]! });
   }
   return found;
@@ -91,6 +98,7 @@ export function renderAbove(
   values: Readonly<Record<string, string>>,
   platform: MentionPlatform,
   directory: MentionDirectory = {},
+  staff?: StaffMentionIds,
 ): RenderedAbove | undefined {
   if (!source) return undefined;
   const defuse = platform === 'discord' ? neutralizeForDiscord : neutralizeForSlack;
@@ -108,6 +116,14 @@ export function renderAbove(
     } else if (match[4]) {
       parts.push({ text: defuse(values[match[4]] ?? ''), cuttable: true });
     } else {
+      if (match[1] === 'staff') {
+        // The people who gave their id, each pinged by it: nobody typed in the template, nothing read from a variable.
+        const ids = [...(staff?.[platform] ?? [])];
+        if (ids.length === 0) continue;
+        parts.push({ text: ids.map((id) => `<@${id}>`).join(' '), cuttable: false });
+        mentions.users.push(...ids);
+        continue;
+      }
       const token: MentionToken = match[1]
         ? { kind: match[1] as 'everyone' | 'here' | 'channel' }
         : { kind: match[2] as MentionKind, key: match[3]! };
