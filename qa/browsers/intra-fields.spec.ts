@@ -49,6 +49,7 @@ async function choose(page: Page, label: string) {
 
 async function deleteEvent(page: Page, path: string) {
   await page.goto(path);
+  await atRest(page);
   await page.getByRole('button', { name: 'Delete event' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Yes, delete permanently' }).click();
   await expect(page).toHaveURL(/\/en\/events(\?|$)/);
@@ -136,12 +137,15 @@ test.describe('the intra fields', () => {
       await setPublication(page, true);
       await page.goto(path);
       await expect(page.getByText('The intra fields are not filled in.')).toBeVisible();
+      await atRest(page);
 
       // Confirming says no, and says why.
       await page.getByRole('button', { name: 'Confirm', exact: true }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Confirm the event' }).click();
       await expect(page.getByText('This event cannot be confirmed')).toBeVisible();
       await expect(page.getByText('Draft').first()).toBeVisible();
+      // (A click while the page is still being taken over by React is a click on a link that does nothing yet.)
+      await atRest(page);
 
       // Editing asks for the fields (and says why), and then it can be confirmed.
       await page.getByRole('link', { name: 'Edit' }).click();
