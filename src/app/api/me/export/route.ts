@@ -109,6 +109,15 @@ export async function GET() {
       })
     : [];
 
+  // The events the person is named as the organizer of on the intra: recorded under the login, which may be somebody else's than the author's.
+  const organizedOnIntra = user.login
+    ? await prisma.event.findMany({
+        where: { intraOrganizerLogin: user.login },
+        select: { title: true, startsAt: true },
+        orderBy: { startsAt: 'desc' },
+      })
+    : [];
+
   const { calendarToken, role, ...profile } = user;
 
   const exportedAt = new Date().toISOString();
@@ -132,6 +141,7 @@ export async function GET() {
           cancelledAt: cancellation.createdAt,
         })),
         refusedProposals,
+        organizedOnIntra,
       },
       notifications: { templatesEdited, templateVersions, mentionsAdded },
     },

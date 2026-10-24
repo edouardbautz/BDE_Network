@@ -93,6 +93,9 @@ A person removed from the list becomes a member with the **default role**.
 - **Removing a category** that events use asks you to choose a category to move them to. At least one category must
   stay.
 - **Reminder hour**: the local hour (the BDE's time zone) at which the day-before reminder goes out. Default: 6 pm.
+- **Publish events on the 42 intra**: when on, every event asks for the fields of the intra's form (see [the fields of the
+  intra](events.md#the-fields-of-the-intra)) and none can be confirmed without them. **Off by default**: nothing changes for a
+  platform until an owner turns it on.
 
 ### Notifications
 
@@ -197,10 +200,11 @@ with no effect.
 
 Required **only** if `events` is in `modules.enabled`. See the [Events module](events.md).
 
-| Field          | Type                | Description                                                                                                                       |
-| -------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `categories`   | list (at least one) | Each entry: `key` (stable identifier, lowercase, digits and hyphens, unique), `label` (displayed name) and `color` (hexadecimal). |
-| `reminderHour` | integer, 0 to 23    | Local hour of the day-before reminder. Default: `18`.                                                                             |
+| Field              | Type                | Description                                                                                                                       |
+| ------------------ | ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `categories`       | list (at least one) | Each entry: `key` (stable identifier, lowercase, digits and hyphens, unique), `label` (displayed name) and `color` (hexadecimal). |
+| `reminderHour`     | integer, 0 to 23    | Local hour of the day-before reminder. Default: `18`.                                                                             |
+| `intraPublication` | `true` or `false`   | The events are published on the intra by the school's staff: the form asks for the intra's fields. Default: `false`.              |
 
 ```yaml
 events:

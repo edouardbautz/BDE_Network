@@ -98,6 +98,13 @@ model AuditLog {
   @@index([actorId])
 }
 
+/// Who the intra (the school's event form) offers an event to.
+enum IntraAudience {
+  STUDENTS
+  PISCINERS
+  BOTH
+}
+
 enum EventStatus {
   DRAFT
   /// Submitted for validation by somebody who may propose events but not publish them.
@@ -111,13 +118,13 @@ enum EventStatus {
 /// Authorship follows the AuditLog pattern: authorLogin is plain text so the
 /// history survives the author's account being removed.
 model Event {
-  id                     String      @id @default(cuid())
+  id                     String         @id @default(cuid())
   title                  String
   description            String?
   location               String?
   /// Key of a category defined in bde.config.yml (events.categories)
   categoryKey            String
-  status                 EventStatus @default(DRAFT)
+  status                 EventStatus    @default(DRAFT)
   /// UTC. For a series, the first occurrence.
   startsAt               DateTime
   /// UTC. endsAt - startsAt is the duration of every occurrence.
@@ -144,11 +151,23 @@ model Event {
   refusalComment         String?
   refusedByLogin         String?
   refusedAt              DateTime?
+  /// What the school's staff needs to publish the event on the intra (src/lib/events/intra.ts), all set or none (a
+  /// CHECK the schema cannot express: the keywords are never empty when the rest is there). null = not given yet:
+  /// an event written before the intra fields, or a platform that does not publish on the intra.
+  intraOrganizerLogin    String?
+  intraAudience          IntraAudience?
+  intraMaxPeople         Int?
+  intraWaitingList       Boolean?
+  /// One of INTRA_KINDS ("Meet/meet_up"): checked in code, so a kind the intra adds needs no migration.
+  intraKind              String?
+  /// Hours before the start after which nobody can unsubscribe any more.
+  intraUnsubscribeHours  Int?
+  intraKeywords          String[]       @default([])
   authorLogin            String
   authorId               String?
-  author                 User?       @relation("EventAuthor", fields: [authorId], references: [id], onDelete: SetNull)
-  createdAt              DateTime    @default(now())
-  updatedAt              DateTime    @updatedAt
+  author                 User?          @relation("EventAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
 
   assignees     EventAssignee[]
   cancellations EventCancellation[]

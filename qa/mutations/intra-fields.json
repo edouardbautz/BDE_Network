@@ -1,0 +1,100 @@
+[
+  [
+    "intra: the organizer may be empty",
+    "src/lib/events/intra.ts",
+    "if (organizerLogin === '') errors.intraOrganizerLogin = 'required';",
+    "if (false) errors.intraOrganizerLogin = 'required';",
+    ["src/lib/events/intra.test.ts", "src/lib/events/input.test.ts"]
+  ],
+  [
+    "intra: a room for nobody is accepted",
+    "src/lib/events/intra.ts",
+    "const number = Number(text);\n  if (number < min) return 'invalid';",
+    "const number = Number(text);",
+    ["src/lib/events/intra.test.ts"]
+  ],
+  [
+    "intra: the limit of keywords is off by one",
+    "src/lib/events/intra.ts",
+    "else if (keywords.length > INTRA_KEYWORDS_LIMIT) errors.intraKeywords = 'tooMany';",
+    "else if (keywords.length >= INTRA_KEYWORDS_LIMIT) errors.intraKeywords = 'tooMany';",
+    ["src/lib/events/intra.test.ts"]
+  ],
+  [
+    "intra: a comma stays in a keyword",
+    "src/lib/events/intra.ts",
+    "return value.replace(/,/g, ' ').replace(/\\s+/g, ' ').trim();",
+    "return value.replace(/\\s+/g, ' ').trim();",
+    ["src/lib/events/intra.test.ts"]
+  ],
+  [
+    "intra: an event with only some of the fields counts as complete",
+    "src/lib/events/intra.ts",
+    "    !row.intraKeywords ||\n    row.intraKeywords.length === 0\n  ) {",
+    "    !row.intraKeywords\n  ) {",
+    ["src/lib/events/intra.test.ts"]
+  ],
+  [
+    "intra: nothing is asked even when the platform publishes on the intra",
+    "src/lib/events/input.ts",
+    "const parsedIntra = options.intra ? parseIntra(raw) : null;",
+    "const parsedIntra = null as ReturnType<typeof parseIntra> | null;",
+    ["src/lib/events/input.test.ts", "src/app/[locale]/(app)/events/actions.test.ts"]
+  ],
+  [
+    "intra: an event can be confirmed without the fields",
+    "src/app/[locale]/(app)/events/actions.ts",
+    "if (status === 'CONFIRMED' && intraPublicationEnabled() && !intraOf(existing)) {",
+    "if (false) {",
+    ["src/app/[locale]/(app)/events/actions-series.test.ts"]
+  ],
+  [
+    "intra: the guard applies when the platform does not publish on the intra",
+    "src/app/[locale]/(app)/events/actions.ts",
+    "if (status === 'CONFIRMED' && intraPublicationEnabled() && !intraOf(existing)) {",
+    "if (status === 'CONFIRMED' && !intraOf(existing)) {",
+    ["src/app/[locale]/(app)/events/actions-series.test.ts"]
+  ],
+  [
+    "intra: the second row of a cut series loses the fields",
+    "src/lib/events/series-operations.ts",
+    "      ...intraColumns(intraOf(event)),\n",
+    "",
+    ["src/app/[locale]/(app)/events/actions-series.test.ts"]
+  ],
+  [
+    "intra: a change of the fields is not seen by 'this date and the following'",
+    "src/lib/events/series-operations.ts",
+    "const intraChanged = !!change.intra && !sameIntra(change.intra, intraOf(event));",
+    "const intraChanged = false;",
+    ["src/app/[locale]/(app)/events/actions-series.test.ts"]
+  ],
+  [
+    "intra: one date alone overwrites the fields of the whole series",
+    "src/lib/events/series-operations.ts",
+    "  if (intraOf(event)) return false;\n  await tx.event.update",
+    "  await tx.event.update",
+    ["src/app/[locale]/(app)/events/actions-series.test.ts"]
+  ],
+  [
+    "markdown: a javascript address is a link",
+    "src/lib/markdown.ts",
+    "return url.protocol === 'http:' || url.protocol === 'https:' || url.protocol === 'mailto:'",
+    "return url.protocol !== 'data:'",
+    ["src/lib/markdown.test.ts", "src/components/markdown.test.tsx"]
+  ],
+  [
+    "markdown: an image is loaded",
+    "src/lib/markdown.ts",
+    "        if (image) {\n          pushText(parts, label);\n          i = end + 1;\n          continue;\n        }\n",
+    "",
+    ["src/lib/markdown.test.ts", "src/components/markdown.test.tsx"]
+  ],
+  [
+    "markdown: a link opens without rel",
+    "src/components/markdown.tsx",
+    "rel=\"noopener noreferrer\"",
+    "rel=\"\"",
+    ["src/components/markdown.test.tsx"]
+  ]
+]

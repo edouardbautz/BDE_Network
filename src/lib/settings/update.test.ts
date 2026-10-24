@@ -1007,6 +1007,7 @@ describe('the events settings', () => {
           { key: 'sport', label: 'Sport', color: '#16a34a' },
         ],
         reminderHour: 18,
+        intraPublication: false,
       },
     });
 
@@ -1066,6 +1067,38 @@ describe('the events settings', () => {
     expect((state.row?.config as BdeConfig).events?.reminderHour).toBe(9);
     expect(getRuntimeSettings()?.config.events?.reminderHour).toBe(9);
     expect(state.audit[0]?.metadata).toMatchObject({ reminderHour: { from: 18, to: 9 } });
+  });
+
+  it('turns the publication on the intra on and off, at once, and says so in the audit log', async () => {
+    const { db, state } = fakeDb();
+    expect(getRuntimeSettings()?.config.events?.intraPublication ?? false).toBe(false);
+
+    await run(events({ intraPublication: true }), db);
+    expect((state.row?.config as BdeConfig).events?.intraPublication).toBe(true);
+    expect(getRuntimeSettings()?.config.events?.intraPublication).toBe(true);
+    expect(state.audit[0]?.metadata).toMatchObject({ intraPublication: { from: false, to: true } });
+
+    await run(events({ intraPublication: false }), db);
+    expect(getRuntimeSettings()?.config.events?.intraPublication).toBe(false);
+  });
+
+  it('keeps the publication on the intra as it is when the change does not mention it', async () => {
+    const { db, state } = fakeDb();
+    await run(events({ intraPublication: true }), db);
+    await run(events({ reminderHour: 9 }), db);
+    expect((state.row?.config as BdeConfig).events).toMatchObject({
+      reminderHour: 9,
+      intraPublication: true,
+    });
+  });
+
+  it('refuses a publication setting that is not a boolean', async () => {
+    const { db, state } = fakeDb();
+    expect(await run(events({ intraPublication: 'yes' as unknown as boolean }), db)).toMatchObject({
+      ok: false,
+      code: 'invalid',
+    });
+    expect(state.audit).toEqual([]);
   });
 
   it.each([-1, 24, 1.5, Number.NaN])('refuses %s as an hour', async (reminderHour) => {

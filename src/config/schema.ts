@@ -177,6 +177,9 @@ const eventsSection = z.object({
     .min(0)
     .max(23)
     .default(18),
+  // The platform publishes the events on the intra 42 through the school's staff: every event then carries the fields of
+  // the intra's form, and confirming one asks the staff to publish it. Off unless the BDE turns it on.
+  intraPublication: z.boolean().default(false),
 });
 
 export const bdeConfigSchema = z

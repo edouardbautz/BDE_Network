@@ -9,6 +9,7 @@ export const EVENT_NOTICES = [
   'occurrenceGone',
   'seriesBusy',
   'alreadyReviewed',
+  'intraFieldsMissing',
 ] as const;
 
 export type EventNotice = (typeof EVENT_NOTICES)[number];

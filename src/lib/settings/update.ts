@@ -61,6 +61,8 @@ export type SettingsChange =
       section: 'events';
       categories: CategoryInput[];
       reminderHour: number;
+      /** Whether the events are published on the intra by the school's staff; absent keeps what it was. */
+      intraPublication?: boolean;
       reassign?: Record<string, string>;
     }
   | { section: 'address'; address: string; acceptInsecure?: boolean }
@@ -224,6 +226,8 @@ function apply(change: SettingsChange, state: State, actor: SettingsActor): Appl
         return fail('invalid');
       }
       const hour = change.reminderHour;
+      const intraPublication = change.intraPublication ?? config.events.intraPublication;
+      if (typeof intraPublication !== 'boolean') return fail('invalid');
       if (!Number.isInteger(hour) || hour < 0 || hour > 23) {
         return fail('reminderHour', { field: 'reminderHour' });
       }
@@ -279,7 +283,10 @@ function apply(change: SettingsChange, state: State, actor: SettingsActor): Appl
         .map((c) => c.label);
 
       return {
-        config: { ...config, events: { ...config.events, categories, reminderHour: hour } },
+        config: {
+          ...config,
+          events: { ...config.events, categories, reminderHour: hour, intraPublication },
+        },
         values,
         removedCategories: removed,
         audit: {
@@ -289,6 +296,7 @@ function apply(change: SettingsChange, state: State, actor: SettingsActor): Appl
             renamed,
             recolored,
             reminderHour: { from: config.events.reminderHour, to: hour },
+            intraPublication: { from: config.events.intraPublication, to: intraPublication },
           },
         },
       };
@@ -434,7 +442,9 @@ function apply(change: SettingsChange, state: State, actor: SettingsActor): Appl
           // Turned on for the first time: the categories a BDE starts with. Turned off, the section is kept.
           events:
             config.events ??
-            (change.events ? { categories: DEFAULT_CATEGORIES, reminderHour: 18 } : undefined),
+            (change.events
+              ? { categories: DEFAULT_CATEGORIES, reminderHour: 18, intraPublication: false }
+              : undefined),
         },
         values,
         audit: {

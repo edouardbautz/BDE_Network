@@ -49,6 +49,8 @@ export interface EventsSettingsView {
   /** How many events each category (by key) is the category of: what a removal has to move. */
   usage: Record<string, number>;
   reminderHour: number;
+  /** Whether the events are published on the intra by the school's staff. */
+  intraPublication: boolean;
   timezone: string;
 }
 
@@ -77,6 +79,7 @@ export async function settingsExtras(): Promise<SettingsExtras> {
       categories: config.events.categories,
       usage: Object.fromEntries(counts.map((row) => [row.categoryKey, row._count._all])),
       reminderHour: config.events.reminderHour,
+      intraPublication: config.events.intraPublication,
       timezone: config.bde.timezone,
     },
   };
