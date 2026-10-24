@@ -120,6 +120,7 @@ const TABLES = [
   'EventOccurrence',
   'EventOccurrenceAssignee',
   'EventReminder',
+  'IntraRequest',
   'BdeCalendarFeed',
   'NotificationTemplate',
   'NotificationTemplateVersion',

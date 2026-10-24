@@ -106,7 +106,8 @@ const sharesCalendar = (who: PersonaKey, variant: PlatformVariant) =>
 const publishesOnIntra = (who: PersonaKey, variant: PlatformVariant) =>
   can(who, 'events.intra_publish', variant);
 const asksForIntra = (who: PersonaKey, variant: PlatformVariant) =>
-  can(who, 'events.intra_request', variant) || can(who, 'events.validate', variant);
+  variant === 'events-intra' &&
+  (can(who, 'events.intra_request', variant) || can(who, 'events.validate', variant));
 
 /** The actions of the settings page: the owner's, whatever they are given; the gate is the first thing they do. */
 const OWNER_ONLY_SETTINGS = [

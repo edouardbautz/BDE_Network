@@ -4,8 +4,9 @@ import { eventInclude } from './include';
 // How the pages read the requests for the intra. The events come with what the intra content is made of (their dates, cancellations
 // and own values); the content itself is worked out by the page with `intraReadiness`.
 
-/** The most requests a page draws: a BDE has some hundreds of events a year, and the ones that wait come first. */
-const LIST_LIMIT = 300;
+/** The most requests that wait a page draws, and the most recently answered ones it adds (a BDE has some hundreds of events a year). */
+const WAITING_LIMIT = 300;
+const ANSWERED_LIMIT = 50;
 
 const requestInclude = {
   event: { include: { ...eventInclude, author: { select: { fullName: true } } } },
@@ -18,13 +19,13 @@ export async function listIntraRequests() {
       where: { status: { in: ['PENDING', 'OUTDATED'] } },
       include: requestInclude,
       orderBy: { requestedAt: 'asc' },
-      take: LIST_LIMIT,
+      take: WAITING_LIMIT,
     }),
     prisma.intraRequest.findMany({
       where: { status: { in: ['PUBLISHED', 'REFUSED'] } },
       include: requestInclude,
       orderBy: { updatedAt: 'desc' },
-      take: LIST_LIMIT,
+      take: ANSWERED_LIMIT,
     }),
   ]);
   return [...waiting, ...answered];

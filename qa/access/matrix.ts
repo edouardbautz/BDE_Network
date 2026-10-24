@@ -58,10 +58,12 @@ const eventsOff = (variant: PlatformVariant) => variant === 'events-disabled';
 
 /** Who sees the requests for the intra: the staff, those who follow them, those who ask for them, and those who run the events. */
 const followsIntra = (who: PersonaKey, variant: PlatformVariant) =>
-  can(who, 'events.intra_publish', variant) ||
-  can(who, 'events.intra_view', variant) ||
-  can(who, 'events.intra_request', variant) ||
-  can(who, 'events.validate', variant);
+  // (the pages do not exist while the platform does not publish on the intra, validators included)
+  variant === 'events-intra' &&
+  (can(who, 'events.intra_publish', variant) ||
+    can(who, 'events.intra_view', variant) ||
+    can(who, 'events.intra_request', variant) ||
+    can(who, 'events.validate', variant));
 
 type Kind = keyof typeof FIXTURES.events;
 const EVENT_KINDS: readonly Kind[] = [
