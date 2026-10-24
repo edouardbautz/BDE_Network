@@ -96,6 +96,9 @@ Une personne retirée de la liste devient un membre avec le **rôle par défaut*
 - **Retirer une catégorie** utilisée par des événements demande de choisir une catégorie où les déplacer. Il faut
   garder au moins une catégorie.
 - **Heure du rappel** : l'heure locale (fuseau du BDE) à laquelle part le rappel de la veille. Par défaut : 18 h.
+- **Publier les événements sur l'intra 42** : activé, chaque événement demande les champs du formulaire de l'intra (voir [les champs de
+  l'intra](events.md#les-champs-de-lintra)) et aucun ne peut être confirmé sans eux. **Désactivé par défaut** : rien ne change pour une
+  plateforme tant qu'un propriétaire ne l'active pas.
 
 ### Les notifications
 
@@ -203,10 +206,11 @@ rôles, sans effet.
 
 Obligatoire **uniquement** si `events` est dans `modules.enabled`. Voir le [module Événements](events.md).
 
-| Champ          | Type                 | Description                                                                                                                         |
-| -------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `categories`   | liste (au moins une) | Chaque entrée : `key` (identifiant stable, minuscules, chiffres et tirets, unique), `label` (nom affiché) et `color` (hexadécimal). |
-| `reminderHour` | entier de 0 à 23     | Heure locale du rappel de la veille. Par défaut : `18`.                                                                             |
+| Champ              | Type                 | Description                                                                                                                          |
+| ------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `categories`       | liste (au moins une) | Chaque entrée : `key` (identifiant stable, minuscules, chiffres et tirets, unique), `label` (nom affiché) et `color` (hexadécimal).  |
+| `reminderHour`     | entier de 0 à 23     | Heure locale du rappel de la veille. Par défaut : `18`.                                                                              |
+| `intraPublication` | `true` ou `false`    | Les événements sont publiés sur l'intra par le staff de l'école : le formulaire demande les champs de l'intra. Par défaut : `false`. |
 
 ```yaml
 events:

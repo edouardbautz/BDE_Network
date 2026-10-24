@@ -329,7 +329,7 @@
     },
     "retention": {
       "title": "Retention period",
-      "description": "Your data is kept for as long as you're a member. When an administrator removes you, your account is deleted; some historical records (like the audit log) keep your login as plain text, with no link to an account, for accountability. Events you created or were in charge of keep your login as plain text (when the Events module is enabled). So do the notification templates you edited (and their successive versions) and the people you added to the list of mentions."
+      "description": "Your data is kept for as long as you're a member. When an administrator removes you, your account is deleted; some historical records (like the audit log) keep your login as plain text, with no link to an account, for accountability. Events you created, were in charge of or are the organizer of on the intra keep your login as plain text (when the Events module is enabled). So do the notification templates you edited (and their successive versions) and the people you added to the list of mentions."
     },
     "rights": {
       "title": "Your rights",
@@ -537,6 +537,11 @@
           "commentHint": "Required. Say what needs to change: the author reads it on the event, and receives it as a notification if it is turned on.",
           "confirm": "Refuse the proposal"
         }
+      },
+      "intra": {
+        "title": "42 intra",
+        "hours": "{count, plural, =0 {Until the start} one {# hour before the start} other {# hours before the start}}",
+        "missing": "The intra fields are not filled in. Edit the event to complete them: it cannot be confirmed without them."
       }
     },
     "form": {
@@ -569,7 +574,9 @@
         "intervalInvalid": "The interval must be a whole number from 1 to 99.",
         "weekdaysRequired": "Choose at least one day of the week.",
         "countInvalid": "Enter a number of occurrences between 1 and 400.",
-        "monthlyUnavailable": "This choice does not exist for this date."
+        "monthlyUnavailable": "This choice does not exist for this date.",
+        "tooMany": "There are too many keywords (20 at most).",
+        "tooBig": "This value is too large."
       },
       "formErrors": {
         "invalidAssignee": "One of the members in charge does not exist or is not approved yet.",
@@ -577,7 +584,40 @@
       },
       "requiredLegend": "* Required field",
       "optional": "optional",
-      "statusHelpProposer": "A draft is only visible to you and the validators. A proposal is sent to the validators, who publish it or refuse it with a comment."
+      "statusHelpProposer": "A draft is only visible to you and the validators. A proposal is sent to the validators, who publish it or refuse it with a comment.",
+      "markdown": {
+        "write": "Write",
+        "preview": "Preview",
+        "empty": "The preview shows here.",
+        "help": "Markdown is accepted, like the intra's form: # title, **bold**, *italic*, - list, [link](https://…). The plain text is kept for copying.",
+        "mode": "Write or preview"
+      },
+      "intra": {
+        "title": "Publication on the 42 intra",
+        "description": "The school's staff copies these fields into the intra's form: they are named as on the intra.",
+        "legacy": "This event predates publication on the intra. Fill in these fields to be able to confirm it: the staff will copy them to the intra.",
+        "seriesHint": "These fields apply to the whole series: they are saved with \"this one and the following\".",
+        "organizer": "Organizer's login",
+        "organizerHelp": "Filled in with the author's login, editable.",
+        "audience": "Available for",
+        "audiences": {
+          "STUDENTS": "Students",
+          "PISCINERS": "Pisciners",
+          "BOTH": "Both"
+        },
+        "maxPeople": "Maximum number of people",
+        "waitingList": "Waiting list",
+        "yes": "Yes",
+        "no": "No",
+        "kind": "Kind",
+        "kindPlaceholder": "Choose a kind",
+        "unsubscribe": "Delay before unsubscribing is no longer possible (hours)",
+        "unsubscribeHelp": "Number of hours before the start after which nobody can unsubscribe.",
+        "keywords": "Keywords",
+        "keywordsPlaceholder": "Add a keyword",
+        "keywordsHelp": "Enter or comma to add; {max} at most.",
+        "keywordRemove": "Remove the keyword {word}"
+      }
     },
     "dashboard": {
       "title": "Upcoming events",
@@ -625,7 +665,8 @@
       "eventGone": "This event no longer exists: someone else probably deleted it.",
       "occurrenceGone": "This date no longer exists: the series was edited in the meantime. Here is the up-to-date state.",
       "seriesBusy": "Somebody else was changing this series at the same moment: nothing was changed. Here is the current state, you can try again.",
-      "alreadyReviewed": "Somebody else already answered this proposal. Here is its current state."
+      "alreadyReviewed": "Somebody else already answered this proposal. Here is its current state.",
+      "intraFieldsMissing": "This event cannot be confirmed: it lacks the intra fields. Edit it to fill them in, then confirm it."
     },
     "scope": {
       "occurrence": "Only this one",
@@ -1214,6 +1255,8 @@
       "keep": "Keep",
       "moveTo": "{count, plural, one {Its event will move} other {Its # events will move}} to the category:",
       "reminderLabel": "Reminder hour",
+      "intraTitle": "Publish events on the 42 intra",
+      "intraBody": "The school's staff publishes the BDE's events on the intra: every event then asks for the fields of the intra's form, and none can be confirmed without them. Turned off, nothing changes.",
       "reminderHelp": "The reminder goes out the day before each event, at this hour ({timezone} time zone).",
       "removeTitle": "{count, plural, one {Remove this category?} other {Remove these # categories?}}",
       "removeBodyMoved": "{count, plural, one {The event concerned is} other {The # events concerned are}} moved to the chosen category right away. This cannot be undone.",

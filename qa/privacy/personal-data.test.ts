@@ -43,6 +43,7 @@ const PERSON_COLUMNS: Record<string, Column> = {
   'Event.authorId': user('events.authored', 'authorId: userId'),
   'Event.authorLogin': user('events.authored', 'authorId: userId'),
   'Event.refusedByLogin': user('events.refusedProposals', 'refusedByLogin: user.login'),
+  'Event.intraOrganizerLogin': user('events.organizedOnIntra', 'intraOrganizerLogin: user.login'),
   'EventAssignee.userId': user('events.inChargeOf', 'prisma.eventAssignee'),
   'EventAssignee.login': user('events.inChargeOf', 'prisma.eventAssignee'),
   'EventOccurrenceAssignee.userId': user(

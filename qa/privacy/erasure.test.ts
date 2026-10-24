@@ -21,6 +21,7 @@ const LOGIN_MAY_STAY = new Set([
   'AuditLog.metadata',
   'Event.authorLogin',
   'Event.refusedByLogin',
+  'Event.intraOrganizerLogin',
   'EventAssignee.login',
   'EventOccurrenceAssignee.login',
   'EventCancellation.cancelledByLogin',

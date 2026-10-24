@@ -28,7 +28,9 @@ import {
   type EventFormField,
   type RawEventInput,
 } from '@/lib/events/input';
-import { NativeSelect, Textarea } from './field-styles';
+import { DescriptionField } from './description-field';
+import { NativeSelect } from './field-styles';
+import { IntraFields } from './intra-fields';
 import { RepeatFields } from './repeat-fields';
 
 export interface FormCategory {
@@ -69,6 +71,8 @@ interface EventFormProps {
   isEditing: boolean;
   /** Editing one date of a series (absent for an event that does not repeat). */
   series?: SeriesEditing;
+  /** The platform publishes the events on the intra: the form asks for the fields of the intra's form. */
+  intra: boolean;
 }
 
 function readRawInput(form: HTMLFormElement): RawEventInput {
@@ -92,6 +96,13 @@ function readRawInput(form: HTMLFormElement): RawEventInput {
     recurrenceUntil: text('recurrenceUntil'),
     repeatCount: text('repeatCount'),
     assigneeLogins: data.getAll('assignees').map(String),
+    intraOrganizerLogin: text('intraOrganizerLogin'),
+    intraAudience: text('intraAudience'),
+    intraMaxPeople: text('intraMaxPeople'),
+    intraWaitingList: text('intraWaitingList'),
+    intraKind: text('intraKind'),
+    intraUnsubscribeHours: text('intraUnsubscribeHours'),
+    intraKeywords: data.getAll('intraKeywords').map(String),
   };
 }
 
@@ -129,6 +140,7 @@ export function EventForm({
   statusChoices,
   isEditing,
   series,
+  intra,
 }: EventFormProps) {
   const t = useTranslations('events');
   const formRef = useRef<HTMLFormElement>(null);
@@ -149,6 +161,7 @@ export function EventForm({
     const result = parseEventInput(readRawInput(form), {
       timeZone,
       categoryKeys: categories.map((category) => category.key),
+      intra,
     });
     return result.ok ? {} : result.errors;
   };
@@ -357,9 +370,7 @@ export function EventForm({
             <FieldLabel htmlFor="description" required>
               {t('form.description')}
             </FieldLabel>
-            <Textarea
-              id="description"
-              name="description"
+            <DescriptionField
               defaultValue={values.description}
               maxLength={DESCRIPTION_MAX_LENGTH}
               {...field('description', true)}
@@ -395,6 +406,22 @@ export function EventForm({
           </fieldset>
         </CardContent>
       </Card>
+
+      {intra && (
+        <Card>
+          <CardContent>
+            <IntraFields
+              values={values}
+              error={error}
+              onChange={() =>
+                clientErrors && formRef.current && setClientErrors(validate(formRef.current))
+              }
+              legacy={isEditing && initial.intraAudience === ''}
+              inSeries={!!series}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={isPending}>

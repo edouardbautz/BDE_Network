@@ -75,6 +75,33 @@ Events created **before** this rule, with an empty location or description, are 
 blocked at their **next edit** in the form, which will ask you to fill in those fields. Confirming, going back to
 draft and canceling a date remain possible.
 
+### The description is written in Markdown
+
+The description accepts the same Markdown as the intra's form: `# title`, `**bold**`, `*italic*`, `- list`, `1. numbered
+list`, `> quote`, `[link](https://…)` and `code`. Beside the field (under it on a phone, behind the **Preview** tab) the
+form draws what the description will look like. The text is kept **exactly as typed**, so it can be copied as it is. A
+tag typed by hand, a picture or a link that is not `http`, `https` or `mailto` is shown as text and never run.
+
+### The fields of the intra
+
+When the platform **publishes the events on the intra** (an owner turns it on in Settings, section Events, see
+[Configuration](configuration.md#events)), the form has a second block, **Publication on the 42 intra**: what the school's staff
+copies into the intra's event form, under the same names. All seven are required:
+
+- **Organizer's login**: filled in with the author's login, editable.
+- **Available for**: students, pisciners or both.
+- **Maximum number of people** and **waiting list** (yes or no).
+- **Kind**: one of the intra's kinds (Pedago/Rush, Pedago/Piscine, Pedago/Partnership, Meet/Conference, Meet/meet_up,
+  Meet/event, Association, Speed working/Hackathon, Speed working/Workshop, Speed working/Challenge, Extern).
+- **Delay before unsubscribing is no longer possible**, in hours before the start.
+- **Keywords**: at least one, added with Enter or a comma.
+
+They belong to **the whole series**: on a series, they are saved with "this date and the following" (editing a single date
+leaves them alone). Events written **before** this block keep working: the form asks for the fields at their next edit,
+and **no event is confirmed without them**: confirming from the event page or from "To validate" shows a message
+asking you to edit it first. Going back to draft, proposing and canceling a date stay possible. The fields are shown on the
+page of the event to those who can create events.
+
 The **school year** (for example `2025-2026`) is computed by itself: from September to August, from the start date.
 A series belongs to the school year of its first date.
 

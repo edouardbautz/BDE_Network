@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseEventInput, type RawEventInput } from './input';
+import { rawIntraOf } from './intra';
 import { MAX_OCCURRENCES } from './repeat';
 import { NO_REPEAT } from './repeat-input';
 
@@ -16,6 +17,7 @@ function raw(overrides: Partial<RawEventInput> = {}): RawEventInput {
     ...NO_REPEAT,
     status: 'DRAFT',
     assigneeLogins: [],
+    ...rawIntraOf(null, ''),
     ...overrides,
   };
 }
@@ -432,5 +434,58 @@ describe('parseEventInput', () => {
         new Date('2026-10-10T18:00:00Z'),
       );
     });
+  });
+});
+
+describe('the intra fields', () => {
+  const complete = {
+    intraOrganizerLogin: 'demo-president',
+    intraAudience: 'BOTH',
+    intraMaxPeople: '60',
+    intraWaitingList: 'no',
+    intraKind: 'Association',
+    intraUnsubscribeHours: '12',
+    intraKeywords: ['bde'],
+  };
+
+  it('are not asked, and not returned, unless the platform publishes on the intra', () => {
+    const result = parseEventInput(raw(), options);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.data.intra).toBeNull();
+  });
+
+  it('are all required once it does, next to the errors of the rest of the form', () => {
+    const result = parseEventInput(raw({ title: '' }), { ...options, intra: true });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.title).toBe('required');
+      expect(result.errors.intraAudience).toBe('required');
+      expect(result.errors.intraKeywords).toBe('required');
+    }
+  });
+
+  it('come back validated with the event', () => {
+    const result = parseEventInput(raw(complete), { ...options, intra: true });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.intra).toEqual({
+        organizerLogin: 'demo-president',
+        audience: 'BOTH',
+        maxPeople: 60,
+        waitingList: false,
+        kind: 'Association',
+        unsubscribeHours: 12,
+        keywords: ['bde'],
+      });
+    }
+  });
+
+  it('are checked even for a series, whose own errors come after', () => {
+    const result = parseEventInput(raw({ ...complete, intraKind: 'nope', repeat: 'CUSTOM' }), {
+      ...options,
+      intra: true,
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.errors.intraKind).toBe('invalid');
   });
 });

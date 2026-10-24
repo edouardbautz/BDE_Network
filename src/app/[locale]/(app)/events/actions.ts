@@ -23,6 +23,8 @@ import {
   type RawEventInput,
 } from '@/lib/events/input';
 import { eventInclude } from '@/lib/events/include';
+import { intraColumns, intraOf } from '@/lib/events/intra';
+import { intraPublicationEnabled } from '@/lib/events/intra-config';
 import {
   notifyEventApproved,
   notifyEventConfirmed,
@@ -48,6 +50,7 @@ import {
 import {
   SeriesError,
   deleteFollowing,
+  completeIntra,
   resolvedAt,
   updateFollowing,
   updateOccurrence,
@@ -84,6 +87,13 @@ function readRawInput(formData: FormData): RawEventInput {
     recurrenceUntil: text('recurrenceUntil'),
     repeatCount: text('repeatCount'),
     assigneeLogins: formData.getAll('assignees').map(String),
+    intraOrganizerLogin: text('intraOrganizerLogin'),
+    intraAudience: text('intraAudience'),
+    intraMaxPeople: text('intraMaxPeople'),
+    intraWaitingList: text('intraWaitingList'),
+    intraKind: text('intraKind'),
+    intraUnsubscribeHours: text('intraUnsubscribeHours'),
+    intraKeywords: formData.getAll('intraKeywords').map(String),
   };
 }
 
@@ -92,6 +102,7 @@ function formConfig() {
   return {
     timeZone: config.bde.timezone,
     categoryKeys: (config.events?.categories ?? []).map((category) => category.key),
+    intra: intraPublicationEnabled(),
   };
 }
 
@@ -259,6 +270,7 @@ export async function createEvent(
     const created = await tx.event.create({
       data: {
         ...data,
+        ...(parsed.data.intra ? intraColumns(parsed.data.intra) : {}),
         repeat: repeatColumn(data.repeat),
         authorLogin: user.login,
         authorId: user.id,
@@ -293,7 +305,8 @@ export async function createEvent(
 
 // ---- what a series changes in an action ---------------------------------------------------------------------------
 
-type Notice = 'eventGone' | 'occurrenceGone' | 'seriesBusy' | 'alreadyReviewed';
+type Notice =
+  'eventGone' | 'occurrenceGone' | 'seriesBusy' | 'alreadyReviewed' | 'intraFieldsMissing';
 
 /** The address of an events page, with its language prefix and query string. */
 async function addressOf(
@@ -422,9 +435,15 @@ export async function updateEvent(
         : await updateFollowing(tx, eventId, occurrenceStart, {
             ...change,
             repeat: { rule: data.repeat, until: data.recurrenceUntil },
+            intra: data.intra,
           });
+    // The intra's fields belong to the whole series, not to a date: "only this one" leaves them as they are, except that an
+    // event that has none yet is given what the form says (it could not be confirmed otherwise).
+    const intraDone =
+      'intraChanged' in done ? done.intraChanged : await completeIntra(tx, eventId, data.intra);
 
     const changed: string[] = done.changed.filter((key) => key !== 'status');
+    if (intraDone) changed.push('intra');
     const ruleChanged = 'ruleChanged' in done && done.ruleChanged;
     if (ruleChanged) changed.push('recurrence');
     const statusChanged = done.changed.includes('status');
@@ -590,6 +609,10 @@ export async function setEventStatus(
   const fromStatus = resolvedAt(existing, occurrenceStart)?.status ?? existing.status;
   if (!canChangeStatus(actor, fromStatus, status)) {
     throw new Error('Forbidden');
+  }
+  // Nothing is confirmed without what the staff needs to publish it on the intra (the form asks for it at the next edit).
+  if (status === 'CONFIRMED' && intraPublicationEnabled() && !intraOf(existing)) {
+    return { href: await addressOf(noticeHref(eventId, 'intraFieldsMissing')) };
   }
 
   const outcome = await inSeries(async (tx) => {

@@ -100,10 +100,12 @@ const EVENT_PROPOSER: Who = { permissions: ['events.view', 'events.propose'] };
 
 interface Scenario {
   enabled?: boolean;
+  /** The platform publishes on the intra (the setting is off by default). */
+  intra?: boolean;
   who: Who;
 }
 
-function setup({ enabled = true, who }: Scenario) {
+function setup({ enabled = true, intra = false, who }: Scenario) {
   vi.mocked(getConfig).mockReturnValue({
     bde: { timezone: 'Europe/Paris' },
     modules: { enabled: enabled ? ['events'] : [] },
@@ -113,6 +115,7 @@ function setup({ enabled = true, who }: Scenario) {
         { key: 'sport', label: 'Sport', color: '#16a34a' },
       ],
       reminderHour: 18,
+      intraPublication: intra,
     },
   } as unknown as ReturnType<typeof getConfig>);
 
@@ -745,5 +748,80 @@ describe('deleting an event', () => {
       await expect(deleteEvent('evt1')).rejects.toThrow(new RedirectSignal('/events'));
       expect(prisma.event.delete).toHaveBeenCalledTimes(1);
     }
+  });
+});
+
+const INTRA_FORM = {
+  intraOrganizerLogin: 'Demo-President',
+  intraAudience: 'BOTH',
+  intraMaxPeople: '60',
+  intraWaitingList: 'yes',
+  intraKind: 'Meet/meet_up',
+  intraUnsubscribeHours: '24',
+  intraKeywords: ['bde', 'jeux'],
+};
+
+const STORED_INTRA = {
+  intraOrganizerLogin: 'demo-president',
+  intraAudience: 'BOTH' as const,
+  intraMaxPeople: 60,
+  intraWaitingList: true,
+  intraKind: 'Meet/meet_up',
+  intraUnsubscribeHours: 24,
+  intraKeywords: ['bde', 'jeux'],
+};
+
+describe('the intra fields', () => {
+  describe('when the platform does not publish on the intra', () => {
+    beforeEach(() => {
+      setup({ who: EVENT_VALIDATOR });
+      vi.mocked(prisma.event.create).mockResolvedValue({ ...storedEvent } as never);
+    });
+
+    it('asks for nothing and writes none, even if a crafted request sends some', async () => {
+      await expect(createEvent({}, form(INTRA_FORM))).rejects.toThrow(RedirectSignal);
+      const data = vi.mocked(prisma.event.create).mock.calls[0]?.[0].data as Record<
+        string,
+        unknown
+      >;
+      expect(Object.keys(data).filter((key) => key.startsWith('intra'))).toEqual([]);
+    });
+  });
+
+  describe('when it does', () => {
+    beforeEach(() => {
+      setup({ who: EVENT_VALIDATOR, intra: true });
+      vi.mocked(prisma.event.create).mockResolvedValue({ ...storedEvent } as never);
+    });
+
+    it('refuses an event without them, field by field, and writes nothing', async () => {
+      const state = await createEvent({}, form({}));
+      expect(state.errors).toMatchObject({
+        intraAudience: 'required',
+        intraMaxPeople: 'required',
+        intraWaitingList: 'required',
+        intraKind: 'required',
+        intraUnsubscribeHours: 'required',
+        intraKeywords: 'required',
+      });
+      expect(prisma.event.create).not.toHaveBeenCalled();
+      expect(logAuditEvent).not.toHaveBeenCalled();
+    });
+
+    it('stores them, normalised, with the event', async () => {
+      await expect(createEvent({}, form(INTRA_FORM))).rejects.toThrow(RedirectSignal);
+      expect(prisma.event.create).toHaveBeenCalledWith({
+        data: expect.objectContaining(STORED_INTRA),
+      });
+    });
+
+    it('refuses to confirm an event that has none, with a notice, and changes nothing', async () => {
+      const target = await setEventStatus('evt1', 'CONFIRMED');
+      expect(target.href).toBe('/fr/events/evt1?notice=intraFieldsMissing');
+      expect(prisma.event.update).not.toHaveBeenCalled();
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+      expect(logAuditEvent).not.toHaveBeenCalled();
+      expect(after).not.toHaveBeenCalled();
+    });
   });
 });

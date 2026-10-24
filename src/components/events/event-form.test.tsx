@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EventFormState } from '@/app/[locale]/(app)/events/actions';
 import type { RawEventInput } from '@/lib/events/input';
+import { rawIntraOf } from '@/lib/events/intra';
 import { NO_REPEAT } from '@/lib/events/repeat-input';
 
 vi.mock('next-intl', () => ({
@@ -34,6 +35,7 @@ const empty: RawEventInput = {
   ...NO_REPEAT,
   status: 'DRAFT',
   assigneeLogins: [],
+  ...rawIntraOf(null, 'alice'),
 };
 const complete: RawEventInput = {
   ...empty,
@@ -49,6 +51,7 @@ const action = vi.fn(async (): Promise<EventFormState> => ({}));
 function renderForm(
   initial: RawEventInput,
   statusChoices: ComponentProps<typeof EventForm>['statusChoices'] = ['DRAFT', 'CONFIRMED'],
+  intra = false,
 ) {
   const view = render(
     <EventForm
@@ -61,6 +64,7 @@ function renderForm(
       cancelHref="/events"
       statusChoices={statusChoices}
       isEditing={false}
+      intra={intra}
     />,
   );
   return { ...view, form: view.container.querySelector('form') as HTMLFormElement };
@@ -192,5 +196,135 @@ describe('EventForm — the statuses a person may choose', () => {
     expect((screen.getByLabelText(/form.status/) as HTMLSelectElement).value).toBe('PROPOSED');
     expect(screen.getByText('form.statusHelpProposer')).toBeTruthy();
     expect(screen.queryByText('form.statusHelp')).toBeNull();
+  });
+});
+
+describe('EventForm — the intra fields', () => {
+  const filled = {
+    ...complete,
+    intraOrganizerLogin: 'alice',
+    intraAudience: 'BOTH',
+    intraMaxPeople: '60',
+    intraWaitingList: 'yes',
+    intraKind: 'Meet/meet_up',
+    intraUnsubscribeHours: '24',
+    intraKeywords: ['bde'],
+  };
+
+  it('are not in the form unless the platform publishes on the intra', () => {
+    renderForm(complete);
+    expect(document.getElementById('intraKind')).toBeNull();
+    expect(screen.queryByText('title')).toBeNull();
+  });
+
+  it('asks for all of them, each marked required, with the author as organizer', () => {
+    renderForm(complete, undefined, true);
+    expect(screen.getByText('title')).toBeInTheDocument();
+    expect(screen.getByLabelText(/organizer/)).toHaveValue('alice');
+    for (const id of [
+      'intraOrganizerLogin',
+      'intraMaxPeople',
+      'intraKind',
+      'intraUnsubscribeHours',
+      'intraKeywords',
+    ]) {
+      expect(document.getElementById(id)).toHaveAttribute('aria-required', 'true');
+    }
+    expect(screen.getAllByRole('radio')).toHaveLength(5);
+  });
+
+  it('refuses to submit without them and puts the focus on the first one that is missing', () => {
+    const { form } = renderForm(complete, undefined, true);
+    fireEvent.submit(form);
+    expect(action).not.toHaveBeenCalled();
+    expect(document.getElementById('intraMaxPeople')).toHaveAccessibleDescription(
+      'form.errors.required',
+    );
+    expect(document.getElementById('intraKind')).toHaveAccessibleDescription(
+      'form.errors.required',
+    );
+    expect(document.querySelector('input[name="intraAudience"]')).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
+  });
+
+  it('submits when they are there', () => {
+    const { form } = renderForm(filled, undefined, true);
+    fireEvent.submit(form);
+    expect(document.querySelector('[aria-invalid="true"]')).toBeNull();
+    expect(action).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers the kinds of the intra, grouped, and the audience and waiting list as choices', () => {
+    renderForm(filled, undefined, true);
+    const select = document.getElementById('intraKind') as HTMLSelectElement;
+    expect([...select.options].map((option) => option.value)).toContain('Speed working/Hackathon');
+    expect([...select.querySelectorAll('optgroup')].map((group) => group.label)).toEqual([
+      'Pedago',
+      'Meet',
+      'Speed working',
+    ]);
+    expect(screen.getByRole('radio', { name: 'audiences.BOTH' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'yes' })).toBeChecked();
+  });
+
+  it('adds a keyword with Enter or a comma, once, and removes it with its button', () => {
+    renderForm({ ...filled, intraKeywords: [] }, undefined, true);
+    const input = document.getElementById('intraKeywords') as HTMLInputElement;
+    const hidden = () =>
+      [
+        ...document.querySelectorAll<HTMLInputElement>(
+          'input[name="intraKeywords"][type="hidden"]',
+        ),
+      ].map((field) => field.value);
+
+    fireEvent.change(input, { target: { value: 'jeux' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    fireEvent.change(input, { target: { value: 'Jeux' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    fireEvent.change(input, { target: { value: 'soirée' } });
+    fireEvent.keyDown(input, { key: ',' });
+    expect(hidden()).toEqual(['jeux', 'soirée']);
+
+    fireEvent.click(screen.getByRole('button', { name: 'keywordRemove{"word":"jeux"}' }));
+    expect(hidden()).toEqual(['soirée']);
+  });
+
+  it('tells an event written before them that they are asked now', () => {
+    renderForm({ ...complete }, undefined, true);
+    expect(screen.queryByText('legacy')).toBeNull();
+    cleanup();
+    render(
+      <EventForm
+        action={action}
+        initial={complete}
+        categories={categories}
+        members={members}
+        timeZone="Europe/Paris"
+        submitLabel="Enregistrer"
+        cancelHref="/events"
+        statusChoices={['DRAFT']}
+        isEditing
+        intra
+      />,
+    );
+    expect(screen.getByText('legacy')).toBeInTheDocument();
+  });
+});
+
+describe('EventForm — the description in Markdown', () => {
+  it('previews what is typed as the pages will show it, and keeps the text as typed', () => {
+    renderForm({ ...complete, description: '## Titre\n\nUn **mot**' });
+    const preview = screen.getByRole('region', { name: 'preview' });
+    expect(preview.querySelector('h3')?.textContent).toBe('Titre');
+    expect(preview.querySelector('strong')?.textContent).toBe('mot');
+    expect(document.getElementById('description')).toHaveValue('## Titre\n\nUn **mot**');
+
+    fireEvent.change(document.getElementById('description') as HTMLElement, {
+      target: { value: '<script>x</script>' },
+    });
+    expect(preview.querySelector('script')).toBeNull();
+    expect(preview.textContent).toContain('<script>x</script>');
   });
 });

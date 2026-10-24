@@ -251,6 +251,16 @@ describeWithDatabase('the dataset in a real database, and the invariants over it
         'a_version_that_is_not_a_reset_holds_a_template',
       ],
       [
+        'an intra kind the intra does not offer',
+        `UPDATE "Event" SET "intraKind" = 'Meet/party' WHERE id = (SELECT min(id) FROM "Event" WHERE "intraKind" IS NOT NULL)`,
+        'an_intra_kind_is_one_the_intra_offers',
+      ],
+      [
+        'a keyword with a comma in it',
+        `UPDATE "Event" SET "intraKeywords" = ARRAY['a,b'] WHERE id = (SELECT min(id) FROM "Event" WHERE "intraKind" IS NOT NULL)`,
+        'an_intra_keyword_has_no_comma_and_is_not_empty',
+      ],
+      [
         'a second default role',
         `UPDATE "Role" SET "isDefault" = TRUE WHERE id = 'role-admin'`,
         'one_default_role',

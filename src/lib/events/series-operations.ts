@@ -1,6 +1,7 @@
 import { getConfig } from '@/config';
 import type { EventStatus, Prisma } from '@/generated/prisma/client';
 import { eventInclude } from './include';
+import { intraColumns, intraOf, sameIntra, type IntraFields } from './intra';
 import { allOccurrences, type RecurringSource } from './recurrence';
 import { cutRule, readRepeatRule, sameRepeat, type RepeatRule } from './repeat';
 import { repeatColumn } from './repeat-column';
@@ -56,6 +57,8 @@ export interface DateChange {
  * does not) and when it ends (see `Event.recurrenceUntil`). */
 export interface FollowingChange extends DateChange {
   repeat?: { rule: RepeatRule | null; until: Date | null };
+  /** The intra's fields, which belong to the whole series (null or absent: nothing to change). */
+  intra?: IntraFields | null;
 }
 
 const timeZone = () => getConfig().bde.timezone;
@@ -201,6 +204,8 @@ async function splitSeries(
       repeat: repeatColumn(cut?.tail ?? null),
       recurrenceUntil: event.recurrenceUntil,
       schoolYear: schoolYearOf(cutAt, zone),
+      // The intra's fields are the series': the second row has the same.
+      ...intraColumns(intraOf(event)),
       // The same series: announced once, not again because it was cut.
       confirmationNotifiedAt: event.confirmationNotifiedAt,
       seriesId: seriesKeyOf(event),
@@ -245,6 +250,8 @@ export interface FollowingResult {
   /** The fields of the date that changed, and whether the series' own rule (frequency, end) did. */
   changed: FieldKey[];
   ruleChanged: boolean;
+  /** The intra's fields changed (or were given for the first time). */
+  intraChanged: boolean;
   /** Dates that had values of their own and had some of them replaced by this change. */
   aligned: number;
   /** Dates whose own values or cancellation were dropped because the date no longer exists in the series. */
@@ -275,7 +282,8 @@ export async function updateFollowing(
     !!change.repeat &&
     (!sameRepeat(change.repeat.rule, rest, wantedFirst) ||
       sameDay(change.repeat.until, event.recurrenceUntil, zone) === false);
-  if (keys.length === 0 && !ruleChanged) {
+  const intraChanged = !!change.intra && !sameIntra(change.intra, intraOf(event));
+  if (keys.length === 0 && !ruleChanged && !intraChanged) {
     // Nothing to change: not worth cutting the series.
     return {
       eventId: event.id,
@@ -284,6 +292,7 @@ export async function updateFollowing(
       occurrenceStart,
       changed: [],
       ruleChanged: false,
+      intraChanged: false,
       aligned: 0,
       dropped: 0,
     };
@@ -303,6 +312,7 @@ export async function updateFollowing(
     update.endsAt = wanted.end;
     update.schoolYear = schoolYearOf(wanted.start, zone);
   }
+  if (change.intra && intraChanged) Object.assign(update, intraColumns(change.intra));
   if (change.repeat && ruleChanged) {
     update.repeat = repeatColumn(change.repeat.rule);
     update.recurrenceUntil = change.repeat.rule ? change.repeat.until : null;
@@ -331,6 +341,7 @@ export async function updateFollowing(
     occurrenceStart: (update.startsAt as Date | undefined) ?? row.startsAt,
     changed: [...keys],
     ruleChanged,
+    intraChanged,
     aligned: 0,
     dropped: 0,
   };
@@ -427,4 +438,18 @@ export async function deleteFollowing(
     data: endSeriesAt(index - 1, starts[index - 1]!.start, head),
   });
   return { deletedEvent: false, removed };
+}
+
+/** "Only this one" leaves the intra's fields alone, since they belong to the whole series; an event that has none yet is
+ * given what the form says, because it could not be confirmed otherwise. True when it did. */
+export async function completeIntra(
+  tx: Tx,
+  eventId: string,
+  fields: IntraFields | null,
+): Promise<boolean> {
+  if (!fields) return false;
+  const event = await loadEvent(tx, eventId);
+  if (intraOf(event)) return false;
+  await tx.event.update({ where: { id: eventId }, data: intraColumns(fields) });
+  return true;
 }

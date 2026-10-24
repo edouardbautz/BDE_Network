@@ -75,6 +75,19 @@ WHERE (("refusalComment" IS NULL) <> ("refusedByLogin" IS NULL))
    OR (("refusalComment" IS NULL) <> ("refusedAt" IS NULL))
    OR ("refusalComment" IS NOT NULL AND "status" <> 'DRAFT')
 UNION ALL
+-- (the intra's fields come all together or not at all: a CHECK of the database holds that; what only the application knows is below)
+SELECT 'an_intra_kind_is_one_the_intra_offers', id
+FROM "Event"
+WHERE "intraKind" IS NOT NULL AND "intraKind" NOT IN ('Pedago/Rush', 'Pedago/Piscine', 'Pedago/Partnership', 'Meet/Conference', 'Meet/meet_up', 'Meet/event', 'Association', 'Speed working/Hackathon', 'Speed working/Workshop', 'Speed working/Challenge', 'Extern')
+UNION ALL
+SELECT 'an_intra_keyword_has_no_comma_and_is_not_empty', id
+FROM "Event" e
+WHERE EXISTS (SELECT 1 FROM unnest(e."intraKeywords") AS keyword WHERE keyword LIKE '%,%' OR btrim(keyword) = '')
+UNION ALL
+SELECT 'a_cut_series_row_has_the_intra_fields_of_its_first_row', e."id"
+FROM "Event" e JOIN "Event" first ON first."id" = e."seriesId"
+WHERE (e."intraOrganizerLogin" IS NULL) <> (first."intraOrganizerLogin" IS NULL)
+UNION ALL
 SELECT 'the_row_a_series_was_cut_from_exists', id
 FROM "Event" e WHERE "seriesId" IS NOT NULL AND NOT EXISTS (SELECT 1 FROM "Event" first WHERE first."id" = e."seriesId")
 UNION ALL

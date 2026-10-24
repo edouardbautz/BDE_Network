@@ -8,6 +8,7 @@ import {
   type RepeatRule,
   type Weekday,
 } from '../src/lib/events/repeat';
+import { INTRA_KINDS } from '../src/lib/events/intra';
 import {
   addDays,
   fromLocalDateTime,
@@ -211,6 +212,42 @@ type Value = string | number | boolean | Date | null | Raw;
 const sqlJson = (value: unknown): Raw => ({
   raw: `'${JSON.stringify(value).replace(/'/g, "''")}'::jsonb`,
 });
+/** FNV-1a: the same text gives the same number on every machine, which is all a dataset needs of it. */
+function hashOf(text: string): number {
+  let hash = 2166136261;
+  for (const char of text) {
+    hash ^= char.codePointAt(0)!;
+    hash = Math.imul(hash, 16777619) >>> 0;
+  }
+  return hash;
+}
+
+const INTRA_KEYWORD_SETS = [
+  ['bde'],
+  ['bde', 'soirée'],
+  ['sport', 'détente'],
+  ['conférence', 'carrière', 'bde'],
+];
+
+/**
+ * The intra's fields of an event: the same for every row of a series (a cut series' second row has its first row's), and
+ * none for one event in five, as an event written before them. Derived from the identifier, never drawn from the generator:
+ * the rest of the dataset (which the visual references and the other suites read) stays as it was.
+ */
+function intraValues(row: EventRow): Value[] {
+  const hash = hashOf(row.seriesId ?? row.id);
+  if (hash % 5 === 0) return [null, null, null, null, null, null, sqlTextArray([])];
+  return [
+    row.authorLogin,
+    (['STUDENTS', 'PISCINERS', 'BOTH'] as const)[hash % 3]!,
+    10 + (hash % 12) * 10,
+    hash % 2 === 0,
+    INTRA_KINDS[hash % INTRA_KINDS.length]!,
+    (hash % 4) * 12,
+    sqlTextArray(INTRA_KEYWORD_SETS[hash % INTRA_KEYWORD_SETS.length]!),
+  ];
+}
+
 const sqlTextArray = (values: readonly string[]): Raw => ({
   raw: `ARRAY[${values.map((v) => `'${v.replace(/'/g, "''")}'`).join(', ')}]::text[]`,
 });
@@ -1253,6 +1290,13 @@ export function buildDataset(options: DatasetOptions = {}): Dataset {
       'authorId',
       'createdAt',
       'updatedAt',
+      'intraOrganizerLogin',
+      'intraAudience',
+      'intraMaxPeople',
+      'intraWaitingList',
+      'intraKind',
+      'intraUnsubscribeHours',
+      'intraKeywords',
     ],
     // A cut series' second row refers to the first: the first is always written first.
     context.events.map((row) => [
@@ -1277,6 +1321,7 @@ export function buildDataset(options: DatasetOptions = {}): Dataset {
       row.authorId,
       row.createdAt,
       row.createdAt,
+      ...intraValues(row),
     ]),
   );
   script.insert('EventAssignee', ['id', 'eventId', 'userId', 'login'], context.assignees);
