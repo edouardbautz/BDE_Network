@@ -495,7 +495,10 @@ jobs:
           cache-to: type=gha,mode=max,scope=qa-image
 
       - name: Start the platform, its notifications going to a webhook that will not answer
-        run: sh qa/platform.sh up --image bde-network --webhook https://qa-hang:8443/hook
+        # At the clock of the dataset (see `--now` in docs/architecture.md): with the real one, a run after the reminder hour (18:00) found the
+        # reminders of the next day due, and the loop sent them one after the other to a webhook that never answers, so a connection was
+        # always open and "the platform gives up within a minute" failed for a reason that was the time of day, not the platform.
+        run: sh qa/platform.sh up --image bde-network --webhook https://qa-hang:8443/hook --now 2026-10-16T12:00:00Z
 
       - name: Take the database and the application away, and the webhook
         run: |
