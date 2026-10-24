@@ -8,6 +8,12 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **Accounts for the school's staff.** Three new rights in the events module: **Publish on the intra** (answer the requests to publish events on the intra: it includes
+  nothing, so a staff role sees that page and neither the calendar, nor the members, nor the settings), **Follow the publications on the intra** (read only) and **Ask for a
+  publication on the intra**. The usual rules apply: nobody hands out a right they do not hold. Each person can give, on their profile, their **Discord id and/or Slack id**
+  (optional, checked strictly: an id, never a name or a mention) so that the messages for the staff can mention them. The owners can give the staff **a room of its own** (a Discord
+  and/or Slack webhook, with a test message) in Settings; without it, those messages go to the BDE's room. Only available once **Publish events on the 42 intra** is on.
+
 - **The fields of the intra 42 on every event, and a description in Markdown.** An owner can turn on **Publish events on the 42 intra** (Settings, Events;
   off by default, nothing changes until then). The event form then asks for what the school's staff copies into the intra's form: the organizer's login (filled
   in with the author's), who it is available for (students, pisciners, both), the maximum number of people, the waiting list, the kind, the delay before

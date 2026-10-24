@@ -15,6 +15,7 @@ import { StepNotifications } from '@/components/setup/step-notifications';
 import type { DraftView } from '@/lib/setup/draft';
 import type { SettingsExtras } from '@/lib/settings/view';
 import { EventsSection } from './events-section';
+import { StaffChannelSection } from './staff-channel-section';
 import { LogoSection } from './logo-section';
 import { OwnersSection } from './owners-section';
 import { UpdatesSection } from './updates-section';
@@ -78,6 +79,14 @@ export function SettingsPanels({
           <Panel>
             {/* Remounted when what is saved changes, so that the form shows what the server holds (new keys...). */}
             <EventsSection key={JSON.stringify(extras.events)} settings={extras.events} />
+          </Panel>
+        )}
+        {extras.events?.intraPublication && (
+          <Panel>
+            <StaffChannelSection
+              key={JSON.stringify(extras.events.staffChannel)}
+              settings={extras.events.staffChannel}
+            />
           </Panel>
         )}
         <Panel>

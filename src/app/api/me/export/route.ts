@@ -35,6 +35,9 @@ export async function GET() {
         email: true,
         photoUrl: true,
         campus: true,
+        // How the person asked to be mentioned on Discord and Slack: theirs, so it is given back.
+        discordUserId: true,
+        slackUserId: true,
         status: true,
         role: { select: { name: true } },
         createdAt: true,

@@ -41,6 +41,11 @@ export const MODULE_EXTRA_PERMISSIONS: Readonly<Record<string, readonly ExtraPer
     { name: 'propose' },
     { name: 'validate', implies: ['propose', 'view'] },
     { name: 'shared_calendar' },
+    // Publishing the events on the intra 42 (see lib/events/intra.ts): the school's staff answers the requests and holds
+    // nothing else, so it does NOT include `view` (a staff role sees the page of the requests and not the calendar).
+    { name: 'intra_publish', implies: [] },
+    { name: 'intra_view' },
+    { name: 'intra_request' },
   ],
 };
 

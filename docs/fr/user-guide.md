@@ -73,6 +73,10 @@ mais le bouton n'est pas rouge : c'est réversible.
 Dans le menu de votre nom, **Mon profil** montre vos informations de compte et votre **lien d'agenda
 personnel**, à ajouter à Google Agenda, Outlook ou Apple Calendar. Voir [Module Événements](events.md#ajouter-à-son-agenda).
 
+Quand la plateforme publie les événements sur l'intra, le profil permet aussi de renseigner votre **identifiant Discord** et/ou
+**Slack** (facultatif) : ils servent uniquement à vous mentionner dans les messages destinés au staff de l'école. La page dit où les
+trouver. Une mention, un nom ou tout ce qui n'est pas un identifiant est refusé, et personne d'autre ne voit ce que vous saisissez.
+
 ## Pour celles et ceux qui gèrent le bureau
 
 ### Gérer les membres

@@ -351,7 +351,7 @@
     },
     "notifications": {
       "title": "E-mails et notifications",
-      "description": "Votre adresse e-mail sert aussi à vous écrire : si votre bureau a activé l'envoi d'e-mails, vous pouvez en recevoir quand votre accès est approuvé, quand un événement est confirmé ou la veille d'un événement dont vous êtes en charge. Les propriétaires et les membres qui peuvent valider les accès reçoivent les nouvelles demandes. Des messages peuvent aussi être publiés dans le salon Discord ou Slack du bureau : ils mentionnent le nom et le login des personnes concernées (nouvelle demande, membre approuvé ou retiré)."
+      "description": "Votre adresse e-mail sert aussi à vous écrire : si votre bureau a activé l'envoi d'e-mails, vous pouvez en recevoir quand votre accès est approuvé, quand un événement est confirmé ou la veille d'un événement dont vous êtes en charge. Les propriétaires et les membres qui peuvent valider les accès reçoivent les nouvelles demandes. Des messages peuvent aussi être publiés dans le salon Discord ou Slack du bureau : ils mentionnent le nom et le login des personnes concernées (nouvelle demande, membre approuvé ou retiré). Si la plateforme publie les événements sur l'intra, vous pouvez en plus renseigner, dans votre profil, votre identifiant Discord et/ou Slack (facultatif) : il sert uniquement à vous mentionner dans les messages destinés au staff ; il n'est visible de personne d'autre, il est supprimé avec votre compte et vous pouvez l'effacer à tout moment."
     },
     "calendar": {
       "title": "Lien d'agenda personnel",
@@ -780,6 +780,18 @@
         "title": "Générer un nouveau lien ?"
       },
       "privacy": "Ce lien est personnel : toute personne qui le possède peut lire les événements que vous avez le droit de voir. Ne le partagez pas. Il cesse de fonctionner si vous quittez le BDE."
+    },
+    "mentions": {
+      "title": "Être mentionné dans les messages",
+      "description": "Facultatif. Sert uniquement à vous mentionner (vous notifier) quand la plateforme écrit sur Discord ou Slack à propos de la publication des événements sur l'intra. Personne d'autre ne le voit.",
+      "discord": "Identifiant Discord",
+      "discordHelp": "Votre identifiant numérique, pas votre pseudo : dans Discord, activez le mode développeur (Paramètres, Avancé), puis clic droit sur votre nom, « Copier l'identifiant de l'utilisateur ».",
+      "slack": "Identifiant Slack",
+      "slackHelp": "Dans Slack : votre profil, menu ⋮, « Copier l'ID du membre » (il commence par U ou W). Laissez vide pour ne rien enregistrer.",
+      "invalid": "Ce n'est pas un identifiant valable : collez l'identifiant numérique (Discord) ou l'ID du membre (Slack), pas un nom.",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "saved": "Enregistré."
     }
   },
   "permissions": {
@@ -822,6 +834,18 @@
         "validate": {
           "label": "Valider les événements",
           "description": "Approuver ou refuser les propositions, créer, modifier, confirmer et supprimer tous les événements, et voir les brouillons."
+        },
+        "intra_publish": {
+          "label": "Publier sur l'intra",
+          "description": "Voir les demandes de publication, copier leurs champs dans l'intra et répondre (publié ou refusé). Ne donne ni le calendrier, ni les membres, ni les réglages. Demande que la publication sur l'intra soit activée (Paramètres, Événements)."
+        },
+        "intra_view": {
+          "label": "Suivre les publications sur l'intra",
+          "description": "Voir où en est la publication de chaque événement sur l'intra (en attente, publié, refusé), sans pouvoir répondre."
+        },
+        "intra_request": {
+          "label": "Demander une publication sur l'intra",
+          "description": "Renvoyer une demande refusée, ou en envoyer une pour un événement déjà confirmé. Valider les événements le permet déjà."
         }
       }
     },
@@ -1269,6 +1293,20 @@
       "description": "Les propriétaires peuvent être prévenus, sur le tableau de bord et sur cette page, quand une nouvelle version de la plateforme est publiée.",
       "checkTitle": "Me prévenir des nouvelles versions",
       "checkBody": "La plateforme demande à GitHub la dernière version publiée, au plus toutes les quelques heures et seulement quand un propriétaire ouvre le tableau de bord ou cette page. La demande ne transporte rien de votre BDE ni de ses membres. Désactivé, la plateforme ne demande rien à personne."
+    },
+    "staffChannel": {
+      "title": "Salon du staff (facultatif)",
+      "description": "Le staff de l'école n'est pas forcément sur le Discord ou le Slack du BDE. Un salon à lui, avec son propre webhook, reçoit les messages sur la publication des événements sur l'intra. Sans webhook, ces messages vont sur le salon du BDE (avec les mentions).",
+      "discord": "Adresse du webhook Discord du staff",
+      "slack": "Adresse du webhook Slack du staff",
+      "savedHint": "Une adresse est enregistrée. Laissez vide pour la garder, ou collez-en une autre pour la remplacer.",
+      "emptyHint": "Aucune adresse : les messages iront sur le salon du BDE.",
+      "willRemove": "L'adresse sera retirée à l'enregistrement.",
+      "savedPlaceholder": "Adresse enregistrée (non affichée)",
+      "test": "Envoyer un message de test ({channel})",
+      "testSent": "Message de test envoyé.",
+      "remove": "Retirer {channel}",
+      "keep": "Garder {channel}"
     }
   },
   "updates": {

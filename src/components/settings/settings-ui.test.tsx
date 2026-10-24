@@ -87,6 +87,7 @@ const extras = (patch: Partial<SettingsExtras> = {}): SettingsExtras => ({
     usage: { soiree: 3 },
     reminderHour: 18,
     intraPublication: false,
+    staffChannel: { hasDiscordWebhook: false, hasSlackWebhook: false },
     timezone: 'Europe/Paris',
   },
   ...patch,

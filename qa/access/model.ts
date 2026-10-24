@@ -13,7 +13,10 @@ export type Right =
   | 'events.view'
   | 'events.propose'
   | 'events.validate'
-  | 'events.shared_calendar';
+  | 'events.shared_calendar'
+  | 'events.intra_publish'
+  | 'events.intra_view'
+  | 'events.intra_request';
 
 const EVERY_RIGHT: readonly Right[] = [
   'members.manage',
@@ -23,6 +26,9 @@ const EVERY_RIGHT: readonly Right[] = [
   'events.propose',
   'events.validate',
   'events.shared_calendar',
+  'events.intra_publish',
+  'events.intra_view',
+  'events.intra_request',
 ];
 
 /** The rights each persona holds (what a role grants, with what each right implies). */
@@ -34,6 +40,8 @@ export const RIGHTS: Record<PersonaKey, readonly Right[]> = {
   proposer: ['events.view', 'events.propose'],
   validator: ['events.view', 'events.propose', 'events.validate'],
   custom: ['members.manage', 'events.view'],
+  // the school's staff: the requests to publish, and not even the calendar
+  staff: ['events.intra_publish'],
   admin: EVERY_RIGHT,
   owner: EVERY_RIGHT,
 };
@@ -44,6 +52,7 @@ export const APPROVED: readonly PersonaKey[] = [
   'proposer',
   'validator',
   'custom',
+  'staff',
   'admin',
   'owner',
 ];
@@ -59,6 +68,8 @@ export function can(
 ): boolean {
   if (!isApproved(who)) return false;
   if (right.startsWith('events.') && variant === 'events-disabled') return false;
+  // the rights of the intra do nothing until the platform publishes on the intra
+  if (right.startsWith('events.intra_') && variant !== 'events-intra') return false;
   return RIGHTS[who].includes(right);
 }
 

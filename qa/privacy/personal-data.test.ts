@@ -36,6 +36,8 @@ const PERSON_COLUMNS: Record<string, Column> = {
   'User.email': user('user.email', 'email: true'),
   'User.photoUrl': user('user.photoUrl', 'photoUrl: true'),
   'User.campus': user('user.campus', 'campus: true'),
+  'User.discordUserId': user('user.discordUserId', 'discordUserId: true'),
+  'User.slackUserId': user('user.slackUserId', 'slackUserId: true'),
   // only whether a link exists: the secret itself is not given back
   'User.calendarToken': user('calendarFeedActive', 'calendarToken: true'),
   'AuditLog.actorId': user('auditLogActions', 'actorId: userId'),
@@ -76,7 +78,8 @@ const PERSON_COLUMNS: Record<string, Column> = {
 };
 
 /** A text column that is a person: a login (`login`, `authorLogin`…), an e-mail, a name, a picture, a campus, a token. */
-const PERSON_TEXT = /^(login|email|fullName|photoUrl|campus|calendarToken|\w+Login)$/;
+const PERSON_TEXT =
+  /^(login|email|fullName|photoUrl|campus|calendarToken|discordUserId|slackUserId|\w+Login)$/;
 
 interface Field {
   model: string;

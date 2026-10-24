@@ -43,23 +43,27 @@ model Role {
 /// business/audit records keep the author's login as plain text so history
 /// survives the deletion (see AuditLog.actorLogin).
 model User {
-  id          String     @id @default(cuid())
+  id            String     @id @default(cuid())
   /// 42 intra login, e.g. "jdoe"
-  login       String     @unique
-  fullName    String
+  login         String     @unique
+  fullName      String
   /// Not unique: the login is the identity. 42 can give an address another account already has
   /// (a shared or reassigned mailbox), and that must never stop someone from signing in.
-  email       String
-  photoUrl    String?
+  email         String
+  photoUrl      String?
   /// 42 campus name as returned by the intra API, e.g. "Paris"
-  campus      String
-  status      UserStatus @default(PENDING)
+  campus        String
+  /// Optional, entered by the person: how the platform mentions them on Discord and Slack in what it posts for the staff
+  /// (their numeric user id and their member id, never a name). Checked by the database too: they end up in a message.
+  discordUserId String?
+  slackUserId   String?
+  status        UserStatus @default(PENDING)
   /// Set exactly when status is MEMBER. RESTRICT: a role still held cannot be deleted.
-  roleId      String?
-  role        Role?      @relation(fields: [roleId], references: [id], onDelete: Restrict)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  lastLoginAt DateTime?
+  roleId        String?
+  role          Role?      @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  lastLoginAt   DateTime?
 
   auditLogEntries              AuditLog[]                    @relation("AuditLogActor")
   authoredEvents               Event[]                       @relation("EventAuthor")

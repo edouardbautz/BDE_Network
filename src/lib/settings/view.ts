@@ -51,6 +51,8 @@ export interface EventsSettingsView {
   reminderHour: number;
   /** Whether the events are published on the intra by the school's staff. */
   intraPublication: boolean;
+  /** The room of the school's staff: whether an address is saved (never the address). */
+  staffChannel: { hasDiscordWebhook: boolean; hasSlackWebhook: boolean };
   timezone: string;
 }
 
@@ -80,6 +82,10 @@ export async function settingsExtras(): Promise<SettingsExtras> {
       usage: Object.fromEntries(counts.map((row) => [row.categoryKey, row._count._all])),
       reminderHour: config.events.reminderHour,
       intraPublication: config.events.intraPublication,
+      staffChannel: {
+        hasDiscordWebhook: Boolean(setting('DISCORD_STAFF_WEBHOOK_URL')),
+        hasSlackWebhook: Boolean(setting('SLACK_STAFF_WEBHOOK_URL')),
+      },
       timezone: config.bde.timezone,
     },
   };

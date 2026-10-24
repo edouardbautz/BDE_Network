@@ -531,6 +531,72 @@ describe('creating a role', () => {
     });
   });
 
+  describe('the staff of the school that publishes events on the intra', () => {
+    beforeEach(() => {
+      // Somebody who runs the roles and can see the events, with no right on the intra; and a staff member who answers the requests.
+      db.addRole({
+        id: 'role-com',
+        name: 'Communication',
+        permissions: ['roles.manage', 'events.view'],
+      });
+      db.addUser({ login: 'com', roleId: 'role-com' });
+      db.addRole({
+        id: 'role-staff-lead',
+        name: 'Staff référent',
+        permissions: ['roles.manage', 'events.intra_publish'],
+      });
+      db.addUser({ login: 'staff-lead', roleId: 'role-staff-lead' });
+    });
+
+    it.each(['events.intra_publish', 'events.intra_view', 'events.intra_request'])(
+      'does not let somebody who lacks %s hand it out',
+      async (permission) => {
+        actAs('com');
+        await expectUntouched(async () => {
+          await expect(
+            create({ name: 'Staff intra', permissions: [permission] }),
+          ).resolves.toMatchObject({
+            error: 'cannotGrant',
+          });
+        });
+        expect(db.roleByName('Staff intra')).toBeUndefined();
+      },
+    );
+
+    it('lets somebody who holds the right hand it out, and it brings nothing with it', async () => {
+      actAs('staff-lead');
+      await expect(
+        create({ name: 'Staff intra', permissions: ['events.intra_publish'] }),
+      ).rejects.toBeInstanceOf(RedirectSignal);
+      // no view of the calendar, no members, no settings: only what was given
+      expect(db.roleByName('Staff intra')?.permissions).toEqual(['events.intra_publish']);
+    });
+
+    it('does not let them hand out what they do not hold next to it', async () => {
+      actAs('staff-lead');
+      await expectUntouched(async () => {
+        await expect(
+          create({ name: 'Trop', permissions: ['events.intra_publish', 'events.validate'] }),
+        ).resolves.toMatchObject({ error: 'cannotGrant' });
+      });
+    });
+
+    it('lets somebody who validates events hand out the right to ask for a publication, but not to answer', async () => {
+      db.addRole({
+        id: 'role-val',
+        name: 'Validateur',
+        permissions: ['roles.manage', 'events.view', 'events.propose', 'events.validate'],
+      });
+      db.addUser({ login: 'val', roleId: 'role-val' });
+      actAs('val');
+      await expectUntouched(async () => {
+        await expect(
+          create({ name: 'Répondre', permissions: ['events.intra_publish'] }),
+        ).resolves.toMatchObject({ error: 'cannotGrant' });
+      });
+    });
+  });
+
   it('keeps names unique, whatever their case', async () => {
     actAs('adm');
     await expectUntouched(async () => {

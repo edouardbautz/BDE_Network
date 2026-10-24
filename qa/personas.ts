@@ -1,7 +1,7 @@
 import { encode } from '@auth/core/jwt';
 
 /**
- * The nine profiles every quality suite plays: who is looking at the platform. The same list serves the data
+ * The ten profiles every quality suite plays: who is looking at the platform. The same list serves the data
  * (`dataset.ts` creates their accounts), the HTTP suites (a session cookie forged for each) and the unit suites.
  *
  * "Module disabled" is not somebody: it is a way of running the platform, so it is a variant of the platform
@@ -15,6 +15,7 @@ export type PersonaKey =
   | 'proposer'
   | 'validator'
   | 'custom'
+  | 'staff'
   | 'admin'
   | 'owner'
   | 'deleted';
@@ -88,6 +89,16 @@ export const ROLE_CUSTOM: PersonaRole = {
   builtin: false,
 };
 
+/** The school's staff: answers the requests to publish events on the intra and holds nothing else, not even the calendar. */
+export const ROLE_STAFF: PersonaRole = {
+  id: 'role-qa-staff',
+  name: 'QA Staff intra',
+  description: 'Publishes the events on the intra, and nothing else.',
+  permissions: ['events.intra_publish'],
+  allPermissions: false,
+  builtin: false,
+};
+
 export const PERSONAS: readonly Persona[] = [
   {
     key: 'anonymous',
@@ -138,6 +149,14 @@ export const PERSONAS: readonly Persona[] = [
     hasCookie: true,
   },
   {
+    key: 'staff',
+    label: 'member of the school staff (publishes on the intra, nothing else)',
+    login: 'qa-staff',
+    status: 'MEMBER',
+    role: ROLE_STAFF,
+    hasCookie: true,
+  },
+  {
     key: 'admin',
     label: 'member with the Admin role',
     login: 'qa-admin',
@@ -162,8 +181,11 @@ export function persona(key: PersonaKey): Persona {
   return found;
 }
 
-/** The way a platform is run for a suite. */
-export const PLATFORM_VARIANTS = ['events-enabled', 'events-disabled'] as const;
+/**
+ * The way a platform is run for a suite: with the events module (the intra publication off, as a platform is until an owner turns
+ * it on), without it, or with the events module and the publication on the intra turned on.
+ */
+export const PLATFORM_VARIANTS = ['events-enabled', 'events-disabled', 'events-intra'] as const;
 export type PlatformVariant = (typeof PLATFORM_VARIANTS)[number];
 
 /** The cookie Auth.js sets over plain HTTP (the QA platforms are never behind HTTPS). */

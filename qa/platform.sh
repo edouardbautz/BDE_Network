@@ -3,7 +3,7 @@
 # imported from files, so no browser is needed), and the QA dataset. The same script runs in the workflows and on a
 # developer's machine; only Docker, Node (for `npm ci` and `tsx`) and `curl` are needed.
 #
-#   sh qa/platform.sh up   [--image bde-network] [--port 3100] [--variant events-enabled|events-disabled]
+#   sh qa/platform.sh up   [--image bde-network] [--port 3100] [--variant events-enabled|events-disabled|events-intra]
 #                          [--dataset full|small|none] [--keep-config] [--now 2026-10-16T12:00:00Z]
 #                          [--webhook https://qa-hang:8443/hook]
 #   sh qa/platform.sh env  [--port 3100]     the variables the suites read (QA_BASE_URL, QA_AUTH_SECRET, QA_DATABASE_URL)
@@ -64,8 +64,9 @@ host_path() {
 
 write_config() {
   case "$VARIANT" in
-    events-enabled) modules='[events]' ;;
-    events-disabled) modules='[]' ;;
+    events-enabled) modules='[events]'; intra=false ;;
+    events-disabled) modules='[]'; intra=false ;;
+    events-intra) modules='[events]'; intra=true ;;
     *) echo "unknown variant $VARIANT" >&2; exit 2 ;;
   esac
   channels='[]'
@@ -91,6 +92,7 @@ events:
     - { key: 'wei', label: 'WEI', color: '#ea580c' }
     - { key: 'partenariat', label: 'Partenariat', color: '#2563eb' }
   reminderHour: 18
+  intraPublication: $intra
 notifications:
   memberPending: []
   memberApproved: []
