@@ -71,22 +71,26 @@ test.describe('the watcher of the journeys', () => {
     problems.list.length = 0;
   });
 
-  test('lets through what an engine raises for a request that a navigation cancelled, and only that', async ({
-    as,
-    problems,
-  }) => {
-    const page = await as('anonymous');
-    await page.goto('/en');
-    await expect(page.getByRole('button', { name: 'Sign in with 42' })).toBeVisible();
-
-    // The engine's word for an aborted fetch, with nothing in flight and no navigation: a real failure, not an abort.
-    // (The page has been at rest for a while: the load that brought it here is not a departure "around" the error.)
-    await page.waitForTimeout(600);
-    await page.evaluate(() => {
+  // A page that asks for nothing and never prefetches (the health check, a bare answer), so that nothing around the error can be a
+  // cancelled request: a page of the platform makes aborted requests of its own, in Chromium on the real image, and one of them
+  // within 5 s of the error is exactly what excuses it.
+  const QUIET = '/api/health';
+  const raise = (page: import('@playwright/test').Page) =>
+    page.evaluate(() => {
       setTimeout(() => {
         throw new TypeError('Load failed');
       });
     });
+
+  test('reports the word an engine gives for an aborted fetch when nothing was cancelled and the page stayed', async ({
+    as,
+    problems,
+  }) => {
+    const page = await as('anonymous');
+    await page.goto(QUIET);
+    // (The page has been at rest for a while: the load that brought it here is not a departure "around" the error.)
+    await page.waitForTimeout(600);
+    await raise(page);
     await expect.poll(() => page.evaluate(() => true)).toBe(true);
     await page.waitForTimeout(300);
     problems.judge();
@@ -94,6 +98,15 @@ test.describe('the watcher of the journeys', () => {
       problems.list.filter((line) => /Load failed.*no request was cancelled/.test(line)),
     ).toHaveLength(1);
     problems.list.length = 0;
+  });
+
+  test('lets through what an engine raises for a request that a navigation cancelled', async ({
+    as,
+    problems,
+  }) => {
+    const page = await as('anonymous');
+    await page.goto('/en');
+    await expect(page.getByRole('button', { name: 'Sign in with 42' })).toBeVisible();
 
     // The same word while a request of the page is in flight, when the page leaves: the navigation cancelled it, which is all
     // the engine says (WebKit, on some systems, gives no `requestfailed` for it). Nothing is reported.
@@ -114,18 +127,14 @@ test.describe('the watcher of the journeys', () => {
     as,
     problems,
   }) => {
-    // A page of its own: nothing cancelled earlier can excuse it. The engine does not always tell which request a navigation cut
-    // short, so the page leaving its document just after the error is the evidence.
+    // A page of its own and a quiet one: nothing cancelled earlier can excuse it. The engine does not always tell which request a
+    // navigation cut short, so the page leaving its document just after the error is the evidence.
     const page = await as('anonymous');
-    await page.goto('/en/privacy');
+    await page.goto(QUIET);
     await page.waitForTimeout(600);
-    await page.evaluate(() => {
-      setTimeout(() => {
-        throw new TypeError('Load failed');
-      });
-    });
+    await raise(page);
     await page.waitForTimeout(100);
-    await page.goto('/en/privacy');
+    await page.goto(QUIET);
     problems.judge();
     expect(problems.list).toEqual([]);
   });
