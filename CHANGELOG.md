@@ -58,6 +58,13 @@ All notable changes to this project are written here, in English. Format based o
   checks the new tables, the right and the page (and a template through backup and restore), and the quality dataset holds templates,
   mentions and their history, with the invariants and the erasure test over them.
 
+- **Quality of the publication on the intra.** The attacks on the running image play hostile text through every field of the requests and the staff's pages, Markdown meant to
+  become a script, a picture from elsewhere or a slow parse, ids that would ping everybody, links that are not the intra's and forged answers (a link that runs, a version that is not
+  a hash, a page to come back to that is an address), with the control that the right answer works; the journeys in the three browsers play the circuit from the confirmation to the
+  update of a published event, as the validator and as the staff, and check that the staff sees nothing else of the platform and that a phone does not scroll sideways; the update
+  suite checks the new table is there and empty and that the pages do not exist until an owner turns the publication on. The glossary and the FAQ say what the staff, a request and
+  "to update" are.
+
 ### Changed
 
 - Development only: the tests of the browser watcher no longer depend on the noise of a real page (Chromium on the real image aborts requests of its own, which excused the error the test wanted reported).

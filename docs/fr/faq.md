@@ -95,6 +95,12 @@ Chaque personne choisit la langue de l'interface dans le menu de son compte (sa 
 
 Non. Le module est le calendrier **interne** du bureau. Les inscriptions des étudiants restent sur l'intra 42.
 
+### La plateforme publie-t-elle mes événements sur l'intra toute seule ?
+
+Non, et elle ne peut pas : l'intra ne lui offre aucune porte d'entrée. Quand un propriétaire active **Publier les événements sur l'intra 42** (Paramètres, Événements ; désactivé par défaut), chaque événement confirmé devient une **demande** que le staff de l'école lit, copie
+dans le formulaire de l'intra et à laquelle il répond. Si l'événement change ensuite, le staff est prévenu de ce qui a changé. Voir
+[Publier sur l'intra](events.md#publier-sur-lintra).
+
 ### Quelle différence entre un brouillon et un événement confirmé ?
 
 Un **brouillon** n'est visible que de son auteur et de ceux qui peuvent valider les événements. Une **proposition**

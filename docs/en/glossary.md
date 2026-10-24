@@ -30,20 +30,23 @@ The words of the platform, as they appear in the interface. One word always mean
 
 ## Events
 
-| Word                       | Meaning                                                                                                           |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| **Module**                 | A function you turn on: for now, the **Events** module.                                                           |
-| **Event**                  | An activity of the BDE, with a title, a start, an end, a location, a description and a category.                  |
-| **Draft**                  | An event not published yet: only its author and those who validate events see it.                                 |
-| **Proposal**               | An event proposed by somebody who cannot publish it, **awaiting validation** until a validator answers.           |
-| **Validator**              | Somebody whose role has the right to validate events: they approve or refuse proposals.                           |
-| **Confirmed**              | An event visible to every member. Confirming it notifies the members.                                             |
-| **Series**                 | An event that repeats (every day, week, month or year, on the days you choose) until a date or a number of times. |
-| **Occurrence**             | One date of a series. You can edit, confirm, cancel it alone, or act on it and the following dates.               |
-| **Category**               | A type of event, with a name and a color (Party, Sport…). Each BDE has its own.                                   |
-| **School year**            | From September to August (`2025-2026`), computed from the start date.                                             |
-| **Personal calendar link** | A member's secret link, to add to Google Calendar, Outlook or Apple Calendar. See **My profile**.                 |
-| **BDE calendar link**      | One link for the whole BDE, to paste once into a shared calendar. It is managed under **Shared calendar**.        |
+| Word                       | Meaning                                                                                                                                        |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Module**                 | A function you turn on: for now, the **Events** module.                                                                                        |
+| **Event**                  | An activity of the BDE, with a title, a start, an end, a location, a description and a category.                                               |
+| **Draft**                  | An event not published yet: only its author and those who validate events see it.                                                              |
+| **Proposal**               | An event proposed by somebody who cannot publish it, **awaiting validation** until a validator answers.                                        |
+| **Validator**              | Somebody whose role has the right to validate events: they approve or refuse proposals.                                                        |
+| **Confirmed**              | An event visible to every member. Confirming it notifies the members.                                                                          |
+| **Series**                 | An event that repeats (every day, week, month or year, on the days you choose) until a date or a number of times.                              |
+| **Occurrence**             | One date of a series. You can edit, confirm, cancel it alone, or act on it and the following dates.                                            |
+| **Category**               | A type of event, with a name and a color (Party, Sport…). Each BDE has its own.                                                                |
+| **School year**            | From September to August (`2025-2026`), computed from the start date.                                                                          |
+| **Personal calendar link** | A member's secret link, to add to Google Calendar, Outlook or Apple Calendar. See **My profile**.                                              |
+| **Staff**                  | The school's staff who publish the BDE's events on the 42 intra. They have an account like any member, with a role that allows it.             |
+| **Request to publish**     | What the platform sends to the staff for a confirmed event: the fields to copy into the intra's form. One per event, a series being one event. |
+| **To update**              | A published event that changed since: the staff has to change it on the intra too, then confirm.                                               |
+| **BDE calendar link**      | One link for the whole BDE, to paste once into a shared calendar. It is managed under **Shared calendar**.                                     |
 
 ## Messages
 
