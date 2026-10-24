@@ -148,7 +148,7 @@ test.describe('the intra fields', () => {
       await atRest(page);
 
       // Editing asks for the fields (and says why), and then it can be confirmed.
-      await page.getByRole('link', { name: 'Edit' }).click();
+      await page.getByRole('button', { name: 'Edit', exact: true }).click();
       await expect(page.getByText('This event predates publication on the intra.')).toBeVisible();
       await choose(page, 'Both');
       await page.getByRole('spinbutton', { name: /^Maximum number of people/ }).fill('25');
