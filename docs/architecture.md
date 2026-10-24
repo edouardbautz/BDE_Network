@@ -1537,11 +1537,14 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
     few tens of percent. **A limit that fails now and then is never raised until it passes**: it is set from the spread of the
     runs, with the runs written down. The numbers that count are those of the CI, not of a developer's computer.
 - **Resilience** (`qa/resilience/`, the `resilience` job of `qa.yml`; `npx tsx qa/resilience/run.ts [--only database,app,webhook]` on a
-  platform made by `sh qa/platform.sh up --webhook https://qa-hang:8443/hook`). What happens to the platform when what it stands
+  platform made by `sh qa/platform.sh up --webhook https://qa-hang:8443/hook --now 2026-10-16T12:00:00Z`). What happens to the platform when what it stands
   on goes away. The suites stop, freeze and kill the platform's containers (Docker only, started without a shell, every wait has a
   deadline), so they run on a platform made for them and each leaves it healthy, so that they can follow each other; they stop at
   once when the platform was not healthy to begin with (what follows would pass or fail for the wrong reason). Each check says what
   it saw, pass or fail.
+  **The platform of this job is made at the clock of the dataset** (`--now`): with the real clock, a run after the reminder hour found the reminders of the next
+  day due and the loop sent them one after the other to the webhook that never answers, so a connection was always open and "gives up within a minute" failed on
+  the time of day (the nightly run, in the morning, never saw it; a pull request in the evening always did).
   - **`database`**: PostgreSQL **stopped** (`/api/health` 503 in seconds, a member, an owner and a visitor are sent to the page that
     says the service is unavailable, a calendar link gets its bare 404, the application does not crash; then the platform serves
     again by itself and **the same session cookies still sign people in**: Auth.js turns a failing lookup into "no session", which
