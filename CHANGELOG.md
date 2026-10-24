@@ -8,6 +8,13 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **The fields of the intra 42 on every event, and a description in Markdown.** An owner can turn on **Publish events on the 42 intra** (Settings, Events;
+  off by default, nothing changes until then). The event form then asks for what the school's staff copies into the intra's form: the organizer's login (filled
+  in with the author's), who it is available for (students, pisciners, both), the maximum number of people, the waiting list, the kind, the delay before
+  unsubscribing is no longer possible, and keywords. They belong to the whole series. Events written before keep working; the form asks for the fields at their
+  next edit and **no event is confirmed without them**. The description accepts the Markdown of the intra's form, with a preview in the form and on the page of the
+  event (the text is kept as typed, ready to copy; nothing a member types can add a tag, a picture or a script to the page).
+
 - **Every notification can be customised, with a live preview.** A new **Notifications** page (a bell in the menu) lets the owners, and
   the members whose role has the new **Customise notifications** right, change what the Discord cards, Slack messages and e-mails
   say and how they look: the small text, the title, the emoji, the colour, which facts are shown, in which order and under which name,

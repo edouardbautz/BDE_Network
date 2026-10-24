@@ -20,6 +20,7 @@ import { ActionButton } from '@/components/action-button';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { CategoryBadge } from '@/components/events/category-badge';
 import { EventNoticeAlert } from '@/components/events/event-notice';
+import { Markdown } from '@/components/markdown';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,8 @@ import { getEventsAccess } from '@/lib/events/access';
 import { chatNames, confirmationNotice } from '@/lib/events/confirmation-notice';
 import { resolveCategory } from '@/lib/events/categories';
 import { formatDateTimeRange, formatLongDate, formatTimeRange } from '@/lib/events/format';
+import { intraOf } from '@/lib/events/intra';
+import { intraPublicationEnabled } from '@/lib/events/intra-config';
 import { readEventNotice } from '@/lib/events/notice';
 import { getVisibleEvent } from '@/lib/events/queries';
 import {
@@ -133,6 +136,7 @@ export default async function EventDetailPage({
 
   const now = Date.now();
   const isSeries = isRepeating(event);
+  const intra = intraOf(event);
   const repeatSummary = summaryInputOf(event, timeZone);
   const requested = Array.isArray(rawSearch.occ) ? rawSearch.occ[0] : rawSearch.occ;
   const live = occurrences.filter((o) => !o.cancelled);
@@ -454,7 +458,7 @@ export default async function EventDetailPage({
               </DetailRow>
               {shown.description && (
                 <DetailRow icon={FileText} label={t('detail.description')}>
-                  <span className="whitespace-pre-wrap">{shown.description}</span>
+                  <Markdown source={shown.description} />
                 </DetailRow>
               )}
             </dl>
@@ -463,6 +467,42 @@ export default async function EventDetailPage({
             </p>
           </CardContent>
         </Card>
+
+        {intraPublicationEnabled() && access.canCreate && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('detail.intra.title')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {intra ? (
+                <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+                  {[
+                    [t('form.intra.organizer'), intra.organizerLogin],
+                    [t('form.intra.audience'), t(`form.intra.audiences.${intra.audience}`)],
+                    [t('form.intra.maxPeople'), String(intra.maxPeople)],
+                    [
+                      t('form.intra.waitingList'),
+                      intra.waitingList ? t('form.intra.yes') : t('form.intra.no'),
+                    ],
+                    [t('form.intra.kind'), intra.kind],
+                    [
+                      t('form.intra.unsubscribe'),
+                      t('detail.intra.hours', { count: intra.unsubscribeHours }),
+                    ],
+                    [t('form.intra.keywords'), intra.keywords.join(', ')],
+                  ].map(([label, value]) => (
+                    <div key={label} className="flex flex-col gap-0.5">
+                      <dt className="text-muted-foreground text-small">{label}</dt>
+                      <dd className="text-body break-words">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : (
+                <p className="text-muted-foreground text-body">{t('detail.intra.missing')}</p>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {isSeries && (
           <Card>

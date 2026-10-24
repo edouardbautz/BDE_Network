@@ -1,5 +1,12 @@
 import { z } from 'zod';
 import type { EventStatus } from '@/generated/prisma/client';
+import {
+  parseIntra,
+  type IntraErrorCode,
+  type IntraField,
+  type IntraFields,
+  type RawIntra,
+} from './intra';
 import type { RepeatRule } from './repeat';
 import {
   parseRepeatInput,
@@ -28,16 +35,17 @@ export type EventFormField =
   | 'startsAt'
   | 'endsAt'
   | RepeatField
+  | IntraField
   | 'status';
 
 /** Keys of `events.form.errors.*` in the message catalogs. */
 export type EventFormErrorCode =
-  'required' | 'tooLong' | 'invalid' | 'endBeforeStart' | RepeatErrorCode;
+  'required' | 'tooLong' | 'invalid' | 'endBeforeStart' | IntraErrorCode | RepeatErrorCode;
 
 export type EventFormErrors = Partial<Record<EventFormField, EventFormErrorCode>>;
 
 /** Raw values as submitted by the form (all strings, wall-clock dates). */
-export interface RawEventInput extends RawRepeat {
+export interface RawEventInput extends RawRepeat, RawIntra {
   title: string;
   description: string;
   location: string;
@@ -62,6 +70,8 @@ export interface EventData {
   recurrenceUntil: Date | null;
   schoolYear: string;
   assigneeLogins: string[];
+  /** What the intra's form asks for; null when the platform does not publish on the intra (nothing was asked). */
+  intra: IntraFields | null;
 }
 
 export type ParsedEventInput =
@@ -109,7 +119,7 @@ function fieldSchema(categoryKeys: readonly string[]) {
  */
 export function parseEventInput(
   raw: RawEventInput,
-  options: { timeZone: string; categoryKeys: readonly string[] },
+  options: { timeZone: string; categoryKeys: readonly string[]; intra?: boolean },
 ): ParsedEventInput {
   const errors: EventFormErrors = {};
 
@@ -129,6 +139,10 @@ export function parseEventInput(
   if (startsAt && endsAt && endsAt.getTime() <= startsAt.getTime()) {
     errors.endsAt = 'endBeforeStart';
   }
+
+  // The intra's fields are required, all of them, once the platform publishes on the intra.
+  const parsedIntra = options.intra ? parseIntra(raw) : null;
+  if (parsedIntra && !parsedIntra.ok) Object.assign(errors, parsedIntra.errors);
 
   const parsedRepeat = parseRepeatInput(raw, startLocal);
   if (!parsedRepeat.ok) Object.assign(errors, parsedRepeat.errors);
@@ -156,12 +170,14 @@ export function parseEventInput(
       recurrenceUntil: plan.recurrenceUntil,
       schoolYear: schoolYearOf(plan.startsAt, options.timeZone),
       assigneeLogins: [...new Set(raw.assigneeLogins.map((login) => login.trim()).filter(Boolean))],
+      intra: parsedIntra?.ok ? parsedIntra.data : null,
     },
   };
 }
 
-/** The columns of the Event row for validated input (assignees live in their own table). */
-export function toEventRow(data: EventData): Omit<EventData, 'assigneeLogins'> {
+/** The columns of the Event row for validated input (assignees live in their own table, the intra fields in their own
+ * columns: see `intraColumns`). */
+export function toEventRow(data: EventData): Omit<EventData, 'assigneeLogins' | 'intra'> {
   return {
     title: data.title,
     description: data.description,

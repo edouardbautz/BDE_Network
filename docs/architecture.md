@@ -94,7 +94,7 @@ src/
   lib/
     auth/                  NextAuth config + 42 OAuth provider
     notifications/         NotificationAdapter + email/discord/slack adapters, the templates of what a BDE changes (`templates/`)
-    events/                events module domain: time, repeat rules (`repeat*.ts`, see "Repeat rules"), recurrence, series (dates of their own), series-operations
+    events/                events module domain: time, the intra's fields (`intra.ts`), repeat rules (`repeat*.ts`, see "Repeat rules"), recurrence, series (dates of their own), series-operations
                            (cutting a series), ics, access, review (the rules of the proposal circuit), queries, actions
                            helpers, notifications, reminders, scheduler (see "Events module")
     permissions/           registry (the list of permissions) + resolution and `can()`
@@ -104,6 +104,7 @@ src/
     roles/view.ts          what pages need to show the right choices (actor from a session, role facts) — display only
     branding/              the uploaded logo: what is accepted (image.ts), where it lives (storage.ts)
     public-address.ts      the platform's public address, in one place (see "The public address")
+    markdown.ts            the Markdown of a description (see "Markdown for a description")
     audit-log.ts, account-label.ts, health.ts, prisma.ts, color.ts (the accent), utils.ts (`cn`)
   types/next-auth.d.ts     Session/User/JWT module augmentation
   test/                    session fixtures, in-memory roles database, migration tests
@@ -796,6 +797,32 @@ recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`)
   the server actions run it again — never trust the browser. `Event.description`/`location` stay
   nullable in Prisma on purpose: rows created before the rule must keep rendering, and are only
   blocked at their next edit through the form (status toggle / cancel-a-date don't go through it).
+- **The intra's fields** (`src/lib/events/intra.ts`, `intra-config.ts`; migration `20261024100000_event_intra_fields`; the staff publishes
+  the events on the intra 42, see the user guide). Seven columns of `Event` (`intraOrganizerLogin`, `intraAudience`, `intraMaxPeople`,
+  `intraWaitingList`, `intraKind`, `intraUnsubscribeHours`, `intraKeywords`), **all set or none** (the CHECK `Event_intra_complete`, and `Event_intra_bounds`),
+  so an event written before them has none and loses nothing. `intraKind` is a string checked against `INTRA_KINDS` in code, not an enum: a kind the intra
+  adds is a line, not a migration. The setting `events.intraPublication` (config, edited in Settings → Events, **off by default**: an update changes
+  nothing for a platform that does not turn it on) decides everything: off, the form asks for nothing, `parseEventInput` returns `intra: null`, the actions write no
+  intra column (a crafted request that sends some is ignored). On, they are all required (`parseIntra`, shared by the form and the server).
+  - **They belong to the series, not to a date**: a date has no intra field of its own. `splitSeries` gives the second row of a cut the same columns,
+    `updateFollowing` takes `change.intra` (compared with the row, written to the row that holds "this date and the following", reported as `intraChanged` and audited
+    as `changed: ['intra']`), and "only this one" leaves them alone **except that an event that has none is given what the form says** (`completeIntra`): it could
+    not be confirmed otherwise.
+  - **Nothing is confirmed without them** (`setEventStatus` is the one door of the buttons and of "To validate"; the form validates itself): the answer is the notice
+    `intraFieldsMissing`, not an error. Going back to draft, proposing and cancelling a date never ask for them.
+  - **Privacy**: `intraOrganizerLogin` can be somebody else's login than the author's, so it is classified in `qa/privacy/personal-data.test.ts`, exported
+    (`events.organizedOnIntra`), kept as plain text when the account goes (the policy says so) and listed in `LOGIN_MAY_STAY`. The QA dataset gives most events
+    the fields and leaves one in five without, derived from the identifier (never drawn from the generator, which would have moved the rest of the dataset), and the
+    invariants (`qa/invariants-intra.sql`) check the kind, the keywords and the fields of a cut series' second row.
+  - Tests: `intra.test.ts`, `input.test.ts`, `actions.test.ts` and `actions-series.test.ts` (the cut, one date, a crafted request, the guard), `event-form.test.tsx`,
+    `test/migrations/event-intra-fields.test.ts` (a real PostgreSQL: nothing lost, the two CHECKs), `qa/browsers/intra-fields.spec.ts` (three engines),
+    mutation-checked (`qa/mutations/intra-fields.json`).
+- **Markdown for a description** (`src/lib/markdown.ts` reads, `src/components/markdown.tsx` draws; the form's preview, the page of an event). **Never HTML**: the reader
+  builds a tree (`Block`, `Inline`) that a component turns into elements, so a tag a member typed is text, a picture is its description (the platform never loads an
+  address an author chose), and a link is kept only when `safeHref` says `http`, `https` or `mailto` (checked on the parsed URL, so a scheme split by a control character, or written in mixed case, fails).
+  Not a library on purpose: the preview must not be turnable against the platform and the script of the form page has a tight budget (`qa/perf/budgets.json`).
+  What is supported is written at the top of the file; the stored description is the typed text, untouched (it is copied as it is). The input is cut at 20 000 characters
+  and nesting at 4, and the hostile cases (`markdown.test.ts`, `markdown.test.tsx`) include a quadratic one.
 - **Visibility is decided in one place, date by date.** `expandEvents` (`occurrences.ts`) drops the dates that are not
   published (a draft or a proposal) unless `includeDrafts`, or unless the event is the reader's own (`ownLogin`; a series
   can be confirmed with one date back to draft, or a draft with one date confirmed alone); the queries also exclude them in
@@ -1247,7 +1274,7 @@ start from the same three things, so that what one finds the others can replay.
   written. It also holds a BDE that customised its notifications (`TEMPLATES`, `MENTIONS`: a template for all channels with a button, a channel with
   a mention and a free text, an e-mail, a Slack message, a history with a reset and a restore, written by accounts of the dataset). `npx tsx qa/cli.ts load --database <url>` writes it, `sql` prints it. Only the persona `qa-owner` is an OWNER
   (the others would be demoted at the next start, `reconcileOwnerAccounts`).
-- **The invariants** (`qa/invariants.sql`, `qa/invariants-templates.sql` for the notification templates, run only on a database that has those tables: the update suite looks at an older one after the way back, `qa/invariants.ts`): what must be true of the database after any scenario —
+- **The invariants** (`qa/invariants.sql`, `qa/invariants-templates.sql` for the notification templates and `qa/invariants-intra.sql` for the intra's fields, each run only on a database that has them: the update suite looks at an older one, before the update and after the way back, `qa/invariants.ts`): what must be true of the database after any scenario —
   one default role, a member has a role and nobody else does, a rule is a rule, a series and its end come together, the
   school year is the one of the start, a refusal is a draft with its three fields, a cut series' first row exists, every
   date a cancellation, a date of its own or a reminder refers to is a date of its series (checked with the engine), no

@@ -86,6 +86,7 @@ const extras = (patch: Partial<SettingsExtras> = {}): SettingsExtras => ({
     categories: [{ key: 'soiree', label: 'Soirée', color: '#db2777' }],
     usage: { soiree: 3 },
     reminderHour: 18,
+    intraPublication: false,
     timezone: 'Europe/Paris',
   },
   ...patch,

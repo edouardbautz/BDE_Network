@@ -3,10 +3,11 @@
 import { DEFAULT_ACCENT } from '@/config/schema';
 import { useRef, useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Undo2, X } from 'lucide-react';
+import { Plus, Send, Undo2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { NativeSelect } from '@/components/events/field-styles';
 import { Field, fieldError, useFailureText } from '@/components/setup/fields';
@@ -44,6 +45,7 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
     settings.categories.map((category, index) => ({ ...category, id: index, removed: false })),
   );
   const [hour, setHour] = useState(String(settings.reminderHour));
+  const [intra, setIntra] = useState(settings.intraPublication);
   const [failure, setFailure] = useState<ActionFailure | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [pending, start] = useTransition();
@@ -77,6 +79,7 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
       const result = await saveEvents({
         categories: active.map(({ key, label, color }) => ({ key, label, color })),
         reminderHour: Number(hour),
+        intraPublication: intra,
         reassign,
       });
       if (!result.ok) return setFailure(result);
@@ -230,6 +233,23 @@ export function EventsSection({ settings }: { settings: EventsSettingsView }) {
             ))}
           </NativeSelect>
         </Field>
+
+        <div className="bg-surface-2 flex items-start gap-3 rounded-lg p-3.5">
+          <div className="bg-accent-soft text-accent-ink flex size-9 shrink-0 items-center justify-center rounded-sm">
+            <Send className="size-4" aria-hidden="true" />
+          </div>
+          <div className="flex-1">
+            <p id="settings-events-intra-title" className="text-body-strong">
+              {t('intraTitle')}
+            </p>
+            <p className="text-muted-foreground text-body">{t('intraBody')}</p>
+          </div>
+          <Switch
+            checked={intra}
+            onCheckedChange={setIntra}
+            aria-labelledby="settings-events-intra-title"
+          />
+        </div>
 
         {failure && !failure.field && (
           <p role="alert" className="text-destructive text-body">

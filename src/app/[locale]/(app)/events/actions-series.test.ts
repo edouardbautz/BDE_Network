@@ -1024,3 +1024,163 @@ describe('the proposal circuit', () => {
     });
   });
 });
+
+describe('the intra fields', () => {
+  const INTRA = {
+    intraOrganizerLogin: 'Demo-President',
+    intraAudience: 'BOTH',
+    intraMaxPeople: '60',
+    intraWaitingList: 'yes',
+    intraKind: 'Meet/meet_up',
+    intraUnsubscribeHours: '24',
+    intraKeywords: ['bde', 'jeux'],
+  };
+  const STORED = {
+    intraOrganizerLogin: 'demo-president',
+    intraAudience: 'BOTH',
+    intraMaxPeople: 60,
+    intraWaitingList: true,
+    intraKind: 'Meet/meet_up',
+    intraUnsubscribeHours: 24,
+    intraKeywords: ['bde', 'jeux'],
+  };
+  const BLANK = {
+    intraOrganizerLogin: null,
+    intraAudience: null,
+    intraMaxPeople: null,
+    intraWaitingList: null,
+    intraKind: null,
+    intraUnsubscribeHours: null,
+    intraKeywords: [],
+  };
+
+  const platform = (intraPublication: boolean) =>
+    vi.mocked(getConfig).mockReturnValue({
+      bde: { timezone: 'Europe/Paris' },
+      modules: { enabled: ['events'] },
+      events: {
+        categories: [{ key: 'sport', label: 'Sport', color: '#16a34a' }],
+        reminderHour: 18,
+        intraPublication,
+      },
+    } as unknown as ReturnType<typeof getConfig>);
+
+  describe('on a platform that publishes on the intra', () => {
+    beforeEach(() => platform(true));
+
+    it('keeps an event that has none from being confirmed, until it is edited with them', async () => {
+      addEvent({
+        repeat: null,
+        recurrenceUntil: null,
+        status: 'DRAFT',
+        confirmationNotifiedAt: null,
+        ...BLANK,
+      });
+
+      const target = await setEventStatus('evt', 'CONFIRMED');
+      expect(target.href).toBe('/fr/events/evt?notice=intraFieldsMissing');
+      expect(db.event('evt')).toMatchObject({ status: 'DRAFT' });
+      expect(audit()).toEqual([]);
+
+      const plain = (values: Record<string, string | string[]>) =>
+        form({ repeat: 'NONE', recurrenceUntil: '', status: 'CONFIRMED', ...values });
+      expect((await updateEvent('evt', {}, plain({}))).errors).toMatchObject({
+        intraKind: 'required',
+      });
+      expect(db.event('evt')).toMatchObject({ status: 'DRAFT', intraKind: null });
+
+      await redirectOf(updateEvent('evt', {}, plain(INTRA)));
+      expect(db.event('evt')).toMatchObject({ status: 'CONFIRMED', ...STORED });
+      expect(audit().map((entry) => entry.action)).toEqual(['event.update', 'event.status_change']);
+      expect(audit()[0]).toMatchObject({ changed: ['intra'] });
+    });
+
+    it('lets an event without them go back to draft', async () => {
+      addEvent({ repeat: null, recurrenceUntil: null, confirmationNotifiedAt: null, ...BLANK });
+      const target = await setEventStatus('evt', 'DRAFT');
+      expect(target.href).not.toContain('intraFieldsMissing');
+      expect(db.event('evt')).toMatchObject({ status: 'DRAFT' });
+    });
+
+    it('saves them with the whole series and audits that they changed', async () => {
+      addEvent({ status: 'DRAFT', confirmationNotifiedAt: null, ...BLANK });
+      await redirectOf(
+        updateEvent('evt', {}, withScope(form({ ...INTRA, status: 'DRAFT' }), 'following', OCT5)),
+      );
+      expect(db.event('evt')).toMatchObject(STORED);
+      expect(audit()).toEqual([
+        expect.objectContaining({ action: 'event.update', changed: ['intra'] }),
+      ]);
+    });
+
+    it('changes nothing, and cuts nothing, when the form says what the event already has', async () => {
+      addEvent(STORED);
+      await redirectOf(
+        updateEvent('evt', {}, withScope(formAt('2026-10-19', INTRA), 'following', OCT19)),
+      );
+      expect(db.table('event')).toHaveLength(1);
+      expect(audit()).toEqual([]);
+    });
+
+    it('gives the second row of a cut series the same fields, and changes only that row from a later date', async () => {
+      addEvent(STORED);
+      await redirectOf(
+        updateEvent(
+          'evt',
+          {},
+          withScope(formAt('2026-10-19', { ...INTRA, intraMaxPeople: '80' }), 'following', OCT19),
+        ),
+      );
+      const rows = db.table('event');
+      expect(rows).toHaveLength(2);
+      const head = rows.find((row) => row.id === 'evt');
+      const tail = rows.find((row) => row.id !== 'evt');
+      expect(head).toMatchObject({ ...STORED, intraMaxPeople: 60 });
+      expect(tail).toMatchObject({ ...STORED, intraMaxPeople: 80 });
+      expect(audit()[0]).toMatchObject({ changed: ['intra'], scope: 'following' });
+    });
+
+    it('leaves the fields of a series alone when only one date is edited', async () => {
+      addEvent(STORED);
+      await redirectOf(
+        updateEvent(
+          'evt',
+          {},
+          withScope(
+            formAt('2026-10-12', { ...INTRA, intraMaxPeople: '99', title: 'Match' }),
+            'occurrence',
+            OCT12,
+          ),
+        ),
+      );
+      expect(db.event('evt')).toMatchObject(STORED);
+      expect(audit()).toEqual([expect.objectContaining({ changed: ['title'] })]);
+    });
+
+    it('gives a series that has none what the form says, even for one date (it could not be confirmed otherwise)', async () => {
+      addEvent({ status: 'DRAFT', confirmationNotifiedAt: null, ...BLANK });
+      await redirectOf(
+        updateEvent(
+          'evt',
+          {},
+          withScope(formAt('2026-10-12', { ...INTRA, status: 'DRAFT' }), 'occurrence', OCT12),
+        ),
+      );
+      expect(db.event('evt')).toMatchObject(STORED);
+      expect(audit()[0]).toMatchObject({ changed: ['intra'] });
+    });
+  });
+
+  it('asks for none, and ignores a crafted request that sends some, when the platform does not publish', async () => {
+    platform(false);
+    addEvent({ status: 'DRAFT', confirmationNotifiedAt: null, ...BLANK });
+    await redirectOf(
+      updateEvent(
+        'evt',
+        {},
+        withScope(form({ ...INTRA, title: 'Autre', status: 'DRAFT' }), 'following', OCT5),
+      ),
+    );
+    expect(db.event('evt')).toMatchObject({ title: 'Autre', ...BLANK });
+  });
+});

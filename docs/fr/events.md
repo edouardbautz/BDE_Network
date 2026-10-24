@@ -79,6 +79,33 @@ Les événements créés **avant** cette règle, avec un lieu ou une description
 sont bloqués qu'à leur **prochaine modification** dans le formulaire, qui demandera de remplir ces champs.
 Confirmer, repasser en brouillon et annuler une date restent possibles.
 
+### La description s'écrit en Markdown
+
+La description accepte le même Markdown que le formulaire de l'intra : `# titre`, `**gras**`, `*italique*`, `- liste`, `1. liste
+numérotée`, `> citation`, `[lien](https://…)` et `code`. À côté du champ (sous le champ sur téléphone, derrière l'onglet
+**Aperçu**), le formulaire dessine ce que la description donnera. Le texte est conservé **exactement comme tapé** : il se copie tel quel.
+Une balise écrite à la main, une image ou un lien qui n'est pas `http`, `https` ou `mailto` s'affiche comme du texte et ne s'exécute jamais.
+
+### Les champs de l'intra
+
+Quand la plateforme **publie les événements sur l'intra** (un propriétaire l'active dans Paramètres, section Événements, voir
+[Configuration](configuration.md#les-événements)), le formulaire a un second bloc, **Publication sur l'intra 42** : ce que le staff de l'école
+copie dans le formulaire d'événement de l'intra, sous les mêmes noms. Les sept champs sont obligatoires :
+
+- **Login de l'organisateur** : prérempli avec le login de l'auteur, modifiable.
+- **Disponible pour** : étudiants, piscineux ou les deux.
+- **Nombre maximum de personnes** et **liste d'attente** (oui ou non).
+- **Genre** : un de ceux de l'intra (Pedago/Rush, Pedago/Piscine, Pedago/Partnership, Meet/Conference, Meet/meet_up,
+  Meet/event, Association, Speed working/Hackathon, Speed working/Workshop, Speed working/Challenge, Extern).
+- **Délai avant de ne plus pouvoir se désinscrire**, en heures avant le début.
+- **Mots-clés** : au moins un, ajoutés avec Entrée ou une virgule.
+
+Ils appartiennent à **toute la série** : sur une série, ils sont enregistrés avec « celui-ci et les suivants » (modifier une seule
+date ne les touche pas). Les événements écrits **avant** ce bloc continuent de fonctionner : le formulaire demande les champs à leur
+prochaine modification, et **aucun événement n'est confirmé sans eux** : confirmer depuis la page de l'événement ou depuis « À valider » affiche
+un message qui demande de le modifier d'abord. Repasser en brouillon, proposer et annuler une date restent possibles. Les champs
+s'affichent sur la page de l'événement pour ceux qui peuvent créer des événements.
+
 L'**année scolaire** (par exemple `2025-2026`) est calculée toute seule : de septembre à août, d'après la date de
 début. Une série appartient à l'année scolaire de sa première date.
 

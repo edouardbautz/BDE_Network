@@ -151,6 +151,7 @@ const categoriesSchema = z.object({
     .array(z.object({ key: z.string().max(60).optional(), label: text, color: z.string().max(20) }))
     .max(60),
   reminderHour: z.number(),
+  intraPublication: z.boolean().optional(),
   reassign: z.record(z.string().max(60), z.string().max(60)).optional(),
 });
 

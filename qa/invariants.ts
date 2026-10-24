@@ -25,6 +25,7 @@ export interface Violation {
 // (the columns are `timestamp` without a zone, in UTC: `pg` would read them in the zone of the machine, so they are converted)
 const SQL = readFileSync(join(__dirname, 'invariants.sql'), 'utf8');
 const TEMPLATES_SQL = readFileSync(join(__dirname, 'invariants-templates.sql'), 'utf8');
+const INTRA_SQL = readFileSync(join(__dirname, 'invariants-intra.sql'), 'utf8');
 
 export async function checkInvariants(
   db: Queryable,
@@ -76,6 +77,16 @@ export async function checkInvariants(
       if (!known?.has((reference.occurrenceStart as Date).getTime())) {
         violations.push({ invariant, detail: String(reference.id) });
       }
+    }
+  }
+
+  // The intra's fields exist from the version that added them.
+  const { rows: intraColumn } = await db.query(
+    `SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'Event' AND column_name = 'intraKind'`,
+  );
+  if (intraColumn.length > 0) {
+    for (const row of (await db.query(INTRA_SQL)).rows) {
+      violations.push({ invariant: String(row.invariant), detail: String(row.detail) });
     }
   }
 

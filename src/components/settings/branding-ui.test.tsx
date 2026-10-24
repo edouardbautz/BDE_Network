@@ -132,6 +132,7 @@ describe('the events section', () => {
     ],
     usage: { soiree: 4, sport: 0 },
     reminderHour: 18,
+    intraPublication: false,
     timezone: 'Europe/Paris',
     ...patch,
   });
@@ -161,6 +162,7 @@ describe('the events section', () => {
           { key: 'sport', label: 'Sport', color: '#000000' },
         ],
         reminderHour: 9,
+        intraPublication: false,
         reassign: {},
       }),
     );
@@ -214,6 +216,7 @@ describe('the events section', () => {
       expect(mocks.saveEvents).toHaveBeenCalledWith({
         categories: [{ key: 'soiree', label: 'Soirée', color: '#db2777' }],
         reminderHour: 18,
+        intraPublication: false,
         reassign: {},
       }),
     );

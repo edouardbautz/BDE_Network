@@ -5,6 +5,8 @@ import { EventForm } from '@/components/events/event-form';
 import { redirect } from '@/i18n/navigation';
 import { getEventsAccess } from '@/lib/events/access';
 import { getCategories } from '@/lib/events/categories';
+import { rawIntraOf } from '@/lib/events/intra';
+import { intraPublicationEnabled } from '@/lib/events/intra-config';
 import { formatLongDate } from '@/lib/events/format';
 import { getVisibleEvent, listAssignableMembers } from '@/lib/events/queries';
 import { canEditEvent, draftVisibility, reviewActorOf, statusChoices } from '@/lib/events/review';
@@ -106,7 +108,9 @@ export default async function EditEventPage({
           ),
           status: date.status,
           assigneeLogins: date.assignees.map((assignee) => assignee.login),
+          ...rawIntraOf(event, access.session.user.login),
         }}
+        intra={intraPublicationEnabled()}
         categories={[
           ...categories.map(({ key, label }) => ({ key, label })),
           ...(knownCategory ? [] : [{ key: date.categoryKey, label: date.categoryKey }]),

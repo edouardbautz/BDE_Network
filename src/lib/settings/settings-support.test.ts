@@ -119,6 +119,7 @@ describe('settingsExtras: what only the settings page shows', () => {
         categories: [{ key: 'soiree', label: 'Soirée', color: '#db2777' }],
         usage: { soiree: 7 },
         reminderHour: 18,
+        intraPublication: false,
         timezone: 'Europe/Paris',
       },
     });

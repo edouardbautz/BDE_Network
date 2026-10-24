@@ -5,6 +5,8 @@ import { EventForm } from '@/components/events/event-form';
 import { redirect } from '@/i18n/navigation';
 import { getEventsAccess } from '@/lib/events/access';
 import { getCategories } from '@/lib/events/categories';
+import { rawIntraOf } from '@/lib/events/intra';
+import { intraPublicationEnabled } from '@/lib/events/intra-config';
 import { listAssignableMembers } from '@/lib/events/queries';
 import { NO_REPEAT } from '@/lib/events/repeat-input';
 import { reviewActorOf, statusChoices } from '@/lib/events/review';
@@ -58,7 +60,9 @@ export default async function NewEventPage({
           ...NO_REPEAT,
           status,
           assigneeLogins: [],
+          ...rawIntraOf(null, access.session.user.login),
         }}
+        intra={intraPublicationEnabled()}
         statusChoices={choices}
         categories={categories.map(({ key, label }) => ({ key, label }))}
         members={await listAssignableMembers()}

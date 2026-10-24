@@ -329,7 +329,7 @@
     },
     "retention": {
       "title": "Durée de conservation",
-      "description": "Vos données sont conservées tant que vous êtes membre du BDE. Lorsqu'un administrateur vous retire du bureau, votre compte est supprimé ; certains enregistrements historiques (comme le journal d'audit) conservent votre login en texte, sans lien vers un compte, à des fins de traçabilité. Les événements que vous avez créés ou dont vous étiez en charge conservent votre login en texte (le module Événements, s'il est activé). Il en va de même pour les modèles de notification que vous avez modifiés (leurs versions successives) et les personnes que vous avez ajoutées à la liste des mentions."
+      "description": "Vos données sont conservées tant que vous êtes membre du BDE. Lorsqu'un administrateur vous retire du bureau, votre compte est supprimé ; certains enregistrements historiques (comme le journal d'audit) conservent votre login en texte, sans lien vers un compte, à des fins de traçabilité. Les événements que vous avez créés, dont vous étiez en charge ou dont vous êtes l'organisateur sur l'intra conservent votre login en texte (le module Événements, s'il est activé). Il en va de même pour les modèles de notification que vous avez modifiés (leurs versions successives) et les personnes que vous avez ajoutées à la liste des mentions."
     },
     "rights": {
       "title": "Vos droits",
@@ -537,6 +537,11 @@
           "commentHint": "Obligatoire. Dites ce qu'il faut changer : l'auteur le lit sur l'événement, et le reçoit en notification si elle est activée.",
           "confirm": "Refuser la proposition"
         }
+      },
+      "intra": {
+        "title": "Intra 42",
+        "hours": "{count, plural, =0 {Jusqu'au début} one {# heure avant le début} other {# heures avant le début}}",
+        "missing": "Les champs de l'intra ne sont pas renseignés. Modifiez l'événement pour les compléter : il ne peut pas être confirmé sans eux."
       }
     },
     "form": {
@@ -569,7 +574,9 @@
         "intervalInvalid": "L'intervalle doit être un nombre entier de 1 à 99.",
         "weekdaysRequired": "Choisissez au moins un jour de la semaine.",
         "countInvalid": "Indiquez un nombre d'occurrences entre 1 et 400.",
-        "monthlyUnavailable": "Ce choix n'existe pas pour cette date."
+        "monthlyUnavailable": "Ce choix n'existe pas pour cette date.",
+        "tooMany": "Il y a trop de mots-clés (20 au maximum).",
+        "tooBig": "Cette valeur est trop grande."
       },
       "formErrors": {
         "invalidAssignee": "Un des membres en charge n'existe pas ou n'est pas encore validé.",
@@ -577,7 +584,40 @@
       },
       "requiredLegend": "* Champ obligatoire",
       "optional": "facultatif",
-      "statusHelpProposer": "Un brouillon n'est visible que de vous et des validateurs. Une proposition est envoyée aux validateurs, qui la publient ou la refusent avec un commentaire."
+      "statusHelpProposer": "Un brouillon n'est visible que de vous et des validateurs. Une proposition est envoyée aux validateurs, qui la publient ou la refusent avec un commentaire.",
+      "markdown": {
+        "write": "Écrire",
+        "preview": "Aperçu",
+        "empty": "L'aperçu s'affichera ici.",
+        "help": "Le Markdown est accepté, comme sur le formulaire de l'intra : # titre, **gras**, *italique*, - liste, [lien](https://…). Le texte brut est conservé pour la copie.",
+        "mode": "Écrire ou prévisualiser"
+      },
+      "intra": {
+        "title": "Publication sur l'intra 42",
+        "description": "Le staff de l'école copie ces champs dans le formulaire de l'intra : ils s'appellent comme sur l'intra.",
+        "legacy": "Cet événement date d'avant la publication sur l'intra. Renseignez ces champs pour pouvoir le confirmer : le staff les copiera sur l'intra.",
+        "seriesHint": "Ces champs valent pour toute la série : ils sont enregistrés avec « celui-ci et les suivants ».",
+        "organizer": "Login de l'organisateur",
+        "organizerHelp": "Prérempli avec le login de l'auteur, modifiable.",
+        "audience": "Disponible pour",
+        "audiences": {
+          "STUDENTS": "Étudiants",
+          "PISCINERS": "Piscineux",
+          "BOTH": "Les deux"
+        },
+        "maxPeople": "Nombre maximum de personnes",
+        "waitingList": "Liste d'attente",
+        "yes": "Oui",
+        "no": "Non",
+        "kind": "Genre",
+        "kindPlaceholder": "Choisir un genre",
+        "unsubscribe": "Délai avant de ne plus pouvoir se désinscrire (heures)",
+        "unsubscribeHelp": "Nombre d'heures avant le début, après lesquelles on ne peut plus se désinscrire.",
+        "keywords": "Mots-clés",
+        "keywordsPlaceholder": "Ajouter un mot-clé",
+        "keywordsHelp": "Entrée ou virgule pour ajouter ; {max} au plus.",
+        "keywordRemove": "Retirer le mot-clé {word}"
+      }
     },
     "dashboard": {
       "title": "Prochains événements",
@@ -625,7 +665,8 @@
       "eventGone": "Cet événement n'existe plus : il a sans doute été supprimé par quelqu'un d'autre.",
       "occurrenceGone": "Cette date n'existe plus : la série a été modifiée entre-temps. Voici l'état à jour.",
       "seriesBusy": "Quelqu'un d'autre modifiait cette série au même moment : rien n'a été changé. Voici l'état à jour, vous pouvez recommencer.",
-      "alreadyReviewed": "Quelqu'un d'autre a déjà répondu à cette proposition. Voici son état actuel."
+      "alreadyReviewed": "Quelqu'un d'autre a déjà répondu à cette proposition. Voici son état actuel.",
+      "intraFieldsMissing": "Cet événement ne peut pas être confirmé : il lui manque les champs de l'intra. Modifiez-le pour les renseigner, puis confirmez-le."
     },
     "scope": {
       "occurrence": "Seulement celui-ci",
@@ -1215,6 +1256,8 @@
       "moveTo": "{count, plural, one {Son événement passera} other {Ses # événements passeront}} dans la catégorie :",
       "reminderLabel": "Heure du rappel",
       "reminderHelp": "Le rappel part la veille de chaque événement, à cette heure (fuseau {timezone}).",
+      "intraTitle": "Publier les événements sur l'intra 42",
+      "intraBody": "Le staff de l'école publie les événements du BDE sur l'intra : chaque événement demande alors les champs du formulaire de l'intra, et aucun ne peut être confirmé sans eux. Désactivé, rien ne change.",
       "removeTitle": "{count, plural, one {Retirer cette catégorie ?} other {Retirer ces # catégories ?}}",
       "removeBodyMoved": "{count, plural, one {L'événement concerné sera déplacé} other {Les # événements concernés seront déplacés}} tout de suite vers la catégorie choisie. Le retrait ne peut pas être annulé.",
       "removeBodyUnused": "{count, plural, one {Aucun événement n'utilise cette catégorie.} other {Aucun événement n'utilise ces catégories.}} Le retrait ne peut pas être annulé.",
