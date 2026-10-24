@@ -351,6 +351,28 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
       `${noCustomise.status} ${noCustomise.location ?? ''}`,
     );
 
+    // Publishing on the intra came with this update and is off until an owner turns it on: the table of the requests is there and empty,
+    // no event has the fields of the intra (the form asks for them only once it is on), nobody gave a Discord or Slack id, and its pages do
+    // not exist, even for the owner.
+    const intra = await stack.database((db) =>
+      db.query(
+        `SELECT (SELECT count(*) FROM "IntraRequest")::int AS requests, (SELECT count(*) FROM "Event" WHERE "intraOrganizerLogin" IS NOT NULL OR "intraKind" IS NOT NULL)::int AS events, (SELECT count(*) FROM "User" WHERE "discordUserId" IS NOT NULL OR "slackUserId" IS NOT NULL)::int AS ids`,
+      ),
+    );
+    check(
+      'the publication on the intra came with this update and changes nothing: no request, no event with its fields, nobody gave an id',
+      Number(intra.rows[0]?.requests) === 0 &&
+        Number(intra.rows[0]?.events) === 0 &&
+        Number(intra.rows[0]?.ids) === 0,
+      JSON.stringify(intra.rows[0]),
+    );
+    const intraList = await page(stack, '/en/events/intra', OLD.owner);
+    check(
+      'the pages of the intra do not exist until an owner turns the publication on',
+      isNotFound(intraList.body) || intraList.status === 404,
+      `${intraList.status} ${intraList.location ?? ''}`,
+    );
+
     const owner = await page(stack, '/en/settings', OLD.owner);
     check(
       'the settings were copied into the database, and the owner reads them',

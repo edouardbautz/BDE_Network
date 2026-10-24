@@ -29,6 +29,8 @@ const REFUSALS = [
   /Invalid Server Actions request/,
   /^⨯ TypeError: Invalid URL$/,
   /^⨯ Error: Forbidden$/,
+  // what an action of the intra says to a request no page would send (a link, a version, a reason, a page to come back to)
+  /^⨯ Error: Invalid (address|version|event|comment|target)$/,
   /^⨯ Error: Dev impersonation is disabled$/,
   /Body exceeded \d+mb limit/,
 ];

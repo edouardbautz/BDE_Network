@@ -131,7 +131,7 @@ export function unescaped(body: string, payloads: readonly string[]): string[] {
   return payloads.filter((payload) => /<[a-z/?]/i.test(payload) && body.includes(payload));
 }
 
-const verdict = (
+export const verdict = (
   report: Report,
   name: string,
   response: Response2,
