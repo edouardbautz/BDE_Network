@@ -28,7 +28,12 @@ test.describe('what a page asks of the platform', () => {
     as,
   }) => {
     const page = await as('member', { viewport: { width: 1280, height: 900 } });
-    const prefetches = await prefetchesOf(page, '/en/events?view=calendar&month=2026-10');
+    // The day is named: without it the calendar selects today when the month is the current one, and the day panel links to the events of
+    // today (each prefetched), so the count moved with the date the suite ran on (16 on a day with four events, against a limit of 15).
+    const prefetches = await prefetchesOf(
+      page,
+      '/en/events?view=calendar&month=2026-10&day=2026-10-01',
+    );
     // The links of the menu, and the other view: a handful. Not the page of each of the hundred events of the month.
     expect(prefetches.length, prefetches.join('\n')).toBeLessThanOrEqual(15);
   });
