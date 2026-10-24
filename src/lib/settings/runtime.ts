@@ -27,6 +27,8 @@ export const SETTING_KEYS = [
   'SMTP_FROM',
   'DISCORD_WEBHOOK_URL',
   'SLACK_WEBHOOK_URL',
+  'DISCORD_STAFF_WEBHOOK_URL',
+  'SLACK_STAFF_WEBHOOK_URL',
 ] as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[number];
@@ -37,6 +39,8 @@ export const SECRET_SETTING_KEYS = [
   'SMTP_PASSWORD',
   'DISCORD_WEBHOOK_URL',
   'SLACK_WEBHOOK_URL',
+  'DISCORD_STAFF_WEBHOOK_URL',
+  'SLACK_STAFF_WEBHOOK_URL',
 ] as const satisfies readonly SettingKey[];
 
 export type SettingValues = Partial<Record<SettingKey, string>>;

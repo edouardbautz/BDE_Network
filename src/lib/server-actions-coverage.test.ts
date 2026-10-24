@@ -25,11 +25,16 @@ const EXEMPT: Record<string, string> = {
     'a section of the settings page that answers like saveIdentity (same `answer()`), which is played',
   'settings.skipFortyTwoVerification': 'a variant of settings.verifyFortyTwo, same `answer()`',
   'settings.loadCampuses': 'reads only: nothing on the page changes',
+  'settings.saveStaffChannel':
+    'a section of the settings page that answers like saveIdentity (same `answer()`)',
+  'settings.testStaffChannel': 'sends a test message: nothing on the page changes',
   'settings.saveCampuses':
     'a section of the settings page that answers like saveIdentity (same `answer()`)',
   'settings.saveNotifications':
     'a section of the settings page that answers like saveIdentity (same `answer()`)',
   'settings.testNotification': 'sends a test message: nothing on the page changes',
+  'profile.saveMentionIds':
+    'a form that keeps its own state (useActionState) and says "saved" itself: the page shows nothing else of what it writes',
   'notifications.acknowledgeRevision':
     'loads the page again like resetTemplate (same `reload()`); the notice it clears only exists once the platform improves a message, and none has yet',
   'notifications.previewTemplate': 'reads only: draws the notification, writes nothing',

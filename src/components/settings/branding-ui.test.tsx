@@ -133,6 +133,7 @@ describe('the events section', () => {
     usage: { soiree: 4, sport: 0 },
     reminderHour: 18,
     intraPublication: false,
+    staffChannel: { hasDiscordWebhook: false, hasSlackWebhook: false },
     timezone: 'Europe/Paris',
     ...patch,
   });

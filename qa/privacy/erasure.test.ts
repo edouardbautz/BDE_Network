@@ -90,13 +90,17 @@ describe.skipIf(!ADMIN_URL)('what is left of a person once their account is remo
     const who = await person('qa-validator');
     expect(who, 'the validator of the dataset').toBeDefined();
     await database.client.query(
-      `UPDATE "User" SET "photoUrl" = 'https://cdn.example/qa-validator.jpg', "calendarToken" = $2 WHERE "id" = $1`,
+      `UPDATE "User" SET "photoUrl" = 'https://cdn.example/qa-validator.jpg', "calendarToken" = $2,
+         "discordUserId" = '348291047563210241', "slackUserId" = 'U04ABCD1234' WHERE "id" = $1`,
       [who.id, 'Q'.repeat(43)],
     );
     const before = await person('qa-validator');
 
     // The sanity of the test: before the removal, each of those values IS somewhere (or the scan proves nothing).
+    // (the ids of Discord and Slack that the person gave to be mentioned are theirs and nobody else's: gone with the account)
     for (const value of [
+      '348291047563210241',
+      'U04ABCD1234',
       before.email,
       before.fullName,
       before.photoUrl!,
@@ -151,6 +155,8 @@ describe.skipIf(!ADMIN_URL)('what is left of a person once their account is remo
       ['the full name', before.fullName],
       ['the picture', before.photoUrl!],
       ['the personal calendar link', before.calendarToken!],
+      ['the Discord id', '348291047563210241'],
+      ['the Slack id', 'U04ABCD1234'],
     ] as const) {
       expect(await whereIs(value), what).toEqual([]);
     }

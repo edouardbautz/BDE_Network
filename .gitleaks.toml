@@ -16,3 +16,11 @@ paths = ['''.*\.test\.tsx?$''']
 [[allowlists]]
 description = "The self-test of the gitleaks configuration"
 paths = ['''qa-rules/gitleaks-selftest\.sh''']
+
+# The tests and the quality suites need a Discord user id of the right shape (17 to 20 digits) to check that it is read, stored and
+# erased. An id is public by design (it is what a mention of an account is made of), the rule takes it for a client id because the
+# word Discord is next to it, and this one is the fake the tests share: only this value, only for that rule.
+[[allowlists]]
+description = "The fake Discord user id of the tests"
+targetRules = ["discord-client-id"]
+regexes = ['''348291047563210241''']

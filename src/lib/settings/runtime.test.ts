@@ -67,8 +67,10 @@ describe('runtime settings', () => {
 
   it('knows which settings are secrets, and only those', () => {
     expect([...SECRET_SETTING_KEYS].sort()).toEqual([
+      'DISCORD_STAFF_WEBHOOK_URL',
       'DISCORD_WEBHOOK_URL',
       'FORTYTWO_CLIENT_SECRET',
+      'SLACK_STAFF_WEBHOOK_URL',
       'SLACK_WEBHOOK_URL',
       'SMTP_PASSWORD',
     ]);

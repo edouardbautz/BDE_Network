@@ -351,7 +351,7 @@
     },
     "notifications": {
       "title": "Emails and notifications",
-      "description": "Your email address is also used to write to you: if your club has turned on email, you may receive one when your access is approved, when an event is confirmed, or the day before an event you are in charge of. Owners and the members who can approve access receive new requests. Messages may also be posted in the club's Discord or Slack channel: they mention the name and login of the people concerned (new request, member approved or removed)."
+      "description": "Your email address is also used to write to you: if your club has turned on email, you may receive one when your access is approved, when an event is confirmed, or the day before an event you are in charge of. Owners and the members who can approve access receive new requests. Messages may also be posted in the club's Discord or Slack channel: they mention the name and login of the people concerned (new request, member approved or removed). When the platform publishes events on the intra, you can also enter your Discord and/or Slack id in your profile (optional): it is only used to mention you in the messages for the staff, nobody else sees it, it is deleted with your account and you can erase it at any time."
     },
     "calendar": {
       "title": "Personal calendar link",
@@ -780,6 +780,18 @@
         "title": "Generate a new link?"
       },
       "privacy": "This link is personal: anyone who has it can read the events you are allowed to see. Do not share it. It stops working if you leave the BDE."
+    },
+    "mentions": {
+      "title": "Be mentioned in the messages",
+      "description": "Optional. Only used to mention you (notify you) when the platform writes on Discord or Slack about publishing events on the intra. Nobody else sees it.",
+      "discord": "Discord id",
+      "discordHelp": "Your numeric id, not your nickname: in Discord, turn on developer mode (Settings, Advanced), then right-click your name, \"Copy user ID\".",
+      "slack": "Slack id",
+      "slackHelp": "In Slack: your profile, ⋮ menu, \"Copy member ID\" (it starts with U or W). Leave empty to save nothing.",
+      "invalid": "That is not a valid id: paste the numeric id (Discord) or the member ID (Slack), not a name.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved."
     }
   },
   "permissions": {
@@ -822,6 +834,18 @@
         "validate": {
           "label": "Validate events",
           "description": "Approve or refuse proposals, create, edit, confirm and delete any event, and see drafts."
+        },
+        "intra_publish": {
+          "label": "Publish on the intra",
+          "description": "See the publication requests, copy their fields into the intra and answer (published or refused). Gives neither the calendar, nor the members, nor the settings. Needs the publication on the intra to be turned on (Settings, Events)."
+        },
+        "intra_view": {
+          "label": "Follow the publications on the intra",
+          "description": "See where the publication of each event on the intra stands (waiting, published, refused), without being able to answer."
+        },
+        "intra_request": {
+          "label": "Ask for a publication on the intra",
+          "description": "Send a refused request again, or send one for an event that is already confirmed. Validating events already allows it."
         }
       }
     },
@@ -1269,6 +1293,20 @@
       "description": "Owners can be told on the dashboard and on this page when a new version of the platform is published.",
       "checkTitle": "Tell me about new versions",
       "checkBody": "The platform asks GitHub for the latest published version, at most every few hours and only when an owner opens the dashboard or this page. The request carries nothing about your BDE or its members. Turned off, the platform asks nobody."
+    },
+    "staffChannel": {
+      "title": "Staff room (optional)",
+      "description": "The school's staff is not necessarily on the BDE's Discord or Slack. A room of its own, with its own webhook, receives the messages about publishing events on the intra. Without a webhook, those messages go to the BDE's room (with the mentions).",
+      "discord": "Staff Discord webhook address",
+      "slack": "Staff Slack webhook address",
+      "savedHint": "An address is saved. Leave empty to keep it, or paste another to replace it.",
+      "emptyHint": "No address: the messages will go to the BDE's room.",
+      "willRemove": "The address will be removed when you save.",
+      "savedPlaceholder": "Saved address (not shown)",
+      "test": "Send a test message ({channel})",
+      "testSent": "Test message sent.",
+      "remove": "Remove {channel}",
+      "keep": "Keep {channel}"
     }
   },
   "updates": {

@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { CopyField } from '@/components/events/copy-field';
+import { ProfileMentionIds } from '@/components/profile/mention-ids';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +9,9 @@ import { accountLabel } from '@/lib/account-label';
 import { requireApprovedSession } from '@/lib/auth/require-session';
 import { isEventsModuleEnabled } from '@/lib/events/access';
 import { ensureCalendarToken } from '@/lib/events/export';
+import { intraPublicationEnabled } from '@/lib/events/intra-config';
 import { getOrigin } from '@/lib/events/origin';
+import { prisma } from '@/lib/prisma';
 import { regenerateMyCalendarToken } from './actions';
 import { PageHeader } from '@/components/layout/page-header';
 import { pageTitle } from '@/lib/page-title';
@@ -29,6 +32,15 @@ export default async function ProfilePage() {
   const feedUrl = showCalendar
     ? `${await getOrigin()}/api/calendar/${await ensureCalendarToken(user.id)}.ics`
     : null;
+
+  // How the platform mentions this person in what it posts for the school's staff: only asked while the platform publishes on the intra.
+  const mentionIds =
+    showCalendar && intraPublicationEnabled()
+      ? await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { discordUserId: true, slackUserId: true },
+        })
+      : null;
 
   return (
     <>
@@ -54,6 +66,21 @@ export default async function ProfilePage() {
             </Badge>
           </CardHeader>
         </Card>
+
+        {mentionIds && (
+          <Card className="max-w-3xl">
+            <CardHeader>
+              <CardTitle>{t('mentions.title')}</CardTitle>
+              <CardDescription>{t('mentions.description')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ProfileMentionIds
+                discordUserId={mentionIds.discordUserId ?? ''}
+                slackUserId={mentionIds.slackUserId ?? ''}
+              />
+            </CardContent>
+          </Card>
+        )}
 
         {feedUrl && (
           <Card className="max-w-3xl">

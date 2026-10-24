@@ -52,6 +52,9 @@ describe('describePermission', () => {
       'events.propose',
       'events.validate',
       'events.shared_calendar',
+      'events.intra_publish',
+      'events.intra_view',
+      'events.intra_request',
     ]);
     for (const definition of events) {
       const { label, description } = describePermission(t, definition);
@@ -99,6 +102,9 @@ describe('buildPermissionGroups', () => {
       'events.propose',
       'events.validate',
       'events.shared_calendar',
+      'events.intra_publish',
+      'events.intra_view',
+      'events.intra_request',
     ]);
 
     const nothing = buildPermissionGroups(t, definitions, NO_PERMISSIONS);

@@ -99,6 +99,11 @@ Une personne retirée de la liste devient un membre avec le **rôle par défaut*
 - **Publier les événements sur l'intra 42** : activé, chaque événement demande les champs du formulaire de l'intra (voir [les champs de
   l'intra](events.md#les-champs-de-lintra)) et aucun ne peut être confirmé sans eux. **Désactivé par défaut** : rien ne change pour une
   plateforme tant qu'un propriétaire ne l'active pas.
+- **Salon du staff** (affiché quand la publication sur l'intra est activée) : le staff de l'école n'est pas forcément sur le Discord ou le
+  Slack du BDE, alors les messages sur la publication des événements peuvent aller dans un salon à lui, avec son propre webhook (Discord
+  et/ou Slack, chacun avec un message de test). Laissé vide, ils vont dans le salon du BDE, avec les mentions. Les adresses sont des
+  secrets, comme celles du BDE : elles ne sont jamais réaffichées, un champ vide garde l'adresse enregistrée, et elles sont conservées
+  chiffrées dans les réglages.
 
 ### Les notifications
 

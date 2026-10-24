@@ -33,7 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [events-enabled, events-disabled]
+        variant: [events-enabled, events-disabled, events-intra]
 
     steps:
       - uses: actions/checkout@v4

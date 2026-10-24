@@ -96,6 +96,10 @@ A person removed from the list becomes a member with the **default role**.
 - **Publish events on the 42 intra**: when on, every event asks for the fields of the intra's form (see [the fields of the
   intra](events.md#the-fields-of-the-intra)) and none can be confirmed without them. **Off by default**: nothing changes for a
   platform until an owner turns it on.
+- **Staff room** (shown when the publication on the intra is on): the school's staff is not necessarily on the BDE's Discord or
+  Slack, so the messages about publishing events can go to a room of their own, with its own webhook (Discord and/or Slack, each with
+  a test message). Left empty, they go to the BDE's room, with the mentions. The addresses are secrets, like the BDE's: they are
+  never shown again, a blank field keeps the saved one, and they are kept in the `secrets` volume's sealed settings.
 
 ### Notifications
 

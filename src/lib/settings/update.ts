@@ -20,6 +20,7 @@ import {
 import * as validate from '@/lib/setup/validate';
 import { seal, settingsKey, SettingsDecryptError, unseal } from './crypto';
 import { syncOwnerAccounts } from './owners';
+import { applyStaffChannel, type StaffChannelInput } from './staff-channel';
 import { SETTING_KEYS, setRuntimeSettings, type SettingKey, type SettingValues } from './runtime';
 import { PLATFORM_ID, splitSettings } from './store';
 
@@ -74,7 +75,9 @@ export type SettingsChange =
   | { section: 'modules'; events: boolean }
   /** Whether the owners are told about a newer version (`updates.check`). */
   | { section: 'updates'; check: boolean }
-  | { section: 'notifications'; notifications: unknown };
+  | { section: 'notifications'; notifications: unknown }
+  /** The room of the school's staff (see `staff-channel.ts`): a blank address keeps the saved one. Needs the events module. */
+  | ({ section: 'staff-channel' } & StaffChannelInput);
 
 export interface SettingsActor {
   login: string;
@@ -455,6 +458,26 @@ function apply(change: SettingsChange, state: State, actor: SettingsActor): Appl
               to: change.events,
             },
           },
+        },
+      };
+    }
+
+    case 'staff-channel': {
+      if (!config.events || !config.modules.enabled.includes(EVENTS_MODULE_KEY)) {
+        return fail('invalid');
+      }
+      if (typeof change.discordWebhook !== 'string' || typeof change.slackWebhook !== 'string') {
+        return fail('invalid');
+      }
+      const applied = applyStaffChannel(values, change);
+      if (!applied.ok) return fail(applied.code, { field: applied.field });
+      return {
+        config,
+        values: applied.values,
+        audit: {
+          action: 'settings.staff-channel.update',
+          // which secret changed, never what it is
+          metadata: { changedSecrets: applied.changedSecrets },
         },
       };
     }

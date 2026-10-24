@@ -74,6 +74,8 @@ const isOwnByProposer = (kind: Kind) =>
 
 /** Whether this persona sees the event at all (a draft or a proposal is for those who validate, and for its own author). */
 function seesEvent(who: PersonaKey, kind: Kind): boolean {
+  // The calendar is for those who hold "view": the school's staff holds the right to publish on the intra and nothing else.
+  if (!can(who, 'events.view')) return false;
   if (isPublished(kind)) return true;
   if (can(who, 'events.validate')) return true;
   return who === 'proposer' && isOwnByProposer(kind);
@@ -187,12 +189,14 @@ export const PAGES: readonly RouteSpec[] = [
       {
         label: 'the calendar',
         path: at('/events'),
-        expect: (who, variant) => inApp(who, () => (eventsOff(variant) ? notFound : ok)),
+        expect: (who, variant) =>
+          inApp(who, () => (eventsOff(variant) || !can(who, 'events.view') ? notFound : ok)),
       },
       {
         label: 'the list',
         path: at('/events?view=list'),
-        expect: (who, variant) => inApp(who, () => (eventsOff(variant) ? notFound : ok)),
+        expect: (who, variant) =>
+          inApp(who, () => (eventsOff(variant) || !can(who, 'events.view') ? notFound : ok)),
       },
     ],
   },
@@ -204,7 +208,7 @@ export const PAGES: readonly RouteSpec[] = [
         path: at('/events/new'),
         expect: (who, variant) =>
           inApp(who, () =>
-            eventsOff(variant)
+            eventsOff(variant) || !can(who, 'events.view')
               ? notFound
               : can(who, 'events.propose') || can(who, 'events.validate')
                 ? ok
@@ -247,7 +251,7 @@ export const PAGES: readonly RouteSpec[] = [
     route: '/events/[id]/edit',
     probes: eventProbes('/edit', (who, kind, variant) =>
       inApp(who, () => {
-        if (eventsOff(variant)) return notFound;
+        if (eventsOff(variant) || !can(who, 'events.view')) return notFound;
         // Somebody who cannot write events is sent back to the event, whatever it is (before anything is looked up).
         if (!can(who, 'events.propose') && !can(who, 'events.validate'))
           return redirect(
