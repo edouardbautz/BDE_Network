@@ -67,6 +67,12 @@ All notable changes to this project are written here, in English. Format based o
 - A new migration adds the tables of the templates, the versions and the mentions; a copy of the database is therefore made before the update,
   from every version, as for any migration.
 
+### Fixed
+
+- **The resilience check of the webhook no longer depends on the time of day.** Run after the reminder hour, the platform found the reminders of the next day due and sent
+  them one after the other to the webhook that never answers, so a connection was always open and "gives up within a minute" failed. The platform of that job is made at the
+  clock of the dataset, like the visual references.
+
 ## [1.5.0] - 2026-10-23
 
 ### Added
