@@ -56,6 +56,36 @@ n'enregistrez pas depuis Paramètres (voir [Configuration](configuration.md#noti
 
 Les textes sont écrits dans la langue des messages choisie dans **Paramètres**, section Votre BDE.
 
+## Messages sur la publication sur l'intra
+
+Quand la plateforme **publie les événements sur l'intra** (un propriétaire l'active dans Paramètres, Événements ; voir
+[Événements](events.md#publier-sur-lintra)), cinq notifications de plus apparaissent, dans le tableau des Paramètres et
+dans la page de personnalisation, sous **Publication sur l'intra**. Elles sont éteintes tant que vous ne les cochez pas.
+
+| Notification                                       | Quand                                                                                     | Qui est prévenu                                                                              |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **Publication demandée** (`intraRequested`)        | un événement est confirmé (ou quelqu'un redemande sa publication)                         | **Le staff** : e-mail à ceux qui ont le droit de publier sur l'intra ; le salon du staff.    |
+| **Événement modifié sur l'intra** (`intraChanged`) | un événement qui est sur l'intra change                                                   | **Le staff**, avec ce que contient l'intra et ce que l'événement est devenu.                 |
+| **Événement retiré** (`intraCancelled`)            | un événement qui était sur l'intra repasse en brouillon, est supprimé ou n'a plus de date | **Le staff**, avec la raison. Rien n'est envoyé pour un événement qui n'a jamais été publié. |
+| **Publié sur l'intra** (`intraPublished`)          | le staff répond « Publié sur l'intra »                                                    | E-mail : **l'auteur**. Discord ou Slack : **le salon du BDE**.                               |
+| **Publication refusée** (`intraRefused`)           | le staff refuse une demande                                                               | E-mail : **l'auteur**, avec la raison. Discord ou Slack : **le salon du BDE**.               |
+
+- **Qui est « le staff ».** Les membres dont le rôle **liste** le droit **Publier sur l'intra** (un rôle qui détient tous
+  les droits, comme Admin, n'est pas le staff : il recevrait toutes les demandes). Quand personne n'a reçu ce droit, ce
+  sont les **propriétaires** qui reçoivent les messages par e-mail.
+- **Le salon du staff.** Le staff n'est pas forcément sur le Discord ou le Slack du BDE : dans Paramètres, Événements,
+  **Salon du staff**, les propriétaires peuvent lui donner un webhook à lui (Discord et/ou Slack, chacun avec un message de
+  test). Les trois messages pour le staff y vont ; sans webhook, ils vont dans le salon du BDE. Les messages pour l'auteur
+  vont toujours dans le salon du BDE.
+- **Mentionner le staff.** Dans la personnalisation des trois messages pour le staff, le menu **Mention** propose
+  **`{@staff}`** : il notifie les membres du staff qui ont donné leur **identifiant Discord et/ou Slack** dans leur profil,
+  et personne d'autre (Discord reçoit exactement cette liste). Il n'est lu que dans le message au-dessus de la carte, comme
+  toute mention, et seulement dans ces trois messages. Un message de test montre `{@staff}` en texte simple, sauf si vous
+  demandez des mentions réelles.
+- Comme toute notification, elles partent **après** l'action, ne la bloquent jamais, et se personnalisent (mots,
+  informations affichées, ordre, couleur, bouton) dans **Notifications**. La **date** affichée est la prochaine à venir ; une
+  série dit combien elle a de dates, et la page du staff les liste.
+
 ## Personnaliser les messages
 
 Les mots, les couleurs, les informations montrées et leur ordre, le bouton et l'objet des e-mails peuvent se

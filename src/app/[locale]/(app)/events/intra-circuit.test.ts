@@ -8,19 +8,29 @@ import { effective, memberWith } from '@/test/session-fixtures';
  * pure parts are in lib/events/intra-request.test.ts.
  */
 
-const { RedirectSignal } = vi.hoisted(() => {
+const { RedirectSignal, afterCallbacks } = vi.hoisted(() => {
   class RedirectSignal extends Error {
     constructor(public href: string) {
       super(`REDIRECT:${href}`);
     }
   }
-  return { RedirectSignal };
+  return { RedirectSignal, afterCallbacks: [] as (() => unknown)[] };
 });
 
 vi.mock('@/config', () => ({ getConfig: vi.fn() }));
 vi.mock('@/lib/auth/session', () => ({ getEffectiveSession: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
-vi.mock('next/server', () => ({ after: vi.fn() }));
+vi.mock('next/server', () => ({
+  after: vi.fn((callback: () => unknown) => {
+    afterCallbacks.push(callback);
+  }),
+}));
+// What the staff, the author and the BDE room are told is held by intra-notifications.test.ts: here, only who is asked to tell, and when.
+vi.mock('@/lib/events/intra-notifications', () => ({
+  announceIntraOutcomes: vi.fn(async () => undefined),
+  notifyIntraAnswered: vi.fn(async () => undefined),
+  notifyIntraRequested: vi.fn(async () => undefined),
+}));
 vi.mock('next-intl/server', () => ({ getLocale: vi.fn(async () => 'fr') }));
 vi.mock('@/i18n/navigation', () => ({
   getPathname: ({
@@ -71,6 +81,8 @@ const {
 } = await import('./actions');
 const { markIntraUpdated, publishOnIntra, refuseOnIntra, requestOnIntra } =
   await import('./intra/actions');
+const { announceIntraOutcomes, notifyIntraAnswered, notifyIntraRequested } =
+  await import('@/lib/events/intra-notifications');
 
 const OCT5 = new Date('2026-10-05T16:00:00Z');
 const OCT12 = new Date('2026-10-12T16:00:00Z');
@@ -193,6 +205,7 @@ const shownHash = () => String(request()!.contentHash);
 
 beforeEach(() => {
   vi.clearAllMocks();
+  afterCallbacks.length = 0;
   db.reset();
   platform(true);
   asValidator();
@@ -649,5 +662,167 @@ describe('who may do what', () => {
     signInAs(['events.intra_request'], 'requester');
     await requestOnIntra('evt', 'event');
     expect(request()).toMatchObject({ status: 'PENDING', requestedByLogin: 'requester' });
+  });
+});
+
+describe('who is told, after the response', () => {
+  const runAfter = async () => {
+    for (const callback of afterCallbacks.splice(0)) await callback();
+  };
+  const outcomesAnnounced = () =>
+    vi.mocked(announceIntraOutcomes).mock.calls.map(([outcomes]) => outcomes.map((o) => o.kind));
+
+  it('confirming an event asks the staff, in the name of whoever confirmed', async () => {
+    addEvent();
+    await setEventStatus('evt', 'CONFIRMED');
+    expect(announceIntraOutcomes).not.toHaveBeenCalled();
+    await runAfter();
+
+    expect(outcomesAnnounced()).toEqual([['requested']]);
+    expect(vi.mocked(announceIntraOutcomes).mock.calls[0]![1]).toBe('real-actor');
+  });
+
+  it('a change to an event that is on the intra, and taking it back, tell the staff', async () => {
+    addEvent();
+    await setEventStatus('evt', 'CONFIRMED');
+    asStaff();
+    await publishOnIntra('evt', shownHash(), '');
+    asValidator();
+    afterCallbacks.length = 0;
+    vi.mocked(announceIntraOutcomes).mockClear();
+
+    await redirectOf(updateEvent('evt', {}, form({ location: 'Room C' })));
+    await runAfter();
+    expect(outcomesAnnounced()).toEqual([['changed']]);
+
+    await setEventStatus('evt', 'DRAFT');
+    await runAfter();
+    expect(outcomesAnnounced()).toEqual([['changed'], ['withdrawn']]);
+  });
+
+  it('says nothing for a change that does not concern the intra', async () => {
+    addEvent({ status: 'DRAFT' });
+    await redirectOf(updateEvent('evt', {}, form({ status: 'DRAFT', title: 'Autre titre' })));
+    await runAfter();
+    expect(announceIntraOutcomes).not.toHaveBeenCalled();
+  });
+
+  it('tells the author and the BDE room when the staff publishes or refuses, and nobody when the staff only updates the intra', async () => {
+    addEvent();
+    await setEventStatus('evt', 'CONFIRMED');
+    afterCallbacks.length = 0;
+    asStaff();
+
+    await publishOnIntra('evt', shownHash(), '');
+    await runAfter();
+    expect(notifyIntraAnswered).toHaveBeenCalledWith('published', 'evt', 'staff-sophie');
+
+    asValidator();
+    await redirectOf(updateEvent('evt', {}, form({ location: 'Room C' })));
+    afterCallbacks.length = 0;
+    asStaff();
+    await markIntraUpdated('evt', shownHash());
+    await runAfter();
+    expect(notifyIntraAnswered).toHaveBeenCalledTimes(1);
+
+    db.reset();
+    addEvent();
+    asValidator();
+    await setEventStatus('evt', 'CONFIRMED');
+    afterCallbacks.length = 0;
+    asStaff();
+    await refuseOnIntra('evt', 'Not on that day');
+    await runAfter();
+    expect(notifyIntraAnswered).toHaveBeenLastCalledWith('refused', 'evt', 'staff-sophie');
+  });
+
+  it('asks the staff again when a refused request is sent again, or asked for', async () => {
+    addEvent({ status: 'CONFIRMED' });
+    await requestOnIntra('evt', 'event');
+    await runAfter();
+    expect(notifyIntraRequested).toHaveBeenCalledWith('evt', 'real-actor');
+  });
+
+  it('says nothing of an answer that was not taken', async () => {
+    addEvent();
+    await setEventStatus('evt', 'CONFIRMED');
+    afterCallbacks.length = 0;
+    asStaff();
+    await publishOnIntra('evt', 'a'.repeat(64), '');
+    await refuseOnIntra('evt', 'x');
+    await runAfter();
+    expect(notifyIntraAnswered).toHaveBeenCalledTimes(1);
+    expect(notifyIntraAnswered).toHaveBeenCalledWith('refused', 'evt', 'staff-sophie');
+  });
+
+  it('never lets a notification that fails undo or fail what was saved', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.mocked(announceIntraOutcomes).mockRejectedValueOnce(new Error('discord is down'));
+    addEvent();
+    await setEventStatus('evt', 'CONFIRMED');
+    await expect(runAfter()).resolves.toBeUndefined();
+    expect(request()).toMatchObject({ status: 'PENDING' });
+    expect(log).toHaveBeenCalled();
+    log.mockRestore();
+  });
+});
+
+describe('why a request was taken back, as the staff is told', () => {
+  const causes = () =>
+    vi
+      .mocked(announceIntraOutcomes)
+      .mock.calls.flatMap(([outcomes]) =>
+        outcomes.flatMap((outcome) => (outcome.kind === 'withdrawn' ? [outcome.cause] : [])),
+      );
+  const published = async (series = false) => {
+    if (series) addSeries();
+    else addEvent();
+    await setEventStatus(
+      'evt',
+      'CONFIRMED',
+      series ? OCT5.getTime() : undefined,
+      series ? 'following' : undefined,
+    );
+    asStaff();
+    await publishOnIntra('evt', shownHash(), '');
+    asValidator();
+    for (const callback of afterCallbacks.splice(0)) await callback();
+    vi.mocked(announceIntraOutcomes).mockClear();
+  };
+  const runAfter = async () => {
+    for (const callback of afterCallbacks.splice(0)) await callback();
+  };
+
+  it('back to draft', async () => {
+    await published();
+    await setEventStatus('evt', 'DRAFT');
+    await runAfter();
+    expect(causes()).toEqual(['draft']);
+  });
+
+  it('the event deleted', async () => {
+    await published();
+    await expect(deleteEvent('evt')).rejects.toBeInstanceOf(RedirectSignal);
+    await runAfter();
+    expect(causes()).toEqual(['deleted']);
+  });
+
+  it('the last confirmed date of a series cancelled: no date left, not a draft', async () => {
+    await published(true);
+    for (const date of [OCT5, OCT12, OCT19]) await cancelOccurrence('evt', date.getTime());
+    await runAfter();
+    expect(causes()).toEqual(['dates']);
+  });
+
+  it('is not told for a request that was never on the intra', async () => {
+    addEvent();
+    await setEventStatus('evt', 'CONFIRMED');
+    await runAfter();
+    vi.mocked(announceIntraOutcomes).mockClear();
+    await setEventStatus('evt', 'DRAFT');
+    await runAfter();
+    // the outcome is there (the request is gone), but it carries nothing that was published
+    const outcomes = vi.mocked(announceIntraOutcomes).mock.calls.flatMap(([list]) => list);
+    expect(outcomes).toMatchObject([{ kind: 'withdrawn', cause: 'draft', published: null }]);
   });
 });

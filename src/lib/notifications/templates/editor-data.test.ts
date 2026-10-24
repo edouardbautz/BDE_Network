@@ -28,6 +28,11 @@ vi.mock('@/config', () => ({
       memberPending: ['slack'],
       memberApproved: [],
       memberRemoved: ['email', 'discord'],
+      intraRequested: ['discord'],
+      intraChanged: [],
+      intraCancelled: [],
+      intraPublished: [],
+      intraRefused: [],
     },
   }),
 }));
@@ -70,6 +75,39 @@ describe('the notifications the page lists', () => {
   it('leaves out those of a module that is off', () => {
     expect(listedTypes(['events'])).toHaveLength(8);
     expect(listedTypes([])).toEqual(['memberPending', 'memberApproved', 'memberRemoved']);
+  });
+
+  it('adds those about the intra only while the platform publishes there (and the events module is on)', () => {
+    expect(listedTypes(['events'], true)).toHaveLength(13);
+    expect(listedTypes(['events'], true)).toEqual(
+      expect.arrayContaining([
+        'intraRequested',
+        'intraChanged',
+        'intraCancelled',
+        'intraPublished',
+        'intraRefused',
+      ]),
+    );
+    expect(listedTypes(['events'], false).some((type) => type.startsWith('intra'))).toBe(false);
+    expect(listedTypes([], true).some((type) => type.startsWith('intra'))).toBe(false);
+  });
+
+  it('gives the editor of a message about the intra its own facts, variables and words', async () => {
+    const data = await loadEditorData('intraRequested');
+    expect(data.items).toEqual([
+      'when',
+      'repeats',
+      'where',
+      'description',
+      'intraFields',
+      'requestedBy',
+    ]);
+    expect(data.variables.map((variable) => variable.id)).toContain('requester');
+    expect(data.variables.find((variable) => variable.id === 'requester')?.sample).toBe(
+      'Camille Martin',
+    );
+    expect(data.channels).toEqual(['discord', 'slack', 'email']);
+    expect(data.defaults.discord?.items.intraFields?.label).toBeTruthy();
   });
 
   it('counts the notifications a BDE customised, by tab', async () => {

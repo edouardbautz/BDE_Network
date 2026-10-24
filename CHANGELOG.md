@@ -8,6 +8,13 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **Messages about publishing on the intra.** Five new notifications, in the table of Settings and in the customisation page (group "Publication on the intra"), shown only
+  while the platform publishes on the intra, off until ticked: **publication requested**, **event changed on the intra** (the old and the new value), **event taken back**
+  (back to draft, deleted, no date left: only for an event that was on the intra), for the staff; **published** and **refused** (with the reason), for the author and the BDE's
+  room. The staff receives them by email (the members whose role lists "Publish on the intra", the owners when nobody does) and in **its own room**: the owners can give it a
+  webhook of its own, which the BDE's room replaces when there is none. In the customisation of the messages for the staff, **`{@staff}`** pings the staff members who gave their
+  Discord or Slack id on their profile, and nobody else. Customisable like every notification; the references of the older notifications do not change.
+
 - **The school's staff publishes the events on the intra, from a page of its own.** Confirming an event now sends a **request** to the staff (one for a whole series,
   with the list of its dates). The new entry **To publish on the intra** of the menu counts what waits; the page of a request gives the event **in the order of the
   intra's form**, each field with a **Copy** button (dates as `DD/MM/YYYY`, times as `HH:mm`, in the BDE's time zone). The staff answers **Published on the intra**

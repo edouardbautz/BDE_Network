@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+const mocks = vi.hoisted(() => ({ audience: vi.fn() }));
+vi.mock('@/lib/events/intra-audience', () => ({ staffAudience: mocks.audience }));
+
 vi.mock('@/config', () => ({
   getConfig: vi.fn(() => ({ bde: { name: 'BDE Nice', defaultLocale: 'en' } })),
 }));
@@ -196,5 +199,60 @@ describe('build', () => {
         throw new Error('boom');
       }),
     ).toThrow('boom');
+  });
+});
+
+describe('{@staff} in the messages for the school’s staff', () => {
+  const staffRow = (scope: string, content: unknown) =>
+    row(scope, content, { type: 'intraRequested' });
+
+  beforeEach(() => {
+    mocks.audience.mockResolvedValue({
+      emails: ['sophie@example.org'],
+      discordIds: ['348291047563210241'],
+      slackIds: ['U04ABCD1234'],
+      fallsBackOnOwners: false,
+    });
+  });
+
+  it('gives each channel the people who gave their id, for a message to the staff', async () => {
+    given([staffRow('all', { above: 'Allô {@staff}' })]);
+    const templates = await templatesFor('intraRequested');
+    for (const channel of ['discord', 'slack', 'email'] as const) {
+      expect(templates.context(channel).staff).toEqual({
+        discord: ['348291047563210241'],
+        slack: ['U04ABCD1234'],
+      });
+    }
+    expect(templates.context('discord').template).toEqual({ above: 'Allô {@staff}' });
+  });
+
+  it('does not even look the staff up for any other message', async () => {
+    given([]);
+    for (const type of [
+      'eventConfirmed',
+      'intraPublished',
+      'intraRefused',
+      'memberPending',
+    ] as const) {
+      const templates = await templatesFor(type);
+      expect(templates.context('discord').staff).toBeUndefined();
+    }
+    expect(mocks.audience).not.toHaveBeenCalled();
+  });
+
+  it('sends the platform’s own message, and mentions nobody, when the staff cannot be read', async () => {
+    mocks.audience.mockRejectedValue(new Error('database down'));
+    given([]);
+    const templates = await templatesFor('intraRequested');
+    expect(templates.context('discord').staff).toBeUndefined();
+    expect(templates.context('discord').bdeName).toBe('BDE Nice');
+  });
+
+  it('keeps the staff when a template could not be used and the platform’s own is sent', async () => {
+    given([staffRow('discord', { title: '{nothing}' })]);
+    const templates = await templatesFor('intraRequested');
+    expect(templates.context('discord').template).toBeUndefined();
+    expect(templates.context('discord').staff?.discord).toEqual(['348291047563210241']);
   });
 });

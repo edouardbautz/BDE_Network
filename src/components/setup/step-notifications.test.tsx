@@ -283,3 +283,56 @@ describe('the test of a channel', () => {
     });
   });
 });
+
+describe('the notifications about the publication on the intra', () => {
+  const withIntra = (patch: Partial<DraftView['notifications']> = {}, events = true): DraftView =>
+    ({ events, intra: true, notifications: notificationsView(patch) }) as DraftView;
+
+  it('are five more rows, only when the events module is on and the platform publishes on the intra', () => {
+    renderStep(withIntra());
+    expect(screen.getAllByRole('checkbox')).toHaveLength(13 * 3 - 1);
+    expect(screen.getByText("Publication sur l'intra")).toBeInTheDocument();
+    for (const name of [
+      'Publication demandée',
+      "Événement modifié sur l'intra",
+      "Événement retiré de l'intra",
+      "Publié sur l'intra",
+      'Publication refusée',
+    ]) {
+      expect(screen.getByRole('checkbox', { name: `${name} — Discord` })).toBeInTheDocument();
+    }
+  });
+
+  it('are not offered while the platform does not publish on the intra, nor without the events module', () => {
+    renderStep(draft());
+    expect(
+      screen.queryByRole('checkbox', { name: /Publication demandée/ }),
+    ).not.toBeInTheDocument();
+    cleanup();
+    renderStep(withIntra({}, false));
+    expect(
+      screen.queryByRole('checkbox', { name: /Publication demandée/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('are ticked like the others, and a column shortcut reaches them too', async () => {
+    renderStep(withIntra({ hasDiscordWebhook: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'Discord : tout cocher' }));
+    expect(box('Publication demandée', 'Discord')).toBeChecked();
+    expect(box("Publié sur l'intra", 'Discord')).toBeChecked();
+
+    save();
+    await waitFor(() => expect(api.saveNotifications).toHaveBeenCalled());
+    const matrix = api.saveNotifications.mock.calls[0]?.[0].matrix;
+    expect(matrix.intraRequested).toEqual(['discord']);
+    expect(matrix.intraRefused).toEqual(['discord']);
+  });
+
+  it('keep what they hold when the table does not show them', async () => {
+    const matrix = { ...emptyMatrix(), intraChanged: ['discord' as const] };
+    renderStep(draft({ matrix, hasDiscordWebhook: true }));
+    save();
+    await waitFor(() => expect(api.saveNotifications).toHaveBeenCalled());
+    expect(api.saveNotifications.mock.calls[0]?.[0].matrix.intraChanged).toEqual(['discord']);
+  });
+});

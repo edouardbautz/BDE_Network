@@ -881,7 +881,7 @@
         "publish": "Published on the intra",
         "publishDialog": {
           "title": "Published on the intra?",
-          "body": "The request is marked as published. If the event changes afterwards, it goes back to \"To update\" in your list.",
+          "body": "The request is marked as published, and the author is told (according to the notifications ticked). If the event changes afterwards, it goes back to \"To update\" in your list, and you are told.",
           "address": "Address on the intra (optional)",
           "addressHint": "An https link to the event on the intra (intra.42.fr), if you want to keep it.",
           "confirm": "Yes, published"
@@ -889,7 +889,7 @@
         "refuse": "Refuse",
         "refuseDialog": {
           "title": "Refuse this request?",
-          "body": "The author reads your comment on the event page and can send the request again once the event is corrected.",
+          "body": "The author reads your comment on the event page, is told, and can send the request again once the event is corrected.",
           "comment": "Why?",
           "commentHint": "Say what has to change so that you can publish the event.",
           "confirm": "Refuse the request"

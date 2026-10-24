@@ -881,7 +881,7 @@
         "publish": "Publié sur l'intra",
         "publishDialog": {
           "title": "Publié sur l'intra ?",
-          "body": "La demande est marquée comme publiée. Si l'événement change ensuite, elle repasse à « À mettre à jour » dans votre liste.",
+          "body": "La demande est marquée comme publiée, et l'auteur en est prévenu (selon les notifications cochées). Si l'événement change ensuite, elle repasse à « À mettre à jour » dans votre liste, et vous en êtes prévenu.",
           "address": "Adresse sur l'intra (facultatif)",
           "addressHint": "Un lien https vers l'événement sur l'intra (intra.42.fr), si vous voulez le garder.",
           "confirm": "Oui, publié"
@@ -889,7 +889,7 @@
         "refuse": "Refuser",
         "refuseDialog": {
           "title": "Refuser cette demande ?",
-          "body": "L'auteur lit votre commentaire sur la page de l'événement et peut renvoyer la demande une fois l'événement corrigé.",
+          "body": "L'auteur lit votre commentaire sur la page de l'événement, en est prévenu, et peut renvoyer la demande une fois l'événement corrigé.",
           "comment": "Pourquoi ?",
           "commentHint": "Dites ce qu'il faut changer pour que vous puissiez publier l'événement.",
           "confirm": "Refuser la demande"

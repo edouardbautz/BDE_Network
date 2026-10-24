@@ -201,6 +201,12 @@ La première réponse l'emporte : si quelqu'un a répondu avant, la page le dit 
 quand l'événement a changé pendant que la page était ouverte (la page vérifie que vous avez vu la dernière version) : regardez
 les nouvelles valeurs, puis répondez de nouveau.
 
+### Qui est prévenu
+
+La page et le compteur du menu sont toujours justes ; les **messages** s'y ajoutent quand le BDE les a cochés (voir [Messages sur la
+publication sur l'intra](notifications.md#messages-sur-la-publication-sur-lintra)) : le staff est prévenu d'une demande, d'un changement
+et d'un événement retiré ; l'auteur et le salon du BDE sont prévenus que l'événement est publié ou refusé.
+
 ### Quand l'événement change
 
 Un événement qui est sur l'intra puis change (titre, description, lieu, dates, ou n'importe quel champ de l'intra) passe à

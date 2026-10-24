@@ -195,6 +195,12 @@ The first answer wins: if somebody answered before, the page says so and nothing
 event changed while the page was open (the page checked that you saw the latest version): look at the new values, then answer
 again.
 
+### Who is told
+
+The page and the counter of the menu are always right; **messages** come on top when the BDE ticked them (see [Messages about
+publishing on the intra](notifications.md#messages-about-publishing-on-the-intra)): the staff is told of a request, of a change
+and of an event taken back; the author and the BDE's room are told that it was published or refused.
+
 ### When the event changes
 
 An event that is on the intra and then changes (title, description, place, dates, or any intra field) becomes **To update**. The

@@ -40,12 +40,6 @@ const KEY = {
   intraRefused: 'intraRefused',
 } as const satisfies Record<IntraCardKind, IntraCardKind>;
 
-const FOR_STAFF: ReadonlySet<IntraCardKind> = new Set([
-  'intraRequested',
-  'intraChanged',
-  'intraCancelled',
-]);
-
 /** A person by name: the login when the account is gone. */
 async function nameOf(login: string): Promise<string> {
   const user = await prisma.user.findUnique({ where: { login }, select: { fullName: true } });

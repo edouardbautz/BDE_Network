@@ -3,9 +3,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/config', () => ({ getConfig: vi.fn() }));
 vi.mock('./index', () => ({ notify: vi.fn(), notifyMany: vi.fn() }));
+vi.mock('@/lib/settings/runtime', () => ({ setting: vi.fn() }));
 
 const { getConfig } = await import('@/config');
 const { notify, notifyMany } = await import('./index');
+const { setting: getSettingForRooms } = await import('@/lib/settings/runtime');
 const { deliver } = await import('./deliver');
 
 type Channel = 'email' | 'discord' | 'slack';
@@ -211,5 +213,39 @@ describe('deliver', () => {
       expect(result.channels).toEqual({ discord: { sent: 1, failed: 0 } });
       expect(notifyMany).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('the room a chat message goes to', () => {
+  const STAFF_DISCORD = 'https://discord.com/api/webhooks/2/staff';
+
+  beforeEach(() => {
+    vi.mocked(getSettingForRooms).mockImplementation((key: string) =>
+      key === 'DISCORD_STAFF_WEBHOOK_URL' ? STAFF_DISCORD : undefined,
+    );
+  });
+
+  it('is the BDE room by default: the adapter reads the webhook of the settings', async () => {
+    useChannels(['discord']);
+    await deliver('memberPending', message, [], '[t]');
+    expect(notify).toHaveBeenCalledWith('discord', message);
+  });
+
+  it('is the staff room, when it has a webhook of its own, for what is written to the staff', async () => {
+    useChannels(['discord']);
+    await deliver('memberPending', message, [], '[t]', 'staff');
+    expect(notify).toHaveBeenCalledWith('discord', message, { webhookUrl: STAFF_DISCORD });
+  });
+
+  it('falls back on the BDE room for a channel the staff has no webhook for', async () => {
+    useChannels(['slack']);
+    await deliver('memberPending', message, [], '[t]', 'staff');
+    expect(notify).toHaveBeenCalledWith('slack', message);
+  });
+
+  it('does not change who the e-mails go to: the recipients are the caller’s, whatever the room', async () => {
+    useChannels(['email']);
+    await deliver('memberPending', message, ['a@x.fr'], '[t]', 'staff');
+    expect(notifyMany).toHaveBeenCalledWith('email', [{ ...message, to: 'a@x.fr' }]);
   });
 });

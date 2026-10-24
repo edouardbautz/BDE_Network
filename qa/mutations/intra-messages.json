@@ -1,0 +1,256 @@
+[
+  [
+    "audience: the owners are always asked, not only when nobody has the right",
+    "src/lib/events/intra-audience.ts",
+    "  if (staff.length > 0) return audienceOf(staff, false);",
+    "  if (staff.length > 100) return audienceOf(staff, false);",
+    ["src/lib/events/intra-audience.test.ts"]
+  ],
+  [
+    "audience: a role that holds everything counts as the staff",
+    "src/lib/events/intra-audience.ts",
+    "    where: { status: 'MEMBER', role: { permissions: { has: STAFF_RIGHT } } },",
+    "    where: { status: 'MEMBER', role: { OR: [{ allPermissions: true }, { permissions: { has: STAFF_RIGHT } }] } },",
+    ["src/lib/events/intra-audience.test.ts"]
+  ],
+  [
+    "rooms: every message goes to the staff room",
+    "src/lib/notifications/rooms.ts",
+    "  if (room !== 'staff') return undefined;",
+    "",
+    ["src/lib/notifications/rooms.test.ts", "src/lib/notifications/deliver.test.ts"]
+  ],
+  [
+    "rooms: an empty webhook of the staff is taken for a webhook",
+    "src/lib/notifications/rooms.ts",
+    "  if (channel === 'discord') return setting('DISCORD_STAFF_WEBHOOK_URL') || undefined;",
+    "  if (channel === 'discord') return setting('DISCORD_STAFF_WEBHOOK_URL');",
+    ["src/lib/notifications/rooms.test.ts"]
+  ],
+  [
+    "deliver: the room is ignored",
+    "src/lib/notifications/deliver.ts",
+    "          const webhookUrl = webhookOf(channel, room);",
+    "          const webhookUrl = webhookOf(channel, 'bde');",
+    ["src/lib/notifications/deliver.test.ts"]
+  ],
+  [
+    "messages: the staff is asked for a request that was answered since",
+    "src/lib/events/intra-notifications.ts",
+    "    if (!event || event.intraRequest?.status !== 'PENDING') return;",
+    "    if (!event) return;",
+    ["src/lib/events/intra-notifications.test.ts"]
+  ],
+  [
+    "messages: the staff is told that an event was taken back from the intra when it never was there",
+    "src/lib/events/intra-notifications.ts",
+    "    if (!outcome.published) return;",
+    "",
+    ["src/lib/events/intra-notifications.test.ts"]
+  ],
+  [
+    "messages: an answer that was changed since is announced",
+    "src/lib/events/intra-notifications.ts",
+    "    if (!event || !request || request.status !== (kind === 'published' ? 'PUBLISHED' : 'REFUSED')) {\n      return;\n    }",
+    "    if (!event || !request) return;",
+    ["src/lib/events/intra-notifications.test.ts"]
+  ],
+  [
+    "messages: the answers go to the staff room",
+    "src/lib/events/intra-notifications.ts",
+    "        room: 'bde',",
+    "        room: 'staff',",
+    ["src/lib/events/intra-notifications.test.ts"]
+  ],
+  [
+    "messages: the requests go to the BDE room",
+    "src/lib/events/intra-notifications.ts",
+    "const STAFF: Audience = {\n  room: 'staff',",
+    "const STAFF: Audience = {\n  room: 'bde',",
+    ["src/lib/events/intra-notifications.test.ts"]
+  ],
+  [
+    "messages: the people are looked up even when e-mail is not a channel",
+    "src/lib/events/intra-notifications.ts",
+    "  const recipients = channels.includes('email') ? await audience.emails() : [];",
+    "  const recipients = await audience.emails();",
+    ["src/lib/events/intra-notifications.test.ts"]
+  ],
+  [
+    "messages: a platform that does not publish on the intra still sends",
+    "src/lib/events/intra-notifications.ts",
+    "  if (!config.events?.intraPublication) return;",
+    "",
+    ["src/lib/events/intra-notifications.test.ts"]
+  ],
+  [
+    "messages: a notification that fails throws into the action",
+    "src/lib/events/intra-notifications.ts",
+    "  try {\n    await work();\n  } catch (error) {\n    console.error(`${LOG_PREFIX} ${what}: notification failed`, error);\n  }",
+    "  await work();",
+    ["src/lib/events/intra-notifications.test.ts"]
+  ],
+  [
+    "messages: the author is written to even when the author is gone (undefined address)",
+    "src/lib/events/intra-notifications.ts",
+    "        emails: async () => (event.author?.email ? [event.author.email] : []),",
+    "        emails: async () => [event.author!.email],",
+    ["src/lib/events/intra-notifications.test.ts"]
+  ],
+  [
+    "actions: a change to an event is not announced",
+    "src/app/[locale]/(app)/events/actions.ts",
+    "  if (outcomes.length === 0) return;\n  after(async () => {\n    try {\n      await announceIntraOutcomes(outcomes, actorLogin);",
+    "  return;\n  after(async () => {\n    try {\n      await announceIntraOutcomes(outcomes, actorLogin);",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "actions: nobody is told that the staff published",
+    "src/app/[locale]/(app)/events/intra/actions.ts",
+    "  afterResponse('intraPublished', () =>\n    notifyIntraAnswered('published', id, actorOf(access).login),\n  );",
+    "",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "actions: a refusal is announced as a publication",
+    "src/app/[locale]/(app)/events/intra/actions.ts",
+    "notifyIntraAnswered('refused', id, actorOf(access).login)",
+    "notifyIntraAnswered('published', id, actorOf(access).login)",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "actions: asking again tells nobody",
+    "src/app/[locale]/(app)/events/intra/actions.ts",
+    "  afterResponse('intraRequested', () => notifyIntraRequested(id, actorOf(access).login));",
+    "",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "sync: a request taken back is always for a draft",
+    "src/lib/events/intra-sync.ts",
+    "      (date) => date.status === 'CONFIRMED',\n    )\n      ? 'dates'\n      : 'draft';",
+    "      (date) => date.status === 'CONFIRMED',\n    )\n      ? 'draft'\n      : 'draft';",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "mentions: {@staff} pings nobody in particular (the people are not told to Discord)",
+    "src/lib/notifications/templates/mentions.ts",
+    "        mentions.users.push(...ids);\n        continue;",
+    "        continue;",
+    [
+      "src/lib/notifications/templates/staff-mention.test.ts",
+      "src/lib/notifications/templates/test-send.test.ts"
+    ]
+  ],
+  [
+    "mentions: {@staff} stands for the other platform's people",
+    "src/lib/notifications/templates/mentions.ts",
+    "        const ids = [...(staff?.[platform] ?? [])];",
+    "        const ids = [...(staff?.discord ?? [])];",
+    ["src/lib/notifications/templates/staff-mention.test.ts"]
+  ],
+  [
+    "schema: {@staff} may be written in any message",
+    "src/lib/notifications/templates/schema.ts",
+    "      } else if (token.kind === 'staff' && !STAFF_TYPES.includes(type)) {",
+    "      } else if (false) {",
+    ["src/lib/notifications/templates/staff-mention.test.ts"]
+  ],
+  [
+    "resolve: the staff is looked up for every message",
+    "src/lib/notifications/templates/resolve.ts",
+    "  if (STAFF_TYPES.includes(type)) {",
+    "  if (true) {",
+    ["src/lib/notifications/templates/resolve.test.ts"]
+  ],
+  [
+    "test message: the mentions of the staff are live without being asked",
+    "src/lib/notifications/templates/test-send.ts",
+    "    if (input.withMentions && STAFF_TYPES.includes(type)) {",
+    "    if (STAFF_TYPES.includes(type)) {",
+    ["src/lib/notifications/templates/test-send.test.ts"]
+  ],
+  [
+    "test message: a message for the staff is tested in the BDE room",
+    "src/lib/notifications/templates/test-send.ts",
+    "    const webhookUrl = STAFF_TYPES.includes(type) ? webhookOf(channel, 'staff') : undefined;",
+    "    const webhookUrl = undefined as string | undefined;",
+    ["src/lib/notifications/templates/test-send.test.ts"]
+  ],
+  [
+    "test message: any message is tested in the staff room",
+    "src/lib/notifications/templates/test-send.ts",
+    "    const webhookUrl = STAFF_TYPES.includes(type) ? webhookOf(channel, 'staff') : undefined;",
+    "    const webhookUrl = webhookOf(channel, 'staff');",
+    ["src/lib/notifications/templates/test-send.test.ts"]
+  ],
+  [
+    "settings: a page that does not know the intra notifications erases them",
+    "src/lib/setup/notifications.ts",
+    "    const ticked = parsed.data.matrix[event] ?? before?.matrix[event] ?? [];",
+    "    const ticked = parsed.data.matrix[event] ?? [];",
+    ["src/lib/settings/update.test.ts"]
+  ],
+  [
+    "table: the rows of the intra are shown whenever the events module is on",
+    "src/components/setup/notification-table.tsx",
+    "(events && (group !== 'intra' || intra))",
+    "(events && (group !== 'intra' || true))",
+    ["src/components/setup/step-notifications.test.tsx"]
+  ],
+  [
+    "table: the rows of the intra are shown without the events module",
+    "src/lib/setup/notification-matrix.ts",
+    "  ...(events && intra ? MATRIX_GROUPS.intra : []),",
+    "  ...(intra ? MATRIX_GROUPS.intra : []),",
+    ["src/lib/setup/notification-matrix.test.ts"]
+  ],
+  [
+    "editor: the intra messages are listed while the platform does not publish there",
+    "src/lib/notifications/templates/editor-data.ts",
+    "    if (INTRA_TYPES.includes(type)) return events && intra;",
+    "    if (INTRA_TYPES.includes(type)) return events;",
+    ["src/lib/notifications/templates/editor-data.test.ts"]
+  ],
+  [
+    "card: the reason of a refusal is not shown",
+    "src/lib/events/intra-card.ts",
+    "    kind === 'intraRefused' ? facts.comment : kind === 'intraCancelled' ? facts.cause : null;",
+    "    kind === 'intraCancelled' ? facts.cause : null;",
+    ["src/lib/notifications/golden-intra.test.ts"]
+  ],
+  [
+    "card: the e-mail to the staff has the members' footer",
+    "src/lib/events/email.ts",
+    "              : STAFF_KINDS.includes(kind)\n                ? 'email.staffFooter'\n                : 'email.footer',",
+    "              : 'email.footer',",
+    [
+      "src/lib/notifications/golden-intra.test.ts",
+      "src/lib/notifications/templates/defaults.test.ts"
+    ]
+  ],
+  [
+    "card: the button of a message for the staff opens the event",
+    "src/lib/events/card-kind.ts",
+    "  if (STAFF_KINDS.includes(kind)) return `${channel}.staffAction`;",
+    "",
+    [
+      "src/lib/notifications/golden-intra.test.ts",
+      "src/lib/notifications/templates/defaults.test.ts"
+    ]
+  ],
+  [
+    "facts: a change is told without the old value",
+    "src/lib/events/intra-facts.ts",
+    "      before: was === '' ? '—' : truncate(was, VALUE_PREVIEW),",
+    "      before: '',",
+    ["src/lib/events/intra-facts.test.ts", "src/lib/notifications/golden-intra.test.ts"]
+  ],
+  [
+    "facts: dates are written month first",
+    "src/lib/events/intra-facts.ts",
+    "  const end = v.endDate === v.startDate ? v.endTime : `${v.endDate} ${v.endTime}`;",
+    "  const end = `${v.endDate} ${v.endTime}`;",
+    ["src/lib/events/intra-facts.test.ts"]
+  ]
+]

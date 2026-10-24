@@ -881,6 +881,28 @@ recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`)
     `intraTime`): it is what the intra's form takes. The description is shown as typed, not drawn. A request to update shows `diffContent` (the fields with the old and the new value,
     the dates to remove and to add, the dates whose own text changed). The answers use `ConfirmDialog` and answer an `ActionTarget` to the list (another pathname); only
     `requestOnIntra` stays on the page it was asked from (also an `ActionTarget`, rule 2 of "Navigation"; scenario "send a refused request again" of `e2e/actions.mjs`).
+  - **Messages** (`events/intra-notifications.ts`, `intra-facts.ts`, `intra-card.ts`, `intra-audience.ts`; `notifications/rooms.ts`). Five notifications of the configuration
+    (`INTRA_NOTIFICATION_EVENTS`: `intraRequested`, `intraChanged`, `intraCancelled`, `intraPublished`, `intraRefused`), **empty by default** like the others, shown in the
+    table and in the editor only while `events.intraPublication` is on, and **optional in what a page sends** (`notificationsSchema`: a page drawn before they existed sends
+    eight keys, and what was saved for the five is kept, `parseNotifications(…, before)`). The senders are best-effort and run in `after()`: the events actions hand the sync's
+    outcomes to `announceIntraOutcomes` (`requested` asks the staff, `changed` carries the old and the new content, `withdrawn` is told only when the request **was on the
+    intra**, with its cause: draft, deleted, no date left), the answers call `notifyIntraAnswered` (published, refused; "intra updated" tells nobody) and `requestOnIntra`
+    calls `notifyIntraRequested`. A sender **re-reads the request and sends nothing for an answer that was changed or taken back meanwhile** (like `announceReview`), and builds
+    its text from the **content of the request**, what the staff is shown, not from the event (which may be gone). Nothing is sent while the platform does not publish on the
+    intra or the notification has no channel.
+  - **Whom, and where.** The three for the staff (`STAFF_TYPES`) go to the **staff room** and, by e-mail, to `staffAudience()`: the members whose role **lists** `events.intra_publish`
+    (a role that holds everything, the Admin role, is not the staff: it would receive every request), the **owners** only when nobody does. The two for the author go to the
+    BDE's room and to the author's e-mail. The room is a parameter of `deliver(…, room)`: `webhookOf(channel, 'staff')` is the staff's own webhook when the owners set one
+    (`DISCORD_STAFF_WEBHOOK_URL`, `SLACK_STAFF_WEBHOOK_URL`) and nothing otherwise, so the adapter reads the BDE's; a test message of the editor goes where the real one would.
+  - **What they say.** The existing builders with five more card kinds (`EventCardKind`: `intraRequested`…), `data.intra` (`IntraFacts`: who, why, the fields of the form, what changed,
+    the address on the intra), the items `requestedBy`, `changes`, `intraFields`, `intraLink` (and `actedBy`, `reason` with their own words for these kinds), the variables
+    `requester`, `editor`, `cause`, `answerer`, `intra_link`, and `intra-card.ts`, which draws the parts once for Discord, Slack and e-mail. The e-mail to the staff has its own
+    footer, its button opens the platform's page (`staffAction`). They are templates like the others (editor group "Publication on the intra", platform words in `defaults.ts`,
+    examples in `samples.ts`, revision 1); their references are `__golden__/intra-*.json`, **separate files so that those of the older notifications stay exactly as they were**.
+  - **`{@staff}`** (`mentions.ts`, `StaffMentionIds`): the mention of the staff, written in the message above the card of the three messages for the staff only (`mentionNotForType`
+    elsewhere, `notForEmail` for an e-mail, as for every mention). It stands for the people who gave their Discord or Slack id (`staffAudience` ids, read when the message is sent
+    through `templatesFor`), each pinged by that id, and Discord is told exactly those (`allowed_mentions.users`); nobody who gave none is pinged, and a mention cut off by the limit of a
+    message does not ping. A test message writes it as plain text unless the person asks for live mentions.
   - **Privacy**: the four person columns (`requestedById/Login`, `answeredById/Login`) are classified in `personal-data.test.ts` and exported (`events.intraRequestsSent`,
     `intraRequestsAnswered`), the foreign keys are `SetNull`, and `publishedContent` (which names the organizer, like the intra does) is among the places the login stays, as the
     policy says.
@@ -889,7 +911,7 @@ recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`)
     published event that has its fields, the logins match their accounts) and a check that every copy is a content the engine reads. Tests: `intra-request.test.ts`,
     `access-intra.test.ts`, `intra-circuit.test.ts` (the whole circuit on the in-memory database: made on confirmation, follows the event, "to update", the cut of a series, every
     answer and who may give it), `intra/pages.test.tsx`, `copy-button.test.tsx`, `test/migrations/intra-requests.test.ts` (a real PostgreSQL), `qa/access` (two pages, four actions,
-    nine personas), mutation-checked (`qa/mutations/intra-circuit.json`).
+    nine personas), mutation-checked (`qa/mutations/intra-circuit.json`). The messages: `intra-notifications.test.ts` (whom, which room, when nothing is sent), `golden-intra.test.ts` (every card, in both languages), `staff-mention.test.ts`, `intra-audience.test.ts`, `rooms.test.ts`, the rows of the table (`step-notifications.test.tsx`) and who is told after the response (`intra-circuit.test.ts`), mutation-checked (`qa/mutations/intra-messages.json`).
 - **Visibility is decided in one place, date by date.** `expandEvents` (`occurrences.ts`) drops the dates that are not
   published (a draft or a proposal) unless `includeDrafts`, or unless the event is the reader's own (`ownLogin`; a series
   can be confirmed with one date back to draft, or a draft with one date confirmed alone); the queries also exclude them in

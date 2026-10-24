@@ -237,16 +237,21 @@ notifications:
 Before version 1.5.0 a notification had **one** channel (`"email"`, `"discord"`, `"slack"`) or `"none"`. That form is
 **still read** (`"discord"` is `[discord]`, `"none"` is `[]`): no file and no stored setting needs editing.
 
-| Notification     | When                         | Who is notified                                                                                  |
-| ---------------- | ---------------------------- | ------------------------------------------------------------------------------------------------ |
-| `memberPending`  | a new member asks for access | Email: the owners and the roles with the "Manage members" right. Discord or Slack: the channel.  |
-| `memberApproved` | a request is approved        | Email: **the approved member** (their role, a sign-in link). Discord or Slack: the channel.      |
-| `memberRemoved`  | a member is removed          | Discord or Slack: the channel. **Never an email**: the removed person receives nothing.          |
-| `eventConfirmed` | an event is confirmed        | See [Events](events.md#notifications).                                                           |
-| `eventReminder`  | the day before an event      | See [Events](events.md#notifications).                                                           |
-| `eventProposed`  | an event is proposed         | Email: the owners and the roles with the "Validate events" right. Discord or Slack: the channel. |
-| `eventApproved`  | a proposal is approved       | Email: **its author**. Discord or Slack: the channel.                                            |
-| `eventRefused`   | a proposal is refused        | Email: **its author**, with the comment. Discord or Slack: the channel.                          |
+| Notification     | When                          | Who is notified                                                                                                           |
+| ---------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `memberPending`  | a new member asks for access  | Email: the owners and the roles with the "Manage members" right. Discord or Slack: the channel.                           |
+| `memberApproved` | a request is approved         | Email: **the approved member** (their role, a sign-in link). Discord or Slack: the channel.                               |
+| `memberRemoved`  | a member is removed           | Discord or Slack: the channel. **Never an email**: the removed person receives nothing.                                   |
+| `eventConfirmed` | an event is confirmed         | See [Events](events.md#notifications).                                                                                    |
+| `eventReminder`  | the day before an event       | See [Events](events.md#notifications).                                                                                    |
+| `eventProposed`  | an event is proposed          | Email: the owners and the roles with the "Validate events" right. Discord or Slack: the channel.                          |
+| `eventApproved`  | a proposal is approved        | Email: **its author**. Discord or Slack: the channel.                                                                     |
+| `eventRefused`   | a proposal is refused         | Email: **its author**, with the comment. Discord or Slack: the channel.                                                   |
+| `intraRequested` | publication requested         | See [Notifications](notifications.md#messages-about-publishing-on-the-intra); only while `events.intraPublication` is on. |
+| `intraChanged`   | an event on the intra changes | See [Notifications](notifications.md#messages-about-publishing-on-the-intra); only while `events.intraPublication` is on. |
+| `intraCancelled` | an event is taken back        | See [Notifications](notifications.md#messages-about-publishing-on-the-intra); only while `events.intraPublication` is on. |
+| `intraPublished` | published on the intra        | See [Notifications](notifications.md#messages-about-publishing-on-the-intra); only while `events.intraPublication` is on. |
+| `intraRefused`   | publication refused           | See [Notifications](notifications.md#messages-about-publishing-on-the-intra); only while `events.intraPublication` is on. |
 
 Messages are sent **after** the action. A send that fails (webhook unavailable, mail server down) is written to the
 logs and never blocks the approval or the removal. If a channel of the list is not set up (for example `email` without

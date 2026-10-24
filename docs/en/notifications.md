@@ -56,6 +56,34 @@ Settings (see [Configuration](configuration.md#notifications-1)).
 
 Texts are written in the language of the messages chosen in **Settings**, Your BDE section.
 
+## Messages about publishing on the intra
+
+When the platform **publishes the events on the intra** (an owner turns it on in Settings, Events; see
+[Events](events.md#publishing-on-the-intra)), five more notifications appear, in the table of Settings and in the
+customisation page, under **Publication on the intra**. They are off until you tick them.
+
+| Notification                                    | When                                                                              | Who is notified                                                                              |
+| ----------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **Publication requested** (`intraRequested`)    | an event is confirmed (or someone asks for its publication again)                 | **The staff**: email to those who hold the right to publish on the intra; the staff's room.  |
+| **Event changed on the intra** (`intraChanged`) | an event that is on the intra changes                                             | **The staff**, with what the intra holds and what the event is now.                          |
+| **Event taken back** (`intraCancelled`)         | an event that was on the intra goes back to draft, is deleted or has no date left | **The staff**, with the reason. Nothing is sent for an event that was never published there. |
+| **Published on the intra** (`intraPublished`)   | the staff answers "Published on the intra"                                        | Email: **the author**. Discord or Slack: **the BDE's room**.                                 |
+| **Publication refused** (`intraRefused`)        | the staff refuses a request                                                       | Email: **the author**, with the reason. Discord or Slack: **the BDE's room**.                |
+
+- **Who "the staff" is.** The members whose role **lists** the right **Publish on the intra** (a role that holds every
+  right, such as Admin, is not the staff: it would receive every request). When nobody was given the right, the
+  **owners** receive the messages by email instead.
+- **The staff's room.** The staff is not necessarily on the BDE's Discord or Slack: in Settings, Events, **Staff room**, the
+  owners can give it a webhook of its own (Discord and/or Slack, each with a test message). The three messages for the
+  staff go there; without a webhook, they go to the BDE's room. The messages for the author always go to the BDE's room.
+- **Mentioning the staff.** In the customisation of the three messages for the staff, the **Mention** menu offers
+  **`{@staff}`**: it pings the staff members who gave their **Discord id and/or Slack id** on their profile, and nobody
+  else (Discord is told exactly those people). It is read only in the message above the card, like every mention, and
+  only in these three messages. A test message shows `{@staff}` as plain text unless you ask for the mentions to be live.
+- Like every notification, these are sent **after** the action, never block it, and can be customised (words, facts shown,
+  order, colour, button) in **Notifications**. The **date** shown is the next one still to come; a series says how many
+  dates it has and the staff's page lists them.
+
 ## Customising the messages
 
 The words, the colours, the information shown and its order, the button and the subject of e-mails can all be changed,

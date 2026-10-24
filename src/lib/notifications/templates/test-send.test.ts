@@ -12,9 +12,11 @@ const mocks = vi.hoisted(() => ({
   notify: vi.fn(),
   settings: {} as Record<string, string | undefined>,
   directory: {} as MentionDirectory,
+  audience: vi.fn(),
 }));
 
 vi.mock('..', () => ({ notify: mocks.notify }));
+vi.mock('@/lib/events/intra-audience', () => ({ staffAudience: mocks.audience }));
 vi.mock('@/config', () => ({
   getConfig: () => ({
     bde: {
@@ -54,6 +56,12 @@ beforeEach(() => {
     SMTP_HOST: 'smtp.example.fr',
   };
   mocks.notify.mockResolvedValue(undefined);
+  mocks.audience.mockResolvedValue({
+    emails: [],
+    discordIds: ['348291047563210241'],
+    slackIds: ['U04ABCD1234'],
+    fallsBackOnOwners: false,
+  });
 });
 
 const sent = (): NotificationMessage => mocks.notify.mock.calls[0]![1];
@@ -213,5 +221,70 @@ describe('the pause between two tests of a channel', () => {
     const start = Date.now();
     await sendTemplateTest({ ...input, drafts: { all: { title: '{nothing}' } } }, start);
     expect(await sendTemplateTest(input, start + 1)).toEqual({ ok: true });
+  });
+});
+
+describe('the messages that speak to the school’s staff', () => {
+  const STAFF_WEBHOOK = 'https://discord.com/api/webhooks/2/staff';
+  const input = {
+    type: 'intraRequested',
+    channel: 'discord',
+    drafts: { own: { above: 'Allô {@staff}' } },
+    withMentions: false,
+  } as const;
+
+  it('are tested where they would go: the staff room when it has a webhook, the BDE room when not', async () => {
+    mocks.settings = {
+      DISCORD_WEBHOOK_URL: 'https://discord.com/api/webhooks/1/x',
+      DISCORD_STAFF_WEBHOOK_URL: STAFF_WEBHOOK,
+    };
+    await sendTemplateTest(input);
+    expect(mocks.notify.mock.calls[0]![2]).toEqual({ webhookUrl: STAFF_WEBHOOK });
+
+    vi.clearAllMocks();
+    globalThis.templateTestClock = undefined;
+    mocks.settings = { DISCORD_WEBHOOK_URL: 'https://discord.com/api/webhooks/1/x' };
+    await sendTemplateTest(input);
+    expect(mocks.notify.mock.calls[0]).toHaveLength(2);
+  });
+
+  it('can be tested through the staff room alone, when the BDE has no chat of its own', () => {
+    mocks.settings = { DISCORD_STAFF_WEBHOOK_URL: STAFF_WEBHOOK };
+    expect(isChannelConfigured('discord')).toBe(false);
+    expect(isChannelConfigured('discord', 'intraRequested')).toBe(true);
+    // what is not for the staff does not use its room
+    expect(isChannelConfigured('discord', 'intraPublished')).toBe(false);
+    expect(isChannelConfigured('slack', 'intraRequested')).toBe(false);
+  });
+
+  it('never use the staff room for what is not about the staff', async () => {
+    mocks.settings = {
+      DISCORD_WEBHOOK_URL: 'https://discord.com/api/webhooks/1/x',
+      DISCORD_STAFF_WEBHOOK_URL: STAFF_WEBHOOK,
+    };
+    await sendTemplateTest({ ...input, type: 'intraPublished', drafts: {} });
+    expect(mocks.notify.mock.calls[0]).toHaveLength(2);
+  });
+
+  it('write {@staff} as a plain name by default, so nobody is notified', async () => {
+    await sendTemplateTest(input);
+    const above = sent().discord!.above!;
+    expect(above.text).not.toContain('<@');
+    expect(above.text.replaceAll('​', '')).toContain('@staff');
+    expect(above.mentions).toEqual({ everyone: false, roles: [], users: [] });
+    expect(mocks.audience).not.toHaveBeenCalled();
+  });
+
+  it('ping the people who gave their id, and only them, when asked to', async () => {
+    await sendTemplateTest({ ...input, withMentions: true });
+    const above = sent().discord!.above!;
+    expect(above.text).toContain('<@348291047563210241>');
+    expect(above.mentions).toEqual({ everyone: false, roles: [], users: ['348291047563210241'] });
+  });
+
+  it('are not offered {@staff} when they are not for the staff', async () => {
+    const outcome = await sendTemplateTest({ ...input, type: 'intraPublished' });
+    expect(outcome).toMatchObject({ ok: false, code: 'invalid' });
+    expect(mocks.notify).not.toHaveBeenCalled();
   });
 });
