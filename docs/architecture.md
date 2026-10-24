@@ -1353,7 +1353,7 @@ start from the same three things, so that what one finds the others can replay.
   that a reviewer would otherwise have to remember, each with a case it must find and a case it must leave alone
   (`semgrep --test qa-rules`; the cases are not formatted by Prettier, a comment applies to the line under it); (2) **gitleaks
   over the whole history** (the generic "looks like a key" rule is relaxed in test files, which write fake secrets, and
-  only there: `qa-rules/gitleaks-selftest.sh` checks that a token of a known service is still found in a test file); (3) **Trivy**
+  only there, and the one fake Discord user id the tests share is allowed for the Discord rule: `qa-rules/gitleaks-selftest.sh` checks that a token of a known service is still found in a test file); (3) **Trivy**
   on the lockfile (production dependencies), on files (secrets) and on the Dockerfile; (4) the **dependency review** of
   what the pull request adds (a known vulnerability, a license outside the list of what the production dependencies have
   today); and (5) **CodeQL** on the code and on the workflows (`security-extended`), whose HIGH and CRITICAL alerts (and
