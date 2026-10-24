@@ -670,7 +670,9 @@ describe('more of the editor', () => {
       ),
     );
     actions.saveTemplate.mockResolvedValue({ ok: true, version: 1, changed: false });
-    fireEvent.click(saveButton());
+    // The toast is raised while the save is still pending: the button says "Enregistrement…" until the transition ends, and a click
+    // asked for at once found no button named "Enregistrer" (one run in four or five). Wait for it to be back.
+    fireEvent.click(await screen.findByRole('button', { name: 'Enregistrer' }));
     await waitFor(() =>
       expect(toast.success).toHaveBeenCalledWith(
         'Rien à enregistrer : le modèle est déjà celui-ci',
