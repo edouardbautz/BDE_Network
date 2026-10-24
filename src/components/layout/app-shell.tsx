@@ -10,6 +10,7 @@ import {
   House,
   Plus,
   ScrollText,
+  Send,
   Settings,
   ShieldCheck,
   Users,
@@ -31,6 +32,7 @@ export interface NavItem {
     | 'dashboard'
     | 'events'
     | 'eventsReview'
+    | 'eventsIntra'
     | 'members'
     | 'roles'
     | 'notifications'
@@ -57,6 +59,7 @@ const NAV_ICONS: Record<NavItem['id'], typeof House> = {
   dashboard: House,
   events: CalendarDays,
   eventsReview: ClipboardCheck,
+  eventsIntra: Send,
   members: Users,
   roles: ShieldCheck,
   notifications: Bell,

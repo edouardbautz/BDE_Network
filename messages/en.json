@@ -174,9 +174,12 @@
       "roles": "Roles",
       "auditLog": "Log",
       "settings": "Settings",
-      "notifications": "Messages"
+      "notifications": "Messages",
+      "eventsIntra": "Intra"
     },
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "eventsIntra": "To publish on the intra",
+    "eventsIntraCount": "{count, plural, =0 {Nothing to publish on the intra} one {# request to handle for the intra} other {# requests to handle for the intra}}"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -758,6 +761,112 @@
         "startNoticeAction": "Start on {date}",
         "previewNext": "Next dates: {dates}",
         "previewTotal": "{count, plural, one {# date in total} other {# dates in total}}"
+      }
+    },
+    "intra": {
+      "status": {
+        "PENDING": "To publish",
+        "PUBLISHED": "Published",
+        "OUTDATED": "To update",
+        "REFUSED": "Refused"
+      },
+      "copy": "Copy",
+      "copied": "Copied",
+      "copyFailed": "Could not copy",
+      "fields": {
+        "organizerLogin": "Organizer's login",
+        "name": "Name",
+        "availableFor": "Available for",
+        "startDate": "Start date",
+        "startTime": "Start time",
+        "endDate": "End date",
+        "endTime": "End time",
+        "description": "Description",
+        "location": "Location",
+        "maxPeople": "Maximum number of people",
+        "waitingList": "Waiting list",
+        "kind": "Kind",
+        "unsubscribeHours": "Delay before unsubscribing is no longer possible (hours)",
+        "keywords": "Keywords"
+      },
+      "list": {
+        "title": "To publish on the intra",
+        "subtitle": "The BDE's events to publish on the 42 intra, in the order they were asked for. Open one to copy its fields into the intra's form, then answer.",
+        "subtitleReadOnly": "Where the publication of each event on the 42 intra stands. You follow these requests without being able to answer them.",
+        "emptyTitle": "No request",
+        "emptyDescription": "Requests show up here as soon as an event is confirmed, or someone asks for one.",
+        "nothingWaitingTitle": "Nothing to handle",
+        "nothingWaitingDescription": "Every request has been answered. New ones will show up here.",
+        "waiting": "To handle",
+        "answered": "Already handled",
+        "moreDates": "{count, plural, one {(+ # other date)} other {(+ # other dates)}}",
+        "sentBy": "Requested by {login} on {date}",
+        "outdatedNote": "The event changed since it was published: the intra has to be updated.",
+        "refusedNote": "Refused: {comment}"
+      },
+      "detail": {
+        "title": "Publication on the intra",
+        "back": "To publish on the intra",
+        "refusedBy": "Refused by {login}",
+        "publishedBy": "Published on the intra by {login} on {date}.",
+        "openOnIntra": "See it on the intra",
+        "publish": "Published on the intra",
+        "publishDialog": {
+          "title": "Published on the intra?",
+          "body": "The request is marked as published. If the event changes afterwards, it goes back to \"To update\" in your list.",
+          "address": "Address on the intra (optional)",
+          "addressHint": "An https link to the event on the intra (intra.42.fr), if you want to keep it.",
+          "confirm": "Yes, published"
+        },
+        "refuse": "Refuse",
+        "refuseDialog": {
+          "title": "Refuse this request?",
+          "body": "The author reads your comment on the event page and can send the request again once the event is corrected.",
+          "comment": "Why?",
+          "commentHint": "Say what has to change so that you can publish the event.",
+          "confirm": "Refuse the request"
+        },
+        "updated": "Intra updated",
+        "updatedDialog": {
+          "title": "Is the intra up to date?",
+          "body": "Confirm that the event on the intra now has the values shown below.",
+          "confirm": "Yes, the intra is up to date"
+        },
+        "sendAgain": "Send the request again",
+        "readOnly": "You follow this request without being able to answer it.",
+        "changes": {
+          "title": "What changed since it was published",
+          "intro": "This is what the intra shows and what the event has become. Update the intra, then confirm.",
+          "before": "On the intra",
+          "after": "Now",
+          "removed": "Dates to remove from the intra",
+          "added": "Dates to add to the intra",
+          "edited": "Dates whose text changed"
+        },
+        "copyTitle": "To copy into the intra",
+        "copyIntro": "The fields are in the order of the intra's form. Dates are written DD/MM/YYYY and times HH:mm, in the BDE's time zone.",
+        "dates": "{count, plural, one {# date} other {# dates}}",
+        "dateNumber": "Date {number}",
+        "ownValues": "Specific to this date:"
+      },
+      "publication": {
+        "title": "Publication on the intra",
+        "pending": "Request sent to the staff by {login} on {date}, waiting to be published.",
+        "published": "Published on the intra by {login} on {date}.",
+        "outdated": "Published on the intra by {login} on {date}, but the event changed since: the staff has to update the intra.",
+        "refused": "Refused by {login}.",
+        "open": "See it on the intra",
+        "none": "No request has been sent to the staff for this event.",
+        "ask": "Ask for publication",
+        "sendAgain": "Send the request again"
+      },
+      "notices": {
+        "gone": "This request no longer exists: the event went back to draft, was deleted or has no published date left.",
+        "alreadyAnswered": "Somebody already answered this request. Here is its current state.",
+        "changedMeanwhile": "The event changed while you had the page open: nothing was saved. Check the values below, then answer again.",
+        "notPublishable": "This event cannot be requested: it has no confirmed date or lacks the intra fields.",
+        "alreadyRequested": "A request already exists for this event.",
+        "busy": "Somebody else was changing this event at the same moment: nothing was saved. You can try again."
       }
     }
   },

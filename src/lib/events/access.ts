@@ -9,6 +9,8 @@ import {
   type PermissionHolder,
 } from '@/lib/permissions';
 
+import { intraPublicationEnabled } from './intra-config';
+
 export { EVENTS_MODULE_KEY };
 
 /** The permissions of the events module (see MODULE_EXTRA_PERMISSIONS in lib/permissions). There is no
@@ -104,5 +106,57 @@ export async function requireSharedCalendarManager(): Promise<EventsAccess> {
   if (!access || !canManageSharedCalendar(access.session.user)) {
     throw new Error('Forbidden');
   }
+  return access;
+}
+
+// ---- publishing on the intra -------------------------------------------------------------------------------------------------
+
+/** Answering the requests: the staff of the school. Includes nothing, so a staff role sees the page of the requests and not the calendar. */
+export function canPublishOnIntra(holder: PermissionHolder): boolean {
+  return can(holder, EVENTS_INTRA_PUBLISH);
+}
+
+/** Sending a request again, or one for an event that is already confirmed: the right of its own, or a validator's. */
+export function canRequestOnIntra(holder: PermissionHolder): boolean {
+  return can(holder, EVENTS_INTRA_REQUEST) || can(holder, EVENTS_VALIDATE);
+}
+
+/** Seeing where each publication stands: following it, answering it or asking for it all need to. */
+export function canFollowIntra(holder: PermissionHolder): boolean {
+  return can(holder, EVENTS_INTRA_VIEW) || canPublishOnIntra(holder) || canRequestOnIntra(holder);
+}
+
+export interface IntraAccess {
+  session: EffectiveSession;
+  /** May answer the requests (published, refused, updated). */
+  canPublish: boolean;
+  /** May send a request (again). */
+  canRequest: boolean;
+}
+
+/** The entry point of the pages and actions about publishing on the intra. Null when the module or the publication on the intra is
+ * off, nobody is signed in, or the account holds none of the rights: callers treat that as "not found" or "forbidden". */
+export async function getIntraAccess(): Promise<IntraAccess | null> {
+  if (!isEventsModuleEnabled() || !intraPublicationEnabled()) return null;
+  const session = await getEffectiveSession();
+  if (!session || !canFollowIntra(session.user)) return null;
+  return {
+    session,
+    canPublish: canPublishOnIntra(session.user),
+    canRequest: canRequestOnIntra(session.user),
+  };
+}
+
+/** Same, throwing unless the account may answer the requests. Every action that answers one starts with this. */
+export async function requireIntraPublisher(): Promise<IntraAccess> {
+  const access = await getIntraAccess();
+  if (!access?.canPublish) throw new Error('Forbidden');
+  return access;
+}
+
+/** Same, for sending a request. */
+export async function requireIntraRequester(): Promise<IntraAccess> {
+  const access = await getIntraAccess();
+  if (!access?.canRequest) throw new Error('Forbidden');
   return access;
 }

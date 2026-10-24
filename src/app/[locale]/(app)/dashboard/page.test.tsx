@@ -50,6 +50,7 @@ vi.mock('@/components/settings/oauth-rejected-alert', () => ({
 }));
 vi.mock('@/lib/events/access', () => ({
   getEventsAccess: () => mocks.eventsAccess(),
+  getIntraAccess: async () => null,
   canValidateEvents: () => mocks.validator,
 }));
 vi.mock('@/lib/events/categories', () => ({ getCategories: () => [] }));

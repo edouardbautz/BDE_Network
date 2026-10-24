@@ -17,6 +17,8 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { getConfig } from '@/config';
 import { channelsFor } from '@/config/schema';
 import { ActionButton } from '@/components/action-button';
+import { IntraNoticeAlert } from '@/components/events/intra-notice';
+import { IntraStatusBadge } from '@/components/events/intra-status-badge';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { CategoryBadge } from '@/components/events/category-badge';
 import { EventNoticeAlert } from '@/components/events/event-notice';
@@ -26,12 +28,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from '@/i18n/navigation';
-import { getEventsAccess } from '@/lib/events/access';
+import { getEventsAccess, getIntraAccess } from '@/lib/events/access';
 import { chatNames, confirmationNotice } from '@/lib/events/confirmation-notice';
 import { resolveCategory } from '@/lib/events/categories';
 import { formatDateTimeRange, formatLongDate, formatTimeRange } from '@/lib/events/format';
 import { intraOf } from '@/lib/events/intra';
 import { intraPublicationEnabled } from '@/lib/events/intra-config';
+import { readIntraNotice } from '@/lib/events/intra-notice';
+import { getIntraRequestOfEvent } from '@/lib/events/intra-queries';
+import { intraReadiness, isOnIntra } from '@/lib/events/intra-request';
 import { readEventNotice } from '@/lib/events/notice';
 import { getVisibleEvent } from '@/lib/events/queries';
 import {
@@ -53,6 +58,7 @@ import {
   restoreOccurrence,
   setEventStatus,
 } from '../actions';
+import { requestOnIntra } from '../intra/actions';
 import { PageHeader } from '@/components/layout/page-header';
 import { pageTitle } from '@/lib/page-title';
 
@@ -137,6 +143,11 @@ export default async function EventDetailPage({
   const now = Date.now();
   const isSeries = isRepeating(event);
   const intra = intraOf(event);
+  // Where the publication on the intra stands, for whoever follows it, the author and the people who run the events.
+  const intraAccess = await getIntraAccess();
+  const showIntra = intraPublicationEnabled() && (access.canCreate || intraAccess !== null);
+  const intraRequest = showIntra ? await getIntraRequestOfEvent(event.id) : null;
+  const intraReady = showIntra && intraReadiness(event, timeZone).ok;
   const repeatSummary = summaryInputOf(event, timeZone);
   const requested = Array.isArray(rawSearch.occ) ? rawSearch.occ[0] : rawSearch.occ;
   const live = occurrences.filter((o) => !o.cancelled);
@@ -184,6 +195,7 @@ export default async function EventDetailPage({
       <PageHeader title={shown.title} back={{ href: '/events', label: t('detail.back') }} />
       <div className="flex flex-col gap-3 sm:gap-4">
         <EventNoticeAlert notice={readEventNotice(rawSearch.notice)} />
+        <IntraNoticeAlert notice={readIntraNotice(rawSearch.notice)} />
 
         <div className="flex flex-col gap-3">
           <div className="flex min-w-0 flex-col gap-2">
@@ -468,7 +480,7 @@ export default async function EventDetailPage({
           </CardContent>
         </Card>
 
-        {intraPublicationEnabled() && access.canCreate && (
+        {showIntra && (
           <Card>
             <CardHeader>
               <CardTitle>{t('detail.intra.title')}</CardTitle>
@@ -499,6 +511,93 @@ export default async function EventDetailPage({
                 </dl>
               ) : (
                 <p className="text-muted-foreground text-body">{t('detail.intra.missing')}</p>
+              )}
+
+              {intraRequest ? (
+                <div className="border-line mt-5 flex flex-col gap-2 border-t pt-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-small font-semibold">{t('intra.publication.title')}</span>
+                    <IntraStatusBadge
+                      status={intraRequest.status}
+                      label={t(`intra.status.${intraRequest.status}`)}
+                    />
+                  </div>
+                  <p className="text-body break-words">
+                    {intraRequest.status === 'PENDING' &&
+                      t('intra.publication.pending', {
+                        login: intraRequest.requestedByLogin,
+                        date: formatLongDate(intraRequest.requestedAt, locale, timeZone),
+                      })}
+                    {isOnIntra(intraRequest.status) &&
+                      t(
+                        intraRequest.status === 'OUTDATED'
+                          ? 'intra.publication.outdated'
+                          : 'intra.publication.published',
+                        {
+                          login: intraRequest.answeredByLogin ?? '',
+                          date: formatLongDate(
+                            intraRequest.answeredAt ?? intraRequest.requestedAt,
+                            locale,
+                            timeZone,
+                          ),
+                        },
+                      )}
+                    {intraRequest.status === 'REFUSED' &&
+                      t('intra.publication.refused', { login: intraRequest.answeredByLogin ?? '' })}
+                    {isOnIntra(intraRequest.status) && intraRequest.intraUrl && (
+                      <>
+                        {' '}
+                        <a
+                          href={intraRequest.intraUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-accent-ink underline underline-offset-3"
+                        >
+                          {t('intra.publication.open')}
+                        </a>
+                      </>
+                    )}
+                  </p>
+                  {intraRequest.status === 'REFUSED' && intraRequest.refusalComment && (
+                    <p className="text-muted-foreground text-body break-words whitespace-pre-wrap">
+                      {intraRequest.refusalComment}
+                    </p>
+                  )}
+                  {intraRequest.status === 'REFUSED' && intraAccess?.canRequest && intraReady && (
+                    <div>
+                      <ActionButton
+                        action={async () => {
+                          'use server';
+                          return requestOnIntra(event.id, 'event');
+                        }}
+                      >
+                        <Send data-icon="inline-start" />
+                        {t('intra.publication.sendAgain')}
+                      </ActionButton>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                intraReady &&
+                intraAccess?.canRequest && (
+                  <div className="border-line mt-5 flex flex-col gap-2 border-t pt-4">
+                    <span className="text-small font-semibold">{t('intra.publication.title')}</span>
+                    <p className="text-muted-foreground text-body">
+                      {t('intra.publication.none')}
+                    </p>
+                    <div>
+                      <ActionButton
+                        action={async () => {
+                          'use server';
+                          return requestOnIntra(event.id, 'event');
+                        }}
+                      >
+                        <Send data-icon="inline-start" />
+                        {t('intra.publication.ask')}
+                      </ActionButton>
+                    </div>
+                  </div>
+                )
               )}
             </CardContent>
           </Card>

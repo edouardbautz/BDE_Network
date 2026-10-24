@@ -174,9 +174,12 @@
       "roles": "Rôles",
       "auditLog": "Journal",
       "settings": "Réglages",
-      "notifications": "Messages"
+      "notifications": "Messages",
+      "eventsIntra": "Intra"
     },
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "eventsIntra": "À publier sur l'intra",
+    "eventsIntraCount": "{count, plural, =0 {Rien à publier sur l'intra} one {# demande à traiter pour l'intra} other {# demandes à traiter pour l'intra}}"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -758,6 +761,112 @@
         "startNoticeAction": "Commencer le {date}",
         "previewNext": "Prochaines dates : {dates}",
         "previewTotal": "{count, plural, one {# date au total} other {# dates au total}}"
+      }
+    },
+    "intra": {
+      "status": {
+        "PENDING": "À publier",
+        "PUBLISHED": "Publié",
+        "OUTDATED": "À mettre à jour",
+        "REFUSED": "Refusé"
+      },
+      "copy": "Copier",
+      "copied": "Copié",
+      "copyFailed": "Copie impossible",
+      "fields": {
+        "organizerLogin": "Login de l'organisateur",
+        "name": "Nom",
+        "availableFor": "Disponible pour",
+        "startDate": "Date de début",
+        "startTime": "Heure de début",
+        "endDate": "Date de fin",
+        "endTime": "Heure de fin",
+        "description": "Description",
+        "location": "Localisation",
+        "maxPeople": "Nombre max de personnes",
+        "waitingList": "Liste d'attente",
+        "kind": "Genre",
+        "unsubscribeHours": "Délai de désinscription (heures)",
+        "keywords": "Mots-clés"
+      },
+      "list": {
+        "title": "À publier sur l'intra",
+        "subtitle": "Les événements du BDE à publier sur l'intra 42, dans l'ordre où ils ont été demandés. Ouvrez-en un pour copier ses champs dans le formulaire de l'intra, puis répondez.",
+        "subtitleReadOnly": "Où en est la publication de chaque événement sur l'intra 42. Vous suivez ces demandes sans pouvoir y répondre.",
+        "emptyTitle": "Aucune demande",
+        "emptyDescription": "Les demandes apparaissent ici dès qu'un événement est confirmé, ou qu'on en demande une.",
+        "nothingWaitingTitle": "Rien à traiter",
+        "nothingWaitingDescription": "Toutes les demandes ont reçu une réponse. Les nouvelles arriveront ici.",
+        "waiting": "À traiter",
+        "answered": "Déjà traités",
+        "moreDates": "{count, plural, one {(+ # autre date)} other {(+ # autres dates)}}",
+        "sentBy": "Demandé par {login} le {date}",
+        "outdatedNote": "L'événement a changé depuis sa publication : l'intra est à mettre à jour.",
+        "refusedNote": "Refusé : {comment}"
+      },
+      "detail": {
+        "title": "Publication sur l'intra",
+        "back": "À publier sur l'intra",
+        "refusedBy": "Refusé par {login}",
+        "publishedBy": "Publié sur l'intra par {login} le {date}.",
+        "openOnIntra": "Voir sur l'intra",
+        "publish": "Publié sur l'intra",
+        "publishDialog": {
+          "title": "Publié sur l'intra ?",
+          "body": "La demande est marquée comme publiée. Si l'événement change ensuite, elle repasse à « À mettre à jour » dans votre liste.",
+          "address": "Adresse sur l'intra (facultatif)",
+          "addressHint": "Un lien https vers l'événement sur l'intra (intra.42.fr), si vous voulez le garder.",
+          "confirm": "Oui, publié"
+        },
+        "refuse": "Refuser",
+        "refuseDialog": {
+          "title": "Refuser cette demande ?",
+          "body": "L'auteur lit votre commentaire sur la page de l'événement et peut renvoyer la demande une fois l'événement corrigé.",
+          "comment": "Pourquoi ?",
+          "commentHint": "Dites ce qu'il faut changer pour que vous puissiez publier l'événement.",
+          "confirm": "Refuser la demande"
+        },
+        "updated": "Intra mis à jour",
+        "updatedDialog": {
+          "title": "L'intra est-il à jour ?",
+          "body": "Confirmez que l'événement de l'intra reprend maintenant les valeurs affichées ci-dessous.",
+          "confirm": "Oui, l'intra est à jour"
+        },
+        "sendAgain": "Renvoyer la demande",
+        "readOnly": "Vous suivez cette demande sans pouvoir y répondre.",
+        "changes": {
+          "title": "Ce qui a changé depuis la publication",
+          "intro": "Voici ce que l'intra affiche et ce que l'événement est devenu. Mettez l'intra à jour, puis confirmez.",
+          "before": "Sur l'intra",
+          "after": "Maintenant",
+          "removed": "Dates à retirer de l'intra",
+          "added": "Dates à ajouter à l'intra",
+          "edited": "Dates dont le texte a changé"
+        },
+        "copyTitle": "À copier dans l'intra",
+        "copyIntro": "Les champs sont dans l'ordre du formulaire de l'intra. Les dates sont au format JJ/MM/AAAA et les heures en HH:mm, dans le fuseau horaire du BDE.",
+        "dates": "{count, plural, one {# date} other {# dates}}",
+        "dateNumber": "Date {number}",
+        "ownValues": "Propre à cette date :"
+      },
+      "publication": {
+        "title": "Publication sur l'intra",
+        "pending": "Demande envoyée au staff par {login} le {date}, en attente de publication.",
+        "published": "Publié sur l'intra par {login} le {date}.",
+        "outdated": "Publié sur l'intra par {login} le {date}, mais l'événement a changé depuis : le staff doit mettre l'intra à jour.",
+        "refused": "Refusé par {login}.",
+        "open": "Voir sur l'intra",
+        "none": "Aucune demande n'a été envoyée au staff pour cet événement.",
+        "ask": "Demander la publication",
+        "sendAgain": "Renvoyer la demande"
+      },
+      "notices": {
+        "gone": "Cette demande n'existe plus : l'événement a été remis en brouillon, supprimé ou n'a plus de date publiée.",
+        "alreadyAnswered": "Quelqu’un a déjà répondu à cette demande. Voici son état actuel.",
+        "changedMeanwhile": "L'événement a changé pendant que vous aviez la page ouverte : rien n'a été enregistré. Vérifiez les valeurs ci-dessous, puis répondez à nouveau.",
+        "notPublishable": "Cet événement ne peut pas être demandé : il n'a pas de date confirmée ou il lui manque les champs de l'intra.",
+        "alreadyRequested": "Une demande existe déjà pour cet événement.",
+        "busy": "Quelqu'un d'autre modifiait cet événement au même moment : rien n'a été enregistré. Vous pouvez réessayer."
       }
     }
   },

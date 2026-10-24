@@ -72,6 +72,8 @@ model User {
   cancelledOccurrences         EventCancellation[]
   notificationTemplates        NotificationTemplate[]        @relation("NotificationTemplateEditor")
   notificationTemplateVersions NotificationTemplateVersion[] @relation("NotificationTemplateVersionAuthor")
+  intraRequestsSent            IntraRequest[]                @relation("IntraRequestSender")
+  intraRequestsAnswered        IntraRequest[]                @relation("IntraRequestAnswerer")
 
   /// Secret token of this member's personal .ics subscription feed (events
   /// module). Regenerable from the profile page; null until first generated.
@@ -177,10 +179,57 @@ model Event {
   cancellations EventCancellation[]
   reminders     EventReminder[]
   occurrences   EventOccurrence[]
+  intraRequest  IntraRequest?
 
   @@index([startsAt])
   @@index([schoolYear])
   @@index([status])
+}
+
+/// Where the publication of an event on the intra stands (src/lib/events/intra-request.ts). One row per event (a series is
+/// one event: its dates are listed in the request), made when the event is confirmed, answered by the school's staff, and
+/// gone when the event goes back to draft or is deleted. `publishedContent` is what the intra holds (a copy of the event's
+/// intra content when the staff answered "published"), so that a later change can be shown as the old and the new value.
+enum IntraRequestStatus {
+  /// Sent, waiting for the staff.
+  PENDING
+  /// On the intra, and the event has not changed since.
+  PUBLISHED
+  /// On the intra, and the event changed since: the staff has to update it.
+  OUTDATED
+  /// The staff refused, with a comment; it can be sent again.
+  REFUSED
+}
+
+model IntraRequest {
+  id               String             @id @default(cuid())
+  eventId          String             @unique
+  event            Event              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  status           IntraRequestStatus @default(PENDING)
+  /// SHA-256 of the intra content of the event as it was last looked at: a sync that finds the same hash changes nothing.
+  contentHash      String
+  /// What the intra holds, from the moment the staff said it is published (status PUBLISHED or OUTDATED, never otherwise).
+  publishedContent Json?
+  publishedAt      DateTime?
+  /// Optional https link to the event on the intra (intra.42.fr).
+  intraUrl         String?
+  refusalComment   String?
+  requestedAt      DateTime           @default(now())
+  /// Who sent it (confirmed the event, or asked again). Plain text next to the key, like AuditLog.actorLogin.
+  requestedByLogin String
+  requestedById    String?
+  requestedBy      User?              @relation("IntraRequestSender", fields: [requestedById], references: [id], onDelete: SetNull)
+  /// The staff member who answered (published or refused); null while the request waits.
+  answeredAt       DateTime?
+  answeredByLogin  String?
+  answeredById     String?
+  answeredBy       User?              @relation("IntraRequestAnswerer", fields: [answeredById], references: [id], onDelete: SetNull)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@index([status])
+  @@index([requestedById])
+  @@index([answeredById])
 }
 
 /// A board member in charge of an event. login is kept in plain text so the
