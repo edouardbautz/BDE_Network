@@ -63,12 +63,6 @@ async function confirmedEvent(page: Page, title: string, day: string): Promise<s
   return new URL(page.url()).pathname;
 }
 
-const publicationCard = (page: Page) =>
-  page
-    .locator('section, div')
-    .filter({ has: page.getByRole('heading', { name: 'Publication on the intra' }) })
-    .last();
-
 test.describe('the publication on the intra', () => {
   test('the staff copies, refuses, publishes and follows a change; the author reads each answer', async ({
     as,
