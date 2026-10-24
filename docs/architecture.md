@@ -813,7 +813,7 @@ recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`)
   - **Privacy**: `intraOrganizerLogin` can be somebody else's login than the author's, so it is classified in `qa/privacy/personal-data.test.ts`, exported
     (`events.organizedOnIntra`), kept as plain text when the account goes (the policy says so) and listed in `LOGIN_MAY_STAY`. The QA dataset gives most events
     the fields and leaves one in five without, derived from the identifier (never drawn from the generator, which would have moved the rest of the dataset), and the
-    invariants check the kind and the keywords (`an_intra_kind_is_one_the_intra_offers`, …).
+    invariants (`qa/invariants-intra.sql`) check the kind, the keywords and the fields of a cut series' second row.
   - Tests: `intra.test.ts`, `input.test.ts`, `actions.test.ts` and `actions-series.test.ts` (the cut, one date, a crafted request, the guard), `event-form.test.tsx`,
     `test/migrations/event-intra-fields.test.ts` (a real PostgreSQL: nothing lost, the two CHECKs), `qa/browsers/intra-fields.spec.ts` (three engines),
     mutation-checked (`qa/mutations/intra-fields.json`).
@@ -1274,7 +1274,7 @@ start from the same three things, so that what one finds the others can replay.
   written. It also holds a BDE that customised its notifications (`TEMPLATES`, `MENTIONS`: a template for all channels with a button, a channel with
   a mention and a free text, an e-mail, a Slack message, a history with a reset and a restore, written by accounts of the dataset). `npx tsx qa/cli.ts load --database <url>` writes it, `sql` prints it. Only the persona `qa-owner` is an OWNER
   (the others would be demoted at the next start, `reconcileOwnerAccounts`).
-- **The invariants** (`qa/invariants.sql`, `qa/invariants-templates.sql` for the notification templates, run only on a database that has those tables: the update suite looks at an older one after the way back, `qa/invariants.ts`): what must be true of the database after any scenario —
+- **The invariants** (`qa/invariants.sql`, `qa/invariants-templates.sql` for the notification templates and `qa/invariants-intra.sql` for the intra's fields, each run only on a database that has them: the update suite looks at an older one, before the update and after the way back, `qa/invariants.ts`): what must be true of the database after any scenario —
   one default role, a member has a role and nobody else does, a rule is a rule, a series and its end come together, the
   school year is the one of the start, a refusal is a draft with its three fields, a cut series' first row exists, every
   date a cancellation, a date of its own or a reminder refers to is a date of its series (checked with the engine), no
