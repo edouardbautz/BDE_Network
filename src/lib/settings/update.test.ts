@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { bdeConfigSchema, type BdeConfig } from '@/config/schema';
-import { seal, settingsKey } from './crypto';
+import { seal, settingsKey, unseal } from './crypto';
 import { getRuntimeSettings, setRuntimeSettings, setting, type SettingValues } from './runtime';
 import { updateSettings, type SettingsChange } from './update';
 
@@ -56,6 +56,8 @@ function fakeDb(
     'SMTP_PASSWORD',
     'DISCORD_WEBHOOK_URL',
     'SLACK_WEBHOOK_URL',
+    'DISCORD_STAFF_WEBHOOK_URL',
+    'SLACK_STAFF_WEBHOOK_URL',
   ];
   const secrets = Object.fromEntries(
     Object.entries(values).filter(([k]) => secretNames.includes(k)),
@@ -1210,5 +1212,111 @@ describe('the events settings', () => {
     const config = baseConfig({ modules: { enabled: [] } });
     const { db } = fakeDb({ config });
     expect(await run(events(), db)).toMatchObject({ ok: false, code: 'invalid' });
+  });
+});
+
+describe('the staff room', () => {
+  const discord = 'https://discord.com/api/webhooks/987654321/staff-secret';
+  const slack = 'https://hooks.slack.com/services/T0123/B0456/staffsecret';
+  const staff = (change: Partial<Extract<SettingsChange, { section: 'staff-channel' }>> = {}) =>
+    ({
+      section: 'staff-channel',
+      discordWebhook: '',
+      slackWebhook: '',
+      ...change,
+    }) as SettingsChange;
+  /** What the row holds, sealed, once opened. */
+  const stored = (state: { row: Record<string, unknown> | null }) =>
+    unseal(String(state.row?.secrets), settingsKey()) as Record<string, string>;
+
+  it('saves the addresses typed, sealed, and loads them at once', async () => {
+    const { db, state } = fakeDb();
+    expect(await run(staff({ discordWebhook: discord, slackWebhook: slack }), db)).toEqual({
+      ok: true,
+      changed: true,
+    });
+    expect(stored(state)).toMatchObject({
+      DISCORD_STAFF_WEBHOOK_URL: discord,
+      SLACK_STAFF_WEBHOOK_URL: slack,
+    });
+    expect(setting('DISCORD_STAFF_WEBHOOK_URL')).toBe(discord);
+    // the BDE's own channels are another thing and are not touched
+    expect(stored(state).DISCORD_WEBHOOK_URL).toBeUndefined();
+  });
+
+  it('audits which secret changed, never what it is', async () => {
+    const { db, state } = fakeDb();
+    await run(staff({ discordWebhook: discord }), db);
+    expect(state.audit).toHaveLength(1);
+    expect(state.audit[0]).toMatchObject({
+      action: 'settings.staff-channel.update',
+      metadata: { changedSecrets: ['DISCORD_STAFF_WEBHOOK_URL'] },
+    });
+    expect(JSON.stringify(state.audit)).not.toContain('staff-secret');
+  });
+
+  it('keeps a saved address when the field is left blank, and writes nothing when nothing changes', async () => {
+    const { db, state } = fakeDb({
+      values: { ...baseValues, DISCORD_STAFF_WEBHOOK_URL: discord },
+    });
+    expect(await run(staff(), db)).toEqual({ ok: true, changed: false });
+    expect(stored(state).DISCORD_STAFF_WEBHOOK_URL).toBe(discord);
+    expect(state.audit).toEqual([]);
+  });
+
+  it('replaces an address by another, and forgets one that is removed (what was typed for it is ignored)', async () => {
+    const { db, state } = fakeDb({
+      values: { ...baseValues, DISCORD_STAFF_WEBHOOK_URL: discord, SLACK_STAFF_WEBHOOK_URL: slack },
+    });
+    const other = 'https://discord.com/api/webhooks/111222333/another';
+    await run(staff({ discordWebhook: other, removeSlack: true, slackWebhook: 'garbage' }), db);
+    expect(stored(state).DISCORD_STAFF_WEBHOOK_URL).toBe(other);
+    expect(stored(state).SLACK_STAFF_WEBHOOK_URL).toBeUndefined();
+    expect(state.audit[0]?.metadata).toMatchObject({
+      changedSecrets: ['DISCORD_STAFF_WEBHOOK_URL', 'SLACK_STAFF_WEBHOOK_URL'],
+    });
+  });
+
+  it.each([
+    [
+      'a Discord address that is another site',
+      { discordWebhook: 'https://evil.example/api/webhooks/1/x' },
+      'discord',
+      'discordWebhook',
+    ],
+    [
+      'a Discord address over http',
+      { discordWebhook: 'http://discord.com/api/webhooks/1/x' },
+      'discord',
+      'discordWebhook',
+    ],
+    [
+      'a Slack address that is not a hook',
+      { slackWebhook: 'https://hooks.slack.com/other' },
+      'slack',
+      'slackWebhook',
+    ],
+  ] as const)(
+    'refuses %s, on its field, and changes nothing',
+    async (_what, change, code, field) => {
+      const { db, state } = fakeDb();
+      const before = { ...state.row };
+      expect(await run(staff(change), db)).toMatchObject({ ok: false, code, field });
+      expect(state.audit).toEqual([]);
+      expect(state.row).toEqual(before);
+    },
+  );
+
+  it('is refused when the events module is off, and for what is not a string', async () => {
+    const off = fakeDb({ config: baseConfig({ modules: { enabled: [] } }) });
+    expect(await run(staff({ discordWebhook: discord }), off.db)).toMatchObject({
+      ok: false,
+      code: 'invalid',
+    });
+    const { db } = fakeDb();
+    expect(await run(staff({ discordWebhook: 3 as unknown as string }), db)).toMatchObject({
+      ok: false,
+      code: 'invalid',
+    });
   });
 });

@@ -37,8 +37,10 @@ import {
   validateAddress,
   validateClientId,
   validateClientSecret,
+  validateDiscordWebhook,
   validateEmail,
   validateLogin,
+  validateSlackWebhook,
 } from '@/lib/setup/validate';
 
 /**
@@ -390,6 +392,65 @@ export async function testNotification(
       installed: true,
     },
     to,
+  );
+  return result.ok ? { ok: true } : failure('testFailed', { detail: result.detail });
+}
+
+// ---------------------------------------------------------------------------------------------
+// The room of the school's staff: one webhook of its own for Discord and one for Slack
+
+const staffChannelSchema = z.object({
+  discordWebhook: text,
+  slackWebhook: text,
+  removeDiscord: z.boolean().optional(),
+  removeSlack: z.boolean().optional(),
+});
+
+export async function saveStaffChannel(input: unknown): Promise<ActionResult> {
+  await requireSettingsManager();
+  const parsed = staffChannelSchema.safeParse(input);
+  if (!parsed.success) return failure('invalid');
+  return change({ section: 'staff-channel', ...parsed.data });
+}
+
+const staffTestSchema = z.object({
+  locale: z.enum(['fr', 'en']),
+  channel: z.enum(['discord', 'slack']),
+  /** Typed in the page; blank tests the saved one. */
+  webhook: text.optional(),
+});
+
+/** One test message to the staff room, to what was typed or, blank, to what is saved: the same message as the BDE's channels send. */
+export async function testStaffChannel(input: unknown): Promise<ActionResult> {
+  await requireSettingsManager();
+  const options = staffTestSchema.safeParse(input);
+  if (!options.success) return failure('invalid');
+  const { channel, locale } = options.data;
+
+  const typed = (options.data.webhook ?? '').trim();
+  const saved = setting(
+    channel === 'discord' ? 'DISCORD_STAFF_WEBHOOK_URL' : 'SLACK_STAFF_WEBHOOK_URL',
+  );
+  let address = saved;
+  if (typed !== '') {
+    const checked = (channel === 'discord' ? validateDiscordWebhook : validateSlackWebhook)(typed);
+    if (!checked.ok) return failure(checked.error, { field: 'webhook' });
+    address = checked.value;
+  }
+  if (!address) return failure('invalid');
+
+  const { bde } = getConfig();
+  const result = await sendTestMessage(
+    channel,
+    channel === 'discord' ? { discordWebhook: address } : { slackWebhook: address },
+    {
+      name: bde.name,
+      locale,
+      timeZone: bde.timezone,
+      accent: bde.accentColor,
+      appUrl: registeredAddress(),
+      installed: true,
+    },
   );
   return result.ok ? { ok: true } : failure('testFailed', { detail: result.detail });
 }

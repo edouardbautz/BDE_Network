@@ -70,6 +70,10 @@ red: it is reversible.
 In the menu of your name, **My profile** shows your account information and your **personal calendar link**, to add
 to Google Calendar, Outlook or Apple Calendar. See [Events module](events.md#adding-it-to-your-calendar).
 
+When the platform publishes events on the intra, the profile also lets you give your **Discord id** and/or **Slack id** (optional):
+they are used only to mention you in the messages for the school's staff. The page says where to find them. A mention, a name or
+anything that is not an id is refused, and nobody else sees what you enter.
+
 ## For those who run the board
 
 ### Managing members

@@ -17,6 +17,10 @@ export { EVENTS_MODULE_KEY };
 export const EVENTS_VIEW = viewPermission(EVENTS_MODULE_KEY);
 export { EVENTS_PROPOSE, EVENTS_VALIDATE };
 export const EVENTS_SHARED_CALENDAR = `${EVENTS_MODULE_KEY}.shared_calendar`;
+/** Publishing on the intra: answering the requests of the school's staff page; following them read only; asking again. */
+export const EVENTS_INTRA_PUBLISH = `${EVENTS_MODULE_KEY}.intra_publish`;
+export const EVENTS_INTRA_VIEW = `${EVENTS_MODULE_KEY}.intra_view`;
+export const EVENTS_INTRA_REQUEST = `${EVENTS_MODULE_KEY}.intra_request`;
 
 /** Whether `modules.enabled` in bde.config.yml contains "events". When it
  * does not, no route, link, API or scheduler of the module is reachable. */

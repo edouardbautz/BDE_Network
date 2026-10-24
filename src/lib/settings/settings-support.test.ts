@@ -120,6 +120,7 @@ describe('settingsExtras: what only the settings page shows', () => {
         usage: { soiree: 7 },
         reminderHour: 18,
         intraPublication: false,
+        staffChannel: { hasDiscordWebhook: false, hasSlackWebhook: false },
         timezone: 'Europe/Paris',
       },
     });

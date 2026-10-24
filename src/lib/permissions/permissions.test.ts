@@ -62,6 +62,9 @@ describe('the permission registry', () => {
       'events.propose',
       'events.validate',
       'events.shared_calendar',
+      'events.intra_publish',
+      'events.intra_view',
+      'events.intra_request',
     ]);
   });
 
@@ -95,6 +98,10 @@ describe('the permission registry', () => {
 
   it('says proposing events includes viewing them, and validating includes both', () => {
     const find = (key: string) => permissionDefinitions(['events']).find((d) => d.key === key);
+    // the staff that publishes on the intra holds that and nothing else: it does not include viewing the calendar
+    expect(find('events.intra_publish')?.implies).toEqual([]);
+    expect(find('events.intra_view')?.implies).toEqual(['events.view']);
+    expect(find('events.intra_request')?.implies).toEqual(['events.view']);
     expect(find('events.propose')?.implies).toEqual(['events.view']);
     expect(find('events.validate')?.implies).toEqual(['events.propose', 'events.view']);
     expect(find('events.shared_calendar')?.implies).toEqual(['events.view']);

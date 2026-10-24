@@ -1,0 +1,86 @@
+[
+  [
+    "staff: the right to publish on the intra includes viewing the calendar",
+    "src/lib/permissions/registry.ts",
+    "{ name: 'intra_publish', implies: [] },",
+    "{ name: 'intra_publish' },",
+    ["src/lib/permissions/permissions.test.ts", "src/lib/roles/escalation.test.ts"]
+  ],
+  [
+    "staff: following the publications does not include viewing",
+    "src/lib/permissions/registry.ts",
+    "{ name: 'intra_view' },",
+    "{ name: 'intra_view', implies: [] },",
+    ["src/lib/permissions/permissions.test.ts"]
+  ],
+  [
+    "mention ids: a Discord id may be any digits",
+    "src/lib/members/mention-ids.ts",
+    "const DISCORD_ID = /^[0-9]{17,20}$/;",
+    "const DISCORD_ID = /^[0-9]+$/;",
+    ["src/lib/members/mention-ids.test.ts"]
+  ],
+  [
+    "mention ids: a Slack id may be a channel",
+    "src/lib/members/mention-ids.ts",
+    "const SLACK_ID = /^[UW][A-Z0-9]{8,12}$/;",
+    "const SLACK_ID = /^[A-Z][A-Z0-9]{8,12}$/;",
+    ["src/lib/members/mention-ids.test.ts"]
+  ],
+  [
+    "mention ids: a mention that wraps several ids is unwrapped",
+    "src/lib/members/mention-ids.ts",
+    "const mention = /^<@!?([^<>@!\\s]+)>$/.exec(text);",
+    "const mention = /^<@!?([^>]+)>/.exec(text);",
+    ["src/lib/members/mention-ids.test.ts"]
+  ],
+  [
+    "profile: a pending account may give its ids",
+    "src/app/[locale]/(app)/profile/actions.ts",
+    "    !isApproved(session.user.status) ||\n",
+    "",
+    ["src/app/[locale]/(app)/profile/actions.test.ts"]
+  ],
+  [
+    "profile: the ids are accepted while the platform does not publish on the intra",
+    "src/app/[locale]/(app)/profile/actions.ts",
+    "    !isEventsModuleEnabled() ||\n    !intraPublicationEnabled()\n",
+    "    !isEventsModuleEnabled()\n",
+    ["src/app/[locale]/(app)/profile/actions.test.ts"]
+  ],
+  [
+    "profile: the account to write is taken from the request",
+    "src/app/[locale]/(app)/profile/actions.ts",
+    "await prisma.user.update({ where: { id: session.user.id }, data: parsed.data });",
+    "await prisma.user.update({\n    where: { id: String(formData.get('id') ?? session.user.id) },\n    data: parsed.data,\n  });",
+    ["src/app/[locale]/(app)/profile/actions.test.ts"]
+  ],
+  [
+    "staff room: any address is accepted",
+    "src/lib/settings/staff-channel.ts",
+    "      if (!checked.ok) {",
+    "      if (false as boolean) {",
+    ["src/lib/settings/update.test.ts"]
+  ],
+  [
+    "staff room: a blank field removes the saved address",
+    "src/lib/settings/staff-channel.ts",
+    "    } else if (address !== '') {",
+    "    } else if (address === '') {\n      delete next[key];\n    } else {",
+    ["src/lib/settings/update.test.ts"]
+  ],
+  [
+    "staff room: it can be saved without the events module",
+    "src/lib/settings/update.ts",
+    "    case 'staff-channel': {\n      if (!config.events || !config.modules.enabled.includes(EVENTS_MODULE_KEY)) {\n        return fail('invalid');\n      }\n",
+    "    case 'staff-channel': {\n",
+    ["src/lib/settings/update.test.ts"]
+  ],
+  [
+    "staff room: the audit entry holds the address",
+    "src/lib/settings/update.ts",
+    "metadata: { changedSecrets: applied.changedSecrets },",
+    "metadata: { changedSecrets: applied.changedSecrets, values: applied.values },",
+    ["src/lib/settings/update.test.ts"]
+  ]
+]

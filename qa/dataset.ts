@@ -17,7 +17,14 @@ import {
   type LocalDate,
 } from '../src/lib/events/time';
 import { createRandom, type Random } from './prng';
-import { PERSONAS, ROLE_CUSTOM, ROLE_PROPOSER, ROLE_VALIDATOR, type PersonaRole } from './personas';
+import {
+  PERSONAS,
+  ROLE_CUSTOM,
+  ROLE_PROPOSER,
+  ROLE_STAFF,
+  ROLE_VALIDATOR,
+  type PersonaRole,
+} from './personas';
 
 /**
  * A believable BDE, as SQL: two school years of members, roles, events (single, series, cut series, drafts, proposals,
@@ -558,6 +565,7 @@ const EXTRA_ROLES: readonly PersonaRole[] = [
   ROLE_PROPOSER,
   ROLE_VALIDATOR,
   ROLE_CUSTOM,
+  ROLE_STAFF,
   {
     id: 'role-qa-president',
     name: 'Président',

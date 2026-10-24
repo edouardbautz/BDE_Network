@@ -117,6 +117,8 @@ describe('who may call them', () => {
       () => actions.saveLogo(new FormData()),
       () => actions.removeLogo(),
       () => actions.saveEvents({}),
+      () => actions.saveStaffChannel({}),
+      () => actions.testStaffChannel({}),
       () => actions.testNotification({}, {}),
     ];
     for (const call of calls) await expect(call()).rejects.toThrow('Forbidden');
@@ -639,5 +641,82 @@ describe('the contact address', () => {
       expect.objectContaining({ section: 'identity', contactEmail: 'bureau@exemple.fr' }),
       expect.anything(),
     );
+  });
+});
+
+describe('the staff room', () => {
+  const discord = 'https://discord.com/api/webhooks/987654321/staff-secret';
+
+  it('is saved as its own section, with what the page sent', async () => {
+    mocks.updateSettings.mockResolvedValue({ ok: true, changed: true });
+    expect(
+      await actions.saveStaffChannel({
+        discordWebhook: discord,
+        slackWebhook: '',
+        removeSlack: true,
+      }),
+    ).toEqual({ ok: true });
+    expect(mocks.updateSettings).toHaveBeenCalledWith(
+      { section: 'staff-channel', discordWebhook: discord, slackWebhook: '', removeSlack: true },
+      expect.anything(),
+    );
+  });
+
+  it('refuses what is not shaped like the request of the page, without writing', async () => {
+    expect(await actions.saveStaffChannel({ discordWebhook: 3 })).toMatchObject({
+      ok: false,
+      code: 'invalid',
+    });
+    expect(mocks.updateSettings).not.toHaveBeenCalled();
+  });
+
+  it('sends the test to what was typed, or to the saved address when the field is blank, and to nothing else', async () => {
+    mocks.sendTestMessage.mockResolvedValue({ ok: true });
+    expect(
+      await actions.testStaffChannel({ locale: 'fr', channel: 'discord', webhook: discord }),
+    ).toEqual({
+      ok: true,
+    });
+    expect(mocks.sendTestMessage).toHaveBeenLastCalledWith(
+      'discord',
+      { discordWebhook: discord },
+      expect.objectContaining({ name: 'BDE Test', installed: true }),
+    );
+
+    mocks.saved = { SLACK_STAFF_WEBHOOK_URL: 'https://hooks.slack.com/services/T1/B2/abc' };
+    await actions.testStaffChannel({ locale: 'en', channel: 'slack', webhook: '' });
+    expect(mocks.sendTestMessage).toHaveBeenLastCalledWith(
+      'slack',
+      { slackWebhook: 'https://hooks.slack.com/services/T1/B2/abc' },
+      expect.anything(),
+    );
+  });
+
+  it('answers on the field when the address typed is not a webhook, and sends nothing', async () => {
+    mocks.sendTestMessage.mockClear();
+    expect(
+      await actions.testStaffChannel({
+        locale: 'fr',
+        channel: 'discord',
+        webhook: 'https://evil.example/x',
+      }),
+    ).toMatchObject({ ok: false, code: 'discord', field: 'webhook' });
+    expect(mocks.sendTestMessage).not.toHaveBeenCalled();
+  });
+
+  it('has nothing to test when there is no address at all', async () => {
+    mocks.saved = {};
+    mocks.sendTestMessage.mockClear();
+    expect(
+      await actions.testStaffChannel({ locale: 'fr', channel: 'slack', webhook: '' }),
+    ).toMatchObject({ ok: false });
+    expect(mocks.sendTestMessage).not.toHaveBeenCalled();
+  });
+
+  it('says why a test failed, without the address', async () => {
+    mocks.sendTestMessage.mockResolvedValue({ ok: false, detail: 'webhook responded with 404' });
+    expect(
+      await actions.testStaffChannel({ locale: 'fr', channel: 'discord', webhook: discord }),
+    ).toEqual({ ok: false, code: 'testFailed', detail: 'webhook responded with 404' });
   });
 });

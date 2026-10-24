@@ -64,14 +64,22 @@ And, **for each module that is on**:
 
 The **Events** module has rights of its own, instead of "Manage":
 
-| Right                          | What it allows                                                                                                           |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
-| **Propose events**             | Create events that wait for a validator, and edit or delete your own as long as they are not published. Includes "view". |
-| **Validate events**            | Approve or refuse proposals, create, edit, confirm and delete any event, and see drafts. Includes "propose" and "view".  |
-| **Manage the shared calendar** | Create, renew or turn off the BDE's common calendar link. Includes "view".                                               |
+| Right                                    | What it allows                                                                                                                      |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Propose events**                       | Create events that wait for a validator, and edit or delete your own as long as they are not published. Includes "view".            |
+| **Validate events**                      | Approve or refuse proposals, create, edit, confirm and delete any event, and see drafts. Includes "propose" and "view".             |
+| **Manage the shared calendar**           | Create, renew or turn off the BDE's common calendar link. Includes "view".                                                          |
+| **Publish on the intra**                 | For the school's staff: see the requests to publish events on the intra, copy their fields and answer. Includes nothing: see below. |
+| **Follow the publications on the intra** | See where the publication of each event stands, without answering. Includes "view".                                                 |
+| **Ask for a publication on the intra**   | Send a refused request again, or one for an event already confirmed. Validating events already allows it. Includes "view".          |
 
 A team that organizes events without being allowed to publish them gets **Propose events**; the board, which decides,
 gets **Validate events**. See [Events module](events.md#proposing-and-validating-events).
+
+**Publish on the intra** is the right of the school's staff, who publish the BDE's events on the intra 42. It includes **nothing**,
+on purpose: a role that holds only this right sees the page of the requests and neither the calendar, nor the members, nor the
+settings. Add "View events" to the role if the staff also wants the calendar. These three rights do something only once an owner turns on
+**Publish events on the 42 intra** (Settings, Events).
 
 Ticking "manage", "validate" or "propose" ticks what it includes. A right of a module that is **off** stays in the role with no effect, and takes
 effect again if you turn the module back on.

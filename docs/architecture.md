@@ -570,7 +570,7 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
     - **The directory of mentions** (`mention-tools.tsx`): names are made from the label (`mentionKeyFor`: no accents, hyphens, never taken), the identifier is checked by the service, and a name that a template
       still uses cannot be removed (`mentionInUse`).
     - Tests: `draft.test.ts`, `defaults.test.ts`, `compose.test.ts`, `test-send.test.ts`, `editor-data.test.ts`, `variable-names.test.ts` (with the real messages), `mention-keys.test.ts`, `template-editor.test.tsx`
-      (real French messages, mocked actions), `actions.test.ts` (every action refused without the right, input read again), `pages.test.tsx`; `qa/access` (the page and the 11 actions, as the nine personas),
+      (real French messages, mocked actions), `actions.test.ts` (every action refused without the right, input read again), `pages.test.tsx`; `qa/access` (the page and the 11 actions, as the personas),
       `qa/browsers/templates.spec.ts` (three engines, a phone), the axe and visual suites (the page is in the matrix and in `visual.spec.ts`); mutation-checked
       (`qa/mutations/notification-templates-editor.json`).
 - **The table** (`lib/setup/notification-matrix.ts`, pure and tested; `components/setup/notification-table.tsx`,
@@ -823,6 +823,25 @@ recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`)
   Not a library on purpose: the preview must not be turnable against the platform and the script of the form page has a tight budget (`qa/perf/budgets.json`).
   What is supported is written at the top of the file; the stored description is the typed text, untouched (it is copied as it is). The input is cut at 20 000 characters
   and nesting at 4, and the hostile cases (`markdown.test.ts`, `markdown.test.tsx`) include a quadratic one.
+- **The school's staff** (permissions `events.intra_publish`, `events.intra_view`, `events.intra_request`; `access.ts` names them `EVENTS_INTRA_*`). The staff of the school
+  publishes the events on the intra; it has an account like any member (42 sign-in, approved by the BDE, a role such as "Staff intra") and the rights below, which only
+  do something once `events.intraPublication` is on (the registry lists them whenever the module is enabled: it is a pure function of the enabled modules, and a role that
+  holds them with the feature off simply gets nothing from them). **`intra_publish` implies nothing** (`implies: []`), where every other extra implies `view`: a
+  role that holds only it sees the page of the requests and neither the calendar, the members nor the settings (least privilege; the matrix plays it as the persona
+  `staff`). `intra_view` (follow the status, read only) and `intra_request` (send a request again, ask for one for an event that is already confirmed; validating
+  already allows it, by a helper and not by `implies`, so no stored role changes meaning) both imply `view`. The rules of `roles/guards.ts` apply unchanged (nobody hands
+  out what they do not hold: `escalation.test.ts`, "the staff of the school that publishes events on the intra").
+  - **How a person is mentioned** (`lib/members/mention-ids.ts`; `User.discordUserId`, `User.slackUserId`; migration `20261024120000_user_mention_ids`). Two optional columns the person
+    fills in on their profile (card shown only while the module and the publication on the intra are on; the action `profile.saveMentionIds` throws `Forbidden` otherwise, for a
+    pending account and for a session without an id). **An id, never a name**: 17 to 20 digits for Discord, a U or W and 8 to 12 capitals or digits for Slack, read strictly
+    (`<@123…>` pasted is unwrapped, `@everyone`, a role, `<!channel>` and a name are refused) and refused again by two CHECKs of the database, because the value ends up in a message
+    that pings. The account is the session's, never the request's. They are exported (`user.discordUserId`), classified in `personal-data.test.ts` (its pattern now knows
+    these two names) and erased with the account (`erasure.test.ts` puts one of each on the removed validator and looks for it in every column), and the policy says what they are for.
+  - **The staff room** (`lib/settings/staff-channel.ts`; secrets `DISCORD_STAFF_WEBHOOK_URL`, `SLACK_STAFF_WEBHOOK_URL`, the section `staff-channel` of `updateSettings`, actions
+    `saveStaffChannel` and `testStaffChannel`, panel `StaffChannelSection`, shown once the publication on the intra is on). The staff is not necessarily on the BDE's server, so the messages
+    for the staff go to a webhook of their own when one is set and to the BDE's own room (with the mentions) when not. Kept like the BDE's webhooks: sealed, never sent back to the page, a blank
+    field keeps the saved address, a removal is staged until Save, the audit entry says `changedSecrets` and never an address, and the test goes through the real adapter with the
+    typed or the saved address.
 - **Visibility is decided in one place, date by date.** `expandEvents` (`occurrences.ts`) drops the dates that are not
   published (a draft or a proposal) unless `includeDrafts`, or unless the event is the reader's own (`ownLogin`; a series
   can be confirmed with one date back to draft, or a draft with one date confirmed alone); the queries also exclude them in
@@ -1261,10 +1280,11 @@ start from the same three things, so that what one finds the others can replay.
   `full-qa`: the heavy suites, on the real image, a real PostgreSQL and the QA dataset. (3) A release: the last run of
   `qa.yml` on the commit to tag must be green. A suite goes in the level its duration allows: the budget of a pull request
   is a few minutes more, the rest is nightly. Never "retry until green" (see "Browser tests that fail now and then").
-- **The personas** (`qa/personas.ts`): the nine profiles every suite plays — visitor, account waiting for approval,
-  member, member who proposes, member who validates, member with a custom role, member with the Admin role, owner, and
-  a removed member whose cookie is still valid. "Module disabled" is not somebody but a way of running the platform
-  (`PLATFORM_VARIANTS`). `cookieHeaderFor` forges the session cookie of a persona with the platform's own secret, exactly
+- **The personas** (`qa/personas.ts`): the ten profiles every suite plays — visitor, account waiting for approval,
+  member, member who proposes, member who validates, member with a custom role, **member of the school's staff (the right to publish on the intra and nothing else)**,
+  member with the Admin role, owner, and a removed member whose cookie is still valid. "Module disabled" and "publication on the intra turned on" are not somebody but ways of
+  running the platform (`PLATFORM_VARIANTS`: `events-enabled`, `events-disabled`, and `events-intra`, which `platform.sh --variant events-intra` makes with `intraPublication: true`; the access
+  matrix runs on all three, the other suites on the first). `cookieHeaderFor` forges the session cookie of a persona with the platform's own secret, exactly
   as Auth.js writes it (the same technique as the `e2e/` scripts: nobody signs in through 42 in a test). A new suite uses
   these, it does not invent accounts.
 - **The dataset** (`qa/dataset.ts`): about 300 members, 600 events over two school years — single events, series of
@@ -1305,7 +1325,7 @@ start from the same three things, so that what one finds the others can replay.
   expectation, so when it disagrees with the code one of the two is wrong and finding which is the point), and played
   against the real image: **every page and API route** (`PAGES`, `API`: several probes for the routes that take an
   id, a token or a state: a published event, a draft, the proposal of somebody else, one's own, one that does not exist…)
-  and **every server action** (`CASES`), as each of the nine personas, with the events module on and off. Rules of the
+  and **every server action** (`CASES`), as each of the ten personas, with the events module off, on, and on with the publication on the intra. Rules of the
   matrix: (1) **"denied" is any answer that shows no content** (not found, or sent elsewhere), where the platform's
   rule is precise (a visitor goes to the login page, a pending account to the waiting page) the expectation says so;
   (2) **a refusal never carries somebody's data** (the addresses of the members, a feed link: looked for in the body);

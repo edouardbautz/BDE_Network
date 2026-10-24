@@ -34,7 +34,7 @@ describe('the generator of random numbers', () => {
 });
 
 describe('the personas', () => {
-  it('are the nine profiles of the access matrix, with different logins', () => {
+  it('are the ten profiles of the access matrix, with different logins', () => {
     expect(PERSONAS.map((who) => who.key)).toEqual([
       'anonymous',
       'pending',
@@ -42,6 +42,7 @@ describe('the personas', () => {
       'proposer',
       'validator',
       'custom',
+      'staff',
       'admin',
       'owner',
       'deleted',
@@ -135,7 +136,7 @@ describe('the dataset', () => {
 
   it('can be made smaller, for the suites that want a quick platform', () => {
     const small = buildDataset({ members: 20, eventsPerYear: 15, schoolYears: 1 });
-    expect(small.stats.User).toBe(30); // 7 personas that have an account, 3 fixture accounts, and 20 members
+    expect(small.stats.User).toBe(31); // 8 personas that have an account, 3 fixture accounts, and 20 members
     expect(small.stats.Event).toBeLessThan(dataset.stats.Event ?? 0);
   });
 });

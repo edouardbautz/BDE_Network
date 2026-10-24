@@ -1,7 +1,7 @@
 import { FIXTURES } from '../dataset';
 import type { PersonaKey, PlatformVariant } from '../personas';
 import type { Queryable } from '../invariants';
-import { can, isOwner } from './model';
+import { can, isApproved, isOwner } from './model';
 
 /**
  * Who may call each server action, as the matrix holds the platform to it. A server action is a public HTTP entry
@@ -61,9 +61,25 @@ export function eventForm(overrides: Record<string, string> = {}): FormData {
     repeatMonthDay: '',
     repeatCount: '10',
     status: 'DRAFT',
+    // what the intra's form asks for, once the platform publishes on the intra (ignored otherwise)
+    intraOrganizerLogin: 'qa-matrix',
+    intraAudience: 'BOTH',
+    intraMaxPeople: '30',
+    intraWaitingList: 'no',
+    intraKind: 'Association',
+    intraUnsubscribeHours: '0',
+    intraKeywords: 'qa',
     ...overrides,
   };
   for (const [name, value] of Object.entries(fields)) form.append(name, value);
+  return form;
+}
+
+/** The form of the profile that gives one's Discord and Slack ids. */
+function mentionIdsForm(): FormData {
+  const form = new FormData();
+  form.append('discordUserId', '348291047563210241');
+  form.append('slackUserId', 'U04ABCD1234');
   return form;
 }
 
@@ -92,6 +108,8 @@ const OWNER_ONLY_SETTINGS = [
   ['saveLogo', [new FormData()]],
   ['removeLogo', []],
   ['saveEvents', [{}]],
+  ['saveStaffChannel', [{}]],
+  ['testStaffChannel', [{}]],
   ['saveAddress', [{}]],
   ['verifyFortyTwo', [{}]],
   ['skipFortyTwoVerification', [{}]],
@@ -512,6 +530,15 @@ export const CASES: readonly ActionCase[] = [
     // Everybody who can read the events has a link to the calendar.
     allowed: (who, variant) => can(who, 'events.view', variant),
     args: () => [],
+  },
+  {
+    action: 'profile.saveMentionIds',
+    label: 'give one’s own Discord and Slack ids',
+    effect: ['User'],
+    // Any approved account, and only while the platform publishes on the intra: the gate is the first thing the action does.
+    allowed: (who, variant) => isApproved(who) && variant === 'events-intra',
+    strictThrow: true,
+    args: () => [{}, mentionIdsForm()],
   },
   // ---- the templates of the notifications: whoever holds the right to customise them ----
   ...TEMPLATE_CASES,
