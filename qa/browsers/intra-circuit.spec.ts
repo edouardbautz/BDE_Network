@@ -162,7 +162,7 @@ test.describe('the publication on the intra', () => {
 
       await staff.goto('/en/events/intra');
       await expect(staff.getByText('To update').first()).toBeVisible();
-      await staff.getByRole('link', { name: new RegExp(renamed.replace(/[()]/g, '\\$&')) }).click();
+      await staff.getByRole('link', { name: renamed }).click();
       await atRest(staff);
       await expect(
         staff.getByText('What changed since it was published', { exact: true }),
@@ -174,7 +174,7 @@ test.describe('the publication on the intra', () => {
         .getByRole('button', { name: 'Yes, the intra is up to date' })
         .click();
       await expect(staff).toHaveURL(/\/en\/events\/intra$/);
-      await staff.getByRole('link', { name: new RegExp(renamed.replace(/[()]/g, '\\$&')) }).click();
+      await staff.getByRole('link', { name: renamed }).click();
       await expect(staff.getByText(/Published on the intra by qa-staff/)).toBeVisible();
       await expect(staff.getByText('What changed since it was published')).toHaveCount(0);
     } finally {
