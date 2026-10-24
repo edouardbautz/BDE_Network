@@ -26,11 +26,13 @@ import { eventInclude } from '@/lib/events/include';
 import { intraColumns, intraOf } from '@/lib/events/intra';
 import { intraPublicationEnabled } from '@/lib/events/intra-config';
 import { intraAuditFields } from '@/lib/events/intra-audit';
+import { announceIntraOutcomes } from '@/lib/events/intra-notifications';
 import {
   inheritIntraRequest,
   syncIntraRequests,
   withdrawIntraRequest,
   type IntraActor,
+  type IntraOutcome,
 } from '@/lib/events/intra-sync';
 import {
   notifyEventApproved,
@@ -155,6 +157,19 @@ function announceApproval(eventId: string, actorLogin: string): void {
       await notifyEventApproved(eventId, actorLogin);
     } catch (error) {
       console.error('[events] approval notice failed', error);
+    }
+  });
+}
+
+/** What an event's change did to its request for the intra, told to the staff after the response: asked, told it changed or was taken
+ * back. The notification layer never throws; nothing it does can fail or delay saving the event. */
+function announceIntra(outcomes: readonly IntraOutcome[], actorLogin: string): void {
+  if (outcomes.length === 0) return;
+  after(async () => {
+    try {
+      await announceIntraOutcomes(outcomes, actorLogin);
+    } catch (error) {
+      console.error('[events] intra notice failed', error);
     }
   });
 }
@@ -305,7 +320,7 @@ export async function createEvent(
   const data = toEventRow(parsed.data);
   const { user } = access.session;
 
-  const event = await prisma.$transaction(async (tx) => {
+  const { created: event, intra: intraOutcomes } = await prisma.$transaction(async (tx) => {
     const created = await tx.event.create({
       data: {
         ...data,
@@ -336,9 +351,10 @@ export async function createEvent(
     if (created.status === 'PROPOSED') {
       await auditEventAction(access, 'event.propose', created, { created: true }, tx);
     }
-    return created;
+    return { created, intra };
   });
 
+  announceIntra(intraOutcomes, user.login);
   if (event.status === 'CONFIRMED') {
     announceConfirmation(event.id);
   }
@@ -530,10 +546,11 @@ export async function updateEvent(
       );
       if (scope === 'following') await settleReviewMarkers(tx, done.eventId, data.status);
     }
-    return { ...done, statusChanged, move };
+    return { ...done, statusChanged, move, intra };
   });
   if (!outcome.ok) return redirectWithNotice(eventId, outcome.notice);
   const result = outcome.value;
+  announceIntra(result.intra, access.session.user.login);
 
   if (result.statusChanged) {
     announceStatusChange({
@@ -571,7 +588,7 @@ export async function deleteEvent(eventId: string): Promise<void> {
     throw new Error('Forbidden');
   }
 
-  await prisma.$transaction(async (tx) => {
+  const intraOutcomes = await prisma.$transaction(async (tx) => {
     await assertMayEdit(tx, access, eventId);
     const intra = await withdrawIntraRequest(tx, eventId);
     await tx.event.delete({ where: { id: eventId } });
@@ -586,8 +603,10 @@ export async function deleteEvent(eventId: string): Promise<void> {
       },
       tx,
     );
+    return intra;
   });
 
+  announceIntra(intraOutcomes, access.session.user.login);
   revalidatePath('/events');
   redirect({ href: '/events', locale: await getLocale() });
 }
@@ -625,10 +644,11 @@ export async function deleteFollowingDates(
       },
       tx,
     );
-    return done;
+    return { ...done, intra };
   });
   if (!outcome.ok) return { href: await addressOf(noticeHref(eventId, outcome.notice)) };
 
+  announceIntra(outcome.value.intra, access.session.user.login);
   revalidatePath('/events');
   return { href: await addressOf(outcome.value.deletedEvent ? '/events' : `/events/${eventId}`) };
 }
@@ -716,10 +736,12 @@ export async function setEventStatus(
       changed,
       move,
       ownStatus: 'status' in done ? done.status : null,
+      intra,
     };
   });
   if (!outcome.ok) return { href: await addressOf(noticeHref(eventId, outcome.notice)) };
   const result = outcome.value;
+  announceIntra(result.intra, access.session.user.login);
 
   if (result.changed) {
     announceStatusChange({
@@ -853,9 +875,11 @@ export async function cancelOccurrence(
       { ...seriesAuditFields(event, 'occurrence', start), ...intraAuditFields(intra) },
       tx,
     );
+    return intra;
   });
   if (!outcome.ok) return { href: await addressOf(noticeHref(eventId, outcome.notice)) };
 
+  announceIntra(outcome.value, user.login);
   revalidatePath('/events');
   return { href: await dateAddress(eventId, start) };
 }
@@ -879,9 +903,11 @@ export async function restoreOccurrence(
       { ...seriesAuditFields(event, 'occurrence', start), ...intraAuditFields(intra) },
       tx,
     );
+    return intra;
   });
   if (!outcome.ok) return { href: await addressOf(noticeHref(eventId, outcome.notice)) };
 
+  announceIntra(outcome.value, access.session.user.login);
   revalidatePath('/events');
   return { href: await dateAddress(eventId, start) };
 }

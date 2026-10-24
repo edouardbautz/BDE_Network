@@ -1,5 +1,5 @@
 import type { NotificationEvent } from '@/config/schema';
-import type { MentionDirectory } from './mentions';
+import type { MentionDirectory, StaffMentionIds } from './mentions';
 
 /**
  * The template of a notification: what a BDE changes of how a card, a Slack message or an e-mail looks.
@@ -30,6 +30,9 @@ export type TemplateType = NotificationEvent;
  * - `proposedBy`, `reviewedBy`, `reason`: the proposal circuit (who proposed, who answered, why it was refused).
  * - `summary`: the sentence that says what happened to a member ("{name} is asking for access to the platform").
  * - `login`, `campus`, `role`, `actedBy`: the member (`actedBy` is who approved or removed them).
+ * - `requestedBy`, `changes`, `intraFields`, `intraLink`: publishing on the intra (who asked, what changed since it was published, the fields
+ *   of the intra's form, where it is on the intra); `actedBy` there is who changed, took back, published or refused it, and `reason` why it was
+ *   taken back or refused.
  */
 export type ItemId =
   | 'when'
@@ -45,7 +48,11 @@ export type ItemId =
   | 'login'
   | 'campus'
   | 'role'
-  | 'actedBy';
+  | 'actedBy'
+  | 'requestedBy'
+  | 'changes'
+  | 'intraFields'
+  | 'intraLink';
 
 /** A line of free text the BDE adds to a notification: the id is `text:` and a short key of its own. */
 export type CustomItemId = `text:${string}`;
@@ -111,4 +118,6 @@ export interface TemplateContext {
   locale?: string;
   /** The people, roles and groups the BDE can mention, by the name its templates use. */
   mentions?: MentionDirectory;
+  /** Who `{@staff}` stands for, in the messages for the school's staff. */
+  staff?: StaffMentionIds;
 }

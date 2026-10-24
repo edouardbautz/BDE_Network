@@ -61,7 +61,9 @@ describe('the catalog', () => {
     expect(nativeOrder('discord', 'eventRefused')[0]).toBe('reason');
     expect(nativeOrder('slack', 'eventRefused')[0]).toBe('reason');
     expect(nativeOrder('email', 'eventRefused')[0]).toBe('reason');
-    for (const type of TYPES.filter((type) => type !== 'eventRefused')) {
+    // the reason is the refusal's (of a proposal, of a publication) or why an event was taken back from the intra: no other has one
+    const WITH_REASON = ['eventRefused', 'intraRefused', 'intraCancelled'];
+    for (const type of TYPES.filter((type) => !WITH_REASON.includes(type))) {
       expect(ITEMS[type]).not.toContain('reason');
     }
   });

@@ -13,6 +13,7 @@ import { renderPlain, renderSegments, toSlack } from '@/lib/notifications/templa
 import type { TemplateContext } from '@/lib/notifications/templates/types';
 import { truncate } from '@/lib/notifications/text';
 import { KIND_LABEL_KEY, actionLabelKey, type EventCardKind } from './card-kind';
+import { intraParts } from './intra-card';
 import { formatDateTime, whenLine, type NotificationEventData, type Translate } from './messages';
 import { eventAbove, eventValues, templateTypeOf } from './template-values';
 import { isSameLocalDay } from './time';
@@ -72,6 +73,7 @@ export function buildEventSlack(
   const kindLabel = say(template?.eyebrow ?? t(KIND_LABEL_KEY[kind]));
   const title = say(template?.title ?? '{title}');
   const description = data.description?.trim();
+  const parts = intraParts(kind, data, t);
 
   const column = (label: string, value: string) => ({
     type: 'mrkdwn' as const,
@@ -95,6 +97,50 @@ ${value}`,
               text(data.review.comment, REASON_PREVIEW),
             ),
           });
+        } else if (parts.reason) {
+          top.push({
+            type: 'section',
+            text: column(label(parts.reason.label), text(parts.reason.text, REASON_PREVIEW)),
+          });
+        }
+        break;
+      case 'changes':
+        if (parts.changes) {
+          top.push({
+            type: 'section',
+            text: column(
+              label(parts.changes.label),
+              parts.changes.lines.map((line) => text(line, 400)).join('\n'),
+            ),
+          });
+        }
+        break;
+      case 'intraFields':
+        if (parts.fields) {
+          top.push({
+            type: 'section',
+            text: column(
+              label(parts.fields.label),
+              parts.fields.lines
+                .map((line) => `${text(line.label, 80)} : ${text(line.value, 300)}`)
+                .join('\n'),
+            ),
+          });
+        }
+        break;
+      case 'requestedBy':
+        if (parts.requestedBy) {
+          columns.push(column(label(parts.requestedBy.label), text(parts.requestedBy.name, 400)));
+        }
+        break;
+      case 'actedBy':
+        if (parts.actor) {
+          columns.push(column(label(parts.actor.label), text(parts.actor.name, 400)));
+        }
+        break;
+      case 'intraLink':
+        if (parts.link) {
+          columns.push(column(label(parts.link.label), text(parts.link.url, 400)));
         }
         break;
       case 'description':

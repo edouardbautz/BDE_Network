@@ -483,7 +483,10 @@ function apply(change: SettingsChange, state: State, actor: SettingsActor): Appl
     }
 
     case 'notifications': {
-      const parsed = parseNotifications(change.notifications, savedNotifications(values));
+      const parsed = parseNotifications(change.notifications, {
+        ...savedNotifications(values),
+        matrix: settingsMatrix(config),
+      });
       if (!parsed.ok) return fail(parsed.code, parsed.field ? { field: parsed.field } : {});
       const { matrix, discordWebhook, slackWebhook, smtp } = parsed.value;
 

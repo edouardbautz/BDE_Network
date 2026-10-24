@@ -13,6 +13,7 @@ import { renderPlain, renderSegments, toDiscord } from '@/lib/notifications/temp
 import type { TemplateContext } from '@/lib/notifications/templates/types';
 import { httpUrl, truncate } from '@/lib/notifications/text';
 import { KIND_LABEL_KEY, actionLabelKey, type EventCardKind } from './card-kind';
+import { intraParts } from './intra-card';
 import type { NotificationEventData, Translate } from './messages';
 import { eventValues, templateTypeOf } from './template-values';
 import { toLocalDateTime } from './time';
@@ -28,6 +29,11 @@ export const KIND_ICON: Record<EventCardKind, string> = {
   proposed: '📝',
   approved: '✅',
   refused: '⛔',
+  intraRequested: '📥',
+  intraChanged: '🔄',
+  intraCancelled: '🗑️',
+  intraPublished: '📢',
+  intraRefused: '⛔',
   test: '🧪',
 };
 export const ICON = {
@@ -39,6 +45,10 @@ export const ICON = {
   author: '👤',
   reviewer: '🛡️',
   reason: '💬',
+  requestedBy: '📨',
+  intraFields: '📋',
+  changes: '🔄',
+  intraLink: '🔗',
   button: '👉',
 } as const;
 
@@ -78,6 +88,7 @@ export function buildEventEmbed(
   const values = eventValues(kind, data, t, context.locale ?? 'en', timeZone, context.bdeName);
   const say = (text: string) => renderPlain(text, values);
   const description = data.description?.trim();
+  const parts = intraParts(kind, data, t);
 
   const fields: NonNullable<DiscordEmbed['fields']> = [];
   const blocks: string[][] = [];
@@ -93,6 +104,56 @@ export function buildEventEmbed(
             headingLine(emoji(ICON.reason), label(t('embed.fields.reason'))),
             quoteBlock(data.review.comment),
           ]);
+        } else if (parts.reason) {
+          blocks.push([
+            headingLine(emoji(ICON.reason), label(parts.reason.label)),
+            quoteBlock(parts.reason.text),
+          ]);
+        }
+        break;
+      case 'changes':
+        if (parts.changes) {
+          blocks.push([
+            headingLine(emoji(ICON.changes), label(parts.changes.label)),
+            quoteBlock(parts.changes.lines.join('\n')),
+          ]);
+        }
+        break;
+      case 'intraFields':
+        if (parts.fields) {
+          fields.push({
+            name: named(emoji(ICON.intraFields), label(parts.fields.label)),
+            value: parts.fields.lines.map((line) => `${line.label} : ${line.value}`).join('\n'),
+          });
+        }
+        break;
+      case 'requestedBy':
+        if (parts.requestedBy) {
+          fields.push({
+            name: named(emoji(ICON.requestedBy), label(parts.requestedBy.label)),
+            value: parts.requestedBy.name,
+            inline: true,
+          });
+        }
+        break;
+      case 'actedBy':
+        if (parts.actor) {
+          fields.push({
+            name: named(emoji(ICON.reviewer), label(parts.actor.label)),
+            value: parts.actor.name,
+            inline: true,
+          });
+        }
+        break;
+      case 'intraLink':
+        if (parts.link) {
+          const address = httpUrl(parts.link.url);
+          if (address) {
+            fields.push({
+              name: named(emoji(ICON.intraLink), label(parts.link.label)),
+              value: address,
+            });
+          }
         }
         break;
       case 'when':

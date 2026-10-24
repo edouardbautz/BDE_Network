@@ -23,6 +23,8 @@ import type { SlackBlock } from '../slack-blocks';
 import { getNotificationTranslate } from '../translate';
 import { channelsOfType, ITEMS } from './catalog';
 import { describeDefaults } from './defaults';
+import type { ChannelDefaults } from './defaults-shape';
+import { EVENT_KIND_OF } from './kinds';
 import { sampleEvent, sampleMember } from './samples';
 import { renderPlain } from './text';
 import { TEMPLATE_CHANNELS, type TemplateType } from './types';
@@ -37,14 +39,42 @@ const TZ = 'Europe/Paris';
 const NOW = new Date('2026-10-08T12:00:00Z');
 const BRAND = { name: 'BDE Nice', accent: '#2f5bea' };
 const TYPES = Object.keys(ITEMS) as TemplateType[];
-const EVENT_TYPES = TYPES.filter((type) => type.startsWith('event'));
-const KIND = {
-  eventConfirmed: 'confirmed',
-  eventReminder: 'tomorrow',
-  eventProposed: 'proposed',
-  eventApproved: 'approved',
-  eventRefused: 'refused',
-} as const;
+const EVENT_TYPES = TYPES.filter((type) => type in EVENT_KIND_OF);
+
+/** The facts each type shows under its own name: as fields of a Discord card, in a Slack message and in an e-mail. */
+type Fact = keyof ChannelDefaults['items'];
+const FACTS: Record<string, { discord: Fact[]; slack: Fact[]; mail: Fact[] }> = {
+  events: {
+    discord: ['category', 'assignees', 'repeats'],
+    slack: ['when', 'where', 'category', 'assignees', 'repeats'],
+    mail: ['when', 'where', 'category', 'assignees', 'repeats'],
+  },
+  intraRequested: {
+    discord: ['intraFields', 'requestedBy', 'repeats'],
+    slack: ['when', 'where', 'repeats', 'intraFields', 'requestedBy'],
+    mail: ['when', 'where', 'repeats', 'requestedBy'],
+  },
+  intraChanged: {
+    discord: ['actedBy', 'repeats'],
+    slack: ['changes', 'when', 'where', 'repeats', 'actedBy'],
+    mail: ['changes', 'when', 'where', 'repeats', 'actedBy'],
+  },
+  intraCancelled: {
+    discord: ['actedBy', 'repeats'],
+    slack: ['reason', 'when', 'where', 'repeats', 'actedBy'],
+    mail: ['reason', 'when', 'where', 'repeats', 'actedBy'],
+  },
+  intraPublished: {
+    discord: ['intraLink', 'actedBy', 'repeats'],
+    slack: ['when', 'where', 'repeats', 'intraLink', 'actedBy'],
+    mail: ['when', 'where', 'repeats', 'intraLink', 'actedBy'],
+  },
+  intraRefused: {
+    discord: ['actedBy', 'repeats'],
+    slack: ['reason', 'when', 'where', 'repeats', 'actedBy'],
+    mail: ['reason', 'when', 'where', 'repeats', 'actedBy'],
+  },
+};
 
 const buttonOf = (blocks: SlackBlock[]) => {
   const actions = blocks.find((block) => block.type === 'actions');
@@ -57,9 +87,9 @@ describe.each(['fr', 'en'] as const)('what the platform says by itself (%s)', (l
   describe('events', () => {
     it.each(EVENT_TYPES)('%s: the words of each channel are the patterns', async (type) => {
       const t = await getNotificationTranslate(locale, 'events.notifications');
-      const kind = KIND[type as keyof typeof KIND];
+      const kind = EVENT_KIND_OF[type]!;
       const data: NotificationEventData = {
-        ...sampleEvent(locale, NOW, type),
+        ...sampleEvent(locale, NOW, type, t, TZ),
         url: url('/events/e1'),
       };
       const values = eventValues(kind, data, t, locale, TZ, 'BDE Nice');
@@ -138,20 +168,21 @@ describe.each(['fr', 'en'] as const)('what the platform says by itself (%s)', (l
       );
       const shown = (id: keyof typeof discord.items, channelItems = discord.items) =>
         channelItems[id]?.label;
+      const facts = FACTS[type] ?? FACTS.events!;
       expect(Object.keys(names)).toEqual(
-        expect.arrayContaining(
-          (['category', 'assignees', 'repeats'] as const).map((id) => shown(id) as string),
-        ),
+        expect.arrayContaining(facts.discord.map((id) => shown(id) as string)),
       );
-      for (const id of ['category', 'assignees', 'repeats'] as const) {
+      for (const id of facts.discord) {
         expect(card.fields?.map((field) => field.name)).toContain(
           `${discord.items[id]?.emoji}  ${discord.items[id]?.label}`,
         );
       }
-      for (const id of ['when', 'where', 'category', 'assignees', 'repeats'] as const) {
+      for (const id of facts.slack) {
         expect(JSON.stringify(message.blocks)).toContain(`*${slack.items[id]?.label}*`);
-        expect(mail.text).toContain(`${email.items[id]?.label} :`);
         expect(slack.items[id]?.emoji).toBeUndefined();
+      }
+      for (const id of facts.mail) {
+        expect(mail.text).toContain(`${email.items[id]?.label} :`);
         expect(email.items[id]?.emoji).toBeUndefined();
       }
     });

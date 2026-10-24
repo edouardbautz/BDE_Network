@@ -20,14 +20,17 @@ const ALL: Configured = { discord: true, slack: true, email: true };
 const NOT_EMAIL: Configured = { discord: true, slack: true, email: false };
 
 describe('the rows of the table', () => {
-  it('are every type of notification, once, in two groups', () => {
-    const rows = [...MATRIX_GROUPS.members, ...MATRIX_GROUPS.events];
+  it('are every type of notification, once, in three groups', () => {
+    const rows = [...MATRIX_GROUPS.members, ...MATRIX_GROUPS.events, ...MATRIX_GROUPS.intra];
     expect([...rows].sort()).toEqual([...NOTIFICATION_EVENTS].sort());
   });
 
-  it('show the events ones only when the module is on', () => {
+  it('show the events ones only when the module is on, and those of the intra only when the platform publishes there', () => {
     expect(visibleRows(false)).toEqual(['memberPending', 'memberApproved', 'memberRemoved']);
     expect(visibleRows(true)).toHaveLength(8);
+    expect(visibleRows(true, true)).toHaveLength(13);
+    // without the events module there is nothing to publish: the intra rows follow it
+    expect(visibleRows(false, true)).toEqual(visibleRows(false));
   });
 });
 

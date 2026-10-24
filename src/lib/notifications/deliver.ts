@@ -1,6 +1,7 @@
 import { getConfig } from '@/config';
 import { channelsFor, type NotificationChannel, type NotificationEvent } from '@/config/schema';
 import { notify, notifyMany } from './index';
+import { webhookOf, type Room } from './rooms';
 import type { NotificationMessage } from './types';
 
 export interface DeliveryResult {
@@ -16,13 +17,15 @@ export interface DeliveryResult {
  * Slack message, nor cancels what already left. Webhook channels (Discord/Slack) get a single post; email gets one message
  * per recipient, each isolated too, so one bad address or a transient SMTP error never prevents the others from being
  * notified. An event with no channel sends nothing. Never throws: a notification problem must not break the action that
- * triggered it. `logPrefix` says whose notification failed (e.g. "[events]").
+ * triggered it. `logPrefix` says whose notification failed (e.g. "[events]"). `room`: `staff` posts the chat messages to the school's staff's
+ * own webhooks when the owners set them (and to the BDE's room when not); the e-mails go to `emailRecipients` whatever the room.
  */
 export async function deliver(
   event: NotificationEvent,
   message: Omit<NotificationMessage, 'to'>,
   emailRecipients: readonly string[],
   logPrefix: string,
+  room: Room = 'bde',
 ): Promise<DeliveryResult> {
   const result: DeliveryResult = { sent: 0, failed: 0, channels: {} };
 
@@ -55,7 +58,8 @@ export async function deliver(
             }
           }
         } else {
-          await notify(channel, message);
+          const webhookUrl = webhookOf(channel, room);
+          await (webhookUrl ? notify(channel, message, { webhookUrl }) : notify(channel, message));
           own.sent += 1;
         }
       } catch (error) {

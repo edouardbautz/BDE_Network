@@ -393,7 +393,12 @@
           "approved": "Proposal approved",
           "refused": "Proposal refused",
           "test": "Test message",
-          "reminderPattern": "Reminder · {day}"
+          "reminderPattern": "Reminder · {day}",
+          "intraRequested": "Publication requested on the intra",
+          "intraChanged": "Event changed: update the intra",
+          "intraCancelled": "Event taken back: remove it from the intra",
+          "intraPublished": "Event published on the intra",
+          "intraRefused": "Publication refused on the intra"
         },
         "fields": {
           "when": "When",
@@ -404,7 +409,25 @@
           "proposedBy": "Proposed by",
           "approvedBy": "Approved by",
           "refusedBy": "Refused by",
-          "reason": "Reason"
+          "reason": "Reason",
+          "requestedBy": "Requested by",
+          "changedBy": "Changed by",
+          "cancelledBy": "Taken back by",
+          "publishedBy": "Published by",
+          "changes": "What changed",
+          "intraFields": "For the intra's form",
+          "intraLink": "On the intra"
+        },
+        "changes": {
+          "field": "{label}: {before} → {after}",
+          "removed": "Date to remove: {date}",
+          "added": "Date to add: {date}",
+          "edited": "Date whose text changed: {date}"
+        },
+        "cause": {
+          "draft": "The event went back to draft.",
+          "deleted": "The event was deleted.",
+          "dates": "No date of the event is published any more."
         }
       },
       "email": {
@@ -412,11 +435,14 @@
         "calendarNote": "The attached file adds the event to your calendar.",
         "footer": "You are receiving this message because you are a member of {bde}.",
         "reviewAction": "Review the proposal",
-        "footerTest": "This is a test message sent from the settings of {bde}."
+        "footerTest": "This is a test message sent from the settings of {bde}.",
+        "staffAction": "Open on the platform",
+        "staffFooter": "You are receiving this message because you publish the events of {bde} on the intra."
       },
       "slack": {
         "action": "View the event",
-        "reviewAction": "Review the proposal"
+        "reviewAction": "Review the proposal",
+        "staffAction": "Open on the platform"
       },
       "proposed": {
         "subject": "Event proposed: {title}",
@@ -429,6 +455,48 @@
       "refused": {
         "subject": "Proposal refused: {title}",
         "intro": "{author}'s proposal was refused by {reviewer}. It can be edited and proposed again."
+      },
+      "intraFields": {
+        "organizerLogin": "Organizer's login",
+        "name": "Name",
+        "availableFor": "Available for",
+        "description": "Description",
+        "location": "Location",
+        "maxPeople": "Maximum number of people",
+        "waitingList": "Waiting list",
+        "kind": "Kind",
+        "unsubscribeHours": "Delay before unsubscribing (hours)",
+        "keywords": "Keywords",
+        "yes": "Yes",
+        "no": "No",
+        "audiences": {
+          "STUDENTS": "Students",
+          "PISCINERS": "Pisciners",
+          "BOTH": "Both"
+        }
+      },
+      "intra": {
+        "intraRequested": {
+          "subject": "Publication requested: {title}",
+          "intro": "{requester} confirmed an event: it has to be published on the intra."
+        },
+        "intraChanged": {
+          "subject": "Event changed: {title}",
+          "intro": "An event that is on the intra changed: the intra has to be updated."
+        },
+        "intraCancelled": {
+          "subject": "Event taken back: {title}",
+          "intro": "An event that was on the intra is no longer to be published: it has to be removed from the intra."
+        },
+        "intraPublished": {
+          "subject": "Published on the intra: {title}",
+          "intro": "{actor} published this event on the intra."
+        },
+        "intraRefused": {
+          "subject": "Publication refused: {title}",
+          "intro": "{actor} refused to publish this event on the intra. It can be corrected, then the request sent again."
+        },
+        "dates": "{count, plural, one {# date} other {# dates}}"
       }
     },
     "title": "Events",
@@ -813,7 +881,7 @@
         "publish": "Published on the intra",
         "publishDialog": {
           "title": "Published on the intra?",
-          "body": "The request is marked as published. If the event changes afterwards, it goes back to \"To update\" in your list.",
+          "body": "The request is marked as published, and the author is told (according to the notifications ticked). If the event changes afterwards, it goes back to \"To update\" in your list, and you are told.",
           "address": "Address on the intra (optional)",
           "addressHint": "An https link to the event on the intra (intra.42.fr), if you want to keep it.",
           "confirm": "Yes, published"
@@ -821,7 +889,7 @@
         "refuse": "Refuse",
         "refuseDialog": {
           "title": "Refuse this request?",
-          "body": "The author reads your comment on the event page and can send the request again once the event is corrected.",
+          "body": "The author reads your comment on the event page, is told, and can send the request again once the event is corrected.",
           "comment": "Why?",
           "commentHint": "Say what has to change so that you can publish the event.",
           "confirm": "Refuse the request"
@@ -1173,7 +1241,8 @@
       "types": {
         "groups": {
           "members": "Members",
-          "events": "Events"
+          "events": "Events",
+          "intra": "Publication on the intra"
         },
         "memberRemovedNoEmail": "Never by e-mail",
         "memberPending": {
@@ -1207,6 +1276,26 @@
         "eventRefused": {
           "name": "Proposal refused",
           "hint": "Tells its author, with the comment."
+        },
+        "intraRequested": {
+          "name": "Publication requested",
+          "hint": "Tells the school's staff: an e-mail to those who can publish, a message in its room."
+        },
+        "intraChanged": {
+          "name": "Event changed on the intra",
+          "hint": "Tells the staff, with the old and the new value."
+        },
+        "intraCancelled": {
+          "name": "Event taken back from the intra",
+          "hint": "Tells the staff that a published event is no longer to be published."
+        },
+        "intraPublished": {
+          "name": "Published on the intra",
+          "hint": "Tells the author, and the BDE's room."
+        },
+        "intraRefused": {
+          "name": "Publication refused",
+          "hint": "Tells the author, with the reason, and the BDE's room."
         }
       }
     },
@@ -1438,7 +1527,8 @@
       "listLabel": "Notifications to customise",
       "groups": {
         "events": "Events",
-        "members": "Members"
+        "members": "Members",
+        "intra": "Publication on the intra"
       },
       "customised": "Customised",
       "notSent": "Sent nowhere"
@@ -1480,6 +1570,26 @@
       "memberRemoved": {
         "name": "Member removed",
         "when": "Sent in the channel when a member is removed. The person removed never receives an e-mail."
+      },
+      "intraRequested": {
+        "name": "Publication requested",
+        "when": "Sent to the school's staff (an e-mail to those who can publish, a message in its room) when an event is confirmed."
+      },
+      "intraChanged": {
+        "name": "Event changed on the intra",
+        "when": "Sent to the staff when an event that is on the intra changes: the old and the new value."
+      },
+      "intraCancelled": {
+        "name": "Event taken back from the intra",
+        "when": "Sent to the staff when an event on the intra goes back to draft, is deleted or has no date left."
+      },
+      "intraPublished": {
+        "name": "Published on the intra",
+        "when": "Sent to the author (e-mail) and to the BDE's room when the staff published the event."
+      },
+      "intraRefused": {
+        "name": "Publication refused",
+        "when": "Sent to the author (e-mail) and to the BDE's room, with the reason, when the staff refuses."
       }
     },
     "editor": {
@@ -1580,7 +1690,11 @@
         "login": "Login",
         "campus": "Campus",
         "role": "Role",
-        "actedBy": "By"
+        "actedBy": "By",
+        "requestedBy": "Requested by",
+        "changes": "What changed",
+        "intraFields": "Fields of the intra's form",
+        "intraLink": "Link on the intra"
       }
     },
     "variables": {
@@ -1667,6 +1781,26 @@
       "actor": {
         "name": "actor",
         "label": "Who approved or removed the member"
+      },
+      "requester": {
+        "name": "requester",
+        "label": "Who asked for the publication"
+      },
+      "editor": {
+        "name": "editor",
+        "label": "Who changed or took back the event"
+      },
+      "cause": {
+        "name": "cause",
+        "label": "Why the event was taken back"
+      },
+      "answerer": {
+        "name": "answerer",
+        "label": "The staff member who answered"
+      },
+      "intra_link": {
+        "name": "intra_link",
+        "label": "Address of the event on the intra"
       }
     },
     "mentions": {
@@ -1703,7 +1837,8 @@
       "added": "Added",
       "remove": "Remove {name}",
       "removed": "Removed",
-      "inUse": "Not possible: this name is still used by {where}. Remove it from the message first."
+      "inUse": "Not possible: this name is still used by {where}. Remove it from the message first.",
+      "staff": "{@staff}: the staff members who gave their id"
     },
     "history": {
       "title": "History: {scope}",
@@ -1805,7 +1940,8 @@
       "mentionInUse": "This mention is still in use.",
       "notFound": "Not found: it may have been changed already.",
       "restoreInvalid": "This version is no longer valid today: it was not restored.",
-      "unknown": "Something went wrong. Try again in a moment."
+      "unknown": "Something went wrong. Try again in a moment.",
+      "mentionNotForType": "This mention is only for the messages to the staff about the intra."
     }
   }
 }

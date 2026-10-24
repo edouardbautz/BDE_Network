@@ -28,6 +28,7 @@ export function settingsView(): DraftView {
     timezone: config.bde.timezone,
     owners: config.auth.owners,
     events: config.modules.enabled.includes('events'),
+    intra: config.events?.intraPublication === true,
     notifications: {
       matrix: settingsMatrix(config),
       hasDiscordWebhook: Boolean(setting('DISCORD_WEBHOOK_URL')),

@@ -1,8 +1,10 @@
 import { getConfig } from '@/config';
+import { staffAudience } from '@/lib/events/intra-audience';
 import { prisma } from '@/lib/prisma';
 import { cascade } from './apply';
 import { sharedChannels } from './catalog';
-import type { MentionDirectory } from './mentions';
+import { STAFF_TYPES } from './kinds';
+import type { MentionDirectory, StaffMentionIds } from './mentions';
 import { validateTemplate, type TemplateScope } from './schema';
 import { loadMentions, loadTemplates, type StoredTemplate } from './store';
 import {
@@ -70,6 +72,21 @@ export async function templatesFor(type: TemplateType): Promise<SendTemplates> {
     );
   }
 
+  // `{@staff}` stands for the staff members who gave their id: looked up only for the messages that speak to the staff.
+  let staff: StaffMentionIds | undefined;
+  if (STAFF_TYPES.includes(type)) {
+    try {
+      const audience = await staffAudience();
+      staff = { discord: audience.discordIds, slack: audience.slackIds };
+    } catch (error) {
+      console.error(
+        `[notifications] ${type}: the staff could not be read, {@staff} mentions nobody`,
+        error,
+      );
+    }
+  }
+  const shared = { ...base, mentions: directory, ...(staff && { staff }) };
+
   const contexts = new Map<TemplateChannel, TemplateContext>();
   for (const channel of TEMPLATE_CHANNELS) {
     const used: TemplateContent[] = [];
@@ -93,11 +110,11 @@ export async function templatesFor(type: TemplateType): Promise<SendTemplates> {
         `[notifications] ${type}/${channel}: the template of the BDE is not valid (${unusable.reason}), the platform's own is sent`,
       );
       void recordFallback(type, unusable.row.scope, unusable.reason, unusable.row);
-      contexts.set(channel, { ...base, mentions: directory });
+      contexts.set(channel, shared);
       continue;
     }
     const template = used.length === 2 ? cascade(used[0], used[1]) : used[0];
-    contexts.set(channel, { ...base, mentions: directory, ...(template && { template }) });
+    contexts.set(channel, { ...shared, ...(template && { template }) });
   }
 
   const context = (channel: TemplateChannel) => contexts.get(channel) ?? base;
@@ -118,7 +135,7 @@ export async function templatesFor(type: TemplateType): Promise<SendTemplates> {
             void recordFallback(type, scope as TemplateScope, 'render:failed');
           }
         }
-        return make({ ...base, mentions: directory });
+        return make(shared);
       }
     },
   };

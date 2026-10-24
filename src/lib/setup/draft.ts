@@ -82,6 +82,8 @@ export interface DraftView {
   timezone: string;
   owners: string[];
   events: boolean;
+  /** The platform publishes the events on the intra: only the settings page turns that on, never the installer. */
+  intra: boolean;
   notifications: {
     /** What each type of notification is sent through. */
     matrix: NotificationMatrix;
@@ -111,6 +113,7 @@ export function toView(draft: SetupDraft, defaults: { addressUrl: string }): Dra
     timezone: draft.timezone ?? '',
     owners: draft.owners ?? [],
     events: draft.events ?? true,
+    intra: false,
     notifications: {
       matrix: notifications?.matrix ?? emptyMatrix(),
       hasDiscordWebhook: Boolean(notifications?.discordWebhook),

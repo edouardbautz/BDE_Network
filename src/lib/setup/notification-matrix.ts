@@ -11,18 +11,22 @@ import type { NotificationMatrix } from './notifications';
  * do not offer (`parseNotifications`): the page is a courtesy.
  */
 
-/** The rows, in groups: what concerns the members, and what concerns the events (only when the module is on). */
+/** The rows, in groups: what concerns the members, the events (only when the module is on) and their publication on the intra
+ * (only when the platform publishes there). */
 export const MATRIX_GROUPS = {
   members: ['memberPending', 'memberApproved', 'memberRemoved'],
   events: ['eventConfirmed', 'eventReminder', 'eventProposed', 'eventApproved', 'eventRefused'],
+  intra: ['intraRequested', 'intraChanged', 'intraCancelled', 'intraPublished', 'intraRefused'],
 } as const satisfies Record<string, readonly NotificationEvent[]>;
 
 export type MatrixGroup = keyof typeof MATRIX_GROUPS;
 
-/** The rows shown: the events ones only when the events module is on (what they hold is kept, not shown). */
-export const visibleRows = (events: boolean): NotificationEvent[] => [
+/** The rows shown: the events ones only when the events module is on, those of the intra only when the platform publishes there
+ * too (what they hold is kept, not shown). */
+export const visibleRows = (events: boolean, intra = false): NotificationEvent[] => [
   ...MATRIX_GROUPS.members,
   ...(events ? MATRIX_GROUPS.events : []),
+  ...(events && intra ? MATRIX_GROUPS.intra : []),
 ];
 
 /** Whether a box exists at all: nobody writes to a member who was just removed, so that one has no e-mail. */

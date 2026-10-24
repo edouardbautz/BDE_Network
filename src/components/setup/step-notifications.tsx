@@ -218,6 +218,7 @@ export function StepNotifications({
           onChange={setMatrix}
           configured={configured}
           events={view.events}
+          intra={view.intra}
         />
         {failure?.field === 'matrix' && (
           <p role="alert" className="text-destructive text-body">

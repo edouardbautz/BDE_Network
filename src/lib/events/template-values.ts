@@ -5,7 +5,7 @@ import {
 } from '@/lib/notifications/templates/mentions';
 import type { TemplateContext } from '@/lib/notifications/templates/types';
 import { truncate } from '@/lib/notifications/text';
-import type { EventCardKind } from './card-kind';
+import type { EventCardKind, IntraCardKind } from './card-kind';
 import { whenLine, type NotificationEventData, type Translate } from './messages';
 
 /** How much of the event's description a variable stands for: it is a notice, the page has the rest. */
@@ -14,8 +14,20 @@ const DESCRIPTION_VARIABLE = 350;
 /** The type of notification a card kind belongs to: the key of `notifications` in the configuration. */
 export function templateTypeOf(
   kind: EventCardKind,
-): 'eventConfirmed' | 'eventReminder' | 'eventProposed' | 'eventApproved' | 'eventRefused' {
+):
+  | 'eventConfirmed'
+  | 'eventReminder'
+  | 'eventProposed'
+  | 'eventApproved'
+  | 'eventRefused'
+  | IntraCardKind {
   switch (kind) {
+    case 'intraRequested':
+    case 'intraChanged':
+    case 'intraCancelled':
+    case 'intraPublished':
+    case 'intraRefused':
+      return kind;
     case 'tomorrow':
     case 'today':
       return 'eventReminder';
@@ -60,7 +72,12 @@ export function eventValues(
     day: kind === 'today' ? t('embed.day.today') : t('embed.day.tomorrow'),
     author: data.review?.authorName ?? '',
     reviewer: data.review?.reviewerName ?? '',
-    comment: data.review?.comment ?? '',
+    comment: data.review?.comment ?? data.intra?.comment ?? '',
+    requester: data.intra?.requestedByName ?? '',
+    editor: data.intra?.actorName ?? '',
+    answerer: data.intra?.actorName ?? '',
+    cause: data.intra?.cause ?? '',
+    intra_link: data.intra?.intraUrl ?? '',
   };
 }
 
@@ -79,5 +96,6 @@ export function eventAbove(
     eventValues(kind, data, t, locale, timeZone, context.bdeName),
     platform,
     context.mentions,
+    context.staff,
   );
 }

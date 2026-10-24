@@ -39,16 +39,19 @@ export function NotificationTable({
   onChange,
   configured,
   events,
+  intra = false,
 }: {
   matrix: NotificationMatrix;
   onChange: (matrix: NotificationMatrix) => void;
   configured: Configured;
   /** Whether the events module is on: its types are shown only then (what they hold is kept). */
   events: boolean;
+  /** Whether the platform publishes the events on the intra: the types about it are shown only then (events module on too). */
+  intra?: boolean;
 }) {
   const t = useTranslations('setup.notifications');
   const groups = (Object.keys(MATRIX_GROUPS) as MatrixGroup[]).filter(
-    (group) => group === 'members' || events,
+    (group) => group === 'members' || (events && (group !== 'intra' || intra)),
   );
   const rows = groups.flatMap((group) => MATRIX_GROUPS[group]) as NotificationEvent[];
 

@@ -44,7 +44,7 @@ export default async function NotificationsPage({
 
   const config = getConfig();
   const query = await searchParams;
-  const types = listedTypes(config.modules.enabled);
+  const types = listedTypes(config.modules.enabled, config.events?.intraPublication === true);
   const requested = first(query.type);
   const selected: TemplateType =
     types.find((type) => type === requested) ?? types[0] ?? (Object.keys(ITEMS)[0] as TemplateType);
@@ -63,8 +63,9 @@ export default async function NotificationsPage({
     ]),
   ) as Record<TemplateChannel, boolean>;
 
-  const groups: Array<{ id: 'events' | 'members'; types: TemplateType[] }> = [
+  const groups: Array<{ id: 'events' | 'intra' | 'members'; types: TemplateType[] }> = [
     { id: 'events', types: types.filter((type) => type.startsWith('event')) },
+    { id: 'intra', types: types.filter((type) => type.startsWith('intra')) },
     { id: 'members', types: types.filter((type) => type.startsWith('member')) },
   ];
 

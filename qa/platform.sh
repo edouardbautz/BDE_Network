@@ -102,6 +102,11 @@ notifications:
   eventProposed: $channels
   eventApproved: $channels
   eventRefused: $channels
+  intraRequested: $channels
+  intraChanged: $channels
+  intraCancelled: $channels
+  intraPublished: $channels
+  intraRefused: $channels
 updates:
   check: false
 EOF

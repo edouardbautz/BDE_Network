@@ -2,12 +2,15 @@ import { getConfig } from '@/config';
 import { registeredAddress } from '@/lib/public-address';
 import { setting } from '@/lib/settings/runtime';
 import { describeSendError } from '@/lib/setup/notify-test';
+import { staffAudience } from '@/lib/events/intra-audience';
 import { notify } from '..';
+import { webhookOf } from '../rooms';
 import { resolveLogoUrl } from '../sender';
 import { getNotificationTranslate } from '../translate';
 import type { NotificationMessage } from '../types';
 import type { TrustedText } from './mentions';
 import { composeDrafts, inertMentions, type Drafts } from './compose';
+import { STAFF_TYPES } from './kinds';
 import { renderPreview, type PreviewOptions } from './preview';
 import type { TemplateIssue } from './schema';
 import { loadMentions } from './store';
@@ -43,10 +46,18 @@ declare global {
 /** Kept on `globalThis` like the other guards: Next.js bundles the actions and the pages separately. */
 const clock = (): Map<TemplateChannel, number> => (globalThis.templateTestClock ??= new Map());
 
-/** Whether the platform has what this channel needs to send. */
-export function isChannelConfigured(channel: TemplateChannel): boolean {
-  if (channel === 'discord') return Boolean(setting('DISCORD_WEBHOOK_URL'));
-  if (channel === 'slack') return Boolean(setting('SLACK_WEBHOOK_URL'));
+/**
+ * Whether the platform has what this channel needs to send: the webhook of the BDE's room, or, for a message that speaks to the
+ * staff, the staff's own (the test goes where the real message would).
+ */
+export function isChannelConfigured(channel: TemplateChannel, type?: TemplateType): boolean {
+  const staff = type !== undefined && STAFF_TYPES.includes(type);
+  if (channel === 'discord') {
+    return Boolean(setting('DISCORD_WEBHOOK_URL') || (staff && webhookOf('discord', 'staff')));
+  }
+  if (channel === 'slack') {
+    return Boolean(setting('SLACK_WEBHOOK_URL') || (staff && webhookOf('slack', 'staff')));
+  }
   return Boolean(setting('SMTP_HOST'));
 }
 
@@ -60,6 +71,9 @@ export interface TestInput {
   to?: string | null;
 }
 
+/** Example ids for `{@staff}` in the editor's picture: nobody is pinged by a preview. */
+const EXAMPLE_STAFF = { discord: ['123456789012345678'], slack: ['U01ABCDE2F3'] } as const;
+
 /** The context a preview is drawn in: the BDE as it signs its messages. */
 export async function previewOptions(): Promise<PreviewOptions> {
   const { bde } = getConfig();
@@ -72,6 +86,7 @@ export async function previewOptions(): Promise<PreviewOptions> {
     accent: bde.accentColor,
     ...(logoUrl && { logoUrl }),
     appUrl,
+    staff: EXAMPLE_STAFF,
   };
 }
 
@@ -90,7 +105,7 @@ export async function sendTemplateTest(
   now: number = Date.now(),
 ): Promise<TestOutcome> {
   const { type, channel } = input;
-  if (!isChannelConfigured(channel) || (channel === 'email' && !input.to)) {
+  if (!isChannelConfigured(channel, type) || (channel === 'email' && !input.to)) {
     return { ok: false, code: 'notConfigured' };
   }
 
@@ -112,6 +127,11 @@ export async function sendTemplateTest(
 
   try {
     const options = await previewOptions();
+    // The mention of the staff pings the people who gave their id, and only when the person asked for live mentions.
+    if (input.withMentions && STAFF_TYPES.includes(type)) {
+      const audience = await staffAudience();
+      options.staff = { discord: audience.discordIds, slack: audience.slackIds };
+    }
     const template = input.withMentions
       ? composed.template
       : withInertAbove(composed.template, directory, channel);
@@ -158,7 +178,8 @@ export async function sendTemplateTest(
         email: { ...preview.mail, subject },
       };
     }
-    await notify(channel, message);
+    const webhookUrl = STAFF_TYPES.includes(type) ? webhookOf(channel, 'staff') : undefined;
+    await (webhookUrl ? notify(channel, message, { webhookUrl }) : notify(channel, message));
     return { ok: true };
   } catch (error) {
     return { ok: false, code: 'failed', detail: describeSendError(error) };

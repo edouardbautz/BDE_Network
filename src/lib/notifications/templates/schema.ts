@@ -1,6 +1,7 @@
 import '@/lib/zod-config';
 import { z } from 'zod';
 import { ITEMS, VARIABLES } from './catalog';
+import { STAFF_TYPES } from './kinds';
 import { TEMPLATE_LIMITS } from './limits';
 import { directoryKey, mentionsIn, type MentionDirectory, type MentionKind } from './mentions';
 import { variablesIn } from './text';
@@ -124,9 +125,9 @@ const BAD_MENTION = /\{@[^{}]*\}/g;
 
 /** The mentions each scope may spell. The ones that need an identifier belong to one platform, so to a template of that channel. */
 const MENTIONS_OF: Record<TemplateScope, ReadonlySet<string>> = {
-  all: new Set(['everyone', 'here']),
-  discord: new Set(['everyone', 'here', 'role', 'user']),
-  slack: new Set(['everyone', 'here', 'channel', 'group', 'user']),
+  all: new Set(['everyone', 'here', 'staff']),
+  discord: new Set(['everyone', 'here', 'staff', 'role', 'user']),
+  slack: new Set(['everyone', 'here', 'channel', 'staff', 'group', 'user']),
   email: new Set(),
 };
 
@@ -214,6 +215,9 @@ export function validateTemplate(
       const token = JSON.parse(raw) as { kind: string; key?: string };
       if (scope === 'email') {
         // already said: there is no message above an e-mail
+      } else if (token.kind === 'staff' && !STAFF_TYPES.includes(type)) {
+        // the staff is only written to about the publication on the intra: elsewhere the mention would ping people for nothing
+        issue('above', 'mentionNotForType', { mention: 'staff' });
       } else if (!MENTIONS_OF[scope].has(token.kind)) {
         // what needs an identifier belongs to a channel: for all of them it can only be asked to customise one
         issue(

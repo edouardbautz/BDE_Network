@@ -393,7 +393,12 @@
           "approved": "Proposition approuvée",
           "refused": "Proposition refusée",
           "test": "Message de test",
-          "reminderPattern": "Rappel · {day}"
+          "reminderPattern": "Rappel · {day}",
+          "intraRequested": "Publication demandée sur l'intra",
+          "intraChanged": "Événement modifié : mettre l'intra à jour",
+          "intraCancelled": "Événement retiré : à retirer de l'intra",
+          "intraPublished": "Événement publié sur l'intra",
+          "intraRefused": "Publication refusée sur l'intra"
         },
         "fields": {
           "when": "Quand",
@@ -404,7 +409,25 @@
           "proposedBy": "Proposé par",
           "approvedBy": "Approuvé par",
           "refusedBy": "Refusé par",
-          "reason": "Motif"
+          "reason": "Motif",
+          "requestedBy": "Demandé par",
+          "changedBy": "Modifié par",
+          "cancelledBy": "Retiré par",
+          "publishedBy": "Publié par",
+          "changes": "Ce qui a changé",
+          "intraFields": "Pour le formulaire de l'intra",
+          "intraLink": "Sur l'intra"
+        },
+        "changes": {
+          "field": "{label} : {before} → {after}",
+          "removed": "Date à retirer : {date}",
+          "added": "Date à ajouter : {date}",
+          "edited": "Date dont le texte a changé : {date}"
+        },
+        "cause": {
+          "draft": "L'événement est repassé en brouillon.",
+          "deleted": "L'événement a été supprimé.",
+          "dates": "Plus aucune date de l'événement n'est publiée."
         }
       },
       "email": {
@@ -412,11 +435,14 @@
         "calendarNote": "Le fichier joint ajoute l'événement à votre agenda.",
         "footer": "Vous recevez ce message parce que vous êtes membre de {bde}.",
         "reviewAction": "Examiner la proposition",
-        "footerTest": "Ceci est un message de test envoyé depuis les réglages de {bde}."
+        "footerTest": "Ceci est un message de test envoyé depuis les réglages de {bde}.",
+        "staffAction": "Ouvrir sur la plateforme",
+        "staffFooter": "Vous recevez ce message parce que vous publiez les événements de {bde} sur l'intra."
       },
       "slack": {
         "action": "Voir l'événement",
-        "reviewAction": "Examiner la proposition"
+        "reviewAction": "Examiner la proposition",
+        "staffAction": "Ouvrir sur la plateforme"
       },
       "proposed": {
         "subject": "Événement proposé : {title}",
@@ -429,6 +455,48 @@
       "refused": {
         "subject": "Proposition refusée : {title}",
         "intro": "La proposition de {author} a été refusée par {reviewer}. Elle peut être modifiée puis proposée de nouveau."
+      },
+      "intraFields": {
+        "organizerLogin": "Login de l'organisateur",
+        "name": "Nom",
+        "availableFor": "Disponible pour",
+        "description": "Description",
+        "location": "Localisation",
+        "maxPeople": "Nombre max de personnes",
+        "waitingList": "Liste d'attente",
+        "kind": "Genre",
+        "unsubscribeHours": "Délai de désinscription (heures)",
+        "keywords": "Mots-clés",
+        "yes": "Oui",
+        "no": "Non",
+        "audiences": {
+          "STUDENTS": "Étudiants",
+          "PISCINERS": "Piscineux",
+          "BOTH": "Les deux"
+        }
+      },
+      "intra": {
+        "intraRequested": {
+          "subject": "Publication demandée : {title}",
+          "intro": "{requester} a confirmé un événement : il est à publier sur l'intra."
+        },
+        "intraChanged": {
+          "subject": "Événement modifié : {title}",
+          "intro": "Un événement qui est sur l'intra a changé : l'intra est à mettre à jour."
+        },
+        "intraCancelled": {
+          "subject": "Événement retiré : {title}",
+          "intro": "Un événement qui était sur l'intra n'est plus à publier : il est à retirer de l'intra."
+        },
+        "intraPublished": {
+          "subject": "Publié sur l'intra : {title}",
+          "intro": "{actor} a publié cet événement sur l'intra."
+        },
+        "intraRefused": {
+          "subject": "Publication refusée : {title}",
+          "intro": "{actor} a refusé de publier cet événement sur l'intra. Il peut être corrigé, puis la demande renvoyée."
+        },
+        "dates": "{count, plural, one {# date} other {# dates}}"
       }
     },
     "title": "Événements",
@@ -813,7 +881,7 @@
         "publish": "Publié sur l'intra",
         "publishDialog": {
           "title": "Publié sur l'intra ?",
-          "body": "La demande est marquée comme publiée. Si l'événement change ensuite, elle repasse à « À mettre à jour » dans votre liste.",
+          "body": "La demande est marquée comme publiée, et l'auteur en est prévenu (selon les notifications cochées). Si l'événement change ensuite, elle repasse à « À mettre à jour » dans votre liste, et vous en êtes prévenu.",
           "address": "Adresse sur l'intra (facultatif)",
           "addressHint": "Un lien https vers l'événement sur l'intra (intra.42.fr), si vous voulez le garder.",
           "confirm": "Oui, publié"
@@ -821,7 +889,7 @@
         "refuse": "Refuser",
         "refuseDialog": {
           "title": "Refuser cette demande ?",
-          "body": "L'auteur lit votre commentaire sur la page de l'événement et peut renvoyer la demande une fois l'événement corrigé.",
+          "body": "L'auteur lit votre commentaire sur la page de l'événement, en est prévenu, et peut renvoyer la demande une fois l'événement corrigé.",
           "comment": "Pourquoi ?",
           "commentHint": "Dites ce qu'il faut changer pour que vous puissiez publier l'événement.",
           "confirm": "Refuser la demande"
@@ -1173,7 +1241,8 @@
       "types": {
         "groups": {
           "members": "Membres",
-          "events": "Événements"
+          "events": "Événements",
+          "intra": "Publication sur l'intra"
         },
         "memberRemovedNoEmail": "Jamais d'e-mail",
         "memberPending": {
@@ -1207,6 +1276,26 @@
         "eventRefused": {
           "name": "Proposition refusée",
           "hint": "Prévient son auteur, avec le commentaire."
+        },
+        "intraRequested": {
+          "name": "Publication demandée",
+          "hint": "Prévient le staff de l'école : e-mail à ceux qui peuvent publier, message dans son salon."
+        },
+        "intraChanged": {
+          "name": "Événement modifié sur l'intra",
+          "hint": "Prévient le staff, avec l'ancienne et la nouvelle valeur."
+        },
+        "intraCancelled": {
+          "name": "Événement retiré de l'intra",
+          "hint": "Prévient le staff qu'un événement publié n'est plus à publier."
+        },
+        "intraPublished": {
+          "name": "Publié sur l'intra",
+          "hint": "Prévient l'auteur, et le salon du BDE."
+        },
+        "intraRefused": {
+          "name": "Publication refusée",
+          "hint": "Prévient l'auteur, avec la raison, et le salon du BDE."
         }
       }
     },
@@ -1438,7 +1527,8 @@
       "listLabel": "Notifications à personnaliser",
       "groups": {
         "events": "Événements",
-        "members": "Membres"
+        "members": "Membres",
+        "intra": "Publication sur l'intra"
       },
       "customised": "Personnalisée",
       "notSent": "Envoyée nulle part"
@@ -1480,6 +1570,26 @@
       "memberRemoved": {
         "name": "Membre retiré",
         "when": "Envoyée dans le salon, quand un membre est retiré. La personne retirée ne reçoit jamais d'e-mail."
+      },
+      "intraRequested": {
+        "name": "Publication demandée",
+        "when": "Envoyé au staff de l'école (e-mail à ceux qui peuvent publier, message dans son salon) quand un événement est confirmé."
+      },
+      "intraChanged": {
+        "name": "Événement modifié sur l'intra",
+        "when": "Envoyé au staff quand un événement déjà publié sur l'intra change : l'ancienne et la nouvelle valeur."
+      },
+      "intraCancelled": {
+        "name": "Événement retiré de l'intra",
+        "when": "Envoyé au staff quand un événement publié sur l'intra repasse en brouillon, est supprimé ou n'a plus de date."
+      },
+      "intraPublished": {
+        "name": "Publié sur l'intra",
+        "when": "Envoyé à l'auteur (e-mail) et au salon du BDE quand le staff a publié l'événement."
+      },
+      "intraRefused": {
+        "name": "Publication refusée",
+        "when": "Envoyé à l'auteur (e-mail) et au salon du BDE, avec la raison, quand le staff refuse."
       }
     },
     "editor": {
@@ -1580,7 +1690,11 @@
         "login": "Login",
         "campus": "Campus",
         "role": "Rôle",
-        "actedBy": "Par"
+        "actedBy": "Par",
+        "requestedBy": "Demandé par",
+        "changes": "Ce qui a changé",
+        "intraFields": "Champs du formulaire de l'intra",
+        "intraLink": "Lien sur l'intra"
       }
     },
     "variables": {
@@ -1667,6 +1781,26 @@
       "actor": {
         "name": "acteur",
         "label": "Qui a approuvé ou retiré le membre"
+      },
+      "requester": {
+        "name": "demandeur",
+        "label": "Qui a demandé la publication"
+      },
+      "editor": {
+        "name": "auteur_changement",
+        "label": "Qui a modifié ou retiré l'événement"
+      },
+      "cause": {
+        "name": "cause",
+        "label": "Pourquoi l'événement est retiré"
+      },
+      "answerer": {
+        "name": "répondant",
+        "label": "Le membre du staff qui a répondu"
+      },
+      "intra_link": {
+        "name": "lien_intra",
+        "label": "L'adresse de l'événement sur l'intra"
       }
     },
     "mentions": {
@@ -1703,7 +1837,8 @@
       "added": "Ajouté",
       "remove": "Retirer {name}",
       "removed": "Retiré",
-      "inUse": "Impossible : ce nom est encore utilisé par {where}. Le retirer d'abord du message."
+      "inUse": "Impossible : ce nom est encore utilisé par {where}. Le retirer d'abord du message.",
+      "staff": "{@staff} : les membres du staff qui ont donné leur identifiant"
     },
     "history": {
       "title": "Historique : {scope}",
@@ -1805,7 +1940,8 @@
       "mentionInUse": "Cette mention est encore utilisée.",
       "notFound": "Introuvable : cela a peut-être déjà été modifié.",
       "restoreInvalid": "Cette version n'est plus valable aujourd'hui : elle n'a pas été restaurée.",
-      "unknown": "Une erreur est survenue. Réessayer dans un instant."
+      "unknown": "Une erreur est survenue. Réessayer dans un instant.",
+      "mentionNotForType": "Cette mention est réservée aux messages au staff sur l'intra."
     }
   }
 }
