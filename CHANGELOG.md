@@ -38,6 +38,9 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Changed
 
+- Development only: the tests of the browser watcher no longer depend on the noise of a real page (Chromium on the real image aborts requests of its own, which excused the error the test wanted reported).
+- Development only: a test of the notification editor no longer fails now and then (it clicked Save again while the button still said it was saving).
+- Development only: the performance test of the calendar no longer depends on the day it runs on (it counted the prefetches of the events of today), nor on how many events the day it looks at has (the prefetches of events are counted apart from those of the menu).
 - Development only: the WebKit browser journeys no longer fail now and then. The watcher excuses the engine's word for an aborted fetch when the page leaves its
   document right after it, cleanups wait for the page before they ask what it shows, and a new `browsers stress` workflow plays the journeys many times in one engine.
 - Development only: the tests now pass on a computer in any time zone (one of the migration tests read dates in the zone of the machine and failed anywhere but in UTC), and CI plays them again in two other zones.
