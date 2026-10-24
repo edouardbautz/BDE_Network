@@ -1,4 +1,12 @@
-import { CalendarDays, ClipboardCheck, LayoutGrid, Plus, Settings, Users } from 'lucide-react';
+import {
+  CalendarDays,
+  ClipboardCheck,
+  LayoutGrid,
+  Plus,
+  Send,
+  Settings,
+  Users,
+} from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { getConfig } from '@/config';
 import { AccountCard } from '@/components/dashboard/account-card';
@@ -13,9 +21,10 @@ import { UpdateBanner } from '@/components/updates/update-banner';
 import { accountLabel } from '@/lib/account-label';
 import { checkFortyTwoCredentials } from '@/lib/auth/oauth-check';
 import { requireApprovedSession } from '@/lib/auth/require-session';
-import { canValidateEvents, getEventsAccess } from '@/lib/events/access';
+import { canValidateEvents, getEventsAccess, getIntraAccess } from '@/lib/events/access';
 import { getCategories } from '@/lib/events/categories';
 import { formatShortDate } from '@/lib/events/format';
+import { countIntraToDo } from '@/lib/events/intra-queries';
 import { countProposals, listUpcomingOccurrences } from '@/lib/events/queries';
 import { draftVisibility } from '@/lib/events/review';
 import { can, canManageSettings, MEMBERS_MANAGE } from '@/lib/permissions';
@@ -71,6 +80,18 @@ export default async function DashboardPage() {
         countLabel: tNav('eventsReviewCount', { count: waiting }),
       });
     }
+  }
+  // The staff's page needs no access to the calendar: it is offered on its own.
+  const intraAccess = await getIntraAccess();
+  if (intraAccess) {
+    const toDo = intraAccess.canPublish ? await countIntraToDo() : 0;
+    shortcuts.push({
+      href: '/events/intra',
+      label: tNav('rail.eventsIntra'),
+      icon: Send,
+      count: toDo,
+      countLabel: tNav('eventsIntraCount', { count: toDo }),
+    });
   }
   if (can(session.user, MEMBERS_MANAGE)) {
     shortcuts.push({ href: '/members', label: tNav('rail.members'), icon: Users });

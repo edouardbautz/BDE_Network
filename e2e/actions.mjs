@@ -6,6 +6,7 @@
 // covers: notifications.saveTemplate, notifications.customizeChannel, notifications.resetTemplate, notifications.resetNotification
 // covers: notifications.restoreVersion, notifications.addMention, notifications.removeMention
 // covers: shared-calendar.enableSharedCalendar, shared-calendar.regenerateSharedCalendar, shared-calendar.disableSharedCalendar
+// covers: intra.requestOnIntra
 // End-to-end test of what the page shows AFTER an action that stays on it, for every such action of the platform
 // (members, roles, settings, profile, shared calendar, language, sign-out), in a real browser, on the real image.
 //
@@ -239,6 +240,25 @@ async function chooseLanguage(name) {
       .find((item) => item.textContent.includes(wanted))
       .click();
   }, name);
+}
+
+// Publishing the events on the intra is a setting of the platform: turned on and off with the switch of the settings page.
+async function setIntraPublication(on) {
+  await goto('/settings');
+  const selector = '[role="switch"][aria-labelledby="settings-events-intra-title"]';
+  await page.waitForSelector(selector);
+  if ((await page.$eval(selector, (el) => el.ariaChecked === 'true')) === on) return;
+  const answered = page.waitForResponse(
+    (r) => r.request().method() === 'POST' && r.url().includes('/settings'),
+  );
+  await page.click(selector);
+  const save = await page.evaluateHandle(
+    (where) => document.querySelector(where).closest('form').querySelector('button[type="submit"]'),
+    selector,
+  );
+  await save.asElement().click();
+  await answered;
+  await page.waitForNetworkIdle({ idleTime: 500 });
 }
 
 // The templates of the notifications: written with SQL, as the page would, and always put back to none.
@@ -700,6 +720,38 @@ const SCENARIOS = [
         'bde-disable',
       );
       return [enabled, regenerated, disabled].find((state) => state !== 'ok') ?? 'ok';
+    },
+  },
+  {
+    name: 'intra: send a refused request again (the event page then says that it waits)',
+    async run({ id }) {
+      const eventId = `e2e-intra-${id}`;
+      try {
+        await setIntraPublication(true);
+        sql(
+          `INSERT INTO "Event" (id, title, "categoryKey", status, "startsAt", "endsAt", "schoolYear", "authorLogin", "updatedAt", "intraOrganizerLogin", "intraAudience", "intraMaxPeople", "intraWaitingList", "intraKind", "intraUnsubscribeHours", "intraKeywords") VALUES ('${eventId}', 'Intra ${id}', 'soiree', 'CONFIRMED', (now() at time zone 'utc') + interval '10 days', (now() at time zone 'utc') + interval '10 days 2 hours', '2026-2027', '${OWNER}', now(), '${OWNER}', 'BOTH', 30, false, 'Association', 0, ARRAY['bde']::text[]);
+           INSERT INTO "IntraRequest" (id, "eventId", status, "contentHash", "refusalComment", "requestedAt", "requestedByLogin", "answeredAt", "answeredByLogin", "updatedAt") VALUES ('e2e-ir-${id}', '${eventId}', 'REFUSED', repeat('0', 64), 'Salle indisponible ce jour-là.', now(), '${OWNER}', now(), 'staff-e2e', now())`,
+        );
+        await goto(`/events/${eventId}`);
+        await page.waitForFunction(() => document.body.innerText.includes('Salle indisponible'));
+        await clickAndLoad('Renvoyer la demande');
+        const shown = await expectPage(
+          () =>
+            document.body.innerText.includes('Demande envoyée au staff') &&
+            !document.body.innerText.includes('Salle indisponible'),
+          undefined,
+          'intra-send-again',
+        );
+        const status = sql(`SELECT status FROM "IntraRequest" WHERE "eventId" = '${eventId}'`);
+        if (shown === 'ok' && status !== 'PENDING') {
+          console.error(`  the request is "${status}" in the database, not PENDING`);
+          return 'FAILED';
+        }
+        return shown;
+      } finally {
+        sql(`DELETE FROM "Event" WHERE id = '${eventId}'`);
+        await setIntraPublication(false);
+      }
     },
   },
   {

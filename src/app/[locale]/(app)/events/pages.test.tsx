@@ -69,6 +69,8 @@ vi.mock('@/config', () => ({
 }));
 vi.mock('@/lib/events/access', () => ({
   getEventsAccess: vi.fn(),
+  // The platform of these tests does not publish on the intra.
+  getIntraAccess: vi.fn(async () => null),
   // The real rule is covered in access.test.ts; page tests only need its outcome.
   canManageSharedCalendar: (user: { permissions: string[] }) =>
     user.permissions.includes('events.shared_calendar'),

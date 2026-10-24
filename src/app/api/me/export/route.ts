@@ -121,6 +121,24 @@ export async function GET() {
       })
     : [];
 
+  // The requests to publish an event on the intra that this person sent, and those they answered as the school's staff: recorded under
+  // their account, and the words they wrote (a refusal's reason) are theirs. Keyed by the account just read, never by the request.
+  const intraRequestsSent = await prisma.intraRequest.findMany({
+    where: { requestedById: userId },
+    select: { status: true, requestedAt: true, event: { select: { title: true } } },
+    orderBy: { requestedAt: 'desc' },
+  });
+  const intraRequestsAnswered = await prisma.intraRequest.findMany({
+    where: { answeredById: userId },
+    select: {
+      status: true,
+      answeredAt: true,
+      refusalComment: true,
+      event: { select: { title: true } },
+    },
+    orderBy: { answeredAt: 'desc' },
+  });
+
   const { calendarToken, role, ...profile } = user;
 
   const exportedAt = new Date().toISOString();
@@ -145,6 +163,8 @@ export async function GET() {
         })),
         refusedProposals,
         organizedOnIntra,
+        intraRequestsSent,
+        intraRequestsAnswered,
       },
       notifications: { templatesEdited, templateVersions, mentionsAdded },
     },

@@ -25,6 +25,13 @@ import {
 import { eventInclude } from '@/lib/events/include';
 import { intraColumns, intraOf } from '@/lib/events/intra';
 import { intraPublicationEnabled } from '@/lib/events/intra-config';
+import { intraAuditFields } from '@/lib/events/intra-audit';
+import {
+  inheritIntraRequest,
+  syncIntraRequests,
+  withdrawIntraRequest,
+  type IntraActor,
+} from '@/lib/events/intra-sync';
 import {
   notifyEventApproved,
   notifyEventConfirmed,
@@ -190,6 +197,38 @@ function reviewedView(event: {
   };
 }
 
+/** Who sends or changes a request for the intra: the account behind the session. */
+function intraActorOf(access: EventsAccess): IntraActor {
+  return { id: access.session.user.id, login: access.session.user.login };
+}
+
+/**
+ * Brings the requests for the intra in line with an event that was just changed, inside the transaction of the change: the
+ * row that holds the date and the following (the new row of a cut series carries on the request of the first), and the row it was
+ * cut from. `confirmed`: the change confirmed the event, so a request is made when there is none.
+ */
+async function syncIntraAfterChange(
+  tx: Prisma.TransactionClient,
+  access: EventsAccess,
+  change: {
+    eventId: string;
+    resultId: string;
+    split: boolean;
+    cutAt: Date;
+    confirmed: boolean;
+  },
+) {
+  const actor = intraActorOf(access);
+  if (change.split) {
+    await inheritIntraRequest(tx, change.eventId, change.resultId, change.cutAt, actor);
+  }
+  const first = await syncIntraRequests(tx, change.split ? [change.eventId] : []);
+  const second = await syncIntraRequests(tx, [change.resultId], {
+    create: change.confirmed ? actor : undefined,
+  });
+  return [...first, ...second];
+}
+
 /** The audit action of a status change: a proposal, a withdrawal and an approval have their own. */
 const STATUS_AUDIT_ACTION = {
   propose: 'event.propose',
@@ -278,11 +317,20 @@ export async function createEvent(
         assignees: { create: assignees.map((a) => ({ login: a.login, userId: a.id })) },
       },
     });
+    // Confirmed at once (a validator's event): the staff is asked to publish it, when the platform publishes on the intra.
+    const intra =
+      created.status === 'CONFIRMED'
+        ? await syncIntraRequests(tx, [created.id], { create: intraActorOf(access) })
+        : [];
     await auditEventAction(
       access,
       'event.create',
       created,
-      { status: created.status, recurrence: readRepeatRule(created.repeat)?.freq ?? 'NONE' },
+      {
+        status: created.status,
+        recurrence: readRepeatRule(created.repeat)?.freq ?? 'NONE',
+        ...intraAuditFields(intra),
+      },
       tx,
     );
     if (created.status === 'PROPOSED') {
@@ -442,6 +490,14 @@ export async function updateEvent(
     const intraDone =
       'intraChanged' in done ? done.intraChanged : await completeIntra(tx, eventId, data.intra);
 
+    const intra = await syncIntraAfterChange(tx, access, {
+      eventId,
+      resultId: done.eventId,
+      split: 'split' in done && done.split,
+      cutAt: occurrenceStart,
+      confirmed: done.changed.includes('status') && data.status === 'CONFIRMED',
+    });
+
     const changed: string[] = done.changed.filter((key) => key !== 'status');
     if (intraDone) changed.push('intra');
     const ruleChanged = 'ruleChanged' in done && done.ruleChanged;
@@ -459,7 +515,7 @@ export async function updateEvent(
         access,
         'event.update',
         existing,
-        { ...scopeFields, changed, ...detail, ...counts },
+        { ...scopeFields, changed, ...detail, ...counts, ...intraAuditFields(intra) },
         tx,
       );
     }
@@ -517,12 +573,17 @@ export async function deleteEvent(eventId: string): Promise<void> {
 
   await prisma.$transaction(async (tx) => {
     await assertMayEdit(tx, access, eventId);
+    const intra = await withdrawIntraRequest(tx, eventId);
     await tx.event.delete({ where: { id: eventId } });
     await auditEventAction(
       access,
       'event.delete',
       event,
-      { status: event.status, ...seriesAuditFields(event, 'following', event.startsAt) },
+      {
+        status: event.status,
+        ...seriesAuditFields(event, 'following', event.startsAt),
+        ...intraAuditFields(intra),
+      },
       tx,
     );
   });
@@ -549,7 +610,9 @@ export async function deleteFollowingDates(
   }
 
   const outcome = await inSeries(async (tx) => {
+    const ifFirst = await withdrawIntraRequest(tx, eventId);
     const done = await deleteFollowing(tx, eventId, occurrenceStart);
+    const intra = done.deletedEvent ? ifFirst : await syncIntraRequests(tx, [eventId]);
     await auditEventAction(
       access,
       'event.delete',
@@ -558,6 +621,7 @@ export async function deleteFollowingDates(
         status: existing.status,
         ...seriesAuditFields(existing, 'following', occurrenceStart),
         removedDates: done.removed,
+        ...intraAuditFields(intra),
       },
       tx,
     );
@@ -623,6 +687,13 @@ export async function setEventStatus(
         : await updateFollowing(tx, eventId, occurrenceStart, { values: { status } });
     const changed = done.changed.includes('status');
     const move = statusMove(done.before.status, status);
+    const intra = await syncIntraAfterChange(tx, access, {
+      eventId,
+      resultId: done.eventId,
+      split: 'split' in done && done.split,
+      cutAt: occurrenceStart,
+      confirmed: changed && status === 'CONFIRMED',
+    });
     if (changed) {
       await auditEventAction(
         access,
@@ -634,6 +705,7 @@ export async function setEventStatus(
           to: status,
           ...('split' in done && done.split ? { splitInto: done.eventId } : {}),
           ...('aligned' in done && done.aligned > 0 ? { alignedDates: done.aligned } : {}),
+          ...intraAuditFields(intra),
         },
         tx,
       );
@@ -761,19 +833,28 @@ export async function cancelOccurrence(
   const { event, start } = found;
   const { user } = access.session;
 
-  await prisma.eventCancellation.upsert({
-    where: { eventId_occurrenceStart: { eventId, occurrenceStart: start } },
-    update: {},
-    create: {
-      eventId,
-      occurrenceStart: start,
-      cancelledByLogin: user.login,
-      cancelledById: user.id,
-    },
+  const outcome = await inSeries(async (tx) => {
+    await tx.eventCancellation.upsert({
+      where: { eventId_occurrenceStart: { eventId, occurrenceStart: start } },
+      update: {},
+      create: {
+        eventId,
+        occurrenceStart: start,
+        cancelledByLogin: user.login,
+        cancelledById: user.id,
+      },
+    });
+    // A date that was on the intra is not any more: the staff has to know (or that nothing is left to publish).
+    const intra = await syncIntraRequests(tx, [eventId]);
+    await auditEventAction(
+      access,
+      'event.occurrence_cancel',
+      event,
+      { ...seriesAuditFields(event, 'occurrence', start), ...intraAuditFields(intra) },
+      tx,
+    );
   });
-  await auditEventAction(access, 'event.occurrence_cancel', event, {
-    ...seriesAuditFields(event, 'occurrence', start),
-  });
+  if (!outcome.ok) return { href: await addressOf(noticeHref(eventId, outcome.notice)) };
 
   revalidatePath('/events');
   return { href: await dateAddress(eventId, start) };
@@ -788,10 +869,18 @@ export async function restoreOccurrence(
   if (!found.ok) return { href: await addressOf(noticeHref(eventId, found.notice)) };
   const { event, start } = found;
 
-  await prisma.eventCancellation.deleteMany({ where: { eventId, occurrenceStart: start } });
-  await auditEventAction(access, 'event.occurrence_restore', event, {
-    ...seriesAuditFields(event, 'occurrence', start),
+  const outcome = await inSeries(async (tx) => {
+    await tx.eventCancellation.deleteMany({ where: { eventId, occurrenceStart: start } });
+    const intra = await syncIntraRequests(tx, [eventId]);
+    await auditEventAction(
+      access,
+      'event.occurrence_restore',
+      event,
+      { ...seriesAuditFields(event, 'occurrence', start), ...intraAuditFields(intra) },
+      tx,
+    );
   });
+  if (!outcome.ok) return { href: await addressOf(noticeHref(eventId, outcome.notice)) };
 
   revalidatePath('/events');
   return { href: await dateAddress(eventId, start) };

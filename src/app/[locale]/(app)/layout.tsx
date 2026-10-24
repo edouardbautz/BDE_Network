@@ -1,7 +1,13 @@
 import { getTranslations } from 'next-intl/server';
 import { getEffectiveSession } from '@/lib/auth/session';
 import { getConfig } from '@/config';
-import { canValidateEvents, canViewEvents, getEventsAccess } from '@/lib/events/access';
+import {
+  canValidateEvents,
+  canViewEvents,
+  getEventsAccess,
+  getIntraAccess,
+} from '@/lib/events/access';
+import { countIntraToDo } from '@/lib/events/intra-queries';
 import { countProposals } from '@/lib/events/queries';
 import { isDatabaseReachable } from '@/lib/health';
 import {
@@ -74,6 +80,20 @@ export default async function AppLayout({
       shortLabel: t('rail.eventsReview'),
       badge: waiting,
       badgeLabel: t('eventsReviewCount', { count: waiting }),
+    });
+  }
+  // The school's staff sees what it has to publish on the intra, counted; whoever follows the publications sees the same page. Null
+  // while the platform does not publish on the intra.
+  const intraAccess = await getIntraAccess();
+  if (intraAccess) {
+    const toDo = intraAccess.canPublish ? await countIntraToDo() : 0;
+    navItems.push({
+      id: 'eventsIntra',
+      href: '/events/intra',
+      label: t('eventsIntra'),
+      shortLabel: t('rail.eventsIntra'),
+      badge: toDo,
+      badgeLabel: t('eventsIntraCount', { count: toDo }),
     });
   }
   if (can(session.user, MEMBERS_MANAGE)) {

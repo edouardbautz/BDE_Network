@@ -64,7 +64,8 @@ src/
         settings/              page + actions.ts + loading.tsx: the platform's settings, OWNER-only (see "Settings in the database")
         events/                events module (404 unless enabled): page, new/, [id]/, [id]/edit/,
                                review/ (the proposals to validate: events.validate), shared-calendar/ (events.shared_calendar:
-                               BDE link), actions.ts (server actions), loading.tsx for each route
+                               BDE link), intra/ (the requests to publish on the intra: the list, [id]/ the page to copy and answer, actions.ts),
+                               actions.ts (server actions), loading.tsx for each route
         profile/                page + actions.ts: account info, personal calendar feed link
     api/
       auth/[...nextauth]/route.ts
@@ -95,7 +96,8 @@ src/
     auth/                  NextAuth config + 42 OAuth provider
     notifications/         NotificationAdapter + email/discord/slack adapters, the templates of what a BDE changes (`templates/`)
     events/                events module domain: time, the intra's fields (`intra.ts`), repeat rules (`repeat*.ts`, see "Repeat rules"), recurrence, series (dates of their own), series-operations
-                           (cutting a series), ics, access, review (the rules of the proposal circuit), queries, actions
+                           (cutting a series), ics, access, review (the rules of the proposal circuit), the requests to publish on the
+                           intra (`intra-request.ts` pure, `intra-sync.ts`, `intra-queries.ts`, `intra-audit.ts`), queries, actions
                            helpers, notifications, reminders, scheduler (see "Events module")
     permissions/           registry (the list of permissions) + resolution and `can()`
     roles/                 escalation rules (guards), input validation, transactional operations, `execute`
@@ -142,7 +144,7 @@ SECURITY.md                  private vulnerability reporting; .github/ has issue
 
 `User`, `UserStatus` (enum), `Role`, `AuditLog`, `PlatformSettings` (see "Settings in the database"), plus the events module's `Event`,
 `EventAssignee`, `EventCancellation`, `EventOccurrence` (+ `EventOccurrenceAssignee`), `EventReminder`,
-`BdeCalendarFeed` (see "Events module"), and the notification templates' `NotificationTemplate`, `NotificationTemplateVersion` and `NotificationMention` (see "Notifications"). Finances and
+`BdeCalendarFeed` and `IntraRequest` (see "Events module"), and the notification templates' `NotificationTemplate`, `NotificationTemplateVersion` and `NotificationMention` (see "Notifications"). Finances and
 meetings do not exist yet.
 
 - **`UserStatus`**: `OWNER | MEMBER | PENDING`. OWNER comes only from the list of owners in the platform's
@@ -842,6 +844,52 @@ recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`)
     for the staff go to a webhook of their own when one is set and to the BDE's own room (with the mentions) when not. Kept like the BDE's webhooks: sealed, never sent back to the page, a blank
     field keeps the saved address, a removal is staged until Save, the audit entry says `changedSecrets` and never an address, and the test goes through the real adapter with the
     typed or the saved address.
+- **The requests to publish on the intra** (`lib/events/intra-request.ts` pure, `intra-sync.ts`, `intra-queries.ts`, `intra-audit.ts`, `intra-notice.ts`; pages
+  `events/intra/` and `events/intra/[id]/`, actions `events/intra/actions.ts`; migration `20261024140000_intra_requests`). **One `IntraRequest` row per event** (`eventId`
+  unique, `onDelete: Cascade`): a series is one event and one request, with the list of its dates. Its `status` is `PENDING` (sent, waiting for the staff), `PUBLISHED`,
+  `OUTDATED` ("to update": on the intra, and the event changed since) or `REFUSED` (with `refusalComment`). `publishedContent` is a **copy of what the intra holds** (set when
+  the staff says "published" or "intra updated"; JSON that is never trusted, read back with `readContent`), `contentHash` the hash of the event's content as it was last looked
+  at. The database holds what the schema cannot say (`IntraRequest_state_shape`: a waiting request has nothing published and nobody who answered, a refusal has its comment and
+  its author, a request on the intra has its copy, its date and who answered; the hash is 64 hexadecimal characters; the link is an `https` address of `intra.42.fr`).
+  - **The content** (`intraReadiness`): the title, description and place, the seven fields of the intra and the **dates that are published** (`CONFIRMED` and not cancelled,
+    from `resolveOccurrences`), each with its own title, description or place **only when it differs from the series'**. It is nothing (and so there is no request) while the
+    fields are missing or no date is published. What is not on the intra (the category, the members in charge, the school year) is not in it, so a change of those changes
+    nothing. `canonicalContent` writes it with a fixed order of keys and `hashContent` hashes that: the **version** of an event, which the staff's page carries to its answers.
+  - **The sync keeps the request in line with the event** (`syncIntraRequest`, idempotent, inside the transaction of the action that changed the event: `createEvent`,
+    `updateEvent`, `setEventStatus`, `deleteEvent`, `deleteFollowingDates`, `cancelOccurrence`, `restoreOccurrence`; the two last became transactions for it). A request is
+    **only made when the event is confirmed** (`create`, the actor being the sender) or when somebody asks (`sendRequest`): an edit of a confirmed event that has none makes none.
+    Then: no longer to be published (back to draft, deleted, every date cancelled) → the request is removed (`withdrawn`, and says whether it had been on the intra); waiting or
+    refused → it follows the event (the staff sees the current version); on the intra → the same as the copy: `PUBLISHED` (a change that is undone brings it back, with nothing to
+    tell), otherwise `OUTDATED` and a `changed` outcome with the old and the new content. **A series cut in two** (`splitSeries`) goes through `inheritIntraRequest`: the second
+    row gets the request of the first, carrying the copy of the dates from the cut on (the intra has no notion of a cut), then both rows are synced, so both show what changed.
+    The outcomes (`requested`, `changed`, `withdrawn`) are written in the audit entry of the change (`intra: [...]`, `intraAuditFields`); they carry what the messages to the
+    staff will need.
+  - **The answers** (`publishRequest`, `refuseRequest`, `markRequestUpdated`, `sendRequest`) are compare-and-set in a SERIALIZABLE transaction (`inSeriesTransaction`) with their
+    audit entry (`intra.publish|refuse|update|request`): the status must still be the one expected (`updateMany` with the status in the filter), and "published" and "intra
+    updated" carry the **version the page showed** (`expectedHash`): an event that changed while the page was open is the notice `changedMeanwhile`, never a silent answer for
+    something else. Somebody answering first, a request that is gone, an event that cannot be asked for, a request already made: notices (`?notice=`, a closed list read by
+    `readIntraNotice`, never echoed), not errors. A crafted request (a version that is not a hash, a link that is not the intra's, a refusal with no reason, a page to come back
+    to that is not in the closed list) throws. The link goes through `parseIntraUrl`: `https`, `intra.42.fr` or one of its sites, no credentials, no port, written as the URL
+    normalises it (the database checks the same).
+  - **Who** (`access.ts`): `getIntraAccess` is null while the module or `events.intraPublication` is off, for a visitor, and for an account with none of the rights; `canPublish`
+    answers, `canRequest` asks (`events.intra_request` **or validating**), and following is any of the three or validating. `requireIntraPublisher` / `requireIntraRequester` are
+    the first line of every action. The staff does not need the calendar: the pages do not go through `getEventsAccess`, and the layout offers the entry **To publish on the intra**
+    (`NavItem` `eventsIntra`, counted for those who can answer, `countIntraToDo`: waiting + to update) and the dashboard a shortcut.
+  - **The page of a request** shows the fields **in the order of the intra's form** (`COPY_FIELDS`: organizer, name, available for, start date, start time, end date, end time,
+    description, place, maximum, waiting list, kind, delay, keywords), each with a `CopyButton` (clipboard, with the hidden field as fallback on a page without HTTPS; the button's
+    name is its visible word followed by the field, WCAG 2.5.3). Dates are `DD/MM/YYYY` and times `HH:mm` **in the BDE's zone whatever the language of the interface** (`intraDay`,
+    `intraTime`): it is what the intra's form takes. The description is shown as typed, not drawn. A request to update shows `diffContent` (the fields with the old and the new value,
+    the dates to remove and to add, the dates whose own text changed). The answers use `ConfirmDialog` and answer an `ActionTarget` to the list (another pathname); only
+    `requestOnIntra` stays on the page it was asked from (also an `ActionTarget`, rule 2 of "Navigation"; scenario "send a refused request again" of `e2e/actions.mjs`).
+  - **Privacy**: the four person columns (`requestedById/Login`, `answeredById/Login`) are classified in `personal-data.test.ts` and exported (`events.intraRequestsSent`,
+    `intraRequestsAnswered`), the foreign keys are `SetNull`, and `publishedContent` (which names the organizer, like the intra does) is among the places the login stays, as the
+    policy says.
+  - **QA**: the dataset gives most confirmed events a request in every state, computed with the real engine (`intraRequestRows`: content, hash, answered by the staff persona),
+    plus four fixtures (`intraPending`, `intraPublished`, `intraOutdated`, `intraRefused`) that the access matrix answers; `qa/invariants-intra-requests.sql` (a request is for a
+    published event that has its fields, the logins match their accounts) and a check that every copy is a content the engine reads. Tests: `intra-request.test.ts`,
+    `access-intra.test.ts`, `intra-circuit.test.ts` (the whole circuit on the in-memory database: made on confirmation, follows the event, "to update", the cut of a series, every
+    answer and who may give it), `intra/pages.test.tsx`, `copy-button.test.tsx`, `test/migrations/intra-requests.test.ts` (a real PostgreSQL), `qa/access` (two pages, four actions,
+    nine personas), mutation-checked (`qa/mutations/intra-circuit.json`).
 - **Visibility is decided in one place, date by date.** `expandEvents` (`occurrences.ts`) drops the dates that are not
   published (a draft or a proposal) unless `includeDrafts`, or unless the event is the reader's own (`ownLogin`; a series
   can be confirmed with one date back to draft, or a draft with one date confirmed alone); the queries also exclude them in

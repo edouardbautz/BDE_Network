@@ -100,7 +100,8 @@ They belong to **the whole series**: on a series, they are saved with "this date
 leaves them alone). Events written **before** this block keep working: the form asks for the fields at their next edit,
 and **no event is confirmed without them**: confirming from the event page or from "To validate" shows a message
 asking you to edit it first. Going back to draft, proposing and canceling a date stay possible. The fields are shown on the
-page of the event to those who can create events.
+page of the event to those who can create events and to those who follow the publications (see
+[Publishing on the intra](#publishing-on-the-intra)).
 
 The **school year** (for example `2025-2026`) is computed by itself: from September to August, from the start date.
 A series belongs to the school year of its first date.
@@ -149,6 +150,64 @@ An event goes through three statuses:
 A proposal is **the whole event**, a series included. Once it is approved, the dates of a series are handled as
 usual (see below). A date of a series confirmed on its own makes the event partly published: its proposer can no longer
 edit it either.
+
+## Publishing on the intra
+
+When the platform publishes the events on the intra, the school's **staff** puts each confirmed event on the intra 42 by hand:
+the platform tells them what to publish, they copy it into the intra's form, then answer. The staff has a 42 account like
+any member, approved by the BDE, with a role that holds the right **Publish on the intra** (see [Roles and rights](roles.md)).
+
+### The request
+
+- **Confirming an event sends the request.** A series is **one request** with the list of its dates (a date confirmed on its
+  own makes a request for that date only, until the rest is confirmed too). Going back to draft, deleting the event or
+  cancelling every date takes the request back.
+- An event confirmed **before** the platform published on the intra, or whose request was taken back, has none. On its page,
+  **Publication on the intra** says so and offers **Ask for publication** to those who hold the right to (validating events
+  already does).
+- Where it stands is shown as a status, on the event's page and in the staff's list:
+
+| Status         | What it means                                                                 |
+| -------------- | ----------------------------------------------------------------------------- |
+| **To publish** | Sent, waiting for the staff.                                                  |
+| **Published**  | On the intra, and the event has not changed since.                            |
+| **To update**  | On the intra, but the event changed since: the staff has to update the intra. |
+| **Refused**    | The staff refused it, with a reason; it can be sent again.                    |
+
+### What the staff does
+
+The entry **To publish on the intra** of the menu counts what waits (a first publication, or an update). The list shows what
+waits first, the oldest first, then what was answered. The page of a request gives the event **in the order of the intra's
+form**, each field with a **Copy** button: the organizer's login, the name, who it is available for, the start date, the start
+time, the end date, the end time, the description (as typed, in Markdown), the place, the maximum number of people, the waiting
+list, the kind, the delay before unsubscribing and the keywords. Dates are written **DD/MM/YYYY** and times **HH:mm**, in the
+BDE's time zone, whatever the language of the interface. A series lists its dates one after the other, each with its four
+values to copy.
+
+Then the staff answers:
+
+- **Published on the intra**, with the address of the event on the intra if they want to keep it (an `https` address of
+  `intra.42.fr`: any other is refused);
+- **Refuse**, with a reason (required, 1000 characters at most): the author reads it on the page of the event, and the request
+  can be **sent again** by whoever holds the right to ask once the event is corrected.
+
+The first answer wins: if somebody answered before, the page says so and nothing is changed. An answer is also refused when the
+event changed while the page was open (the page checked that you saw the latest version): look at the new values, then answer
+again.
+
+### When the event changes
+
+An event that is on the intra and then changes (title, description, place, dates, or any intra field) becomes **To update**. The
+page of the request then shows **what the intra holds and what the event is now**, field by field, with the dates to remove
+and to add. Once the intra is up to date, **Intra updated** brings the request back to _Published_. A change that is undone
+needs nothing: the request goes back to _Published_ by itself. Changes that are not on the intra (the category, the members in
+charge) change nothing.
+
+A series cut in two ("this date and the following") continues the request on the new row: both are _To update_ if what
+the intra holds is no longer what they say.
+
+Everything is in the [audit log](#audit-log): who asked, who answered, and, for an event that changed, that its request is
+_To update_.
 
 ## Events that repeat
 

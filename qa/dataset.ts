@@ -8,7 +8,13 @@ import {
   type RepeatRule,
   type Weekday,
 } from '../src/lib/events/repeat';
-import { INTRA_KINDS } from '../src/lib/events/intra';
+import { INTRA_KINDS, type IntraFields } from '../src/lib/events/intra';
+import {
+  hashContent,
+  intraReadiness,
+  type IntraContent,
+  type IntraSource,
+} from '../src/lib/events/intra-request';
 import {
   addDays,
   fromLocalDateTime,
@@ -82,6 +88,11 @@ export const FIXTURES = {
     ownDraft: 'qa-fx-own-draft',
     ownProposed: 'qa-fx-own-proposed',
     ownConfirmed: 'qa-fx-own-confirmed',
+    /** Published, written by the validator persona, with a request for the intra in each state the staff and the BDE meet. */
+    intraPending: 'qa-fx-intra-pending',
+    intraPublished: 'qa-fx-intra-published',
+    intraOutdated: 'qa-fx-intra-outdated',
+    intraRefused: 'qa-fx-intra-refused',
   },
 } as const;
 
@@ -241,17 +252,34 @@ const INTRA_KEYWORD_SETS = [
  * none for one event in five, as an event written before them. Derived from the identifier, never drawn from the generator:
  * the rest of the dataset (which the visual references and the other suites read) stays as it was.
  */
-function intraValues(row: EventRow): Value[] {
+function intraFieldsOf(row: EventRow): IntraFields | null {
   const hash = hashOf(row.seriesId ?? row.id);
-  if (hash % 5 === 0) return [null, null, null, null, null, null, sqlTextArray([])];
+  // The events of the fixtures all have them: any of them can be confirmed, and asked for, by the suites.
+  if (hash % 5 === 0 && !FIXTURE_EVENT_IDS.has(row.id)) return null;
+  return {
+    organizerLogin: row.authorLogin,
+    audience: (['STUDENTS', 'PISCINERS', 'BOTH'] as const)[hash % 3]!,
+    maxPeople: 10 + (hash % 12) * 10,
+    waitingList: hash % 2 === 0,
+    kind: INTRA_KINDS[hash % INTRA_KINDS.length]!,
+    unsubscribeHours: (hash % 4) * 12,
+    keywords: INTRA_KEYWORD_SETS[hash % INTRA_KEYWORD_SETS.length]!,
+  };
+}
+
+const FIXTURE_EVENT_IDS: ReadonlySet<string> = new Set(Object.values(FIXTURES.events));
+
+function intraValues(row: EventRow): Value[] {
+  const fields = intraFieldsOf(row);
+  if (!fields) return [null, null, null, null, null, null, sqlTextArray([])];
   return [
-    row.authorLogin,
-    (['STUDENTS', 'PISCINERS', 'BOTH'] as const)[hash % 3]!,
-    10 + (hash % 12) * 10,
-    hash % 2 === 0,
-    INTRA_KINDS[hash % INTRA_KINDS.length]!,
-    (hash % 4) * 12,
-    sqlTextArray(INTRA_KEYWORD_SETS[hash % INTRA_KEYWORD_SETS.length]!),
+    fields.organizerLogin,
+    fields.audience,
+    fields.maxPeople,
+    fields.waitingList,
+    fields.kind,
+    fields.unsubscribeHours,
+    sqlTextArray(fields.keywords),
   ];
 }
 
@@ -1128,6 +1156,12 @@ function addFixtureEvents(context: Context): void {
     };
   };
   const events = FIXTURES.events;
+  const intraFixtures = [
+    [events.intraPending, 'Fixture: to publish on the intra', 16],
+    [events.intraPublished, 'Fixture: published on the intra', 17],
+    [events.intraOutdated, 'Fixture: to update on the intra', 18],
+    [events.intraRefused, 'Fixture: refused by the staff', 19],
+  ] as const;
   const series: RepeatRule = { freq: 'WEEKLY', interval: 1, count: 6 };
   const seriesStart = at(20, 18);
   const seriesEnd = new Date(seriesStart.getTime() + 2 * 3_600_000);
@@ -1150,6 +1184,9 @@ function addFixtureEvents(context: Context): void {
       'CONFIRMED',
       15,
     ),
+    ...intraFixtures.map(([id, title, daysAhead]) =>
+      row(id, title, 'qa-validator', 'CONFIRMED', daysAhead),
+    ),
     row(events.series, 'Fixture: series', 'qa-validator', 'CONFIRMED', 20, {
       startsAt: seriesStart,
       endsAt: seriesEnd,
@@ -1160,6 +1197,106 @@ function addFixtureEvents(context: Context): void {
   ]) {
     context.events.push(fixture);
   }
+}
+
+// ---- the requests to publish on the intra ---------------------------------------------------------------------------------
+
+type IntraRequestState = 'PENDING' | 'PUBLISHED' | 'OUTDATED' | 'REFUSED';
+
+/** The state of the requests of the fixtures, and none for the three that the suites ask for themselves. */
+const FIXTURE_REQUESTS: Readonly<Record<string, IntraRequestState>> = {
+  [FIXTURES.events.intraPending]: 'PENDING',
+  [FIXTURES.events.intraPublished]: 'PUBLISHED',
+  [FIXTURES.events.intraOutdated]: 'OUTDATED',
+  [FIXTURES.events.intraRefused]: 'REFUSED',
+};
+const WITHOUT_REQUEST: ReadonlySet<string> = new Set([
+  FIXTURES.events.confirmed,
+  FIXTURES.events.ownConfirmed,
+  FIXTURES.events.series,
+]);
+
+/**
+ * The requests for the intra of the confirmed events that have its fields: deterministic (drawn from the identifier, never from
+ * the generator, so the rest of the dataset does not move), computed with the real rules (the content the staff would be shown, and its
+ * hash), in every state, answered by the staff persona. An event of the past is on the intra or has no request. The events with
+ * dates of their own or cancelled dates are left out: their content is what the engine says, which the dataset does not repeat here.
+ */
+function intraRequestRows(context: Context): Value[][] {
+  const staff = context.people.find((person) => person.login === 'qa-staff');
+  if (!staff) throw new Error('the staff persona is not in the dataset');
+  const rows: Value[][] = [];
+  for (const event of context.events) {
+    const fields = intraFieldsOf(event);
+    if (!fields || event.status !== 'CONFIRMED' || WITHOUT_REQUEST.has(event.id)) continue;
+    const hasOwn =
+      context.cancellations.some((c) => c[1] === event.id) ||
+      context.occurrences.some((o) => o[1] === event.id);
+    if (hasOwn) continue;
+    const source: IntraSource = {
+      ...event,
+      updatedAt: event.createdAt,
+      assignees: [],
+      cancellations: [],
+      occurrences: [],
+      intraOrganizerLogin: fields.organizerLogin,
+      intraAudience: fields.audience,
+      intraMaxPeople: fields.maxPeople,
+      intraWaitingList: fields.waitingList,
+      intraKind: fields.kind,
+      intraUnsubscribeHours: fields.unsubscribeHours,
+      intraKeywords: fields.keywords,
+    };
+    const readiness = intraReadiness(source, context.zone);
+    if (!readiness.ok) continue;
+
+    const pick = hashOf(`intra-request:${event.id}`) % 7;
+    const past = event.startsAt.getTime() < context.now.getTime();
+    const state: IntraRequestState | null =
+      FIXTURE_REQUESTS[event.id] ??
+      (past
+        ? pick % 2 === 0
+          ? 'PUBLISHED'
+          : null
+        : (
+            [null, 'PENDING', 'PUBLISHED', 'PUBLISHED', 'OUTDATED', 'REFUSED', 'PUBLISHED'] as const
+          )[pick]!);
+    if (!state) continue;
+
+    const id = nextId(context, 'qa-ir');
+    const content = readiness.content;
+    const requestedAt = new Date(event.createdAt.getTime() + 3_600_000);
+    const answeredAt = new Date(requestedAt.getTime() + 2 * 3_600_000);
+    const answered = state === 'PENDING' ? null : answeredAt;
+    const onIntra = state === 'PUBLISHED' || state === 'OUTDATED';
+    // What the intra holds: the content, or, for a request to update, an earlier version of it.
+    const published: IntraContent | null = onIntra
+      ? state === 'OUTDATED'
+        ? { ...content, title: `${content.title} (earlier title)` }
+        : content
+      : null;
+    rows.push([
+      id,
+      event.id,
+      state,
+      hashContent(content),
+      published ? sqlJson(published) : null,
+      published ? answeredAt : null,
+      state === 'PUBLISHED' && pick % 2 === 0
+        ? `https://profile.intra.42.fr/events/${100_000 + rows.length}`
+        : null,
+      state === 'REFUSED' ? 'The room is not available on that day: choose another one.' : null,
+      requestedAt,
+      event.authorLogin,
+      event.authorId,
+      answered,
+      answered ? staff.login : null,
+      answered ? staff.id : null,
+      requestedAt,
+      answered ?? requestedAt,
+    ]);
+  }
+  return rows;
 }
 
 // ---- the whole data -------------------------------------------------------------------------------------------------
@@ -1273,6 +1410,7 @@ export function buildDataset(options: DatasetOptions = {}): Dataset {
   addFixtureEvents(context);
   for (const row of context.events) auditEvent(context, row);
   addTemplates(context);
+  const intraRequests = intraRequestRows(context);
 
   script.insert(
     'Event',
@@ -1331,6 +1469,28 @@ export function buildDataset(options: DatasetOptions = {}): Dataset {
       row.createdAt,
       ...intraValues(row),
     ]),
+  );
+  script.insert(
+    'IntraRequest',
+    [
+      'id',
+      'eventId',
+      'status',
+      'contentHash',
+      'publishedContent',
+      'publishedAt',
+      'intraUrl',
+      'refusalComment',
+      'requestedAt',
+      'requestedByLogin',
+      'requestedById',
+      'answeredAt',
+      'answeredByLogin',
+      'answeredById',
+      'createdAt',
+      'updatedAt',
+    ],
+    intraRequests,
   );
   script.insert('EventAssignee', ['id', 'eventId', 'userId', 'login'], context.assignees);
   script.insert(

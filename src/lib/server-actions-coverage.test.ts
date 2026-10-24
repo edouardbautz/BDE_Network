@@ -21,6 +21,12 @@ const EXEMPT: Record<string, string> = {
   'events.createEvent':
     'leaves the page: the form redirects to the new event (another pathname, which the router shows)',
   'events.deleteEvent': 'leaves the page: it redirects to the list (another pathname)',
+  'intra.publishOnIntra':
+    'leaves the page: it answers the address of the list of requests (another pathname), which the browser loads',
+  'intra.refuseOnIntra':
+    'leaves the page: it answers the address of the list of requests (another pathname), which the browser loads',
+  'intra.markIntraUpdated':
+    'leaves the page: it answers the address of the list of requests (another pathname), which the browser loads',
   'settings.saveAddress':
     'a section of the settings page that answers like saveIdentity (same `answer()`), which is played',
   'settings.skipFortyTwoVerification': 'a variant of settings.verifyFortyTwo, same `answer()`',

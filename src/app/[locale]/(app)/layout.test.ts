@@ -31,11 +31,19 @@ vi.mock('next-intl/server', () => ({
   ),
 }));
 vi.mock('@/lib/events/queries', () => ({ countProposals: vi.fn(async () => 0) }));
+// The platform of these tests does not publish on the intra, unless a test says so.
+vi.mock('@/lib/events/intra-queries', () => ({ countIntraToDo: vi.fn(async () => 0) }));
+vi.mock('@/lib/events/access', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/events/access')>()),
+  getIntraAccess: vi.fn(async () => null),
+}));
 
 const { auth } = await import('@/lib/auth');
 const { redirect } = await import('@/i18n/navigation');
 const { isDatabaseReachable } = await import('@/lib/health');
 const { countProposals } = await import('@/lib/events/queries');
+const { countIntraToDo } = await import('@/lib/events/intra-queries');
+const { getIntraAccess } = await import('@/lib/events/access');
 const { default: AppLayout } = await import('./layout');
 const { memberWith } = await import('@/test/session-fixtures');
 
@@ -144,5 +152,53 @@ describe('(app) layout — the entry that counts the proposals to validate', () 
     vi.mocked(countProposals).mockClear();
     expect(await entry()).toBeUndefined();
     expect(countProposals).not.toHaveBeenCalled();
+  });
+});
+
+describe('(app) layout — the entry that counts what the staff has to publish on the intra', () => {
+  const entry = async () => {
+    const shell = (await callLayout()) as {
+      props: { navItems: { id: string; badge?: number; badgeLabel?: string }[] };
+    };
+    return shell.props.navItems.find((item) => item.id === 'eventsIntra');
+  };
+  const access = (canPublish: boolean) =>
+    ({ canPublish, canRequest: false }) as Awaited<ReturnType<typeof getIntraAccess>>;
+
+  it('is offered to the staff, with how many requests wait', async () => {
+    mockAuth.mockResolvedValue(memberWith(['events.intra_publish']));
+    vi.mocked(getIntraAccess).mockResolvedValue(access(true));
+    vi.mocked(countIntraToDo).mockResolvedValue(4);
+    expect(await entry()).toMatchObject({
+      href: '/events/intra',
+      badge: 4,
+      badgeLabel: 'eventsIntraCount:4',
+    });
+  });
+
+  it('is offered to somebody who only follows, with no count and no query for one', async () => {
+    mockAuth.mockResolvedValue(memberWith(['events.intra_view']));
+    vi.mocked(getIntraAccess).mockResolvedValue(access(false));
+    vi.mocked(countIntraToDo).mockClear();
+    expect(await entry()).toMatchObject({ href: '/events/intra', badge: 0 });
+    expect(countIntraToDo).not.toHaveBeenCalled();
+  });
+
+  it('is not offered when the platform does not publish on the intra, or to somebody with no right to it', async () => {
+    mockAuth.mockResolvedValue(sessionFor('OWNER'));
+    vi.mocked(getIntraAccess).mockResolvedValue(null);
+    vi.mocked(countIntraToDo).mockClear();
+    expect(await entry()).toBeUndefined();
+    expect(countIntraToDo).not.toHaveBeenCalled();
+  });
+
+  it('does not make the staff see the calendar: the entry of the intra is there, the one of the events is not', async () => {
+    mockAuth.mockResolvedValue(memberWith(['events.intra_publish']));
+    vi.mocked(getIntraAccess).mockResolvedValue(access(true));
+    const shell = (await callLayout()) as { props: { navItems: { id: string }[] } };
+    const ids = shell.props.navItems.map((item) => item.id);
+    expect(ids).toContain('eventsIntra');
+    expect(ids).not.toContain('events');
+    expect(ids).not.toContain('members');
   });
 });

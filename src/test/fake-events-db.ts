@@ -8,7 +8,7 @@ import { Prisma } from '@/generated/prisma/client';
  *   injected to test the retry.
  * - The unique indexes of the schema exist: (eventId, occurrenceStart) on dates with values of their own,
  *   cancellations and reminders, (occurrenceId, login) on a date's members in charge. Breaking one throws P2002.
- * - Deleting an event cascades to everything that hangs from it, as `onDelete: Cascade` does.
+ * - Deleting an event cascades to everything that hangs from it, as `onDelete: Cascade` does (its request for the intra too).
  */
 
 type Row = Record<string, unknown> & { id: string };
@@ -23,6 +23,7 @@ interface State {
   eventOccurrenceAssignee: Row[];
   eventCancellation: Row[];
   eventReminder: Row[];
+  intraRequest: Row[];
   user: Row[];
   auditLog: Row[];
 }
@@ -34,6 +35,7 @@ const TABLES = [
   'eventOccurrenceAssignee',
   'eventCancellation',
   'eventReminder',
+  'intraRequest',
   'user',
   'auditLog',
 ] as const;
@@ -45,6 +47,7 @@ const UNIQUE: Partial<Record<TableName, string[]>> = {
   eventReminder: ['eventId', 'occurrenceStart'],
   eventOccurrenceAssignee: ['occurrenceId', 'login'],
   eventAssignee: ['eventId', 'login'],
+  intraRequest: ['eventId'],
 };
 
 function databaseError(code: string, message: string): Error {
@@ -141,6 +144,21 @@ export function createFakeEventsDb() {
       createdAt: new Date(0),
       updatedAt: new Date(0),
     }),
+    intraRequest: () => ({
+      id: '',
+      status: 'PENDING',
+      publishedContent: null,
+      publishedAt: null,
+      intraUrl: null,
+      refusalComment: null,
+      requestedAt: new Date(0),
+      requestedById: null,
+      answeredAt: null,
+      answeredByLogin: null,
+      answeredById: null,
+      createdAt: new Date(0),
+      updatedAt: new Date(0),
+    }),
     eventOccurrence: () => ({
       id: '',
       title: null,
@@ -168,6 +186,7 @@ export function createFakeEventsDb() {
       'eventOccurrence',
       'eventCancellation',
       'eventReminder',
+      'intraRequest',
     ] as const) {
       state[name] = state[name].filter((row) => row.eventId !== eventId);
     }
@@ -189,6 +208,7 @@ export function createFakeEventsDb() {
     return {
       ...event,
       assignees: state.eventAssignee.filter((a) => a.eventId === event.id).map(person),
+      intraRequest: state.intraRequest.find((r) => r.eventId === event.id) ?? null,
       cancellations: state.eventCancellation
         .filter((c) => c.eventId === event.id)
         .map((c) => ({ occurrenceStart: c.occurrenceStart })),

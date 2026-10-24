@@ -262,6 +262,31 @@ describeWithDatabase('the dataset in a real database, and the invariants over it
         'an_intra_keyword_has_no_comma_and_is_not_empty',
       ],
       [
+        'a request for the intra whose event went back to draft',
+        `UPDATE "Event" SET "status" = 'DRAFT' WHERE id = (SELECT min("eventId") FROM "IntraRequest")`,
+        'a_request_for_the_intra_is_for_a_published_event',
+      ],
+      [
+        'a request for the intra whose event lost its fields',
+        `UPDATE "Event" SET "intraOrganizerLogin" = NULL, "intraAudience" = NULL, "intraMaxPeople" = NULL, "intraWaitingList" = NULL, "intraKind" = NULL, "intraUnsubscribeHours" = NULL, "intraKeywords" = ARRAY[]::text[] WHERE id = (SELECT min("eventId") FROM "IntraRequest")`,
+        'a_request_for_the_intra_is_for_an_event_that_has_its_fields',
+      ],
+      [
+        'a request sent under another login than the account that sent it',
+        `UPDATE "IntraRequest" SET "requestedByLogin" = 'someone-else' WHERE id = (SELECT min(id) FROM "IntraRequest" WHERE "requestedById" IS NOT NULL)`,
+        'a_request_sender_id_is_the_account_of_the_sender_login',
+      ],
+      [
+        'a request answered under another login than the account that answered it',
+        `UPDATE "IntraRequest" SET "answeredByLogin" = 'someone-else' WHERE id = (SELECT min(id) FROM "IntraRequest" WHERE "answeredById" IS NOT NULL)`,
+        'a_request_answerer_id_is_the_account_of_the_answerer_login',
+      ],
+      [
+        'a published request whose copy is not a content',
+        `UPDATE "IntraRequest" SET "publishedContent" = '{"nothing":true}' WHERE id = (SELECT min(id) FROM "IntraRequest" WHERE "status" = 'PUBLISHED')`,
+        'a_request_on_the_intra_holds_a_content_the_engine_reads',
+      ],
+      [
         'a second default role',
         `UPDATE "Role" SET "isDefault" = TRUE WHERE id = 'role-admin'`,
         'one_default_role',

@@ -22,6 +22,10 @@ const LOGIN_MAY_STAY = new Set([
   'Event.authorLogin',
   'Event.refusedByLogin',
   'Event.intraOrganizerLogin',
+  'IntraRequest.requestedByLogin',
+  'IntraRequest.answeredByLogin',
+  // the copy of what was published on the intra, which names the organizer
+  'IntraRequest.publishedContent',
   'EventAssignee.login',
   'EventOccurrenceAssignee.login',
   'EventCancellation.cancelledByLogin',
@@ -119,7 +123,7 @@ describe.skipIf(!ADMIN_URL)('what is left of a person once their account is remo
     const kept = async () => {
       const counts: Record<string, number> = {};
       for (const place of [...LOGIN_MAY_STAY].filter(
-        (p) => !/AuditLog.(metadata|targetLabel)/.test(p),
+        (p) => !/AuditLog.(metadata|targetLabel)|IntraRequest.publishedContent/.test(p),
       )) {
         const [table, column] = place.split('.');
         const { rows } = await database.client.query(
@@ -132,6 +136,10 @@ describe.skipIf(!ADMIN_URL)('what is left of a person once their account is remo
     };
     const rowsBefore = await kept();
     expect(rowsBefore['Event.authorLogin'], 'events they wrote').toBeGreaterThan(0);
+    expect(
+      rowsBefore['IntraRequest.requestedByLogin'],
+      'requests for the intra they sent',
+    ).toBeGreaterThan(0);
     expect(
       rowsBefore['NotificationTemplate.updatedByLogin'],
       'templates they wrote',

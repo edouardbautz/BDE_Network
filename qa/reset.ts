@@ -16,6 +16,7 @@ export async function resetDatabase(db: Queryable, options: DatasetOptions = {})
     DELETE FROM "NotificationTemplate";
     DELETE FROM "NotificationMention";
     DELETE FROM "EventReminder";
+    DELETE FROM "IntraRequest";
     DELETE FROM "EventOccurrenceAssignee";
     DELETE FROM "EventOccurrence";
     DELETE FROM "EventCancellation";

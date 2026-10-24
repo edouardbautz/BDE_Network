@@ -468,6 +468,7 @@ describe('cancelOccurrence / restoreOccurrence', () => {
     );
     expect(prisma.event.update).not.toHaveBeenCalled();
     expect(prisma.event.delete).not.toHaveBeenCalled();
+    // Written in the transaction of the cancellation (the second argument), with the date it bore on.
     expect(logAuditEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'event.occurrence_cancel',
@@ -476,6 +477,7 @@ describe('cancelOccurrence / restoreOccurrence', () => {
           occurrenceStart: '2026-10-17T18:00:00.000Z',
         }),
       }),
+      expect.anything(),
     );
   });
 
@@ -503,6 +505,7 @@ describe('cancelOccurrence / restoreOccurrence', () => {
     });
     expect(logAuditEvent).toHaveBeenCalledWith(
       expect.objectContaining({ action: 'event.occurrence_restore' }),
+      expect.anything(),
     );
   });
 });
