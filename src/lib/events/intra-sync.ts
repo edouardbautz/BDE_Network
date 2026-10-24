@@ -1,10 +1,9 @@
-import { createHash } from 'node:crypto';
 import { getConfig } from '@/config';
 import type { IntraRequest, Prisma } from '@/generated/prisma/client';
 import { eventInclude } from './include';
 import { intraPublicationEnabled } from './intra-config';
 import {
-  canonicalContent,
+  hashContent,
   intraReadiness,
   isOnIntra,
   readContent,
@@ -44,10 +43,6 @@ export type IntraNotice =
 
 export type IntraAnswer<T = Record<string, never>> =
   ({ ok: true } & T) | { ok: false; notice: IntraNotice };
-
-export function hashContent(content: IntraContent): string {
-  return createHash('sha256').update(canonicalContent(content)).digest('hex');
-}
 
 const timeZone = () => getConfig().bde.timezone;
 
@@ -209,7 +204,12 @@ export async function inheritIntraRequest(
   } else {
     // Waiting, or nothing of it on the intra: the new row is to be published like any other.
     await tx.intraRequest.create({
-      data: { ...common, requestedAt: new Date(), requestedByLogin: actor.login, requestedById: actor.id },
+      data: {
+        ...common,
+        requestedAt: new Date(),
+        requestedByLogin: actor.login,
+        requestedById: actor.id,
+      },
     });
   }
 }

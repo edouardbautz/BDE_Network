@@ -30,6 +30,8 @@ export async function auditIntraAction(
 }
 
 /** What a change to an event did to the request for the intra, for the audit entry of that change (nothing: no key). */
-export function intraAuditFields(outcomes: readonly IntraOutcome[]): Record<string, Prisma.InputJsonValue> {
+export function intraAuditFields(
+  outcomes: readonly IntraOutcome[],
+): Record<string, Prisma.InputJsonValue> {
   return outcomes.length === 0 ? {} : { intra: outcomes.map((outcome) => outcome.kind) };
 }

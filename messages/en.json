@@ -332,7 +332,7 @@
     },
     "retention": {
       "title": "Retention period",
-      "description": "Your data is kept for as long as you're a member. When an administrator removes you, your account is deleted; some historical records (like the audit log) keep your login as plain text, with no link to an account, for accountability. Events you created, were in charge of or are the organizer of on the intra keep your login as plain text (when the Events module is enabled). So do the notification templates you edited (and their successive versions) and the people you added to the list of mentions."
+      "description": "Your data is kept for as long as you're a member. When an administrator removes you, your account is deleted; some historical records (like the audit log) keep your login as plain text, with no link to an account, for accountability. Events you created, were in charge of or are the organizer of on the intra keep your login as plain text (when the Events module is enabled). So do the notification templates you edited (and their successive versions) and the people you added to the list of mentions. So do the requests to publish events on the intra that you sent or answered, and the copy of what was published (which names the organizer)."
     },
     "rights": {
       "title": "Your rights",

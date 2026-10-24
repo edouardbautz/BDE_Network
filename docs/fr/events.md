@@ -104,7 +104,8 @@ Ils appartiennent à **toute la série** : sur une série, ils sont enregistrés
 date ne les touche pas). Les événements écrits **avant** ce bloc continuent de fonctionner : le formulaire demande les champs à leur
 prochaine modification, et **aucun événement n'est confirmé sans eux** : confirmer depuis la page de l'événement ou depuis « À valider » affiche
 un message qui demande de le modifier d'abord. Repasser en brouillon, proposer et annuler une date restent possibles. Les champs
-s'affichent sur la page de l'événement pour ceux qui peuvent créer des événements.
+s'affichent sur la page de l'événement pour ceux qui peuvent créer des événements et pour ceux qui suivent les publications (voir
+[Publier sur l'intra](#publier-sur-lintra)).
 
 L'**année scolaire** (par exemple `2025-2026`) est calculée toute seule : de septembre à août, d'après la date de
 début. Une série appartient à l'année scolaire de sa première date.
@@ -154,6 +155,65 @@ Un événement passe par trois statuts :
 Une proposition est **l'événement entier**, série comprise. Une fois approuvée, les dates d'une série se gèrent comme
 d'habitude (voir plus bas). Une date de série confirmée toute seule rend l'événement en partie publié : son proposeur ne
 peut plus le modifier non plus.
+
+## Publier sur l'intra
+
+Quand la plateforme publie les événements sur l'intra, le **staff** de l'école met chaque événement confirmé sur l'intra 42 à la
+main : la plateforme lui dit quoi publier, il le copie dans le formulaire de l'intra, puis répond. Le staff a un compte 42 comme
+n'importe quel membre, approuvé par le BDE, avec un rôle qui détient le droit **Publier sur l'intra** (voir
+[Rôles et droits](roles.md)).
+
+### La demande
+
+- **Confirmer un événement envoie la demande.** Une série est **une seule demande** avec la liste de ses dates (une date
+  confirmée toute seule fait une demande pour cette date seulement, jusqu'à ce que le reste soit confirmé aussi). Repasser en
+  brouillon, supprimer l'événement ou annuler toutes ses dates retire la demande.
+- Un événement confirmé **avant** que la plateforme publie sur l'intra, ou dont la demande a été retirée, n'en a pas. Sur sa page,
+  **Publication sur l'intra** le dit et propose **Demander la publication** à ceux qui en ont le droit (valider les événements
+  le donne déjà).
+- Où elle en est s'affiche sous forme de statut, sur la page de l'événement et dans la liste du staff :
+
+| Statut              | Ce que ça veut dire                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| **À publier**       | Envoyée, en attente du staff.                                                        |
+| **Publié**          | Sur l'intra, et l'événement n'a pas changé depuis.                                   |
+| **À mettre à jour** | Sur l'intra, mais l'événement a changé depuis : le staff doit mettre l'intra à jour. |
+| **Refusé**          | Le staff l'a refusée, avec une raison ; elle peut être renvoyée.                     |
+
+### Ce que fait le staff
+
+L'entrée **À publier sur l'intra** du menu compte ce qui attend (une première publication, ou une mise à jour). La liste montre
+d'abord ce qui attend, le plus ancien en premier, puis ce qui a reçu une réponse. La page d'une demande donne l'événement
+**dans l'ordre du formulaire de l'intra**, chaque champ avec un bouton **Copier** : le login de l'organisateur, le nom, à qui il
+est ouvert, la date de début, l'heure de début, la date de fin, l'heure de fin, la description (telle que tapée, en Markdown),
+le lieu, le nombre maximum de personnes, la liste d'attente, le genre, le délai de désinscription et les mots-clés. Les dates
+s'écrivent **JJ/MM/AAAA** et les heures **HH:mm**, dans le fuseau horaire du BDE, quelle que soit la langue de l'interface. Une
+série liste ses dates l'une après l'autre, chacune avec ses quatre valeurs à copier.
+
+Puis le staff répond :
+
+- **Publié sur l'intra**, avec l'adresse de l'événement sur l'intra s'il veut la garder (une adresse `https` de `intra.42.fr` :
+  toute autre est refusée) ;
+- **Refuser**, avec une raison (obligatoire, 1000 caractères au plus) : l'auteur la lit sur la page de l'événement, et la demande
+  peut être **renvoyée** par ceux qui ont le droit d'en demander, une fois l'événement corrigé.
+
+La première réponse l'emporte : si quelqu'un a répondu avant, la page le dit et rien n'est modifié. Une réponse est aussi refusée
+quand l'événement a changé pendant que la page était ouverte (la page vérifie que vous avez vu la dernière version) : regardez
+les nouvelles valeurs, puis répondez de nouveau.
+
+### Quand l'événement change
+
+Un événement qui est sur l'intra puis change (titre, description, lieu, dates, ou n'importe quel champ de l'intra) passe à
+**À mettre à jour**. La page de la demande montre alors **ce que l'intra contient et ce que l'événement est devenu**, champ par
+champ, avec les dates à retirer et à ajouter. Une fois l'intra à jour, **Intra mis à jour** remet la demande à _Publié_. Un
+changement qu'on annule ne demande rien : la demande revient à _Publié_ toute seule. Ce qui n'est pas sur l'intra (la
+catégorie, les membres en charge) ne change rien.
+
+Une série coupée en deux (« celle-ci et les suivantes ») poursuit la demande sur la nouvelle ligne : les deux sont _À mettre à jour_
+si ce que contient l'intra n'est plus ce qu'elles disent.
+
+Tout est dans le [journal d'audit](#journal-daudit) : qui a demandé, qui a répondu, et, pour un événement qui a changé, que sa
+demande est _À mettre à jour_.
 
 ## Les événements qui se répètent
 

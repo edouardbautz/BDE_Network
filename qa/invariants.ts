@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readContent } from '../src/lib/events/intra-request';
 import { expandRepeat, readRepeatRule } from '../src/lib/events/repeat';
 import { directoryKey, type MentionDirectory } from '../src/lib/notifications/templates/mentions';
 import { validateTemplate } from '../src/lib/notifications/templates/schema';
@@ -26,6 +27,7 @@ export interface Violation {
 const SQL = readFileSync(join(__dirname, 'invariants.sql'), 'utf8');
 const TEMPLATES_SQL = readFileSync(join(__dirname, 'invariants-templates.sql'), 'utf8');
 const INTRA_SQL = readFileSync(join(__dirname, 'invariants-intra.sql'), 'utf8');
+const INTRA_REQUESTS_SQL = readFileSync(join(__dirname, 'invariants-intra-requests.sql'), 'utf8');
 
 export async function checkInvariants(
   db: Queryable,
@@ -87,6 +89,27 @@ export async function checkInvariants(
   if (intraColumn.length > 0) {
     for (const row of (await db.query(INTRA_SQL)).rows) {
       violations.push({ invariant: String(row.invariant), detail: String(row.detail) });
+    }
+  }
+
+  // The requests to publish on the intra, in a database that has the table: what the intra is said to hold is a content the engine reads.
+  const { rows: requestTable } = await db.query(
+    `SELECT to_regclass('public."IntraRequest"') IS NOT NULL AS there`,
+  );
+  if (requestTable[0]?.there === true) {
+    for (const row of (await db.query(INTRA_REQUESTS_SQL)).rows) {
+      violations.push({ invariant: String(row.invariant), detail: String(row.detail) });
+    }
+    const { rows: copies } = await db.query(
+      `SELECT "id", "publishedContent" FROM "IntraRequest" WHERE "status" IN ('PUBLISHED', 'OUTDATED')`,
+    );
+    for (const copy of copies) {
+      if (readContent(copy.publishedContent) === null) {
+        violations.push({
+          invariant: 'a_request_on_the_intra_holds_a_content_the_engine_reads',
+          detail: String(copy.id),
+        });
+      }
     }
   }
 

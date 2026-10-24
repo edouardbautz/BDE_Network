@@ -1,5 +1,12 @@
+import { createHash } from 'node:crypto';
 import type { IntraAudience, IntraRequestStatus } from '@/generated/prisma/client';
-import { intraOf, INTRA_AUDIENCES, INTRA_KINDS, type IntraColumns, type IntraFields } from './intra';
+import {
+  intraOf,
+  INTRA_AUDIENCES,
+  INTRA_KINDS,
+  type IntraColumns,
+  type IntraFields,
+} from './intra';
 import { resolveOccurrences, type EventRecord } from './series';
 import { toLocalDateTime } from './time';
 
@@ -96,6 +103,11 @@ export function canonicalContent(content: IntraContent): string {
   });
 }
 
+/** SHA-256 of the canonical content, in hexadecimal: the version of an event a staff member had in front of them. */
+export function hashContent(content: IntraContent): string {
+  return createHash('sha256').update(canonicalContent(content)).digest('hex');
+}
+
 export function sameContent(a: IntraContent | null, b: IntraContent | null): boolean {
   if (a === null || b === null) return a === b;
   return canonicalContent(a) === canonicalContent(b);
@@ -118,7 +130,11 @@ export function readContent(value: unknown): IntraContent | null {
   if (!isRecord(value) || !isRecord(value.fields) || !Array.isArray(value.dates)) return null;
   const { title, description, location } = value;
   const f = value.fields;
-  if (typeof title !== 'string' || typeof description !== 'string' || typeof location !== 'string') {
+  if (
+    typeof title !== 'string' ||
+    typeof description !== 'string' ||
+    typeof location !== 'string'
+  ) {
     return null;
   }
   const audience = INTRA_AUDIENCES.find((candidate) => candidate === f.audience);
@@ -191,7 +207,12 @@ export const COPY_FIELDS = [
 export type CopyField = (typeof COPY_FIELDS)[number];
 
 /** The four fields that belong to a date. */
-export const DATE_FIELDS = ['startDate', 'startTime', 'endDate', 'endTime'] as const satisfies readonly CopyField[];
+export const DATE_FIELDS = [
+  'startDate',
+  'startTime',
+  'endDate',
+  'endTime',
+] as const satisfies readonly CopyField[];
 export type DateField = (typeof DATE_FIELDS)[number];
 
 /** `DD/MM/YYYY`, in the BDE's time zone, whatever the language of the interface: it is what the intra's form takes. */
@@ -304,9 +325,7 @@ export function isEmptyChange(change: ContentChange): boolean {
  * shown to members, so it is read strictly (no credentials, no port, no other host) and written the way the database checks it. */
 export const INTRA_URL_MAX_LENGTH = 300;
 
-export function parseIntraUrl(
-  input: unknown,
-): { ok: true; value: string | null } | { ok: false } {
+export function parseIntraUrl(input: unknown): { ok: true; value: string | null } | { ok: false } {
   const text = typeof input === 'string' ? input.trim() : '';
   if (text === '') return { ok: true, value: null };
   if (text.length > INTRA_URL_MAX_LENGTH) return { ok: false };

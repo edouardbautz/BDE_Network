@@ -149,7 +149,10 @@ export async function refuseOnIntra(eventId: string, comment: string): Promise<A
  * Sends the staff a request: again after a refusal, or for an event that is confirmed and has none. `returnTo` is the page the person
  * comes back to (a closed list, never an address).
  */
-export async function requestOnIntra(eventId: string, returnTo: string = 'event'): Promise<ActionTarget> {
+export async function requestOnIntra(
+  eventId: string,
+  returnTo: string = 'event',
+): Promise<ActionTarget> {
   const access = await requireIntraRequester();
   const id = requireEventId(eventId);
   if (!(RETURNS as readonly string[]).includes(returnTo)) throw new Error('Invalid target');

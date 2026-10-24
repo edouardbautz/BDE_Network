@@ -8,6 +8,15 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **The school's staff publishes the events on the intra, from a page of its own.** Confirming an event now sends a **request** to the staff (one for a whole series,
+  with the list of its dates). The new entry **To publish on the intra** of the menu counts what waits; the page of a request gives the event **in the order of the
+  intra's form**, each field with a **Copy** button (dates as `DD/MM/YYYY`, times as `HH:mm`, in the BDE's time zone). The staff answers **Published on the intra**
+  (with the address of the event there, if they want it) or **Refuse**, with a reason the author reads on the event; a refused request can be sent again. An event that
+  is on the intra and then changes becomes **To update**: the page shows what the intra holds and what the event is now, and **Intra updated** closes it. Going back to
+  draft, deleting the event or cancelling every date takes the request back. Events confirmed before can be asked for from their page. Needs the rights "Publish on the
+  intra", "Follow the publications on the intra" and "Ask for a publication on the intra" (validating events already allows asking). A new migration adds the table; nothing
+  existing changes. The privacy policy and the personal export say that the requests a person sent or answered are kept under their login.
+
 - **Accounts for the school's staff.** Three new rights in the events module: **Publish on the intra** (answer the requests to publish events on the intra: it includes
   nothing, so a staff role sees that page and neither the calendar, nor the members, nor the settings), **Follow the publications on the intra** (read only) and **Ask for a
   publication on the intra**. The usual rules apply: nobody hands out a right they do not hold. Each person can give, on their profile, their **Discord id and/or Slack id**

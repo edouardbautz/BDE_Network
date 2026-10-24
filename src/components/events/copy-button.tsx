@@ -53,6 +53,8 @@ export function CopyButton({
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
 
+  const shown = state === 'copied' ? copiedLabel : state === 'failed' ? failedLabel : copyLabel;
+
   const copy = async () => {
     const worked = await copyText(value);
     setState(worked ? 'copied' : 'failed');
@@ -61,12 +63,16 @@ export function CopyButton({
   };
 
   return (
-    <Button type="button" variant="outline" size="sm" onClick={copy}>
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={copy}
+      // the visible word first, then the field: the name contains what is seen
+      aria-label={`${shown} ${fieldName}`}
+    >
       {state === 'copied' ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}
-      <span aria-live="polite">
-        {state === 'copied' ? copiedLabel : state === 'failed' ? failedLabel : copyLabel}
-      </span>
-      <span className="sr-only"> {fieldName}</span>
+      <span aria-live="polite">{shown}</span>
     </Button>
   );
 }

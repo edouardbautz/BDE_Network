@@ -19,6 +19,7 @@ import {
   dateValues,
   diffContent,
   fieldValue,
+  hashContent,
   intraReadiness,
   isEmptyChange,
   readContent,
@@ -26,7 +27,6 @@ import {
   type DateField,
   type IntraContent,
 } from '@/lib/events/intra-request';
-import { hashContent } from '@/lib/events/intra-sync';
 import { REFUSAL_COMMENT_MAX_LENGTH } from '@/lib/events/review';
 import { pageTitle } from '@/lib/page-title';
 import { markIntraUpdated, publishOnIntra, refuseOnIntra, requestOnIntra } from '../actions';
@@ -398,7 +398,10 @@ export default async function IntraRequestPage({
                             </p>
                             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                               {DATE_FIELDS.map((field) => (
-                                <div key={field} className="flex items-center justify-between gap-2">
+                                <div
+                                  key={field}
+                                  className="flex items-center justify-between gap-2"
+                                >
                                   <span className="min-w-0">
                                     <span className="text-muted-foreground text-small block">
                                       {fieldLabel(field)}

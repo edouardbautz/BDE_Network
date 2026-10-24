@@ -67,10 +67,7 @@ export default async function IntraRequestsPage({
                   >
                     {request.event.title}
                   </Link>
-                  <IntraStatusBadge
-                    status={request.status}
-                    label={t(`status.${request.status}`)}
-                  />
+                  <IntraStatusBadge status={request.status} label={t(`status.${request.status}`)} />
                 </div>
                 <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-small">
                   {first && (

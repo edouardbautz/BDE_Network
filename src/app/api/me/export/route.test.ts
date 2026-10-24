@@ -13,6 +13,7 @@ vi.mock('@/lib/prisma', () => ({
     notificationTemplate: { findMany: vi.fn() },
     notificationTemplateVersion: { findMany: vi.fn() },
     notificationMention: { findMany: vi.fn() },
+    intraRequest: { findMany: vi.fn() },
   },
 }));
 
@@ -34,6 +35,7 @@ beforeEach(() => {
     calendarToken: SECRET,
   } as never);
   vi.mocked(prisma.auditLog.findMany).mockResolvedValue([]);
+  vi.mocked(prisma.intraRequest.findMany).mockResolvedValue([]);
   vi.mocked(prisma.event.findMany).mockImplementation((async (args: {
     where: Record<string, unknown>;
   }) =>
@@ -134,6 +136,47 @@ describe('GET /api/me/export', () => {
       expect.objectContaining({ where: { createdByLogin: 'alice' } }),
     );
     expect(JSON.stringify(body)).not.toContain('"content"');
+  });
+
+  it('lists the requests for the intra the member sent and those they answered, each for this account alone', async () => {
+    vi.mocked(prisma.intraRequest.findMany).mockImplementation((async (args: {
+      where: Record<string, unknown>;
+    }) =>
+      'requestedById' in args.where
+        ? [
+            {
+              status: 'PENDING',
+              requestedAt: new Date('2026-10-01T10:00:00Z'),
+              event: { title: 'Tournoi' },
+            },
+          ]
+        : [
+            {
+              status: 'REFUSED',
+              answeredAt: new Date('2026-10-02T10:00:00Z'),
+              refusalComment: 'La salle est prise.',
+              event: { title: 'Soirée' },
+            },
+          ]) as never);
+    const body = JSON.parse(await (await GET()).text());
+
+    expect(body.events.intraRequestsSent).toEqual([
+      { status: 'PENDING', requestedAt: '2026-10-01T10:00:00.000Z', event: { title: 'Tournoi' } },
+    ]);
+    expect(body.events.intraRequestsAnswered).toEqual([
+      {
+        status: 'REFUSED',
+        answeredAt: '2026-10-02T10:00:00.000Z',
+        refusalComment: 'La salle est prise.',
+        event: { title: 'Soirée' },
+      },
+    ]);
+    expect(prisma.intraRequest.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { requestedById: 'u1' } }),
+    );
+    expect(prisma.intraRequest.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { answeredById: 'u1' } }),
+    );
   });
 
   it("includes the member's events data but never the secret calendar token", async () => {

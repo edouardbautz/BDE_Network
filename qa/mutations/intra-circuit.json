@@ -1,0 +1,349 @@
+[
+  [
+    "request: an edit of an event that has none makes one",
+    "src/lib/events/intra-sync.ts",
+    "if (!options.create || !readiness.ok) return [];",
+    "if (!readiness.ok) return [];",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "request: confirming does not make one",
+    "src/app/[locale]/(app)/events/actions.ts",
+    "create: change.confirmed ? actor : undefined,",
+    "create: undefined,",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "request: a validator’s own new confirmed event makes none",
+    "src/app/[locale]/(app)/events/actions.ts",
+    "created.status === 'CONFIRMED'\n        ? await syncIntraRequests(tx, [created.id], { create: intraActorOf(access) })\n        : [];",
+    "[];",
+    [
+      "src/app/[locale]/(app)/events/actions.test.ts",
+      "src/app/[locale]/(app)/events/actions-series.test.ts",
+      "src/app/[locale]/(app)/events/intra-circuit.test.ts"
+    ]
+  ],
+  [
+    "request: nothing is made when the platform does not publish on the intra (the check is gone)",
+    "src/lib/events/intra-sync.ts",
+    "export async function syncIntraRequest(\n  tx: Tx,\n  eventId: string,\n  options: { create?: IntraActor } = {},\n): Promise<IntraOutcome[]> {\n  if (!intraPublicationEnabled()) return [];",
+    "export async function syncIntraRequest(\n  tx: Tx,\n  eventId: string,\n  options: { create?: IntraActor } = {},\n): Promise<IntraOutcome[]> {",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "request: going back to draft keeps the request",
+    "src/lib/events/intra-sync.ts",
+    "  if (!readiness.ok) {\n    await tx.intraRequest.delete({ where: { id: request.id } });",
+    "  if (!readiness.ok) {\n    return [];\n    await tx.intraRequest.delete({ where: { id: request.id } });",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "request: a withdrawal does not say that the event was on the intra",
+    "src/lib/events/intra-sync.ts",
+    "        published: isOnIntra(request.status) ? publishedOf(request) : null,\n      },\n    ];\n  }\n\n  const hash",
+    "        published: null,\n      },\n    ];\n  }\n\n  const hash",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "request: a waiting request is made to update by a change",
+    "src/lib/events/intra-sync.ts",
+    "  if (!isOnIntra(request.status)) {\n    await tx.intraRequest.update({ where: { id: request.id }, data: { contentHash: hash } });\n    return [];\n  }",
+    "",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "request: a change that is undone stays to update",
+    "src/lib/events/intra-sync.ts",
+    "data: { contentHash: hash, status: unchanged ? 'PUBLISHED' : 'OUTDATED' },",
+    "data: { contentHash: hash, status: 'OUTDATED' },",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "request: a change of an event on the intra is not reported",
+    "src/lib/events/intra-sync.ts",
+    "  if (unchanged || !published) return [];",
+    "  return [];",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "request: a change is compared with the wrong thing (the hash alone decides)",
+    "src/lib/events/intra-sync.ts",
+    "  const unchanged = sameContent(published, readiness.content);",
+    "  const unchanged = false;",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "request: the cut of a series forgets the request of the second row",
+    "src/app/[locale]/(app)/events/actions.ts",
+    "  if (change.split) {\n    await inheritIntraRequest(tx, change.eventId, change.resultId, change.cutAt, actor);\n  }",
+    "",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "request: the second row of a cut series carries all the dates of the intra, not those from the cut",
+    "src/lib/events/intra-sync.ts",
+    "published.dates.filter((date) => new Date(date.start) >= cutAt)",
+    "published.dates",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "request: the first row of a cut series is not looked at again",
+    "src/app/[locale]/(app)/events/actions.ts",
+    "const first = await syncIntraRequests(tx, change.split ? [change.eventId] : []);",
+    "const first = await syncIntraRequests(tx, []);",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "request: deleting a series’ dates from one on does not look at the request",
+    "src/app/[locale]/(app)/events/actions.ts",
+    "const intra = done.deletedEvent ? ifFirst : await syncIntraRequests(tx, [eventId]);",
+    "const intra = done.deletedEvent ? ifFirst : [];",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "request: cancelling a date does not look at the request",
+    "src/app/[locale]/(app)/events/actions.ts",
+    "    // A date that was on the intra is not any more: the staff has to know (or that nothing is left to publish).\n    const intra = await syncIntraRequests(tx, [eventId]);",
+    "    const intra = [] as Awaited<ReturnType<typeof syncIntraRequests>>;",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "answer: published is taken for a version the page did not show",
+    "src/lib/events/intra-sync.ts",
+    "  if (current.hash !== options.expectedHash) return { ok: false, notice: 'changedMeanwhile' };\n  const now = new Date();\n  const done = await tx.intraRequest.updateMany({\n    where: { id: current.request.id, status: 'PENDING' },",
+    "  const now = new Date();\n  const done = await tx.intraRequest.updateMany({\n    where: { id: current.request.id, status: 'PENDING' },",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "answer: “intra updated” is taken for a version the page did not show",
+    "src/lib/events/intra-sync.ts",
+    "  if (current.hash !== options.expectedHash) return { ok: false, notice: 'changedMeanwhile' };\n  const now = new Date();\n  const done = await tx.intraRequest.updateMany({\n    where: { id: current.request.id, status: 'OUTDATED' },",
+    "  const now = new Date();\n  const done = await tx.intraRequest.updateMany({\n    where: { id: current.request.id, status: 'OUTDATED' },",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "answer: a request that was answered can be answered again (published)",
+    "src/lib/events/intra-sync.ts",
+    "  if (current.request.status !== 'PENDING') return { ok: false, notice: 'alreadyAnswered' };\n  if (current.hash",
+    "  if (current.hash",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "answer: a refusal can overwrite an answer",
+    "src/lib/events/intra-sync.ts",
+    "  if (request.status !== 'PENDING') return { ok: false, notice: 'alreadyAnswered' };\n  const done = await tx.intraRequest.updateMany({\n    where: { id: request.id, status: 'PENDING' },\n    data: {\n      status: 'REFUSED',",
+    "  const done = await tx.intraRequest.updateMany({\n    where: { id: request.id },\n    data: {\n      status: 'REFUSED',",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "answer: “intra updated” works on a request that is not to update",
+    "src/lib/events/intra-sync.ts",
+    "  if (current.request.status !== 'OUTDATED') return { ok: false, notice: 'alreadyAnswered' };",
+    "",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "answer: a request that is sent twice makes two answers (only a refused one is sent again)",
+    "src/lib/events/intra-sync.ts",
+    "  if (request.status !== 'REFUSED') return { ok: false, notice: 'alreadyRequested' };",
+    "",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "answer: a request can be made for an event that is not published",
+    "src/lib/events/intra-sync.ts",
+    "  if (!readiness.ok) return { ok: false, notice: 'notPublishable' };",
+    "",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "answer: sending again keeps the refusal",
+    "src/lib/events/intra-sync.ts",
+    "      refusalComment: null,\n      answeredAt: null,\n      answeredByLogin: null,\n      answeredById: null,\n      requestedAt: new Date(),",
+    "      requestedAt: new Date(),",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "actions: the staff’s right is not asked to publish",
+    "src/app/[locale]/(app)/events/intra/actions.ts",
+    "  const access = await requireIntraPublisher();\n  const id = requireEventId(eventId);\n  const hash = requireHash(expectedHash);\n  const parsedUrl",
+    "  const access = await requireIntraRequester();\n  const id = requireEventId(eventId);\n  const hash = requireHash(expectedHash);\n  const parsedUrl",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "actions: asking is for the staff",
+    "src/app/[locale]/(app)/events/intra/actions.ts",
+    "  const access = await requireIntraRequester();\n  const id = requireEventId(eventId);\n  if (!(RETURNS",
+    "  const access = await requireIntraPublisher();\n  const id = requireEventId(eventId);\n  if (!(RETURNS",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "actions: a link that is not the intra’s is kept",
+    "src/app/[locale]/(app)/events/intra/actions.ts",
+    "  if (!parsedUrl.ok) throw new Error('Invalid address');",
+    "",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "actions: a refusal without a reason is accepted",
+    "src/app/[locale]/(app)/events/intra/actions.ts",
+    "  if (!parsed.ok) throw new Error('Invalid comment');",
+    "",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "actions: the page to come back to is any address",
+    "src/app/[locale]/(app)/events/intra/actions.ts",
+    "  if (!(RETURNS as readonly string[]).includes(returnTo)) throw new Error('Invalid target');",
+    "",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "actions: the version is not checked to be a hash",
+    "src/app/[locale]/(app)/events/intra/actions.ts",
+    "  if (typeof value !== 'string' || !HASH.test(value)) throw new Error('Invalid version');",
+    "",
+    ["src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "access: the staff’s right includes asking",
+    "src/lib/events/access.ts",
+    "export function canRequestOnIntra(holder: PermissionHolder): boolean {\n  return can(holder, EVENTS_INTRA_REQUEST) || can(holder, EVENTS_VALIDATE);",
+    "export function canRequestOnIntra(holder: PermissionHolder): boolean {\n  return can(holder, EVENTS_INTRA_REQUEST) || can(holder, EVENTS_VALIDATE) || can(holder, EVENTS_INTRA_PUBLISH);",
+    ["src/lib/events/access-intra.test.ts"]
+  ],
+  [
+    "access: validating does not allow asking",
+    "src/lib/events/access.ts",
+    "return can(holder, EVENTS_INTRA_REQUEST) || can(holder, EVENTS_VALIDATE);",
+    "return can(holder, EVENTS_INTRA_REQUEST);",
+    ["src/lib/events/access-intra.test.ts", "src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "access: validating allows answering",
+    "src/lib/events/access.ts",
+    "export function canPublishOnIntra(holder: PermissionHolder): boolean {\n  return can(holder, EVENTS_INTRA_PUBLISH);",
+    "export function canPublishOnIntra(holder: PermissionHolder): boolean {\n  return can(holder, EVENTS_INTRA_PUBLISH) || can(holder, EVENTS_VALIDATE);",
+    ["src/lib/events/access-intra.test.ts", "src/app/[locale]/(app)/events/intra-circuit.test.ts"]
+  ],
+  [
+    "access: following the publications needs more than any right about it",
+    "src/lib/events/access.ts",
+    "return can(holder, EVENTS_INTRA_VIEW) || canPublishOnIntra(holder) || canRequestOnIntra(holder);",
+    "return can(holder, EVENTS_INTRA_VIEW);",
+    ["src/lib/events/access-intra.test.ts"]
+  ],
+  [
+    "access: the pages about the intra are open while the platform does not publish on it",
+    "src/lib/events/access.ts",
+    "  if (!isEventsModuleEnabled() || !intraPublicationEnabled()) return null;",
+    "  if (!isEventsModuleEnabled()) return null;",
+    ["src/lib/events/access-intra.test.ts"]
+  ],
+  [
+    "content: a cancelled date is published",
+    "src/lib/events/intra-request.ts",
+    "    if (date.cancelled || date.status !== 'CONFIRMED') continue;",
+    "    if (date.status !== 'CONFIRMED') continue;",
+    ["src/lib/events/intra-request.test.ts"]
+  ],
+  [
+    "content: a draft date is published",
+    "src/lib/events/intra-request.ts",
+    "    if (date.cancelled || date.status !== 'CONFIRMED') continue;",
+    "    if (date.cancelled) continue;",
+    ["src/lib/events/intra-request.test.ts"]
+  ],
+  [
+    "content: an event without its fields is ready",
+    "src/lib/events/intra-request.ts",
+    "  if (!fields) return { ok: false, reason: 'fieldsMissing' };",
+    "",
+    ["src/lib/events/intra-request.test.ts"]
+  ],
+  [
+    "content: a link to the intra may carry a port",
+    "src/lib/events/intra-request.ts",
+    "    url.port !== ''\n  ) {",
+    "    false\n  ) {",
+    ["src/lib/events/intra-request.test.ts"]
+  ],
+  [
+    "content: any host ending in intra.42.fr is the intra’s",
+    "src/lib/events/intra-request.ts",
+    "host === 'intra.42.fr' || host.endsWith('.intra.42.fr')",
+    "host === 'intra.42.fr' || host.endsWith('intra.42.fr')",
+    ["src/lib/events/intra-request.test.ts"]
+  ],
+  [
+    "content: a link may be http",
+    "src/lib/events/intra-request.ts",
+    "    url.protocol !== 'https:' ||",
+    "",
+    ["src/lib/events/intra-request.test.ts"]
+  ],
+  [
+    "content: the date is written in the language of the interface (month first)",
+    "src/lib/events/intra-request.ts",
+    "return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;",
+    "return `${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}/${year}`;",
+    ["src/lib/events/intra-request.test.ts"]
+  ],
+  [
+    "content: the category is part of the version",
+    "src/lib/events/intra-request.ts",
+    "    title: content.title,\n    description: content.description,\n    location: content.location,\n    fields: {",
+    "    title: content.title,\n    description: content.description,\n    location: content.location,\n    category: 'x',\n    fields: {",
+    ["src/lib/events/intra-request.test.ts"]
+  ],
+  [
+    "page: the staff’s page is shown to anybody",
+    "src/app/[locale]/(app)/events/intra/page.tsx",
+    "  const access = await getIntraAccess();\n  if (!access) {\n    notFound();\n  }",
+    "  const access = (await getIntraAccess()) ?? ({ canPublish: false, canRequest: false } as never);",
+    ["src/app/[locale]/(app)/events/intra/pages.test.tsx"]
+  ],
+  [
+    "page: a follower is given the buttons of the answers",
+    "src/app/[locale]/(app)/events/intra/[id]/page.tsx",
+    "  const showAnswers = access.canPublish;",
+    "  const showAnswers = true;",
+    ["src/app/[locale]/(app)/events/intra/pages.test.tsx"]
+  ],
+  [
+    "page: the fields are not in the order of the intra’s form",
+    "src/app/[locale]/(app)/events/intra/[id]/page.tsx",
+    "const BEFORE_DATES: readonly Field[] = ['organizerLogin', 'name', 'availableFor'];",
+    "const BEFORE_DATES: readonly Field[] = ['name', 'organizerLogin', 'availableFor'];",
+    ["src/app/[locale]/(app)/events/intra/pages.test.tsx"]
+  ],
+  [
+    "page: the link to the intra opens without protection",
+    "src/app/[locale]/(app)/events/intra/[id]/page.tsx",
+    "                        rel=\"noopener noreferrer\"",
+    "",
+    ["src/app/[locale]/(app)/events/intra/pages.test.tsx"]
+  ],
+  [
+    "page: the staff is offered to send a request again",
+    "src/app/[locale]/(app)/events/intra/[id]/page.tsx",
+    "            {access.canRequest && request.status === 'REFUSED' && (",
+    "            {request.status === 'REFUSED' && (",
+    ["src/app/[locale]/(app)/events/intra/pages.test.tsx"]
+  ],
+  [
+    "copy: the value is trimmed before it is copied",
+    "src/components/events/copy-button.tsx",
+    "await navigator.clipboard.writeText(text);",
+    "await navigator.clipboard.writeText(text.trim());",
+    ["src/components/events/copy-button.test.tsx"]
+  ],
+  [
+    "copy: a failure says it was copied",
+    "src/components/events/copy-button.tsx",
+    "setState(worked ? 'copied' : 'failed');",
+    "setState('copied');",
+    ["src/components/events/copy-button.test.tsx"]
+  ]
+]

@@ -41,6 +41,7 @@ const FILE_OF: Record<string, RegExp> = {
   roles: /\(app\)\/roles\/actions\.ts$/,
   events: /\(app\)\/events\/actions\.ts$/,
   'shared-calendar': /shared-calendar\/actions\.ts$/,
+  intra: /\(app\)\/events\/intra\/actions\.ts$/,
   profile: /\(app\)\/profile\/actions\.ts$/,
   settings: /\(app\)\/settings\/actions\.ts$/,
   notifications: /\(app\)\/notifications\/actions\.ts$/,
@@ -144,6 +145,14 @@ async function seriesStart(db: {
   return Number(rows[0]?.ms);
 }
 
+/** The version of each event with a request, as the dataset recorded it (the hash the page of the request shows to the staff). */
+async function intraHashes(db: {
+  query(sql: string): Promise<{ rows: Record<string, unknown>[] }>;
+}): Promise<Record<string, string>> {
+  const { rows } = await db.query(`SELECT "eventId", "contentHash" FROM "IntraRequest"`);
+  return Object.fromEntries(rows.map((row) => [String(row.eventId), String(row.contentHash)]));
+}
+
 export async function playActions(variant: PlatformVariant): Promise<ActionCell[]> {
   const platform = platformFromEnvironment();
   const manifest = readManifest();
@@ -151,7 +160,10 @@ export async function playActions(variant: PlatformVariant): Promise<ActionCell[
 
   await withDatabase(platform, async (db) => {
     await resetDatabase(db);
-    const context: Context = { seriesStart: await seriesStart(db) };
+    const context: Context = {
+      seriesStart: await seriesStart(db),
+      intraHashes: await intraHashes(db),
+    };
     const located = new Map(CASES.map((item) => [item, locate(manifest, item.action)]));
 
     // 1. Every persona that must be refused is refused: nothing changes in the database, and where the gate is the

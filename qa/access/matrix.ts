@@ -56,6 +56,13 @@ const inApp = (who: PersonaKey, rule: () => Expect): Expect => entrance(who) ?? 
 
 const eventsOff = (variant: PlatformVariant) => variant === 'events-disabled';
 
+/** Who sees the requests for the intra: the staff, those who follow them, those who ask for them, and those who run the events. */
+const followsIntra = (who: PersonaKey, variant: PlatformVariant) =>
+  can(who, 'events.intra_publish', variant) ||
+  can(who, 'events.intra_view', variant) ||
+  can(who, 'events.intra_request', variant) ||
+  can(who, 'events.validate', variant);
+
 type Kind = keyof typeof FIXTURES.events;
 const EVENT_KINDS: readonly Kind[] = [
   'confirmed',
@@ -225,6 +232,40 @@ export const PAGES: readonly RouteSpec[] = [
         path: at('/events/review'),
         expect: (who, variant) =>
           inApp(who, () => (can(who, 'events.validate', variant) ? ok : denied)),
+      },
+    ],
+  },
+  {
+    route: '/events/intra',
+    probes: [
+      {
+        label: 'the requests to publish on the intra',
+        path: at('/events/intra'),
+        expect: (who, variant) => inApp(who, () => (followsIntra(who, variant) ? ok : denied)),
+      },
+    ],
+  },
+  {
+    route: '/events/intra/[id]',
+    probes: [
+      ...(['intraPending', 'intraPublished', 'intraOutdated', 'intraRefused'] as const).map(
+        (kind): Probe => ({
+          label: `a request for the intra: ${kind}`,
+          path: at(`/events/intra/${FIXTURES.events[kind]}`),
+          expect: (who, variant) => inApp(who, () => (followsIntra(who, variant) ? ok : denied)),
+        }),
+      ),
+      {
+        label: 'an event that has no request',
+        path: at(`/events/intra/${FIXTURES.events.confirmed}`),
+        expect: (who, variant) =>
+          inApp(who, () => (followsIntra(who, variant) ? notFound : denied)),
+      },
+      {
+        label: 'a request that does not exist',
+        path: at('/events/intra/qa-fx-missing'),
+        expect: (who, variant) =>
+          inApp(who, () => (followsIntra(who, variant) ? notFound : denied)),
       },
     ],
   },
@@ -475,7 +516,8 @@ export const API: readonly RouteSpec[] = [
  * action matrix plays. A new one fails the test until it is declared here.
  */
 export const INLINE_ACTIONS: Readonly<Record<string, number>> = {
-  'src/app/[locale]/(app)/events/[id]/page.tsx': 11,
+  'src/app/[locale]/(app)/events/[id]/page.tsx': 13,
+  'src/app/[locale]/(app)/events/intra/[id]/page.tsx': 4,
   'src/app/[locale]/(app)/events/review/page.tsx': 2,
   'src/app/[locale]/(app)/events/shared-calendar/page.tsx': 3,
   'src/app/[locale]/(app)/members/page.tsx': 1,

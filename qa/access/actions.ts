@@ -16,6 +16,8 @@ import { can, isApproved, isOwner } from './model';
 export interface Context {
   /** The first date of the series fixture, in milliseconds (UTC): the dates are a week apart. */
   seriesStart: number;
+  /** The version of each event that has a request for the intra, by event: what the staff's page shows (and the answers repeat). */
+  intraHashes: Record<string, string>;
 }
 
 export interface ActionCase {
@@ -101,6 +103,10 @@ const roles = (who: PersonaKey) => can(who, 'roles.manage');
 const templates = (who: PersonaKey) => can(who, 'notifications.templates');
 const sharesCalendar = (who: PersonaKey, variant: PlatformVariant) =>
   can(who, 'events.shared_calendar', variant);
+const publishesOnIntra = (who: PersonaKey, variant: PlatformVariant) =>
+  can(who, 'events.intra_publish', variant);
+const asksForIntra = (who: PersonaKey, variant: PlatformVariant) =>
+  can(who, 'events.intra_request', variant) || can(who, 'events.validate', variant);
 
 /** The actions of the settings page: the owner's, whatever they are given; the gate is the first thing they do. */
 const OWNER_ONLY_SETTINGS = [
@@ -488,6 +494,57 @@ export const CASES: readonly ActionCase[] = [
     label: 'refuse an event that is not a proposal',
     allowed: nobody,
     args: () => [events.confirmed, 'No.'],
+  },
+  // ---- publishing on the intra: the staff answers, the BDE asks ----
+  {
+    action: 'intra.publishOnIntra',
+    label: 'answer "published on the intra"',
+    effect: ['IntraRequest', 'AuditLog'],
+    allowed: publishesOnIntra,
+    strictThrow: true,
+    args: (context) => [events.intraPending, context.intraHashes[events.intraPending] ?? '', ''],
+  },
+  {
+    action: 'intra.publishOnIntra',
+    label: 'answer "published" to a request that was already answered',
+    allowed: nobody,
+    args: (context) => [
+      events.intraPublished,
+      context.intraHashes[events.intraPublished] ?? '',
+      '',
+    ],
+  },
+  {
+    action: 'intra.refuseOnIntra',
+    label: 'refuse a request, with the reason',
+    effect: ['IntraRequest', 'AuditLog'],
+    allowed: publishesOnIntra,
+    strictThrow: true,
+    args: () => [events.intraPending, 'The room is not available on that day.'],
+  },
+  {
+    action: 'intra.markIntraUpdated',
+    label: 'answer "intra updated"',
+    effect: ['IntraRequest', 'AuditLog'],
+    allowed: publishesOnIntra,
+    strictThrow: true,
+    args: (context) => [events.intraOutdated, context.intraHashes[events.intraOutdated] ?? ''],
+  },
+  {
+    action: 'intra.requestOnIntra',
+    label: 'send a refused request again',
+    effect: ['IntraRequest', 'AuditLog'],
+    allowed: asksForIntra,
+    strictThrow: true,
+    args: () => [events.intraRefused, 'event'],
+  },
+  {
+    action: 'intra.requestOnIntra',
+    label: 'ask for the publication of a confirmed event that has no request',
+    effect: ['IntraRequest', 'AuditLog'],
+    allowed: asksForIntra,
+    strictThrow: true,
+    args: () => [events.confirmed, 'event'],
   },
   // ---- the calendar links ----
   {

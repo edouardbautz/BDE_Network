@@ -10,13 +10,7 @@ const STATUS_LOOK = {
 } as const satisfies Record<IntraRequestStatus, unknown>;
 
 /** Where the publication of an event on the intra stands, as a badge (the word is the caller's: it is translated). */
-export function IntraStatusBadge({
-  status,
-  label,
-}: {
-  status: IntraRequestStatus;
-  label: string;
-}) {
+export function IntraStatusBadge({ status, label }: { status: IntraRequestStatus; label: string }) {
   const { variant, Icon } = STATUS_LOOK[status];
   return (
     <Badge variant={variant}>

@@ -582,9 +582,7 @@ export default async function EventDetailPage({
                 intraAccess?.canRequest && (
                   <div className="border-line mt-5 flex flex-col gap-2 border-t pt-4">
                     <span className="text-small font-semibold">{t('intra.publication.title')}</span>
-                    <p className="text-muted-foreground text-body">
-                      {t('intra.publication.none')}
-                    </p>
+                    <p className="text-muted-foreground text-body">{t('intra.publication.none')}</p>
                     <div>
                       <ActionButton
                         action={async () => {
