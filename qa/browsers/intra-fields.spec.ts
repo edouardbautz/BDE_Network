@@ -35,6 +35,49 @@ async function fillBasics(page: Page, title: string, day: string) {
   await page.getByRole('textbox', { name: 'Location' }).fill('Gymnase');
 }
 
+/** A choice among pills: the visible label is what a person clicks (the radio under it is hidden). */
+async function choose(page: Page, label: string) {
+  await page.locator('label').filter({ hasText: new RegExp(`^${label}import type { Page } from '@playwright/test';
+import { expect, test } from './fixtures';
+import { atRest } from './rest';
+
+/**
+ * The fields of the intra's form, in every engine, as an owner: the setting that turns the publication on, the form that then asks
+ * for all of them (refused when empty, a Markdown description with its preview, keywords as chips), the page of the event that
+ * shows them, and an event written before them, which cannot be confirmed until it is edited. The journeys leave the platform as
+ * they found it: the setting off, their events deleted.
+ */
+
+const aDayAhead = (days: number) =>
+  new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);
+
+/** The form of the events section of the settings page (the one with the hour of the reminder). */
+const eventsForm = (page: Page) => page.locator('form', { has: page.getByLabel('Reminder hour') });
+
+async function setPublication(page: Page, on: boolean) {
+  await page.goto('/en/settings');
+  const toggle = page.getByRole('switch', { name: 'Publish events on the 42 intra' });
+  await expect(toggle).toBeVisible();
+  await atRest(page);
+  if ((await toggle.getAttribute('aria-checked')) === String(on)) return;
+  await toggle.click();
+  await eventsForm(page).getByRole('button', { name: 'Save' }).click();
+  await expect(page.getByText('Saved', { exact: true })).toBeVisible();
+  await atRest(page);
+}
+
+async function fillBasics(page: Page, title: string, day: string) {
+  await page.getByRole('textbox', { name: 'Title' }).fill(title);
+  await page.getByRole('combobox', { name: 'Category' }).selectOption({ label: 'Sport' });
+  await page.getByRole('textbox', { name: 'Start' }).fill(`${day}T19:00`);
+  await page.getByRole('textbox', { name: 'End' }).fill(`${day}T21:30`);
+  await page.getByRole('textbox', { name: 'Location' }).fill('Gymnase');
+}
+
+) }).click();
+  await expect(page.getByRole('radio', { name: label, exact: true })).toBeChecked();
+}
+
 async function deleteEvent(page: Page, path: string) {
   await page.goto(path);
   await page.getByRole('button', { name: 'Delete event' }).click();
@@ -72,9 +115,9 @@ test.describe('the intra fields', () => {
       await expect(page.getByText('This field is required.').first()).toBeVisible();
       await expect(page).toHaveURL(/\/events\/new/);
 
-      await page.getByRole('radio', { name: 'Students' }).check({ force: true });
+      await choose(page, 'Students');
       await page.getByRole('spinbutton', { name: /^Maximum number of people/ }).fill('40');
-      await page.getByRole('radio', { name: 'No', exact: true }).check({ force: true });
+      await choose(page, 'No');
       await page.getByRole('combobox', { name: /^Kind/ }).selectOption('Meet/meet_up');
       await page.getByRole('spinbutton', { name: /^Delay before unsubscribing/ }).fill('12');
       const keywords = page.getByRole('textbox', { name: /^Keywords/ });
@@ -85,9 +128,9 @@ test.describe('the intra fields', () => {
       await expect(page.getByRole('button', { name: 'Remove the keyword jeux' })).toBeVisible();
 
       await page.getByRole('button', { name: 'Create event' }).click();
-      await expect(page).toHaveURL(/\/en\/events\/[^/?]+/);
-      path = new URL(page.url()).pathname;
+      await expect(page).toHaveURL(/\/en\/events\/(?!new)[^/?]+$/);
       await expect(page.getByRole('heading', { name: title, level: 1 })).toBeVisible();
+      path = new URL(page.url()).pathname;
 
       // The event shows the Markdown as drawn text, and what the staff will copy.
       await expect(page.getByRole('heading', { name: 'Titre', level: 3 })).toBeVisible();
@@ -121,7 +164,7 @@ test.describe('the intra fields', () => {
       await fillBasics(page, title, aDayAhead(61));
       await page.getByRole('textbox', { name: 'Description' }).fill('Written before.');
       await page.getByRole('button', { name: 'Create event' }).click();
-      await expect(page).toHaveURL(/\/en\/events\/[^/?]+/);
+      await expect(page).toHaveURL(/\/en\/events\/(?!new)[^/?]+$/);
       path = new URL(page.url()).pathname;
 
       await setPublication(page, true);
@@ -137,9 +180,9 @@ test.describe('the intra fields', () => {
       // Editing asks for the fields (and says why), and then it can be confirmed.
       await page.getByRole('link', { name: 'Edit' }).click();
       await expect(page.getByText('This event predates publication on the intra.')).toBeVisible();
-      await page.getByRole('radio', { name: 'Both' }).check({ force: true });
+      await choose(page, 'Both');
       await page.getByRole('spinbutton', { name: /^Maximum number of people/ }).fill('25');
-      await page.getByRole('radio', { name: 'Yes', exact: true }).check({ force: true });
+      await choose(page, 'Yes');
       await page.getByRole('combobox', { name: /^Kind/ }).selectOption('Association');
       await page.getByRole('spinbutton', { name: /^Delay before unsubscribing/ }).fill('0');
       const keywords = page.getByRole('textbox', { name: /^Keywords/ });
@@ -147,7 +190,7 @@ test.describe('the intra fields', () => {
       await keywords.press('Enter');
       await page.getByRole('combobox', { name: 'Status' }).selectOption('CONFIRMED');
       await page.getByRole('button', { name: 'Save' }).click();
-      await expect(page).toHaveURL(/\/en\/events\/[^/?]+$/);
+      await expect(page).toHaveURL(/\/en\/events\/(?!new)[^/?]+$/);
       await expect(page.getByText('Confirmed').first()).toBeVisible();
       await expect(page.getByText('Association').first()).toBeVisible();
     } finally {
