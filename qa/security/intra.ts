@@ -26,6 +26,8 @@ const tag = `sec${randomBytes(3).toString('hex')}`;
 
 /** Markdown that tries to become something else: it must stay text, or a link that runs nothing. */
 const MARKDOWN_PAYLOADS: readonly string[] = [
+  // not hostile: an ordinary link must be drawn, and opened apart (the check below needs one to look at)
+  '[a page](https://evil.example/page)',
   '[click](javascript:alert(1))',
   '[click](JaVaScRiPt:alert(1))',
   '[click](java\tscript:alert(1))',
