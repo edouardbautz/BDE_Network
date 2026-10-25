@@ -109,8 +109,8 @@
   [
     "editor data: a module that is off still lists its notifications",
     "src/lib/notifications/templates/editor-data.ts",
-    "(type) => events || !type.startsWith('event'),",
-    "() => true,",
+    "return events || !type.startsWith('event');",
+    "return true;",
     [
       "src/lib/notifications/templates/editor-data.test.ts",
       "src/app/[locale]/(app)/notifications/pages.test.tsx"
