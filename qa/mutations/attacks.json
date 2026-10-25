@@ -88,5 +88,26 @@
     "src/lib/auth/logger.ts",
     "  'InvalidCallbackUrl',\n",
     ""
+  ],
+  [
+    "intra: an answer of the staff needs no right",
+    "src/lib/events/access.ts",
+    "  if (!access?.canPublish) throw new Error('Forbidden');",
+    "  if (!access) throw new Error('Forbidden');",
+    "events-intra"
+  ],
+  [
+    "intra: a request can be sent back to any page",
+    "src/app/[locale]/(app)/events/intra/actions.ts",
+    "  if (!(RETURNS as readonly string[]).includes(returnTo)) throw new Error('Invalid target');",
+    "",
+    "events-intra"
+  ],
+  [
+    "intra: a link of a description opens without protection",
+    "src/components/markdown.tsx",
+    "rel=\"noopener noreferrer\"",
+    "",
+    "events-intra"
   ]
 ]

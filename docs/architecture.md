@@ -1461,7 +1461,13 @@ start from the same three things, so that what one finds the others can replay.
   (`qa/security/templates.ts`) — a template and a directory of mentions full of the hostile corpus **stored** in the database, the page that edits them opened as the owner on two tabs;
   the same text **drawn** by the preview of every channel (what comes back is text, and the e-mail built like a browser would build it has no handler, no `javascript:` address, nothing that
   loads from elsewhere); and the action that writes a template **forged** from another site or a sandbox (refused, nothing written, with the control that it works from its own origin), or
-  called by somebody who may not write one. `logs`, last: none of the secrets met during the
+  called by somebody who may not write one. `intra` (`qa/security/intra.ts`, played on the variant `events-intra`; on another it checks that the pages do not exist): hostile text stored in
+  the title, description, place, keywords, the copy the intra holds and the reason of a refusal, opened on the staff's list and page and on the event's, all read as a browser
+  would build them; **Markdown** that tries to become something else (a `javascript:` or `data:` link in any case or split by a control character, a picture from elsewhere, a tag, nesting and
+  repetition meant to be slow) and must stay text or a link opened apart; **identifiers** that ping (`@everyone`, `<@id>`, a role, a channel, a line break, digits of another script) and
+  **links** that are not an https address of the intra, which the database itself must refuse; and **forged answers** (a link that runs, one that looks like the intra, a version that is not
+  a hash, a refusal with no reason or a hundred thousand characters, a page to come back to that is an address, an answer by somebody who does not hold the right) that change nothing,
+  with the control that the same answer works with what the page sends. `logs`, last: none of the secrets met during the
   run (the signing secret, the 42 secret, the database password, every calendar link and cookie) is in the logs, and no
   error is there that an attack should not have caused (the framework's own refusals are listed in `REFUSALS`). The
   detectors have unit tests (`detectors.test.ts`: what each must catch and what it must leave alone): a check that cannot
@@ -1486,7 +1492,7 @@ start from the same three things, so that what one finds the others can replay.
   menu, what a member is never shown), `circuit` (a proposer proposes a weekly event, a validator approves it, a member reads
   it; a refusal with a comment; the confirmation dialog's focus, trap and Escape), `calendar` (French, the + of a day, the
   keyboard), `owner` (every page of the board; the logo's file input, preview, upload and reset; a file that is not an image),
-  `notifications` (the table of the settings page: no box before a channel is set up, the shortcut of a column, two channels saved and found again, a refused address, and on a phone a list that does not scroll sideways with boxes of 44 px, which each journey leaves without a channel), `self-hosted` (nothing a page loads comes from outside the platform, and the font drawn is Manrope served by it), and `watcher` (the watcher itself, see below). **No retry, ever**: a journey that fails now and then is a defect to find (see
+  `notifications` (the table of the settings page: no box before a channel is set up, the shortcut of a column, two channels saved and found again, a refused address, and on a phone a list that does not scroll sideways with boxes of 44 px, which each journey leaves without a channel), `self-hosted` (nothing a page loads comes from outside the platform, and the font drawn is Manrope served by it), `intra-fields` and `intra-circuit` (the publication on the intra: the form that asks for the fields once an owner turns it on, then a validator confirms, the staff finds the request, sees the fields in the order of the intra's form, refuses with a reason, the author reads it and sends the request again, the staff publishes with a link, the author changes the event, the staff reads what changed and confirms; the staff is shown nothing else of the platform; a phone does not scroll sideways), and `watcher` (the watcher itself, see below). **No retry, ever**: a journey that fails now and then is a defect to find (see
   "Browser tests that fail now and then"); `workers: 1`, because the journeys change the one database, and each makes events of
   its own, named after its engine.
   - **Every journey ends by asking what its pages raised** (`fixtures.ts`, a fixture every test uses): an exception, an error
@@ -1657,7 +1663,7 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
   (every UID, date, hour and cancellation: a differential test against the old algorithm, with no date computed by hand), the
   invariants of the database, the copy the platform made by itself, the settings imported into the database, **each notification keeping its channel** (the configuration of every version before 1.5.0 names one channel per notification: the settings page of the version under test must tick exactly those boxes, `NOTIFICATION_BOXES`), the old session
   cookies still signing people in, the treasurer able to validate while the reader still cannot, **the notification templates' tables there and empty** (every notification is still the platform's own: the
-  golden files hold the bytes), the page where they are customised open for the owner and refused to a role that was not given the right; (6) a backup of the new version
+  golden files hold the bytes), the page where they are customised open for the owner and refused to a role that was not given the right, **the table of the requests to publish on the intra there and empty, no event with the fields of the intra, nobody with a Discord or Slack id, and the staff's pages a 404 for the owner while the publication is off**; (6) a backup of the new version
   and its restore (the row written after the backup is gone, the platform answers, **a template with its version and the person it mentions come back**); (7) **the way back**: the copy the platform made
   (`restore.sh --pre-update`) or the backup made before (`restore.sh <archive> --no-start`, for 1.1.0 alone: every other version has a copy, the notification templates being a migration), `git checkout` of the old
   tag, `docker compose up -d`, and the old version gives the same calendar files as before the update. The platform is made with the
