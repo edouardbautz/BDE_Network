@@ -93,7 +93,7 @@
     "intra: an answer of the staff needs no right",
     "src/lib/events/access.ts",
     "  if (!access?.canPublish) throw new Error('Forbidden');",
-    "",
+    "  if (!access) throw new Error('Forbidden');",
     "events-intra"
   ],
   [
