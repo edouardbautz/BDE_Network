@@ -87,6 +87,8 @@ All notable changes to this project are written here, in English. Format based o
   them one after the other to the webhook that never answers, so a connection was always open and "gives up within a minute" failed. The platform of that job is made at the
   clock of the dataset, like the visual references.
 
+- **A mutation that cannot be applied is now a failing test.** Ten mutations of the quality campaign had lost the text they break (the code had moved on) and were only reported at the end of a job that runs for an hour. `qa/mutations/anchors.test.ts` checks every list on every pull request, and the ten are re-anchored and played again: none survives.
+
 ## [1.5.0] - 2026-10-23
 
 ### Added
