@@ -68,8 +68,8 @@
   [
     "injection: a member's name is written as HTML",
     "src/app/[locale]/(app)/members/page.tsx",
-    "<span className=\"font-medium\">{name}</span>",
-    "<span className=\"font-medium\" dangerouslySetInnerHTML={{ __html: name }} />"
+    "<span className=\"font-semibold\">{name}</span>",
+    "<span className=\"font-semibold\" dangerouslySetInnerHTML={{ __html: name }} />"
   ],
   [
     "injection: the platform trusts the address it is reached on",
