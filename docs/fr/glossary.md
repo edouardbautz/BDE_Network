@@ -31,20 +31,23 @@ chose dans cette documentation.
 
 ## Les événements
 
-| Mot                         | Sens                                                                                                                            |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| **Module**                  | Une fonction que l'on active : pour l'instant, le module **Événements**.                                                        |
-| **Événement**               | Une activité du BDE, avec un titre, un début, une fin, un lieu, une description et une catégorie.                               |
-| **Brouillon**               | Un événement pas encore publié : seuls son auteur et ceux qui valident les événements le voient.                                |
-| **Proposition**             | Un événement proposé par quelqu'un qui ne peut pas le publier, **en attente de validation** jusqu'à la réponse d'un validateur. |
-| **Validateur**              | Quelqu'un dont le rôle a le droit de valider les événements : il approuve ou refuse les propositions.                           |
-| **Confirmé**                | Un événement visible de tous les membres. Le confirmer prévient les membres.                                                    |
-| **Série**                   | Un événement qui se répète (chaque jour, semaine, mois ou année, aux jours choisis) jusqu'à une date ou un nombre de fois.      |
-| **Occurrence**              | Une date d'une série. On peut la modifier, la confirmer, l'annuler seule, ou agir sur elle et les suivantes.                    |
-| **Catégorie**               | Un type d'événement, avec un nom et une couleur (Soirée, Sport…). Chaque BDE a les siennes.                                     |
-| **Année scolaire**          | De septembre à août (`2025-2026`), calculée d'après la date de début.                                                           |
-| **Lien d'agenda personnel** | Le lien secret d'un membre, à ajouter à Google Agenda, Outlook ou Apple Calendar. Voir **Mon profil**.                          |
-| **Lien d'agenda du BDE**    | Un seul lien pour tout le BDE, à coller une fois dans un agenda partagé. Il se gère dans **Agenda partagé**.                    |
+| Mot                         | Sens                                                                                                                                                                       |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Module**                  | Une fonction que l'on active : pour l'instant, le module **Événements**.                                                                                                   |
+| **Événement**               | Une activité du BDE, avec un titre, un début, une fin, un lieu, une description et une catégorie.                                                                          |
+| **Brouillon**               | Un événement pas encore publié : seuls son auteur et ceux qui valident les événements le voient.                                                                           |
+| **Proposition**             | Un événement proposé par quelqu'un qui ne peut pas le publier, **en attente de validation** jusqu'à la réponse d'un validateur.                                            |
+| **Validateur**              | Quelqu'un dont le rôle a le droit de valider les événements : il approuve ou refuse les propositions.                                                                      |
+| **Confirmé**                | Un événement visible de tous les membres. Le confirmer prévient les membres.                                                                                               |
+| **Série**                   | Un événement qui se répète (chaque jour, semaine, mois ou année, aux jours choisis) jusqu'à une date ou un nombre de fois.                                                 |
+| **Occurrence**              | Une date d'une série. On peut la modifier, la confirmer, l'annuler seule, ou agir sur elle et les suivantes.                                                               |
+| **Catégorie**               | Un type d'événement, avec un nom et une couleur (Soirée, Sport…). Chaque BDE a les siennes.                                                                                |
+| **Année scolaire**          | De septembre à août (`2025-2026`), calculée d'après la date de début.                                                                                                      |
+| **Lien d'agenda personnel** | Le lien secret d'un membre, à ajouter à Google Agenda, Outlook ou Apple Calendar. Voir **Mon profil**.                                                                     |
+| **Staff**                   | Le staff de l'école, qui publie les événements du BDE sur l'intra 42. Il a un compte comme tout membre, avec un rôle qui l'y autorise.                                     |
+| **Demande de publication**  | Ce que la plateforme envoie au staff pour un événement confirmé : les champs à copier dans le formulaire de l'intra. Une par événement, une série étant un seul événement. |
+| **À mettre à jour**         | Un événement publié qui a changé depuis : le staff doit le modifier aussi sur l'intra, puis confirmer.                                                                     |
+| **Lien d'agenda du BDE**    | Un seul lien pour tout le BDE, à coller une fois dans un agenda partagé. Il se gère dans **Agenda partagé**.                                                               |
 
 ## Les messages
 

@@ -68,8 +68,8 @@
   [
     "injection: a member's name is written as HTML",
     "src/app/[locale]/(app)/members/page.tsx",
-    "<span className=\"font-medium\">{name}</span>",
-    "<span className=\"font-medium\" dangerouslySetInnerHTML={{ __html: name }} />"
+    "<span className=\"font-semibold\">{name}</span>",
+    "<span className=\"font-semibold\" dangerouslySetInnerHTML={{ __html: name }} />"
   ],
   [
     "injection: the platform trusts the address it is reached on",
@@ -88,5 +88,26 @@
     "src/lib/auth/logger.ts",
     "  'InvalidCallbackUrl',\n",
     ""
+  ],
+  [
+    "intra: an answer of the staff needs no right",
+    "src/lib/events/access.ts",
+    "  if (!access?.canPublish) throw new Error('Forbidden');",
+    "  if (!access) throw new Error('Forbidden');",
+    "events-intra"
+  ],
+  [
+    "intra: a request can be sent back to any page",
+    "src/app/[locale]/(app)/events/intra/actions.ts",
+    "  if (!(RETURNS as readonly string[]).includes(returnTo)) throw new Error('Invalid target');",
+    "",
+    "events-intra"
+  ],
+  [
+    "intra: a link of a description opens without protection",
+    "src/components/markdown.tsx",
+    "rel=\"noopener noreferrer\"",
+    "",
+    "events-intra"
   ]
 ]

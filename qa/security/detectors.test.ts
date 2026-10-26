@@ -4,6 +4,7 @@ import { contentSecurityPolicy } from '../../src/lib/security-headers';
 import { OWN_POLICY, cspProblems, missingEverywhere, parseCsp } from './headers';
 import { unfold } from './feeds';
 import { PAYLOADS, unescaped, violations } from './injection';
+import { markdownViolations } from './intra';
 import { png } from './uploads';
 import { inspectImage } from '../../src/lib/branding/image';
 
@@ -241,5 +242,36 @@ describe('the verdict on a ZAP report', () => {
   it('says which accepted entries match nothing any more', () => {
     const { unused } = judge(findings(report), [{ plugin: '99999', path: '.*', reason: 'x' }]);
     expect(unused).toHaveLength(1);
+  });
+});
+
+describe('markdownViolations', () => {
+  const page = (body: string) => `<html><body>${body}</body></html>`;
+
+  it.each([
+    [
+      '<a href="javascript:alert(1)" target="_blank" rel="noopener noreferrer">x</a>',
+      'javascript:',
+    ],
+    ['<a href=" JaVaScRiPt:alert(1)">x</a>', 'JaVaScRiPt'],
+    ['<a href="data:text/html,x">x</a>', 'data:'],
+    ['<a href="vbscript:msgbox(1)">x</a>', 'vbscript:'],
+    ['<a href="https://evil.example/x">x</a>', 'not opened apart'],
+    ['<a href="https://evil.example/x" target="_blank">x</a>', 'not opened apart'],
+    ['<a href="https://evil.example/x" rel="noopener noreferrer">x</a>', 'not opened apart'],
+    ['<img src="https://evil.example/x.png">', '<img'],
+    ['<img src="javascript:alert(1)">', '<img'],
+  ])('catches %s', (html, expected) => {
+    expect(markdownViolations(page(html)).join('\n')).toContain(expected);
+  });
+
+  it('leaves alone what the platform draws from a description: a link opened apart, a mail address, the platform’s own pictures', () => {
+    expect(
+      markdownViolations(
+        page(
+          '<a href="https://evil.example/x" target="_blank" rel="noopener noreferrer">x</a><a href="mailto:a@b.fr">m</a><img src="/api/logo?v=0123456789abcdef"><a href="/events/1">e</a>',
+        ),
+      ),
+    ).toEqual([]);
   });
 });

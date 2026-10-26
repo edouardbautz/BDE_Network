@@ -58,6 +58,13 @@ All notable changes to this project are written here, in English. Format based o
   checks the new tables, the right and the page (and a template through backup and restore), and the quality dataset holds templates,
   mentions and their history, with the invariants and the erasure test over them.
 
+- **Quality of the publication on the intra.** The attacks on the running image play hostile text through every field of the requests and the staff's pages, Markdown meant to
+  become a script, a picture from elsewhere or a slow parse, ids that would ping everybody, links that are not the intra's and forged answers (a link that runs, a version that is not
+  a hash, a page to come back to that is an address), with the control that the right answer works; the journeys in the three browsers play the circuit from the confirmation to the
+  update of a published event, as the validator and as the staff, and check that the staff sees nothing else of the platform and that a phone does not scroll sideways; the update
+  suite checks the new table is there and empty and that the pages do not exist until an owner turns the publication on. The glossary and the FAQ say what the staff, a request and
+  "to update" are.
+
 ### Changed
 
 - Development only: the tests of the browser watcher no longer depend on the noise of a real page (Chromium on the real image aborts requests of its own, which excused the error the test wanted reported).
@@ -79,6 +86,8 @@ All notable changes to this project are written here, in English. Format based o
 - **The resilience check of the webhook no longer depends on the time of day.** Run after the reminder hour, the platform found the reminders of the next day due and sent
   them one after the other to the webhook that never answers, so a connection was always open and "gives up within a minute" failed. The platform of that job is made at the
   clock of the dataset, like the visual references.
+
+- **A mutation that cannot be applied is now a failing test.** Ten mutations of the quality campaign had lost the text they break (the code had moved on) and were only reported at the end of a job that runs for an hour. `qa/mutations/anchors.test.ts` checks every list on every pull request, and the ten are re-anchored and played again: none survives.
 
 ## [1.5.0] - 2026-10-23
 

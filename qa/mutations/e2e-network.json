@@ -1,0 +1,51 @@
+[
+  [
+    "e2e network: a request of the document that was left still counts",
+    "e2e/network.mjs",
+    "const current = () => [...inFlight.values()].filter((request) => request.loaderId === documentId);",
+    "const current = () => [...inFlight.values()];",
+    ["e2e/network.test.ts"]
+  ],
+  [
+    "e2e network: a new document is not recognised",
+    "e2e/network.mjs",
+    "if (type === 'Document') {",
+    "if (false) {",
+    ["e2e/network.test.ts"]
+  ],
+  [
+    "e2e network: a request that finished stays counted",
+    "e2e/network.mjs",
+    "session.on('Network.loadingFinished', ended);",
+    "",
+    ["e2e/network.test.ts"]
+  ],
+  [
+    "e2e network: a request that failed stays counted",
+    "e2e/network.mjs",
+    "session.on('Network.loadingFailed', ended);",
+    "",
+    ["e2e/network.test.ts"]
+  ],
+  [
+    "e2e network: the quiet time is not waited for",
+    "e2e/network.mjs",
+    "if (quietSince !== null && now - quietSince >= idleTime) return;",
+    "if (quietSince !== null) return;",
+    ["e2e/network.test.ts"]
+  ],
+  [
+    "e2e network: a request that never ends is not given up on",
+    "e2e/network.mjs",
+    "if (now >= deadline) {",
+    "if (false) {",
+    ["e2e/network.test.ts"]
+  ],
+  [
+    "e2e network: the query of an address is told",
+    "e2e/network.mjs",
+    "const { pathname } = new URL(url);",
+    "const pathname = url;",
+    ["e2e/network.test.ts"]
+  ]
+]

@@ -54,8 +54,8 @@
   [
     "Discord event: a link line without being asked",
     "src/lib/events/discord-embed.ts",
-    "if (template?.button?.enabled === true && link) {",
-    "if (link) {",
+    "if (template?.button?.enabled === true && buttonLink) {",
+    "if (buttonLink) {",
     ["src/lib/notifications/golden.test.ts", "src/lib/notifications/templates/render.test.ts"]
   ],
   [
@@ -75,15 +75,15 @@
   [
     "Slack event: the button cannot be taken away",
     "src/lib/events/slack-blocks.ts",
-    "...(data.url && template?.button?.enabled !== false",
-    "...(data.url",
+    "...(buttonUrl && template?.button?.enabled !== false",
+    "...(buttonUrl",
     ["src/lib/notifications/templates/render.test.ts"]
   ],
   [
     "e-mail event: the button cannot be taken away",
     "src/lib/events/email.ts",
-    "const showButton = data.url && template?.button?.enabled !== false;",
-    "const showButton = data.url;",
+    "const showButton = buttonUrl && template?.button?.enabled !== false;",
+    "const showButton = buttonUrl;",
     ["src/lib/notifications/templates/render.test.ts"]
   ],
   [
@@ -103,8 +103,8 @@
   [
     "Discord member: a link for every kind",
     "src/lib/members/discord-embed.ts",
-    "if ((template?.button?.enabled ?? kind === 'pending') && link) {",
-    "if ((template?.button?.enabled ?? true) && link) {",
+    "if ((template?.button?.enabled ?? kind === 'pending') && buttonLink) {",
+    "if ((template?.button?.enabled ?? true) && buttonLink) {",
     ["src/lib/notifications/golden.test.ts"]
   ],
   [

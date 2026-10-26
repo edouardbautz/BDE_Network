@@ -4,6 +4,7 @@ import { Report } from './core';
 import { checkCsrf } from './csrf';
 import { checkFeeds } from './feeds';
 import { checkInjection } from './injection';
+import { checkIntra } from './intra';
 import { checkLimits } from './limits';
 import { checkTemplates } from './templates';
 import { checkLogs } from './logs';
@@ -28,6 +29,7 @@ export const SUITES: Record<string, (platform: Platform, report: Report) => Prom
   uploads: checkUploads,
   injection: checkInjection,
   templates: checkTemplates,
+  intra: checkIntra,
   limits: checkLimits,
   logs: checkLogs,
 };

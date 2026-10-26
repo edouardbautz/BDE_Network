@@ -65,15 +65,8 @@
   [
     "channel: slack",
     "src/lib/notifications/index.ts",
-    "case 'slack':\n      return new SlackAdapter();",
-    "case 'slack':\n      return new DiscordAdapter();",
-    ["src/lib/notifications/channels.test.ts"]
-  ],
-  [
-    "channel: unknown is nothing",
-    "src/lib/notifications/index.ts",
-    "default:\n      return new NoneAdapter();",
-    "default:\n      return new EmailAdapter();",
+    "case 'slack':\n      return new SlackAdapter(webhookUrl);",
+    "case 'slack':\n      return new DiscordAdapter(webhookUrl);",
     ["src/lib/notifications/channels.test.ts"]
   ],
   [

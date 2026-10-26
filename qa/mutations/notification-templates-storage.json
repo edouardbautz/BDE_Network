@@ -70,8 +70,8 @@
   [
     "schema: the template for all channels may mention a role",
     "src/lib/notifications/templates/schema.ts",
-    "all: new Set(['everyone', 'here']),",
-    "all: new Set(['everyone', 'here', 'role', 'user', 'group']),",
+    "all: new Set(['everyone', 'here', 'staff']),",
+    "all: new Set(['everyone', 'here', 'staff', 'role', 'user', 'group']),",
     ["src/lib/notifications/templates/schema.test.ts"]
   ],
   [
@@ -119,7 +119,7 @@
   [
     "resolve: a build that fails with the template is not built again without it",
     "src/lib/notifications/templates/resolve.ts",
-    "return make({ ...base, mentions: directory });\n      }\n    },",
+    "return make(shared);\n      }\n    },",
     "throw error;\n      }\n    },",
     ["src/lib/notifications/templates/resolve.test.ts"]
   ],

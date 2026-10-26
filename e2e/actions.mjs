@@ -6,7 +6,7 @@
 // covers: notifications.saveTemplate, notifications.customizeChannel, notifications.resetTemplate, notifications.resetNotification
 // covers: notifications.restoreVersion, notifications.addMention, notifications.removeMention
 // covers: shared-calendar.enableSharedCalendar, shared-calendar.regenerateSharedCalendar, shared-calendar.disableSharedCalendar
-// covers: intra.requestOnIntra
+// covers: intra.requestOnIntra, intra.publishOnIntra, intra.refuseOnIntra, intra.markIntraUpdated
 // End-to-end test of what the page shows AFTER an action that stays on it, for every such action of the platform
 // (members, roles, settings, profile, shared calendar, language, sign-out), in a real browser, on the real image.
 //
@@ -16,9 +16,11 @@
 //   ROUNDS=3          how many times each scenario is played (the defect this test hunts is random: about one click in
 //                     two before it was fixed, so one round proves nothing)
 //   MEASURE=1         do not fail: print, for each scenario, how many rounds were fine, STALE or FAILED
-//   ONLY=members      play only the scenarios whose name contains this
+//   ONLY=members      play only the scenarios whose name contains this (several, separated by |: ONLY='shared|intra')
 //   OWNER_CANDIDATE=bob  a login that the platform's 42 (or its stand-in) knows, to add as an owner; by default a made-up
 //                     one, which only works when 42 cannot answer (the owner then accepts it unverified)
+//   LATENCY_MS=20 KBPS=1500   slow the connection down      CPU_THROTTLE=4   slow the browser's processor down (four times)
+//   TIMEZONE=Asia/Kolkata   another time zone for the browser
 //   CHROME_PATH=...   SHOTS=<folder>
 //
 // Why it exists: in the production build, Next.js 15 often does not show the page it fetched after an action that
@@ -37,6 +39,7 @@ import { join } from 'node:path';
 import { deflateSync } from 'node:zlib';
 import { encode } from '@auth/core/jwt';
 import puppeteer from 'puppeteer-core';
+import { watchNetwork } from './network.mjs';
 import { sqlRunner } from './sql.mjs';
 
 const [base] = process.argv.slice(2);
@@ -120,8 +123,25 @@ const browser = await puppeteer.launch({
 const page = await browser.newPage();
 await page.setViewport({ width: 1280, height: 1000 });
 page.setDefaultTimeout(15000);
+// The connection, the processor and the time zone of the browser can be set (a busy runner, a distant server): what is measured must
+// not depend on them.
+if (process.env.LATENCY_MS || process.env.KBPS) {
+  const session = await page.createCDPSession();
+  const kbps = Number(process.env.KBPS ?? 0);
+  await session.send('Network.emulateNetworkConditions', {
+    offline: false,
+    latency: Number(process.env.LATENCY_MS ?? 0),
+    downloadThroughput: kbps > 0 ? (kbps * 1000) / 8 : -1,
+    uploadThroughput: kbps > 0 ? (kbps * 1000) / 8 : -1,
+  });
+}
+if (process.env.CPU_THROTTLE) await page.emulateCPUThrottling(Number(process.env.CPU_THROTTLE));
+if (process.env.TIMEZONE) await page.emulateTimezone(process.env.TIMEZONE);
 const pageErrors = [];
 page.on('pageerror', (error) => pageErrors.push(error.message));
+// What the page has on its way, for the waits that name themselves and for the wait for the network to rest. (Not
+// `page.waitForNetworkIdle`: it counts for good a request that a navigation cut short, see network.mjs.)
+const network = await watchNetwork(page);
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const signIn = () => page.setCookie({ name: COOKIE, value: token, url: base, httpOnly: true });
@@ -207,6 +227,15 @@ async function expectPage(until, argument, what) {
   return afterReload ? 'STALE' : 'FAILED';
 }
 
+/** Says what waited, and what the page still had on its way, when something did not come: "Timed out after waiting 15000ms" alone does not say. */
+async function during(what, promise) {
+  try {
+    return await promise;
+  } catch (error) {
+    throw new Error(`${what}: ${error.message.split('\n')[0]} [${network.describe()}]`);
+  }
+}
+
 const suffix = () => `${Date.now().toString(36)}${Math.floor(Math.random() * 1e3).toString(36)}`;
 const createPending = (login) =>
   sql(
@@ -246,7 +275,7 @@ async function chooseLanguage(name) {
 async function setIntraPublication(on) {
   await goto('/settings');
   const selector = '[role="switch"][aria-labelledby="settings-events-intra-title"]';
-  await page.waitForSelector(selector);
+  await during('the switch of the intra on the settings page', page.waitForSelector(selector));
   if ((await page.$eval(selector, (el) => el.ariaChecked === 'true')) === on) return;
   const answered = page.waitForResponse(
     (r) => r.request().method() === 'POST' && r.url().includes('/settings'),
@@ -257,8 +286,21 @@ async function setIntraPublication(on) {
     selector,
   );
   await save.asElement().click();
-  await answered;
-  await page.waitForNetworkIdle({ idleTime: 500 });
+  await during('the answer of the settings page to its save', answered);
+  await during('the network at rest after the save', network.rests({ idleTime: 500 }));
+}
+
+// A confirmed event with every field of the intra, ten days from now, written with SQL as the form would; `waitingRequest` also gives it
+// the request that the staff finds in its list (what is on the page is computed from the event: the hash stored with it is not read).
+function createIntraEvent(eventId, title, waitingRequest = false) {
+  sql(
+    `INSERT INTO "Event" (id, title, "categoryKey", status, "startsAt", "endsAt", "schoolYear", "authorLogin", "updatedAt", "intraOrganizerLogin", "intraAudience", "intraMaxPeople", "intraWaitingList", "intraKind", "intraUnsubscribeHours", "intraKeywords") VALUES ('${eventId}', '${title}', 'soiree', 'CONFIRMED', (now() at time zone 'utc') + interval '10 days', (now() at time zone 'utc') + interval '10 days 2 hours', '2026-2027', '${OWNER}', now(), '${OWNER}', 'BOTH', 30, false, 'Association', 0, ARRAY['bde']::text[])`,
+  );
+  if (waitingRequest) {
+    sql(
+      `INSERT INTO "IntraRequest" (id, "eventId", status, "contentHash", "requestedAt", "requestedByLogin", "updatedAt") VALUES ('ir-${eventId}', '${eventId}', 'PENDING', repeat('0', 64), now(), '${OWNER}', now())`,
+    );
+  }
 }
 
 // The templates of the notifications: written with SQL, as the page would, and always put back to none.
@@ -728,9 +770,9 @@ const SCENARIOS = [
       const eventId = `e2e-intra-${id}`;
       try {
         await setIntraPublication(true);
+        createIntraEvent(eventId, `Intra ${id}`);
         sql(
-          `INSERT INTO "Event" (id, title, "categoryKey", status, "startsAt", "endsAt", "schoolYear", "authorLogin", "updatedAt", "intraOrganizerLogin", "intraAudience", "intraMaxPeople", "intraWaitingList", "intraKind", "intraUnsubscribeHours", "intraKeywords") VALUES ('${eventId}', 'Intra ${id}', 'soiree', 'CONFIRMED', (now() at time zone 'utc') + interval '10 days', (now() at time zone 'utc') + interval '10 days 2 hours', '2026-2027', '${OWNER}', now(), '${OWNER}', 'BOTH', 30, false, 'Association', 0, ARRAY['bde']::text[]);
-           INSERT INTO "IntraRequest" (id, "eventId", status, "contentHash", "refusalComment", "requestedAt", "requestedByLogin", "answeredAt", "answeredByLogin", "updatedAt") VALUES ('e2e-ir-${id}', '${eventId}', 'REFUSED', repeat('0', 64), 'Salle indisponible ce jour-là.', now(), '${OWNER}', now(), 'staff-e2e', now())`,
+          `INSERT INTO "IntraRequest" (id, "eventId", status, "contentHash", "refusalComment", "requestedAt", "requestedByLogin", "answeredAt", "answeredByLogin", "updatedAt") VALUES ('e2e-ir-${id}', '${eventId}', 'REFUSED', repeat('0', 64), 'Salle indisponible ce jour-là.', now(), '${OWNER}', now(), 'staff-e2e', now())`,
         );
         await goto(`/events/${eventId}`);
         await page.waitForFunction(() => document.body.innerText.includes('Salle indisponible'));
@@ -748,6 +790,92 @@ const SCENARIOS = [
           return 'FAILED';
         }
         return shown;
+      } finally {
+        sql(`DELETE FROM "Event" WHERE id = '${eventId}'`);
+        await setIntraPublication(false);
+      }
+    },
+  },
+  {
+    name: 'intra: answer "published" (the list of requests then holds it as handled)',
+    async run({ id }) {
+      const eventId = `e2e-intra-publish-${id}`;
+      const title = `Publie ${id}`;
+      try {
+        await setIntraPublication(true);
+        createIntraEvent(eventId, title, true);
+        await goto(`/events/intra/${eventId}`);
+        await click("Publié sur l'intra");
+        await page.waitForSelector(dialog);
+        await clickAndLoad('Oui, publié', dialog);
+        const shown = await expectPage(
+          (name) =>
+            location.pathname === '/fr/events/intra' && document.body.innerText.includes(name),
+          title,
+          'intra-publish',
+        );
+        const status = sql(`SELECT status FROM "IntraRequest" WHERE "eventId" = '${eventId}'`);
+        return shown === 'ok' && status !== 'PUBLISHED' ? 'FAILED' : shown;
+      } finally {
+        sql(`DELETE FROM "Event" WHERE id = '${eventId}'`);
+        await setIntraPublication(false);
+      }
+    },
+  },
+  {
+    name: 'intra: answer "refused" with a reason (the list of requests then says why)',
+    async run({ id }) {
+      const eventId = `e2e-intra-refuse-${id}`;
+      try {
+        await setIntraPublication(true);
+        createIntraEvent(eventId, `Refuse ${id}`, true);
+        await goto(`/events/intra/${eventId}`);
+        await click('Refuser');
+        await page.waitForSelector(dialog);
+        await page.type(`${dialog} textarea, ${dialog} input[type="text"]`, 'Salle indisponible');
+        await clickAndLoad('Refuser la demande', dialog);
+        const shown = await expectPage(
+          () =>
+            location.pathname === '/fr/events/intra' &&
+            document.body.innerText.includes('Salle indisponible'),
+          undefined,
+          'intra-refuse',
+        );
+        const status = sql(`SELECT status FROM "IntraRequest" WHERE "eventId" = '${eventId}'`);
+        return shown === 'ok' && status !== 'REFUSED' ? 'FAILED' : shown;
+      } finally {
+        sql(`DELETE FROM "Event" WHERE id = '${eventId}'`);
+        await setIntraPublication(false);
+      }
+    },
+  },
+  {
+    name: 'intra: answer "intra updated" (the request is no longer to update)',
+    async run({ id }) {
+      const eventId = `e2e-intra-updated-${id}`;
+      try {
+        await setIntraPublication(true);
+        createIntraEvent(eventId, `Maj ${id}`, true);
+        // published through the page, as the staff does: the copy of what the intra holds is then the event as it is
+        await goto(`/events/intra/${eventId}`);
+        await click("Publié sur l'intra");
+        await page.waitForSelector(dialog);
+        await clickAndLoad('Oui, publié', dialog);
+        // the event changes afterwards, which is what puts a request back to "to update"
+        sql(
+          `UPDATE "Event" SET title = title || ' modifié', "updatedAt" = now() WHERE id = '${eventId}'; UPDATE "IntraRequest" SET status = 'OUTDATED' WHERE "eventId" = '${eventId}'`,
+        );
+        await goto(`/events/intra/${eventId}`);
+        await click('Intra mis à jour');
+        await page.waitForSelector(dialog);
+        await clickAndLoad("Oui, l'intra est à jour", dialog);
+        const shown = await expectPage(
+          () => location.pathname === '/fr/events/intra',
+          undefined,
+          'intra-updated',
+        );
+        const status = sql(`SELECT status FROM "IntraRequest" WHERE "eventId" = '${eventId}'`);
+        return shown === 'ok' && status !== 'PUBLISHED' ? 'FAILED' : shown;
       } finally {
         sql(`DELETE FROM "Event" WHERE id = '${eventId}'`);
         await setIntraPublication(false);
@@ -944,7 +1072,9 @@ const SCENARIOS = [
 // ---------------------------------------------------------------------------------------------------------------------
 
 const results = [];
-for (const scenario of SCENARIOS.filter((s) => s.name.includes(ONLY))) {
+for (const scenario of SCENARIOS.filter((s) =>
+  ONLY.split('|').some((part) => s.name.includes(part)),
+)) {
   const counts = { ok: 0, STALE: 0, FAILED: 0, ERROR: 0 };
   const notes = [];
   for (let round = 1; round <= ROUNDS; round++) {
@@ -953,7 +1083,9 @@ for (const scenario of SCENARIOS.filter((s) => s.name.includes(ONLY))) {
       state = await scenario.run({ id: suffix() });
     } catch (error) {
       state = 'ERROR';
-      notes.push(error.message.split('\n')[0]);
+      // The first line of the message and where it was thrown from: "Timed out after waiting 15000ms" alone does not say what waited.
+      const where = (error.stack ?? '').split('\n').find((line) => /actions\.mjs:\d+/.test(line));
+      notes.push(`${error.message.split('\n')[0]}${where ? `  ${where.trim()}` : ''}`);
       await signIn().catch(() => undefined);
     }
     counts[state] += 1;
