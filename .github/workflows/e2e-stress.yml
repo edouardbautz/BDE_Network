@@ -116,6 +116,13 @@ jobs:
           echo "${{ matrix.script }}: $((rounds - failures)) of $rounds rounds passed"
           [ "$failures" = 0 ]
 
+      # What the platform itself said while the rounds were played (the scripts only see the browser's side of a failure).
+      - name: The log of the platform
+        if: failure()
+        run: |
+          mkdir -p "$RUNNER_TEMP/shots"
+          docker logs installer > "$RUNNER_TEMP/shots/platform.log" 2>&1 || true
+
       - name: Evidence of the failures
         if: failure()
         uses: actions/upload-artifact@v4

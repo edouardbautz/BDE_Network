@@ -138,6 +138,21 @@ if (process.env.CPU_THROTTLE) await page.emulateCPUThrottling(Number(process.env
 if (process.env.TIMEZONE) await page.emulateTimezone(process.env.TIMEZONE);
 const pageErrors = [];
 page.on('pageerror', (error) => pageErrors.push(error.message));
+// The requests the page started and has not seen end: what a wait for the network to rest was waiting for.
+const inFlight = new Map();
+page.on('request', (request) => inFlight.set(request, Date.now()));
+page.on('requestfinished', (request) => inFlight.delete(request));
+page.on('requestfailed', (request) => inFlight.delete(request));
+const describeInFlight = () =>
+  inFlight.size === 0
+    ? 'nothing in flight'
+    : [...inFlight]
+        .slice(0, 8)
+        .map(([request, since]) => {
+          const { pathname } = new URL(request.url());
+          return `${request.method()} ${pathname} (${request.resourceType()}, ${Date.now() - since} ms)`;
+        })
+        .join('; ');
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const signIn = () => page.setCookie({ name: COOKIE, value: token, url: base, httpOnly: true });
@@ -223,6 +238,15 @@ async function expectPage(until, argument, what) {
   return afterReload ? 'STALE' : 'FAILED';
 }
 
+/** Says what waited, and what the page still had on its way, when something did not come: "Timed out after waiting 15000ms" alone does not say. */
+async function during(what, promise) {
+  try {
+    return await promise;
+  } catch (error) {
+    throw new Error(`${what}: ${error.message.split('\n')[0]} [${describeInFlight()}]`);
+  }
+}
+
 const suffix = () => `${Date.now().toString(36)}${Math.floor(Math.random() * 1e3).toString(36)}`;
 const createPending = (login) =>
   sql(
@@ -260,14 +284,6 @@ async function chooseLanguage(name) {
 
 // Publishing the events on the intra is a setting of the platform: turned on and off with the switch of the settings page.
 async function setIntraPublication(on) {
-  // What waited, when something did not come: "Timed out after waiting 15000ms" alone does not say.
-  const during = async (what, promise) => {
-    try {
-      return await promise;
-    } catch (error) {
-      throw new Error(`${what}: ${error.message.split('\n')[0]}`);
-    }
-  };
   await goto('/settings');
   const selector = '[role="switch"][aria-labelledby="settings-events-intra-title"]';
   await during('the switch of the intra on the settings page', page.waitForSelector(selector));

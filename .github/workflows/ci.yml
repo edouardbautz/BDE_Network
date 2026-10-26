@@ -292,6 +292,11 @@ jobs:
           docker rm -f installer
           rm e2e/node_modules
 
+      # What the platform itself said while the browser tests ran (the tests only see the browser's side of a failure).
+      - name: The log of the platform, when a browser test failed
+        if: failure()
+        run: docker logs installer 2>&1 | tail -300 || true
+
       - name: Screenshots of the installer and the settings page
         if: failure()
         uses: actions/upload-artifact@v4
