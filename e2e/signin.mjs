@@ -14,6 +14,7 @@
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import puppeteer from 'puppeteer-core';
+import { networkRests, watchNetwork } from './network.mjs';
 
 const [platform, fortyTwo, other] = process.argv.slice(2);
 if (!platform || !fortyTwo) {
@@ -65,6 +66,7 @@ const signIns = async () => (await fetch(`${fortyTwo}/__sign-ins`)).json();
 async function signInFrom(address) {
   const context = await browser.createBrowserContext();
   const page = await context.newPage();
+  await watchNetwork(page);
   await page.setExtraHTTPHeaders({ 'Accept-Language': 'fr' });
   page.setDefaultTimeout(20000);
   const visited = [];
@@ -88,7 +90,7 @@ async function signInFrom(address) {
       timeout: 20000,
     })
     .catch(() => undefined); // judged by the caller, from where the visitor ended up
-  await page.waitForNetworkIdle().catch(() => undefined);
+  await networkRests(page).catch(() => undefined);
   if (shots) {
     await page.screenshot({ path: join(shots, `${String(++count).padStart(2, '0')}-signin.png`) });
   }

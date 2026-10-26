@@ -92,14 +92,25 @@ jobs:
           export LOADS=15 PAGES=/en/events,/en/dashboard
           zones=(UTC Pacific/Auckland America/Los_Angeles Asia/Kolkata)
           failures=0
-          # One round of the actions script already plays each of its scenarios three times and takes about ten minutes.
+          # One round of the actions script already plays each of its scenarios three times and takes about ten minutes
+          # (the script reads ROUNDS too: left at 20 it played every scenario 20 times and the job was cancelled at 75 minutes).
           rounds="$ROUNDS"
-          [ "${{ matrix.script }}" = actions ] && rounds=3
+          if [ "${{ matrix.script }}" = actions ]; then rounds=3; export ROUNDS=3; fi
+          # The settings script changes what the installer chose (the notifications, the owners...) and expects to find it again:
+          # each round starts from the settings as they were installed.
+          if [ "${{ matrix.script }}" = settings ]; then
+            psql -h 127.0.0.1 -U bde -d bde_install -v ON_ERROR_STOP=1 -q -c 'CREATE TABLE settings_snapshot AS SELECT * FROM "PlatformSettings"'
+          fi
           for round in $(seq 1 "$rounds"); do
             # The browser is set to a time zone other than the server's, one after the other: a page that the server
             # and the browser draw differently according to the time zone would show here.
             export TIMEZONE="${zones[$(( (round - 1) % ${#zones[@]} ))]}"
             export SHOTS="$RUNNER_TEMP/shots/${{ matrix.script }}-round-$round"
+            if [ "${{ matrix.script }}" = settings ] && [ "$round" -gt 1 ]; then
+              psql -h 127.0.0.1 -U bde -d bde_install -v ON_ERROR_STOP=1 -q -c 'UPDATE "PlatformSettings" s SET config = b.config, environment = b.environment, secrets = b.secrets, "updatedAt" = now() FROM settings_snapshot b WHERE s.id = b.id'
+              docker restart installer > /dev/null
+              for attempt in $(seq 1 30); do curl -fsS http://127.0.0.1:3003/api/health > /dev/null 2>&1 && break; sleep 2; done
+            fi
             # The series script cuts and deletes its events: each round starts from the same two series.
             if [ "${{ matrix.script }}" = series ]; then
               psql -h 127.0.0.1 -U bde -d bde_install -v ON_ERROR_STOP=1 -q                 -c "DELETE FROM \"Event\" WHERE id LIKE 'e2e-series-%' OR \"seriesId\" LIKE 'e2e-series-%'"                 -c "INSERT INTO \"Event\" (id, title, description, location, \"categoryKey\", status, \"startsAt\", \"endsAt\", repeat, \"recurrenceUntil\", \"schoolYear\", \"authorLogin\", \"updatedAt\") SELECT 'e2e-series-' || lang, 'E2E series', 'Test', 'Room', 'soiree', 'CONFIRMED', now() + interval '2 days', now() + interval '2 days 2 hours', jsonb_build_object('freq', 'WEEKLY', 'interval', 1), now() + interval '38 days', '2026-2027', 'alice', now() FROM (VALUES ('fr'), ('en')) AS languages(lang)"
@@ -109,12 +120,19 @@ jobs:
             else
               failures=$((failures + 1))
               echo "round $round ($TIMEZONE): FAILED"
-              grep -E '✗|Error' "$RUNNER_TEMP/round.log" | head -5 | cut -c1-400
+              grep -E '✗|Error|^    ' "$RUNNER_TEMP/round.log" | head -12 | cut -c1-600
               cp "$RUNNER_TEMP/round.log" "$RUNNER_TEMP/shots/${{ matrix.script }}-round-$round.log" 2>/dev/null || { mkdir -p "$RUNNER_TEMP/shots"; cp "$RUNNER_TEMP/round.log" "$RUNNER_TEMP/shots/${{ matrix.script }}-round-$round.log"; }
             fi
           done
           echo "${{ matrix.script }}: $((rounds - failures)) of $rounds rounds passed"
           [ "$failures" = 0 ]
+
+      # What the platform itself said while the rounds were played (the scripts only see the browser's side of a failure).
+      - name: The log of the platform
+        if: failure()
+        run: |
+          mkdir -p "$RUNNER_TEMP/shots"
+          docker logs installer > "$RUNNER_TEMP/shots/platform.log" 2>&1 || true
 
       - name: Evidence of the failures
         if: failure()
