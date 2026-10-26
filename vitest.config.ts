@@ -11,6 +11,7 @@ export default defineConfig({
     include: [
       'src/**/*.test.{ts,tsx}',
       'docker/**/*.test.ts',
+      'e2e/**/*.test.ts',
       'scripts/**/*.test.ts',
       'qa/**/*.test.ts',
     ],

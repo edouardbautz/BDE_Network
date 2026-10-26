@@ -19,6 +19,7 @@ import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { encode } from '@auth/core/jwt';
 import puppeteer from 'puppeteer-core';
+import { networkRests } from './network.mjs';
 import { watchPage } from './watch-page.mjs';
 
 const [base] = process.argv.slice(2);
@@ -343,7 +344,7 @@ async function run(lang) {
   // (The page itself answers 200 with its "not found" content: the response is streamed before the page knows.)
   // Asked from the page that is open: leaving it for another page while it is still hydrating raises errors that are
   // the test's own doing.
-  await page.waitForNetworkIdle({ idleTime: 500 }).catch(() => undefined);
+  await networkRests(page, { idleTime: 500 }).catch(() => undefined);
   const goneStatus = await page.evaluate(
     (address) => fetch(address).then((response) => response.status),
     `/api/events/${tailId}/ics`,

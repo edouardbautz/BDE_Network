@@ -15,6 +15,7 @@ import { join } from 'node:path';
 import { deflateSync } from 'node:zlib';
 import { encode } from '@auth/core/jwt';
 import puppeteer from 'puppeteer-core';
+import { networkRests, watchNetwork } from './network.mjs';
 
 const [base] = process.argv.slice(2);
 const secret = process.env.AUTH_SECRET;
@@ -87,6 +88,7 @@ const browser = await puppeteer.launch({
   timeout: 120000,
 });
 const page = await browser.newPage();
+await watchNetwork(page);
 await page.setViewport({ width: 1100, height: 1400 });
 await page.setExtraHTTPHeaders({ 'Accept-Language': 'fr' });
 page.setDefaultTimeout(20000);
@@ -148,7 +150,7 @@ const save = async (label, within) => {
   );
   await clickButton(label, within);
   await answered;
-  await page.waitForNetworkIdle({ idleTime: 500 });
+  await networkRests(page, { idleTime: 500 });
 };
 const clear = async (selector) => {
   await page.focus(selector);
@@ -329,7 +331,7 @@ try {
       .click();
   });
   await removed;
-  await page.waitForNetworkIdle({ idleTime: 500 });
+  await networkRests(page, { idleTime: 500 });
   await page.waitForFunction(() => !document.querySelector('[role="dialog"]'));
   await page.reload({ waitUntil: 'networkidle0' });
   if (await page.$('[aria-label="Nom de la catégorie 5"]')) fail('the category is still there');
@@ -364,7 +366,7 @@ try {
         .click();
     });
     await answered;
-    await page.waitForNetworkIdle({ idleTime: 500 });
+    await networkRests(page, { idleTime: 500 });
   };
 
   await page.goto(`${base}/fr/settings`, { waitUntil: 'networkidle0' });

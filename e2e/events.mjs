@@ -18,6 +18,7 @@ import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { encode } from '@auth/core/jwt';
 import puppeteer from 'puppeteer-core';
+import { networkRests } from './network.mjs';
 import { settled, watchPage } from './watch-page.mjs';
 
 const [base] = process.argv.slice(2);
@@ -323,7 +324,7 @@ async function run(screen, lang) {
     );
     // Let the page finish loading before leaving it: leaving a page that is still hydrating raises errors that are
     // the test's own doing, not the page's.
-    await page.waitForNetworkIdle({ idleTime: 500 }).catch(() => undefined);
+    await networkRests(page, { idleTime: 500 }).catch(() => undefined);
     await clickAndWait(
       entry('dashboard'),
       () => location.pathname.endsWith('/dashboard'),
@@ -331,7 +332,7 @@ async function run(screen, lang) {
     );
     // Let the page finish loading before leaving it: leaving a page that is still hydrating raises errors that are
     // the test's own doing, not the page's.
-    await page.waitForNetworkIdle({ idleTime: 500 }).catch(() => undefined);
+    await networkRests(page, { idleTime: 500 }).catch(() => undefined);
     await clickAndWait(
       entry('events'),
       () => location.pathname.endsWith('/events') && document.querySelector('table') !== null,
@@ -339,7 +340,7 @@ async function run(screen, lang) {
     );
     // Let the page finish loading before leaving it: leaving a page that is still hydrating raises errors that are
     // the test's own doing, not the page's.
-    await page.waitForNetworkIdle({ idleTime: 500 }).catch(() => undefined);
+    await networkRests(page, { idleTime: 500 }).catch(() => undefined);
     step('the menu opens the events page, from itself and from the dashboard');
   }
 

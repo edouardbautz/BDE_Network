@@ -5,6 +5,7 @@
 // by the server and by the browser (a real bug) and a click that came before the page was ready (the test's own doing).
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { networkRests, watchNetwork } from './network.mjs';
 
 /** The page as the browser holds it, and as the server sends it for the same address (same cookies, same headers). */
 async function snapshot(page) {
@@ -27,6 +28,7 @@ async function snapshot(page) {
  */
 export async function watchPage(page, { label, shots }) {
   const started = Date.now();
+  await watchNetwork(page); // from the start: `settled` and the scripts wait for it to rest (see network.mjs)
   const documents = []; // one per document the main frame has shown, in order
   const errors = [];
 
@@ -196,5 +198,5 @@ export async function settled(page, { quietMs = 400, timeout = 15000 } = {}) {
       !document.body.innerHTML.includes('<!--$?-->'),
     { timeout },
   );
-  await page.waitForNetworkIdle({ idleTime: quietMs, timeout }).catch(() => undefined);
+  await networkRests(page, { idleTime: quietMs, timeout }).catch(() => undefined);
 }

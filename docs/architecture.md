@@ -1330,6 +1330,20 @@ rounds. The races found this way in the scripts themselves: the settings script 
 confirmed removal (the dialog closes at once), and `e2e/settings.mjs`/`events.mjs` take `LATENCY_MS`, `TIMEZONE` and
 `CPU_THROTTLE` to reproduce a slow server, another time zone and a slow processor.
 
+**`page.waitForNetworkIdle` is never used in a script (`e2e/network.mjs` does it).** Puppeteer counts a request until the
+browser reports it ended, and the browser never reports one that a navigation cut short before its answer: the prefetches
+that Next.js makes of the links it sees, a request of the page being left. Each stays counted for as long as the page lives
+(measured on its own: four requests cut by a navigation are counted four times for good, then eight, then twelve), so once a
+single prefetch was still waiting for the server when a script moved on, **every later wait of that page timed out**. That
+was the "intra" scenarios of `e2e/actions.mjs` failing three rounds out of three in about one CI run in five (and every time in
+the stress workflow, where a script navigates hundreds of times), always on the wait after saving the settings, while the
+scenario passed alone and on a developer's computer (a faster server cuts fewer prefetches). It was never the product, and it
+hid in `events.mjs`, whose waits ignored their timeout and so lasted their whole 15 seconds. `watchNetwork(page)` counts the
+requests of the document on screen from the browser's own events, a new document forgets those of the one it replaces, and a
+wait that times out says what the page still had on its way (`network.describe()`; the query is left out, it may hold a token).
+`network.test.ts` plays the browser's events, mutation-checked (`qa/mutations/e2e-network.json`). Found with the stress
+workflow and the evidence it keeps: the log of the platform when a script fails, and the notes of each failed scenario.
+
 The Playwright journeys have their own stress workflow, **`.github/workflows/browsers-stress.yml`** (Actions → browsers stress → Run
 workflow: `engine`, `rounds`, `files` or `all`; also run on a pull request that touches it): three shards, each a platform of its
 own made from the image, each playing the files `rounds` times, so a defect that comes one time in twenty is seen three times in
