@@ -138,21 +138,33 @@ if (process.env.CPU_THROTTLE) await page.emulateCPUThrottling(Number(process.env
 if (process.env.TIMEZONE) await page.emulateTimezone(process.env.TIMEZONE);
 const pageErrors = [];
 page.on('pageerror', (error) => pageErrors.push(error.message));
-// The requests the page started and has not seen end: what a wait for the network to rest was waiting for.
+// The requests the browser started and has not reported ended, from its own network events (the ones the wait for the
+// network to rest counts): what such a wait was waiting for. A request that a navigation cut short is never reported ended
+// and stays in the list, so only those of the document on screen are told, the others are counted.
 const inFlight = new Map();
-page.on('request', (request) => inFlight.set(request, Date.now()));
-page.on('requestfinished', (request) => inFlight.delete(request));
-page.on('requestfailed', (request) => inFlight.delete(request));
-const describeInFlight = () =>
-  inFlight.size === 0
-    ? 'nothing in flight'
-    : [...inFlight]
-        .slice(0, 8)
-        .map(([request, since]) => {
-          const { pathname } = new URL(request.url());
-          return `${request.method()} ${pathname} (${request.resourceType()}, ${Date.now() - since} ms)`;
-        })
-        .join('; ');
+let documentSince = Date.now();
+const network = await page.createCDPSession();
+await network.send('Network.enable');
+network.on('Network.requestWillBeSent', ({ requestId, request, type }) =>
+  inFlight.set(requestId, { method: request.method, url: request.url, type, since: Date.now() }),
+);
+network.on('Network.loadingFinished', ({ requestId }) => inFlight.delete(requestId));
+network.on('Network.loadingFailed', ({ requestId }) => inFlight.delete(requestId));
+page.on('framenavigated', (frame) => {
+  if (frame === page.mainFrame()) documentSince = Date.now();
+});
+const describeInFlight = () => {
+  const current = [...inFlight.values()].filter((request) => request.since >= documentSince);
+  const earlier = inFlight.size - current.length;
+  const told = current
+    .slice(0, 8)
+    .map(({ method, url, type, since }) => {
+      const { pathname } = new URL(url);
+      return `${method} ${pathname} (${type}, ${Date.now() - since} ms)`;
+    })
+    .join('; ');
+  return `${told || 'nothing in flight on this page'}${earlier > 0 ? ` (+${earlier} from earlier pages)` : ''}`;
+};
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const signIn = () => page.setCookie({ name: COOKIE, value: token, url: base, httpOnly: true });
