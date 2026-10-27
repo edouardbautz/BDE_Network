@@ -4,13 +4,14 @@
 # developer's machine; only Docker, Node (for `npm ci` and `tsx`) and `curl` are needed.
 #
 #   sh qa/platform.sh up   [--image bde-network] [--port 3100] [--variant events-enabled|events-disabled|events-intra]
-#                          [--dataset full|large|small|none] [--keep-config] [--now 2026-10-16T12:00:00Z] [--stats]
+#                          [--dataset full|club|large|small|none] [--keep-config] [--now 2026-10-16T12:00:00Z] [--stats]
 #                          [--webhook https://qa-hang:8443/hook]
 #   sh qa/platform.sh env  [--port 3100]     the variables the suites read (QA_BASE_URL, QA_AUTH_SECRET, QA_DATABASE_URL)
 #   sh qa/platform.sh logs
 #   sh qa/platform.sh down
 #
-# `--dataset large` is five school years and five times the members (qa/optim measures the platform on both datasets). `--stats`
+# `--dataset club` is a BDE as they are (150 accounts, two school years); `--dataset large` is five school years and five times the
+# members of `full` (qa/optim measures the platform on the three). `--stats`
 # loads `pg_stat_statements` in PostgreSQL, to count the statements a page sends (qa/optim/measure.ts).
 #
 # `--now` sets the clock of the application to the moment of the dataset (qa/fake-clock.cjs, which runs from there at the normal
@@ -175,6 +176,7 @@ case "$command" in
     case "$DATASET" in
       none) ;;
       full) npx tsx qa/cli.ts load --database "$(database_url)" ;;
+      club) npx tsx qa/cli.ts load --database "$(database_url)" --members 139 --events-per-year 80 ;;
       large) npx tsx qa/cli.ts load --database "$(database_url)" --members 1500 --events-per-year 300 --school-years 5 ;;
       small) npx tsx qa/cli.ts load --database "$(database_url)" --members 40 --events-per-year 40 ;;
       *) echo "unknown dataset $DATASET" >&2; exit 2 ;;
