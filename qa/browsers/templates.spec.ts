@@ -104,6 +104,8 @@ test.describe('writing a template', () => {
   }) => {
     const page = await as('owner');
     await open(page);
+    // a last good picture needs a first one: the draft is not invalid yet
+    await expect(page.getByTestId('preview-discord')).toBeVisible();
     await page.getByLabel('Title', { exact: true }).fill('{nothing}');
     await expect(page.getByText(/last valid version/)).toBeVisible();
     await expect(page.getByText('Unknown variable: nothing.')).toBeVisible();

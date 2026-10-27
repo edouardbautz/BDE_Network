@@ -69,10 +69,10 @@ test.describe('the table of notifications', () => {
     try {
       await form(page).getByLabel('Discord webhook address').fill(WEBHOOK);
       await form(page).getByLabel('Slack webhook address').fill(SLACK);
-      await expect.poll(() => tickable(page)).toBe(8 + 8);
+      await expect.poll(() => tickable(page)).toBe(10 + 10);
 
       await form(page).getByRole('button', { name: 'Discord: check all' }).click();
-      await expect.poll(() => ticked(page)).toBe(8);
+      await expect.poll(() => ticked(page)).toBe(10);
       await expect(form(page).getByRole('button', { name: 'Discord: clear all' })).toBeVisible();
 
       await page.getByRole('checkbox', { name: 'Event confirmed — Slack' }).check();
@@ -81,7 +81,7 @@ test.describe('the table of notifications', () => {
       await page.reload();
       await expect(page.getByRole('heading', { name: 'Who is told, and where' })).toBeVisible();
       await atRest(page);
-      await expect.poll(() => ticked(page)).toBe(9);
+      await expect.poll(() => ticked(page)).toBe(11);
       await expect(page.getByRole('checkbox', { name: 'Event confirmed — Slack' })).toBeChecked();
       await expect(page.getByRole('checkbox', { name: 'Event confirmed — Discord' })).toBeChecked();
       await expect(

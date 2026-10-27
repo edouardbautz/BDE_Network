@@ -48,6 +48,28 @@ test.describe('the watcher of the journeys', () => {
     problems.list.length = 0;
   });
 
+  test('lets a sandboxed frame refuse the init script of the watcher, and still sees an error of the page', async ({
+    as,
+    problems,
+  }) => {
+    const page = await as('anonymous');
+    await page.goto('/en');
+    await expect(page.getByRole('button', { name: 'Sign in with 42' })).toBeVisible();
+    // the preview of an e-mail: a sandboxed frame with a document of its own
+    await page.evaluate(() => {
+      const frame = document.createElement('iframe');
+      frame.setAttribute('sandbox', '');
+      frame.srcdoc = '<p>an e-mail</p>';
+      document.body.append(frame);
+    });
+    await page.evaluate(() => console.error('written on purpose, next to the frame'));
+    await expect
+      .poll(() => problems.list.some((line) => /written on purpose, next to the frame/.test(line)))
+      .toBe(true);
+    expect(problems.list.some((line) => /Blocked script execution/.test(line))).toBe(false);
+    problems.list.length = 0;
+  });
+
   test('reads an error object whole, even when the page navigates away at once', async ({
     as,
     problems,

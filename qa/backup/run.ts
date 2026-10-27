@@ -94,6 +94,8 @@ function folder(project: string): string {
     copyFileSync(join(project, name), join(dir, name));
   }
   mkdirSync(join(dir, 'scripts'));
+  // a clone of the project ships backups/ (.gitkeep): the user's, where scripts/backup.sh writes; Docker makes only backups/auto inside it
+  mkdirSync(join(dir, 'backups'));
   for (const name of ['backup.sh', 'restore.sh']) {
     copyFileSync(join(project, 'scripts', name), join(dir, 'scripts', name));
   }
@@ -382,7 +384,7 @@ export async function playBackups(report: Report): Promise<void> {
     check(
       'scripts/restore.sh --auto restores it',
       restored.ok,
-      restored.ok ? '' : restored.out.slice(-600),
+      restored.ok ? '' : restored.out.slice(-1500),
     );
     await answers(b, 'the platform answers after the restore');
 
@@ -435,7 +437,7 @@ export async function playBackups(report: Report): Promise<void> {
     check(
       'restore.sh restores the downloaded file with its passphrase',
       fromFile.ok,
-      fromFile.ok ? '' : fromFile.out.slice(-600),
+      fromFile.ok ? '' : fromFile.out.slice(-1500),
     );
     await answers(b, 'the platform answers after the second restore');
     const fromDownload = await facts(b);
