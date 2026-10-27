@@ -23,7 +23,7 @@
   [
     "pages: the polyfills of the nomodule tag are counted as loaded",
     "qa/optim/html.ts",
-    "const html = page.replace(/<script\b[^>]*\bnomodule\b[^>]*>/gi, '');",
+    "const html = page.replace(/<script\\b[^>]*\\bnomodule\\b[^>]*>/gi, '');",
     "const html = page;",
     ["qa/optim/optim.test.ts"]
   ]
