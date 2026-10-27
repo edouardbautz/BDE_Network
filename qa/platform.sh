@@ -153,10 +153,14 @@ case "$command" in
 
     # The options of the clock go in the argument list (not in a string: a path may hold a space).
     set --
+    node_options="${QA_APP_NODE_OPTIONS:-}"
     if [ -n "$NOW" ]; then
       clock_file="$(cd "$(dirname "$0")" && pwd)/fake-clock.cjs"
-      set -- -v "$(host_path "$clock_file"):/qa/fake-clock.cjs:ro" -e "BDE_QA_NOW=$NOW" -e NODE_OPTIONS=--require=/qa/fake-clock.cjs
+      set -- -v "$(host_path "$clock_file"):/qa/fake-clock.cjs:ro" -e "BDE_QA_NOW=$NOW"
+      node_options="--require=/qa/fake-clock.cjs $node_options"
     fi
+    # QA_APP_NODE_OPTIONS=--max-old-space-size=256 tries the options of Node.js that the image could set.
+    [ -n "$node_options" ] && set -- "$@" -e "NODE_OPTIONS=$node_options"
 
     if [ -n "$WEBHOOK" ]; then
       set -- "$@" -e "DISCORD_WEBHOOK_URL=$WEBHOOK" -e NODE_TLS_REJECT_UNAUTHORIZED=0
