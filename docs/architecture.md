@@ -1633,7 +1633,10 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
     `requestfailed` and no request the page could have been waiting for (the watcher's trail, written under any suspect it cannot
     excuse, showed it: the requests all `finished`, then a navigation). Nothing in flight and no departure is still a failure
     (`watcher.spec.ts` tests both, and a mutation of the rule fails it). It was the product's console noise, never a visitor's:
-    nobody can confirm a dialog in the 350 ms of the editor's debounced preview.
+    nobody can confirm a dialog in the 350 ms of the editor's debounced preview. (5) The sentence Chromium writes when a **sandboxed frame** refuses the init script of the watcher
+    (`Blocked script execution in 'about:srcdoc' because the document's frame is sandboxed`): the preview of an e-mail is a frame with `sandbox=""`, Playwright puts that script in every
+    frame, and the browser refusing it there is the sandbox doing its work. Only that frame and that sentence; `watcher.spec.ts` checks an error of the page next to such a frame is still seen.
+    It stayed hidden until a probe (`?scope=email`) opened an e-mail tab for the first time.
   - **Traps met writing it.** Role queries skip what is `aria-hidden`, and a dialog hides the page behind it: after "Approve" the
     row vanishes from the tree while the dialog is open, so "the row is gone" is true at once; wait for the real page drawn again
     (rule 2 of "Navigation": the action loads the page, and the loading skeleton has no row either). Code run inside
@@ -1755,6 +1758,13 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
   ours and is experimental).
   The measures of the starting point of the campaign (taken by the CI, 2026-10-27) are kept in `qa/optim/baselines/`, and the numbers
   with their objectives are on the Quality page of the documentation, which each step of the campaign updates.
+  - **Budgets** (`qa/optim/budgets.json`, `budgets.ts` pure and tested, `qa/mutations/budgets.json`). What the campaign gained is held by numbers a change must not go
+    over. The `budgets` job of `ci.yml` (part of the `docker image` check `main` requires) starts the image on the QA dataset, takes `measure.ts --only image,pages,db` (three
+    runs) and compares: the image (260 MiB), and for **every page** the statements it sends, the scripts it loads at once and its HTML, which are bytes and counts and do not depend
+    on the machine. A page that has no budget fails, and so does a budget with no page: a new page brings its numbers. The `measures` workflow adds the server every night (restart
+    2 s, memory at rest 160 MiB, peak under load 600 MiB, no failed request), loose because a shared runner varies by about 10 % (see "Which numbers are held tight, and which
+    loose"). The numbers were set from the CI's measure of 2026-10-27, a little above it (4 % on the scripts, 10 % on the HTML); going over one is a pull request that raises it and
+    says why, never a retry.
 - **Resilience** (`qa/resilience/`, the `resilience` job of `qa.yml`; `npx tsx qa/resilience/run.ts [--only database,app,webhook]` on a
   platform made by `sh qa/platform.sh up --webhook https://qa-hang:8443/hook --now 2026-10-16T12:00:00Z`). What happens to the platform when what it stands
   on goes away. The suites stop, freeze and kill the platform's containers (Docker only, started without a shell, every wait has a
@@ -1834,6 +1844,17 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
 gives calendar files with the data in them` guards that); the not-found page marks itself, the words are in every page's payload.
   - **Not covered yet**: an update from a platform installed by the web installer (it needs the browser; the settings are imported
     from files here), a second update in a row, and an update interrupted in the middle (the safe-update script plays that).
+- **Backups** (`qa/backup/`, the `backups` job of `qa.yml`; `npx tsx qa/backup/run.ts`, after `docker build -t bde-network:local .`). The promise of "Automatic backups", played with `docker compose`
+  on the real image: a stack with the QA dataset whose clock is set to 01:00 (before the hour of the backup: a clock past 03:00 would make a backup of the empty platform at the first look
+  of the loop) and then recreated at 03:10, so that the platform makes its backup by itself; the file is `0600` and owned by the application, holds exactly the four files of the
+  manifest, was read again in a scratch database that is gone, and nothing half made is left. The owner downloads it (a short passphrase, another origin and a visitor refused, the
+  audit entry written once, the file an `openssl` file that holds nothing readable). `docker compose down -v` removes every volume and the backup is still on the host. A second stack
+  with nothing: the archive is put in its folder and `restore.sh --auto` restores it (the same rows table by table, the invariants, the keys of the old server back, the cookie of before
+  still signing the owner in, the sealed settings read), then `restore.sh` refuses a wrong passphrase without touching anything and restores the downloaded file with the right one. Last, the
+  database is stopped at 03:10 (a clock ten minutes later, because the name of a backup is its second): the failure is written down with its reason, the backup that was there is untouched,
+  health says 503, and when the database is back the Settings page says that the last attempt failed, why, and that nobody is told by message. The folder is made as a clone makes it
+  (`backups/` of the user, Docker making only `backups/auto` in it): a folder made by Docker as root would hide that `scripts/backup.sh`, which `restore.sh` runs first, writes there.
+  **Not covered**: a real rootless daemon (the folder that cannot be handed over is played as a failure with its reason).
 - **Long time** (`qa/longtime/`, the `longtime` job of `qa.yml`: nightly, by hand, or with the label `full-qa`; `QA_LONGTIME=1`
   and `MIGRATION_TEST_DATABASE_URL` for `npx vitest run qa/longtime`). What months do to the platform, without waiting for them. The
   reminder loop takes the instant to look at as a parameter (`runReminderTick(now)`), so no clock is faked: it is called with each of

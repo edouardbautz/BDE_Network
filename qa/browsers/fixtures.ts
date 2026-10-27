@@ -42,6 +42,10 @@ const NETWORK_WORDS = [
   /Content-Security-Policy/i,
   // The tracer's fetch of a blob image (see below), as Chromium words it in the console.
   /Connecting to 'blob:/i,
+  // The preview of an e-mail is a frame with `sandbox=""` (it runs no script, whatever the message holds): Playwright puts the init script of
+  // this watcher in every frame, and Chromium refuses it there and says so. That is the sandbox doing its work on the tool, not a defect of
+  // the page; only that frame (`about:srcdoc`) and that sentence are let through (`watcher.spec.ts` checks a real error still shows).
+  /Blocked script execution in 'about:srcdoc' because the document's frame is sandboxed/i,
 ];
 
 /**
@@ -67,6 +71,8 @@ const CANCELLATION_WORDS = [
   /NS_BASE_STREAM_CLOSED/i,
   // React's own word (#412) for a stream of the router that was closed under it: the prefetch it was reading was cancelled.
   /Minified React error #412|Connection closed/i,
+  // webpack's word for a script of the page that the browser stopped loading (Firefox, a click that follows a page which is still loading its chunks).
+  /ChunkLoadError: Loading chunk d+ failed/i,
 ];
 const RECENTLY_MS = 5000;
 /**

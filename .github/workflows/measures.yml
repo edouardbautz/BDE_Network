@@ -70,6 +70,12 @@ jobs:
           mkdir -p optim
           npx tsx qa/optim/measure.ts --label "${{ matrix.dataset }} dataset" --image bde-network --out "optim/${{ matrix.dataset }}.json"
 
+      # The numbers that hold the gains (qa/optim/budgets.json): a night that goes over one fails, with the server (restart, memory,
+      # failed requests under load) judged here, on the runner, with the room the budgets give it.
+      - name: Compare with the budgets
+        if: matrix.dataset == 'full'
+        run: npx tsx qa/optim/budgets.ts optim/full.json
+
       # The speed of what is drawn on a phone with a slow network and processor (Lighthouse: LCP, TBT, CLS and the weight): taken
       # on the QA dataset only. The budgets are those of the performance job of qa.yml; here a breach is a number, not a failure.
       - name: Install the browser (Lighthouse drives the one of Playwright)

@@ -33,6 +33,11 @@ dont le cookie est encore valide.
   un navigateur ; envois de logo piégés ; déluges de mauvaises requêtes ; et les journaux, fouillés pour tout secret rencontré
   pendant l'exécution. OWASP ZAP analyse la plateforme en marche, connecté comme propriétaire. À la demande, les attaques sont
   elles-mêmes vérifiées en cassant une protection exprès et en construisant l'image, pour voir qu'elles s'en aperçoivent.
+- **Sauvegardes.** Une plateforme lancée avec `docker compose up -d`, l'horloge de la plateforme réglée à trois heures dix du matin : elle
+  fait sa sauvegarde toute seule et la relit ; le propriétaire la télécharge avec une phrase de passe ; `docker compose down -v` supprime tous
+  les volumes ; sur un serveur neuf, `restore.sh` remet la sauvegarde, puis le fichier téléchargé (une mauvaise phrase de passe ne touche à rien).
+  Les mêmes lignes, les mêmes clés, la session d'avant encore ouverte. Puis la base est arrêtée à l'heure de la sauvegarde : l'échec est écrit,
+  la sauvegarde précédente est intacte, et la page Paramètres dit ce qui a échoué.
 - **Navigateurs.** Les parcours de la plateforme (une proposition approuvée, un refus avec son commentaire, le calendrier, les
   réglages, le clavier) dans **Chromium, Firefox et WebKit** (le moteur de Safari). Un parcours échoue si ses pages lèvent une
   exception, écrivent une erreur dans la console, enfreignent leur propre politique de sécurité du contenu ou reçoivent une erreur
@@ -103,30 +108,36 @@ grosse qu'un serveur d'école), sur trois jeux de données : deux années scolai
 durées ne se comparent qu'à d'autres mesures prises sur la même. Les mesures brutes du point de départ sont dans
 `qa/optim/baselines/`.
 
-| Ce qui est mesuré                                                       | Avant (2026-10-27)           | Objectif                                | Maintenant                            |
-| ----------------------------------------------------------------------- | ---------------------------- | --------------------------------------- | ------------------------------------- |
-| Image Docker                                                            | 318 Mo                       | 250 Mo ou moins                         | 246 Mo                                |
-| Scripts chargés d'emblée : connexion, tableau de bord, un événement     | 211, 217 et 242 Ko           | 200 Ko ou moins                         | 175, 181 et 205 Ko                    |
-| Plus grand affichage (LCP) sur téléphone, réseau lent : tableau de bord | 4,2 s (un événement : 4,3 s) | 3,5 s ou moins                          |                                       |
-| Requêtes envoyées à la base : tableau de bord, calendrier, événement    | 10, 12 et 10                 | 8 ou moins                              | 2, 4 et 2                             |
-| Mémoire de l'application sous la charge de 20 personnes                 | 1 105 Mo (103 Mo au repos)   | 450 Mo ou moins, même débit             | 340 à 476 Mo                          |
-| 95 % des réponses sous cette charge                                     | 1,56 s                       | 30 % de moins                           | 1,2 à 1,4 s                           |
-| Redémarrage jusqu'à ce que la plateforme réponde                        | 2,6 s                        | 1,6 s ou moins                          | 1,4 à 1,6 s                           |
-| Le plus petit serveur qui tient la charge                               | pas essayé                   | 1 CPU et 1 Go, aucune requête en échec  | 1 CPU, 1 Go : aucune requête en échec |
-| Journaux Docker                                                         | sans limite                  | 30 Mo au plus                           | 30 Mo au plus par service             |
-| Durée des vérifications d'une pull request                              | 12 à 17 minutes              | 9 minutes ou moins, mêmes vérifications | 5,4 minutes                           |
+| Ce qui est mesuré                                                       | Avant (2026-10-27)           | Objectif                                | Maintenant                                                          |
+| ----------------------------------------------------------------------- | ---------------------------- | --------------------------------------- | ------------------------------------------------------------------- |
+| Image Docker                                                            | 318 Mo                       | 250 Mo ou moins                         | 246,7 Mo                                                            |
+| Scripts chargés d'emblée : connexion, tableau de bord, un événement     | 211, 217 et 242 Ko           | 200 Ko ou moins                         | 175, 181 et 205 Ko                                                  |
+| Plus grand affichage (LCP) sur téléphone, réseau lent : tableau de bord | 4,2 s (un événement : 4,3 s) | 3,5 s ou moins                          | **3,7 s** (un événement : 4,2 s)                                    |
+| Requêtes envoyées à la base : tableau de bord, calendrier, événement    | 10, 12 et 10                 | 8 ou moins                              | 2, 4 et 2                                                           |
+| Mémoire de l'application sous la charge de 20 personnes                 | 1 105 Mo (103 Mo au repos)   | 450 Mo ou moins, même débit             | 450 Mo (340 à 476 lors des passes précédentes)                      |
+| 95 % des réponses sous cette charge                                     | 1,56 s                       | 30 % de moins                           | 0,8 s (**49 % de moins** ; 1,2 à 1,4 s lors des passes précédentes) |
+| Redémarrage jusqu'à ce que la plateforme réponde                        | 2,6 s                        | 1,6 s ou moins                          | 1,1 s                                                               |
+| Le plus petit serveur qui tient la charge                               | pas essayé                   | 1 CPU et 1 Go, aucune requête en échec  | 1 CPU, 1 Go : aucune requête en échec                               |
+| Journaux Docker                                                         | sans limite                  | 30 Mo au plus                           | 30 Mo au plus par service                                           |
+| Durée des vérifications d'une pull request                              | 12 à 17 minutes              | 9 minutes ou moins, mêmes vérifications | 5,4 minutes                                                         |
 
 **Étapes faites.** (La première lecture des scripts comptait les polyfills de la balise `nomodule`, environ 39 Ko, qu'aucun navigateur qui compte ne télécharge : les chiffres ci-dessus sont recomptés.) La connexion, le tableau de bord et un événement chargent d'abord 175, 181 et 205 Ko de scripts : Zod, que deux lignes du code des langues amenaient dans toutes les pages, n'y est plus, et le code qui dessine les toasts est chargé une fois la page interactive. Le temps de blocage du tableau de bord sur téléphone passe de 236 à 165 ms et son plus grand affichage de 4,1 à 3,9 s (même machine, cinq passes chacun). Cet affichage est borné par le processeur, qui exécute les scripts quatre fois plus lentement dans ce test : seul moins de script le fait baisser ; 3,5 s demanderait une autre façon de construire les pages, et n'est pas atteint. Les vérifications d'une pull request tournent en jobs parallèles sur une image construite une seule fois (5,4
 minutes, mesurées sur la pull request elle-même). Une page lit ses relations avec une jointure et la session avec une seule
 requête, ce qui ramène les requêtes du tableau de bord, du calendrier et d'un événement à 2, 4 et 2 ; sur 1 CPU et 1 Go avec la
 charge de 20 personnes, la plateforme répond à 7,3 à 7,4 requêtes par seconde au lieu de 6,3 à 6,6, et 95 % des réponses arrivent
-en 2,9 à 3,2 s au lieu de 3,3 à 3,8 s. L'image est Alpine plus le binaire de Node.js, et l'outil Prisma est élagué de ce qu'il ne charge jamais (318 → 246 Mo en CI) ; Node.js doit garder son tas sous 384 Mo (1 123 Mo sans, pour le même débit : 12,7 à 14,0 requêtes par seconde avec, 13,9 sans, des exécutions du même runner de CI diffèrent d'autant) ; la commande Prisma n'est pas lancée quand la base est à jour (redémarrage 2,6 → 1,4-1,6 s). Les 30 % sur les réponses sous charge ne sont pas atteints de façon fiable (1,2 à 1,4 s contre 1,56 s : deux exécutions, un runner qui varie de 10 % d'une fois à l'autre).
+en 2,9 à 3,2 s au lieu de 3,3 à 3,8 s. L'image est Alpine plus le binaire de Node.js, et l'outil Prisma est élagué de ce qu'il ne charge jamais (318 → 246 Mo en CI) ; Node.js doit garder son tas sous 384 Mo (1 123 Mo sans, pour le même débit : 12,7 à 14,0 requêtes par seconde avec, 13,9 sans, des exécutions du même runner de CI diffèrent d'autant) ; la commande Prisma n'est pas lancée quand la base est à jour (redémarrage 2,6 → 1,4-1,6 s). Les 30 % sur les réponses sous charge sont atteints dans la dernière mesure (0,8 s contre 1,56 s) et pas dans les deux d'avant (1,2 à 1,4 s) : un runner varie de 10 % d'une fois à l'autre.
 
 Ce que disent les mesures, et qui décide où va l'effort : la base de données n'est pas le goulot (aucune page n'envoie une
 requête cinq fois ou plus, aucune n'en envoie plus de 12, et une page passe 0,1 à 7 ms en base même avec cinq ans de
 données) ; le processus Node.js l'est, en mémoire et en processeur. Les données grossissent lentement : le journal d'audit
 écrit environ 300 octets par ligne et en compte 1 319 après deux années scolaires, et toute la base pèse 10 Mo (12,6 Mo
 avec cinq ans et 1 500 membres) ; aucune purge n'est donc prévue. Une base vide pèse déjà 8,2 Mo : les données d'un BDE grossissent donc d'environ 1 Mo par an (cinq ans et 1 500 comptes : 4,4 Mo), et une sauvegarde en fait quelques Mo. Les journaux sont l'autre chose qui grossit sur un serveur que personne ne surveille : Docker les coupe maintenant (trois fichiers de 10 Mo au plus par service), et chaque service a un plafond de mémoire (`APP_MEMORY`, `DB_MEMORY`).
+
+**Les objectifs qui ne sont pas atteints.** Le plus grand affichage sur téléphone, réseau lent, est de 3,7 s pour le tableau de bord et de 4,2 s pour un événement, contre 3,5 s : il est borné par le processeur, qui exécute les scripts quatre fois plus lentement dans ce test, donc seul moins de script le fait baisser. Les scripts d'un événement font 205 Ko contre 200. La mémoire sous charge est de 450 Mo, pile sur la ligne. Les réponses sous charge sont 49 % plus rapides dans la dernière mesure de la CI et 10 à 25 % dans les précédentes : une machine partagée varie d'environ 10 % d'une passe à l'autre, donc le workflow `measures` garde les chiffres bruts et les budgets ci-dessous sont posés avec de la marge.
+
+**Ce qui a été regardé et laissé tel quel.** Le code a été fouillé pour du code mort, de la duplication et des dépendances que rien n'utilise : 0,06 % des lignes sont dupliquées, les deux paquets que rien n'utilise (`@eslint/eslintrc`, `cross-env`) retirent deux paquets sur 1 109 du verrou et rien de l'image, et les exports inutilisés sont des types et des aides qui ne coûtent aucun octet à l'exécution. Rien de cela ne donne un gain mesurable : rien n'a été changé. Deux autres idées ont été essayées et abandonnées : précompiler les messages (aucun gain sur le plus grand affichage, et le précompilateur de next-intl est expérimental et échoue sur quatre de nos messages) et ne charger que les messages d'une page (idem, pour 24 Ko).
+
+**Budgets.** Les gains ne restent pas tout seuls. `qa/optim/budgets.json` contient les chiffres qu'un changement ne doit pas dépasser, et le job `budgets` de chaque pull request échoue au-dessus : la taille de l'image (260 Mo) et, pour chaque page, les requêtes envoyées à la base, les scripts chargés d'emblée et son HTML. Une nouvelle page échoue tant qu'elle n'a pas ses chiffres. Chaque nuit, le workflow `measures` y ajoute le serveur : redémarrage (2 s), mémoire au repos (160 Mo), pic de mémoire sous charge (600 Mo) et aucune requête en échec. Dépasser un budget, c'est une pull request qui le relève et dit pourquoi.
 
 **Une limite connue.** La page des membres liste tous les comptes d'un coup, sans pagination : un BDE compte quelques
 dizaines de comptes (le bureau et le staff), et la page est faite pour cela. Avec 150 comptes, plus que n'en a un BDE, elle met 109 ms à se construire et pèse 64 Ko de
@@ -143,6 +154,8 @@ de quelques centaines de comptes, paginez-la avant de vous y fier.
   ([Déploiement](deployment.md#3-reverse-proxy-https)). Les tests notent ce que la plateforme accepte.
 - **42 et les services de messagerie sont remplacés par des doublures.** La connexion par le vrai 42 et la livraison vers un vrai
   Discord, Slack ou serveur de mail ne sont pas testées ; une doublure joue leur rôle, y compris une qui ne répond jamais.
+- **Un Docker sans droits root** n'est pas joué contre un vrai démon rootless : le dossier des sauvegardes que l'application ne peut pas écrire
+  est joué comme un échec avec sa raison, et la pile démarre quand même ; ce que le démon fait du propriétaire d'un dossier est l'affaire de Docker.
 - **Le serveur de mail** est testé contre un serveur silencieux et par des tests unitaires, pas par une plateforme qui envoie de
   vrais mails.
 - **Une mise à jour depuis une plateforme installée avec l'installateur web** n'est pas jouée (il faut un navigateur) ; la suite de

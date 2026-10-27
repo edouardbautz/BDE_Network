@@ -91,7 +91,12 @@ test.describe('accessibility (axe, WCAG 2.2 AA)', () => {
           const title = await page.title();
           if (!/\b(pending|auth-error)\b/.test(probe.path)) expect(title).toMatch(/ · /);
 
-          const { violations } = await new AxeBuilder({ page }).withTags(WCAG).analyze();
+          // The preview of an e-mail is a frame with sandbox="" (it runs no script): axe cannot run in it and waits for it until the test times out. What it shows is a
+          // message for a mail client, not a page of the platform, and its own look is held by the golden files of the e-mails; the frame is the one exception.
+          const { violations } = await new AxeBuilder({ page })
+            .withTags(WCAG)
+            .exclude('iframe[data-testid="preview-email"]')
+            .analyze();
           expect(
             violations.map(
               (violation) =>

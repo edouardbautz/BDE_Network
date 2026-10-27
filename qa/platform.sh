@@ -139,7 +139,8 @@ wait_for() {
 case "$command" in
   up)
     "$0" down >/dev/null 2>&1 || true
-    docker network create "$NETWORK" >/dev/null
+    # (the network of a platform just taken down can still be there for a moment: the active scan of ZAP makes a second platform right after the first)
+    docker network inspect "$NETWORK" >/dev/null 2>&1 || docker network create "$NETWORK" >/dev/null
     # The options of PostgreSQL go after the image name; none unless a suite asks for them.
     set --
     [ -n "$STATS" ] && set -- -c shared_preload_libraries=pg_stat_statements -c pg_stat_statements.track=all

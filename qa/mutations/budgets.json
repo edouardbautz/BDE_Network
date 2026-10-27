@@ -1,0 +1,51 @@
+[
+  [
+    "budgets: a number over its budget passes",
+    "qa/optim/budgets.ts",
+    "if (seen > limit) breaches.push",
+    "if (false) breaches.push",
+    ["qa/optim/budgets.test.ts"]
+  ],
+  [
+    "budgets: a number equal to its budget fails",
+    "qa/optim/budgets.ts",
+    "if (seen > limit) breaches.push",
+    "if (seen >= limit) breaches.push",
+    ["qa/optim/budgets.test.ts"]
+  ],
+  [
+    "budgets: a page with no budget passes",
+    "qa/optim/budgets.ts",
+    "    if (!budget) {\n      breaches.push({\n        subject: page.name,\n        what: 'has no budget",
+    "    if (!budget && false) {\n      breaches.push({\n        subject: page.name,\n        what: 'has no budget",
+    ["qa/optim/budgets.test.ts"]
+  ],
+  [
+    "budgets: a page that does not answer passes",
+    "qa/optim/budgets.ts",
+    "if (page.status !== 200) {",
+    "if (false) {",
+    ["qa/optim/budgets.test.ts"]
+  ],
+  [
+    "budgets: the statements are not compared",
+    "qa/optim/budgets.ts",
+    "if (queries !== undefined) over(page.name, 'statements', queries, budget.statements, '');",
+    "",
+    ["qa/optim/budgets.test.ts"]
+  ],
+  [
+    "budgets: the image is not compared",
+    "qa/optim/budgets.ts",
+    "over('image', 'size', measurement.image.bytes / MIB, budgets.image.maxMiB, 'MiB');",
+    "",
+    ["qa/optim/budgets.test.ts"]
+  ],
+  [
+    "budgets: the failed requests are not compared",
+    "qa/optim/budgets.ts",
+    "over('server', 'failed requests under load', load.failedRate, budgets.server.failedRate, '');",
+    "",
+    ["qa/optim/budgets.test.ts"]
+  ]
+]

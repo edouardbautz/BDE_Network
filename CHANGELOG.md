@@ -8,6 +8,15 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **Automatic backups.** The platform backs itself up **every night at 3:00 (BDE time)**, with nobody doing anything: one archive that holds the database, the keys to read it
+  and the logo, in the folder `backups/auto` of the server (`BDE_BACKUP_DIR`), outside Docker's volumes, so that `docker compose down -v` does not remove it. Each backup is **read
+  again before it is trusted** (the files against their SHA-256, the dump loaded into a scratch database, the encrypted settings opened with the keys of the archive). 7 daily, 4
+  weekly and 6 monthly are kept. The Settings page shows the last one, the list, a **Back up now** button and a **Download** that encrypts the file with a passphrase the owner chooses
+  (the format of `openssl enc`; a lost passphrase cannot be recovered, and the page says so). `scripts/restore.sh` learns `--auto`, the keys inside an archive, and the decryption of a
+  downloaded file. The owners can be told (e-mail, Discord, Slack; two new customisable notifications, off until a channel is chosen) when the backup of the night fails and when none
+  succeeded for two days. `docker-compose.yml` mounts the folder (the stack number goes to 3: an image that expects the mount refuses an older compose file) and no longer stops
+  when a file system refuses to hand it over. New guide: [Automatic backups](docs/en/backups.md). A new nightly suite plays it all on a real stack, down to a new server.
+
 - **Messages about publishing on the intra.** Five new notifications, in the table of Settings and in the customisation page (group "Publication on the intra"), shown only
   while the platform publishes on the intra, off until ticked: **publication requested**, **event changed on the intra** (the old and the new value), **event taken back**
   (back to draft, deleted, no date left: only for an event that was on the intra), for the staff; **published** and **refused** (with the reason), for the author and the BDE's
@@ -66,6 +75,8 @@ All notable changes to this project are written here, in English. Format based o
   "to update" are.
 
 ### Changed
+
+- **Lighter, faster, and a platform that can be left alone.** Measured on the production image and the quality dataset (see [Quality](docs/en/quality.md#speed-and-resources-the-numbers)): the image is 247 MiB instead of 318, the platform restarts in 1.1 s instead of 2.6, a page sends 2 to 5 statements to the database instead of 10 to 12 (relations are read with a join, the session with one statement), the scripts every page loads first lose about 36 KiB (Zod and the toasts are no longer in them), and under the load of 20 people the application peaks at 450 MiB instead of 1,105 and answers 95 % of the requests in 0.8 to 1.4 s instead of 1.6 s. Docker now cuts the logs (three files of 10 MB per service) and each service has a ceiling for its memory (`APP_MEMORY`, `DB_MEMORY`); the deployment guide says what size of server holds a BDE (1 CPU and 1 GiB are enough). The checks of a pull request run as parallel jobs (5 minutes instead of 12 to 17), and **budgets** (`qa/optim/budgets.json`) fail a pull request that makes the image, the scripts, the HTML or the statements of a page grow.
 
 - Development only: the tests of the browser watcher no longer depend on the noise of a real page (Chromium on the real image aborts requests of its own, which excused the error the test wanted reported).
 - Development only: a test of the notification editor no longer fails now and then (it clicked Save again while the button still said it was saving).

@@ -340,6 +340,63 @@ jobs:
           path: ${{ runner.temp }}/shots
           if-no-files-found: warn
 
+  # The budgets that hold what the optimisation campaign gained (qa/optim/budgets.json; "Measures of the optimisation campaign" in
+  # docs/architecture.md): the size of the image, and for every page the statements it sends, the scripts it loads at once and its HTML, on
+  # the QA dataset. Only what does not depend on the machine is judged here (bytes and statements); the memory, the restart and the
+  # failed requests under load are judged every night by the `measures` workflow.
+  budgets:
+    name: budgets
+    needs: docker-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: image
+          path: ${{ runner.temp }}
+
+      - name: Load the image
+        run: docker load --input "$RUNNER_TEMP/image.tar.gz"
+
+      - name: Start the platform with the dataset
+        run: sh qa/platform.sh up --image bde-network --stats --dataset full --now 2026-10-16T12:00:00Z
+
+      - name: Measure the image and the pages
+        run: |
+          eval "$(sh qa/platform.sh env)"
+          mkdir -p optim
+          npx tsx qa/optim/measure.ts --label budgets --image bde-network --only image,pages,db --runs 3 --out optim/budgets.json
+
+      - name: Compare with the budgets
+        run: npx tsx qa/optim/budgets.ts optim/budgets.json
+
+      - name: Keep the measure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: budgets-measure
+          path: optim
+          if-no-files-found: ignore
+
+      - name: Keep the logs of the platform
+        if: failure()
+        run: sh qa/platform.sh logs | tail -200
+
+      - name: Stop the platform
+        if: always()
+        run: sh qa/platform.sh down
+
   # Docker Compose, from the folder: no image of the release exists yet when a pull request is tested, so it builds its own.
   docker-compose:
     name: docker compose
@@ -419,14 +476,14 @@ jobs:
   docker:
     name: docker image
     if: always()
-    needs: [docker-build, docker-checks, docker-browser, docker-compose, time-zones]
+    needs: [docker-build, docker-checks, docker-browser, docker-compose, time-zones, budgets]
     runs-on: ubuntu-latest
 
     steps:
       - name: Did every job of the image pass
         run: |
-          echo "build: ${{ needs.docker-build.result }}, checks: ${{ needs.docker-checks.result }}, browser tests: ${{ needs.docker-browser.result }}, compose: ${{ needs.docker-compose.result }}, time zones: ${{ needs.time-zones.result }}"
-          [ "${{ needs.docker-build.result }}" = success ] && [ "${{ needs.docker-checks.result }}" = success ] && [ "${{ needs.docker-browser.result }}" = success ] && [ "${{ needs.docker-compose.result }}" = success ] && [ "${{ needs.time-zones.result }}" = success ]
+          echo "build: ${{ needs.docker-build.result }}, checks: ${{ needs.docker-checks.result }}, browser tests: ${{ needs.docker-browser.result }}, compose: ${{ needs.docker-compose.result }}, time zones: ${{ needs.time-zones.result }}, budgets: ${{ needs.budgets.result }}"
+          [ "${{ needs.docker-build.result }}" = success ] && [ "${{ needs.docker-checks.result }}" = success ] && [ "${{ needs.docker-browser.result }}" = success ] && [ "${{ needs.docker-compose.result }}" = success ] && [ "${{ needs.time-zones.result }}" = success ] && [ "${{ needs.budgets.result }}" = success ]
 
   # Applies the real migration files to a real PostgreSQL: the custom-roles data migration is
   # tested with legacy accounts (src/test/migrations), and the migrations must leave exactly the

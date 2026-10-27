@@ -1,0 +1,104 @@
+{
+  "_about": "Numbers a change must not go over: checked on every pull request (the budgets job of ci.yml: image, statements, scripts, HTML) and every night (measures.yml, which adds the server). Set from the measure of 2026-10-27 on the CI (qa/optim/baselines/ holds the starting point) with the room written in docs/architecture.md; raising one is a pull request that says why.",
+  "image": {
+    "maxMiB": 260
+  },
+  "pages": {
+    "login": {
+      "statements": 1,
+      "scriptsKiB": 184,
+      "htmlKiB": 40
+    },
+    "privacy": {
+      "statements": 0,
+      "scriptsKiB": 238,
+      "htmlKiB": 43
+    },
+    "dashboard": {
+      "statements": 2,
+      "scriptsKiB": 191,
+      "htmlKiB": 50
+    },
+    "calendar": {
+      "statements": 4,
+      "scriptsKiB": 184,
+      "htmlKiB": 75
+    },
+    "events-list": {
+      "statements": 4,
+      "scriptsKiB": 184,
+      "htmlKiB": 71
+    },
+    "event": {
+      "statements": 2,
+      "scriptsKiB": 215,
+      "htmlKiB": 47
+    },
+    "event-series": {
+      "statements": 2,
+      "scriptsKiB": 215,
+      "htmlKiB": 48
+    },
+    "event-form": {
+      "statements": 2,
+      "scriptsKiB": 255,
+      "htmlKiB": 54
+    },
+    "event-edit": {
+      "statements": 4,
+      "scriptsKiB": 255,
+      "htmlKiB": 55
+    },
+    "proposals": {
+      "statements": 3,
+      "scriptsKiB": 215,
+      "htmlKiB": 72
+    },
+    "shared-calendar": {
+      "statements": 3,
+      "scriptsKiB": 215,
+      "htmlKiB": 46
+    },
+    "members": {
+      "statements": 4,
+      "scriptsKiB": 225,
+      "htmlKiB": 102
+    },
+    "roles": {
+      "statements": 3,
+      "scriptsKiB": 225,
+      "htmlKiB": 49
+    },
+    "role-form": {
+      "statements": 2,
+      "scriptsKiB": 261,
+      "htmlKiB": 49
+    },
+    "audit-log": {
+      "statements": 3,
+      "scriptsKiB": 184,
+      "htmlKiB": 53
+    },
+    "settings": {
+      "statements": 4,
+      "scriptsKiB": 266,
+      "htmlKiB": 61
+    },
+    "notifications": {
+      "statements": 5,
+      "scriptsKiB": 262,
+      "htmlKiB": 52
+    },
+    "profile": {
+      "statements": 2,
+      "scriptsKiB": 215,
+      "htmlKiB": 46
+    }
+  },
+  "server": {
+    "restartMs": 2000,
+    "idleAppMiB": 160,
+    "peakAppMiB": 600,
+    "failedRate": 0
+  }
+}
