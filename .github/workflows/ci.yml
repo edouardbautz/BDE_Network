@@ -44,7 +44,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # The production build is played on Windows here, and on Linux by the image (`docker build` runs the same `npm run build`).
       - name: Build
+        if: matrix.os != 'ubuntu-latest'
         run: npm run build
 
       # Windows runs the tests as they are; Ubuntu runs them once more through V8 coverage, which enforces the floors of
@@ -56,18 +58,6 @@ jobs:
       - name: Test, with the coverage floors
         if: matrix.os == 'ubuntu-latest'
         run: npm run test:coverage
-
-      # The tests hold on any computer, whatever its time zone: the runners are in UTC, a developer's is not, and a test that read a
-      # date in the zone of the machine passed here and failed there (event-repeat-rules.test.ts). One zone ahead of UTC across the
-      # date line and one behind, with the clock changes of the two hemispheres.
-      - name: Test, in two other time zones
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          for zone in Pacific/Auckland America/Los_Angeles; do
-            echo "::group::$zone"
-            TZ="$zone" npm run test || exit 1
-            echo "::endgroup::"
-          done
 
       - name: Coverage report
         if: always() && matrix.os == 'ubuntu-latest' && hashFiles('coverage/coverage-summary.json') != ''
@@ -81,6 +71,34 @@ jobs:
           path: coverage/lcov.info
           if-no-files-found: ignore
           retention-days: 14
+
+  # The tests hold on any computer, whatever its time zone: the runners are in UTC, a developer's is not, and a test that read a
+  # date in the zone of the machine passed here and failed there (event-repeat-rules.test.ts). One zone ahead of UTC across the
+  # date line and one behind, with the clock changes of the two hemispheres. Each zone is a machine of its own, so that the
+  # three runs take what the longest of them takes (the three at once on one machine took 2.8 times as long as one: the tests
+  # already use every core, and some of them do not hold two suites at the same time). The check that `main` requires for these is
+  # `docker image`, which waits for them (below): the check `ci (ubuntu-latest)` cannot wait for another job.
+  time-zones:
+    name: tests in ${{ matrix.zone }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        zone: [Pacific/Auckland, America/Los_Angeles]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test
+        run: TZ="${{ matrix.zone }}" npm run test
 
   # The documentation is a product of its own: internal links and anchors, images' alternative text, French and
   # English pages that are twins (scripts/check-docs.mjs), Markdown style (markdownlint) and layout (Prettier).
@@ -396,18 +414,19 @@ jobs:
           docker compose down -v
           git checkout bde.config.yml
 
-  # The check that `main` requires for the image: it passes when the build, the checks, the browser tests and the compose flows did.
+  # The check that `main` requires for the image: it passes when the build, the checks, the browser tests and the compose flows did,
+  # and when the tests passed in the two other time zones (a job that is skipped or cancelled is not a pass).
   docker:
     name: docker image
     if: always()
-    needs: [docker-build, docker-checks, docker-browser, docker-compose]
+    needs: [docker-build, docker-checks, docker-browser, docker-compose, time-zones]
     runs-on: ubuntu-latest
 
     steps:
       - name: Did every job of the image pass
         run: |
-          echo "build: ${{ needs.docker-build.result }}, checks: ${{ needs.docker-checks.result }}, browser tests: ${{ needs.docker-browser.result }}, compose: ${{ needs.docker-compose.result }}"
-          [ "${{ needs.docker-build.result }}" = success ] && [ "${{ needs.docker-checks.result }}" = success ] && [ "${{ needs.docker-browser.result }}" = success ] && [ "${{ needs.docker-compose.result }}" = success ]
+          echo "build: ${{ needs.docker-build.result }}, checks: ${{ needs.docker-checks.result }}, browser tests: ${{ needs.docker-browser.result }}, compose: ${{ needs.docker-compose.result }}, time zones: ${{ needs.time-zones.result }}"
+          [ "${{ needs.docker-build.result }}" = success ] && [ "${{ needs.docker-checks.result }}" = success ] && [ "${{ needs.docker-browser.result }}" = success ] && [ "${{ needs.docker-compose.result }}" = success ] && [ "${{ needs.time-zones.result }}" = success ]
 
   # Applies the real migration files to a real PostgreSQL: the custom-roles data migration is
   # tested with legacy accounts (src/test/migrations), and the migrations must leave exactly the
