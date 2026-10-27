@@ -103,24 +103,24 @@ grosse qu'un serveur d'école), sur trois jeux de données : deux années scolai
 durées ne se comparent qu'à d'autres mesures prises sur la même. Les mesures brutes du point de départ sont dans
 `qa/optim/baselines/`.
 
-| Ce qui est mesuré                                                       | Avant (2026-10-27)           | Objectif                                | Maintenant         |
-| ----------------------------------------------------------------------- | ---------------------------- | --------------------------------------- | ------------------ |
-| Image Docker                                                            | 318 Mo                       | 250 Mo ou moins                         |                    |
-| Scripts chargés d'emblée : connexion, tableau de bord, un événement     | 211, 217 et 242 Ko           | 200 Ko ou moins                         | 175, 181 et 205 Ko |
-| Plus grand affichage (LCP) sur téléphone, réseau lent : tableau de bord | 4,2 s (un événement : 4,3 s) | 3,5 s ou moins                          |                    |
-| Requêtes envoyées à la base : tableau de bord, calendrier, événement    | 10, 12 et 10                 | 8 ou moins                              | 2, 4 et 2          |
-| Mémoire de l'application sous la charge de 20 personnes                 | 1 105 Mo (103 Mo au repos)   | 450 Mo ou moins, même débit             |                    |
-| 95 % des réponses sous cette charge                                     | 1,56 s                       | 30 % de moins                           |                    |
-| Redémarrage jusqu'à ce que la plateforme réponde                        | 2,6 s                        | 1,6 s ou moins                          |                    |
-| Le plus petit serveur qui tient la charge                               | pas essayé                   | 1 CPU et 1 Go, aucune requête en échec  |                    |
-| Journaux Docker                                                         | sans limite                  | 30 Mo au plus                           |                    |
-| Durée des vérifications d'une pull request                              | 12 à 17 minutes              | 9 minutes ou moins, mêmes vérifications | 5,4 minutes        |
+| Ce qui est mesuré                                                       | Avant (2026-10-27)           | Objectif                                | Maintenant                            |
+| ----------------------------------------------------------------------- | ---------------------------- | --------------------------------------- | ------------------------------------- |
+| Image Docker                                                            | 318 Mo                       | 250 Mo ou moins                         | 246 Mo                                |
+| Scripts chargés d'emblée : connexion, tableau de bord, un événement     | 211, 217 et 242 Ko           | 200 Ko ou moins                         | 175, 181 et 205 Ko                    |
+| Plus grand affichage (LCP) sur téléphone, réseau lent : tableau de bord | 4,2 s (un événement : 4,3 s) | 3,5 s ou moins                          |                                       |
+| Requêtes envoyées à la base : tableau de bord, calendrier, événement    | 10, 12 et 10                 | 8 ou moins                              | 2, 4 et 2                             |
+| Mémoire de l'application sous la charge de 20 personnes                 | 1 105 Mo (103 Mo au repos)   | 450 Mo ou moins, même débit             | 340 à 476 Mo                          |
+| 95 % des réponses sous cette charge                                     | 1,56 s                       | 30 % de moins                           | 1,2 à 1,4 s                           |
+| Redémarrage jusqu'à ce que la plateforme réponde                        | 2,6 s                        | 1,6 s ou moins                          | 1,4 à 1,6 s                           |
+| Le plus petit serveur qui tient la charge                               | pas essayé                   | 1 CPU et 1 Go, aucune requête en échec  | 1 CPU, 1 Go : aucune requête en échec |
+| Journaux Docker                                                         | sans limite                  | 30 Mo au plus                           |                                       |
+| Durée des vérifications d'une pull request                              | 12 à 17 minutes              | 9 minutes ou moins, mêmes vérifications | 5,4 minutes                           |
 
 **Étapes faites.** (La première lecture des scripts comptait les polyfills de la balise `nomodule`, environ 39 Ko, qu'aucun navigateur qui compte ne télécharge : les chiffres ci-dessus sont recomptés.) La connexion, le tableau de bord et un événement chargent d'abord 175, 181 et 205 Ko de scripts : Zod, que deux lignes du code des langues amenaient dans toutes les pages, n'y est plus, et le code qui dessine les toasts est chargé une fois la page interactive. Le temps de blocage du tableau de bord sur téléphone passe de 236 à 165 ms et son plus grand affichage de 4,1 à 3,9 s (même machine, cinq passes chacun). Cet affichage est borné par le processeur, qui exécute les scripts quatre fois plus lentement dans ce test : seul moins de script le fait baisser ; 3,5 s demanderait une autre façon de construire les pages, et n'est pas atteint. Les vérifications d'une pull request tournent en jobs parallèles sur une image construite une seule fois (5,4
 minutes, mesurées sur la pull request elle-même). Une page lit ses relations avec une jointure et la session avec une seule
 requête, ce qui ramène les requêtes du tableau de bord, du calendrier et d'un événement à 2, 4 et 2 ; sur 1 CPU et 1 Go avec la
 charge de 20 personnes, la plateforme répond à 7,3 à 7,4 requêtes par seconde au lieu de 6,3 à 6,6, et 95 % des réponses arrivent
-en 2,9 à 3,2 s au lieu de 3,3 à 3,8 s.
+en 2,9 à 3,2 s au lieu de 3,3 à 3,8 s. L'image est Alpine plus le binaire de Node.js, et l'outil Prisma est élagué de ce qu'il ne charge jamais (318 → 246 Mo en CI) ; Node.js doit garder son tas sous 384 Mo (1 123 Mo sans, pour le même débit : 12,7 à 14,0 requêtes par seconde avec, 13,9 sans, des exécutions du même runner de CI diffèrent d'autant) ; la commande Prisma n'est pas lancée quand la base est à jour (redémarrage 2,6 → 1,4-1,6 s). Les 30 % sur les réponses sous charge ne sont pas atteints de façon fiable (1,2 à 1,4 s contre 1,56 s : deux exécutions, un runner qui varie de 10 % d'une fois à l'autre).
 
 Ce que disent les mesures, et qui décide où va l'effort : la base de données n'est pas le goulot (aucune page n'envoie une
 requête cinq fois ou plus, aucune n'en envoie plus de 12, et une page passe 0,1 à 7 ms en base même avec cinq ans de
