@@ -14,6 +14,9 @@
 # members of `full` (qa/optim measures the platform on the three). `--stats`
 # loads `pg_stat_statements` in PostgreSQL, to count the statements a page sends (qa/optim/measure.ts).
 #
+# `QA_APP_CPUS=1 QA_APP_MEMORY=1g` in the environment limits the container of the application (`QA_DATABASE_MEMORY=256m` that of
+# PostgreSQL), to try the platform on the small server of a school (qa/optim measures it that way).
+#
 # `--now` sets the clock of the application to the moment of the dataset (qa/fake-clock.cjs, which runs from there at the normal
 # speed): the dates to come, the day marked as today and the reminders are then the same whenever the platform is made.
 #
@@ -142,7 +145,7 @@ case "$command" in
     [ -n "$STATS" ] && set -- -c shared_preload_libraries=pg_stat_statements -c pg_stat_statements.track=all
     docker run -d --name "$DATABASE_CONTAINER" --network "$NETWORK" \
       -e POSTGRES_USER=bde -e POSTGRES_PASSWORD=qa-password -e POSTGRES_DB=bde_network \
-      -p "127.0.0.1:$DATABASE_PORT:5432" postgres:17-alpine "$@" >/dev/null
+      -p "127.0.0.1:$DATABASE_PORT:5432" ${QA_DATABASE_MEMORY:+--memory "$QA_DATABASE_MEMORY"} postgres:17-alpine "$@" >/dev/null
     wait_for 60 'PostgreSQL did not start' docker exec "$DATABASE_CONTAINER" pg_isready -U bde -d bde_network
     if [ -n "$STATS" ]; then
       wait_for 30 'pg_stat_statements did not load' docker exec "$DATABASE_CONTAINER" psql -U bde -d bde_network -c 'CREATE EXTENSION IF NOT EXISTS pg_stat_statements'
@@ -162,7 +165,12 @@ case "$command" in
     config_dir="$(mktemp -d)"
     write_config "$config_dir/bde.config.yml"
     chmod 644 "$config_dir/bde.config.yml"
-    docker run -d --name "$APP_CONTAINER" --network "$NETWORK" -p "127.0.0.1:$PORT:3000" \
+    # The limits of the application's container, when a suite asks for them (see the top of this file).
+    limits=""
+    [ -n "${QA_APP_CPUS:-}" ] && limits="$limits --cpus $QA_APP_CPUS"
+    [ -n "${QA_APP_MEMORY:-}" ] && limits="$limits --memory $QA_APP_MEMORY --memory-swap $QA_APP_MEMORY"
+    # shellcheck disable=SC2086
+    docker run -d --name "$APP_CONTAINER" --network "$NETWORK" -p "127.0.0.1:$PORT:3000" $limits \
       -v "$(host_path "$config_dir/bde.config.yml"):/app/bde.config.yml:ro" \
       -e DATABASE_URL='postgresql://bde:qa-password@qa-postgres:5432/bde_network?schema=public' \
       -e AUTH_SECRET="$AUTH_SECRET_VALUE" \

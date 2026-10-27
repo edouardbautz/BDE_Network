@@ -1,0 +1,37 @@
+[
+  [
+    "database: the session callback reads the account again instead of using what the jwt callback read",
+    "src/lib/auth/callbacks.ts",
+    "const dbUser = login ? (readByJwt.get(token) ?? (await readAccount(login))) : null;",
+    "const dbUser = login ? await readAccount(login) : null;",
+    ["src/lib/auth/callbacks.test.ts"]
+  ],
+  [
+    "database: the jwt callback does not keep what it read",
+    "src/lib/auth/callbacks.ts",
+    "  readByJwt.set(token, account);\n",
+    "",
+    ["src/lib/auth/callbacks.test.ts"]
+  ],
+  [
+    "database: the read of one request is shared with the next (a fixed key instead of the token)",
+    "src/lib/auth/callbacks.ts",
+    "const readByJwt = new WeakMap<JWT, Account>();",
+    "const readByJwt = { get: (_: JWT): Account | undefined => lastRead, set: (_: JWT, value: Account) => void (lastRead = value) };\nlet lastRead: Account | undefined;",
+    ["src/lib/auth/callbacks.test.ts"]
+  ],
+  [
+    "database: a removed account keeps its session",
+    "src/lib/auth/callbacks.ts",
+    "  if (!account) return null;\n  readByJwt.set(token, account);",
+    "  readByJwt.set(token, account as Account);",
+    ["src/lib/auth/callbacks.test.ts", "src/lib/auth/removed-account.test.ts"]
+  ],
+  [
+    "database: the relationJoins preview feature is dropped from the schema",
+    "prisma/schema.prisma",
+    "  previewFeatures = [\"relationJoins\"]\n",
+    "",
+    ["src/lib/prisma-relations.test.ts"]
+  ]
+]

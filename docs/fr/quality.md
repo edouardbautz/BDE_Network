@@ -103,18 +103,24 @@ grosse qu'un serveur d'école), sur trois jeux de données : deux années scolai
 durées ne se comparent qu'à d'autres mesures prises sur la même. Les mesures brutes du point de départ sont dans
 `qa/optim/baselines/`.
 
-| Ce qui est mesuré                                                       | Avant (2026-10-27)           | Objectif                                |
-| ----------------------------------------------------------------------- | ---------------------------- | --------------------------------------- |
-| Image Docker                                                            | 318 Mo                       | 250 Mo ou moins                         |
-| Scripts chargés d'emblée : connexion, tableau de bord, un événement     | 249, 256 et 281 Ko           | 200 Ko ou moins                         |
-| Plus grand affichage (LCP) sur téléphone, réseau lent : tableau de bord | 4,2 s (un événement : 4,3 s) | 3,5 s ou moins                          |
-| Requêtes envoyées à la base : tableau de bord, calendrier, événement    | 10, 12 et 10                 | 8 ou moins                              |
-| Mémoire de l'application sous la charge de 20 personnes                 | 1 105 Mo (103 Mo au repos)   | 450 Mo ou moins, même débit             |
-| 95 % des réponses sous cette charge                                     | 1,56 s                       | 30 % de moins                           |
-| Redémarrage jusqu'à ce que la plateforme réponde                        | 2,6 s                        | 1,6 s ou moins                          |
-| Le plus petit serveur qui tient la charge                               | pas essayé                   | 1 CPU et 1 Go, aucune requête en échec  |
-| Journaux Docker                                                         | sans limite                  | 30 Mo au plus                           |
-| Durée des vérifications d'une pull request                              | 12 à 17 minutes              | 9 minutes ou moins, mêmes vérifications |
+| Ce qui est mesuré                                                       | Avant (2026-10-27)           | Objectif                                | Maintenant  |
+| ----------------------------------------------------------------------- | ---------------------------- | --------------------------------------- | ----------- |
+| Image Docker                                                            | 318 Mo                       | 250 Mo ou moins                         |             |
+| Scripts chargés d'emblée : connexion, tableau de bord, un événement     | 249, 256 et 281 Ko           | 200 Ko ou moins                         |             |
+| Plus grand affichage (LCP) sur téléphone, réseau lent : tableau de bord | 4,2 s (un événement : 4,3 s) | 3,5 s ou moins                          |             |
+| Requêtes envoyées à la base : tableau de bord, calendrier, événement    | 10, 12 et 10                 | 8 ou moins                              | 2, 4 et 2   |
+| Mémoire de l'application sous la charge de 20 personnes                 | 1 105 Mo (103 Mo au repos)   | 450 Mo ou moins, même débit             |             |
+| 95 % des réponses sous cette charge                                     | 1,56 s                       | 30 % de moins                           |             |
+| Redémarrage jusqu'à ce que la plateforme réponde                        | 2,6 s                        | 1,6 s ou moins                          |             |
+| Le plus petit serveur qui tient la charge                               | pas essayé                   | 1 CPU et 1 Go, aucune requête en échec  |             |
+| Journaux Docker                                                         | sans limite                  | 30 Mo au plus                           |             |
+| Durée des vérifications d'une pull request                              | 12 à 17 minutes              | 9 minutes ou moins, mêmes vérifications | 5,4 minutes |
+
+**Étapes faites.** Les vérifications d'une pull request tournent en jobs parallèles sur une image construite une seule fois (5,4
+minutes, mesurées sur la pull request elle-même). Une page lit ses relations avec une jointure et la session avec une seule
+requête, ce qui ramène les requêtes du tableau de bord, du calendrier et d'un événement à 2, 4 et 2 ; sur 1 CPU et 1 Go avec la
+charge de 20 personnes, la plateforme répond à 7,3 à 7,4 requêtes par seconde au lieu de 6,3 à 6,6, et 95 % des réponses arrivent
+en 2,9 à 3,2 s au lieu de 3,3 à 3,8 s.
 
 Ce que disent les mesures, et qui décide où va l'effort : la base de données n'est pas le goulot (aucune page n'envoie une
 requête cinq fois ou plus, aucune n'en envoie plus de 12, et une page passe 0,1 à 7 ms en base même avec cinq ans de

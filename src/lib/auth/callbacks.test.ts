@@ -49,11 +49,11 @@ describe('jwtCallback', () => {
   });
 
   it('keeps the session while the account still exists', async () => {
-    findUnique.mockResolvedValue({ id: 'u1' } as never);
+    findUnique.mockResolvedValue(dbUser as never);
     const token: JWT = { login: 'alice' };
 
     await expect(jwtCallback({ token })).resolves.toBe(token);
-    expect(findUnique).toHaveBeenCalledWith({ where: { login: 'alice' }, select: { id: true } });
+    expect(findUnique).toHaveBeenCalledWith({ where: { login: 'alice' }, include: { role: true } });
   });
 
   it('ends the session once the account was removed', async () => {
@@ -65,6 +65,43 @@ describe('jwtCallback', () => {
   it('ends a session whose token carries no login, without querying', async () => {
     await expect(jwtCallback({ token: {} })).resolves.toBeNull();
     expect(findUnique).not.toHaveBeenCalled();
+  });
+});
+
+describe('one request, one read of the account', () => {
+  it('builds the session from what the jwt callback read, without reading again', async () => {
+    findUnique.mockResolvedValue(dbUser as never);
+    const token: JWT = { login: 'alice' };
+
+    await jwtCallback({ token });
+    const result = await sessionCallback({ session: session(), token });
+
+    expect(findUnique).toHaveBeenCalledTimes(1);
+    expect(result.user).toMatchObject({ id: 'u1', roleName: 'Membre' });
+  });
+
+  it('reads the account for a token the jwt callback did not see', async () => {
+    findUnique.mockResolvedValue(dbUser as never);
+
+    await sessionCallback({ session: session(), token: { login: 'alice' } });
+
+    expect(findUnique).toHaveBeenCalledTimes(1);
+  });
+
+  it('never shares the read between two requests: another token is read again', async () => {
+    findUnique.mockResolvedValue(dbUser as never);
+    await jwtCallback({ token: { login: 'alice' } });
+    const next: JWT = { login: 'alice' };
+    await jwtCallback({ token: next });
+    findUnique.mockResolvedValue({
+      ...dbUser,
+      roleId: 'role-other',
+      role: { name: 'Autre', permissions: [], allPermissions: false },
+    } as never);
+
+    const result = await sessionCallback({ session: session(), token: { login: 'alice' } });
+
+    expect(result.user).toMatchObject({ roleName: 'Autre' });
   });
 });
 
