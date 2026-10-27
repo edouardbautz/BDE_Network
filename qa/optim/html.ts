@@ -23,10 +23,8 @@ const normalise = (path: string): string => {
 
 export function assetsOf(page: string): PageAssets {
   // A `nomodule` script is the polyfills for browsers without modules: no browser that matters downloads it.
-  const html = page.replace(/<script[^>]*nomodule[^>]*>/gi, '');
+  const html = page.replace(/<script\b[^>]*\bnomodule\b[^>]*>/gi, '');
   const scripts = [...html.matchAll(/<script\b([^>]*)>/g)]
-    // A `nomodule` script is the polyfills for browsers without modules: no browser that matters downloads it.
-    .filter((match) => !/\bnomodule\b/i.test(match[1]!))
     .map((match) => /\bsrc="([^"]+)"/.exec(match[1]!)?.[1])
     .filter((src): src is string => src !== undefined && src.includes('/_next/static/'))
     .map(normalise);

@@ -56,6 +56,7 @@ describe('the assets of a page', () => {
     const { referenced } = assetsOf(html);
     expect(referenced).toContain('/_next/static/chunks/lazy-123.js');
     expect(referenced.filter((path) => path.endsWith('main-abc.js'))).toHaveLength(1);
+    expect(referenced.some((path) => path.includes('polyfills'))).toBe(false);
   });
 });
 
