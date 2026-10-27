@@ -17,6 +17,8 @@
 //                     two before it was fixed, so one round proves nothing)
 //   MEASURE=1         do not fail: print, for each scenario, how many rounds were fine, STALE or FAILED
 //   ONLY=members      play only the scenarios whose name contains this (several, separated by |: ONLY='shared|intra')
+//   EXCEPT=members    play all the others (the CI splits the scenarios between two jobs: one takes ONLY, the other EXCEPT, so that a new
+//                     scenario is played by one of them without being placed)
 //   OWNER_CANDIDATE=bob  a login that the platform's 42 (or its stand-in) knows, to add as an owner; by default a made-up
 //                     one, which only works when 42 cannot answer (the owner then accepts it unverified)
 //   LATENCY_MS=20 KBPS=1500   slow the connection down      CPU_THROTTLE=4   slow the browser's processor down (four times)
@@ -53,6 +55,7 @@ const OWNER = process.env.OWNER ?? 'alice';
 const ROUNDS = Number(process.env.ROUNDS ?? 3);
 const MEASURE = process.env.MEASURE === '1';
 const ONLY = process.env.ONLY ?? '';
+const EXCEPT = process.env.EXCEPT ?? '';
 
 const CANDIDATES = [
   process.env.CHROME_PATH,
@@ -1072,8 +1075,10 @@ const SCENARIOS = [
 // ---------------------------------------------------------------------------------------------------------------------
 
 const results = [];
-for (const scenario of SCENARIOS.filter((s) =>
-  ONLY.split('|').some((part) => s.name.includes(part)),
+for (const scenario of SCENARIOS.filter(
+  (s) =>
+    ONLY.split('|').some((part) => s.name.includes(part)) &&
+    (EXCEPT === '' || !EXCEPT.split('|').some((part) => s.name.includes(part))),
 )) {
   const counts = { ok: 0, STALE: 0, FAILED: 0, ERROR: 0 };
   const notes = [];
