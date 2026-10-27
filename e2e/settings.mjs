@@ -418,7 +418,7 @@ try {
       .click();
   });
   await page.waitForFunction(() => location.pathname === '/en/settings');
-  await waitText('Back up the "secrets" volume');
+  await waitText('Back up now');
   await shot('settings-en');
   step('the language switcher moves to the same page in English');
 
