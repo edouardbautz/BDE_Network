@@ -177,7 +177,7 @@
   [
     "backups: the folder is not handed to the application",
     "docker-compose.yml",
-    "        chown 1001:1001 /auto-backups\n",
+    "        { chown 1001:1001 /auto-backups && chmod 755 /auto-backups; } 2>/dev/null ||\n",
     "",
     ["scripts/compose.test.ts"]
   ],
