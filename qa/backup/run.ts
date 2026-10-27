@@ -311,7 +311,8 @@ export async function playBackups(report: Report): Promise<void> {
     const file = await download(PASSPHRASE);
     check('the owner downloads the backup', file.status === 200, `${file.status}`);
     const encrypted = Buffer.from(await file.arrayBuffer());
-    const encFile = join(dirB, `${archive}.enc`);
+    const encName = `${archive}.enc`;
+    const encFile = join(dirB, encName);
     writeFileSync(encFile, encrypted);
     check(
       'what is downloaded is an openssl file, and holds nothing readable',
@@ -408,7 +409,7 @@ export async function playBackups(report: Report): Promise<void> {
     const refused = b.scriptWith(
       { BDE_BACKUP_PASSPHRASE: 'not the passphrase' },
       'restore.sh',
-      encFile,
+      encName,
       '--yes',
     );
     const untouched = await b.database(async (db) =>
@@ -422,7 +423,7 @@ export async function playBackups(report: Report): Promise<void> {
     const fromFile = b.scriptWith(
       { BDE_BACKUP_PASSPHRASE: PASSPHRASE },
       'restore.sh',
-      encFile,
+      encName,
       '--yes',
     );
     check(
