@@ -293,12 +293,14 @@ restent lues **une seule fois**, au premier démarrage après une mise à jour, 
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | Le serveur e-mail.                                                                                                                                         |
 | `DISCORD_WEBHOOK_URL`, `SLACK_WEBHOOK_URL`                          | Les webhooks.                                                                                                                                              |
 
-Ces deux variables-ci sont **toujours** lues dans `.env`, parce qu'elles règlent Docker et non la plateforme :
+Ces variables-ci sont **toujours** lues dans `.env`, parce qu'elles règlent Docker et non la plateforme :
 
-| Variable   | Rôle                                                                                                                                                                                                                                           |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `APP_BIND` | L'adresse où Docker publie le port. Par défaut `127.0.0.1` : seule la machine elle-même y accède, derrière un proxy HTTPS. `0.0.0.0` ouvre le port à tout le réseau, en HTTP clair : lisez [Sans proxy HTTPS](deployment.md#sans-proxy-https). |
-| `APP_PORT` | Le port publié sur la machine (par défaut `3000`). À changer seulement si un autre programme l'utilise ; l'URL de redirection 42 doit alors porter le même port.                                                                               |
+| Variable     | Rôle                                                                                                                                                                                                                                           |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `APP_BIND`   | L'adresse où Docker publie le port. Par défaut `127.0.0.1` : seule la machine elle-même y accède, derrière un proxy HTTPS. `0.0.0.0` ouvre le port à tout le réseau, en HTTP clair : lisez [Sans proxy HTTPS](deployment.md#sans-proxy-https). |
+| `APP_PORT`   | Le port publié sur la machine (par défaut `3000`). À changer seulement si un autre programme l'utilise ; l'URL de redirection 42 doit alors porter le même port.                                                                               |
+| `APP_MEMORY` | La mémoire maximale que Docker donne à l'application (par défaut `768m`). Node.js garde son tas sous 384 Mo ; augmentez les deux sur un serveur plus grand (voir [Quelle taille de serveur](deployment.md#quelle-taille-de-serveur)).          |
+| `DB_MEMORY`  | La mémoire maximale que Docker donne à PostgreSQL (par défaut `384m` ; il en utilise environ 40 Mo).                                                                                                                                           |
 
 Et pour la maintenance et le développement :
 

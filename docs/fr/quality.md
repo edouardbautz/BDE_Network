@@ -113,7 +113,7 @@ durées ne se comparent qu'à d'autres mesures prises sur la même. Les mesures 
 | 95 % des réponses sous cette charge                                     | 1,56 s                       | 30 % de moins                           | 1,2 à 1,4 s                           |
 | Redémarrage jusqu'à ce que la plateforme réponde                        | 2,6 s                        | 1,6 s ou moins                          | 1,4 à 1,6 s                           |
 | Le plus petit serveur qui tient la charge                               | pas essayé                   | 1 CPU et 1 Go, aucune requête en échec  | 1 CPU, 1 Go : aucune requête en échec |
-| Journaux Docker                                                         | sans limite                  | 30 Mo au plus                           |                                       |
+| Journaux Docker                                                         | sans limite                  | 30 Mo au plus                           | 30 Mo au plus par service             |
 | Durée des vérifications d'une pull request                              | 12 à 17 minutes              | 9 minutes ou moins, mêmes vérifications | 5,4 minutes                           |
 
 **Étapes faites.** (La première lecture des scripts comptait les polyfills de la balise `nomodule`, environ 39 Ko, qu'aucun navigateur qui compte ne télécharge : les chiffres ci-dessus sont recomptés.) La connexion, le tableau de bord et un événement chargent d'abord 175, 181 et 205 Ko de scripts : Zod, que deux lignes du code des langues amenaient dans toutes les pages, n'y est plus, et le code qui dessine les toasts est chargé une fois la page interactive. Le temps de blocage du tableau de bord sur téléphone passe de 236 à 165 ms et son plus grand affichage de 4,1 à 3,9 s (même machine, cinq passes chacun). Cet affichage est borné par le processeur, qui exécute les scripts quatre fois plus lentement dans ce test : seul moins de script le fait baisser ; 3,5 s demanderait une autre façon de construire les pages, et n'est pas atteint. Les vérifications d'une pull request tournent en jobs parallèles sur une image construite une seule fois (5,4
@@ -126,7 +126,7 @@ Ce que disent les mesures, et qui décide où va l'effort : la base de données 
 requête cinq fois ou plus, aucune n'en envoie plus de 12, et une page passe 0,1 à 7 ms en base même avec cinq ans de
 données) ; le processus Node.js l'est, en mémoire et en processeur. Les données grossissent lentement : le journal d'audit
 écrit environ 300 octets par ligne et en compte 1 319 après deux années scolaires, et toute la base pèse 10 Mo (12,6 Mo
-avec cinq ans et 1 500 membres) ; aucune purge n'est donc prévue.
+avec cinq ans et 1 500 membres) ; aucune purge n'est donc prévue. Une base vide pèse déjà 8,2 Mo : les données d'un BDE grossissent donc d'environ 1 Mo par an (cinq ans et 1 500 comptes : 4,4 Mo), et une sauvegarde en fait quelques Mo. Les journaux sont l'autre chose qui grossit sur un serveur que personne ne surveille : Docker les coupe maintenant (trois fichiers de 10 Mo au plus par service), et chaque service a un plafond de mémoire (`APP_MEMORY`, `DB_MEMORY`).
 
 **Une limite connue.** La page des membres liste tous les comptes d'un coup, sans pagination : un BDE compte quelques
 dizaines de comptes (le bureau et le staff), et la page est faite pour cela. Avec 150 comptes, plus que n'en a un BDE, elle met 109 ms à se construire et pèse 64 Ko de
