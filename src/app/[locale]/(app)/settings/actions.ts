@@ -1,9 +1,13 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 import { getConfig } from '@/config';
 import { NOTIFICATION_CHANNELS } from '@/config/schema';
+import { getPathname } from '@/i18n/navigation';
+import type { ActionTarget } from '@/lib/action-target';
+import { backupNow } from '@/lib/backups/service';
 import { registeredAddress } from '@/lib/public-address';
 import type { ActionResult, CampusOption } from '@/app/[locale]/setup/actions';
 import { LOGO_MAX_BYTES } from '@/lib/branding/image';
@@ -470,4 +474,20 @@ function currentValues() {
     if (value) values[key] = value;
   }
   return values;
+}
+
+/**
+ * "Back up now": the same backup as the nightly one, made while the owner waits (seconds for a BDE), then the page is loaded again
+ * with what came of it in `?backup=` (a closed list, `lib/backups/notice.ts`): the list and the last backup are the real ones, not a guess
+ * of the browser (rule 2 of "Navigation": the action answers the address to load).
+ */
+export async function runBackupNow(): Promise<ActionTarget> {
+  const session = await requireSettingsManager();
+  const backup = await backupNow({ login: session.user.login, id: session.user.id });
+  return {
+    href: getPathname({
+      href: { pathname: '/settings', query: { backup } },
+      locale: await getLocale(),
+    }),
+  };
 }

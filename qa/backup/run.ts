@@ -277,6 +277,71 @@ export async function playBackups(report: Report): Promise<void> {
       '',
     );
 
+    // ---- the download: an owner takes the file away, encrypted with a passphrase of their own -------------------------------------
+    const PASSPHRASE = 'correct horse battery staple';
+    const download = (passphrase: string, origin?: string) =>
+      fetch(`${a.base}/api/backups/download`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          cookie: `${SESSION_COOKIE}=${cookieValue}`,
+          ...(origin ? { Origin: origin } : {}),
+        },
+        body: JSON.stringify({ name: archive, passphrase }),
+        signal: AbortSignal.timeout(60_000),
+      });
+    const cookieValue = await forgeSessionCookie(OWNER, secret);
+    const tooShort = await download('short');
+    check('a passphrase of 5 characters is refused', tooShort.status === 400, `${tooShort.status}`);
+    const stranger = await download(PASSPHRASE, 'https://evil.example');
+    check(
+      'a download asked from another site is refused',
+      stranger.status === 403,
+      `${stranger.status}`,
+    );
+    const visitor = await fetch(`${a.base}/api/backups/download`, {
+      method: 'POST',
+      body: JSON.stringify({ name: archive, passphrase: PASSPHRASE }),
+    });
+    check(
+      'a visitor gets a bare 404',
+      visitor.status === 404 && (await visitor.text()) === '',
+      `${visitor.status}`,
+    );
+    const file = await download(PASSPHRASE);
+    check('the owner downloads the backup', file.status === 200, `${file.status}`);
+    const encrypted = Buffer.from(await file.arrayBuffer());
+    const encName = `${archive}.enc`;
+    const encFile = join(dirB, encName);
+    writeFileSync(encFile, encrypted);
+    check(
+      'what is downloaded is an openssl file, and holds nothing readable',
+      encrypted.subarray(0, 8).toString('ascii') === 'Salted__' &&
+        !encrypted.includes('PostgreSQL database dump') &&
+        !encrypted.includes(keyA),
+      `${encrypted.length} bytes`,
+    );
+    check(
+      'it is named after the backup, plus .enc',
+      /bde-auto-.*.tar.gz.enc/.test(file.headers.get('content-disposition') ?? ''),
+      file.headers.get('content-disposition') ?? '',
+    );
+    const audited = await a.database(
+      async (db) =>
+        (
+          await db.query(
+            `SELECT metadata::text AS m, "actorLogin" FROM "AuditLog" WHERE action = 'backup.download'`,
+          )
+        ).rows,
+    );
+    check(
+      'the download is in the audit log, once, with who and which backup, never the passphrase',
+      audited.length === 1 &&
+        audited[0]?.actorLogin === OWNER &&
+        !String(audited[0]?.m).includes(PASSPHRASE),
+      JSON.stringify(audited),
+    );
+
     // ---- 2. every volume of the platform gone -------------------------------------------------------------------------------------
     a.down();
     check(
@@ -339,6 +404,43 @@ export async function playBackups(report: Report): Promise<void> {
       shown(again),
       `${again.status}`,
     );
+    // ---- 4. the same, from the file that was downloaded -----------------------------------------------------------------------------
+    await b.database((db) => db.query('DELETE FROM "AuditLog"'));
+    const refused = b.scriptWith(
+      { BDE_BACKUP_PASSPHRASE: 'not the passphrase' },
+      'restore.sh',
+      encName,
+      '--yes',
+    );
+    const untouched = await b.database(async (db) =>
+      Number((await db.query('SELECT count(*) AS n FROM "AuditLog"')).rows[0]?.n),
+    );
+    check(
+      'restore.sh refuses a wrong passphrase and touches nothing',
+      !refused.ok && untouched === 0,
+      refused.out.slice(-200),
+    );
+    const fromFile = b.scriptWith(
+      { BDE_BACKUP_PASSPHRASE: PASSPHRASE },
+      'restore.sh',
+      encName,
+      '--yes',
+    );
+    check(
+      'restore.sh restores the downloaded file with its passphrase',
+      fromFile.ok,
+      fromFile.ok ? '' : fromFile.out.slice(-600),
+    );
+    await answers(b, 'the platform answers after the second restore');
+    const fromDownload = await facts(b);
+    check(
+      'the same rows again, table by table',
+      JSON.stringify(fromDownload.counts) === JSON.stringify(before.counts),
+      `${JSON.stringify(fromDownload.counts)}`,
+    );
+    const stillIn = await pageAs(b, '/fr/settings', secret);
+    check('and the owner is still signed in', shown(stillIn), `${stillIn.status}`);
+
     const sealedLogs = b.logs(300);
     check(
       'the sealed settings were read (no "secrets lost" in the logs)',

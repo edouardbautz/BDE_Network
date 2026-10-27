@@ -2,6 +2,8 @@ import { createCipheriv, createDecipheriv, pbkdf2, randomBytes } from 'node:cryp
 import { Transform, type TransformCallback } from 'node:stream';
 import { promisify } from 'node:util';
 
+export { MAX_PASSPHRASE_LENGTH, MIN_PASSPHRASE_LENGTH, passphraseProblem } from './passphrase';
+
 /**
  * The encryption of a DOWNLOADED backup: the format of `openssl enc`, not one of ours. AES-256-CBC, the key and the IV derived from the
  * passphrase by PBKDF2-HMAC-SHA256 (600,000 rounds, the figure OWASP gives for it) and a random salt of 8 bytes, written after the
@@ -18,20 +20,9 @@ import { promisify } from 'node:util';
  */
 export const ENCRYPTED_SUFFIX = '.enc';
 export const PBKDF2_ROUNDS = 600_000;
-export const MIN_PASSPHRASE_LENGTH = 12;
-export const MAX_PASSPHRASE_LENGTH = 200;
-
 const MAGIC = Buffer.from('Salted__', 'ascii');
 const SALT_BYTES = 8;
 const derive = promisify(pbkdf2);
-
-/** Whether the passphrase is acceptable: long enough to resist a guess, short enough not to be a way to waste the server's time. */
-export function passphraseProblem(passphrase: string): 'tooShort' | 'tooLong' | null {
-  const length = [...passphrase].length;
-  if (length < MIN_PASSPHRASE_LENGTH) return 'tooShort';
-  if (length > MAX_PASSPHRASE_LENGTH) return 'tooLong';
-  return null;
-}
 
 async function keyAndIv(passphrase: string, salt: Buffer): Promise<{ key: Buffer; iv: Buffer }> {
   const bytes = await derive(passphrase, salt, PBKDF2_ROUNDS, 48, 'sha256');

@@ -1,0 +1,79 @@
+[
+  [
+    "backups settings: the download is open to anybody",
+    "src/app/api/backups/download/route.ts",
+    "  if (!session) return new NextResponse(null, { status: 404 });\n",
+    "",
+    ["src/app/api/backups/download/route.test.ts"]
+  ],
+  [
+    "backups settings: another site may ask for a download",
+    "src/app/api/backups/download/route.ts",
+    "  if (fromAnotherSite(request)) return refusal('origin', 403);\n",
+    "",
+    ["src/app/api/backups/download/route.test.ts"]
+  ],
+  [
+    "backups settings: the download is not audited under its name",
+    "src/app/api/backups/download/route.ts",
+    "action: 'backup.download',",
+    "action: 'backup.downloaded',",
+    ["src/app/api/backups/download/route.test.ts"]
+  ],
+  [
+    "backups settings: any name reaches the folder",
+    "src/lib/backups/download.ts",
+    "if (typeof name !== 'string' || !parseArchiveName(name))",
+    "if (typeof name !== 'string')",
+    ["src/lib/backups/download.test.ts", "src/app/api/backups/download/route.test.ts"]
+  ],
+  [
+    "backups settings: any passphrase will do",
+    "src/lib/backups/download.ts",
+    "if (problem) return { ok: false, refusal: problem };",
+    "",
+    ["src/lib/backups/download.test.ts", "src/app/api/backups/download/route.test.ts"]
+  ],
+  [
+    "backups settings: a folder is taken for a backup",
+    "src/lib/backups/download.ts",
+    "(info) => info.isFile(),",
+    "() => true,",
+    ["src/lib/backups/download.test.ts"]
+  ],
+  [
+    "backups settings: the notice of the address is echoed",
+    "src/lib/backups/notice.ts",
+    "BACKUP_NOTICES.find((known) => known === notice) ?? null;",
+    "(notice as BackupNotice | undefined) ?? null;",
+    ["src/app/[locale]/(app)/settings/page.test.tsx"]
+  ],
+  [
+    "backups settings: \"back up now\" is open to anybody",
+    "src/app/[locale]/(app)/settings/actions.ts",
+    "  const session = await requireSettingsManager();\n  const backup = await backupNow",
+    "  const session = { user: { login: \"anyone\", id: \"x\" } };\n  const backup = await backupNow",
+    ["src/app/[locale]/(app)/settings/actions.test.ts"]
+  ],
+  [
+    "backups settings: two different passphrases are accepted",
+    "src/components/settings/backup-download.tsx",
+    "    if (passphrase !== again) return setError('mismatch');\n",
+    "",
+    ["src/components/settings/backups-ui.test.tsx"]
+  ],
+  [
+    "backups settings: a short passphrase is sent to the platform",
+    "src/components/settings/backup-download.tsx",
+    "    if (problem) return setError(problem);\n",
+    "",
+    ["src/components/settings/backups-ui.test.tsx"]
+  ],
+  [
+    "backups settings: the staleness is counted from the last attempt, not the last success",
+    "src/lib/backups/list.ts",
+    "stale: isStale({ now, lastSuccessAt, since: new Date(status.since) }),",
+    "stale: false,",
+    ["src/lib/backups/list.test.ts"]
+  ]
+]

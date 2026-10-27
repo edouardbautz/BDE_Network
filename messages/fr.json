@@ -1407,12 +1407,83 @@
       "title": "Les réglages sont encore dans des fichiers",
       "body": "Cette plateforme lit encore ses réglages dans bde.config.yml et .env, qui ne sont pas complets : ils ne peuvent pas être modifiés ici. Une fois ces fichiers complétés et la plateforme relancée, ils sont copiés dans la base de données et cette page devient utilisable (voir le guide de configuration)."
     },
-    "backup": {
-      "title": "Sauvegardez le volume « secrets »",
-      "body": "Les secrets de la plateforme (clé de l'application 42, mot de passe du serveur d'e-mail, webhooks) sont enregistrés chiffrés dans la base de données. La clé qui les déchiffre n'est pas dans la base : elle est dans le volume Docker « secrets ». Sans une sauvegarde de ce volume, après une restauration sur un autre serveur, ces secrets ne pourront plus être lus et il faudra les ressaisir.",
-      "command": "Commande de sauvegarde",
-      "commandLabel": "Commande de sauvegarde",
-      "note": "Elle crée deux fichiers dans le dossier backups : la base de données et les clés. Gardez-les à deux endroits différents, et hors du serveur. Ne lancez jamais « docker compose down -v » : l'option -v supprime les volumes."
+    "backups": {
+      "title": "Sauvegardes",
+      "description": "La plateforme se sauvegarde toute seule chaque nuit à 3 h (l’heure de votre BDE), sans que personne n’ait rien à faire. Chaque sauvegarde est un seul fichier qui contient la base de données et les clés pour la relire, et elle est vérifiée juste après avoir été faite.",
+      "last": {
+        "title": "Dernière sauvegarde",
+        "size": "{size}",
+        "restored": "Vérifiée : remise dans une base de contrôle, et ses réglages chiffrés ouverts avec ses propres clés.",
+        "read": "Vérifiée : ouverte et comparée à son manifeste. (Ce serveur de base de données ne laisse pas la plateforme créer une base de contrôle.)",
+        "unknown": "Vérifiée au moment où elle a été faite.",
+        "none": "Aucune sauvegarde pour l’instant",
+        "noneBody": "La première est faite cette nuit à 3 h. Vous pouvez aussi en faire une tout de suite, ci-dessous."
+      },
+      "stale": {
+        "title": "Aucune sauvegarde n’a réussi depuis deux jours",
+        "body": "Vos données ne sont pas protégées comme elles devraient l’être. Voyez la raison ci-dessous, et dans les journaux de la plateforme (docker compose logs app)."
+      },
+      "failure": {
+        "title": "La dernière tentative a échoué",
+        "body": "Raison : {reason} Les sauvegardes déjà faites sont intactes."
+      },
+      "reasons": {
+        "folder": "le dossier des sauvegardes ne peut pas être écrit.",
+        "space": "il n’y a pas assez de place sur le disque des sauvegardes.",
+        "dump": "la base de données n’a pas pu être exportée.",
+        "secrets": "les clés n’ont pas pu être lues.",
+        "archive": "l’archive n’a pas pu être écrite.",
+        "verify-archive": "le fichier écrit n’est pas ce que dit son manifeste.",
+        "verify-restore": "l’export ne se charge pas dans une base de contrôle.",
+        "verify-secrets": "les clés de l’archive n’ouvrent pas ses réglages chiffrés.",
+        "unexpected": "une erreur inattendue (voir les journaux).",
+        "lock": "une autre sauvegarde était en cours."
+      },
+      "run": {
+        "button": "Sauvegarder maintenant",
+        "hint": "Prend quelques secondes."
+      },
+      "notice": {
+        "made": "La sauvegarde a été faite et vérifiée.",
+        "busy": "Une sauvegarde est déjà en cours. Réessayez dans une minute.",
+        "unavailable": "Cette plateforme ne peut pas faire de sauvegardes (pas d’adresse de base de données).",
+        "failed": "La sauvegarde a échoué : {reason}"
+      },
+      "list": {
+        "title": "Sauvegardes gardées",
+        "description": "7 quotidiennes, 4 hebdomadaires et 6 mensuelles sont gardées, les autres sont supprimées toutes seules.",
+        "label": "Sauvegardes gardées",
+        "empty": "Aucune sauvegarde pour l’instant",
+        "emptyHint": "La première est faite cette nuit à 3 h.",
+        "columns": {
+          "date": "Date",
+          "size": "Taille",
+          "download": "Télécharger"
+        },
+        "unreadable": "Le dossier des sauvegardes ne peut pas être lu. Vérifiez BDE_BACKUP_DIR et les droits du dossier."
+      },
+      "download": {
+        "button": "Télécharger",
+        "buttonLabel": "Télécharger la sauvegarde du {date}",
+        "title": "Télécharger cette sauvegarde",
+        "description": "Le fichier est chiffré avec une phrase de passe de votre choix. Il contient toute la base de données et les clés : qui a le fichier et la phrase de passe a tout.",
+        "passphrase": "Phrase de passe",
+        "passphraseHint": "12 caractères au moins. Quelques mots font une bonne phrase.",
+        "confirm": "Répétez la phrase de passe",
+        "warning": "Gardez cette phrase de passe. Si vous la perdez, personne ne pourra plus ouvrir le fichier téléchargé, nous non plus. Les sauvegardes gardées sur le serveur ne sont pas concernées.",
+        "restore": "Pour utiliser le fichier sur un serveur neuf : ./scripts/restore.sh {file}",
+        "submit": "Télécharger",
+        "working": "Préparation du fichier…",
+        "done": "Le fichier a été téléchargé.",
+        "errors": {
+          "tooShort": "La phrase de passe doit avoir au moins 12 caractères.",
+          "tooLong": "La phrase de passe doit avoir 200 caractères au plus.",
+          "mismatch": "Les deux phrases de passe ne sont pas les mêmes.",
+          "missing": "Cette sauvegarde n’existe plus (supprimée par la rotation ?). Rechargez la page.",
+          "generic": "Le fichier n’a pas pu être préparé. Réessayez."
+        }
+      },
+      "where": "Les sauvegardes sont dans le dossier « backups/auto » à côté de docker-compose.yml sur le serveur (BDE_BACKUP_DIR), hors des volumes de Docker : elles survivent à « docker compose down -v ». Elles sont sur le même disque que la plateforme : copiez-les ailleurs de temps en temps."
     },
     "oauthRejected": {
       "title": "42 refuse l'application de ce BDE",

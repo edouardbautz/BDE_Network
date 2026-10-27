@@ -46,6 +46,27 @@ whoever has the file has everything. The password of PostgreSQL is not in it: a 
 > **The folder is on the same disk as the platform.** It protects against a mistake (`down -v`, a bad update, a deleted
 > volume), not against the loss of the whole server or of its disk. Copy the folder somewhere else from time to time.
 
+## From the Settings page
+
+Owners only. The **Backups** section of the Settings page shows:
+
+- **the last backup**: its date, its size, and how far it was checked;
+- a warning when **no backup has succeeded for two days**, and the reason the last attempt failed;
+- **Back up now**: the same backup as the night's (a few seconds), written in the audit log with who asked;
+- **the backups kept**, each with a **Download** button.
+
+### Downloading a backup
+
+The backups on the server are not encrypted (they have to be made at 3:00 with nobody there to type a passphrase). A file that
+leaves the server is: **Download** asks for a passphrase of your choice, twice, 12 characters at least, and encrypts the file with it.
+
+- The file is named `bde-auto-….tar.gz.enc` and is in the format of `openssl enc` (AES-256, key derived with PBKDF2): it can be opened
+  with the `restore.sh` script below, or by hand with `openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -md sha256`.
+- **If you lose the passphrase, nobody can open the file again, including us.** The platform does not keep it and cannot recover it. The
+  backups kept on the server are not affected.
+- The file still holds the database and the keys: whoever has it and the passphrase has everything. Each download is written in the
+  audit log (who, which backup), never the passphrase.
+
 ## How a backup is checked
 
 A file that was written is not a backup that works. Right after making the archive, the platform:
@@ -97,6 +118,14 @@ are in the backup: no other file is needed.
 **On a new server** (the old one is lost): install Docker, get the project (`git clone`), run `docker compose up -d`
 (no `.env` is needed), copy the backup file into `backups/auto/` of the new server, then `./scripts/restore.sh --auto`.
 The BDE is back as it was, and the people who were signed in still are.
+
+**From a downloaded file**: put the `.enc` file anywhere on the new server and give its path. The script asks for the passphrase (nothing
+is shown while you type it; `BDE_BACKUP_PASSPHRASE` in the environment does the same for a script). A wrong passphrase stops it before
+anything is touched.
+
+```text
+./scripts/restore.sh ~/bde-auto-2026-10-25_02-00-03Z.tar.gz.enc
+```
 
 > If the new server has an `AUTH_SECRET` in its `.env`, it overrides the restored session key and everyone must sign in
 > again. Leave it out.

@@ -183,7 +183,15 @@ export class Stack {
 
   /** One of the folder's scripts (`scripts/backup.sh`, `scripts/restore.sh`), as an operator runs it. */
   script(name: string, ...args: string[]): Run {
-    return run('sh', [join('scripts', name), ...args], { cwd: this.dir, env: this.env });
+    return this.scriptWith({}, name, ...args);
+  }
+
+  /** The same, with more in the environment of the script (the passphrase of a downloaded backup). */
+  scriptWith(env: Record<string, string>, name: string, ...args: string[]): Run {
+    return run('sh', [join('scripts', name), ...args], {
+      cwd: this.dir,
+      env: { ...this.env, ...env },
+    });
   }
 
   logs(tail = 60): string {

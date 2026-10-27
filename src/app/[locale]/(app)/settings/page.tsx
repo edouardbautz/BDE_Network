@@ -1,13 +1,16 @@
-import { FileWarning, KeyRound, ShieldAlert } from 'lucide-react';
+import { FileWarning, ShieldAlert } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { redirect } from '@/i18n/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CopyField } from '@/components/events/copy-field';
+import { BackupsSection } from '@/components/settings/backups-section';
 import { OAuthRejectedAlert } from '@/components/settings/oauth-rejected-alert';
 import { UpdateBanner } from '@/components/updates/update-banner';
 import { SettingsPanels } from '@/components/settings/settings-panels';
 import { getConfig } from '@/config';
 import { checkFortyTwoCredentials } from '@/lib/auth/oauth-check';
+import { readOverview } from '@/lib/backups/list';
+import { readBackupNotice } from '@/lib/backups/notice';
+import { backupDir } from '@/lib/backups/service';
 import { prisma } from '@/lib/prisma';
 import { PageHeader } from '@/components/layout/page-header';
 import { pageTitle } from '@/lib/page-title';
@@ -20,8 +23,15 @@ export const dynamic = 'force-dynamic';
 export const generateMetadata = pageTitle('settings', 'title');
 
 /** The settings of the platform: owners only (a simulated role in development does not count). */
-export default async function SettingsPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function SettingsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ backup?: string | string[] }>;
+}) {
   const { locale } = await params;
+  const { backup } = await searchParams;
   const session = await getSettingsManager();
   if (!session) {
     redirect({ href: '/dashboard', locale });
@@ -60,20 +70,13 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
       <div className="flex max-w-3xl flex-col gap-3 sm:gap-4">
         {editable && <UpdateBanner enabled={getConfig().updates.check} />}
 
-        {/* The keys are not in the database: this is the one thing to keep safe, so it is always in view. */}
-        <Alert>
-          <KeyRound aria-hidden="true" />
-          <AlertTitle>{t('backup.title')}</AlertTitle>
-          <AlertDescription className="flex flex-col gap-3">
-            <span>{t('backup.body')}</span>
-            <CopyField
-              id="settings-backup-command"
-              value="./scripts/backup.sh"
-              label={t('backup.commandLabel')}
-            />
-            <span>{t('backup.note')}</span>
-          </AlertDescription>
-        </Alert>
+        {/* The backups: the keys are not in the database, and a backup that holds both is the one thing to keep safe, so it is always in view. */}
+        <BackupsSection
+          overview={await readOverview(backupDir(), new Date())}
+          notice={readBackupNotice(backup)}
+          locale={locale}
+          timeZone={getConfig().bde.timezone}
+        />
 
         {editable && (await checkFortyTwoCredentials()) === 'rejected' && <OAuthRejectedAlert />}
 

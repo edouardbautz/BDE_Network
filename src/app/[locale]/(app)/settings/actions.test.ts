@@ -20,11 +20,23 @@ const mocks = vi.hoisted(() => ({
   stopScheduler: vi.fn(),
   storeLogo: vi.fn(),
   pruneLogos: vi.fn(),
+  backupNow: vi.fn(),
   saved: {} as Record<string, string | undefined>,
 }));
 
 vi.mock('next/cache', () => ({ revalidatePath: mocks.revalidatePath }));
+vi.mock('@/lib/backups/service', () => ({ backupNow: mocks.backupNow }));
+vi.mock('@/i18n/navigation', () => ({
+  getPathname: ({
+    href,
+    locale,
+  }: {
+    href: { pathname: string; query: Record<string, string> };
+    locale: string;
+  }) => `/${locale}${href.pathname}?${new URLSearchParams(href.query)}`,
+}));
 vi.mock('next-intl/server', () => ({
+  getLocale: async () => 'fr',
   getTranslations: async () => (key: string, values?: Record<string, string>) =>
     `${key}${values ? JSON.stringify(values) : ''}`,
 }));
@@ -120,6 +132,7 @@ describe('who may call them', () => {
       () => actions.saveStaffChannel({}),
       () => actions.testStaffChannel({}),
       () => actions.testNotification({}, {}),
+      () => actions.runBackupNow(),
     ];
     for (const call of calls) await expect(call()).rejects.toThrow('Forbidden');
     expect(mocks.updateSettings).not.toHaveBeenCalled();
@@ -127,6 +140,7 @@ describe('who may call them', () => {
     expect(mocks.checkLogin).not.toHaveBeenCalled();
     expect(mocks.storeLogo).not.toHaveBeenCalled();
     expect(mocks.pruneLogos).not.toHaveBeenCalled();
+    expect(mocks.backupNow).not.toHaveBeenCalled();
   });
 
   it('answers "readOnly" while the settings are still in the files, and writes nothing', async () => {
@@ -719,4 +733,20 @@ describe('the staff room', () => {
       await actions.testStaffChannel({ locale: 'fr', channel: 'discord', webhook: discord }),
     ).toEqual({ ok: false, code: 'testFailed', detail: 'webhook responded with 404' });
   });
+});
+
+describe('"back up now"', () => {
+  it('makes the backup in the name of the owner, then answers the page to load with what came of it', async () => {
+    mocks.backupNow.mockResolvedValue('made');
+    expect(await actions.runBackupNow()).toEqual({ href: '/fr/settings?backup=made' });
+    expect(mocks.backupNow).toHaveBeenCalledWith({ login: 'alice', id: 'u-alice' });
+  });
+
+  it.each(['busy', 'dump', 'space', 'unavailable'])(
+    'answers why when it did not work (%s)',
+    async (outcome) => {
+      mocks.backupNow.mockResolvedValue(outcome);
+      expect(await actions.runBackupNow()).toEqual({ href: `/fr/settings?backup=${outcome}` });
+    },
+  );
 });

@@ -1407,12 +1407,83 @@
       "title": "The settings are still in files",
       "body": "This platform still reads its settings from bde.config.yml and .env, which are not complete: they cannot be changed here. Once those files are completed and the platform restarted, they are copied into the database and this page becomes usable (see the configuration guide)."
     },
-    "backup": {
-      "title": "Back up the \"secrets\" volume",
-      "body": "The platform's secrets (the 42 application's key, the mail server's password, webhooks) are stored encrypted in the database. The key that decrypts them is not in the database: it is in the Docker volume \"secrets\". Without a backup of that volume, after a restore on another server, those secrets can no longer be read and have to be entered again.",
-      "command": "Backup command",
-      "commandLabel": "Backup command",
-      "note": "It creates two files in the backups folder: the database and the keys. Keep them in two different places, off the server. Never run \"docker compose down -v\": the -v option deletes the volumes."
+    "backups": {
+      "title": "Backups",
+      "description": "The platform backs itself up every night at 3:00 (the time of your BDE), with nobody doing anything. Each backup is one file that holds the database and the keys to read it, and it is checked right after it is made.",
+      "last": {
+        "title": "Last backup",
+        "size": "{size}",
+        "restored": "Checked: put back into a test database, and its encrypted settings opened with its own keys.",
+        "read": "Checked: opened and compared with its manifest. (This database server does not let the platform make a test database.)",
+        "unknown": "Checked when it was made.",
+        "none": "No backup yet",
+        "noneBody": "The first one is made tonight at 3:00. You can also make one now, below."
+      },
+      "stale": {
+        "title": "No backup has succeeded for two days",
+        "body": "Your data is not protected as it should be. See the reason below, and in the logs of the platform (docker compose logs app)."
+      },
+      "failure": {
+        "title": "The last attempt failed",
+        "body": "Reason: {reason} The backups already made are untouched."
+      },
+      "reasons": {
+        "folder": "the folder of the backups cannot be written.",
+        "space": "there is not enough room on the disk of the backups.",
+        "dump": "the database could not be exported.",
+        "secrets": "the keys could not be read.",
+        "archive": "the archive could not be written.",
+        "verify-archive": "the file written is not what its manifest says.",
+        "verify-restore": "the export does not load into a test database.",
+        "verify-secrets": "the keys of the archive do not open its encrypted settings.",
+        "unexpected": "an unexpected error (see the logs).",
+        "lock": "another backup was running."
+      },
+      "run": {
+        "button": "Back up now",
+        "hint": "Takes a few seconds."
+      },
+      "notice": {
+        "made": "The backup was made and checked.",
+        "busy": "A backup is already running. Try again in a minute.",
+        "unavailable": "This platform cannot make backups (no database address).",
+        "failed": "The backup failed: {reason}"
+      },
+      "list": {
+        "title": "Backups kept",
+        "description": "7 daily, 4 weekly and 6 monthly are kept, the others are deleted by themselves.",
+        "label": "Backups kept",
+        "empty": "No backup yet",
+        "emptyHint": "The first one is made tonight at 3:00.",
+        "columns": {
+          "date": "Date",
+          "size": "Size",
+          "download": "Download"
+        },
+        "unreadable": "The folder of the backups cannot be read. Check BDE_BACKUP_DIR and the rights of the folder."
+      },
+      "download": {
+        "button": "Download",
+        "buttonLabel": "Download the backup of {date}",
+        "title": "Download this backup",
+        "description": "The file is encrypted with a passphrase of your choice. It holds the whole database and the keys: whoever has the file and the passphrase has everything.",
+        "passphrase": "Passphrase",
+        "passphraseHint": "12 characters at least. A few words make a good one.",
+        "confirm": "Repeat the passphrase",
+        "warning": "Keep this passphrase. If you lose it, nobody can open the downloaded file again, including us. The backups kept on the server are not affected.",
+        "restore": "To use the file on a new server: ./scripts/restore.sh {file}",
+        "submit": "Download",
+        "working": "Preparing the file…",
+        "done": "The file was downloaded.",
+        "errors": {
+          "tooShort": "The passphrase must have at least 12 characters.",
+          "tooLong": "The passphrase must have at most 200 characters.",
+          "mismatch": "The two passphrases are not the same.",
+          "missing": "This backup no longer exists (it was deleted by the rotation?). Reload the page.",
+          "generic": "The file could not be prepared. Try again."
+        }
+      },
+      "where": "The backups are in the folder “backups/auto” next to docker-compose.yml on the server (BDE_BACKUP_DIR), outside Docker’s volumes: they survive “docker compose down -v”. They are on the same disk as the platform, so copy them somewhere else from time to time."
     },
     "oauthRejected": {
       "title": "42 refuses this BDE's application",
