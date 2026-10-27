@@ -5,7 +5,7 @@
  */
 
 export interface PageAssets {
-  /** `<script src>`: loaded at once. */
+  /** `<script src>`: loaded at once, the `nomodule` ones left out. */
   scripts: string[];
   /** `<link rel="stylesheet">`. */
   stylesheets: string[];
@@ -21,10 +21,14 @@ const normalise = (path: string): string => {
   return match ? `/_next/${match[0]}` : path;
 };
 
-export function assetsOf(html: string): PageAssets {
-  const scripts = [...html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)]
-    .map((match) => match[1]!)
-    .filter((src) => src.includes('/_next/static/'))
+export function assetsOf(page: string): PageAssets {
+  // A `nomodule` script is the polyfills for browsers without modules: no browser that matters downloads it.
+  const html = page.replace(/<script[^>]*nomodule[^>]*>/gi, '');
+  const scripts = [...html.matchAll(/<script\b([^>]*)>/g)]
+    // A `nomodule` script is the polyfills for browsers without modules: no browser that matters downloads it.
+    .filter((match) => !/\bnomodule\b/i.test(match[1]!))
+    .map((match) => /\bsrc="([^"]+)"/.exec(match[1]!)?.[1])
+    .filter((src): src is string => src !== undefined && src.includes('/_next/static/'))
     .map(normalise);
   const stylesheets = [...html.matchAll(/<link\b[^>]*\brel="stylesheet"[^>]*\bhref="([^"]+)"/g)]
     .map((match) => match[1]!)

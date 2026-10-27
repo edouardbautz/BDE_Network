@@ -352,12 +352,12 @@
       },
       "htmlBytes": 33342,
       "scripts": {
-        "count": 17,
-        "bytes": 255393
+        "count": 16,
+        "bytes": 215769
       },
       "referencedScripts": {
         "count": 22,
-        "bytes": 310102
+        "bytes": 310105
       },
       "stylesheets": {
         "count": 2,
@@ -385,12 +385,12 @@
       },
       "htmlBytes": 35923,
       "scripts": {
-        "count": 22,
-        "bytes": 309977
+        "count": 21,
+        "bytes": 270353
       },
       "referencedScripts": {
         "count": 22,
-        "bytes": 309977
+        "bytes": 309980
       },
       "stylesheets": {
         "count": 2,
@@ -418,12 +418,12 @@
       },
       "htmlBytes": 42951,
       "scripts": {
-        "count": 19,
-        "bytes": 261726
+        "count": 18,
+        "bytes": 222102
       },
       "referencedScripts": {
         "count": 23,
-        "bytes": 316098
+        "bytes": 316101
       },
       "stylesheets": {
         "count": 2,
@@ -451,12 +451,12 @@
       },
       "htmlBytes": 58683,
       "scripts": {
-        "count": 18,
-        "bytes": 258459
+        "count": 17,
+        "bytes": 218835
       },
       "referencedScripts": {
         "count": 23,
-        "bytes": 315560
+        "bytes": 315563
       },
       "stylesheets": {
         "count": 2,
@@ -484,12 +484,12 @@
       },
       "htmlBytes": 61090,
       "scripts": {
-        "count": 18,
-        "bytes": 258459
+        "count": 17,
+        "bytes": 218835
       },
       "referencedScripts": {
         "count": 23,
-        "bytes": 315560
+        "bytes": 315563
       },
       "stylesheets": {
         "count": 2,
@@ -517,12 +517,12 @@
       },
       "htmlBytes": 41622,
       "scripts": {
-        "count": 23,
-        "bytes": 287847
+        "count": 22,
+        "bytes": 248223
       },
       "referencedScripts": {
         "count": 25,
-        "bytes": 321252
+        "bytes": 321255
       },
       "stylesheets": {
         "count": 2,
@@ -550,12 +550,12 @@
       },
       "htmlBytes": 43942,
       "scripts": {
-        "count": 23,
-        "bytes": 287847
+        "count": 22,
+        "bytes": 248223
       },
       "referencedScripts": {
         "count": 25,
-        "bytes": 321252
+        "bytes": 321255
       },
       "stylesheets": {
         "count": 2,
@@ -583,12 +583,12 @@
       },
       "htmlBytes": 43860,
       "scripts": {
-        "count": 25,
-        "bytes": 303856
+        "count": 24,
+        "bytes": 264232
       },
       "referencedScripts": {
         "count": 27,
-        "bytes": 337261
+        "bytes": 337264
       },
       "stylesheets": {
         "count": 2,
@@ -616,12 +616,12 @@
       },
       "htmlBytes": 45285,
       "scripts": {
-        "count": 24,
-        "bytes": 300790
+        "count": 23,
+        "bytes": 261166
       },
       "referencedScripts": {
         "count": 26,
-        "bytes": 334195
+        "bytes": 334198
       },
       "stylesheets": {
         "count": 2,
@@ -649,12 +649,12 @@
       },
       "htmlBytes": 47086,
       "scripts": {
-        "count": 24,
-        "bytes": 290913
+        "count": 23,
+        "bytes": 251289
       },
       "referencedScripts": {
         "count": 26,
-        "bytes": 324318
+        "bytes": 324321
       },
       "stylesheets": {
         "count": 2,
@@ -682,12 +682,12 @@
       },
       "htmlBytes": 39147,
       "scripts": {
-        "count": 24,
-        "bytes": 290913
+        "count": 23,
+        "bytes": 251289
       },
       "referencedScripts": {
         "count": 26,
-        "bytes": 324318
+        "bytes": 324321
       },
       "stylesheets": {
         "count": 2,
@@ -715,12 +715,12 @@
       },
       "htmlBytes": 65433,
       "scripts": {
-        "count": 23,
-        "bytes": 287847
+        "count": 22,
+        "bytes": 248223
       },
       "referencedScripts": {
         "count": 25,
-        "bytes": 321252
+        "bytes": 321255
       },
       "stylesheets": {
         "count": 2,
@@ -748,12 +748,12 @@
       },
       "htmlBytes": 42003,
       "scripts": {
-        "count": 23,
-        "bytes": 287847
+        "count": 22,
+        "bytes": 248223
       },
       "referencedScripts": {
         "count": 25,
-        "bytes": 321252
+        "bytes": 321255
       },
       "stylesheets": {
         "count": 2,
@@ -781,12 +781,12 @@
       },
       "htmlBytes": 41587,
       "scripts": {
-        "count": 25,
-        "bytes": 294928
+        "count": 24,
+        "bytes": 255304
       },
       "referencedScripts": {
         "count": 27,
-        "bytes": 328333
+        "bytes": 328336
       },
       "stylesheets": {
         "count": 2,
@@ -814,12 +814,12 @@
       },
       "htmlBytes": 45816,
       "scripts": {
-        "count": 17,
-        "bytes": 255393
+        "count": 16,
+        "bytes": 215769
       },
       "referencedScripts": {
         "count": 22,
-        "bytes": 312494
+        "bytes": 312497
       },
       "stylesheets": {
         "count": 2,
@@ -847,12 +847,12 @@
       },
       "htmlBytes": 49661,
       "scripts": {
-        "count": 25,
-        "bytes": 301304
+        "count": 24,
+        "bytes": 261680
       },
       "referencedScripts": {
         "count": 27,
-        "bytes": 334709
+        "bytes": 334712
       },
       "stylesheets": {
         "count": 2,
@@ -880,12 +880,12 @@
       },
       "htmlBytes": 44458,
       "scripts": {
-        "count": 25,
-        "bytes": 323926
+        "count": 24,
+        "bytes": 284302
       },
       "referencedScripts": {
         "count": 26,
-        "bytes": 327833
+        "bytes": 327836
       },
       "stylesheets": {
         "count": 2,
@@ -913,12 +913,12 @@
       },
       "htmlBytes": 38923,
       "scripts": {
-        "count": 23,
-        "bytes": 287847
+        "count": 22,
+        "bytes": 248223
       },
       "referencedScripts": {
         "count": 25,
-        "bytes": 321252
+        "bytes": 321255
       },
       "stylesheets": {
         "count": 2,
@@ -1653,5 +1653,8 @@
       },
       "logBytes": 0
     }
-  }
+  },
+  "notes": [
+    "The scripts are counted without the polyfills of the nomodule tag (about 38.7 KiB on every page), which no browser that matters downloads: recounted on 2026-10-27 from the same code. The durations are those of the CI runner."
+  ]
 }

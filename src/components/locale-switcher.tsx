@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { SUPPORTED_LOCALES, type SupportedLocale } from '@/config/schema';
+import { SUPPORTED_LOCALES, type SupportedLocale } from '@/config/locales';
 import { usePathname, useRouter } from '@/i18n/navigation';
 
 /** Each language is named in itself: someone who cannot read the current one must still find theirs. */

@@ -25,6 +25,8 @@ export function markdownOf(m: Measurement): string {
     '',
   ];
 
+  for (const note of m.notes ?? []) out.push(`> ${note}`, '');
+
   if (m.image) {
     out.push(
       '### Image',

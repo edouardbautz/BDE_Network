@@ -37,6 +37,7 @@ describe('the assets of a page', () => {
     <script src="/_next/static/chunks/main-abc.js" async=""></script>
     <script src="/_next/static/chunks/page-def.js?dpl=1" async=""></script>
     <script src="https://elsewhere.example/analytics.js"></script>
+    <script src="/_next/static/chunks/polyfills-xyz.js" noModule=""></script>
     <script>self.__next_f.push([1,"3:[\\"static/chunks/lazy-123.js\\",\\"static/chunks/main-abc.js\\"]"])</script>`;
 
   it('lists what the tags load at once, only from the platform', () => {
