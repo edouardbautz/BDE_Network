@@ -265,7 +265,7 @@ describe('the download of a backup', () => {
   });
 
   it('sends the passphrase in the body of one request, then hands the file over under its name plus .enc', async () => {
-    const fetchMock = vi.fn(async () => new Response(new Blob(['encrypted']), { status: 200 }));
+    const fetchMock = vi.fn(async () => new Response('encrypted', { status: 200 }));
     vi.stubGlobal('fetch', fetchMock);
     open();
     fill('a long enough passphrase', 'a long enough passphrase');
