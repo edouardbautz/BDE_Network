@@ -112,6 +112,7 @@ src/
                            `update.ts` (changing them from the settings page), owners, access (OWNER-only)
     roles/view.ts          what pages need to show the right choices (actor from a session, role facts) — display only
     branding/              the uploaded logo: what is accepted (image.ts), where it lives (storage.ts)
+    backups/               the nightly backups: retention and schedule (pure), the run, the check by reading it again, the status file, the encryption of a download (see "Automatic backups")
     public-address.ts      the platform's public address, in one place (see "The public address")
     markdown.ts            the Markdown of a description (see "Markdown for a description")
     audit-log.ts, account-label.ts, health.ts, prisma.ts, color.ts (the accent), utils.ts (`cn`)
@@ -1023,6 +1024,52 @@ recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`)
   - `NAV_ICONS`, its permissions (`<module>.view`/`.manage` are automatic; extras go in `MODULE_EXTRA_PERMISSIONS` with
     their `permissions.items.<module>.<name>` messages), audit entries for every mutation, FR/EN messages, `loading.tsx` per route, seed data, a `docs/en/<module>.md` and its twin `docs/fr/<module>.md`.
 
+## Automatic backups (`src/lib/backups/`, `qa/backup/`, `docs/en/backups.md`)
+
+The platform backs itself up every night at 03:00 in `bde.timezone`, with nobody there. The aim is one file that is enough to start again on a
+server with nothing, that **has been read again** before it is trusted, and that survives `docker compose down -v`.
+
+- **A folder of the host, not a volume.** `docker-compose.yml` mounts `${BDE_BACKUP_DIR:-./backups/auto}` on `/auto-backups` (the image sets
+  `BDE_BACKUP_DIR=/auto-backups`: inside the container the variable is the image's, outside it is the host's path). A named volume goes with
+  `down -v`; a folder does not. The one-shot `secrets` service, which is root, mounts it too and hands it to uid 1001 (`chown`, `chmod 755`: a folder Docker
+  makes on the host belongs to root, and a rootless Docker has no other way to make it writable by the application); the archives in it are `0600`. It is
+  `backups/auto`, not `backups`, because `scripts/backup.sh` writes the latter as the host's user. `BDE_STACK` went from 2 to 3 with this: an image that
+  expects the mount, started by a compose file that does not give it, would write the backups inside the container and lose them at the next
+  recreation; the image now refuses that with a page (`stack-old-compose`).
+- **One archive** (`run.ts`): `database.sql` (`pg_dump --clean --if-exists`, the dump `backup.sh` makes, reached with `PG*` variables
+  built from `DATABASE_URL` by `connection.ts`: the password never on a command line), `secrets.tar` (`auth_secret` and `settings_key`, from the
+  `/secrets` volume or, failing that, from `AUTH_SECRET` / `SETTINGS_KEY`; **not** `postgres_password`: a dump restores into any password), `logo.tar`,
+  `info.txt` and `manifest.json` (size and SHA-256 of each). The archive is made under a temporary name, checked, and **renamed**: a name appears whole or not at all.
+  The names are `bde-auto-<UTC>.tar.gz` (`names.ts`), so `backup.sh --keep` (`bde-backup-*`) and the rotation never touch each other's files, and the
+  rotation touches nothing else in the folder.
+- **Read again, not just written** (`verify.ts`): the archive opens and holds exactly what the manifest lists, every SHA-256 matches, the dump ends with PostgreSQL's
+  own last line, the dump **loads into a scratch database** (`bde_verify_*`, created and dropped by the platform, `--single-transaction`, `ON_ERROR_STOP`) with
+  migrations and tables in it, and the sealed settings of that copy are **opened with the key found in the archive**, not the running platform's. That last
+  check is the one nobody does until the day it matters (the archive and its keys going together). A server that refuses `CREATE DATABASE`
+  (`permission denied`: a managed PostgreSQL) gets the first two checks and the level `read`, which the status says. A failed check deletes the
+  new file and leaves every other backup as it was.
+- **Rotation** (`retention.ts`, pure): 7 daily (the newest of each of the last 7 days that have one), 4 weekly (the **oldest** of each of the last 4 weeks, Monday to
+  Sunday), 6 monthly (the oldest of each of the last 6 months), in the days of the BDE. The oldest of a period, so that the one kept as the weekly or the monthly
+  does not change every night. Days are counted where there is a backup: a server that was off for a month keeps 7 days. The newest is never removed.
+- **When** (`schedule.ts`, pure; `scheduler.ts`, started like the reminders from `instrumentation.ts` and by the installer when it finishes, production only): a tick every
+  5 minutes, the first 60 s after the start. A backup is due from 03:00 BDE time while no successful one is dated since that 03:00 (one made by hand at 10:00 counts for the
+  day; one made at 01:00 does not), so a platform that was off catches up the same day. A failure waits 30 minutes, three attempts a day at most. The state is a
+  file next to the backups (`.status.json`, written whole and renamed), **not** the database: it must be readable when the database is the problem. One backup at a time
+  (`.lock`, exclusive file, taken over after 2 hours). Free space of at least 50 MiB and three times the last backup is checked first (`space`).
+- **Failures are codes** (`FailureCode`: `folder`, `space`, `dump`, `secrets`, `archive`, `verify-archive`, `verify-restore`, `verify-secrets`, `unexpected`; `busy` is only answered), logged in
+  French on one line with no secret and no output of a tool, and kept in the status. A folder that cannot be created or written (the rights of a rootless Docker, a read-only disk) is `folder`.
+- **Restore** (`scripts/restore.sh`): `--auto [name]` reads the folder through the application's container (so rootless and root-owned files do not matter) and restores the newest or the
+  named one; an archive that holds `secrets.tar` puts the keys back without `--secrets` (which still wins when given); a file ending `.enc` is decrypted first in the image
+  (`openssl` is installed in it) with the passphrase from `BDE_BACKUP_PASSPHRASE` or asked without echo, passed to the container by name and never on a command line. The server only needs Docker.
+  `encrypt.ts` writes that format for the download: **`openssl enc` compatible** (`Salted__`, AES-256-CBC, PBKDF2-SHA256, 600 000 rounds), made by Node's `crypto`, nothing of our own;
+  `encrypt.test.ts` opens what it writes with the real `openssl`, and the other way round. CBC does not authenticate: the manifest's SHA-256 inside the archive is what says it is whole.
+  The archive kept on the server is **not** encrypted (it is made at 03:00 with nobody to type a passphrase); only a download is.
+- **Tests**: `retention`, `schedule`, `names` (`backups-plan.test.ts`: the rules, a year of nights, DST, the days of the BDE), `run.test.ts` (a real `tar` and real files, PostgreSQL played by a stand-in: the
+  password is not in a command line, every failing step leaves the previous backups and no leftover, the lock, the rotation, a tampered archive), `service.test.ts`, `encrypt.test.ts`,
+  `scripts/restore.test.ts` (Linux only: `--auto`, the keys inside, the passphrase), `scripts/compose.test.ts`, and **`qa/backup/run.ts`** (the `backups` job of `qa.yml`): a real compose
+  stack with the clock of the platform set to 03:10, the backup made by itself, `docker compose down -v`, a second stack with nothing, `restore.sh --auto`, and the same rows, the
+  invariants, the keys of the old server and the cookie of before still signing in. Mutation-checked (`qa/mutations/backups.json`).
+
 ## Production image & hardening
 
 - **Dockerfile** (multi-stage): `next build` with `output: 'standalone'` (server.js + only the
@@ -1466,7 +1513,7 @@ start from the same three things, so that what one finds the others can replay.
   per variant). `npx tsx qa/access/run.ts --variant events-enabled` plays it on a platform made by `qa/platform.sh`.
 - **Static security** (`.github/workflows/security.yml`, `codeql.yml`, the image scan of `ci.yml` and `qa.yml`; `qa-rules/`,
   `.gitleaks.toml`, `.trivyignore`, `scripts/sarif-gate.mjs`). Every pull request is read by: (1) **Semgrep with the rules of
-  the project** (`qa-rules/`: a managed setting read from `process.env`, `eval`, a process started by the application,
+  the project** (`qa-rules/`: a managed setting read from `process.env`, `eval`, a process started by the application (but for `src/lib/backups/exec.ts`, the one door: no shell, fixed arguments),
   `Math.random()`, raw SQL built from a string, a link that does not go through the i18n `Link`, a cookie that is not
   `httpOnly`, a secret in a log, `dangerouslySetInnerHTML`, a `target="_blank"` without `rel`): the rules of this document
   that a reviewer would otherwise have to remember, each with a case it must find and a case it must leave alone

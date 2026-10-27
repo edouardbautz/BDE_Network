@@ -1,0 +1,140 @@
+🇫🇷 Français · [🇬🇧 English](../en/backups.md)
+
+# Sauvegardes automatiques
+
+La plateforme se sauvegarde **toute seule chaque nuit à 3 h (l'heure de votre BDE), sans que personne n'ait rien à
+faire**. Chaque sauvegarde est **un seul fichier** qui contient la base de données **et** les clés pour la relire, est
+**vérifiée juste après avoir été faite**, et reste sur le serveur **hors des volumes de Docker** : `docker compose
+down -v`, ou la suppression par erreur des volumes de la plateforme, ne l'efface pas.
+
+Cette page parle de ces sauvegardes. Celles que vous faites vous-même avec `scripts/backup.sh`, et la copie que la
+plateforme fait avant une mise à jour, sont dans [Déploiement](deployment.md#sauvegardes-et-restauration).
+
+## Ce qui se passe chaque nuit
+
+1. À 3 h dans le fuseau horaire de votre BDE (`bde.timezone`), la plateforme exporte sa base de données, prend les clés
+   du volume `secrets` et le logo, et écrit une archive.
+2. Elle **la relit** (voir plus bas). Seule une sauvegarde qui a réussi est gardée.
+3. Elle supprime les sauvegardes dont elle n'a plus besoin (voir « Combien sont gardées »).
+
+Une plateforme éteinte à 3 h fait sa sauvegarde dès qu'elle est rallumée, le même jour. Après un échec, elle réessaie
+30 minutes plus tard, trois fois au plus par jour, puis attend la nuit suivante.
+
+## Où sont les sauvegardes
+
+Dans le **dossier `backups/auto/` à côté de `docker-compose.yml`**, sur le serveur lui-même. Pour les garder ailleurs
+(un autre disque, un lecteur monté), indiquez le dossier dans `.env`, puis `docker compose up -d` :
+
+```text
+BDE_BACKUP_DIR=/mnt/disk2/bde-backups
+```
+
+Une sauvegarde porte le nom du moment où elle a été faite, en UTC : `bde-auto-2026-10-27_02-00-04Z.tar.gz` est la nuit du
+27 octobre à Paris (3 h en hiver, c'est 02 h UTC). Elle contient :
+
+| Fichier         | Contenu                                                                                                          |
+| --------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `database.sql`  | **La base de données** : membres, événements, rôles, réglages.                                                   |
+| `secrets.tar`   | **Les clés** : celle qui chiffre les secrets de la plateforme, et celle qui signe les sessions.                  |
+| `logo.tar`      | Le logo envoyé depuis Paramètres (seulement s'il y en a un).                                                     |
+| `info.txt`      | La date et la version de la plateforme.                                                                          |
+| `manifest.json` | La liste de ces fichiers, avec la taille et le SHA-256 de chacun : ce à quoi la vérification ci-dessous compare. |
+
+Le fichier n'est lisible que par l'utilisateur de la plateforme (droits `600`). **Il contient les clés : traitez-le
+comme un mot de passe**, car qui a le fichier a tout. Le mot de passe de PostgreSQL n'y est pas : une sauvegarde se
+restaure sous n'importe quel mot de passe.
+
+> **Le dossier est sur le même disque que la plateforme.** Il protège d'une erreur (`down -v`, une mauvaise mise à
+> jour, un volume supprimé), pas de la perte du serveur entier ou de son disque. Copiez le dossier ailleurs de temps en
+> temps.
+
+## Comment une sauvegarde est vérifiée
+
+Un fichier écrit n'est pas une sauvegarde qui marche. Juste après avoir fait l'archive, la plateforme :
+
+1. l'ouvre et compare chaque fichier au SHA-256 de son manifeste ;
+2. vérifie que l'export est entier (PostgreSQL écrit une dernière ligne quand il l'est) ;
+3. **charge l'export dans une base de contrôle** (créée pour cela, supprimée juste après) et vérifie qu'elle contient
+   les migrations et les tables ;
+4. **ouvre les réglages chiffrés avec les clés trouvées dans l'archive**, et non avec celles que la plateforme utilise :
+   c'est la preuve que l'archive et ses clés vont ensemble.
+
+Une sauvegarde qui échoue à l'une de ces étapes est supprimée, et les précédentes restent. Quand le serveur de base de
+données ne laisse pas la plateforme créer une base de contrôle (un PostgreSQL géré), seules les étapes 1 et 2 sont
+faites, et la sauvegarde est marquée « relue seulement ».
+
+## Combien sont gardées
+
+**7 quotidiennes, 4 hebdomadaires, 6 mensuelles**, comptées en jours de votre BDE :
+
+- la dernière sauvegarde de chacun des **7 jours les plus récents** qui en ont une ;
+- la première sauvegarde de chacune des **4 semaines les plus récentes** (du lundi au dimanche) ;
+- la première sauvegarde de chacun des **6 mois les plus récents**.
+
+Une même sauvegarde peut être plusieurs de ces choses à la fois. Cela fait 10 à 17 fichiers, d'il y a une semaine à il y
+a six mois. La plus récente n'est jamais supprimée. Un serveur resté éteint un mois garde tout de même ses 7 derniers
+jours : on compte les jours qui ont une sauvegarde, pas ceux du calendrier.
+
+Seuls les fichiers nommés `bde-auto-…` sont touchés : rien d'autre dans le dossier n'est jamais supprimé, et les
+sauvegardes faites avec `scripts/backup.sh` ne sont pas concernées.
+
+## Restaurer
+
+Tout se fait avec Docker seul, depuis le dossier du projet. Pour restaurer la **plus récente** :
+
+```text
+./scripts/restore.sh --auto
+```
+
+ou une en particulier (la liste est affichée si le nom est faux) :
+
+```text
+./scripts/restore.sh --auto bde-auto-2026-10-25_02-00-03Z.tar.gz
+```
+
+Le script explique ce qu'il va faire et demande de taper `RESTAURER`. Il fait d'abord une copie de sécurité de l'état
+actuel, remplace la base, remet les clés et le logo de la sauvegarde, et redémarre la plateforme. Les clés sont dans la
+sauvegarde : aucun autre fichier n'est nécessaire.
+
+**Sur un serveur neuf** (l'ancien est perdu) : installez Docker, récupérez le projet (`git clone`), lancez `docker
+compose up -d` (aucun `.env` n'est nécessaire), copiez le fichier de sauvegarde dans `backups/auto/` du nouveau
+serveur, puis `./scripts/restore.sh --auto`. Le BDE est de retour tel qu'il était, et les personnes qui étaient
+connectées le sont toujours.
+
+> Si le nouveau serveur a un `AUTH_SECRET` dans son `.env`, il l'emporte sur la clé de session restaurée et tout le
+> monde doit se reconnecter. Ne le mettez pas.
+
+## Docker sans droits d'administrateur (rootless)
+
+La plateforme écrit ses sauvegardes sous l'identité de l'utilisateur du conteneur. Avec un Docker ordinaire, le dossier
+`backups/auto/` appartient alors à cet utilisateur et **vous pouvez le lister mais pas lire les fichiers** (c'est à cela
+que servent les droits `600`), et `restore.sh --auto` les lit par le conteneur, donc cela marche pareil. Avec un Docker
+rootless, l'utilisateur du conteneur est un numéro de la plage du compte, avec le même effet : vous ne pouvez pas ouvrir
+vous-même les fichiers depuis l'hôte, et vous n'en avez pas besoin.
+
+Si le dossier ne peut pas servir du tout (un disque monté en lecture seule, un dossier où le conteneur n'a pas le droit
+d'écrire), la sauvegarde échoue avec la raison `folder` : voir plus bas.
+
+## Si une sauvegarde échoue
+
+Chaque sauvegarde, faite ou échouée, est écrite dans les journaux de la plateforme :
+
+```text
+docker compose logs app | grep -i sauvegarde
+```
+
+Un échec vient avec une raison :
+
+| Raison           | Ce que cela veut dire                                                              | Que faire                                                                 |
+| ---------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `folder`         | Le dossier des sauvegardes ne peut pas être créé ou écrit.                         | Vérifiez `BDE_BACKUP_DIR`, le disque, les droits du dossier.              |
+| `space`          | Moins de 50 Mio de libres, ou moins de trois fois la dernière sauvegarde.          | Libérez de la place sur le disque des sauvegardes.                        |
+| `dump`           | La base de données n'a pas pu être exportée.                                       | La base tourne-t-elle ? `docker compose ps`.                              |
+| `secrets`        | Les clés n'ont pas pu être lues.                                                   | Vérifiez le volume `secrets`.                                             |
+| `archive`        | L'archive n'a pas pu être écrite.                                                  | Vérifiez le disque.                                                       |
+| `verify-archive` | Le fichier écrit n'est pas ce que dit le manifeste (disque abîmé, archive coupée). | Vérifiez le disque ; les sauvegardes précédentes sont intactes.           |
+| `verify-restore` | L'export ne se charge pas dans une base de contrôle.                               | Gardez les journaux et demandez de l'aide : la base est peut-être abîmée. |
+| `verify-secrets` | Les clés de l'archive n'ouvrent pas les réglages chiffrés.                         | Le volume `secrets` n'est pas celui de cette base.                        |
+| `unexpected`     | Tout le reste.                                                                     | Lisez les journaux.                                                       |
+
+Une sauvegarde échouée ne remplace jamais une bonne : les sauvegardes précédentes restent telles qu'elles étaient.

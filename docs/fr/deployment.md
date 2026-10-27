@@ -243,6 +243,10 @@ Ensuite `docker compose up -d --build` suffit.
 
 ## Sauvegardes et restauration
 
+La plateforme se sauvegarde aussi **toute seule chaque nuit**, hors des volumes de Docker : voir
+[Sauvegardes automatiques](backups.md). Ce qui suit est la sauvegarde que vous faites vous-même, pour une copie que
+vous déplacez ou gardez.
+
 Une sauvegarde est faite de **deux archives**, créées ensemble par `scripts/backup.sh` :
 
 | Archive                                          | Contenu                                                                                                      |

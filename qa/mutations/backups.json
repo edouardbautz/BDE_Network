@@ -1,0 +1,191 @@
+[
+  [
+    "backups: the weekly backup is the newest of its week, so it moves every night",
+    "src/lib/backups/retention.ts",
+    "add(list[0]!.name, 'weekly')",
+    "add(list[list.length - 1]!.name, 'weekly')",
+    ["src/lib/backups/backups-plan.test.ts"]
+  ],
+  [
+    "backups: the monthly backup is the newest of its month",
+    "src/lib/backups/retention.ts",
+    "add(list[0]!.name, 'monthly')",
+    "add(list[list.length - 1]!.name, 'monthly')",
+    ["src/lib/backups/backups-plan.test.ts"]
+  ],
+  [
+    "backups: the daily backup is the oldest of its day",
+    "src/lib/backups/retention.ts",
+    "add(list[list.length - 1]!.name, 'daily')",
+    "add(list[0]!.name, 'daily')",
+    ["src/lib/backups/backups-plan.test.ts"]
+  ],
+  [
+    "backups: one more day is kept",
+    "src/lib/backups/retention.ts",
+    ".slice(0, policy.daily)",
+    ".slice(0, policy.daily + 1)",
+    ["src/lib/backups/backups-plan.test.ts"]
+  ],
+  [
+    "backups: one week too few is kept",
+    "src/lib/backups/retention.ts",
+    ".slice(0, policy.weekly)",
+    ".slice(0, policy.weekly - 1)",
+    ["src/lib/backups/backups-plan.test.ts"]
+  ],
+  [
+    "backups: one month too many is kept",
+    "src/lib/backups/retention.ts",
+    ".slice(0, policy.monthly)",
+    ".slice(0, policy.monthly + 1)",
+    ["src/lib/backups/backups-plan.test.ts"]
+  ],
+  [
+    "backups: the days are those of UTC, not of the BDE",
+    "src/lib/backups/retention.ts",
+    "toLocalDateTime(at, timeZone)",
+    "toLocalDateTime(at, 'UTC')",
+    ["src/lib/backups/backups-plan.test.ts"]
+  ],
+  [
+    "backups: the nightly backup is at 4:00",
+    "src/lib/backups/schedule.ts",
+    "export const BACKUP_HOUR = 3;",
+    "export const BACKUP_HOUR = 4;",
+    ["src/lib/backups/backups-plan.test.ts"]
+  ],
+  [
+    "backups: a successful backup of the day does not stop the next",
+    "src/lib/backups/schedule.ts",
+    "if (sinceSlot.some((attempt) => attempt.ok)) return { due: false, why: 'done' };",
+    "",
+    ["src/lib/backups/backups-plan.test.ts"]
+  ],
+  [
+    "backups: four attempts a day",
+    "src/lib/backups/schedule.ts",
+    "export const MAX_FAILURES_PER_DAY = 3;",
+    "export const MAX_FAILURES_PER_DAY = 4;",
+    ["src/lib/backups/backups-plan.test.ts"]
+  ],
+  [
+    "backups: a failure is tried again after 5 minutes",
+    "src/lib/backups/schedule.ts",
+    "export const RETRY_AFTER_MS = 30 * 60_000;",
+    "export const RETRY_AFTER_MS = 5 * 60_000;",
+    ["src/lib/backups/backups-plan.test.ts"]
+  ],
+  [
+    "backups: a name that is not a day is accepted",
+    "src/lib/backups/names.ts",
+    "return archiveName(at) === name ? at : null;",
+    "return at;",
+    ["src/lib/backups/backups-plan.test.ts"]
+  ],
+  [
+    "backups: the archive is not compared with its manifest",
+    "src/lib/backups/verify.ts",
+    "if (listed.join() !== present.join()) {",
+    "if (false) {",
+    ["src/lib/backups/run.test.ts"]
+  ],
+  [
+    "backups: the SHA-256 of the files is not checked",
+    "src/lib/backups/verify.ts",
+    " || (await sha256OfFile(path)) !== entry.sha256",
+    "",
+    ["src/lib/backups/run.test.ts"]
+  ],
+  [
+    "backups: the dump is not checked to be whole",
+    "src/lib/backups/verify.ts",
+    "if (!(await dumpIsWhole(join(opened, DATABASE_FILE)))) {",
+    "if (false) {",
+    ["src/lib/backups/run.test.ts"]
+  ],
+  [
+    "backups: the control database is not dropped",
+    "src/lib/backups/verify.ts",
+    "DROP DATABASE IF EXISTS",
+    "SELECT 1 -- ",
+    ["src/lib/backups/run.test.ts"]
+  ],
+  [
+    "backups: the settings are opened with another key than the one of the archive",
+    "src/lib/backups/verify.ts",
+    "unseal(sealed, await keyOf(opened, exec));",
+    "unseal(sealed, Buffer.alloc(32, 7));",
+    ["src/lib/backups/run.test.ts"]
+  ],
+  [
+    "backups: the dump is not loaded in a single transaction",
+    "src/lib/backups/verify.ts",
+    "'--single-transaction', ",
+    "",
+    ["src/lib/backups/run.test.ts"]
+  ],
+  [
+    "backups: the free space is not checked",
+    "src/lib/backups/run.ts",
+    "if (free !== null && free < Math.max(MIN_FREE_BYTES, 3 * previous)) {",
+    "if (false) {",
+    ["src/lib/backups/run.test.ts"]
+  ],
+  [
+    "backups: the rotation does not run",
+    "src/lib/backups/run.ts",
+    "const removed = await rotate(context);",
+    "const removed: string[] = [];",
+    ["src/lib/backups/run.test.ts"]
+  ],
+  [
+    "backups: two backups at once",
+    "src/lib/backups/run.ts",
+    "open(path, 'wx', 0o600)",
+    "open(path, 'w', 0o600)",
+    ["src/lib/backups/run.test.ts"]
+  ],
+  [
+    "backups: the password goes in the environment of the tool no more",
+    "src/lib/backups/connection.ts",
+    "if (url.password) env.PGPASSWORD = decodeURIComponent(url.password);",
+    "",
+    ["src/lib/backups/run.test.ts"]
+  ],
+  [
+    "backups: the download is encrypted with fewer rounds than restore.sh asks for",
+    "src/lib/backups/encrypt.ts",
+    "export const PBKDF2_ROUNDS = 600_000;",
+    "export const PBKDF2_ROUNDS = 100_000;",
+    ["src/lib/backups/encrypt.test.ts"]
+  ],
+  [
+    "backups: the server starts without the backups",
+    "src/instrumentation.ts",
+    "    const { startBackupScheduler } = await import('./lib/backups/scheduler');\n    startBackupScheduler();\n",
+    "",
+    ["src/instrumentation.test.ts"]
+  ],
+  [
+    "backups: the application does not get the folder",
+    "docker-compose.yml",
+    "      - ${BDE_BACKUP_DIR:-./backups/auto}:/auto-backups\n    # No bind",
+    "    # No bind",
+    ["scripts/compose.test.ts"]
+  ],
+  [
+    "backups: the folder is not handed to the application",
+    "docker-compose.yml",
+    "        chown 1001:1001 /auto-backups\n",
+    "",
+    ["scripts/compose.test.ts"]
+  ],
+  [
+    "backups: the stack number is not raised in the image",
+    "docker/safe-update.mjs",
+    "export const STACK_VERSION = 3;",
+    "export const STACK_VERSION = 2;",
+    ["scripts/compose.test.ts"]
+  ]
+]

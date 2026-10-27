@@ -138,15 +138,33 @@ export class Stack {
    * if the file were not theirs), and a file of the QA adds what the guide does not have: the database's port to look at it, and,
    * for the compose files that do not mount the configuration themselves, its mount.
    */
-  prepare(options: { mountsConfig: boolean; build: boolean }): void {
+  prepare(options: {
+    mountsConfig: boolean;
+    build: boolean;
+    /** More for the application (the backup suite sets the clock of the platform). */
+    app?: { volumes?: string[]; environment?: Record<string, string> };
+  }): void {
     writeFileSync(join(this.dir, 'bde.config.yml'), CONFIG);
     const lines = [
       'services:',
       '  postgres:',
       `    ports: ['127.0.0.1:${this.databasePort}:5432']`,
     ];
-    if (options.mountsConfig) {
-      lines.push('  app:', '    volumes:', '      - ./bde.config.yml:/app/bde.config.yml:ro');
+    const volumes = [
+      ...(options.mountsConfig ? ['./bde.config.yml:/app/bde.config.yml:ro'] : []),
+      ...(options.app?.volumes ?? []),
+    ];
+    const environment = Object.entries(options.app?.environment ?? {});
+    if (volumes.length > 0 || environment.length > 0) {
+      lines.push('  app:');
+      if (volumes.length > 0)
+        lines.push('    volumes:', ...volumes.map((v) => `      - ${JSON.stringify(v)}`));
+      if (environment.length > 0) {
+        lines.push(
+          '    environment:',
+          ...environment.map(([k, v]) => `      ${k}: ${JSON.stringify(v)}`),
+        );
+      }
     }
     writeFileSync(join(this.dir, 'qa-override.yml'), `${lines.join('\n')}\n`);
     this.files = options.build

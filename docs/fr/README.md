@@ -24,8 +24,9 @@ Cette documentation est écrite en français et en anglais. Les deux versions di
 2. [Déploiement](deployment.md) : un serveur, un nom de domaine, HTTPS et sauvegardes.
 3. [Configuration](configuration.md) : la page Paramètres et la référence de chaque réglage.
 4. [Mettre à jour](upgrading.md) : sauvegarde, commande, vérification, retour arrière.
-5. [Problèmes fréquents](troubleshooting.md) : ce que l'on voit, pourquoi, que faire.
-6. [Qualité](quality.md) : ce qui est vérifié, comment, ce que cela a trouvé, et ce qui n'est pas couvert.
+5. [Sauvegardes automatiques](backups.md) : chaque nuit, vérifiées, restaurées en une commande.
+6. [Problèmes fréquents](troubleshooting.md) : ce que l'on voit, pourquoi, que faire.
+7. [Qualité](quality.md) : ce qui est vérifié, comment, ce que cela a trouvé, et ce qui n'est pas couvert.
 
 ### Je contribue au code
 

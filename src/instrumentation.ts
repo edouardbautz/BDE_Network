@@ -52,5 +52,9 @@ export async function register(): Promise<void> {
 
     const { startEventReminderScheduler } = await import('./lib/events/scheduler');
     startEventReminderScheduler();
+
+    // The nightly backup (03:00, BDE time), whether or not the events module is on.
+    const { startBackupScheduler } = await import('./lib/backups/scheduler');
+    startBackupScheduler();
   }
 }

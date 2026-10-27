@@ -59,6 +59,7 @@ ENV NODE_ENV=production \
     PRISMA_HIDE_UPDATE_MESSAGE=1 \
     CHECKPOINT_DISABLE=1 \
     UPLOADS_DIR=/uploads \
+    BDE_BACKUP_DIR=/auto-backups \
     NODE_OPTIONS="--max-old-space-size=384 --max-semi-space-size=32"
 # NODE_OPTIONS: on a computer with a lot of memory, Node.js lets its heap grow to a gigabyte and more before it cleans (1,060 MiB
 # after the load of 20 people, on a server that a BDE shares with other things). With these two limits the same load peaks at
@@ -71,7 +72,7 @@ ENV NODE_ENV=production \
 # published for Alpine before it reaches the next Node image, and the scan of the image (CI) fails on a fix that is there.
 # (`libstdc++` is the one library the binary of Node.js needs besides the system's.) Nothing here needs npm or yarn: the server is
 # started with `node`.
-RUN apk upgrade --no-cache && apk add --no-cache libstdc++ postgresql17-client \
+RUN apk upgrade --no-cache && apk add --no-cache libstdc++ postgresql17-client openssl \
  && addgroup --system --gid 1001 nodejs \
  && adduser --system --uid 1001 nextjs
 
@@ -96,7 +97,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.bde-version /opt/start/version
 # written when the image runs without the volume, and so that a new volume starts with the right owner.
 # Where the `uploads` volume is mounted: the BDE's logo (src/lib/branding). Also created here, for the same reason.
 # Where the `backups` volume is mounted: the copies of the database made before an update. Created here for the same reason.
-RUN mkdir /secrets /uploads /backups && chown nextjs:nodejs /secrets /uploads /backups && chmod 700 /secrets /backups
+# Where the nightly backups go (BDE_BACKUP_DIR; a folder of the host in docker-compose.yml, because they must outlive the volumes).
+# `openssl` (installed above) opens a downloaded, encrypted backup on a server that has nothing but Docker (scripts/restore.sh).
+RUN mkdir /secrets /uploads /backups /auto-backups && chown nextjs:nodejs /secrets /uploads /backups /auto-backups && chmod 700 /secrets /backups
 USER nextjs
 EXPOSE 3000
 

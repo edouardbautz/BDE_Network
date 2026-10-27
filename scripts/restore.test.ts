@@ -38,6 +38,9 @@ const DOCKER_STUB = `#!/bin/sh
 echo "docker $*" >> "$STUB_LOG"
 case "$*" in
   *"ps --status running"*) echo postgres ;;
+  *"--entrypoint ls app -1 /auto-backups"*) printf 'bde-auto-2026-10-25_02-00-00Z.tar.gz\nbde-auto-2026-10-26_02-00-00Z.tar.gz\n' ;;
+  *"--entrypoint cat app /auto-backups/"*) cat "$STUB_DIR/auto.tar.gz" ;;
+  *openssl*) cat > /dev/null; if [ -f "$STUB_DIR/wrong-passphrase" ]; then exit 1; fi; cat "$STUB_DIR/auto.tar.gz" ;;
   *pg_dump*) echo "-- PostgreSQL database dump complete" ;;
   *"--entrypoint ls app"*) echo "pre-update_20261015T101530Z_v1.1.0.sql.gz" ;;
   *"--entrypoint cat app"*) gzip -c "$STUB_DIR/database.sql" ;;
@@ -106,6 +109,21 @@ describe.skipIf(!hasShell || process.platform === 'win32')(
       ]);
     });
 
+    beforeEach(() => {
+      // an automatic backup: the dump, the keys, the logo's absence is fine, and the manifest the platform wrote
+      writeFileSync(join(work, 'manifest.json'), '{}');
+      spawnSync('tar', [
+        '-czf',
+        join(work, 'auto.tar.gz'),
+        '-C',
+        work,
+        'database.sql',
+        'secrets.tar',
+        'info.txt',
+        'manifest.json',
+      ]);
+    });
+
     afterEach(() => rmSync(work, { recursive: true, force: true }));
 
     /** The commands that start the application, after the database was replaced. */
@@ -136,6 +154,120 @@ describe.skipIf(!hasShell || process.platform === 'win32')(
       expect(result.status, result.stderr).toBe(0);
       expect(docker().some((line) => line.includes('psql'))).toBe(true);
       expect(startsOfTheApp()).toEqual([]);
+    });
+
+    describe('the backups the platform makes by itself', () => {
+      it("--auto restores the newest one, read through the application's own container, keys included", () => {
+        const result = restore('--auto', '--yes');
+        expect(result.status, result.stderr).toBe(0);
+        const lines = docker();
+        expect(
+          lines.some((line) =>
+            line.includes('cat app /auto-backups/bde-auto-2026-10-26_02-00-00Z.tar.gz'),
+          ),
+        ).toBe(true);
+        expect(lines.some((line) => line.includes('psql'))).toBe(true);
+        // the keys come out of the archive itself: no second file to give
+        expect(lines.some((line) => line.includes('tar app -xf - -C /secrets'))).toBe(true);
+        expect(result.stdout).toMatch(/clés de la sauvegarde/);
+        expect(result.stdout).not.toMatch(/Rappel/);
+      });
+
+      it('--auto restores the one that is named, and refuses a name that is not in the folder', () => {
+        const named = restore('--auto', 'bde-auto-2026-10-25_02-00-00Z.tar.gz', '--yes');
+        expect(named.status, named.stderr).toBe(0);
+        expect(
+          docker().some((line) =>
+            line.includes('/auto-backups/bde-auto-2026-10-25_02-00-00Z.tar.gz'),
+          ),
+        ).toBe(true);
+
+        writeFileSync(log, '');
+        const unknown = restore('--auto', 'bde-auto-2020-01-01_00-00-00Z.tar.gz', '--yes');
+        expect(unknown.status).not.toBe(0);
+        expect(unknown.stderr).toMatch(/introuvable/);
+        expect(docker().some((line) => line.includes('psql'))).toBe(false);
+      });
+
+      it('--auto does not mix with a file or with --pre-update', () => {
+        expect(restore('--auto', 'backup.tar.gz', '--yes').status).toBe(2);
+        expect(restore('--auto', '--pre-update', '--yes').status).toBe(2);
+      });
+
+      it('restores the keys of a backup that holds them, and says nothing about a missing key archive', () => {
+        const result = restore('auto.tar.gz', '--yes');
+        expect(result.status, result.stderr).toBe(0);
+        expect(docker().some((line) => line.includes('tar app -xf - -C /secrets'))).toBe(true);
+        expect(result.stdout).not.toMatch(/Rappel/);
+      });
+
+      it('lets an archive of keys given by hand replace the one inside', () => {
+        const result = restore('auto.tar.gz', '--secrets', 'secrets.tar', '--yes');
+        // secrets.tar is not a gzip: the check of the keys archive refuses it before anything is touched
+        expect(result.status).not.toBe(0);
+        expect(docker().some((line) => line.includes('psql'))).toBe(false);
+      });
+
+      it("decrypts a downloaded file in the application's image, the passphrase in the environment and never on a command line", () => {
+        copyFileSync(
+          join(work, 'auto.tar.gz'),
+          join(work, 'bde-auto-2026-10-26_02-00-00Z.tar.gz.enc'),
+        );
+        const result = spawnSync(
+          'sh',
+          ['scripts/restore.sh', 'bde-auto-2026-10-26_02-00-00Z.tar.gz.enc', '--yes'],
+          {
+            cwd: work,
+            encoding: 'utf8',
+            env: {
+              ...process.env,
+              PATH: `${posix(join(work, 'bin'))}:${process.env.PATH}`,
+              STUB_LOG: posix(log),
+              STUB_DIR: posix(work),
+              BDE_BACKUP_PASSPHRASE: 'correct horse battery staple',
+            },
+          },
+        );
+        expect(result.status, result.stderr).toBe(0);
+        const lines = docker();
+        const decrypt = lines.find((line) => line.includes('openssl enc -d'))!;
+        expect(decrypt).toContain(
+          '-aes-256-cbc -pbkdf2 -iter 600000 -md sha256 -pass env:BDE_BACKUP_PASSPHRASE',
+        );
+        expect(lines.join('\n')).not.toContain('correct horse');
+        expect(lines.some((line) => line.includes('psql'))).toBe(true);
+      });
+
+      it('stops before touching anything when the passphrase is wrong', () => {
+        copyFileSync(join(work, 'auto.tar.gz'), join(work, 'download.tar.gz.enc'));
+        writeFileSync(join(work, 'wrong-passphrase'), '');
+        const result = spawnSync('sh', ['scripts/restore.sh', 'download.tar.gz.enc', '--yes'], {
+          cwd: work,
+          encoding: 'utf8',
+          env: {
+            ...process.env,
+            PATH: `${posix(join(work, 'bin'))}:${process.env.PATH}`,
+            STUB_LOG: posix(log),
+            STUB_DIR: posix(work),
+            BDE_BACKUP_PASSPHRASE: 'not the one',
+          },
+        });
+        expect(result.status).not.toBe(0);
+        expect(result.stderr).toMatch(/phrase de passe incorrecte/);
+        const lines = docker();
+        expect(lines.some((line) => line.includes('psql'))).toBe(false);
+        expect(lines.some((line) => line.includes('backup.sh') || line.includes('pg_dump'))).toBe(
+          false,
+        );
+      });
+
+      it('asks for the passphrase, and does nothing, when there is no terminal to ask on', () => {
+        copyFileSync(join(work, 'auto.tar.gz'), join(work, 'download.tar.gz.enc'));
+        const result = restore('download.tar.gz.enc', '--yes');
+        expect(result.status).not.toBe(0);
+        expect(result.stderr).toMatch(/BDE_BACKUP_PASSPHRASE/);
+        expect(docker().some((line) => line.includes('psql'))).toBe(false);
+      });
     });
 
     it('still starts the application again when the restore fails (the database is as it was)', () => {

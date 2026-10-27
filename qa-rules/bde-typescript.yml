@@ -43,8 +43,9 @@ rules:
     languages: [typescript]
     severity: ERROR
     message: >-
-      The application never starts a process: the container has no tool for it, and what a member types must never
-      get near a shell. (The scripts of `scripts/`, `docker/` and `qa/` are not the application.)
+      The application never starts a process, except through `src/lib/backups/exec.ts` (the nightly backup needs `pg_dump`, `psql` and `tar`:
+      no shell, fixed arguments, nothing a member typed). What a member types must never get near a shell. (The scripts of `scripts/`,
+      `docker/` and `qa/` are not the application.)
     pattern-either:
       - pattern: import $X from 'child_process'
       - pattern: import $X from 'node:child_process'
@@ -54,8 +55,9 @@ rules:
       - pattern: require('node:child_process')
     paths:
       include: [src/]
-      # A test may start a process of its own (a fresh Node, to look at what a module does when it is loaded).
-      exclude: ['**/*.test.ts', '**/*.test.tsx']
+      # A test may start a process of its own (a fresh Node, to look at what a module does when it is loaded). The one door of the
+      # application is the backups' exec.ts (exec.test.ts checks that no other file of src/ opens another).
+      exclude: ['**/*.test.ts', '**/*.test.tsx', 'src/lib/backups/exec.ts']
 
   - id: bde-no-math-random
     languages: [typescript]

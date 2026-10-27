@@ -286,12 +286,13 @@ read **once**, at the first start after an update, to be copied into the databas
 
 These variables are **always** read from `.env`, because they set Docker and not the platform:
 
-| Variable     | Role                                                                                                                                                                                                                                                              |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `APP_BIND`   | The address where Docker publishes the port. Default `127.0.0.1`: only the machine itself reaches it, behind an HTTPS proxy. `0.0.0.0` opens the port to the whole network, over plain HTTP: read [Without an HTTPS proxy](deployment.md#without-an-https-proxy). |
-| `APP_PORT`   | The port published on the machine (default `3000`). Change it only if another program uses it; the 42 redirect URL must then carry the same port.                                                                                                                 |
-| `APP_MEMORY` | The most memory Docker gives the application (default `768m`). Node.js keeps its heap under 384 MiB; raise both on a bigger server (see [What size of server](deployment.md#what-size-of-server)).                                                                |
-| `DB_MEMORY`  | The most memory Docker gives PostgreSQL (default `384m`; it uses about 40 MiB).                                                                                                                                                                                   |
+| Variable         | Role                                                                                                                                                                                                                                                              |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `APP_BIND`       | The address where Docker publishes the port. Default `127.0.0.1`: only the machine itself reaches it, behind an HTTPS proxy. `0.0.0.0` opens the port to the whole network, over plain HTTP: read [Without an HTTPS proxy](deployment.md#without-an-https-proxy). |
+| `APP_PORT`       | The port published on the machine (default `3000`). Change it only if another program uses it; the 42 redirect URL must then carry the same port.                                                                                                                 |
+| `APP_MEMORY`     | The most memory Docker gives the application (default `768m`). Node.js keeps its heap under 384 MiB; raise both on a bigger server (see [What size of server](deployment.md#what-size-of-server)).                                                                |
+| `DB_MEMORY`      | The most memory Docker gives PostgreSQL (default `384m`; it uses about 40 MiB).                                                                                                                                                                                   |
+| `BDE_BACKUP_DIR` | The folder of the host where the nightly backups are kept (default `./backups/auto`, next to `docker-compose.yml`). See [Automatic backups](backups.md).                                                                                                          |
 
 And for maintenance and development:
 
