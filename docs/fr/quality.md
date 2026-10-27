@@ -92,6 +92,41 @@ ne doit pas (la matrice d'accès et les attaques), une écriture laissée à moi
 session perdue par une panne, une date, une heure, un droit ou une ligne changés par une mise à jour depuis la 1.0.0, la 1.1.0, la
 1.2.0, la 1.3.0 ou la 1.4.0, un rappel envoyé deux fois ou pas du tout sur un an et demi, et un lien mort dans l'interface.
 
+## Vitesse et ressources : les chiffres
+
+Un BDE héberge souvent la plateforme sur un petit serveur que personne ne surveille. Une campagne d'optimisation part
+donc de **mesures**, prises de la même façon avant et après chaque changement, et un changement qui n'apporte pas de gain
+mesuré n'est pas fait. `qa/optim` les prend sur l'image de production et le jeu de données de qualité
+(`npx tsx qa/optim/measure.ts`) ; le workflow `measures` le fait chaque nuit sur la machine de la CI (4 CPU, 16 Go, plus
+grosse qu'un serveur d'école), sur trois jeux de données : deux années scolaires avec 300 membres, un BDE tel qu'il est
+(150 comptes) et cinq ans avec 1 500 membres. Les chiffres en octets et en requêtes ne dépendent pas de la machine ; les
+durées ne se comparent qu'à d'autres mesures prises sur la même. Les mesures brutes du point de départ sont dans
+`qa/optim/baselines/`.
+
+| Ce qui est mesuré                                                       | Avant (2026-10-27)           | Objectif                                |
+| ----------------------------------------------------------------------- | ---------------------------- | --------------------------------------- |
+| Image Docker                                                            | 318 Mo                       | 250 Mo ou moins                         |
+| Scripts chargés d'emblée : connexion, tableau de bord, un événement     | 249, 256 et 281 Ko           | 200 Ko ou moins                         |
+| Plus grand affichage (LCP) sur téléphone, réseau lent : tableau de bord | 4,2 s (un événement : 4,3 s) | 3,5 s ou moins                          |
+| Requêtes envoyées à la base : tableau de bord, calendrier, événement    | 10, 12 et 10                 | 8 ou moins                              |
+| Mémoire de l'application sous la charge de 20 personnes                 | 1 105 Mo (103 Mo au repos)   | 450 Mo ou moins, même débit             |
+| 95 % des réponses sous cette charge                                     | 1,56 s                       | 30 % de moins                           |
+| Redémarrage jusqu'à ce que la plateforme réponde                        | 2,6 s                        | 1,6 s ou moins                          |
+| Le plus petit serveur qui tient la charge                               | pas essayé                   | 1 CPU et 1 Go, aucune requête en échec  |
+| Journaux Docker                                                         | sans limite                  | 30 Mo au plus                           |
+| Durée des vérifications d'une pull request                              | 12 à 17 minutes              | 9 minutes ou moins, mêmes vérifications |
+
+Ce que disent les mesures, et qui décide où va l'effort : la base de données n'est pas le goulot (aucune page n'envoie une
+requête cinq fois ou plus, aucune n'en envoie plus de 12, et une page passe 0,1 à 7 ms en base même avec cinq ans de
+données) ; le processus Node.js l'est, en mémoire et en processeur. Les données grossissent lentement : le journal d'audit
+écrit environ 300 octets par ligne et en compte 1 319 après deux années scolaires, et toute la base pèse 10 Mo (12,6 Mo
+avec cinq ans et 1 500 membres) ; aucune purge n'est donc prévue.
+
+**Une limite connue.** La page des membres liste tous les comptes d'un coup, sans pagination : un BDE compte quelques
+dizaines de comptes (le bureau et le staff), et la page est faite pour cela. Avec 1 511 comptes, elle met 628 ms à se
+construire et pèse 272 Ko de HTML (89 Ko avec 311 comptes, où le plus grand affichage sur téléphone est déjà de 4,6 s). Au-delà
+de quelques centaines de comptes, paginez-la avant de vous y fier.
+
 ## Ce qui n'est pas couvert
 
 Être clair là-dessus compte autant que le reste.

@@ -89,6 +89,40 @@ may not (the access matrix and the attacks), a write left half done when the dat
 by an outage, a date, an hour, a right or a row changed by an update from 1.0.0, 1.1.0, 1.2.0, 1.3.0 or 1.4.0, a reminder sent twice or not
 sent over a year and a half, and a dead link in the interface.
 
+## Speed and resources: the numbers
+
+A BDE often hosts the platform on a small server that nobody watches. An optimisation campaign therefore starts from
+**measures**, taken the same way before and after each change, and a change that does not show a measured gain is not
+made. `qa/optim` takes them on the production image and the quality dataset (`npx tsx qa/optim/measure.ts`); the
+`measures` workflow does it every night on the CI's machine (4 CPUs, 16 GiB, bigger than a school's server), on three
+datasets: two school years with 300 members, a BDE as they are (150 accounts) and five years with 1,500 members. The
+numbers in bytes and in statements do not depend on the machine; the durations only compare with other measures taken
+on the same one. The raw measures of the starting point are in `qa/optim/baselines/`.
+
+| What                                                           | Before (2026-10-27)         | Objective                          |
+| -------------------------------------------------------------- | --------------------------- | ---------------------------------- |
+| Docker image                                                   | 318 MiB                     | 250 MiB or less                    |
+| Scripts loaded at once: sign-in, dashboard, an event           | 249, 256 and 281 KiB        | 200 KiB or less                    |
+| Largest contentful paint on a phone, slow network: dashboard   | 4.2 s (an event: 4.3 s)     | 3.5 s or less                      |
+| Statements sent to the database: dashboard, calendar, an event | 10, 12 and 10               | 8 or fewer                         |
+| Memory of the application under the load of 20 people          | 1,105 MiB (103 MiB at rest) | 450 MiB or less, same throughput   |
+| 95 % of the answers under that load                            | 1.56 s                      | 30 % less                          |
+| Restart until the platform answers                             | 2.6 s                       | 1.6 s or less                      |
+| The smallest server that holds the load                        | not tried                   | 1 CPU and 1 GiB, no request failed |
+| Docker logs                                                    | no limit                    | 30 MiB at most                     |
+| Duration of the checks of a pull request                       | 12 to 17 minutes            | 9 minutes or less, same checks     |
+
+What the measures say, which decides where the effort goes: the database is not the bottleneck (no page sends a statement
+five times or more, none sends more than 12, and a page spends 0.1 to 7 ms in the database even with five years of data);
+the Node.js process is, in memory and in processor. The data grows slowly: the audit log writes about 300 bytes a line and
+holds 1,319 lines after two school years, and the whole database weighs 10 MiB (12.6 MiB with five years and 1,500 members),
+so no purge is planned.
+
+**A known limit.** The members page lists every account at once, with no pagination: a BDE has tens of accounts (the
+board and the staff), and the page is built for that. With 1,511 accounts it takes 628 ms to build and weighs 272 KiB of
+HTML (89 KiB with 311 accounts, where the largest contentful paint on a phone is already 4.6 s). Past a few hundred accounts,
+paginate it before relying on it.
+
 ## What is not covered
 
 Being clear about this matters as much as the rest.

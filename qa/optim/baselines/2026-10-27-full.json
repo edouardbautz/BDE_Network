@@ -1,0 +1,1657 @@
+{
+  "label": "full dataset",
+  "takenAt": "2026-10-27T06:56:34.283Z",
+  "environment": {
+    "platform": "Linux 6.17.0-1022-azure",
+    "cpus": 4,
+    "memoryGiB": 15.6,
+    "node": "v22.23.3"
+  },
+  "dataset": {
+    "EventOccurrence": 212,
+    "EventCancellation": 172,
+    "NotificationTemplateVersion": 8,
+    "Role": 10,
+    "NotificationMention": 3,
+    "NotificationTemplate": 5,
+    "AuditLog": 1319,
+    "Event": 631,
+    "_prisma_migrations": 13,
+    "PlatformSettings": 1,
+    "IntraRequest": 196,
+    "EventAssignee": 935,
+    "User": 311,
+    "EventReminder": 743
+  },
+  "image": {
+    "name": "bde-network",
+    "bytes": 333529764,
+    "inspectedBytes": 333529764,
+    "layers": [
+      {
+        "bytes": 0,
+        "createdBy": "CMD [\"node\" \"/opt/start/start.mjs\"]"
+      },
+      {
+        "bytes": 0,
+        "createdBy": "HEALTHCHECK {Test:[CMD-SHELL wget -qO- http:…"
+      },
+      {
+        "bytes": 0,
+        "createdBy": "EXPOSE [3000/tcp]"
+      },
+      {
+        "bytes": 0,
+        "createdBy": "USER nextjs"
+      },
+      {
+        "bytes": 0,
+        "createdBy": "RUN /bin/sh -c mkdir /secrets /uploads /back…"
+      },
+      {
+        "bytes": 6,
+        "createdBy": "COPY --chown=nextjs:nodejs /app/.bde-version…"
+      },
+      {
+        "bytes": 62620,
+        "createdBy": "COPY --chown=nextjs:nodejs docker/start.mjs …"
+      },
+      {
+        "bytes": 507,
+        "createdBy": "COPY --chown=nextjs:nodejs docker/prisma.con…"
+      },
+      {
+        "bytes": 118131626,
+        "createdBy": "COPY --chown=nextjs:nodejs /opt/migrate /opt…"
+      },
+      {
+        "bytes": 30346,
+        "createdBy": "COPY --chown=nextjs:nodejs /app/prisma/migra…"
+      },
+      {
+        "bytes": 19662,
+        "createdBy": "COPY --chown=nextjs:nodejs /app/prisma/schem…"
+      },
+      {
+        "bytes": 485,
+        "createdBy": "COPY --chown=nextjs:nodejs /app/bde.config.y…"
+      },
+      {
+        "bytes": 83688,
+        "createdBy": "COPY --chown=nextjs:nodejs /app/public ./pub…"
+      },
+      {
+        "bytes": 1883625,
+        "createdBy": "COPY --chown=nextjs:nodejs /app/.next/static…"
+      },
+      {
+        "bytes": 39865176,
+        "createdBy": "COPY --chown=nextjs:nodejs /app/.next/standa…"
+      },
+      {
+        "bytes": 3444,
+        "createdBy": "RUN /bin/sh -c rm -rf /usr/local/lib/node_mo…"
+      },
+      {
+        "bytes": 5226269,
+        "createdBy": "RUN /bin/sh -c apk upgrade --no-cache && apk…"
+      },
+      {
+        "bytes": 0,
+        "createdBy": "ENV NODE_ENV=production PORT=3000 HOSTNAME=0…"
+      },
+      {
+        "bytes": 0,
+        "createdBy": "WORKDIR /app"
+      },
+      {
+        "bytes": 0,
+        "createdBy": "ENV NEXT_TELEMETRY_DISABLED=1"
+      },
+      {
+        "bytes": 0,
+        "createdBy": "CMD [\"node\"]"
+      },
+      {
+        "bytes": 0,
+        "createdBy": "ENTRYPOINT [\"docker-entrypoint.sh\"]"
+      },
+      {
+        "bytes": 388,
+        "createdBy": "COPY docker-entrypoint.sh /usr/local/bin/ # …"
+      },
+      {
+        "bytes": 5366589,
+        "createdBy": "RUN /bin/sh -c apk add --no-cache --virtual …"
+      },
+      {
+        "bytes": 0,
+        "createdBy": "ENV YARN_VERSION=1.22.22"
+      },
+      {
+        "bytes": 154432930,
+        "createdBy": "RUN /bin/sh -c addgroup -g 1000 node && …"
+      },
+      {
+        "bytes": 0,
+        "createdBy": "ENV NODE_VERSION=22.23.4"
+      },
+      {
+        "bytes": 0,
+        "createdBy": "CMD [\"/bin/sh\"]"
+      },
+      {
+        "bytes": 8422403,
+        "createdBy": "ADD alpine-minirootfs-3.24.3-x86_64.tar.gz /…"
+      }
+    ],
+    "folders": [
+      {
+        "kib": 343264,
+        "path": "/"
+      },
+      {
+        "kib": 149420,
+        "path": "/usr"
+      },
+      {
+        "kib": 149420,
+        "path": "/usr"
+      },
+      {
+        "kib": 139028,
+        "path": "/opt"
+      },
+      {
+        "kib": 139028,
+        "path": "/opt"
+      },
+      {
+        "kib": 138944,
+        "path": "/opt/migrate"
+      },
+      {
+        "kib": 138932,
+        "path": "/opt/migrate/node_modules"
+      },
+      {
+        "kib": 134844,
+        "path": "/usr/local"
+      },
+      {
+        "kib": 127028,
+        "path": "/usr/local/bin"
+      },
+      {
+        "kib": 49316,
+        "path": "/app"
+      },
+      {
+        "kib": 49316,
+        "path": "/app"
+      },
+      {
+        "kib": 38900,
+        "path": "/app/node_modules"
+      },
+      {
+        "kib": 29236,
+        "path": "/app/node_modules/next"
+      },
+      {
+        "kib": 11112,
+        "path": "/usr/lib"
+      },
+      {
+        "kib": 9960,
+        "path": "/app/.next"
+      },
+      {
+        "kib": 7576,
+        "path": "/app/.next/server"
+      },
+      {
+        "kib": 6668,
+        "path": "/usr/local/include"
+      },
+      {
+        "kib": 4800,
+        "path": "/app/node_modules/@prisma"
+      },
+      {
+        "kib": 3156,
+        "path": "/usr/libexec"
+      },
+      {
+        "kib": 3152,
+        "path": "/usr/libexec/postgresql17"
+      },
+      {
+        "kib": 3060,
+        "path": "/var"
+      },
+      {
+        "kib": 3060,
+        "path": "/var"
+      },
+      {
+        "kib": 3000,
+        "path": "/var/cache"
+      },
+      {
+        "kib": 2988,
+        "path": "/var/cache/apk"
+      },
+      {
+        "kib": 2504,
+        "path": "/app/node_modules/caniuse-lite"
+      }
+    ],
+    "packages": [
+      {
+        "kib": 34612,
+        "path": "/opt/migrate/node_modules/effect"
+      },
+      {
+        "kib": 29236,
+        "path": "/app/node_modules/next"
+      },
+      {
+        "kib": 24400,
+        "path": "/opt/migrate/node_modules/@prisma/engines"
+      },
+      {
+        "kib": 18776,
+        "path": "/opt/migrate/node_modules/@prisma/dev"
+      },
+      {
+        "kib": 13796,
+        "path": "/opt/migrate/node_modules/@prisma/studio-core"
+      },
+      {
+        "kib": 12196,
+        "path": "/opt/migrate/node_modules/prisma"
+      },
+      {
+        "kib": 5272,
+        "path": "/opt/migrate/node_modules/remeda"
+      },
+      {
+        "kib": 5008,
+        "path": "/opt/migrate/node_modules/lodash"
+      },
+      {
+        "kib": 4708,
+        "path": "/app/node_modules/@prisma/client"
+      },
+      {
+        "kib": 4632,
+        "path": "/opt/migrate/node_modules/fast-check"
+      },
+      {
+        "kib": 2836,
+        "path": "/opt/migrate/node_modules/@prisma/fetch-engine"
+      },
+      {
+        "kib": 2544,
+        "path": "/opt/migrate/node_modules/ajv"
+      },
+      {
+        "kib": 2504,
+        "path": "/app/node_modules/caniuse-lite"
+      },
+      {
+        "kib": 1824,
+        "path": "/opt/migrate/node_modules/valibot"
+      },
+      {
+        "kib": 1768,
+        "path": "/opt/migrate/node_modules/jiti"
+      },
+      {
+        "kib": 1496,
+        "path": "/opt/migrate/node_modules/@prisma/streams-local"
+      },
+      {
+        "kib": 1428,
+        "path": "/app/node_modules/react-dom"
+      },
+      {
+        "kib": 1412,
+        "path": "/opt/migrate/node_modules/@prisma/get-platform"
+      },
+      {
+        "kib": 1056,
+        "path": "/opt/migrate/node_modules/mysql2"
+      },
+      {
+        "kib": 672,
+        "path": "/opt/migrate/node_modules/find-my-way"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "name": "login",
+      "who": "anonymous",
+      "path": "/fr",
+      "status": 200,
+      "firstByteMs": {
+        "n": 15,
+        "median": 20.82027999999991,
+        "p95": 32.83743200000026,
+        "min": 16.108670000000075,
+        "max": 32.83743200000026
+      },
+      "totalMs": {
+        "n": 15,
+        "median": 25.63530300000002,
+        "p95": 38.185547999999926,
+        "min": 20.745813,
+        "max": 38.185547999999926
+      },
+      "htmlBytes": 33341,
+      "scripts": {
+        "count": 17,
+        "bytes": 255395
+      },
+      "referencedScripts": {
+        "count": 22,
+        "bytes": 310104
+      },
+      "stylesheets": {
+        "count": 2,
+        "bytes": 15069
+      }
+    },
+    {
+      "name": "privacy",
+      "who": "anonymous",
+      "path": "/fr/privacy",
+      "status": 200,
+      "firstByteMs": {
+        "n": 15,
+        "median": 16.841601000000082,
+        "p95": 21.97133500000018,
+        "min": 14.518215999999939,
+        "max": 21.97133500000018
+      },
+      "totalMs": {
+        "n": 15,
+        "median": 21.58215199999995,
+        "p95": 26.721038000000135,
+        "min": 19.141280999999708,
+        "max": 26.721038000000135
+      },
+      "htmlBytes": 35925,
+      "scripts": {
+        "count": 22,
+        "bytes": 309979
+      },
+      "referencedScripts": {
+        "count": 22,
+        "bytes": 309979
+      },
+      "stylesheets": {
+        "count": 2,
+        "bytes": 15069
+      }
+    },
+    {
+      "name": "dashboard",
+      "who": "member",
+      "path": "/fr/dashboard",
+      "status": 200,
+      "firstByteMs": {
+        "n": 15,
+        "median": 32.53780599999982,
+        "p95": 68.98124499999994,
+        "min": 27.38263299999926,
+        "max": 68.98124499999994
+      },
+      "totalMs": {
+        "n": 15,
+        "median": 70.1534459999998,
+        "p95": 87.24304800000027,
+        "min": 63.70080999999982,
+        "max": 87.24304800000027
+      },
+      "htmlBytes": 42793,
+      "scripts": {
+        "count": 19,
+        "bytes": 261728
+      },
+      "referencedScripts": {
+        "count": 23,
+        "bytes": 316100
+      },
+      "stylesheets": {
+        "count": 2,
+        "bytes": 15069
+      }
+    },
+    {
+      "name": "calendar",
+      "who": "member",
+      "path": "/fr/events?view=calendar&month=2026-10",
+      "status": 200,
+      "firstByteMs": {
+        "n": 15,
+        "median": 29.550535999999738,
+        "p95": 43.107772000000296,
+        "min": 25.588496000000305,
+        "max": 43.107772000000296
+      },
+      "totalMs": {
+        "n": 15,
+        "median": 105.00932899999952,
+        "p95": 120.85851999999977,
+        "min": 98.01386199999979,
+        "max": 120.85851999999977
+      },
+      "htmlBytes": 66204,
+      "scripts": {
+        "count": 18,
+        "bytes": 258461
+      },
+      "referencedScripts": {
+        "count": 23,
+        "bytes": 315562
+      },
+      "stylesheets": {
+        "count": 2,
+        "bytes": 15069
+      }
+    },
+    {
+      "name": "events-list",
+      "who": "member",
+      "path": "/fr/events?view=list",
+      "status": 200,
+      "firstByteMs": {
+        "n": 15,
+        "median": 29.89267800000016,
+        "p95": 32.88162999999986,
+        "min": 27.981567999999243,
+        "max": 32.88162999999986
+      },
+      "totalMs": {
+        "n": 15,
+        "median": 136.39254900000014,
+        "p95": 144.36740699999973,
+        "min": 126.96686699999918,
+        "max": 144.36740699999973
+      },
+      "htmlBytes": 62379,
+      "scripts": {
+        "count": 18,
+        "bytes": 258461
+      },
+      "referencedScripts": {
+        "count": 23,
+        "bytes": 315562
+      },
+      "stylesheets": {
+        "count": 2,
+        "bytes": 15069
+      }
+    },
+    {
+      "name": "event",
+      "who": "member",
+      "path": "/fr/events/qa-fx-confirmed",
+      "status": 200,
+      "firstByteMs": {
+        "n": 15,
+        "median": 24.73431100000016,
+        "p95": 28.49196699999993,
+        "min": 21.83177599999908,
+        "max": 28.49196699999993
+      },
+      "totalMs": {
+        "n": 15,
+        "median": 32.35443699999996,
+        "p95": 35.08820399999968,
+        "min": 28.793274999999994,
+        "max": 35.08820399999968
+      },
+      "htmlBytes": 41622,
+      "scripts": {
+        "count": 23,
+        "bytes": 287849
+      },
+      "referencedScripts": {
+        "count": 25,
+        "bytes": 321254
+      },
+      "stylesheets": {
+        "count": 2,
+        "bytes": 15069
+      }
+    },
+    {
+      "name": "event-series",
+      "who": "member",
+      "path": "/fr/events/qa-fx-series",
+      "status": 200,
+      "firstByteMs": {
+        "n": 15,
+        "median": 26.822818999999072,
+        "p95": 32.713761999999406,
+        "min": 25.189832000000024,
+        "max": 32.713761999999406
+      },
+      "totalMs": {
+        "n": 15,
+        "median": 35.38051499999892,
+        "p95": 40.10000599999876,
+        "min": 33.01792000000023,
+        "max": 40.10000599999876
+      },
+      "htmlBytes": 43940,
+      "scripts": {
+        "count": 23,
+        "bytes": 287849
+      },
+      "referencedScripts": {
+        "count": 25,
+        "bytes": 321254
+      },
+      "stylesheets": {
+        "count": 2,
+        "bytes": 15069
+      }
+    },
+    {
+      "name": "event-form",
+      "who": "proposer",
+      "path": "/fr/events/new",
+      "status": 200,
+      "firstByteMs": {
+        "n": 15,
+        "median": 29.642616999999518,
+        "p95": 31.592844000000696,
+        "min": 26.28745600000002,
+        "max": 31.592844000000696
+      },
+      "totalMs": {
+        "n": 15,
+        "median": 35.588283000000956,
+        "p95": 37.429245999999694,
+        "min": 31.95841400000063,
+        "max": 37.429245999999694
+      },
+      "htmlBytes": 46601,
+      "scripts": {
+        "count": 25,
+        "bytes": 303858
+      },
+      "referencedScripts": {
+        "count": 27,
+        "bytes": 337263
+      },
+      "stylesheets": {
+        "count": 2,
+        "bytes": 15069
+      }
+    },
+    {
+      "name": "event-edit",
+      "who": "validator",
+      "path": "/fr/events/qa-fx-confirmed/edit",
+      "status": 200,
+      "firstByteMs": {
+        "n": 15,
+        "median": 26.52778799999942,
+        "p95": 27.831351000000723,
+        "min": 23.168413999999757,
+        "max": 27.831351000000723
+      },
+      "totalMs": {
+        "n": 15,
+        "median": 38.31484400000045,
+        "p95": 40.35218700000041,
+        "min": 34.37491600000067,
+        "max": 40.35218700000041
+      },
+      "htmlBytes": 47968,
+      "scripts": {
+        "count": 24,
+        "bytes": 300792
+      },
+      "referencedScripts": {
+        "count": 26,
+        "bytes": 334197
+      },
+      "stylesheets": {
+        "count": 2,
+        "bytes": 15069
+      }
+    },
+    {
+      "name": "proposals",
+      "who": "validator",
+      "path": "/fr/events/review",
+      "status": 200,
+      "firstByteMs": {
+        "n": 15,
+        "median": 95.67493800000011,
+        "p95": 113.02650299999914,
+        "min": 24.04716499999995,
+        "max": 113.02650299999914
+      },
+      "totalMs": {
+        "n": 15,
+        "median": 142.7308150000008,
+        "p95": 270.78247700000065,
+        "min": 135.48174400000062,
+        "max": 270.78247700000065
+      },
+      "htmlBytes": 63629,
+      "scripts": {
+        "count": 24,
+        "bytes": 290915
+      },
+      "referencedScripts": {
+        "count": 26,
+        "bytes": 324320
+      },
+      "stylesheets": {
+        "count": 2,
+        "bytes": 15069
+      }
+    },
+    {
+      "name": "shared-calendar",
+      "who": "owner",
+      "path": "/fr/events/shared-calendar",
+      "status": 200,
+      "firstByteMs": {
+        "n": 15,
+        "median": 21.659482999999454,
+        "p95": 28.883154999999533,
+        "min": 20.623413999999684,
+        "max": 28.883154999999533
+      },
+      "totalMs": {
+        "n": 15,
+        "median": 26.174941999999646,
+        "p95": 33.33137799999895,
+        "min": 25.18744400000105,
+        "max": 33.33137799999895
+      },
+      "htmlBytes": 39146,
+      "scripts": {
+        "count": 24,
+        "bytes": 290915
+      },
+      "referencedScripts": {
+        "count": 26,
+        "bytes": 324320
+      },
+      "stylesheets": {
+        "count": 2,
+        "bytes": 15069
+      }
+    },
+    {
+      "name": "members",
+      "who": "owner",
+      "path": "/fr/members",
+      "status": 200,
+      "firstByteMs": {
+        "n": 15,
+        "median": 56.346450000000914,
+        "p95": 71.32871300000079,
+        "min": 27.560723000000507,
+        "max": 71.32871300000079
+      },
+      "totalMs": {
+        "n": 15,
+        "median": 164.62433900000178,
+        "p95": 405.0262469999998,
+        "min": 150.55870900000082,
+        "max": 405.0262469999998
+      },
+      "htmlBytes": 91493,
+      "scripts": {
+        "count": 23,
+        "bytes": 287849
+      },
+      "referencedScripts": {
+        "count": 25,
+        "bytes": 321254
+      },
+      "stylesheets": {
+        "count": 2,
+        "bytes": 15069
+      }
+    },
+    {
+      "name": "roles",
+      "who": "owner",
+      "path": "/fr/roles",
+      "status": 200,
+      "firstByteMs": {
+        "n": 15,
+        "median": 27.32550600000104,
+        "p95": 30.989423999999417,
+        "min": 25.40046799999982,
+        "max": 30.989423999999417
+      },
+      "totalMs": {
+        "n": 15,
+        "median": 32.656294000000344,
+        "p95": 36.14406500000041,
+        "min": 30.55667899999753,
+        "max": 36.14406500000041
+      },
+      "htmlBytes": 42040,
+      "scripts": {
+        "count": 23,
+        "bytes": 287849
+      },
+      "referencedScripts": {
+        "count": 25,
+        "bytes": 321254
+      },
+      "stylesheets": {
+        "count": 2,
+        "bytes": 15069
+      }
+    },
+    {
+      "name": "role-form",
+      "who": "owner",
+      "path": "/fr/roles/new",
+      "status": 200,
+      "firstByteMs": {
+        "n": 15,
+        "median": 22.714332999999897,
+        "p95": 27.135451999998622,
+        "min": 20.525711000002048,
+        "max": 27.135451999998622
+      },
+      "totalMs": {
+        "n": 15,
+        "median": 27.49301800000103,
+        "p95": 34.436352000000625,
+        "min": 25.389686000002257,
+        "max": 34.436352000000625
+      },
+      "htmlBytes": 41591,
+      "scripts": {
+        "count": 25,
+        "bytes": 294930
+      },
+      "referencedScripts": {
+        "count": 27,
+        "bytes": 328335
+      },
+      "stylesheets": {
+        "count": 2,
+        "bytes": 15069
+      }
+    },
+    {
+      "name": "audit-log",
+      "who": "owner",
+      "path": "/fr/audit-log",
+      "status": 200,
+      "firstByteMs": {
+        "n": 15,
+        "median": 31.36605199999758,
+        "p95": 36.382260999998834,
+        "min": 27.894619999999122,
+        "max": 36.382260999998834
+      },
+      "totalMs": {
+        "n": 15,
+        "median": 37.95352699999785,
+        "p95": 43.29354599999715,
+        "min": 34.63112600000022,
+        "max": 43.29354599999715
+      },
+      "htmlBytes": 45947,
+      "scripts": {
+        "count": 17,
+        "bytes": 255395
+      },
+      "referencedScripts": {
+        "count": 22,
+        "bytes": 312496
+      },
+      "stylesheets": {
+        "count": 2,
+        "bytes": 15069
+      }
+    },
+    {
+      "name": "settings",
+      "who": "owner",
+      "path": "/fr/settings",
+      "status": 200,
+      "firstByteMs": {
+        "n": 15,
+        "median": 28.99926399999822,
+        "p95": 36.807755999998335,
+        "min": 27.225506999999197,
+        "max": 36.807755999998335
+      },
+      "totalMs": {
+        "n": 15,
+        "median": 34.57693599999766,
+        "p95": 42.77892000000065,
+        "min": 33.092797999997856,
+        "max": 42.77892000000065
+      },
+      "htmlBytes": 49669,
+      "scripts": {
+        "count": 25,
+        "bytes": 301306
+      },
+      "referencedScripts": {
+        "count": 27,
+        "bytes": 334711
+      },
+      "stylesheets": {
+        "count": 2,
+        "bytes": 15069
+      }
+    },
+    {
+      "name": "notifications",
+      "who": "owner",
+      "path": "/fr/notifications",
+      "status": 200,
+      "firstByteMs": {
+        "n": 15,
+        "median": 31.61324500000046,
+        "p95": 38.8269500000024,
+        "min": 27.973237000001973,
+        "max": 38.8269500000024
+      },
+      "totalMs": {
+        "n": 15,
+        "median": 36.749409000000014,
+        "p95": 44.78885799999989,
+        "min": 33.20592300000135,
+        "max": 44.78885799999989
+      },
+      "htmlBytes": 44455,
+      "scripts": {
+        "count": 25,
+        "bytes": 323928
+      },
+      "referencedScripts": {
+        "count": 26,
+        "bytes": 327835
+      },
+      "stylesheets": {
+        "count": 2,
+        "bytes": 15069
+      }
+    },
+    {
+      "name": "profile",
+      "who": "member",
+      "path": "/fr/profile",
+      "status": 200,
+      "firstByteMs": {
+        "n": 15,
+        "median": 19.995058000000427,
+        "p95": 24.834928000000218,
+        "min": 19.0787049999999,
+        "max": 24.834928000000218
+      },
+      "totalMs": {
+        "n": 15,
+        "median": 24.52588200000173,
+        "p95": 29.3241909999997,
+        "min": 23.598979999998846,
+        "max": 29.3241909999997
+      },
+      "htmlBytes": 38926,
+      "scripts": {
+        "count": 23,
+        "bytes": 287849
+      },
+      "referencedScripts": {
+        "count": 25,
+        "bytes": 321254
+      },
+      "stylesheets": {
+        "count": 2,
+        "bytes": 15069
+      }
+    }
+  ],
+  "db": [
+    {
+      "name": "login",
+      "queries": 1,
+      "controls": 0,
+      "totalMs": 0.01,
+      "repeated": [],
+      "slowest": [
+        {
+          "query": "SELECT $1",
+          "calls": 1,
+          "totalMs": 0.007374
+        }
+      ]
+    },
+    {
+      "name": "privacy",
+      "queries": 0,
+      "controls": 0,
+      "totalMs": 0,
+      "repeated": [],
+      "slowest": []
+    },
+    {
+      "name": "dashboard",
+      "queries": 10,
+      "controls": 0,
+      "totalMs": 1.84,
+      "repeated": [],
+      "slowest": [
+        {
+          "query": "SELECT \"public\".\"Event\".\"id\", \"public\".\"Event\".\"title\", \"public\".\"Event\".\"description\", \"public\".\"Event\".\"location\", \"public\".\"Event\".\"categoryKey\", \"public\".\"…",
+          "calls": 1,
+          "totalMs": 0.8238
+        },
+        {
+          "query": "SELECT \"public\".\"EventAssignee\".\"id\", \"public\".\"EventAssignee\".\"login\", \"public\".\"EventAssignee\".\"userId\", \"public\".\"EventAssignee\".\"eventId\" FROM \"public\".\"Ev…",
+          "calls": 1,
+          "totalMs": 0.372887
+        },
+        {
+          "query": "SELECT \"public\".\"EventOccurrence\".\"id\", \"public\".\"EventOccurrence\".\"eventId\", \"public\".\"EventOccurrence\".\"occurrenceStart\", \"public\".\"EventOccurrence\".\"title\",…",
+          "calls": 1,
+          "totalMs": 0.220522
+        }
+      ]
+    },
+    {
+      "name": "calendar",
+      "queries": 12,
+      "controls": 0,
+      "totalMs": 2.22,
+      "repeated": [],
+      "slowest": [
+        {
+          "query": "SELECT \"public\".\"Event\".\"id\", \"public\".\"Event\".\"schoolYear\" FROM \"public\".\"Event\" WHERE (\"public\".\"Event\".\"status\" = CAST($1::text AS \"public\".\"EventStatus\") O…",
+          "calls": 1,
+          "totalMs": 0.7554420000000001
+        },
+        {
+          "query": "SELECT \"public\".\"Event\".\"id\", \"public\".\"Event\".\"title\", \"public\".\"Event\".\"description\", \"public\".\"Event\".\"location\", \"public\".\"Event\".\"categoryKey\", \"public\".\"…",
+          "calls": 1,
+          "totalMs": 0.687215
+        },
+        {
+          "query": "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"login\", \"public\".\"User\".\"fullName\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"status\" IN (CAST($1::text AS \"publ…",
+          "calls": 1,
+          "totalMs": 0.37243600000000004
+        }
+      ]
+    },
+    {
+      "name": "events-list",
+      "queries": 12,
+      "controls": 0,
+      "totalMs": 3.33,
+      "repeated": [],
+      "slowest": [
+        {
+          "query": "SELECT \"public\".\"Event\".\"id\", \"public\".\"Event\".\"title\", \"public\".\"Event\".\"description\", \"public\".\"Event\".\"location\", \"public\".\"Event\".\"categoryKey\", \"public\".\"…",
+          "calls": 1,
+          "totalMs": 1.315751
+        },
+        {
+          "query": "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"login\", \"public\".\"User\".\"fullName\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"status\" IN (CAST($1::text AS \"publ…",
+          "calls": 1,
+          "totalMs": 0.659743
+        },
+        {
+          "query": "SELECT \"public\".\"EventAssignee\".\"id\", \"public\".\"EventAssignee\".\"login\", \"public\".\"EventAssignee\".\"userId\", \"public\".\"EventAssignee\".\"eventId\" FROM \"public\".\"Ev…",
+          "calls": 1,
+          "totalMs": 0.60976
+        }
+      ]
+    },
+    {
+      "name": "event",
+      "queries": 10,
+      "controls": 0,
+      "totalMs": 0.19,
+      "repeated": [],
+      "slowest": [
+        {
+          "query": "SELECT \"public\".\"Event\".\"id\", \"public\".\"Event\".\"title\", \"public\".\"Event\".\"description\", \"public\".\"Event\".\"location\", \"public\".\"Event\".\"categoryKey\", \"public\".\"…",
+          "calls": 1,
+          "totalMs": 0.038061
+        },
+        {
+          "query": "SELECT \"public\".\"User\".\"id\" FROM \"public\".\"User\" WHERE (\"public\".\"User\".\"login\" = $1 AND $4=$5) LIMIT $2 OFFSET $3",
+          "calls": 1,
+          "totalMs": 0.034685
+        },
+        {
+          "query": "SELECT \"public\".\"EventCancellation\".\"id\", \"public\".\"EventCancellation\".\"occurrenceStart\", \"public\".\"EventCancellation\".\"eventId\" FROM \"public\".\"EventCancellati…",
+          "calls": 1,
+          "totalMs": 0.029695
+        }
+      ]
+    },
+    {
+      "name": "event-series",
+      "queries": 10,
+      "controls": 0,
+      "totalMs": 0.2,
+      "repeated": [],
+      "slowest": [
+        {
+          "query": "SELECT \"public\".\"Event\".\"id\", \"public\".\"Event\".\"title\", \"public\".\"Event\".\"description\", \"public\".\"Event\".\"location\", \"public\".\"Event\".\"categoryKey\", \"public\".\"…",
+          "calls": 1,
+          "totalMs": 0.044293
+        },
+        {
+          "query": "SELECT \"public\".\"User\".\"id\" FROM \"public\".\"User\" WHERE (\"public\".\"User\".\"login\" = $1 AND $4=$5) LIMIT $2 OFFSET $3",
+          "calls": 1,
+          "totalMs": 0.041387
+        },
+        {
+          "query": "SELECT \"public\".\"EventOccurrence\".\"id\", \"public\".\"EventOccurrence\".\"eventId\", \"public\".\"EventOccurrence\".\"occurrenceStart\", \"public\".\"EventOccurrence\".\"title\",…",
+          "calls": 1,
+          "totalMs": 0.033212
+        }
+      ]
+    },
+    {
+      "name": "event-form",
+      "queries": 4,
+      "controls": 0,
+      "totalMs": 0.47,
+      "repeated": [],
+      "slowest": [
+        {
+          "query": "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"login\", \"public\".\"User\".\"fullName\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"status\" IN (CAST($1::text AS \"publ…",
+          "calls": 1,
+          "totalMs": 0.39613000000000004
+        },
+        {
+          "query": "SELECT \"public\".\"User\".\"id\" FROM \"public\".\"User\" WHERE (\"public\".\"User\".\"login\" = $1 AND $4=$5) LIMIT $2 OFFSET $3",
+          "calls": 1,
+          "totalMs": 0.033172
+        },
+        {
+          "query": "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"login\", \"public\".\"User\".\"fullName\", \"public\".\"User\".\"email\", \"public\".\"User\".\"photoUrl\", \"public\".\"User\".\"campus\"…",
+          "calls": 1,
+          "totalMs": 0.022683
+        }
+      ]
+    },
+    {
+      "name": "event-edit",
+      "queries": 12,
+      "controls": 0,
+      "totalMs": 0.64,
+      "repeated": [],
+      "slowest": [
+        {
+          "query": "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"login\", \"public\".\"User\".\"fullName\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"status\" IN (CAST($1::text AS \"publ…",
+          "calls": 1,
+          "totalMs": 0.406619
+        },
+        {
+          "query": "SELECT COUNT(*) AS \"_count$_all\" FROM (SELECT \"public\".\"Event\".\"id\" FROM \"public\".\"Event\" WHERE \"public\".\"Event\".\"status\" = CAST($1::text AS \"public\".\"EventSta…",
+          "calls": 1,
+          "totalMs": 0.049132
+        },
+        {
+          "query": "SELECT \"public\".\"User\".\"id\" FROM \"public\".\"User\" WHERE (\"public\".\"User\".\"login\" = $1 AND $4=$5) LIMIT $2 OFFSET $3",
+          "calls": 1,
+          "totalMs": 0.034193
+        }
+      ]
+    },
+    {
+      "name": "proposals",
+      "queries": 12,
+      "controls": 0,
+      "totalMs": 0.97,
+      "repeated": [],
+      "slowest": [
+        {
+          "query": "SELECT \"public\".\"Event\".\"id\", \"public\".\"Event\".\"title\", \"public\".\"Event\".\"description\", \"public\".\"Event\".\"location\", \"public\".\"Event\".\"categoryKey\", \"public\".\"…",
+          "calls": 1,
+          "totalMs": 0.476662
+        },
+        {
+          "query": "SELECT \"public\".\"EventAssignee\".\"id\", \"public\".\"EventAssignee\".\"login\", \"public\".\"EventAssignee\".\"userId\", \"public\".\"EventAssignee\".\"eventId\" FROM \"public\".\"Ev…",
+          "calls": 1,
+          "totalMs": 0.1872
+        },
+        {
+          "query": "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"fullName\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,…",
+          "calls": 1,
+          "totalMs": 0.09883499999999999
+        }
+      ]
+    },
+    {
+      "name": "shared-calendar",
+      "queries": 5,
+      "controls": 0,
+      "totalMs": 0.13,
+      "repeated": [],
+      "slowest": [
+        {
+          "query": "SELECT COUNT(*) AS \"_count$_all\" FROM (SELECT \"public\".\"Event\".\"id\" FROM \"public\".\"Event\" WHERE \"public\".\"Event\".\"status\" = CAST($1::text AS \"public\".\"EventSta…",
+          "calls": 1,
+          "totalMs": 0.050845
+        },
+        {
+          "query": "SELECT \"public\".\"User\".\"id\" FROM \"public\".\"User\" WHERE (\"public\".\"User\".\"login\" = $1 AND $4=$5) LIMIT $2 OFFSET $3",
+          "calls": 1,
+          "totalMs": 0.033263
+        },
+        {
+          "query": "SELECT \"public\".\"BdeCalendarFeed\".\"id\", \"public\".\"BdeCalendarFeed\".\"token\" FROM \"public\".\"BdeCalendarFeed\" WHERE (\"public\".\"BdeCalendarFeed\".\"id\" = $1 AND $4=$…",
+          "calls": 1,
+          "totalMs": 0.024827000000000002
+        }
+      ]
+    },
+    {
+      "name": "members",
+      "queries": 7,
+      "controls": 0,
+      "totalMs": 1.12,
+      "repeated": [],
+      "slowest": [
+        {
+          "query": "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"login\", \"public\".\"User\".\"fullName\", \"public\".\"User\".\"email\", \"public\".\"User\".\"photoUrl\", \"public\".\"User\".\"campus\"…",
+          "calls": 1,
+          "totalMs": 0.895944
+        },
+        {
+          "query": "SELECT COUNT(*) AS \"_count$_all\" FROM (SELECT \"public\".\"Event\".\"id\" FROM \"public\".\"Event\" WHERE \"public\".\"Event\".\"status\" = CAST($1::text AS \"public\".\"EventSta…",
+          "calls": 1,
+          "totalMs": 0.06596300000000001
+        },
+        {
+          "query": "SELECT \"public\".\"Role\".\"id\", \"public\".\"Role\".\"name\" FROM \"public\".\"Role\" WHERE \"public\".\"Role\".\"id\" IN ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,…",
+          "calls": 1,
+          "totalMs": 0.051577
+        }
+      ]
+    },
+    {
+      "name": "roles",
+      "queries": 5,
+      "controls": 0,
+      "totalMs": 0.37,
+      "repeated": [],
+      "slowest": [
+        {
+          "query": "SELECT \"public\".\"Role\".\"id\", \"public\".\"Role\".\"name\", \"public\".\"Role\".\"description\", \"public\".\"Role\".\"permissions\", \"public\".\"Role\".\"allPermissions\", \"public\".\"…",
+          "calls": 1,
+          "totalMs": 0.233697
+        },
+        {
+          "query": "SELECT COUNT(*) AS \"_count$_all\" FROM (SELECT \"public\".\"Event\".\"id\" FROM \"public\".\"Event\" WHERE \"public\".\"Event\".\"status\" = CAST($1::text AS \"public\".\"EventSta…",
+          "calls": 1,
+          "totalMs": 0.06906000000000001
+        },
+        {
+          "query": "SELECT \"public\".\"User\".\"id\" FROM \"public\".\"User\" WHERE (\"public\".\"User\".\"login\" = $1 AND $4=$5) LIMIT $2 OFFSET $3",
+          "calls": 1,
+          "totalMs": 0.03203
+        }
+      ]
+    },
+    {
+      "name": "role-form",
+      "queries": 4,
+      "controls": 0,
+      "totalMs": 0.13,
+      "repeated": [],
+      "slowest": [
+        {
+          "query": "SELECT \"public\".\"User\".\"id\" FROM \"public\".\"User\" WHERE (\"public\".\"User\".\"login\" = $1 AND $4=$5) LIMIT $2 OFFSET $3",
+          "calls": 1,
+          "totalMs": 0.071022
+        },
+        {
+          "query": "SELECT COUNT(*) AS \"_count$_all\" FROM (SELECT \"public\".\"Event\".\"id\" FROM \"public\".\"Event\" WHERE \"public\".\"Event\".\"status\" = CAST($1::text AS \"public\".\"EventSta…",
+          "calls": 1,
+          "totalMs": 0.054393
+        },
+        {
+          "query": "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"login\", \"public\".\"User\".\"fullName\", \"public\".\"User\".\"email\", \"public\".\"User\".\"photoUrl\", \"public\".\"User\".\"campus\"…",
+          "calls": 1,
+          "totalMs": 0.022921999999999998
+        }
+      ]
+    },
+    {
+      "name": "audit-log",
+      "queries": 5,
+      "controls": 0,
+      "totalMs": 0.34,
+      "repeated": [],
+      "slowest": [
+        {
+          "query": "SELECT \"public\".\"AuditLog\".\"id\", \"public\".\"AuditLog\".\"actorLogin\", \"public\".\"AuditLog\".\"actorId\", \"public\".\"AuditLog\".\"action\", \"public\".\"AuditLog\".\"targetType…",
+          "calls": 1,
+          "totalMs": 0.215213
+        },
+        {
+          "query": "SELECT COUNT(*) AS \"_count$_all\" FROM (SELECT \"public\".\"Event\".\"id\" FROM \"public\".\"Event\" WHERE \"public\".\"Event\".\"status\" = CAST($1::text AS \"public\".\"EventSta…",
+          "calls": 1,
+          "totalMs": 0.052608999999999996
+        },
+        {
+          "query": "SELECT \"public\".\"User\".\"id\" FROM \"public\".\"User\" WHERE (\"public\".\"User\".\"login\" = $1 AND $4=$5) LIMIT $2 OFFSET $3",
+          "calls": 1,
+          "totalMs": 0.038512
+        }
+      ]
+    },
+    {
+      "name": "settings",
+      "queries": 6,
+      "controls": 0,
+      "totalMs": 0.46,
+      "repeated": [],
+      "slowest": [
+        {
+          "query": "SELECT COUNT(*) AS \"_count$_all\", \"public\".\"Event\".\"categoryKey\" FROM \"public\".\"Event\" WHERE $2=$3 GROUP BY \"public\".\"Event\".\"categoryKey\" OFFSET $1",
+          "calls": 1,
+          "totalMs": 0.29529099999999997
+        },
+        {
+          "query": "SELECT COUNT(*) AS \"_count$_all\" FROM (SELECT \"public\".\"Event\".\"id\" FROM \"public\".\"Event\" WHERE \"public\".\"Event\".\"status\" = CAST($1::text AS \"public\".\"EventSta…",
+          "calls": 1,
+          "totalMs": 0.062988
+        },
+        {
+          "query": "SELECT \"public\".\"User\".\"id\" FROM \"public\".\"User\" WHERE (\"public\".\"User\".\"login\" = $1 AND $4=$5) LIMIT $2 OFFSET $3",
+          "calls": 1,
+          "totalMs": 0.046036
+        }
+      ]
+    },
+    {
+      "name": "notifications",
+      "queries": 7,
+      "controls": 0,
+      "totalMs": 0.26,
+      "repeated": [],
+      "slowest": [
+        {
+          "query": "SELECT COUNT(*) AS \"_count$_all\" FROM (SELECT \"public\".\"Event\".\"id\" FROM \"public\".\"Event\" WHERE \"public\".\"Event\".\"status\" = CAST($1::text AS \"public\".\"EventSta…",
+          "calls": 1,
+          "totalMs": 0.068909
+        },
+        {
+          "query": "SELECT \"public\".\"NotificationTemplate\".\"id\", \"public\".\"NotificationTemplate\".\"type\", \"public\".\"NotificationTemplate\".\"scope\", \"public\".\"NotificationTemplate\".\"…",
+          "calls": 1,
+          "totalMs": 0.05355
+        },
+        {
+          "query": "SELECT \"public\".\"NotificationTemplate\".\"id\", \"public\".\"NotificationTemplate\".\"type\", \"public\".\"NotificationTemplate\".\"scope\", \"public\".\"NotificationTemplate\".\"…",
+          "calls": 1,
+          "totalMs": 0.039664
+        }
+      ]
+    },
+    {
+      "name": "profile",
+      "queries": 4,
+      "controls": 0,
+      "totalMs": 0.1,
+      "repeated": [],
+      "slowest": [
+        {
+          "query": "SELECT \"public\".\"User\".\"id\" FROM \"public\".\"User\" WHERE (\"public\".\"User\".\"login\" = $1 AND $4=$5) LIMIT $2 OFFSET $3",
+          "calls": 1,
+          "totalMs": 0.044844
+        },
+        {
+          "query": "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"calendarToken\" FROM \"public\".\"User\" WHERE (\"public\".\"User\".\"id\" = $1 AND $4=$5) LIMIT $2 OFFSET $3",
+          "calls": 1,
+          "totalMs": 0.024435
+        },
+        {
+          "query": "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"login\", \"public\".\"User\".\"fullName\", \"public\".\"User\".\"email\", \"public\".\"User\".\"photoUrl\", \"public\".\"User\".\"campus\"…",
+          "calls": 1,
+          "totalMs": 0.022712
+        }
+      ]
+    }
+  ],
+  "scans": [
+    {
+      "table": "EventAssignee",
+      "rows": 935,
+      "seqScans": 11,
+      "seqTuplesRead": 10285,
+      "indexScans": 9
+    },
+    {
+      "table": "EventOccurrence",
+      "rows": 212,
+      "seqScans": 45,
+      "seqTuplesRead": 9540,
+      "indexScans": 0
+    },
+    {
+      "table": "User",
+      "rows": 311,
+      "seqScans": 29,
+      "seqTuplesRead": 9019,
+      "indexScans": 94
+    },
+    {
+      "table": "Event",
+      "rows": 631,
+      "seqScans": 11,
+      "seqTuplesRead": 6941,
+      "indexScans": 52
+    },
+    {
+      "table": "EventCancellation",
+      "rows": 172,
+      "seqScans": 21,
+      "seqTuplesRead": 3612,
+      "indexScans": 0
+    },
+    {
+      "table": "Role",
+      "rows": 10,
+      "seqScans": 34,
+      "seqTuplesRead": 340,
+      "indexScans": 0
+    },
+    {
+      "table": "NotificationTemplate",
+      "rows": 5,
+      "seqScans": 7,
+      "seqTuplesRead": 35,
+      "indexScans": 2
+    },
+    {
+      "table": "NotificationMention",
+      "rows": 3,
+      "seqScans": 6,
+      "seqTuplesRead": 18,
+      "indexScans": 0
+    },
+    {
+      "table": "PlatformSettings",
+      "rows": 1,
+      "seqScans": 2,
+      "seqTuplesRead": 2,
+      "indexScans": 0
+    },
+    {
+      "table": "AuditLog",
+      "rows": 1319,
+      "seqScans": 0,
+      "seqTuplesRead": 0,
+      "indexScans": 2
+    }
+  ],
+  "growth": {
+    "databaseBytes": 10729139,
+    "tables": [
+      {
+        "table": "EventOccurrence",
+        "bytes": 98304,
+        "rows": 212
+      },
+      {
+        "table": "EventCancellation",
+        "bytes": 90112,
+        "rows": 172
+      },
+      {
+        "table": "NotificationTemplateVersion",
+        "bytes": 81920,
+        "rows": 8
+      },
+      {
+        "table": "Role",
+        "bytes": 65536,
+        "rows": 10
+      },
+      {
+        "table": "NotificationMention",
+        "bytes": 49152,
+        "rows": 3
+      },
+      {
+        "table": "NotificationTemplate",
+        "bytes": 49152,
+        "rows": 5
+      },
+      {
+        "table": "AuditLog",
+        "bytes": 409600,
+        "rows": 1319
+      },
+      {
+        "table": "Event",
+        "bytes": 352256,
+        "rows": 631
+      },
+      {
+        "table": "_prisma_migrations",
+        "bytes": 32768,
+        "rows": 13
+      },
+      {
+        "table": "PlatformSettings",
+        "bytes": 32768,
+        "rows": 1
+      },
+      {
+        "table": "EventOccurrenceAssignee",
+        "bytes": 32768,
+        "rows": 0
+      },
+      {
+        "table": "IntraRequest",
+        "bytes": 262144,
+        "rows": 196
+      },
+      {
+        "table": "EventAssignee",
+        "bytes": 253952,
+        "rows": 935
+      },
+      {
+        "table": "BdeCalendarFeed",
+        "bytes": 24576,
+        "rows": 0
+      },
+      {
+        "table": "User",
+        "bytes": 188416,
+        "rows": 311
+      },
+      {
+        "table": "EventReminder",
+        "bytes": 180224,
+        "rows": 743
+      }
+    ],
+    "perYear": [
+      {
+        "table": "AuditLog",
+        "year": 2024,
+        "rows": 13
+      },
+      {
+        "table": "AuditLog",
+        "year": 2025,
+        "rows": 367
+      },
+      {
+        "table": "AuditLog",
+        "year": 2026,
+        "rows": 939
+      },
+      {
+        "table": "Event",
+        "year": 2025,
+        "rows": 105
+      },
+      {
+        "table": "Event",
+        "year": 2026,
+        "rows": 328
+      },
+      {
+        "table": "Event",
+        "year": 2027,
+        "rows": 198
+      },
+      {
+        "table": "User",
+        "year": 2024,
+        "rows": 15
+      },
+      {
+        "table": "User",
+        "year": 2025,
+        "rows": 169
+      },
+      {
+        "table": "User",
+        "year": 2026,
+        "rows": 127
+      }
+    ]
+  },
+  "server": {
+    "restartMs": {
+      "n": 3,
+      "median": 2605.1083599999984,
+      "p95": 2640.774596999996,
+      "min": 2524.849298000001,
+      "max": 2640.774596999996
+    },
+    "idle": {
+      "app": {
+        "cpu": 0,
+        "memoryMiB": 102.7
+      },
+      "database": {
+        "cpu": 0,
+        "memoryMiB": 37.4
+      }
+    },
+    "load": {
+      "vus": 20,
+      "seconds": 40,
+      "requests": 671,
+      "perSecond": 12.142302430068856,
+      "failedRate": 0,
+      "p95Ms": 1562.7855009999998,
+      "pages": [
+        {
+          "page": "event-list",
+          "requests": 88,
+          "averageMs": 1197.7522927840907,
+          "p95Ms": 1821.5965657999998
+        },
+        {
+          "page": "calendar",
+          "requests": 158,
+          "averageMs": 1055.6614029113925,
+          "p95Ms": 1653.384659
+        },
+        {
+          "page": "review",
+          "requests": 36,
+          "averageMs": 1108.6913154999997,
+          "p95Ms": 1648.7351695
+        },
+        {
+          "page": "event",
+          "requests": 84,
+          "averageMs": 941.0277115000004,
+          "p95Ms": 1471.8046612999997
+        },
+        {
+          "page": "members",
+          "requests": 24,
+          "averageMs": 1032.8152688333332,
+          "p95Ms": 1364.6102738999998
+        },
+        {
+          "page": "dashboard",
+          "requests": 130,
+          "averageMs": 921.7060194461541,
+          "p95Ms": 1358.27774805
+        },
+        {
+          "page": "settings",
+          "requests": 13,
+          "averageMs": 832.6354553076922,
+          "p95Ms": 1227.2509313999997
+        },
+        {
+          "page": "profile",
+          "requests": 29,
+          "averageMs": 705.4590141379311,
+          "p95Ms": 1218.5224839999996
+        },
+        {
+          "page": "audit-log",
+          "requests": 11,
+          "averageMs": 789.3554425454545,
+          "p95Ms": 1141.409378
+        },
+        {
+          "page": "event-form",
+          "requests": 26,
+          "averageMs": 730.8801952692307,
+          "p95Ms": 1062.65848775
+        },
+        {
+          "page": "roles",
+          "requests": 16,
+          "averageMs": 648.4397968750001,
+          "p95Ms": 1023.2138215
+        },
+        {
+          "page": "feed",
+          "requests": 22,
+          "averageMs": 440.9889351363636,
+          "p95Ms": 670.05649275
+        },
+        {
+          "page": "login",
+          "requests": 34,
+          "averageMs": 315.5475118235295,
+          "p95Ms": 587.885514
+        }
+      ],
+      "app": {
+        "peakMemoryMiB": 1104.9,
+        "meanCpu": 105.9
+      },
+      "database": {
+        "peakMemoryMiB": 60.8,
+        "meanCpu": 7.8
+      },
+      "logBytes": 0
+    }
+  }
+}
