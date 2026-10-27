@@ -28,6 +28,8 @@ export interface Probe {
   expect(who: PersonaKey, variant: PlatformVariant): Expect;
   /** Only run it for these variants (default: both). */
   variants?: readonly PlatformVariant[];
+  /** How it is asked when it is not a plain GET (a route that takes a body). */
+  init?: RequestInit;
 }
 
 export interface RouteSpec {
@@ -445,6 +447,45 @@ export const API: readonly RouteSpec[] = [
         path: '/api/updates',
         // Owners only, and a bare 404 for everybody else: the route must not even say that it exists.
         expect: (who) => (isOwner(who) ? status(200) : status(404)),
+      },
+    ],
+  },
+  {
+    route: '/api/backups/download',
+    probes: [
+      {
+        label: 'a download with a passphrase that is too short',
+        path: '/api/backups/download',
+        // Owners only, and a bare 404 for everybody else. The owner is answered a refusal (400) and nothing is written to the audit log:
+        // a probe that would succeed would change the database, which a reading must not do.
+        expect: (who) => (isOwner(who) ? status(400) : status(404)),
+        init: {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: 'bde-auto-2026-10-26_02-00-00Z.tar.gz',
+            passphrase: 'short',
+          }),
+        },
+      },
+      {
+        label: 'a download asked from another site',
+        path: '/api/backups/download',
+        expect: (who) => (isOwner(who) ? status(403) : status(404)),
+        init: {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Origin: 'https://evil.example' },
+          body: JSON.stringify({
+            name: 'bde-auto-2026-10-26_02-00-00Z.tar.gz',
+            passphrase: 'a long enough passphrase',
+          }),
+        },
+      },
+      {
+        label: 'a download asked with a GET',
+        path: '/api/backups/download',
+        // The route only takes a POST: Next.js answers 405 to everybody, owners included.
+        expect: () => status(405),
       },
     ],
   },

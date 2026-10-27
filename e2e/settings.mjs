@@ -175,7 +175,8 @@ try {
   const opened = await text();
   for (const expected of [
     'Paramètres',
-    'Sauvegardez le volume « secrets »',
+    'Sauvegardes',
+    'Sauvegarder maintenant',
     'Votre BDE',
     'Application 42',
     'Propriétaires',
@@ -183,9 +184,7 @@ try {
   ]) {
     if (!opened.includes(expected)) fail(`the page lacks "${expected}"`);
   }
-  const command = await page.$eval('#settings-backup-command', (el) => el.value);
-  if (command !== './scripts/backup.sh') fail(`the backup command is "${command}"`);
-  step('an owner sees the settings, with the reminder to back up the secrets volume');
+  step('an owner sees the settings, with the backups and the button to make one');
 
   // 1. identity
   await clear('#setup-name');

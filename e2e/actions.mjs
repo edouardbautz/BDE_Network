@@ -1,7 +1,7 @@
 // covers: members.approveMember, members.rejectMember, members.removeMember, members.changeMemberRole
 // covers: roles.createRole, roles.updateRole, roles.deleteRole, roles.setDefaultRole
 // covers: settings.saveIdentity, settings.saveLogo, settings.removeLogo, settings.saveModules, settings.checkOwner, settings.saveUpdates
-// covers: settings.addOwner, settings.removeOwner
+// covers: settings.addOwner, settings.removeOwner, settings.runBackupNow
 // covers: profile.regenerateMyCalendarToken
 // covers: notifications.saveTemplate, notifications.customizeChannel, notifications.resetTemplate, notifications.resetNotification
 // covers: notifications.restoreVersion, notifications.addMention, notifications.removeMention
@@ -733,6 +733,27 @@ const SCENARIOS = [
         },
         before,
         'profile-token',
+      );
+    },
+  },
+  {
+    name: 'settings: back up now',
+    async run() {
+      await goto('/settings');
+      const made = () => document.body.innerText.includes('La sauvegarde a été faite et vérifiée.');
+      if (await page.evaluate(made)) return 'FAILED'; // the notice must come from this click, not from an old address
+      await clickAndLoad('Sauvegarder maintenant');
+      const notice = await expectPage(made, undefined, 'backup-now');
+      if (notice !== 'ok') return notice;
+      // the real list follows: the backup is in it, with its download
+      return await expectPage(
+        () =>
+          Boolean(document.querySelector('#backups-last')) &&
+          [...document.querySelectorAll('button')].some((b) =>
+            b.getAttribute('aria-label')?.startsWith('Télécharger la sauvegarde du'),
+          ),
+        undefined,
+        'backup-listed',
       );
     },
   },

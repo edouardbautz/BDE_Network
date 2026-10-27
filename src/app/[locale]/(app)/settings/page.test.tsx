@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-/** The settings page: owners only, the backup of the secrets volume always in view, read only while in files. */
+/** The settings page: owners only, the backups always in view, read only while in files. */
 
 const mocks = vi.hoisted(() => {
   class Redirect extends Error {
@@ -31,7 +31,21 @@ vi.mock('@/i18n/navigation', () => ({
   },
 }));
 vi.mock('@/lib/auth/oauth-check', () => ({ checkFortyTwoCredentials: mocks.credentials }));
-vi.mock('@/config', () => ({ getConfig: () => ({ updates: { check: mocks.updatesCheck } }) }));
+vi.mock('@/config', () => ({
+  getConfig: () => ({ updates: { check: mocks.updatesCheck }, bde: { timezone: 'Europe/Paris' } }),
+}));
+vi.mock('@/lib/backups/list', () => ({
+  readOverview: async (dir: string) => ({ dir, backups: [] }),
+}));
+vi.mock('@/lib/backups/service', () => ({ backupDir: () => '/auto-backups' }));
+vi.mock('@/components/settings/backups-section', () => ({
+  // an async Server Component with a client dialog inside: its own test is next to it
+  BackupsSection: (props: { notice: string | null; timeZone: string; locale: string }) => (
+    <div>
+      backups, notice: {props.notice ?? 'none'}, {props.timeZone}, {props.locale}
+    </div>
+  ),
+}));
 vi.mock('@/components/updates/update-banner', () => ({
   // a client component that asks the network: its own test is next to it
   UpdateBanner: ({ enabled }: { enabled: boolean }) => (
@@ -66,9 +80,6 @@ vi.mock('@/lib/prisma', () => ({
     },
   },
 }));
-vi.mock('@/components/events/copy-field', () => ({
-  CopyField: ({ value }: { value: string }) => <code data-testid="command">{value}</code>,
-}));
 vi.mock('@/components/settings/settings-panels', () => ({
   SettingsPanels: (props: { actorLogin: string; view: { name: string }; extras: unknown }) => {
     mocks.panels(props);
@@ -78,8 +89,13 @@ vi.mock('@/components/settings/settings-panels', () => ({
 
 const { default: SettingsPage } = await import('./page');
 
-const renderPage = async () =>
-  render(await SettingsPage({ params: Promise.resolve({ locale: 'fr' }) }));
+const renderPage = async (search: { backup?: string | string[] } = {}) =>
+  render(
+    await SettingsPage({
+      params: Promise.resolve({ locale: 'fr' }),
+      searchParams: Promise.resolve(search),
+    }),
+  );
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -120,13 +136,26 @@ describe('SettingsPage', () => {
     expect(screen.getByText('update banner, enabled: false')).toBeInTheDocument();
   });
 
-  it('always reminds to back up the secrets volume, with the command', async () => {
+  it('always shows the backups, in the time zone of the BDE', async () => {
     await renderPage();
-    expect(screen.getByText('backup.title')).toBeInTheDocument();
-    expect(screen.getByText('backup.body')).toBeInTheDocument();
-    expect(screen.getByTestId('command')).toHaveTextContent('./scripts/backup.sh');
-    expect(screen.getByText('backup.note')).toBeInTheDocument();
+    expect(screen.getByText('backups, notice: none, Europe/Paris, fr')).toBeInTheDocument();
   });
+
+  it.each(['made', 'busy', 'dump'])(
+    'says what the backup that was just asked came to (%s)',
+    async (backup) => {
+      await renderPage({ backup });
+      expect(screen.getByText(`backups, notice: ${backup}, Europe/Paris, fr`)).toBeInTheDocument();
+    },
+  );
+
+  it.each(['<script>alert(1)</script>', 'nothing', ''])(
+    'ignores a notice that is not in the list, and never echoes it (%j)',
+    async (backup) => {
+      await renderPage({ backup });
+      expect(screen.getByText('backups, notice: none, Europe/Paris, fr')).toBeInTheDocument();
+    },
+  );
 
   it('says since when the settings are in the database', async () => {
     await renderPage();
@@ -138,8 +167,8 @@ describe('SettingsPage', () => {
     await renderPage();
     expect(screen.getByText('readOnly.title')).toBeInTheDocument();
     expect(screen.queryByText(/panels for/)).toBeNull();
-    // the reminder stays: it concerns the platform, not this page
-    expect(screen.getByText('backup.title')).toBeInTheDocument();
+    // the backups stay: they concern the platform, not the settings that are in the files
+    expect(screen.getByText(/^backups, notice/)).toBeInTheDocument();
   });
 
   it.each([

@@ -384,7 +384,7 @@ button, nothing takes the focus), the same validators (`lib/setup/validate.ts`, 
   **the rescue for a wrong address** (`APP_URL=…` + `BDE_REIMPORT=settings`, documented in `docs/en/troubleshooting.md`, `docs/fr/troubleshooting.md`): the
   address is run through `validateAddress` first (so it is written like the installer writes it, and `0.0.0.0` is
   refused), and the log says `ancienne → nouvelle`. There is deliberately no second mechanism.
-- **The page always reminds to back up the `secrets` volume** (the key is not in the database), with the command, and
+- **The page always shows the backups** (`BackupsSection`, see "Automatic backups"), the keys not being in the database, and
   says so loudly when the secrets were found unreadable (`secretsStatus` of the runtime cache: `lost`, `resealed`).
 - **Tests**: `update.test.ts` (every section, the owner rules, the concurrent save, no secret in the audit), `actions.test.ts`
   (every action refused unless OWNER, read-only mode), `page.test.tsx`, `settings-ui.test.tsx`, `scheduler.test.ts`, and
@@ -1064,6 +1064,17 @@ server with nothing, that **has been read again** before it is trusted, and that
   `encrypt.ts` writes that format for the download: **`openssl enc` compatible** (`Salted__`, AES-256-CBC, PBKDF2-SHA256, 600 000 rounds), made by Node's `crypto`, nothing of our own;
   `encrypt.test.ts` opens what it writes with the real `openssl`, and the other way round. CBC does not authenticate: the manifest's SHA-256 inside the archive is what says it is whole.
   The archive kept on the server is **not** encrypted (it is made at 03:00 with nobody to type a passphrase); only a download is.
+- **The Settings page** (`components/settings/backups-section.tsx`, owners only like the rest of the page; `lib/backups/list.ts`): the last backup (date in the BDE's zone, size,
+  how far it was checked), a warning when none succeeded for two days (`isStale`, counted from the first look when there never was one) and the reason of the last failure, the list of the
+  backups kept with a download each, and **Back up now** (`runBackupNow`, the same `runBackup` as the night's, kind `manual`, audited as `backup.run`). It reads the folder and the status
+  file, never the database: it has to be able to say that the database is the problem. The action answers an `ActionTarget` to `/settings?backup=<outcome>` (rule 2 of "Navigation"; the
+  outcome is a closed list, `notice.ts`, never echoed) and `e2e/actions.mjs` plays it ("settings: back up now").
+- **The download** (`POST /api/backups/download`, `download.ts`, `encrypt.ts`): a POST with the passphrase in the body (so in no address or log), owners only and a bare 404 for the rest, refused
+  when the `Origin` is another site, the name checked against the pattern of our own names (nothing from the request reaches a path), the passphrase 12 to 200 characters (`passphrase.ts`, pure,
+  the form applies the same rule), the file streamed through the encryption (nothing held in memory), `Cache-Control: no-store`, `nosniff`. The audit entry (`backup.download`, who and which
+  backup, never the passphrase) is written **before** the first byte, and if it cannot be written no byte leaves. The dialog (`backup-download.tsx`) asks the passphrase twice and says, before
+  the file is made, that a lost passphrase cannot be recovered by anybody. The access matrix probes the route without ever succeeding (a success would write the audit log): a short passphrase
+  gives the owner 400 and everybody else 404, another origin 403 for the owner; the success is played by `qa/backup`, which restores a downloaded file on a new server.
 - **Tests**: `retention`, `schedule`, `names` (`backups-plan.test.ts`: the rules, a year of nights, DST, the days of the BDE), `run.test.ts` (a real `tar` and real files, PostgreSQL played by a stand-in: the
   password is not in a command line, every failing step leaves the previous backups and no leftover, the lock, the rotation, a tampered archive), `service.test.ts`, `encrypt.test.ts`,
   `scripts/restore.test.ts` (Linux only: `--auto`, the keys inside, the passphrase), `scripts/compose.test.ts`, and **`qa/backup/run.ts`** (the `backups` job of `qa.yml`): a real compose

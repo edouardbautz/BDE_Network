@@ -129,6 +129,7 @@ const OWNER_ONLY_SETTINGS = [
   ['saveUpdates', [{}]],
   ['saveNotifications', [{}]],
   ['testNotification', [{}]],
+  ['runBackupNow', []],
 ] as const;
 
 /** The actions of the installer: it is over once the platform is installed, for everybody. */

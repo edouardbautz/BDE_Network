@@ -69,7 +69,14 @@ export async function playRoutes(
           const expected = probe.expect(who.key, variant);
           let seen: Observed;
           try {
-            seen = await observe(platform, who.key, resolve(probe.path), isPage, {}, secrets);
+            seen = await observe(
+              platform,
+              who.key,
+              resolve(probe.path),
+              isPage,
+              probe.init ?? {},
+              secrets,
+            );
           } catch (error) {
             seen = { kind: 'error', status: 0 };
             console.error(`request failed: ${probe.path}`, error);

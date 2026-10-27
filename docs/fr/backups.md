@@ -48,6 +48,28 @@ restaure sous n'importe quel mot de passe.
 > jour, un volume supprimé), pas de la perte du serveur entier ou de son disque. Copiez le dossier ailleurs de temps en
 > temps.
 
+## Depuis la page Paramètres
+
+Réservée aux propriétaires. La section **Sauvegardes** de la page Paramètres montre :
+
+- **la dernière sauvegarde** : sa date, sa taille, et jusqu'où elle a été vérifiée ;
+- un avertissement quand **aucune sauvegarde n'a réussi depuis deux jours**, et la raison de l'échec de la dernière tentative ;
+- **Sauvegarder maintenant** : la même sauvegarde que celle de la nuit (quelques secondes), écrite dans le journal d'audit avec le nom de qui l'a demandée ;
+- **les sauvegardes gardées**, chacune avec un bouton **Télécharger**.
+
+### Télécharger une sauvegarde
+
+Les sauvegardes du serveur ne sont pas chiffrées (elles doivent être faites à 3 h sans personne pour taper une phrase de passe). Un fichier
+qui quitte le serveur l'est : **Télécharger** demande une phrase de passe de votre choix, deux fois, de 12 caractères au moins, et chiffre le
+fichier avec elle.
+
+- Le fichier s'appelle `bde-auto-….tar.gz.enc` et est au format de `openssl enc` (AES-256, clé dérivée par PBKDF2) : il s'ouvre avec le
+  script `restore.sh` ci-dessous, ou à la main avec `openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -md sha256`.
+- **Si vous perdez la phrase de passe, personne ne peut plus ouvrir le fichier, nous non plus.** La plateforme ne la garde pas et ne peut pas
+  la retrouver. Les sauvegardes gardées sur le serveur ne sont pas concernées.
+- Le fichier contient toujours la base de données et les clés : qui l'a avec la phrase de passe a tout. Chaque téléchargement est écrit dans le
+  journal d'audit (qui, quelle sauvegarde), jamais la phrase de passe.
+
 ## Comment une sauvegarde est vérifiée
 
 Un fichier écrit n'est pas une sauvegarde qui marche. Juste après avoir fait l'archive, la plateforme :
@@ -100,6 +122,14 @@ sauvegarde : aucun autre fichier n'est nécessaire.
 compose up -d` (aucun `.env` n'est nécessaire), copiez le fichier de sauvegarde dans `backups/auto/` du nouveau
 serveur, puis `./scripts/restore.sh --auto`. Le BDE est de retour tel qu'il était, et les personnes qui étaient
 connectées le sont toujours.
+
+**Depuis un fichier téléchargé** : mettez le fichier `.enc` où vous voulez sur le nouveau serveur et donnez son chemin. Le script demande la
+phrase de passe (rien ne s'affiche pendant la saisie ; `BDE_BACKUP_PASSPHRASE` dans l'environnement fait de même pour un script). Une
+mauvaise phrase de passe l'arrête avant que quoi que ce soit soit touché.
+
+```text
+./scripts/restore.sh ~/bde-auto-2026-10-25_02-00-03Z.tar.gz.enc
+```
 
 > Si le nouveau serveur a un `AUTH_SECRET` dans son `.env`, il l'emporte sur la clé de session restaurée et tout le
 > monde doit se reconnecter. Ne le mettez pas.
