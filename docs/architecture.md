@@ -1033,6 +1033,19 @@ recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`)
   of CI then scans the image with Trivy and **fails on a HIGH or CRITICAL vulnerability that has a fix** (`--ignore-unfixed`:
   what nobody can fix yet stops nobody). What is accepted is in `.trivyignore`, each with its reason and the same wording as
   `scripts/audit-allowlist.json`.
+- **The `docker image` check is the sum of five jobs** (`ci.yml`; it used to be one job of 15 minutes, 10 of them the browser scripts one
+  after the other). `docker build` builds the image once (and checks that the build file of Docker Compose builds the same one) and
+  keeps it as a file for the others; `docker checks` scans it, starts it against PostgreSQL and tries the safe update and the start-up
+  problems; `browser tests` are four shards that each load the image, install a platform of their own and play the scripts of
+  `e2e/ci-browser.sh` (balanced by the time each takes, about two and a half minutes; the scenarios of `e2e/actions.mjs` that the
+  first shard does not name run in the second, by `EXCEPT`, so a new scenario is played without anybody placing it); `docker compose`
+  builds from the folder twice (a fresh installation, an installation imported from its files), which needs a build of its own because
+  the image carries `bde.config.yml`. `tests in <zone>` are the unit tests in the two other time zones, one machine each (the three runs at once on one machine took 2.8 times
+  as long as one, and two tests do not hold two suites at the same time: parallelism needs another machine, not another process).
+  **The job named `docker image` only reports whether those five passed** (`needs`, `if: always()`):
+  it is the check `main` requires, so the five can change without touching the branch protection, and a job that was skipped or
+  cancelled is not a pass. A new script of `e2e/` goes in a shard of `ci-browser.sh`; `e2e-stress.yml` still plays each script alone
+  on a platform of its own, which is what proves a shard can hold it.
 - **The published image** (`.github/workflows/release.yml`, `scripts/release.mjs`; tests in `scripts/release.test.ts`).
   `docker-compose.yml` starts `ghcr.io/edouardbautz/bde_network:${BDE_VERSION:-X.Y.Z}`: the version is **written in the
   file**, never `latest`, so that `git pull` + `docker compose up -d` is the whole update and an older checkout runs its

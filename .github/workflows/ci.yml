@@ -44,7 +44,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # The production build is played on Windows here, and on Linux by the image (`docker build` runs the same `npm run build`).
       - name: Build
+        if: matrix.os != 'ubuntu-latest'
         run: npm run build
 
       # Windows runs the tests as they are; Ubuntu runs them once more through V8 coverage, which enforces the floors of
@@ -56,18 +58,6 @@ jobs:
       - name: Test, with the coverage floors
         if: matrix.os == 'ubuntu-latest'
         run: npm run test:coverage
-
-      # The tests hold on any computer, whatever its time zone: the runners are in UTC, a developer's is not, and a test that read a
-      # date in the zone of the machine passed here and failed there (event-repeat-rules.test.ts). One zone ahead of UTC across the
-      # date line and one behind, with the clock changes of the two hemispheres.
-      - name: Test, in two other time zones
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          for zone in Pacific/Auckland America/Los_Angeles; do
-            echo "::group::$zone"
-            TZ="$zone" npm run test || exit 1
-            echo "::endgroup::"
-          done
 
       - name: Coverage report
         if: always() && matrix.os == 'ubuntu-latest' && hashFiles('coverage/coverage-summary.json') != ''
@@ -81,6 +71,34 @@ jobs:
           path: coverage/lcov.info
           if-no-files-found: ignore
           retention-days: 14
+
+  # The tests hold on any computer, whatever its time zone: the runners are in UTC, a developer's is not, and a test that read a
+  # date in the zone of the machine passed here and failed there (event-repeat-rules.test.ts). One zone ahead of UTC across the
+  # date line and one behind, with the clock changes of the two hemispheres. Each zone is a machine of its own, so that the
+  # three runs take what the longest of them takes (the three at once on one machine took 2.8 times as long as one: the tests
+  # already use every core, and some of them do not hold two suites at the same time). The check that `main` requires for these is
+  # `docker image`, which waits for them (below): the check `ci (ubuntu-latest)` cannot wait for another job.
+  time-zones:
+    name: tests in ${{ matrix.zone }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        zone: [Pacific/Auckland, America/Los_Angeles]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test
+        run: TZ="${{ matrix.zone }}" npm run test
 
   # The documentation is a product of its own: internal links and anchors, images' alternative text, French and
   # English pages that are twins (scripts/check-docs.mjs), Markdown style (markdownlint) and layout (Prettier).
@@ -111,11 +129,43 @@ jobs:
       - name: Markdown layout
         run: npx prettier --check "**/*.md"
 
-  # The production image is what operators actually run: build it, start it against a real
-  # PostgreSQL and check it comes up (migrations applied, environment accepted, database
-  # reachable). Catches a broken Dockerfile or a Prisma update the pruned CLI can no longer run.
-  docker:
-    name: docker image
+  # The production image is what operators actually run: it is built once (here), then tried at the same time by the jobs below,
+  # which load it instead of building it again: started against a real PostgreSQL (docker checks), driven by the browser tests
+  # (browser tests, four shards that each make a platform of their own), and brought up by Docker Compose (docker compose). The job
+  # `docker image` only says whether all of them passed: it is the check that `main` requires.
+  docker-build:
+    name: docker build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the image
+        run: |
+          docker build -t bde-network .
+          docker images bde-network --format 'Image size: {{.Size}}'
+
+      # The build file of Docker Compose builds the same image (same Dockerfile, same folder: the layers are already there).
+      - name: The build file of Docker Compose builds it too
+        env:
+          COMPOSE_FILE: docker-compose.yml:docker-compose.build.yml
+          COMPOSE_PATH_SEPARATOR: ':'
+        run: docker compose build app
+
+      # The image goes to the jobs that use it as a file. Both names are saved, in one archive (the layers once).
+      - name: Keep the image for the other jobs
+        run: docker save bde-network bde-network:local | gzip -1 > "$RUNNER_TEMP/image.tar.gz"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: image
+          path: ${{ runner.temp }}/image.tar.gz
+          compression-level: 0
+          retention-days: 1
+
+  docker-checks:
+    name: docker checks
+    needs: docker-build
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -135,10 +185,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build the image
-        run: |
-          docker build -t bde-network .
-          docker images bde-network --format 'Image size: {{.Size}}'
+      - uses: actions/download-artifact@v4
+        with:
+          name: image
+          path: ${{ runner.temp }}
+
+      - name: Load the image
+        run: docker load --input "$RUNNER_TEMP/image.tar.gz"
 
       # No fixable HIGH or CRITICAL vulnerability in what the image ships (its operating system, Node, the packages of the
       # application). A vulnerability that has no fix yet does not stop anybody (--ignore-unfixed), and the few that are
@@ -228,69 +281,51 @@ jobs:
           [ "$(docker inspect -f '{{.State.Running}} {{.RestartCount}}' broken-db)" = "true 0" ]
           docker rm -f broken-db
 
-      # The installer, in a real browser, against the real image: puppeteer-core drives the Chrome of the runner
-      # and e2e/mock-fortytwo.mjs stands in for the 42 API. It has its own database, so the other steps see
-      # nothing of it. Nothing secret may be in a log or in clear in the database afterwards (the settings page
-      # is then tried on the same platform; it forges session cookies with @auth/core, at the version of the lockfile).
-      - name: The installer and the settings page, end to end in a browser
-        run: |
-          PGPASSWORD=ci-password psql -h 127.0.0.1 -U bde -d postgres -c 'CREATE DATABASE bde_install'
-          mkdir "$RUNNER_TEMP/e2e-deps"
-          npm install --prefix "$RUNNER_TEMP/e2e-deps" --no-audit --no-fund puppeteer-core@25.12.0 @auth/core@0.41.3
-          ln -s "$RUNNER_TEMP/e2e-deps/node_modules" e2e/node_modules
-          MOCK_LATEST_RELEASE=v99.0.0 node e2e/mock-fortytwo.mjs 4242 &
-          docker run -d --name installer --network host -e PORT=3003 \
-            -e DATABASE_URL='postgresql://bde:ci-password@127.0.0.1:5432/bde_install?schema=public' \
-            -e FORTYTWO_API_URL=http://127.0.0.1:4242 \
-            -e RELEASES_API_URL=http://127.0.0.1:4242 \
-            bde-network
-          code=""
-          for attempt in $(seq 1 45); do
-            code="$(docker logs installer 2>&1 | grep -o 'Code : [A-Z0-9-]*' | tail -1 | sed 's/Code : //')"
-            [ -n "$code" ] && break
-            sleep 2
-          done
-          [ -n "$code" ] || { docker logs installer; exit 1; }
-          SHOTS="$RUNNER_TEMP/shots" node e2e/install.mjs http://127.0.0.1:3003 "$code"
-          # The settings page, on the platform the installer has just made: its owner ("alice") and a plain member
-          # get an account, and the test forges their sessions with the platform's own secret (nobody can sign in
-          # through 42 here). A member must be sent away; the owner changes the settings, which apply at once.
-          PGPASSWORD=ci-password psql -h 127.0.0.1 -U bde -d bde_install -v ON_ERROR_STOP=1 \
-            -c "INSERT INTO \"User\" (id, login, \"fullName\", email, campus, status, \"updatedAt\") VALUES ('e2e-alice', 'alice', 'Alice', 'alice@example.org', 'Nice', 'OWNER', now()) ON CONFLICT (login) DO UPDATE SET status = 'OWNER', \"roleId\" = NULL" \
-            -c "INSERT INTO \"User\" (id, login, \"fullName\", email, campus, status, \"roleId\", \"updatedAt\") SELECT 'e2e-carol', 'carol', 'Carol', 'carol@example.org', 'Nice', 'MEMBER', id, now() FROM \"Role\" WHERE \"isDefault\"" \
-            -c "INSERT INTO \"Event\" (id, title, description, location, \"categoryKey\", status, \"startsAt\", \"endsAt\", repeat, \"recurrenceUntil\", \"schoolYear\", \"authorLogin\", \"updatedAt\") VALUES ('e2e-weekly', 'E2E weekly', 'Test', 'Room', 'soiree', 'CONFIRMED', now() + interval '1 day', now() + interval '1 day 2 hours', jsonb_build_object('freq', 'WEEKLY', 'interval', 1), now() + interval '70 days', '2026-2027', 'alice', now())" \
-            -c "INSERT INTO \"Event\" (id, title, description, location, \"categoryKey\", status, \"startsAt\", \"endsAt\", repeat, \"recurrenceUntil\", \"schoolYear\", \"authorLogin\", \"updatedAt\") SELECT 'e2e-series-' || lang, 'E2E series', 'Test', 'Room', 'soiree', 'CONFIRMED', now() + interval '2 days', now() + interval '2 days 2 hours', jsonb_build_object('freq', 'WEEKLY', 'interval', 1), now() + interval '38 days', '2026-2027', 'alice', now() FROM (VALUES ('fr'), ('en')) AS languages(lang)"
-          # The buttons of the events page (month, calendar or list, a day, one date of a series, the menu), clicked for
-          # real on a computer-sized and a phone-sized screen, in both languages. In the production build Next.js's
-          # client router can swallow a click on a link to the page you are on: see "Navigation" in docs/architecture.md.
-          AUTH_SECRET="$(docker exec installer cat /secrets/auth_secret)" SHOTS="$RUNNER_TEMP/shots/events" node e2e/events.mjs http://127.0.0.1:3003
-          # The dialogs of a series (one date, or this date and the following: edit, draft, confirm, cancel, delete), clicked
-          # for real, in both languages: a series is cut in two rows, and the page after the action must be the one that holds
-          # the date. The page must also CHANGE after an action that stays on it (see "Navigation" in docs/architecture.md).
-          AUTH_SECRET="$(docker exec installer cat /secrets/auth_secret)" SHOTS="$RUNNER_TEMP/shots/series" node e2e/series.mjs http://127.0.0.1:3003
-          # The proposal circuit, in both languages: somebody whose role only proposes creates an event, a validator finds it
-          # counted in the menu and approves it or refuses it with a comment, and what a proposer or a member may not see or do.
-          AUTH_SECRET="$(docker exec installer cat /secrets/auth_secret)" OWNER=alice MEMBER=carol PGPASSWORD=ci-password PSQL="psql -h 127.0.0.1 -U bde -d bde_install" SHOTS="$RUNNER_TEMP/shots/review" node e2e/review.mjs http://127.0.0.1:3003
-          # The repeat rules, in both languages: a usual choice and a custom rule (every 2 weeks on Monday and Wednesday, 10 times)
-          # worded and previewed by the form before they are saved, a first date that moves to the first one that fits, the limit of
-          # an event, a series cut in two (the number of dates is shared) and the rule of a series edited.
-          AUTH_SECRET="$(docker exec installer cat /secrets/auth_secret)" OWNER=alice PGPASSWORD=ci-password PSQL="psql -h 127.0.0.1 -U bde -d bde_install" SHOTS="$RUNNER_TEMP/shots/repeat" node e2e/repeat.mjs http://127.0.0.1:3003
-          # What every action of the platform shows afterwards (members, roles, settings, profile, shared calendar, language), 3
-          # plays of each, with no reload: see "Actions that stay on the page" in docs/architecture.md.
-          AUTH_SECRET="$(docker exec installer cat /secrets/auth_secret)" OWNER=alice OWNER_CANDIDATE=bob PGPASSWORD=ci-password PSQL="psql -h 127.0.0.1 -U bde -d bde_install" SHOTS="$RUNNER_TEMP/shots/actions" node e2e/actions.mjs http://127.0.0.1:3003
-          AUTH_SECRET="$(docker exec installer cat /secrets/auth_secret)" SHOTS="$RUNNER_TEMP/shots/settings" node e2e/settings.mjs http://127.0.0.1:3003
-          # Pages hydrated on a slow connection, with their scripts in the browser's cache: the React of Next.js 15.5 threw the
-          # server's HTML away on about one load in seven (see "A hydration error on a slow connection" in docs/architecture.md).
-          AUTH_SECRET="$(docker exec installer cat /secrets/auth_secret)" LOADS=20 PAGES=/en/events,/en/dashboard SHOTS="$RUNNER_TEMP/shots/hydration" node e2e/hydration.mjs http://127.0.0.1:3003
-          # The sign-in with 42 (the stand-in plays 42, and refuses a code like the real one when the redirect_uri of
-          # the exchange is not the one of the authorization). The image listens on 0.0.0.0, which is what Next.js puts
-          # in every request URL: the registered address (this computer is written localhost) must be what 42 is given.
-          SHOTS="$RUNNER_TEMP/shots/signin" node e2e/signin.mjs http://localhost:3003 http://127.0.0.1:4242 http://127.0.0.1:3003
-          ! docker logs installer 2>&1 | grep -q 's-s4t2ud-e2e-test-secret'
-          [ "$(PGPASSWORD=ci-password psql -h 127.0.0.1 -U bde -d bde_install -tAc 'SELECT secrets LIKE $$%e2e-test-secret%$$ FROM "PlatformSettings"')" = f ]
-          [ "$(docker inspect -f '{{.State.Running}} {{.RestartCount}}' installer)" = "true 0" ]
-          docker rm -f installer
-          rm e2e/node_modules
+      - name: Show the logs
+        if: always()
+        run: docker logs app
+
+  # The installer, in a real browser, against the real image: puppeteer-core drives the Chrome of the runner and
+  # e2e/mock-fortytwo.mjs stands in for the 42 API. Each shard has its own PostgreSQL and its own platform (e2e/ci-browser.sh says
+  # which scripts it plays), so the shards run at the same time: together they take what the longest of them takes. Nothing
+  # secret may be in a log or in clear in the database afterwards; the scripts forge session cookies with @auth/core, at the
+  # version of the lockfile.
+  docker-browser:
+    name: browser tests (shard ${{ matrix.shard }})
+    needs: docker-build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: bde
+          POSTGRES_PASSWORD: ci-password
+          POSTGRES_DB: bde_network
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U bde -d bde_network"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: image
+          path: ${{ runner.temp }}
+
+      - name: Load the image
+        run: docker load --input "$RUNNER_TEMP/image.tar.gz"
+
+      - name: The installer, then the scripts of the shard, in a real browser
+        run: sh e2e/ci-browser.sh ${{ matrix.shard }}
 
       # What the platform itself said while the browser tests ran (the tests only see the browser's side of a failure).
       - name: The log of the platform, when a browser test failed
@@ -301,8 +336,17 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: installer-screenshots
+          name: installer-screenshots-${{ matrix.shard }}
           path: ${{ runner.temp }}/shots
+          if-no-files-found: warn
+
+  # Docker Compose, from the folder: no image of the release exists yet when a pull request is tested, so it builds its own.
+  docker-compose:
+    name: docker compose
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
 
       # (The two steps below build the image from the folder, through docker-compose.build.yml, because the image of the
       # release does not exist yet when a pull request is tested. The published image is tried by release.yml.)
@@ -370,9 +414,19 @@ jobs:
           docker compose down -v
           git checkout bde.config.yml
 
-      - name: Show the logs
-        if: always()
-        run: docker logs app
+  # The check that `main` requires for the image: it passes when the build, the checks, the browser tests and the compose flows did,
+  # and when the tests passed in the two other time zones (a job that is skipped or cancelled is not a pass).
+  docker:
+    name: docker image
+    if: always()
+    needs: [docker-build, docker-checks, docker-browser, docker-compose, time-zones]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Did every job of the image pass
+        run: |
+          echo "build: ${{ needs.docker-build.result }}, checks: ${{ needs.docker-checks.result }}, browser tests: ${{ needs.docker-browser.result }}, compose: ${{ needs.docker-compose.result }}, time zones: ${{ needs.time-zones.result }}"
+          [ "${{ needs.docker-build.result }}" = success ] && [ "${{ needs.docker-checks.result }}" = success ] && [ "${{ needs.docker-browser.result }}" = success ] && [ "${{ needs.docker-compose.result }}" = success ] && [ "${{ needs.time-zones.result }}" = success ]
 
   # Applies the real migration files to a real PostgreSQL: the custom-roles data migration is
   # tested with legacy accounts (src/test/migrations), and the migrations must leave exactly the
