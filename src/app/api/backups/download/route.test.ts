@@ -64,6 +64,11 @@ describe('who may download', () => {
     expect(mocks.audit).not.toHaveBeenCalled();
   });
 
+  it('refuses an origin that is not an address', async () => {
+    const response = await post({ name: NAME, passphrase: PASS }, { origin: 'not an address' });
+    expect(response.status).toBe(403);
+  });
+
   it('accepts the platform’s own origin, behind a proxy too', async () => {
     expect(
       (await post({ name: NAME, passphrase: PASS }, { origin: 'http://bde.example' })).status,
