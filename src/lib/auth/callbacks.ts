@@ -93,6 +93,21 @@ export async function signInCallback({ user }: { user: User }): Promise<boolean 
   return true;
 }
 
+type Account = NonNullable<Awaited<ReturnType<typeof readAccount>>>;
+
+/** The account behind a login, with its role, in one statement (the client reads relations with a join: see `previewFeatures` in schema.prisma). */
+function readAccount(login: string) {
+  return prisma.user.findUnique({ where: { login }, include: { role: true } });
+}
+
+/**
+ * What the `jwt` callback has just read, for the `session` callback of the same request: Auth.js gives the second the very
+ * token the first returned. Both callbacks used to read the account, one for its existence and one for its row and role, which
+ * was three statements on every page. Nothing outlives the request: the token is garbage once the request is over, and a
+ * role changed or an account removed meanwhile shows on the next request, as before.
+ */
+const readByJwt = new WeakMap<JWT, Account>();
+
 /**
  * Runs when the cookie is created (sign-in, `user` set) and on every later
  * read of it. The JWT only proves who signed in, not that the account still
@@ -118,11 +133,10 @@ export async function jwtCallback({
     return null;
   }
 
-  const account = await prisma.user.findUnique({
-    where: { login: token.login },
-    select: { id: true },
-  });
-  return account ? token : null;
+  const account = await readAccount(token.login);
+  if (!account) return null;
+  readByJwt.set(token, account);
+  return token;
 }
 
 /**
@@ -142,9 +156,7 @@ export async function sessionCallback({
   token: JWT;
 }): Promise<Session> {
   const login = token.login;
-  const dbUser = login
-    ? await prisma.user.findUnique({ where: { login }, include: { role: true } })
-    : null;
+  const dbUser = login ? (readByJwt.get(token) ?? (await readAccount(login))) : null;
   if (!dbUser || (dbUser.status === 'MEMBER' && !dbUser.role)) {
     throw new Error('[auth] No account behind this session');
   }
