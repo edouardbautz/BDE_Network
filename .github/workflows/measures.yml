@@ -60,6 +60,21 @@ jobs:
           mkdir -p optim
           npx tsx qa/optim/measure.ts --label "${{ matrix.dataset }} dataset" --image bde-network --out "optim/${{ matrix.dataset }}.json"
 
+      # The speed of what is drawn on a phone with a slow network and processor (Lighthouse: LCP, TBT, CLS and the weight): taken
+      # on the QA dataset only. The budgets are those of the performance job of qa.yml; here a breach is a number, not a failure.
+      - name: Install the browser (Lighthouse drives the one of Playwright)
+        if: matrix.dataset == 'full'
+        run: npx playwright install --with-deps chromium
+
+      - name: Core Web Vitals, on a phone and on a computer
+        if: matrix.dataset == 'full'
+        continue-on-error: true
+        env:
+          LIGHTHOUSE_REPORTS: optim/lighthouse
+        run: |
+          eval "$(sh qa/platform.sh env)"
+          npx tsx qa/perf/lighthouse.ts
+
       - name: Keep the measures
         if: always()
         uses: actions/upload-artifact@v4
