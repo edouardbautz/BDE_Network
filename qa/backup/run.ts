@@ -57,8 +57,14 @@ updates:
 
 /** 03:10 on 2026-10-27 in Paris (UTC+1 since the clocks went back): ten minutes after the hour of the backup. */
 const NIGHT = '2026-10-27T02:10:00Z';
-/** Midday: the platform is loaded with its data while the hour of the backup is far away. */
-const NOON = '2026-10-27T11:00:00Z';
+/**
+ * 01:00 in Paris: before the hour of the backup, so that a platform started with this clock makes none by itself (a clock at midday would be
+ * past 03:00 with no backup of the day: the first look of the loop, a minute after the start, would make one, and `restore.sh --auto`, which takes the
+ * newest, would restore the empty platform's).
+ */
+/** Ten minutes later: the name of a backup is its second, and the server that restores the first one must not make one of the same name. */
+const LATER = '2026-10-27T02:20:00Z';
+const EARLY = '2026-10-27T00:00:00Z';
 
 const COUNTED = ['User', 'Role', 'Event', 'AuditLog', 'PlatformSettings'] as const;
 
@@ -167,7 +173,7 @@ export async function playBackups(report: Report): Promise<void> {
 
   try {
     // ---- 1. a platform with data, left alone at the hour of the backup ---------------------------------------------------------
-    prepare(a, NOON, project);
+    prepare(a, EARLY, project);
     const started = a.up({ build: false });
     check(
       'the platform starts with docker compose up -d',
@@ -185,7 +191,7 @@ export async function playBackups(report: Report): Promise<void> {
     check('the dataset is loaded', loaded.ok, loaded.ok ? '' : loaded.out.slice(-300));
     const folderA = join(dirA, 'backups', 'auto');
     check(
-      'the folder of the backups exists on the host, made by compose, and nothing is in it at noon',
+      'the folder of the backups exists on the host, made by compose, and nothing is in it before 03:00',
       readdirSync(folderA).filter((name) => name.startsWith('bde-auto-')).length === 0,
       readdirSync(folderA).join(', '),
     );
@@ -351,7 +357,7 @@ export async function playBackups(report: Report): Promise<void> {
     );
 
     // ---- 3. a server with nothing -----------------------------------------------------------------------------------------------
-    prepare(b, NOON, project);
+    prepare(b, EARLY, project);
     check('a new server starts', b.up({ build: false }).ok);
     await answers(b, 'and answers (an empty BDE)');
     const emptyKey = inApp(b, 'cat', '/secrets/settings_key').out.trim();
@@ -450,6 +456,59 @@ export async function playBackups(report: Report): Promise<void> {
           .filter((l) => /secret/i.test(l))
           .join('\n'),
       ),
+      '',
+    );
+
+    // ---- 5. the database is down at the hour of the backup ----------------------------------------------------------------------------
+    // The platform is recreated at 03:10 and its database stopped before the first look of the loop (a minute after the start): the
+    // backup cannot be made. What was there stays, nothing half made is left, the failure is written down, and the page says so.
+    prepare(b, LATER, project);
+    check('the platform is recreated at 03:10 once more', b.up({ build: false }).ok);
+    await answers(b, 'and answers (at 03:10)');
+    const stopped = b.compose('stop', 'postgres');
+    check('the database is stopped', stopped.ok, stopped.out.slice(-200));
+    const failedAt = Date.now() + 5 * 60_000;
+    let attempt: { ok: boolean; code?: string; kind?: string } | undefined;
+    while (Date.now() < failedAt && !attempt) {
+      try {
+        const written = JSON.parse(inApp(b, 'cat', '/auto-backups/.status.json').out) as {
+          attempts: { ok: boolean; code?: string; kind?: string }[];
+        };
+        attempt = written.attempts.at(-1);
+      } catch {
+        // not written yet
+      }
+      if (!attempt) await sleep(5_000);
+    }
+    check(
+      'a backup that cannot be made is written down, with its reason',
+      attempt?.ok === false && attempt.code === 'dump' && attempt.kind === 'scheduled',
+      JSON.stringify(attempt),
+    );
+    const kept = inApp(b, 'ls', '-A', '/auto-backups').out.split(/\r?\n/).filter(Boolean).sort();
+    check(
+      'the backup that was there is untouched and nothing half made is left',
+      kept.join() === ['.status.json', archive].sort().join(),
+      kept.join(', '),
+    );
+    const down = await fetch(`${b.base}/api/health`, { signal: AbortSignal.timeout(10_000) }).then(
+      (response) => response.status,
+      () => 0,
+    );
+    check('the platform says its database is down (503)', down === 503, `${down}`);
+
+    check('the database is started again', b.compose('start', 'postgres').ok);
+    await answers(b, 'and the platform answers again');
+    const warned = await pageAs(b, '/fr/settings', secret);
+    check(
+      'the Settings page says that the last attempt failed, and why',
+      /La dernière tentative a échoué/.test(warned.body) &&
+        /n.a pas pu être exportée/.test(warned.body),
+      `${warned.status}`,
+    );
+    check(
+      'and that nobody is told by message, since no channel is chosen',
+      /Aucun message ne prévient les propriétaires/.test(warned.body),
       '',
     );
   } finally {

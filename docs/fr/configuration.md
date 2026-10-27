@@ -259,6 +259,8 @@ est **toujours lue** (`"discord"` vaut `[discord]`, `"none"` vaut `[]`) : aucun 
 | `intraCancelled` | un événement est retiré           | Voir [Notifications](notifications.md#messages-sur-la-publication-sur-lintra) ; seulement quand `events.intraPublication` est activé. |
 | `intraPublished` | publié sur l'intra                | Voir [Notifications](notifications.md#messages-sur-la-publication-sur-lintra) ; seulement quand `events.intraPublication` est activé. |
 | `intraRefused`   | publication refusée               | Voir [Notifications](notifications.md#messages-sur-la-publication-sur-lintra) ; seulement quand `events.intraPublication` est activé. |
+| `backupFailed`   | la sauvegarde de la nuit échoue   | E-mail : chaque propriétaire. Discord ou Slack : le salon. Voir [Notifications](notifications.md#messages-sur-les-sauvegardes).       |
+| `backupStale`    | aucune sauvegarde depuis 2 jours  | Les mêmes, une fois par jour. Voir [Notifications](notifications.md#messages-sur-les-sauvegardes).                                    |
 
 Les messages sont envoyés **après** l'action. Un envoi qui échoue (webhook indisponible, serveur SMTP en panne)
 est écrit dans les journaux et ne bloque jamais l'approbation ni le retrait. Si un canal de la liste n'est pas

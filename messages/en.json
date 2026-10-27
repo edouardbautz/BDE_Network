@@ -299,6 +299,42 @@
     "roleChangeBody": "{name} will go from \"{from}\" to \"{to}\". Their rights change immediately.",
     "roleChangeConfirm": "Change the role"
   },
+  "backups": {
+    "notifications": {
+      "failed": {
+        "subject": "{bde}: the automatic backup failed"
+      },
+      "stale": {
+        "subject": "{bde}: no backup for {days} days"
+      },
+      "embed": {
+        "kind": {
+          "failed": "Automatic backups",
+          "stale": "Automatic backups"
+        },
+        "title": {
+          "failed": "Backup failed",
+          "stale": "No recent backup"
+        },
+        "description": {
+          "failed": "The automatic backup failed. The platform will try again in 30 minutes.",
+          "stale": "No backup has succeeded for {days} days."
+        },
+        "fields": {
+          "reason": "Reason",
+          "last": "Last good backup"
+        }
+      },
+      "action": "Open the backups",
+      "last": {
+        "none": "none",
+        "format": "{date} · {size}"
+      },
+      "email": {
+        "footer": "You receive this message because you are an owner of {bde}."
+      }
+    }
+  },
   "auditLog": {
     "title": "Audit log",
     "subtitle": "Read-only — visible to owners only.",
@@ -1242,7 +1278,8 @@
         "groups": {
           "members": "Members",
           "events": "Events",
-          "intra": "Publication on the intra"
+          "intra": "Publication on the intra",
+          "backups": "Backups"
         },
         "memberRemovedNoEmail": "Never by e-mail",
         "memberPending": {
@@ -1296,6 +1333,14 @@
         "intraRefused": {
           "name": "Publication refused",
           "hint": "Tells the author, with the reason, and the BDE's room."
+        },
+        "backupFailed": {
+          "name": "Backup failed",
+          "hint": "Tells the owners when the night's backup fails, once a day."
+        },
+        "backupStale": {
+          "name": "No backup for 2 days",
+          "hint": "Tells the owners, once a day, as long as no backup has succeeded."
         }
       }
     },
@@ -1483,7 +1528,8 @@
           "generic": "The file could not be prepared. Try again."
         }
       },
-      "where": "The backups are in the folder “backups/auto” next to docker-compose.yml on the server (BDE_BACKUP_DIR), outside Docker’s volumes: they survive “docker compose down -v”. They are on the same disk as the platform, so copy them somewhere else from time to time."
+      "where": "The backups are in the folder “backups/auto” next to docker-compose.yml on the server (BDE_BACKUP_DIR), outside Docker’s volumes: they survive “docker compose down -v”. They are on the same disk as the platform, so copy them somewhere else from time to time.",
+      "notTold": "No message tells the owners when a backup fails: choose a channel for “Backup failed” and “No backup for 2 days” in the Notifications section below. Without one, they only see it here."
     },
     "oauthRejected": {
       "title": "42 refuses this BDE's application",
@@ -1599,7 +1645,8 @@
       "groups": {
         "events": "Events",
         "members": "Members",
-        "intra": "Publication on the intra"
+        "intra": "Publication on the intra",
+        "backups": "Backups"
       },
       "customised": "Customised",
       "notSent": "Sent nowhere"
@@ -1661,6 +1708,14 @@
       "intraRefused": {
         "name": "Publication refused",
         "when": "Sent to the author (e-mail) and to the BDE's room, with the reason, when the staff refuses."
+      },
+      "backupFailed": {
+        "name": "Backup failed",
+        "when": "Sent to the owners (e-mail) and in the BDE's channel when the night's backup fails, once a day."
+      },
+      "backupStale": {
+        "name": "No backup for 2 days",
+        "when": "Sent to the owners (e-mail) and in the BDE's channel, once a day, as long as no backup has succeeded."
       }
     },
     "editor": {
@@ -1765,7 +1820,9 @@
         "requestedBy": "Requested by",
         "changes": "What changed",
         "intraFields": "Fields of the intra's form",
-        "intraLink": "Link on the intra"
+        "intraLink": "Link on the intra",
+        "failure": "Why it failed",
+        "lastBackup": "Last good backup"
       }
     },
     "variables": {
@@ -1872,6 +1929,18 @@
       "intra_link": {
         "name": "intra_link",
         "label": "Address of the event on the intra"
+      },
+      "reason": {
+        "name": "reason",
+        "label": "Why the backup failed"
+      },
+      "last": {
+        "name": "last",
+        "label": "The last good backup, with its date and size"
+      },
+      "days": {
+        "name": "days",
+        "label": "Number of days without a good backup"
       }
     },
     "mentions": {

@@ -25,6 +25,9 @@ export const STAFF_TYPES: readonly TemplateType[] = [
   'intraCancelled',
 ];
 
+/** The notifications about the backups: they exist whatever the modules, and speak to the owners. */
+export const BACKUP_TYPES: readonly TemplateType[] = ['backupFailed', 'backupStale'];
+
 /** The notifications about the publication on the intra: they exist only while the platform publishes there. */
 export const INTRA_TYPES: readonly TemplateType[] = [
   'intraRequested',

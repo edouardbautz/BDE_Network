@@ -21,6 +21,12 @@ export const INTRA_NOTIFICATION_EVENTS = [
 ] as const;
 
 /**
+ * The notifications about the backups, for the owners: the nightly backup failed, or none has succeeded for two days. They exist whatever
+ * the modules, and a page drawn before they existed does not know them (what is saved for them is kept).
+ */
+export const BACKUP_NOTIFICATION_EVENTS = ['backupFailed', 'backupStale'] as const;
+
+/**
  * Notification events wired at this stage of the project. Business modules
  * (events, finances, meetings...) will add their own keys here as they land.
  */
@@ -34,6 +40,7 @@ export const NOTIFICATION_EVENTS = [
   'eventApproved',
   'eventRefused',
   ...INTRA_NOTIFICATION_EVENTS,
+  ...BACKUP_NOTIFICATION_EVENTS,
 ] as const;
 
 /** Module keys that ship with the platform. `modules.enabled` is free-form on
@@ -160,6 +167,8 @@ const notificationsSection = z.preprocess(
     intraCancelled: notificationChannels('intraCancelled'),
     intraPublished: notificationChannels('intraPublished'),
     intraRefused: notificationChannels('intraRefused'),
+    backupFailed: notificationChannels('backupFailed'),
+    backupStale: notificationChannels('backupStale'),
   }),
 );
 

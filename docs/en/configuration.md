@@ -252,6 +252,8 @@ Before version 1.5.0 a notification had **one** channel (`"email"`, `"discord"`,
 | `intraCancelled` | an event is taken back        | See [Notifications](notifications.md#messages-about-publishing-on-the-intra); only while `events.intraPublication` is on. |
 | `intraPublished` | published on the intra        | See [Notifications](notifications.md#messages-about-publishing-on-the-intra); only while `events.intraPublication` is on. |
 | `intraRefused`   | publication refused           | See [Notifications](notifications.md#messages-about-publishing-on-the-intra); only while `events.intraPublication` is on. |
+| `backupFailed`   | the nightly backup fails      | Email: every owner. Discord or Slack: the channel. See [Notifications](notifications.md#messages-about-the-backups).      |
+| `backupStale`    | no backup for two days        | The same, once a day. See [Notifications](notifications.md#messages-about-the-backups).                                   |
 
 Messages are sent **after** the action. A send that fails (webhook unavailable, mail server down) is written to the
 logs and never blocks the approval or the removal. If a channel of the list is not set up (for example `email` without

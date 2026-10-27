@@ -1,3 +1,8 @@
+import { describeFacts } from '@/lib/backups/notifications/facts';
+import { buildBackupEmail } from '@/lib/backups/notifications/email';
+import { buildBackupEmbed } from '@/lib/backups/notifications/discord-embed';
+import { buildBackupSlack } from '@/lib/backups/notifications/slack-blocks';
+import { backupAbove } from '@/lib/backups/notifications/template-values';
 import { buildEventEmbed } from '@/lib/events/discord-embed';
 import { buildEventEmail } from '@/lib/events/email';
 import { buildEventSlack } from '@/lib/events/slack-blocks';
@@ -16,7 +21,7 @@ import type { EmailContent } from '../types';
 import { channelsOfType } from './catalog';
 import { EVENT_KIND_OF } from './kinds';
 import type { MentionDirectory, RenderedAbove, StaffMentionIds } from './mentions';
-import { sampleEvent, sampleMember } from './samples';
+import { sampleBackup, sampleEvent, sampleMember } from './samples';
 import type { TemplateChannel, TemplateContent, TemplateType } from './types';
 
 /**
@@ -102,6 +107,33 @@ export async function renderPreview(
     return {
       channel,
       mail: buildEventEmail(eventKind, data, t, locale, timeZone, brand, undefined, context),
+    };
+  }
+
+  if (type === 'backupFailed' || type === 'backupStale') {
+    const backupKind = type === 'backupFailed' ? 'failed' : 'stale';
+    const t = await getNotificationTranslate(locale, 'backups.notifications');
+    const reasons = await getNotificationTranslate(locale, 'settings.backups.reasons');
+    const facts = describeFacts(sampleBackup(now), { locale, timeZone, t, reasons });
+    const settingsUrl = link('/settings');
+    if (channel === 'discord') {
+      const embed = signCard(
+        buildBackupEmbed(backupKind, facts, t, settingsUrl, now, context),
+        sender,
+      );
+      return {
+        channel,
+        embed: fitEmbed(neutralizeEmbedForDiscord(embed)),
+        above: backupAbove('discord', facts, settingsUrl, context),
+      };
+    }
+    if (channel === 'slack') {
+      const message = buildBackupSlack(backupKind, facts, t, settingsUrl, brand, context);
+      return { channel, message: fitSlackPayload(message) };
+    }
+    return {
+      channel,
+      mail: buildBackupEmail(backupKind, facts, t, settingsUrl, brand, locale, context),
     };
   }
 

@@ -74,9 +74,9 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('a table with a row per notification and a column per channel', () => {
-  it('has the eight rows, the three channels, and no box that can be ticked before a channel is set up', () => {
+  it('has the ten rows, the three channels, and no box that can be ticked before a channel is set up', () => {
     renderStep(draft());
-    expect(screen.getAllByRole('checkbox')).toHaveLength(8 * 3 - 1); // no e-mail for a member removed
+    expect(screen.getAllByRole('checkbox')).toHaveLength(10 * 3 - 1); // no e-mail for a member removed
     for (const checkbox of screen.getAllByRole('checkbox')) {
       expect(checkbox).toBeDisabled();
       expect(checkbox).not.toBeChecked();
@@ -98,7 +98,8 @@ describe('a table with a row per notification and a column per channel', () => {
     const matrix = { ...emptyMatrix(), eventConfirmed: ['discord' as const] };
     renderStep(draft({ matrix, hasDiscordWebhook: true }, false));
     expect(screen.queryByRole('checkbox', { name: /Événement confirmé/ })).not.toBeInTheDocument();
-    expect(screen.getAllByRole('checkbox')).toHaveLength(3 * 3 - 1);
+    // the members' and the backups': the owners are told whatever the modules
+    expect(screen.getAllByRole('checkbox')).toHaveLength(5 * 3 - 1);
 
     save();
     await waitFor(() => expect(api.saveNotifications).toHaveBeenCalled());
@@ -143,15 +144,15 @@ describe('the shortcuts of a column', () => {
   it('tick a whole column, then clear it, the button saying which', () => {
     renderStep(draft({ hasDiscordWebhook: true, hasSmtp: true }));
     press('Discord : tout cocher');
-    expect(screen.getAllByRole('checkbox', { checked: true })).toHaveLength(8);
+    expect(screen.getAllByRole('checkbox', { checked: true })).toHaveLength(10);
     expect(screen.getByRole('button', { name: 'Discord : tout décocher' })).toBeInTheDocument();
 
     press('E-mail : tout cocher');
-    // 7: the e-mail of a member removed does not exist
-    expect(screen.getAllByRole('checkbox', { checked: true })).toHaveLength(8 + 7);
+    // 9: the e-mail of a member removed does not exist
+    expect(screen.getAllByRole('checkbox', { checked: true })).toHaveLength(10 + 9);
 
     press('Discord : tout décocher');
-    expect(screen.getAllByRole('checkbox', { checked: true })).toHaveLength(7);
+    expect(screen.getAllByRole('checkbox', { checked: true })).toHaveLength(9);
   });
 
   it('clear every box at once', () => {
@@ -290,7 +291,7 @@ describe('the notifications about the publication on the intra', () => {
 
   it('are five more rows, only when the events module is on and the platform publishes on the intra', () => {
     renderStep(withIntra());
-    expect(screen.getAllByRole('checkbox')).toHaveLength(13 * 3 - 1);
+    expect(screen.getAllByRole('checkbox')).toHaveLength(15 * 3 - 1);
     expect(screen.getByText("Publication sur l'intra")).toBeInTheDocument();
     for (const name of [
       'Publication demandée',

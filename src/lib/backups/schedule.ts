@@ -53,3 +53,10 @@ export function isStale(input: { now: Date; lastSuccessAt: Date | null; since: D
   const reference = input.lastSuccessAt ?? input.since;
   return input.now.getTime() - reference.getTime() >= STALE_AFTER_MS;
 }
+
+/** The day of the BDE an instant falls in, `2026-10-27`: what "once a day" is counted in. */
+export function localDay(now: Date, timeZone: string): string {
+  const local = toLocalDateTime(now, timeZone);
+  const two = (value: number) => String(value).padStart(2, '0');
+  return `${local.year}-${two(local.month)}-${two(local.day)}`;
+}

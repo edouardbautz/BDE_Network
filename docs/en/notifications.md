@@ -84,6 +84,21 @@ customisation page, under **Publication on the intra**. They are off until you t
   order, colour, button) in **Notifications**. The **date** shown is the next one still to come; a series says how many
   dates it has and the staff's page lists them.
 
+## Messages about the backups
+
+Two notifications for the owners, **off until you choose a channel for them** (**Settings**, **Notifications** section, group
+"Backups"; the [Backups](backups.md) section of the same page says so while none is chosen):
+
+| Notification                             | When                                 | Who is notified                                                                      |
+| ---------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------ |
+| **Backup failed** (`backupFailed`)       | the nightly backup fails             | Email: **every owner**. Discord or Slack: the channel. The first failure of the day. |
+| **No backup for 2 days** (`backupStale`) | no backup has succeeded for two days | The same, once a day for as long as it lasts.                                        |
+
+Each says why, when the last good backup was made and how big it was, and has a button to the Backups section of the Settings page.
+They are customised like the others, from the **Notifications** page. At most one message of each kind a day: the platform tries
+again 30 minutes after a failure (three times a day at most) and does not repeat itself. A backup that you ask for with **Back up
+now** and that fails is shown on the page, not sent.
+
 ## Customising the messages
 
 The words, the colours, the information shown and its order, the button and the subject of e-mails can all be changed,

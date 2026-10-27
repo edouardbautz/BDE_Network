@@ -142,10 +142,16 @@ que servent les droits `600`), et `restore.sh --auto` les lit par le conteneur, 
 rootless, l'utilisateur du conteneur est un numéro de la plage du compte, avec le même effet : vous ne pouvez pas ouvrir
 vous-même les fichiers depuis l'hôte, et vous n'en avez pas besoin.
 
-Si le dossier ne peut pas servir du tout (un disque monté en lecture seule, un dossier où le conteneur n'a pas le droit
-d'écrire), la sauvegarde échoue avec la raison `folder` : voir plus bas.
+Si le dossier ne peut pas servir du tout (un disque monté en lecture seule, un partage qui refuse de donner le dossier à
+l'application, un dossier où le conteneur n'a pas le droit d'écrire), la plateforme **démarre quand même** : la sauvegarde échoue
+chaque nuit avec la raison `folder`, la section Sauvegardes de la page Paramètres le montre, et les propriétaires sont prévenus si un
+canal est choisi pour cela (voir plus bas).
 
 ## Si une sauvegarde échoue
+
+Les propriétaires peuvent en être prévenus par e-mail et dans le salon du BDE, la première fois chaque jour, et de nouveau quand aucune
+sauvegarde n'a réussi depuis deux jours : choisissez un canal pour ces deux messages dans **Paramètres**, section **Notifications** (voir
+[Notifications](notifications.md#messages-sur-les-sauvegardes)). Sans canal, la section Sauvegardes de la page Paramètres le dit.
 
 Chaque sauvegarde, faite ou échouée, est écrite dans les journaux de la plateforme :
 

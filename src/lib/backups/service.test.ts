@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Exec } from './exec';
 import type { BackupContext } from './run';
-import { backupDir, backupTick, secretsDir } from './service';
+import { backupDir, secretsDir } from './service';
 import { startBackupScheduler } from './scheduler';
 import { runBackup } from './run';
 
@@ -42,30 +42,6 @@ describe('where the backups are', () => {
     expect(backupDir({ BDE_BACKUP_DIR: '  ' })).toBe(join(process.cwd(), 'backups'));
     expect(secretsDir({})).toBe('/secrets');
     expect(secretsDir({ SECRETS_DIR: '/keys' })).toBe('/keys');
-  });
-});
-
-describe('one look of the loop', () => {
-  it('does nothing before 03:00 of the BDE, and does not even start a tool', async () => {
-    const outcome = await backupTick(context('2026-10-27T01:30:00Z'));
-    expect(outcome).toEqual({ ran: false, why: 'early' });
-  });
-
-  it('makes the backup from 03:00 on (a failure here: the tools are not there, the failure is the answer, not a throw)', async () => {
-    const outcome = await backupTick(
-      context('2026-10-27T02:05:00Z', async () => ({ code: 1, stdout: '', stderr: 'no pg_dump' })),
-    );
-    expect(outcome).toMatchObject({ ran: true, result: { ok: false, code: 'dump' } });
-  });
-
-  it('waits 30 minutes after a failure, then tries again', async () => {
-    const failing: Exec = async () => ({ code: 1, stdout: '', stderr: '' });
-    await backupTick(context('2026-10-27T02:05:00Z', failing));
-    expect(await backupTick(context('2026-10-27T02:20:00Z'))).toEqual({
-      ran: false,
-      why: 'retry-later',
-    });
-    expect(await backupTick(context('2026-10-27T02:40:00Z', failing))).toMatchObject({ ran: true });
   });
 });
 

@@ -175,17 +175,17 @@ try {
   await clickButton('Continuer');
   await waitText('Qui est prévenu, et où');
   // Nothing can be ticked before a channel is set up; typing a Discord address makes its column tickable, and the shortcut
-  // of the column ticks every box of it (the events module is on: eight notifications).
+  // of the column ticks every box of it (the events module is on: ten notifications, the two about the backups among them).
   const ticked = () => page.$$eval('input[type="checkbox"]:checked', (boxes) => boxes.length);
   const enabled = () =>
     page.$$eval('input[type="checkbox"]:not(:disabled)', (boxes) => boxes.length);
   if ((await enabled()) !== 0) fail('a box can be ticked before any channel is set up');
   await page.type('#setup-discord', WEBHOOK);
-  if ((await enabled()) !== 8)
-    fail(`${await enabled()} boxes can be ticked with Discord set up, not 8`);
+  if ((await enabled()) !== 10)
+    fail(`${await enabled()} boxes can be ticked with Discord set up, not 10`);
   await clickButton('Discord : tout cocher');
-  if ((await ticked()) !== 8)
-    fail(`${await ticked()} boxes ticked by the shortcut of the column, not 8`);
+  if ((await ticked()) !== 10)
+    fail(`${await ticked()} boxes ticked by the shortcut of the column, not 10`);
   await shot('notifications');
   await clickButton('Continuer');
   step('6-7. modules and notifications (a column ticked once its channel is set up)');
@@ -193,7 +193,7 @@ try {
   // 8. summary, then install
   await waitText('Récapitulatif');
   const summary = await text();
-  for (const expected of ['BDE Test', 'Nice', 'alice', 'vérifiée par 42', 'Discord (8 types)']) {
+  for (const expected of ['BDE Test', 'Nice', 'alice', 'vérifiée par 42', 'Discord (10 types)']) {
     if (!summary.includes(expected)) fail(`the summary lacks "${expected}"`);
   }
   if (summary.includes(CLIENT_SECRET)) fail('the summary shows the 42 secret');

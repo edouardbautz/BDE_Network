@@ -25,6 +25,9 @@ export const ITEMS: Record<TemplateType, readonly ItemId[]> = {
   memberPending: ['summary', 'login', 'campus'],
   memberApproved: ['summary', 'login', 'campus', 'role', 'actedBy'],
   memberRemoved: ['summary', 'login', 'campus', 'role', 'actedBy'],
+  // The backups (after the members, so that the editor opens on the first of them when no module is on): the owners are told that the nightly backup failed, or that none has succeeded for two days.
+  backupFailed: ['summary', 'failure', 'lastBackup'],
+  backupStale: ['summary', 'failure', 'lastBackup'],
 };
 
 /**
@@ -89,10 +92,18 @@ const MEMBER_NATIVE: Record<TemplateChannel, readonly ItemId[]> = {
   email: ['summary', 'login', 'campus', 'role', 'actedBy'],
 };
 
+/** The same order on the three channels: the sentence, why, and the last good backup. */
+const BACKUP_NATIVE: Record<TemplateChannel, readonly ItemId[]> = {
+  discord: ['summary', 'failure', 'lastBackup'],
+  slack: ['summary', 'failure', 'lastBackup'],
+  email: ['summary', 'failure', 'lastBackup'],
+};
+
 /** What a channel shows of the items of a type: its own order, restricted to what the type has and the channel shows. */
 export function nativeOrder(channel: TemplateChannel, type: TemplateType): ItemId[] {
-  const own =
-    type.startsWith('event') || type.startsWith('intra')
+  const own = type.startsWith('backup')
+    ? BACKUP_NATIVE[channel]
+    : type.startsWith('event') || type.startsWith('intra')
       ? EVENT_NATIVE[channel]
       : MEMBER_NATIVE[channel];
   const known = new Set<ItemId>(ITEMS[type]);
@@ -149,6 +160,8 @@ export const VARIABLES = {
   memberPending: ['name', 'login', 'campus', 'bde', 'link'],
   memberApproved: ['name', 'login', 'campus', 'role', 'actor', 'bde', 'link'],
   memberRemoved: ['name', 'login', 'campus', 'role', 'actor', 'bde'],
+  backupFailed: ['reason', 'last', 'bde', 'link'],
+  backupStale: ['days', 'last', 'reason', 'bde', 'link'],
 } as const satisfies Record<TemplateType, readonly string[]>;
 
 export type VariableId = (typeof VARIABLES)[TemplateType][number];
