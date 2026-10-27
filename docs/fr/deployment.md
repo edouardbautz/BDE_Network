@@ -22,11 +22,11 @@ Un petit serveur suffit. Mesuré avec la charge de 20 personnes en même temps (
 **1 CPU et 1 Go pour la plateforme** (l'application limitée à 768 Mo, la base à 256 Mo) : aucune requête n'a échoué, l'application n'a
 jamais dépassé 431 Mo ni la base 70 Mo.
 
-|            | Minimum                                                                              | Confortable                                                |
-| ---------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
-| Processeur | 1 CPU                                                                                | 2 CPU                                                      |
-| Mémoire    | 1 Go pour tout le serveur                                                            | 2 Go                                                       |
-| Disque     | 5 Go (l'image pèse 273 Mo ; les données d'un BDE, 10 Mo après deux années scolaires) | 10 Go, pour garder les copies faites avant une mise à jour |
+|            | Minimum                                                                                      | Confortable                                                |
+| ---------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Processeur | 1 CPU                                                                                        | 2 CPU                                                      |
+| Mémoire    | 1 Go pour tout le serveur                                                                    | 2 Go                                                       |
+| Disque     | 5 Go (l'image pèse environ 250 Mo ; les données d'un BDE, 10 Mo après deux années scolaires) | 10 Go, pour garder les copies faites avant une mise à jour |
 
 Au repos l'application utilise environ 105 Mo et la base 40 Mo. La plateforme redémarre en moins de 2 secondes : un redémarrage du
 conteneur ne se remarque pas. Un BDE n'a pas besoin de plus ; une école qui héberge plusieurs plateformes sur une machine additionne les

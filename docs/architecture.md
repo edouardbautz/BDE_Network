@@ -1032,8 +1032,8 @@ recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`)
   The Prisma CLI (a dev dependency, so not in the bundle) is installed separately at the lockfile's
   exact version into `/opt/migrate` and **pruned of what only Studio / `prisma dev` use** (~120 MB), then of what `migrate deploy` never loads
   (the sources and type declarations of `effect`, its unused ESM build, the three files of the local database of `prisma dev`, the build metadata
-  of Studio, the drivers of databases we do not use: 139 → 81 MiB; each removal was tried alone against a real PostgreSQL, and what could not
-  go — `effect/dist/cjs`, `@prisma/dev` itself, the wasm of the schema — stays). The image went from 365 to 273 MiB measured on one machine.
+  of Studio, the wasm of the schema engine (the native one does the work), the drivers of databases we do not use: 139 → 76 MiB; each removal was tried alone against a real PostgreSQL, and what could not
+  go — `effect/dist/cjs`, `@prisma/dev` itself, the wasm that validates the schema — stays). The image went from 365 to 268 MiB measured on one machine.
   **`NODE_OPTIONS` is set in the image** (`--max-old-space-size=384 --max-semi-space-size=32`): without it Node.js lets its heap grow past 1 GiB under
   the load of 20 people on a machine with memory to spare (1,060 MiB), with it the same load peaks at 335 MiB with the same throughput. On the
   five-years dataset (1,500 accounts) the cap costs 6 % of throughput and the peak is 528 MiB instead of 1,002: a known limit, written in the

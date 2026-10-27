@@ -24,8 +24,8 @@ RUN node -p "require('./package.json').version" > /app/.bde-version
 # The last command removes what only Prisma Studio and `prisma dev` use (about 170 MB):
 # a user interface, a local database and the query compilers, and, in what has to stay,
 # what is never run: the sources and the type declarations of `effect`, the files of the local
-# database of `prisma dev` (the three that weigh 18 MB), the build metadata of Studio, and the
-# drivers of databases we do not use. Each of these was tried alone against a real PostgreSQL:
+# database of `prisma dev` (the three that weigh 18 MB), the build metadata of Studio, the wasm of
+# the schema engine (the native one does the work) and the drivers of databases we do not use. Each of these was tried alone against a real PostgreSQL:
 # `migrate deploy` needs none of it, and a package that cannot lose a file (`effect/dist/cjs`,
 # `@prisma/dev` itself) is not touched. The CI "docker" job fails if a Prisma update ever changes
 # that.
@@ -41,6 +41,7 @@ RUN PRISMA_VERSION="$(node -p "require('./package-lock.json').packages['node_mod
       @prisma/dev/dist/runtime-assets/pglite.wasm @prisma/dev/dist/runtime-assets/pglite.data \
       @prisma/dev/dist/runtime-assets/pglite-seed.tar.gz \
       @prisma/studio-core/dist/metafile-cjs.json @prisma/studio-core/dist/metafile-esm.json \
+      prisma/build/schema_engine_bg.wasm \
       effect/src effect/dist/dts effect/dist/esm \
       lodash mysql2 iconv-lite aws-ssl-profiles postgres find-my-way
 
