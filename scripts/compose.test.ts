@@ -37,3 +37,44 @@ describe('docker-compose.yml, for a platform that nobody watches', () => {
     },
   );
 });
+
+/**
+ * The nightly backups must outlive the platform's volumes: they are a folder of the host, mounted by the application (which writes
+ * them) and by the one-shot `secrets` service (which, as root, hands the folder to the application's user: a folder made by Docker
+ * on the host belongs to root, and a rootless Docker has no other way to make it writable).
+ */
+describe('docker-compose.yml, for the backups', () => {
+  const text = readFileSync(join(process.cwd(), 'docker-compose.yml'), 'utf8');
+  const doc = load(text) as {
+    services: Record<string, { volumes?: string[]; command?: string[] }>;
+    volumes: Record<string, unknown>;
+  };
+  const mount = '${BDE_BACKUP_DIR:-./backups/auto}:/auto-backups';
+
+  it('mounts a folder of the host, not a volume, on /auto-backups', () => {
+    expect(doc.services.app?.volumes).toContain(mount);
+    expect(doc.services.secrets?.volumes).toContain(mount);
+    expect(Object.keys(doc.volumes)).not.toContain('auto-backups');
+  });
+
+  it("gives the folder to the application's user before the application starts", () => {
+    const script = String(doc.services.secrets?.command?.join('\n'));
+    expect(script).toContain('chown 1001:1001 /auto-backups');
+    expect(script).toContain('chmod 755 /auto-backups');
+  });
+
+  it('passes the number of the stack that the image checks (the two change together)', () => {
+    const stack = /BDE_STACK: '(\d+)'/.exec(text)?.[1];
+    const image = /STACK_VERSION = (\d+);/.exec(
+      readFileSync(join(process.cwd(), 'docker', 'safe-update.mjs'), 'utf8'),
+    )?.[1];
+    expect(stack).toBe(image);
+  });
+
+  it("does not set the folder the application sees: the image decides (BDE_BACKUP_DIR is the host's path here)", () => {
+    expect(text).not.toMatch(/^\s+BDE_BACKUP_DIR:/m);
+    expect(readFileSync(join(process.cwd(), 'Dockerfile'), 'utf8')).toContain(
+      'BDE_BACKUP_DIR=/auto-backups',
+    );
+  });
+});

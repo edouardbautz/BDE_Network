@@ -24,8 +24,9 @@ This documentation is written in English and in French. Both versions say the sa
 2. [Deployment](deployment.md): a server, a domain name, HTTPS and backups.
 3. [Configuration](configuration.md): the Settings page and the reference of every setting.
 4. [Upgrading](upgrading.md): backup, command, check, rolling back.
-5. [Troubleshooting](troubleshooting.md): what you see, why, what to do.
-6. [Quality](quality.md): what is checked, how, what it found, and what it does not cover.
+5. [Automatic backups](backups.md): every night, checked, restored with one command.
+6. [Troubleshooting](troubleshooting.md): what you see, why, what to do.
+7. [Quality](quality.md): what is checked, how, what it found, and what it does not cover.
 
 ### I contribute to the code
 

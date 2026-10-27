@@ -13,7 +13,7 @@
 /** What docker-compose.yml gives the image, as a number: the variables it sets, the volumes it mounts. Raised
  * when the two have to change together. docker-compose.yml passes it as `BDE_STACK`; a plain `docker run` (the CI,
  * a test) passes nothing and is not checked. */
-export const STACK_VERSION = 2;
+export const STACK_VERSION = 3;
 
 /** The compose file's number against this image's: null when they belong together (or when nothing says). */
 export function checkStack(env) {

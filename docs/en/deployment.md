@@ -238,6 +238,9 @@ Then `docker compose up -d --build` is enough.
 
 ## Backups and restore
 
+The platform also backs itself up **every night, by itself**, outside Docker's volumes: see
+[Automatic backups](backups.md). What follows is the backup you make yourself, for a copy you move or keep.
+
 A backup is made of **two archives**, created together by `scripts/backup.sh`:
 
 | Archive                                          | Content                                                                                                 |

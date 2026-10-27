@@ -449,5 +449,8 @@ export async function finishInstallation(): Promise<ActionResult> {
   // The reminders of the events module start now that the platform has a configuration.
   const { startEventReminderScheduler } = await import('@/lib/events/scheduler');
   startEventReminderScheduler();
+  // ...and so do the nightly backups.
+  const { startBackupScheduler } = await import('@/lib/backups/scheduler');
+  startBackupScheduler();
   return { ok: true };
 }

@@ -5,8 +5,16 @@
 # pas besoin de Node.js sur le serveur. Sous Windows, lancez-le depuis Git Bash ou WSL.
 #
 # Usage : ./scripts/restore.sh backups/bde-backup-AAAA-MM-JJ_HH-MM-SS.tar.gz [--secrets backups/bde-secrets-....tar.gz] [--yes]
+#         ./scripts/restore.sh --auto [bde-auto-AAAA-MM-JJ_HH-MM-SSZ.tar.gz] [--yes]
+#         ./scripts/restore.sh bde-auto-....tar.gz.enc                         (fichier téléchargé depuis Paramètres : phrase de passe demandée)
 #         ./scripts/restore.sh --pre-update [pre-update_AAAAMMJJTHHMMSSZ_vX.Y.Z.sql.gz] [--yes]
 #         ./scripts/restore.sh backups/bde-backup-....tar.gz --no-start        (pour revenir à une version précédente)
+#   --auto     restaure une des sauvegardes que la plateforme fait TOUTE SEULE chaque nuit (dossier backups/auto de l'hôte,
+#              ou BDE_BACKUP_DIR), la plus récente si vous n'en nommez pas. Elle contient la base ET les clés : rien d'autre à donner,
+#              même sur un serveur neuf.
+#   fichier .enc  une sauvegarde téléchargée depuis la page Paramètres est chiffrée avec une phrase de passe que le propriétaire a
+#              choisie. Elle est demandée ici (ou lue dans la variable BDE_BACKUP_PASSPHRASE). Perdue, elle ne se retrouve pas :
+#              le fichier est alors inutilisable (les sauvegardes du dossier du serveur, elles, ne sont pas chiffrées).
 #   --pre-update  restaure la copie que la plateforme a faite TOUTE SEULE avant d'appliquer une mise à jour de la
 #              base (volume « backups » de Docker ; la plus récente si vous n'en nommez pas). Elle ne contient que la
 #              base : les clés du volume « secrets » n'ont pas changé.
@@ -29,6 +37,8 @@ umask 077
 
 usage() {
   echo "Usage : ./scripts/restore.sh backups/bde-backup-AAAA-MM-JJ_HH-MM-SS.tar.gz [--secrets backups/bde-secrets-....tar.gz] [--no-start] [--yes]"
+  echo "        ./scripts/restore.sh --auto [bde-auto-....tar.gz] [--yes]"
+  echo "        ./scripts/restore.sh bde-auto-....tar.gz.enc [--yes]     (fichier téléchargé : phrase de passe demandée)"
   echo "        ./scripts/restore.sh --pre-update [pre-update_....sql.gz] [--yes]"
 }
 
@@ -38,6 +48,8 @@ ASSUME_YES=0
 NO_START=0
 PRE_UPDATE=0
 PRE_UPDATE_NAME=
+AUTO=0
+AUTO_NAME=
 while [ $# -gt 0 ]; do
   case "$1" in
     --yes)
@@ -55,6 +67,17 @@ while [ $# -gt 0 ]; do
       case "${1:-}" in
         pre-update_*.sql.gz)
           PRE_UPDATE_NAME="$1"
+          shift
+          ;;
+      esac
+      ;;
+    --auto)
+      AUTO=1
+      shift
+      # Un nom de sauvegarde peut suivre ; sinon, la plus récente.
+      case "${1:-}" in
+        bde-auto-*.tar.gz)
+          AUTO_NAME="$1"
           shift
           ;;
       esac
@@ -92,12 +115,16 @@ done
 # apply its migrations again at once.
 [ "$PRE_UPDATE" -eq 1 ] && NO_START=1
 
-if [ "$PRE_UPDATE" -eq 1 ] && [ -n "$FILE" ]; then
-  echo "--pre-update et un fichier de sauvegarde ne vont pas ensemble : choisissez l'un ou l'autre." >&2
+if { [ "$PRE_UPDATE" -eq 1 ] || [ "$AUTO" -eq 1 ]; } && [ -n "$FILE" ]; then
+  echo "--pre-update, --auto et un fichier de sauvegarde ne vont pas ensemble : choisissez l'un ou l'autre." >&2
+  exit 2
+fi
+if [ "$PRE_UPDATE" -eq 1 ] && [ "$AUTO" -eq 1 ]; then
+  echo "--pre-update et --auto ne vont pas ensemble : choisissez l'un ou l'autre." >&2
   exit 2
 fi
 
-if [ "$PRE_UPDATE" -eq 0 ] && [ -z "$FILE" ]; then
+if [ "$PRE_UPDATE" -eq 0 ] && [ "$AUTO" -eq 0 ] && [ -z "$FILE" ]; then
   echo "Indiquez la sauvegarde à restaurer." >&2
   usage >&2
   echo "" >&2
@@ -105,6 +132,7 @@ if [ "$PRE_UPDATE" -eq 0 ] && [ -z "$FILE" ]; then
   cd "$(dirname "$0")/.."
   # shellcheck disable=SC2012
   ls -1t backups/bde-backup-*.tar.gz 2>/dev/null | head -n 10 >&2 || true
+  echo "(Les sauvegardes automatiques : ./scripts/restore.sh --auto)" >&2
   exit 2
 fi
 
@@ -121,7 +149,7 @@ esac
 
 cd "$(dirname "$0")/.."
 
-if [ "$PRE_UPDATE" -eq 0 ] && [ ! -f "$FILE" ]; then
+if [ "$PRE_UPDATE" -eq 0 ] && [ "$AUTO" -eq 0 ] && [ ! -f "$FILE" ]; then
   echo "Fichier introuvable : $FILE" >&2
   exit 1
 fi
@@ -169,10 +197,58 @@ if [ "$PRE_UPDATE" -eq 1 ]; then
     echo "La copie « $PRE_UPDATE_NAME » est incomplète : restauration annulée, rien n'a été modifié." >&2
     exit 1
   fi
-elif ! tar -tzf "$FILE" 2>/dev/null | grep -qx "database.sql"; then
-  echo "« $FILE » n'est pas une sauvegarde de BDE_Network (database.sql absent) :" >&2
-  echo "elle doit avoir été créée par scripts/backup.sh." >&2
-  exit 1
+else
+  ARCHIVE="$FILE"
+  if [ "$AUTO" -eq 1 ]; then
+    # Les sauvegardes automatiques sont dans le dossier de l'hôte monté sur /auto-backups, lisible par l'application seulement :
+    # on les lit avec un conteneur éphémère (le même dossier qu'elle, sans en deviner le chemin, rootless compris).
+    AVAILABLE="$(docker compose run --rm --no-deps -T --entrypoint ls app -1 /auto-backups 2>/dev/null | grep '^bde-auto-.*\.tar\.gz$' | sort || true)"
+    if [ -z "$AVAILABLE" ]; then
+      echo "Aucune sauvegarde automatique dans le dossier des sauvegardes (backups/auto, ou BDE_BACKUP_DIR)." >&2
+      echo "(Pour un fichier téléchargé depuis Paramètres, donnez son chemin.)" >&2
+      exit 1
+    fi
+    if [ -z "$AUTO_NAME" ]; then
+      AUTO_NAME="$(printf '%s\n' "$AVAILABLE" | tail -n 1)"
+    elif ! printf '%s\n' "$AVAILABLE" | grep -qx "$AUTO_NAME"; then
+      echo "Sauvegarde introuvable : $AUTO_NAME. Disponibles :" >&2
+      printf '%s\n' "$AVAILABLE" >&2
+      exit 1
+    fi
+    FILE="$AUTO_NAME"
+    ARCHIVE="$WORK/archive.tar.gz"
+    docker compose run --rm --no-deps -T --entrypoint cat app "/auto-backups/$AUTO_NAME" >"$ARCHIVE"
+  fi
+  case "$FILE" in
+    *.enc)
+      # Chiffrée par la page Paramètres : OpenSSL standard (AES-256-CBC, PBKDF2-SHA256, 600 000 itérations), déchiffrée dans
+      # l'image de l'application, qui a openssl : le serveur n'a besoin que de Docker.
+      if [ -z "${BDE_BACKUP_PASSPHRASE:-}" ]; then
+        if [ ! -t 0 ]; then
+          echo "Ce fichier est chiffré : donnez la phrase de passe dans BDE_BACKUP_PASSPHRASE, ou relancez dans un terminal." >&2
+          exit 1
+        fi
+        printf "Phrase de passe du fichier (rien ne s'affiche pendant la saisie) : "
+        stty -echo 2>/dev/null || true
+        read -r BDE_BACKUP_PASSPHRASE || true
+        stty echo 2>/dev/null || true
+        echo ""
+      fi
+      export BDE_BACKUP_PASSPHRASE
+      if ! docker compose run --rm --no-deps -T -e BDE_BACKUP_PASSPHRASE --entrypoint sh app -c 'openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -md sha256 -pass env:BDE_BACKUP_PASSPHRASE' <"$ARCHIVE" >"$WORK/decrypted.tar.gz" 2>"$WORK/decrypt.log"; then
+        echo "Le fichier n'a pas pu être déchiffré : phrase de passe incorrecte, ou fichier abîmé. Rien n'a été modifié." >&2
+        exit 1
+      fi
+      unset BDE_BACKUP_PASSPHRASE
+      ARCHIVE="$WORK/decrypted.tar.gz"
+      ;;
+  esac
+  if ! tar -tzf "$ARCHIVE" 2>/dev/null | grep -qx "database.sql"; then
+    echo "« $FILE » n'est pas une sauvegarde de BDE_Network (database.sql absent) :" >&2
+    echo "elle doit avoir été créée par scripts/backup.sh ou par la plateforme (sauvegardes automatiques)." >&2
+    echo "(Un fichier .enc demande la bonne phrase de passe : une mauvaise donne parfois un contenu illisible.)" >&2
+    exit 1
+  fi
 fi
 
 echo ""
@@ -189,6 +265,8 @@ echo "  • Une copie de sécurité de l'état actuel est faite juste avant, dan
 if [ -n "$SECRETS_FILE" ]; then
   echo "  • Les clés du volume « secrets » (session, chiffrement des secrets) seront REMPLACÉES par celles de :"
   echo "    $SECRETS_FILE"
+elif [ "$PRE_UPDATE" -eq 0 ] && tar -tzf "$ARCHIVE" 2>/dev/null | grep -qx "secrets.tar"; then
+  echo "  • Les clés du volume « secrets » (session, chiffrement des secrets) seront REMPLACÉES par celles de la sauvegarde."
 fi
 echo ""
 
@@ -214,7 +292,7 @@ if ! BACKUP_LABEL="-avant-restauration" ./scripts/backup.sh; then
 fi
 
 if [ "$PRE_UPDATE" -eq 0 ]; then
-  tar -xzf "$FILE" -C "$WORK"
+  tar -xzf "$ARCHIVE" -C "$WORK"
 fi
 
 echo ""
@@ -224,6 +302,16 @@ docker compose stop app >/dev/null 2>&1 || true
 if [ -n "$SECRETS_FILE" ]; then
   echo "3/5 Restauration des clés (volume « secrets »)..."
   if ! gzip -dc "$SECRETS_FILE" | docker compose run --rm --no-deps -T --entrypoint tar app -xf - -C /secrets >"$WORK/secrets.log" 2>&1; then
+    cat "$WORK/secrets.log" >&2
+    echo "" >&2
+    echo "Les clés n'ont pas pu être restaurées : rien n'a été modifié. Relance de l'application..." >&2
+    docker compose up -d app >/dev/null 2>&1 || true
+    exit 1
+  fi
+elif [ -f "$WORK/secrets.tar" ]; then
+  # Une sauvegarde automatique porte ses clés : une seule archive suffit, même sur un serveur sans rien.
+  echo "3/5 Restauration des clés de la sauvegarde (volume « secrets »)..."
+  if ! docker compose run --rm --no-deps -T --entrypoint tar app -xf - -C /secrets <"$WORK/secrets.tar" >"$WORK/secrets.log" 2>&1; then
     cat "$WORK/secrets.log" >&2
     echo "" >&2
     echo "Les clés n'ont pas pu être restaurées : rien n'a été modifié. Relance de l'application..." >&2
@@ -276,7 +364,7 @@ else
   echo "Restauration terminée. L'application redémarre (les migrations éventuelles s'appliquent toutes seules)."
   echo "Vérifiez avec : docker compose logs --tail 20 app"
 fi
-if [ -z "$SECRETS_FILE" ]; then
+if [ -z "$SECRETS_FILE" ] && [ ! -f "$WORK/secrets.tar" ]; then
   echo ""
   echo "Rappel : sur un AUTRE serveur que celui d'origine, relancez avec --secrets <archive des clés>."
   echo "Sans elle, les secrets chiffrés de la base (clé 42, SMTP, webhooks) ne seront pas lisibles : l'application"

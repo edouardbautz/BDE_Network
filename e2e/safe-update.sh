@@ -57,7 +57,7 @@ app() { # <script-before> [docker run options...]
   shift
   docker rm -f bdeupd-app >/dev/null 2>&1 || true
   docker run -d --name bdeupd-app --network "$NET" -p "127.0.0.1:${PORT}:3000" \
-    -v bdeupd-backups:/backups -e DATABASE_URL="$URL" -e BDE_STACK=2 "$@" \
+    -v bdeupd-backups:/backups -e DATABASE_URL="$URL" -e BDE_STACK=3 "$@" \
     --entrypoint sh "$IMAGE" -c "$script exec node /opt/start/start.mjs" >/dev/null
 }
 page() { curl -s -H "Accept-Language: $1" "http://127.0.0.1:${PORT}/" | sed "s/&#39;/'/g"; }
@@ -154,7 +154,7 @@ sql -c "DELETE FROM _prisma_migrations WHERE id = 'future'" >/dev/null
 
 # ---- 5. the compose file and the image do not belong together -----------------------------------------------------------
 docker rm -f bdeupd-app >/dev/null 2>&1
-app '' -e BDE_STACK=3
+app '' -e BDE_STACK=4
 wait_for 90 "the explanation page" serving
 page fr | grep -q "L'image est plus ancienne que docker-compose.yml" || fail "no page for an image older than the compose file"
 ok "an image older than docker-compose.yml: explained instead of looping"
@@ -167,7 +167,7 @@ ok "a compose file older than the image: explained instead of looping"
 
 # ---- 6. no database address at all (the incident: "Connection url is empty") --------------------------------------------
 docker rm -f bdeupd-app >/dev/null 2>&1
-docker run -d --name bdeupd-app --network "$NET" -p "127.0.0.1:${PORT}:3000" -e DATABASE_URL= -e BDE_STACK=2 "$IMAGE" >/dev/null
+docker run -d --name bdeupd-app --network "$NET" -p "127.0.0.1:${PORT}:3000" -e DATABASE_URL= -e BDE_STACK=3 "$IMAGE" >/dev/null
 wait_for 90 "the explanation page" serving
 page fr | grep -q "L'adresse de la base de données est invalide" || fail "no page for a missing database address"
 ok "no database address: explained instead of 'Connection url is empty' in a loop"
