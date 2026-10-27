@@ -1664,6 +1664,13 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
   school's server, whose limits are tried apart) is the reference. `optim.test.ts` holds the pure parts (statistics, assets of a page, statements, what
   `docker` prints, the comparison). Traps met: `n_live_tup` is 0 just after a load (the rows are counted); the scope folders of
   `node_modules` (`@prisma`) are counted with their packages if the listing is not told otherwise.
+  The scripts a page "loads at once" leave out the polyfills of the `nomodule` tag (38.7 KiB that no browser that matters downloads: the first reading
+  counted them). **What every page loads first** is held by `client-weight.test.ts`: the routing and the language menus once imported the list of
+  languages from the schema of the configuration, which imports Zod, so Zod (27 KiB on the wire) was on every page; the list is now `config/locales.ts`,
+  and the toasts are drawn by a component fetched once the page is interactive (`layout/lazy-toaster.tsx`). A phone with a slow network runs the scripts four
+  times slower in the Lighthouse test, so the largest contentful paint follows the scripts, not the bytes of the messages (a trial that left the
+  catalog of messages out of the page, 24 KiB, did not move it and was not kept; the precompilation of the messages of next-intl fails on four of
+  ours and is experimental).
   The measures of the starting point of the campaign (taken by the CI, 2026-10-27) are kept in `qa/optim/baselines/`, and the numbers
   with their objectives are on the Quality page of the documentation, which each step of the campaign updates.
 - **Resilience** (`qa/resilience/`, the `resilience` job of `qa.yml`; `npx tsx qa/resilience/run.ts [--only database,app,webhook]` on a

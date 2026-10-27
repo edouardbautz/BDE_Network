@@ -71,6 +71,12 @@ describe('what every page loads first', () => {
     },
   );
 
+  it('draws the toasts through the lazy component, not in the first scripts', () => {
+    const layout = readFileSync(join(root, 'src/app/[locale]/layout.tsx'), 'utf8');
+    expect(layout).toContain('LazyToaster');
+    expect(layout).not.toContain("from '@/components/ui/sonner'");
+  });
+
   it('can see an import chain (the walk is not blind)', () => {
     // schema.ts imports zod: starting from it, the walk must find it
     const source = readFileSync(join(root, 'src/config/schema.ts'), 'utf8');
