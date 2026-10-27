@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => {
     panels: vi.fn(),
     credentials: vi.fn(),
     updatesCheck: true,
+    backupChannels: [] as string[],
   };
 });
 
@@ -32,7 +33,11 @@ vi.mock('@/i18n/navigation', () => ({
 }));
 vi.mock('@/lib/auth/oauth-check', () => ({ checkFortyTwoCredentials: mocks.credentials }));
 vi.mock('@/config', () => ({
-  getConfig: () => ({ updates: { check: mocks.updatesCheck }, bde: { timezone: 'Europe/Paris' } }),
+  getConfig: () => ({
+    updates: { check: mocks.updatesCheck },
+    bde: { timezone: 'Europe/Paris' },
+    notifications: { backupFailed: mocks.backupChannels, backupStale: [] },
+  }),
 }));
 vi.mock('@/lib/backups/list', () => ({
   readOverview: async (dir: string) => ({ dir, backups: [] }),
@@ -40,9 +45,15 @@ vi.mock('@/lib/backups/list', () => ({
 vi.mock('@/lib/backups/service', () => ({ backupDir: () => '/auto-backups' }));
 vi.mock('@/components/settings/backups-section', () => ({
   // an async Server Component with a client dialog inside: its own test is next to it
-  BackupsSection: (props: { notice: string | null; timeZone: string; locale: string }) => (
+  BackupsSection: (props: {
+    notice: string | null;
+    timeZone: string;
+    locale: string;
+    told: boolean;
+  }) => (
     <div>
-      backups, notice: {props.notice ?? 'none'}, {props.timeZone}, {props.locale}
+      backups, notice: {props.notice ?? 'none'}, {props.timeZone}, {props.locale}, told:{' '}
+      {String(props.told)}
     </div>
   ),
 }));
@@ -138,14 +149,18 @@ describe('SettingsPage', () => {
 
   it('always shows the backups, in the time zone of the BDE', async () => {
     await renderPage();
-    expect(screen.getByText('backups, notice: none, Europe/Paris, fr')).toBeInTheDocument();
+    expect(
+      screen.getByText('backups, notice: none, Europe/Paris, fr, told: false'),
+    ).toBeInTheDocument();
   });
 
   it.each(['made', 'busy', 'dump'])(
     'says what the backup that was just asked came to (%s)',
     async (backup) => {
       await renderPage({ backup });
-      expect(screen.getByText(`backups, notice: ${backup}, Europe/Paris, fr`)).toBeInTheDocument();
+      expect(
+        screen.getByText(`backups, notice: ${backup}, Europe/Paris, fr, told: false`),
+      ).toBeInTheDocument();
     },
   );
 
@@ -153,7 +168,9 @@ describe('SettingsPage', () => {
     'ignores a notice that is not in the list, and never echoes it (%j)',
     async (backup) => {
       await renderPage({ backup });
-      expect(screen.getByText('backups, notice: none, Europe/Paris, fr')).toBeInTheDocument();
+      expect(
+        screen.getByText('backups, notice: none, Europe/Paris, fr, told: false'),
+      ).toBeInTheDocument();
     },
   );
 
@@ -196,5 +213,13 @@ describe('SettingsPage', () => {
     await renderPage();
     expect(screen.queryByText('secrets.lostTitle')).toBeNull();
     expect(screen.queryByText('secrets.resealedTitle')).toBeNull();
+  });
+});
+
+describe('the backups section, told or not', () => {
+  it('knows whether a message tells the owners when a backup fails', async () => {
+    mocks.backupChannels = ['email'];
+    await renderPage();
+    expect(screen.getByText(/told: true/)).toBeInTheDocument();
   });
 });

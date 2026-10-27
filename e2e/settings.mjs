@@ -370,16 +370,17 @@ try {
 
   await page.goto(`${base}/fr/settings`, { waitUntil: 'networkidle0' });
   await waitText('Qui est prévenu, et où');
-  // the installer ticked Discord for the eight notifications; only the Discord column can be ticked
-  if ((await ticked()) !== 8) fail(`${await ticked()} boxes ticked after the installation, not 8`);
-  if ((await enabledBoxes()) !== 8) fail('a box of a channel that is not set up can be ticked');
+  // the installer ticked Discord for the ten notifications; only the Discord column can be ticked
+  if ((await ticked()) !== 10)
+    fail(`${await ticked()} boxes ticked after the installation, not 10`);
+  if ((await enabledBoxes()) !== 10) fail('a box of a channel that is not set up can be ticked');
   await page.type('#setup-slack', SLACK);
-  if ((await enabledBoxes()) !== 8 + 8) fail('typing a Slack address did not open its column');
+  if ((await enabledBoxes()) !== 10 + 10) fail('typing a Slack address did not open its column');
   await clickButton('Slack : tout cocher');
-  if ((await ticked()) !== 16) fail(`${await ticked()} boxes ticked with two columns, not 16`);
+  if ((await ticked()) !== 20) fail(`${await ticked()} boxes ticked with two columns, not 20`);
   await saveNotifications();
   await reloadNotifications();
-  if ((await ticked()) !== 16) fail('the two channels are not there after a reload');
+  if ((await ticked()) !== 20) fail('the two channels are not there after a reload');
   if ((await text()).includes('e2eslacksecret')) fail('the Slack address is shown back');
   await shot('notifications-two-channels');
   step(
@@ -389,14 +390,14 @@ try {
   await clickButton('Discord : tout décocher');
   await saveNotifications();
   await reloadNotifications();
-  if ((await ticked()) !== 8) fail('clearing the Discord column did not leave the Slack one');
+  if ((await ticked()) !== 10) fail('clearing the Discord column did not leave the Slack one');
   step('a column is cleared with its shortcut, and the other one stays');
 
   await clickButton('Retirer Slack');
   await saveNotifications();
   await reloadNotifications();
   if ((await ticked()) !== 0) fail('a removed channel left boxes ticked');
-  if ((await enabledBoxes()) !== 8) fail('the removed channel can still be ticked');
+  if ((await enabledBoxes()) !== 10) fail('the removed channel can still be ticked');
   step('a channel is removed: its settings are forgotten and its boxes cleared');
 
   // 4. the 42 application: a wrong secret is refused, the real one saved without leaving the page

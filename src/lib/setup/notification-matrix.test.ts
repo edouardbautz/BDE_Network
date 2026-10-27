@@ -20,15 +20,27 @@ const ALL: Configured = { discord: true, slack: true, email: true };
 const NOT_EMAIL: Configured = { discord: true, slack: true, email: false };
 
 describe('the rows of the table', () => {
-  it('are every type of notification, once, in three groups', () => {
-    const rows = [...MATRIX_GROUPS.members, ...MATRIX_GROUPS.events, ...MATRIX_GROUPS.intra];
+  it('are every type of notification, once, in four groups', () => {
+    const rows = [
+      ...MATRIX_GROUPS.members,
+      ...MATRIX_GROUPS.backups,
+      ...MATRIX_GROUPS.events,
+      ...MATRIX_GROUPS.intra,
+    ];
     expect([...rows].sort()).toEqual([...NOTIFICATION_EVENTS].sort());
   });
 
   it('show the events ones only when the module is on, and those of the intra only when the platform publishes there', () => {
-    expect(visibleRows(false)).toEqual(['memberPending', 'memberApproved', 'memberRemoved']);
-    expect(visibleRows(true)).toHaveLength(8);
-    expect(visibleRows(true, true)).toHaveLength(13);
+    // the backups are the owners' whatever the modules
+    expect(visibleRows(false)).toEqual([
+      'memberPending',
+      'memberApproved',
+      'memberRemoved',
+      'backupFailed',
+      'backupStale',
+    ]);
+    expect(visibleRows(true)).toHaveLength(10);
+    expect(visibleRows(true, true)).toHaveLength(15);
     // without the events module there is nothing to publish: the intra rows follow it
     expect(visibleRows(false, true)).toEqual(visibleRows(false));
   });
@@ -69,13 +81,13 @@ describe('the shortcut of a column', () => {
 
   it('ticks every box of the column that can be ticked: not the e-mail of a removed member', () => {
     const matrix = setColumn(emptyMatrix(), 'email', rows, ALL, true);
-    expect(countFor(matrix, 'email')).toBe(7);
+    expect(countFor(matrix, 'email')).toBe(9);
     expect(matrix.memberRemoved).toEqual([]);
     expect(countFor(matrix, 'discord')).toBe(0);
   });
 
   it('ticks the whole Discord column, memberRemoved included', () => {
-    expect(countFor(setColumn(emptyMatrix(), 'discord', rows, ALL, true), 'discord')).toBe(8);
+    expect(countFor(setColumn(emptyMatrix(), 'discord', rows, ALL, true), 'discord')).toBe(10);
   });
 
   it('does nothing for a channel that is not configured', () => {

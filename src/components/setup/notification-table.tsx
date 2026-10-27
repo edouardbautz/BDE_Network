@@ -51,7 +51,8 @@ export function NotificationTable({
 }) {
   const t = useTranslations('setup.notifications');
   const groups = (Object.keys(MATRIX_GROUPS) as MatrixGroup[]).filter(
-    (group) => group === 'members' || (events && (group !== 'intra' || intra)),
+    (group) =>
+      group === 'members' || group === 'backups' || (events && (group !== 'intra' || intra)),
   );
   const rows = groups.flatMap((group) => MATRIX_GROUPS[group]) as NotificationEvent[];
 

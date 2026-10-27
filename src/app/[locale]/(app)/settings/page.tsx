@@ -7,6 +7,7 @@ import { OAuthRejectedAlert } from '@/components/settings/oauth-rejected-alert';
 import { UpdateBanner } from '@/components/updates/update-banner';
 import { SettingsPanels } from '@/components/settings/settings-panels';
 import { getConfig } from '@/config';
+import { channelsFor } from '@/config/schema';
 import { checkFortyTwoCredentials } from '@/lib/auth/oauth-check';
 import { readOverview } from '@/lib/backups/list';
 import { readBackupNotice } from '@/lib/backups/notice';
@@ -76,6 +77,10 @@ export default async function SettingsPage({
           notice={readBackupNotice(backup)}
           locale={locale}
           timeZone={getConfig().bde.timezone}
+          told={
+            channelsFor(getConfig(), 'backupFailed').length > 0 ||
+            channelsFor(getConfig(), 'backupStale').length > 0
+          }
         />
 
         {editable && (await checkFortyTwoCredentials()) === 'rejected' && <OAuthRejectedAlert />}

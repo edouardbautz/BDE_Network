@@ -351,6 +351,11 @@ export const PAGES: readonly RouteSpec[] = [
         expect: (who) => inApp(who, () => (can(who, 'notifications.templates') ? ok : denied)),
       },
       {
+        label: 'a notification about the backups, which exists whatever the modules',
+        path: at('/notifications?type=backupFailed&scope=email'),
+        expect: (who) => inApp(who, () => (can(who, 'notifications.templates') ? ok : denied)),
+      },
+      {
         label: 'a notification that does not exist (the first one is shown)',
         path: at('/notifications?type=nothing'),
         expect: (who) => inApp(who, () => (can(who, 'notifications.templates') ? ok : denied)),

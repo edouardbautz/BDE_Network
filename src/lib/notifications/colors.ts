@@ -11,6 +11,12 @@ export const MEMBER_COLORS = {
   removed: 0xda5749, // danger
 } as const;
 
+/** The notifications about the backups wear the colours of the member ones: danger when a backup failed, warning when none has succeeded for two days. */
+export const BACKUP_COLORS = {
+  failed: MEMBER_COLORS.removed,
+  stale: MEMBER_COLORS.pending,
+} as const;
+
 /** Used for an event whose category has no colour (a category removed from the config): halfway between the two `--muted`. */
 export const NEUTRAL_COLOR = 0x7a818b;
 

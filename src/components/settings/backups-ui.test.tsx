@@ -82,6 +82,7 @@ async function renderSection(
     notice,
     locale: 'fr',
     timeZone: 'Europe/Paris',
+    told: true,
   });
   return render(
     <NextIntlClientProvider locale="fr" messages={fr}>
@@ -132,6 +133,25 @@ describe('the backups section', () => {
     expect(
       screen.getByText(/pas assez de place sur le disque des sauvegardes/),
     ).toBeInTheDocument();
+  });
+
+  it('says that nobody is told by message when no channel is chosen for the failures', async () => {
+    const element = await BackupsSection({
+      overview: overview(),
+      notice: null,
+      locale: 'fr',
+      timeZone: 'Europe/Paris',
+      told: false,
+    });
+    render(
+      <NextIntlClientProvider locale="fr" messages={fr}>
+        {element}
+      </NextIntlClientProvider>,
+    );
+    expect(screen.getByText(/Aucun message ne prévient les propriétaires/)).toBeInTheDocument();
+    cleanup();
+    await renderSection();
+    expect(screen.queryByText(/Aucun message ne prévient les propriétaires/)).toBeNull();
   });
 
   it('says nothing alarming when all is well', async () => {

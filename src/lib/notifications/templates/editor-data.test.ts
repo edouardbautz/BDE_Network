@@ -33,6 +33,8 @@ vi.mock('@/config', () => ({
       intraCancelled: [],
       intraPublished: [],
       intraRefused: [],
+      backupFailed: [],
+      backupStale: [],
     },
   }),
 }));
@@ -73,12 +75,19 @@ beforeEach(() => {
 
 describe('the notifications the page lists', () => {
   it('leaves out those of a module that is off', () => {
-    expect(listedTypes(['events'])).toHaveLength(8);
-    expect(listedTypes([])).toEqual(['memberPending', 'memberApproved', 'memberRemoved']);
+    expect(listedTypes(['events'])).toHaveLength(10);
+    // the ones about the backups are the owners' whatever the modules
+    expect(listedTypes([])).toEqual([
+      'memberPending',
+      'memberApproved',
+      'memberRemoved',
+      'backupFailed',
+      'backupStale',
+    ]);
   });
 
   it('adds those about the intra only while the platform publishes there (and the events module is on)', () => {
-    expect(listedTypes(['events'], true)).toHaveLength(13);
+    expect(listedTypes(['events'], true)).toHaveLength(15);
     expect(listedTypes(['events'], true)).toEqual(
       expect.arrayContaining([
         'intraRequested',

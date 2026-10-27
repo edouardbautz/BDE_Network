@@ -29,12 +29,15 @@ export async function BackupsSection({
   notice,
   locale,
   timeZone,
+  told,
 }: {
   overview: BackupOverview;
   /** What the backup the owner asked for came to (`?backup=`), when the page was loaded after one. */
   notice: BackupNotice | null;
   locale: string;
   timeZone: string;
+  /** Whether a message tells the owners when a backup fails (a channel is chosen for it in the Notifications section). */
+  told: boolean;
 }) {
   const t = await getTranslations('settings.backups');
   const when = new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeStyle: 'short', timeZone });
@@ -123,6 +126,8 @@ export async function BackupsSection({
             </ActionButton>
             <span className="text-small text-muted-foreground">{t('run.hint')}</span>
           </div>
+
+          {!told && <p className="text-small text-muted-foreground">{t('notTold')}</p>}
 
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-1">

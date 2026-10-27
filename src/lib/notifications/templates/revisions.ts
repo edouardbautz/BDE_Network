@@ -23,6 +23,8 @@ export const REVISIONS: Readonly<Record<TemplateType, number>> = {
   intraCancelled: 1,
   intraPublished: 1,
   intraRefused: 1,
+  backupFailed: 1,
+  backupStale: 1,
   memberPending: 1,
   memberApproved: 1,
   memberRemoved: 1,

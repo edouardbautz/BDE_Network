@@ -1,6 +1,7 @@
 import { causeText, intraChangeLines, intraFacts, intraFieldLines } from '@/lib/events/intra-facts';
 import type { IntraContent } from '@/lib/events/intra-request';
 import type { NotificationEventData, Translate } from '@/lib/events/messages';
+import type { BackupSituation } from '@/lib/backups/notifications/facts';
 import type { MemberFacts } from '@/lib/members/messages';
 import type { TemplateType } from './types';
 
@@ -130,6 +131,16 @@ function sampleIntraContent(data: NotificationEventData): IntraContent {
       keywords: ['bde', 'soirée'],
     },
     dates: [{ start: data.start.toISOString(), end: data.end.toISOString() }],
+  };
+}
+
+/** The example situation of the backups: a failure for lack of room, the last good backup the night before, a third night without. */
+export function sampleBackup(now: Date): BackupSituation {
+  return {
+    reasonCode: 'space',
+    lastAt: new Date(now.getTime() - 2 * DAY),
+    lastBytes: 108_107,
+    days: 3,
   };
 }
 

@@ -1,0 +1,79 @@
+[
+  [
+    "backups notifications: \"no backup for two days\" is said at every tick",
+    "src/lib/backups/tick.ts",
+    "    status.alerts.stale !== day\n",
+    "    true\n",
+    ["src/lib/backups/tick.test.ts"]
+  ],
+  [
+    "backups notifications: a failure is said at every retry",
+    "src/lib/backups/tick.ts",
+    "    if (current.alerts.failed !== day) {",
+    "    if (true) {",
+    ["src/lib/backups/tick.test.ts"]
+  ],
+  [
+    "backups notifications: a backup that was busy is called a failure",
+    "src/lib/backups/tick.ts",
+    "if (!result.ok && result.code !== 'busy') {",
+    "if (!result.ok) {",
+    ["src/lib/backups/tick.test.ts"]
+  ],
+  [
+    "backups notifications: the failure is not told before the folder is known to be unusable",
+    "src/lib/backups/tick.ts",
+    "    if (result.code === 'folder') {",
+    "    if (false) {",
+    ["src/lib/backups/tick.test.ts"]
+  ],
+  [
+    "backups notifications: the stale alert is written after it is sent, so it can loop",
+    "src/lib/backups/tick.ts",
+    "    await markAlert(context.dir, now, 'stale', day);\n    await tell(notify, 'backupStale', situationOf(status, now, null));",
+    "    await tell(notify, 'backupStale', situationOf(status, now, null));\n    if (false) await markAlert(context.dir, now, 'stale', day);",
+    ["src/lib/backups/tick.test.ts"]
+  ],
+  [
+    "backups notifications: nobody is told by e-mail",
+    "src/lib/backups/notifications/send.ts",
+    "await emailsOfOwners()",
+    "[]",
+    ["src/lib/backups/notifications/send.test.ts"]
+  ],
+  [
+    "backups notifications: the members are told, not only the owners",
+    "src/lib/notifications/recipients.ts",
+    "    where: { status: 'OWNER' },\n    select: { email: true },\n  });\n  return owners",
+    "    where: { status: { in: ['OWNER', 'MEMBER'] } },\n    select: { email: true },\n  });\n  return owners",
+    ["src/lib/notifications/recipients.test.ts"]
+  ],
+  [
+    "backups notifications: a type with no channel still sends",
+    "src/lib/backups/notifications/send.ts",
+    "if (channelsFor(config, type).length === 0) return;",
+    "",
+    ["src/lib/backups/notifications/send.test.ts"]
+  ],
+  [
+    "backups notifications: the card of a failure is not red",
+    "src/lib/notifications/colors.ts",
+    "  failed: MEMBER_COLORS.removed,",
+    "  failed: MEMBER_COLORS.approved,",
+    ["src/lib/notifications/golden-backups.test.ts"]
+  ],
+  [
+    "backups notifications: the reason is left out of the card",
+    "src/lib/backups/notifications/discord-embed.ts",
+    "      case 'failure':",
+    "      case 'nothing':",
+    ["src/lib/notifications/golden-backups.test.ts"]
+  ],
+  [
+    "backups notifications: the link opens another page",
+    "src/lib/backups/notifications/send.ts",
+    "`${base}/${locale}/settings`",
+    "`${base}/${locale}/members`",
+    ["src/lib/backups/notifications/send.test.ts"]
+  ]
+]

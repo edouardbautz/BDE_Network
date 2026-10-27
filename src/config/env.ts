@@ -49,7 +49,14 @@ const INTRA_NOTIFICATIONS = [
  * anything (the example even had `memberPending: email`), so a channel that is not set up is
  * a warning here, not a reason to refuse to start: the platform works, the alerts do not go out.
  */
-const MEMBER_NOTIFICATIONS = ['memberPending', 'memberApproved', 'memberRemoved'] as const;
+const MEMBER_NOTIFICATIONS = [
+  'memberPending',
+  'memberApproved',
+  'memberRemoved',
+  // The backups' are set like them, and a missing channel is just as much a warning: the platform works, the alert does not go out.
+  'backupFailed',
+  'backupStale',
+] as const;
 
 const isBlank = (value: string | undefined): boolean => !value || value.trim() === '';
 

@@ -63,10 +63,11 @@ export default async function NotificationsPage({
     ]),
   ) as Record<TemplateChannel, boolean>;
 
-  const groups: Array<{ id: 'events' | 'intra' | 'members'; types: TemplateType[] }> = [
+  const groups: Array<{ id: 'events' | 'intra' | 'members' | 'backups'; types: TemplateType[] }> = [
     { id: 'events', types: types.filter((type) => type.startsWith('event')) },
     { id: 'intra', types: types.filter((type) => type.startsWith('intra')) },
     { id: 'members', types: types.filter((type) => type.startsWith('member')) },
+    { id: 'backups', types: types.filter((type) => type.startsWith('backup')) },
   ];
 
   return (

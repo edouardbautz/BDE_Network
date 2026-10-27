@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('@/lib/prisma', () => ({ prisma: { user: { findMany: vi.fn() } } }));
 
 const { prisma } = await import('@/lib/prisma');
-const { emailsOfHolders } = await import('./recipients');
+const { emailsOfHolders, emailsOfOwners } = await import('./recipients');
 
 beforeEach(() => vi.clearAllMocks());
 
@@ -34,5 +34,20 @@ describe('emailsOfHolders', () => {
     ] as never);
 
     await expect(emailsOfHolders('members.manage')).resolves.toEqual(['a@x.fr', 'b@x.fr']);
+  });
+});
+
+describe('emailsOfOwners', () => {
+  it('asks for the owners and nobody else (a role cannot make somebody one), and returns their addresses', async () => {
+    vi.mocked(prisma.user.findMany).mockResolvedValue([
+      { email: 'a@x.fr' },
+      { email: 'b@x.fr' },
+    ] as never);
+
+    expect(await emailsOfOwners()).toEqual(['a@x.fr', 'b@x.fr']);
+    expect(prisma.user.findMany).toHaveBeenCalledExactlyOnceWith({
+      where: { status: 'OWNER' },
+      select: { email: true },
+    });
   });
 });
