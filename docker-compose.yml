@@ -37,9 +37,10 @@ services:
         chmod 700 /secrets
         chmod 600 "$$file"
         # The nightly backups (a folder of the host: the volumes can go, they stay). The application owns it; the archives in it
-        # are for that owner alone (0600), the folder itself can be listed.
-        chown 1001:1001 /auto-backups
-        chmod 755 /auto-backups
+        # are for that owner alone (0600), the folder itself can be listed. A file system that refuses this (a share, a mount of
+        # Windows) must not stop the platform from starting: the backups then fail with their reason (folder) and the owners are told.
+        { chown 1001:1001 /auto-backups && chmod 755 /auto-backups; } 2>/dev/null ||
+          echo "The folder of the backups cannot be handed to the application: the automatic backups will fail (see docs/en/backups.md)." >&2
 
   postgres:
     image: postgres:17-alpine

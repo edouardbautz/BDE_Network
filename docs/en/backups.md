@@ -138,8 +138,9 @@ belongs to that user and **you can list it but not read the files** (that is wha
 container is a number of the account's range, with the same effect: you cannot open the files from the host yourself,
 and you do not need to.
 
-If the folder cannot be used at all (a disk mounted read-only, a folder the container may not write to), the backup
-fails with the reason `folder`: see below.
+If the folder cannot be used at all (a disk mounted read-only, a share that refuses to give the folder to the application, a folder
+the container may not write to), the platform **still starts**: the backup fails every night with the reason `folder`, the Backups
+section of the Settings page shows it, and the owners are told if a channel is chosen for it (see below).
 
 ## If a backup fails
 

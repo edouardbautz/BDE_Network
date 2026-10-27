@@ -63,6 +63,14 @@ describe('docker-compose.yml, for the backups', () => {
     expect(script).toContain('chmod 755 /auto-backups');
   });
 
+  it('does not stop the platform from starting when a file system refuses to hand the folder over (a share, a Windows mount)', () => {
+    // the script runs with `set -eu`: a refused chown must be answered, not fatal
+    const script = String(doc.services.secrets?.command?.join('\n'));
+    expect(script).toMatch(
+      /\{ chown 1001:1001 \/auto-backups && chmod 755 \/auto-backups; \} 2>\/dev\/null \|\|\s+echo "[^"]*automatic backups will fail/,
+    );
+  });
+
   it('passes the number of the stack that the image checks (the two change together)', () => {
     const stack = /BDE_STACK: '(\d+)'/.exec(text)?.[1];
     const image = /STACK_VERSION = (\d+);/.exec(
