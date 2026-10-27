@@ -31,13 +31,12 @@ permissions:
 jobs:
   measure:
     name: measures (${{ matrix.dataset }})
-    if: ${{ matrix.dataset == 'full' || !inputs.full_only }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
-        dataset: [full, club, large]
+        dataset: ${{ fromJSON(inputs.full_only && '["full"]' || '["full", "club", "large"]') }}
     steps:
       - uses: actions/checkout@v4
 
