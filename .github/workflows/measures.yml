@@ -11,6 +11,14 @@ on:
   schedule:
     - cron: '47 3 * * *'
   workflow_dispatch:
+    inputs:
+      node_options:
+        description: 'Options of Node.js added after those of the image (to compare settings on this runner), e.g. --max-old-space-size=4096'
+        default: ''
+      full_only:
+        description: 'Only the dataset of two school years (a comparison needs no more)'
+        type: boolean
+        default: false
   pull_request:
     paths:
       - 'qa/optim/**'
@@ -23,6 +31,7 @@ permissions:
 jobs:
   measure:
     name: measures (${{ matrix.dataset }})
+    if: ${{ matrix.dataset == 'full' || !inputs.full_only }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
@@ -52,6 +61,8 @@ jobs:
           cache-to: type=gha,mode=max,scope=qa-image
 
       - name: Start the platform with the dataset
+        env:
+          QA_APP_NODE_OPTIONS: ${{ inputs.node_options }}
         run: sh qa/platform.sh up --image bde-network --stats --dataset ${{ matrix.dataset }} --now 2026-10-16T12:00:00Z
 
       - name: Measure
