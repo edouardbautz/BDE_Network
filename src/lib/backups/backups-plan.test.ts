@@ -116,6 +116,15 @@ describe('what the rotation keeps: 7 daily, 4 weekly, 6 monthly', () => {
     expect(keep.size).toBe(2);
   });
 
+  it("keeps the newest backup of a day as its daily one (a backup made by hand in the afternoon replaces the night's)", () => {
+    const { keep } = planRetention(
+      [entry('2026-10-27T02:00:00Z'), entry('2026-10-27T14:00:00Z')],
+      PARIS,
+      { daily: 1, weekly: 0, monthly: 0 },
+    );
+    expect([...keep.keys()]).toEqual([archiveName(at('2026-10-27T14:00:00Z'))]);
+  });
+
   it('handles nothing, and one', () => {
     expect(planRetention([], PARIS)).toEqual({ keep: new Map(), remove: [] });
     expect(planRetention([entry('2026-10-27T02:00:00Z')], PARIS).remove).toEqual([]);
