@@ -1211,6 +1211,12 @@ vX.Y.Z`. **The GitHub release is created by the maintainer, not by the workflow*
   reaches it unless the operator opts out (`APP_BIND=0.0.0.0`, documented in `docs/en/deployment.md`). **PostgreSQL
   publishes no port** (only the app, on the compose network, reaches it); `docker-compose.dev.yml` still
   publishes 5432 on 127.0.0.1 for `npm run dev` outside Docker.
+- **A platform that nobody watches** (`docker-compose.yml`, `scripts/compose.test.ts`). A container's log is a file that Docker never cuts: `x-logging` keeps three
+  files of 10 MB at most per service. Each service that keeps running has `mem_limit` (`APP_MEMORY`, default 768m, and `DB_MEMORY`, default 384m, in `.env` like
+  `APP_PORT`): a ceiling, not a reservation. The numbers come from the measures (the application peaks at 431 MiB on 1 CPU under the load of 20
+  people, PostgreSQL at 70 MiB, 157 MiB with five years of data), and the test fails for a service that runs without them. Nothing needs to change
+  in the image for these: `BDE_STACK` stays as it is. The data grows by about 1 MiB a year over the 8.2 MiB of an empty database (`qa/optim`, `growth`),
+  and the audit log by 0.2 MiB: nothing is purged.
 - **Security headers** (`src/lib/security-headers.ts`, wired in `next.config.ts`): CSP (production
   only; `'unsafe-inline'` is needed by Next hydration and next-themes; no `upgrade-insecure-requests`
   so an instance without an HTTPS proxy still works; profile pictures from `cdn.intra.42.fr`),

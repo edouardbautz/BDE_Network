@@ -1,3 +1,11 @@
+# The log of a container is a file that Docker never cuts by itself: on a server that nobody watches it ends up filling the disk.
+# Three files of 10 MB at most per service (30 MB), the oldest one thrown away.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
 services:
   # Makes the password of the database, once, in the `secrets` volume: nobody has to choose or write it. An
   # installation that already has a POSTGRES_PASSWORD in its .env keeps it (the database exists with it). Then it
@@ -31,6 +39,10 @@ services:
   postgres:
     image: postgres:17-alpine
     restart: unless-stopped
+    logging: *logging
+    # A ceiling, not a reservation: the database of a BDE uses about 40 MiB (70 under the load of 20 people, 160 with five years of
+    # data and 1,500 accounts), and a runaway query then ends in PostgreSQL's own error instead of taking the server down.
+    mem_limit: ${DB_MEMORY:-384m}
     depends_on:
       secrets:
         condition: service_completed_successfully
@@ -57,6 +69,11 @@ services:
     # docker-compose.build.yml, see docs/en/deployment.md.
     image: ghcr.io/edouardbautz/bde_network:${BDE_VERSION:-1.5.0}
     restart: unless-stopped
+    logging: *logging
+    # A ceiling, not a reservation. Node.js keeps its heap under 384 MiB (NODE_OPTIONS in the image); the application peaked at 431 MiB
+    # under the load of 20 people, on 1 CPU. A server with room to spare can raise it (APP_MEMORY in .env), and must then raise
+    # NODE_OPTIONS (--max-old-space-size) to use it.
+    mem_limit: ${APP_MEMORY:-768m}
     depends_on:
       postgres:
         condition: service_healthy
