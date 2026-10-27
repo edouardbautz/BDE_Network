@@ -1,0 +1,37 @@
+[
+  [
+    "unattended: the application's log is no longer cut",
+    "docker-compose.yml",
+    "    logging: *logging\n    # A ceiling, not a reservation. Node.js",
+    "    # A ceiling, not a reservation. Node.js",
+    ["scripts/compose.test.ts"]
+  ],
+  [
+    "unattended: the database's log is no longer cut",
+    "docker-compose.yml",
+    "    logging: *logging\n    # A ceiling, not a reservation: the database",
+    "    # A ceiling, not a reservation: the database",
+    ["scripts/compose.test.ts"]
+  ],
+  [
+    "unattended: the application has no ceiling for its memory",
+    "docker-compose.yml",
+    "    mem_limit: ${APP_MEMORY:-768m}\n",
+    "",
+    ["scripts/compose.test.ts"]
+  ],
+  [
+    "unattended: the database ceiling can no longer be changed",
+    "docker-compose.yml",
+    "mem_limit: ${DB_MEMORY:-384m}",
+    "mem_limit: 384m",
+    ["scripts/compose.test.ts"]
+  ],
+  [
+    "unattended: the log is cut to 100 MB instead of 10",
+    "docker-compose.yml",
+    "max-size: '10m'",
+    "max-size: '100m'",
+    ["scripts/compose.test.ts"]
+  ]
+]
