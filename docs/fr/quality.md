@@ -123,7 +123,8 @@ données) ; le processus Node.js l'est, en mémoire et en processeur. Les donné
 avec cinq ans et 1 500 membres) ; aucune purge n'est donc prévue.
 
 **Une limite connue.** La page des membres liste tous les comptes d'un coup, sans pagination : un BDE compte quelques
-dizaines de comptes (le bureau et le staff), et la page est faite pour cela. Avec 1 511 comptes, elle met 628 ms à se
+dizaines de comptes (le bureau et le staff), et la page est faite pour cela. Avec 150 comptes, plus que n'en a un BDE, elle met 109 ms à se construire et pèse 64 Ko de
+HTML, avec 7 requêtes et 0,6 ms en base. Avec 1 511 comptes, elle met 628 ms à se
 construire et pèse 272 Ko de HTML (89 Ko avec 311 comptes, où le plus grand affichage sur téléphone est déjà de 4,6 s). Au-delà
 de quelques centaines de comptes, paginez-la avant de vous y fier.
 

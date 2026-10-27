@@ -119,7 +119,8 @@ holds 1,319 lines after two school years, and the whole database weighs 10 MiB (
 so no purge is planned.
 
 **A known limit.** The members page lists every account at once, with no pagination: a BDE has tens of accounts (the
-board and the staff), and the page is built for that. With 1,511 accounts it takes 628 ms to build and weighs 272 KiB of
+board and the staff), and the page is built for that. With 150 accounts, more than a BDE has, it takes 109 ms to build and
+weighs 64 KiB of HTML, with 7 statements and 0.6 ms in the database. With 1,511 accounts it takes 628 ms to build and weighs 272 KiB of
 HTML (89 KiB with 311 accounts, where the largest contentful paint on a phone is already 4.6 s). Past a few hundred accounts,
 paginate it before relying on it.
 
