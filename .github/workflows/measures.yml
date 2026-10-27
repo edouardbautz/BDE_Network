@@ -3,7 +3,7 @@ name: measures
 # The numbers of the optimisation campaign (qa/optim; see "Measures of the optimisation campaign" in docs/architecture.md): the
 # image, every page (time on the server, weight of the scripts), the statements each page sends to PostgreSQL, the tables read
 # in full, the restart, the memory at rest and under load, and the growth of the data, on the QA dataset (two school years) and
-# on a large one (five years, five times the members). The runner is close to a small server (2 CPUs, 7 GiB). It judges nothing:
+# on a large one (five years, five times the members). The runner (4 CPUs, 16 GiB) is the reference machine; a school's server is smaller, so the limits of a minimal one are tried apart. It judges nothing:
 # the JSON of each run is kept as an artifact, and the budgets that hold the gains are those of the other jobs. Run it by hand
 # (Actions → measures → Run workflow) to take the "before" of a change; it also runs every night and on a pull request that
 # touches the tooling.

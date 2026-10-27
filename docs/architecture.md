@@ -1640,8 +1640,8 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
   to a healthy `/api/health` (not Next.js's own "Ready in", which says 0 ms: it prints it before the application starts), the memory and
   the CPU of the application and of PostgreSQL at rest, then under the k6 load of the performance job (peak memory, mean CPU, the log
   written). **`growth`**: the size of each table and of the database, and the rows written per year. The numbers that do not depend on the
-  machine (bytes, statements) can be compared across machines; the durations only on the same one, and the CI's runner (2 CPUs, 7 GiB,
-  close to a school's server) is the reference. `optim.test.ts` holds the pure parts (statistics, assets of a page, statements, what
+  machine (bytes, statements) can be compared across machines; the durations only on the same one, and the CI's runner (4 CPUs, 16 GiB: bigger than a
+  school's server, whose limits are tried apart) is the reference. `optim.test.ts` holds the pure parts (statistics, assets of a page, statements, what
   `docker` prints, the comparison). Traps met: `n_live_tup` is 0 just after a load (the rows are counted); the scope folders of
   `node_modules` (`@prisma`) are counted with their packages if the listing is not told otherwise.
 - **Resilience** (`qa/resilience/`, the `resilience` job of `qa.yml`; `npx tsx qa/resilience/run.ts [--only database,app,webhook]` on a
