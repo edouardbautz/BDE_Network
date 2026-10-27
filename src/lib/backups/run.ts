@@ -14,6 +14,7 @@ import {
 } from 'node:fs/promises';
 import { join } from 'node:path';
 import { connectionOf } from './connection';
+import { dumpIsWhole } from './dump';
 import type { Exec } from './exec';
 import {
   DATABASE_FILE,
@@ -85,7 +86,6 @@ const LOCK_FILE = '.lock';
 const LOCK_STALE_MS = 2 * 3_600_000;
 const LEFTOVER_MS = 2 * 3_600_000;
 const MIN_FREE_BYTES = 50 * 1024 * 1024;
-const DUMP_FOOTER = 'PostgreSQL database dump complete';
 const LOGO = /^logo-[a-f0-9]{16}$/;
 const tmpId = () => randomBytes(4).toString('hex');
 
@@ -164,14 +164,8 @@ async function create(context: BackupContext, status: BackupStatus, started: Dat
       env: connection.env,
       stdoutFile: join(dir, work, DATABASE_FILE),
     });
-    const sql = await readFile(join(dir, work, DATABASE_FILE)).catch(() => Buffer.alloc(0));
-    if (
-      dump.code !== 0 ||
-      !sql
-        .subarray(Math.max(0, sql.length - 400))
-        .toString('utf8')
-        .includes(DUMP_FOOTER)
-    ) {
+    const whole = await dumpIsWhole(join(dir, work, DATABASE_FILE)).catch(() => false);
+    if (dump.code !== 0 || !whole) {
       context.log?.(`pg_dump: ${dump.stderr.trim().slice(0, 300)}`);
       throw new BackupError('dump', 'the dump of the database failed or is incomplete');
     }

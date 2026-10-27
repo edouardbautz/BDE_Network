@@ -72,10 +72,15 @@ describe('the encryption of a downloaded backup', () => {
   });
 
   it('does not open with another passphrase, and does not hand back the data', async () => {
-    const encrypted = await encrypt(randomBytes(4000), PASS);
-    await expect(
-      collect(Readable.from([encrypted]), createDecryptStream('another one')),
-    ).rejects.toThrow();
+    const data = randomBytes(4000);
+    const encrypted = await encrypt(data, PASS);
+    // CBC does not authenticate: about one wrong passphrase in 256 ends on a valid padding and "succeeds" with noise. The promise
+    // is that the data never comes out, and the manifest inside the archive is what catches the noise.
+    const outcome = await collect(
+      Readable.from([encrypted]),
+      createDecryptStream('another one'),
+    ).catch(() => null);
+    expect(outcome === null || !outcome.equals(data)).toBe(true);
   });
 
   it('refuses what is not an encrypted backup', async () => {
@@ -147,7 +152,8 @@ describe('the encryption of a downloaded backup', () => {
   });
 
   it.skipIf(!hasOpenssl)('is not opened by openssl with a wrong passphrase', async () => {
-    const encrypted = await encrypt(randomBytes(5000), PASS);
+    const data = randomBytes(5000);
+    const encrypted = await encrypt(data, PASS);
     const decrypted = spawnSync(
       'openssl',
       [
@@ -164,7 +170,8 @@ describe('the encryption of a downloaded backup', () => {
       ],
       { input: encrypted, env: { ...process.env, P: 'wrong passphrase!' } },
     );
-    expect(decrypted.status).not.toBe(0);
+    // (a wrong passphrase ends on a valid padding one time in 256: then it is noise, never the data)
+    expect(decrypted.status !== 0 || Buffer.compare(decrypted.stdout, data) !== 0).toBe(true);
   });
 });
 

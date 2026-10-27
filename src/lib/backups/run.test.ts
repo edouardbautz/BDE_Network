@@ -172,6 +172,9 @@ describe('a backup that works', () => {
       .filter((call) => call.command === 'psql')
       .map((call) => call.args[call.args.indexOf('-c') + 1] ?? '');
     expect(sql.some((line) => line.startsWith('CREATE DATABASE bde_verify_'))).toBe(true);
+    // the dump is loaded in one transaction, the first error stopping it: a half loaded copy proves nothing
+    const load = play.calls.find((call) => call.command === 'psql' && call.args.includes('-f'));
+    expect(load?.args).toEqual(expect.arrayContaining(['--single-transaction', 'ON_ERROR_STOP=1']));
     expect(
       sql.some(
         (line) => line.includes('DROP DATABASE IF EXISTS bde_verify_') && line.includes('FORCE'),
@@ -434,6 +437,45 @@ describe('a dump that is cut but whose manifest agrees with it', () => {
     ).rejects.toMatchObject({
       code: 'verify-archive',
       message: expect.stringContaining('not complete'),
+    });
+  });
+});
+
+describe('an archive that holds more than its manifest lists', () => {
+  it('is refused: what the manifest does not know is not checked', async () => {
+    const play = database();
+    await runBackup(context(play.exec), 'scheduled');
+    const name = archives()[0]!;
+    const opened = join(dir, 'extra');
+    mkdirSync(opened);
+    await realExec('tar', ['-xzf', name, '-C', 'extra'], { cwd: dir });
+    writeFileSync(join(opened, 'surprise.txt'), 'not in the manifest');
+    await realExec(
+      'tar',
+      [
+        '-czf',
+        'extra.tar.gz',
+        '-C',
+        'extra',
+        'database.sql',
+        'secrets.tar',
+        'info.txt',
+        'manifest.json',
+        'surprise.txt',
+      ],
+      { cwd: dir },
+    );
+    await expect(
+      verifyArchive({
+        archive: 'extra.tar.gz',
+        cwd: dir,
+        scratchDir: '.verify-e',
+        exec: play.exec,
+        connection: connectionOf(DATABASE_URL),
+      }),
+    ).rejects.toMatchObject({
+      code: 'verify-archive',
+      message: expect.stringContaining('manifest'),
     });
   });
 });

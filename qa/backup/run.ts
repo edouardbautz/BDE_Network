@@ -176,7 +176,7 @@ export async function playBackups(report: Report): Promise<void> {
     );
     await answers(a, 'the platform answers');
     const loaded = run(
-      process.execPath,
+      'node',
       ['--import', 'tsx', 'qa/cli.ts', 'load', '--database', a.databaseUrl],
       {
         cwd: project,

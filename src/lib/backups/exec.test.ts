@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { realExec } from './exec';
@@ -47,23 +47,17 @@ describe('exec.ts, the one place the application starts a program', () => {
   });
 
   it('is the only file of src/ that imports child_process', () => {
-    const importers: string[] = [];
-    const walk = (directory: string) => {
-      for (const name of readdirSync(directory)) {
-        const path = join(directory, name);
-        if (statSync(path).isDirectory()) walk(path);
-        else if (/\.(ts|tsx)$/.test(name) && !/\.test\.tsx?$/.test(name)) {
-          if (
-            /from ['"](node:)?child_process['"]|require\(['"](node:)?child_process['"]\)/.test(
-              readFileSync(path, 'utf8'),
-            )
-          ) {
-            importers.push(relative(process.cwd(), path).split(sep).join('/'));
-          }
-        }
-      }
-    };
-    walk(join(process.cwd(), 'src'));
+    const importer = /from ['"](node:)?child_process['"]|require\(['"](node:)?child_process['"]\)/;
+    const files = readdirSync(join(process.cwd(), 'src'), { recursive: true, withFileTypes: true })
+      .filter(
+        (entry) =>
+          entry.isFile() && /\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name),
+      )
+      .map((entry) => join(entry.parentPath, entry.name));
+    const importers = files
+      .filter((path) => importer.test(readFileSync(path, 'utf8')))
+      .map((path) => relative(process.cwd(), path).split(sep).join('/'));
+    expect(files.length).toBeGreaterThan(100);
     expect(importers).toEqual(['src/lib/backups/exec.ts']);
   });
 });

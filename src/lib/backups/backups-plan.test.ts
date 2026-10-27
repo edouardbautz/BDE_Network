@@ -106,13 +106,14 @@ describe('what the rotation keeps: 7 daily, 4 weekly, 6 monthly', () => {
   });
 
   it('reads the days of the BDE, not UTC: 23:30 UTC in Paris is already tomorrow', () => {
-    // 2026-10-27T23:30Z is 00:30 on the 28th in Paris (UTC+1 after the clocks went back): two backups of the same Paris day
+    // 22:30Z and 23:30Z of the 27th are 23:30 on the 27th and 00:30 on the 28th in Paris (UTC+1 after the clocks went back):
+    // two days of the BDE, one in UTC
     const { keep } = planRetention(
-      [entry('2026-10-27T23:30:00Z'), entry('2026-10-28T02:00:00Z')],
+      [entry('2026-10-27T22:30:00Z'), entry('2026-10-27T23:30:00Z')],
       PARIS,
-      { daily: 1, weekly: 0, monthly: 0 },
+      { daily: 2, weekly: 0, monthly: 0 },
     );
-    expect([...keep.keys()]).toEqual([archiveName(at('2026-10-28T02:00:00Z'))]);
+    expect(keep.size).toBe(2);
   });
 
   it('handles nothing, and one', () => {

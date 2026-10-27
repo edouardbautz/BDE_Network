@@ -3,6 +3,7 @@ import { mkdir, readFile, rm, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { settingsKey, unseal } from '@/lib/settings/crypto';
 import { toDatabase, type Connection } from './connection';
+import { dumpIsWhole } from './dump';
 import type { Exec } from './exec';
 import {
   DATABASE_FILE,
@@ -44,17 +45,10 @@ export interface Verification {
   sealedOpened: boolean | null;
 }
 
-const DUMP_FOOTER = 'PostgreSQL database dump complete';
 const SAFE_NAME = /^[a-z0-9_]+$/;
 
 /** What a name inside an archive may be: a plain file name, nothing that climbs out of the folder it is opened in. */
 const plainName = (name: string) => /^[A-Za-z0-9._-]+$/.test(name) && !name.startsWith('.');
-
-async function dumpIsWhole(path: string): Promise<boolean> {
-  const size = (await stat(path)).size;
-  const tail = (await readFile(path)).subarray(Math.max(0, size - 400)).toString('utf8');
-  return tail.includes(DUMP_FOOTER);
-}
 
 export async function verifyArchive(options: {
   /** The archive, relative to `cwd`. */
