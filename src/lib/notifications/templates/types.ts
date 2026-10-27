@@ -33,6 +33,7 @@ export type TemplateType = NotificationEvent;
  * - `requestedBy`, `changes`, `intraFields`, `intraLink`: publishing on the intra (who asked, what changed since it was published, the fields
  *   of the intra's form, where it is on the intra); `actedBy` there is who changed, took back, published or refused it, and `reason` why it was
  *   taken back or refused.
+ * - `lastBackup`: the notifications about the backups, to the owners (`summary` is the sentence, `failure` why the backup failed, `lastBackup` the last one that passed its check).
  */
 export type ItemId =
   | 'when'
@@ -52,7 +53,9 @@ export type ItemId =
   | 'requestedBy'
   | 'changes'
   | 'intraFields'
-  | 'intraLink';
+  | 'intraLink'
+  | 'failure'
+  | 'lastBackup';
 
 /** A line of free text the BDE adds to a notification: the id is `text:` and a short key of its own. */
 export type CustomItemId = `text:${string}`;

@@ -1,4 +1,8 @@
 import { ICON as EVENT_ICON, KIND_ICON as EVENT_KIND_ICON } from '@/lib/events/discord-embed';
+import {
+  ICON as BACKUP_ICON,
+  KIND_ICON as BACKUP_KIND_ICON,
+} from '@/lib/backups/notifications/discord-embed';
 import { ICON as MEMBER_ICON, KIND_ICON as MEMBER_KIND_ICON } from '@/lib/members/discord-embed';
 import { PLATFORM_NAME } from '../platform';
 import { getNotificationRaw } from '../translate';
@@ -15,6 +19,7 @@ import type { TemplateChannel, TemplateType } from './types';
 
 const EVENTS = 'events.notifications';
 const MEMBERS = 'members.notifications';
+const BACKUPS = 'backups.notifications';
 
 const MEMBER_KIND = {
   memberPending: 'pending',
@@ -108,6 +113,28 @@ export async function describeDefaults(
         ...(type === 'eventConfirmed' && { note: await raw(EVENTS, 'email.calendarNote') }),
       }),
       items,
+    };
+  }
+
+  if (type === 'backupFailed' || type === 'backupStale') {
+    const backupKind = type === 'backupFailed' ? 'failed' : 'stale';
+    const field = (key: string) => raw(BACKUPS, `embed.fields.${key}`);
+    const withEmoji = async (key: string, icon: string): Promise<ItemDefault> => ({
+      label: await field(key),
+      ...(channel === 'discord' && { emoji: icon }),
+    });
+    return {
+      eyebrow: await raw(BACKUPS, `embed.kind.${backupKind}`),
+      title: await raw(BACKUPS, `embed.title.${backupKind}`),
+      emoji: channel === 'discord' ? BACKUP_KIND_ICON[backupKind] : '',
+      footer: channel === 'email' ? await raw(BACKUPS, 'email.footer') : footer,
+      button: { label: await raw(BACKUPS, 'action'), native: channel !== 'discord' },
+      ...(channel === 'email' && { subject: await raw(BACKUPS, `${backupKind}.subject`) }),
+      items: {
+        summary: { text: await raw(BACKUPS, `embed.description.${backupKind}`) },
+        failure: await withEmoji('reason', BACKUP_ICON.reason),
+        lastBackup: await withEmoji('last', BACKUP_ICON.last),
+      },
     };
   }
 

@@ -147,6 +147,10 @@ d'écrire), la sauvegarde échoue avec la raison `folder` : voir plus bas.
 
 ## Si une sauvegarde échoue
 
+Les propriétaires peuvent en être prévenus par e-mail et dans le salon du BDE, la première fois chaque jour, et de nouveau quand aucune
+sauvegarde n'a réussi depuis deux jours : choisissez un canal pour ces deux messages dans **Paramètres**, section **Notifications** (voir
+[Notifications](notifications.md#messages-sur-les-sauvegardes)). Sans canal, la section Sauvegardes de la page Paramètres le dit.
+
 Chaque sauvegarde, faite ou échouée, est écrite dans les journaux de la plateforme :
 
 ```text

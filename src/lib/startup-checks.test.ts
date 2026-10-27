@@ -22,6 +22,8 @@ const config = {
     memberPending: 'none',
     memberApproved: 'none',
     memberRemoved: 'none',
+    backupFailed: [],
+    backupStale: [],
   },
 };
 

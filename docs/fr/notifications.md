@@ -86,6 +86,21 @@ dans la page de personnalisation, sous **Publication sur l'intra**. Elles sont �
   informations affichées, ordre, couleur, bouton) dans **Notifications**. La **date** affichée est la prochaine à venir ; une
   série dit combien elle a de dates, et la page du staff les liste.
 
+## Messages sur les sauvegardes
+
+Deux notifications pour les propriétaires, **éteintes tant que vous ne leur choisissez pas de canal** (**Paramètres**, section
+**Notifications**, groupe « Sauvegardes » ; la section [Sauvegardes](backups.md) de la même page le dit tant qu'aucun n'est choisi) :
+
+| Notification                                         | Quand                                          | Qui est prévenu                                                                          |
+| ---------------------------------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| **Sauvegarde échouée** (`backupFailed`)              | la sauvegarde de la nuit échoue                | E-mail : **chaque propriétaire**. Discord ou Slack : le salon. Le premier échec du jour. |
+| **Aucune sauvegarde depuis 2 jours** (`backupStale`) | aucune sauvegarde n'a réussi depuis deux jours | Les mêmes, une fois par jour tant que cela dure.                                         |
+
+Chacune dit pourquoi, quand la dernière bonne sauvegarde a été faite et sa taille, et porte un bouton vers la section Sauvegardes de la
+page Paramètres. Elles se personnalisent comme les autres, depuis la page **Notifications**. Au plus un message de chaque sorte par
+jour : la plateforme réessaie 30 minutes après un échec (trois fois par jour au plus) et ne se répète pas. Une sauvegarde que vous
+demandez avec **Sauvegarder maintenant** et qui échoue est montrée sur la page, pas envoyée.
+
 ## Personnaliser les messages
 
 Les mots, les couleurs, les informations montrées et leur ordre, le bouton et l'objet des e-mails peuvent se

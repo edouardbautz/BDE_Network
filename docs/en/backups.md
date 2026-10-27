@@ -143,6 +143,10 @@ fails with the reason `folder`: see below.
 
 ## If a backup fails
 
+The owners can be told by e-mail and in the BDE's channel, the first time it happens each day, and again when no backup has
+succeeded for two days: choose a channel for these two messages in **Settings**, **Notifications** section (see
+[Notifications](notifications.md#messages-about-the-backups)). Without one, the Backups section of the Settings page says it says so.
+
 Each backup, made or failed, is written in the platform's logs:
 
 ```text

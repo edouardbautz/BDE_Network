@@ -3,9 +3,8 @@ import { getConfig } from '@/config';
 import { logAuditEvent } from '@/lib/audit-log';
 import { uploadsDir } from '@/lib/branding/storage';
 import { realExec } from './exec';
-import { isDue, type AttemptTime } from './schedule';
-import { runBackup, type BackupContext, type BackupResult } from './run';
-import { readStatus, type Attempt, type FailureCode } from './status';
+import { runBackup, type BackupContext } from './run';
+import type { FailureCode } from './status';
 
 /**
  * Where the automatic backups go: `BDE_BACKUP_DIR` (`/auto-backups` in the image, a folder of the host in the compose file, so that they
@@ -35,22 +34,6 @@ export function platformBackupContext(): BackupContext | null {
     now: () => new Date(),
     log: (line) => console.log(`💾 ${line}`),
   };
-}
-
-const times = (attempts: readonly Attempt[]): AttemptTime[] =>
-  attempts.map((attempt) => ({ at: new Date(attempt.at), ok: attempt.ok }));
-
-export type TickOutcome =
-  | { ran: false; why: 'early' | 'done' | 'retry-later' | 'gave-up' }
-  | { ran: true; result: BackupResult };
-
-/** One look of the loop: makes the backup if one is due. Never throws. */
-export async function backupTick(context: BackupContext): Promise<TickOutcome> {
-  const now = context.now();
-  const status = await readStatus(context.dir, now);
-  const due = isDue({ now, timeZone: context.timeZone, attempts: times(status.attempts) });
-  if (!due.due) return { ran: false, why: due.why };
-  return { ran: true, result: await runBackup(context, 'scheduled') };
 }
 
 /** What a backup asked for by an owner came to: made, or why not (`busy`: another one is running; `unavailable`: no database address). */

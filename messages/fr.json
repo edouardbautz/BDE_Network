@@ -299,6 +299,42 @@
     "roleChangeBody": "{name} passera de « {from} » à « {to} ». Ses droits changent tout de suite.",
     "roleChangeConfirm": "Changer le rôle"
   },
+  "backups": {
+    "notifications": {
+      "failed": {
+        "subject": "{bde} : la sauvegarde automatique a échoué"
+      },
+      "stale": {
+        "subject": "{bde} : aucune sauvegarde depuis {days} jours"
+      },
+      "embed": {
+        "kind": {
+          "failed": "Sauvegardes automatiques",
+          "stale": "Sauvegardes automatiques"
+        },
+        "title": {
+          "failed": "Sauvegarde échouée",
+          "stale": "Aucune sauvegarde récente"
+        },
+        "description": {
+          "failed": "La sauvegarde automatique a échoué. La plateforme réessaiera dans 30 minutes.",
+          "stale": "Aucune sauvegarde n'a réussi depuis {days} jours."
+        },
+        "fields": {
+          "reason": "Raison",
+          "last": "Dernière sauvegarde réussie"
+        }
+      },
+      "action": "Ouvrir les sauvegardes",
+      "last": {
+        "none": "aucune",
+        "format": "{date} · {size}"
+      },
+      "email": {
+        "footer": "Vous recevez ce message parce que vous êtes propriétaire de {bde}."
+      }
+    }
+  },
   "auditLog": {
     "title": "Journal d'audit",
     "subtitle": "Lecture seule — visible uniquement par les propriétaires.",
@@ -1242,7 +1278,8 @@
         "groups": {
           "members": "Membres",
           "events": "Événements",
-          "intra": "Publication sur l'intra"
+          "intra": "Publication sur l'intra",
+          "backups": "Sauvegardes"
         },
         "memberRemovedNoEmail": "Jamais d'e-mail",
         "memberPending": {
@@ -1296,6 +1333,14 @@
         "intraRefused": {
           "name": "Publication refusée",
           "hint": "Prévient l'auteur, avec la raison, et le salon du BDE."
+        },
+        "backupFailed": {
+          "name": "Sauvegarde échouée",
+          "hint": "Prévient les propriétaires quand la sauvegarde de la nuit échoue, une fois par jour."
+        },
+        "backupStale": {
+          "name": "Aucune sauvegarde depuis 2 jours",
+          "hint": "Prévient les propriétaires, une fois par jour, tant qu'aucune sauvegarde n'a réussi."
         }
       }
     },
@@ -1483,7 +1528,8 @@
           "generic": "Le fichier n’a pas pu être préparé. Réessayez."
         }
       },
-      "where": "Les sauvegardes sont dans le dossier « backups/auto » à côté de docker-compose.yml sur le serveur (BDE_BACKUP_DIR), hors des volumes de Docker : elles survivent à « docker compose down -v ». Elles sont sur le même disque que la plateforme : copiez-les ailleurs de temps en temps."
+      "where": "Les sauvegardes sont dans le dossier « backups/auto » à côté de docker-compose.yml sur le serveur (BDE_BACKUP_DIR), hors des volumes de Docker : elles survivent à « docker compose down -v ». Elles sont sur le même disque que la plateforme : copiez-les ailleurs de temps en temps.",
+      "notTold": "Aucun message ne prévient les propriétaires si une sauvegarde échoue : choisissez un canal pour « Sauvegarde échouée » et « Aucune sauvegarde depuis 2 jours » dans la section Notifications ci-dessous. Sans cela, ils ne le voient qu'ici."
     },
     "oauthRejected": {
       "title": "42 refuse l'application de ce BDE",
@@ -1599,7 +1645,8 @@
       "groups": {
         "events": "Événements",
         "members": "Membres",
-        "intra": "Publication sur l'intra"
+        "intra": "Publication sur l'intra",
+        "backups": "Sauvegardes"
       },
       "customised": "Personnalisée",
       "notSent": "Envoyée nulle part"
@@ -1661,6 +1708,14 @@
       "intraRefused": {
         "name": "Publication refusée",
         "when": "Envoyé à l'auteur (e-mail) et au salon du BDE, avec la raison, quand le staff refuse."
+      },
+      "backupFailed": {
+        "name": "Sauvegarde échouée",
+        "when": "Envoyé aux propriétaires (e-mail) et dans le salon du BDE quand la sauvegarde de la nuit échoue, une fois par jour."
+      },
+      "backupStale": {
+        "name": "Aucune sauvegarde depuis 2 jours",
+        "when": "Envoyé aux propriétaires (e-mail) et dans le salon du BDE, une fois par jour, tant qu'aucune sauvegarde n'a réussi."
       }
     },
     "editor": {
@@ -1765,7 +1820,9 @@
         "requestedBy": "Demandé par",
         "changes": "Ce qui a changé",
         "intraFields": "Champs du formulaire de l'intra",
-        "intraLink": "Lien sur l'intra"
+        "intraLink": "Lien sur l'intra",
+        "failure": "Raison de l'échec",
+        "lastBackup": "Dernière sauvegarde réussie"
       }
     },
     "variables": {
@@ -1872,6 +1929,18 @@
       "intra_link": {
         "name": "lien_intra",
         "label": "L'adresse de l'événement sur l'intra"
+      },
+      "reason": {
+        "name": "raison",
+        "label": "Pourquoi la sauvegarde a échoué"
+      },
+      "last": {
+        "name": "dernière",
+        "label": "La dernière sauvegarde réussie, avec sa date et sa taille"
+      },
+      "days": {
+        "name": "jours",
+        "label": "Nombre de jours sans sauvegarde réussie"
       }
     },
     "mentions": {

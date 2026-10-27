@@ -60,6 +60,8 @@ vi.mock('@/config', () => ({
       eventProposed: [],
       eventApproved: [],
       eventRefused: [],
+      backupFailed: [],
+      backupStale: [],
       memberPending: [],
       memberApproved: [],
       memberRemoved: [],

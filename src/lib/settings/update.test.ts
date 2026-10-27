@@ -535,13 +535,15 @@ describe('the sections', () => {
       eventApproved: [],
       eventRefused: [],
     };
-    // what a platform holds for the notifications about the intra when nothing was ticked for them (a page may leave them out)
+    // what a platform holds for the notifications about the intra and the backups when nothing was ticked for them (a page may leave them out)
     const noIntra = {
       intraRequested: [],
       intraChanged: [],
       intraCancelled: [],
       intraPublished: [],
       intraRefused: [],
+      backupFailed: [],
+      backupStale: [],
     };
     const save = (notifications: unknown, db: ReturnType<typeof fakeDb>['db']) =>
       run({ section: 'notifications', notifications }, db);

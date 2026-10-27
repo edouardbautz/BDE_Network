@@ -1075,8 +1075,17 @@ server with nothing, that **has been read again** before it is trusted, and that
   backup, never the passphrase) is written **before** the first byte, and if it cannot be written no byte leaves. The dialog (`backup-download.tsx`) asks the passphrase twice and says, before
   the file is made, that a lost passphrase cannot be recovered by anybody. The access matrix probes the route without ever succeeding (a success would write the audit log): a short passphrase
   gives the owner 400 and everybody else 404, another origin 403 for the owner; the success is played by `qa/backup`, which restores a downloaded file on a new server.
+- **Telling the owners** (`tick.ts`, `notifications/`): two more notification types of the templates system, `backupFailed` and `backupStale` (`BACKUP_NOTIFICATION_EVENTS` in the
+  configuration: empty by default, optional in what a page sends like the ones about the intra, a group "Backups" of the table that is always shown because the owners are
+  the ones told). Items `summary`, `failure`, `lastBackup`, variables `{reason}`, `{last}`, `{days}` (+ `{bde}`, `{link}`); the builders for the three channels sit next to the members' (`backups/notifications/`),
+  the editor, the preview, the test message and the defaults know them like any other type (`catalog.ts`, `preview.ts`, `defaults.ts`, `samples.ts`, `revisions.ts`). They go by e-mail to
+  every owner (`emailsOfOwners`) and to the BDE's room. **When** is decided by `backupTick`, one look of the loop: "no backup has succeeded for two days" is checked at every tick, before the
+  backup is due (so it is said at 01:30 too), and the first failure of the day of a scheduled backup is told at once; **each once per day of the BDE**, written to `.status.json`
+  (`alerts`) **before** the message is sent, so that a crash or a webhook that is down cannot make it repeat. What a folder that cannot be written cannot hold (`folder`) is kept in memory for the
+  life of the process, retry spacing and once-a-day rule included, so the owners are still told. A backup asked for by hand never notifies (the owner is looking at the page). While no channel
+  is chosen for either, the Backups section says nobody is told by message (`told`). `golden-backups.test.ts` holds the words to the byte, in both languages.
 - **Tests**: `retention`, `schedule`, `names` (`backups-plan.test.ts`: the rules, a year of nights, DST, the days of the BDE), `run.test.ts` (a real `tar` and real files, PostgreSQL played by a stand-in: the
-  password is not in a command line, every failing step leaves the previous backups and no leftover, the lock, the rotation, a tampered archive), `service.test.ts`, `encrypt.test.ts`,
+  password is not in a command line, every failing step leaves the previous backups and no leftover, the lock, the rotation, a tampered archive), `service.test.ts`, `tick.test.ts` (the first failure of the day, the second day, two days without, the folder that cannot be written, a message that cannot be sent), `notifications/send.test.ts`, `golden-backups.test.ts`, `encrypt.test.ts`,
   `scripts/restore.test.ts` (Linux only: `--auto`, the keys inside, the passphrase), `scripts/compose.test.ts`, and **`qa/backup/run.ts`** (the `backups` job of `qa.yml`): a real compose
   stack with the clock of the platform set to 03:10, the backup made by itself, `docker compose down -v`, a second stack with nothing, `restore.sh --auto`, and the same rows, the
   invariants, the keys of the old server and the cookie of before still signing in. Mutation-checked (`qa/mutations/backups.json`).

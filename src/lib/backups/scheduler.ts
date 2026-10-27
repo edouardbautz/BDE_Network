@@ -1,4 +1,5 @@
-import { backupTick, platformBackupContext } from './service';
+import { platformBackupContext } from './service';
+import { backupTick } from './tick';
 
 const TICK_INTERVAL_MS = 5 * 60 * 1000;
 // A little after the reminders' first tick: a platform that has just started is busy with its first requests.

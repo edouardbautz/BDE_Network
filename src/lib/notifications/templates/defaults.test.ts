@@ -1,4 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { buildBackupEmbed } from '@/lib/backups/notifications/discord-embed';
+import { buildBackupEmail } from '@/lib/backups/notifications/email';
+import { describeFacts } from '@/lib/backups/notifications/facts';
+import { buildBackupMessage } from '@/lib/backups/notifications/messages';
+import { buildBackupSlack } from '@/lib/backups/notifications/slack-blocks';
+import { backupValues } from '@/lib/backups/notifications/template-values';
 import { buildEventEmbed } from '@/lib/events/discord-embed';
 import { buildEventEmail } from '@/lib/events/email';
 import {
@@ -25,7 +31,7 @@ import { channelsOfType, ITEMS } from './catalog';
 import { describeDefaults } from './defaults';
 import type { ChannelDefaults } from './defaults-shape';
 import { EVENT_KIND_OF } from './kinds';
-import { sampleEvent, sampleMember } from './samples';
+import { sampleBackup, sampleEvent, sampleMember } from './samples';
 import { renderPlain } from './text';
 import { TEMPLATE_CHANNELS, type TemplateType } from './types';
 
@@ -258,6 +264,62 @@ describe.each(['fr', 'en'] as const)('what the platform says by itself (%s)', (l
         // the team's sentence of an approval
         if (type === 'memberApproved') {
           expect(buildApprovedMessage(member, member.roleName ?? '', t).subject).toBeTruthy();
+        }
+      },
+    );
+  });
+
+  describe('backups', () => {
+    it.each(['backupFailed', 'backupStale'] as const)(
+      '%s: the words of each channel are the patterns',
+      async (type) => {
+        const t = await getNotificationTranslate(locale, 'backups.notifications');
+        const reasons = await getNotificationTranslate(locale, 'settings.backups.reasons');
+        const kind = type === 'backupFailed' ? 'failed' : 'stale';
+        const facts = describeFacts(sampleBackup(NOW), { locale, timeZone: TZ, t, reasons });
+        const link = url('/settings');
+        const values = backupValues(facts, 'BDE Nice', link);
+        const say = (pattern: string) => renderPlain(pattern, values);
+
+        for (const channel of channelsOfType(type)) {
+          const defaults = await describeDefaults(type, channel, locale);
+          expect(say(defaults.eyebrow)).toBe(t(`embed.kind.${kind}`));
+          expect(say(defaults.title)).toBe(t(`embed.title.${kind}`));
+          expect(say(defaults.items.summary!.text!)).toBe(
+            t(`embed.description.${kind}`, { days: facts.days }),
+          );
+          if (channel === 'discord') {
+            const card = buildBackupEmbed(kind, facts, t, link, NOW);
+            expect(card.title).toBe(`${defaults.emoji}  ${say(defaults.title)}`);
+            expect(card.footer?.text).toBe(say(defaults.footer));
+            expect(card.description).toContain(`-# ${say(defaults.eyebrow).toUpperCase()}`);
+            expect(card.description).toContain(`[${say(defaults.button.label)}](`);
+            expect(defaults.button.native).toBe(false);
+            for (const id of ['failure', 'lastBackup'] as const) {
+              expect(card.fields?.map((field) => field.name)).toContain(
+                `${defaults.items[id]?.emoji}  ${defaults.items[id]?.label}`,
+              );
+            }
+          } else if (channel === 'slack') {
+            const message = buildBackupSlack(kind, facts, t, link, BRAND);
+            expect(JSON.stringify(message.blocks.at(-1))).toContain(say(defaults.footer));
+            expect(buttonOf(message.blocks)).toBe(say(defaults.button.label));
+            expect(defaults.emoji).toBe('');
+            for (const id of ['failure', 'lastBackup'] as const) {
+              expect(JSON.stringify(message.blocks)).toContain(`*${defaults.items[id]?.label}*`);
+            }
+          } else {
+            const mail = buildBackupEmail(kind, facts, t, link, BRAND, locale);
+            expect(mail.html).toContain(escapeHtml(say(defaults.footer)));
+            expect(mail.html).toContain(escapeHtml(say(defaults.title)));
+            expect(mail.html).toContain(escapeHtml(say(defaults.button.label)));
+            expect(say(defaults.subject!)).toBe(
+              buildBackupMessage(kind, facts, 'BDE Nice', t, link).subject,
+            );
+            for (const id of ['failure', 'lastBackup'] as const) {
+              expect(mail.text).toContain(`${defaults.items[id]?.label} :`);
+            }
+          }
         }
       },
     );

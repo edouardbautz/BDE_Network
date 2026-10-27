@@ -73,6 +73,8 @@ describe('bdeConfigSchema', () => {
         intraCancelled: [],
         intraPublished: [],
         intraRefused: [],
+        backupFailed: [],
+        backupStale: [],
       });
     }
   });
