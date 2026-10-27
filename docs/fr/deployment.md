@@ -16,6 +16,24 @@ nulle part : ni pour lancer la plateforme, ni pour les sauvegardes.
   pointer vers votre domaine final : `https://votre-domaine.example/api/auth/callback/42-school`. La page
   d'installation vous la donne toute prête, à l'étape de l'adresse.
 
+## Quelle taille de serveur
+
+Un petit serveur suffit. Mesuré avec la charge de 20 personnes en même temps (le bureau et le staff d'un BDE) sur une machine limitée à
+**1 CPU et 1 Go pour la plateforme** (l'application limitée à 768 Mo, la base à 256 Mo) : aucune requête n'a échoué, l'application n'a
+jamais dépassé 431 Mo ni la base 70 Mo.
+
+|            | Minimum                                                                                      | Confortable                                                |
+| ---------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Processeur | 1 CPU                                                                                        | 2 CPU                                                      |
+| Mémoire    | 1 Go pour tout le serveur                                                                    | 2 Go                                                       |
+| Disque     | 5 Go (l'image pèse environ 250 Mo ; les données d'un BDE, 10 Mo après deux années scolaires) | 10 Go, pour garder les copies faites avant une mise à jour |
+
+Au repos l'application utilise environ 105 Mo et la base 40 Mo. La plateforme redémarre en moins de 2 secondes : un redémarrage du
+conteneur ne se remarque pas. Un BDE n'a pas besoin de plus ; une école qui héberge plusieurs plateformes sur une machine additionne les
+chiffres. Si votre serveur a moins de 768 Mo à donner à l'application, ne l'y installez pas : Node.js doit garder son tas sous 384 Mo
+(l'image fixe `NODE_OPTIONS` ; sans cela le processus laissait son tas dépasser 1 Go sous la même charge sur une grosse machine).
+Un serveur plus grand peut lever la limite en fixant `NODE_OPTIONS` pour le service `app` dans `docker-compose.yml`.
+
 ## 1. Préparer le serveur
 
 ```text

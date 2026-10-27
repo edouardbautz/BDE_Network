@@ -16,6 +16,24 @@ to run the platform, nor for backups.
   point to your final domain: `https://your-domain.example/api/auth/callback/42-school`. The installer gives it to you
   ready to copy, at the address step.
 
+## What size of server
+
+A small server is enough. Measured with the load of 20 people at once (the board and the staff of a BDE) on a machine limited to
+**1 CPU and 1 GiB for the platform** (the application limited to 768 MiB, the database to 256 MiB): no request failed, the
+application never went over 431 MiB and the database over 70 MiB.
+
+|           | Minimum                                                                                  | Comfortable                                               |
+| --------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Processor | 1 CPU                                                                                    | 2 CPUs                                                    |
+| Memory    | 1 GiB for the whole server                                                               | 2 GiB                                                     |
+| Disk      | 5 GiB (the image weighs about 250 MiB; the data of a BDE, 10 MiB after two school years) | 10 GiB, to keep the copies that are made before an update |
+
+At rest the application uses about 105 MiB and the database 40 MiB. The platform starts again in under 2 seconds, so a restart of the
+container is not noticed. A BDE does not need more; a school that hosts several platforms on one machine adds the figures. If your
+server has less than 768 MiB to give to the application, do not run it there: Node.js is told to keep its heap under 384 MiB (the
+image sets `NODE_OPTIONS`; without it the process let its heap grow to more than 1 GiB under the same load on a large machine).
+A bigger server can lift the limit by setting `NODE_OPTIONS` for the `app` service in `docker-compose.yml`.
+
 ## 1. Prepare the server
 
 ```text

@@ -334,6 +334,48 @@ describe('supervise', () => {
       },
     );
 
+    describe('the command that applies the migrations', () => {
+      const states = {
+        current: { state: 'current', pending: [], unknown: [], failed: [] },
+        fresh: { state: 'fresh', pending: [M], unknown: [], failed: [] },
+        pending,
+        unreachable: { state: 'unreachable', output: 'connection refused' },
+      };
+
+      it('is not started when everything is applied: Prisma would only say so', async () => {
+        const marker = join(dir, 'migrate-ran');
+        const db = tools({ inspect: vi.fn(async () => states.current) });
+        const code = await start({
+          safety: safety(db),
+          migrate: script(`require('fs').writeFileSync(${JSON.stringify(marker)}, '1')`),
+        });
+        expect(code).toBe(0);
+        expect(existsSync(marker)).toBe(false);
+        expect(lines.join('\n')).toContain('à jour');
+      });
+
+      it.each(['fresh', 'pending', 'unreachable'] as const)(
+        'is started when the database is %s',
+        async (state) => {
+          const marker = join(dir, `migrate-ran-${state}`);
+          const db = tools({ inspect: vi.fn(async () => states[state]) });
+          await start({
+            safety: safety(db),
+            migrate: script(`require('fs').writeFileSync(${JSON.stringify(marker)}, '1')`),
+          });
+          expect(existsSync(marker)).toBe(true);
+        },
+      );
+
+      it('is started when nothing could be checked (no safety at all: a plain docker run)', async () => {
+        const marker = join(dir, 'migrate-ran-plain');
+        await start({
+          migrate: script(`require('fs').writeFileSync(${JSON.stringify(marker)}, '1')`),
+        });
+        expect(existsSync(marker)).toBe(true);
+      });
+    });
+
     it('makes no copy when told to go on without one (BDE_SKIP_BACKUP)', async () => {
       const db = tools();
       expect(await start({ safety: safety(db, { skipBackup: true }) })).toBe(0);

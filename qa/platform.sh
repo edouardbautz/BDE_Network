@@ -153,10 +153,17 @@ case "$command" in
 
     # The options of the clock go in the argument list (not in a string: a path may hold a space).
     set --
+    # What the image sets, kept: `-e NODE_OPTIONS=...` replaces it, and the platform would then run without the ceiling for its memory
+    # that the image gives it (the first measures of the CI did, and showed 1,169 MiB under load).
+    image_options="$(docker image inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$IMAGE" | sed -n 's/^NODE_OPTIONS=//p')"
+    node_options="$image_options ${QA_APP_NODE_OPTIONS:-}"
     if [ -n "$NOW" ]; then
       clock_file="$(cd "$(dirname "$0")" && pwd)/fake-clock.cjs"
-      set -- -v "$(host_path "$clock_file"):/qa/fake-clock.cjs:ro" -e "BDE_QA_NOW=$NOW" -e NODE_OPTIONS=--require=/qa/fake-clock.cjs
+      set -- -v "$(host_path "$clock_file"):/qa/fake-clock.cjs:ro" -e "BDE_QA_NOW=$NOW"
+      node_options="--require=/qa/fake-clock.cjs $node_options"
     fi
+    # QA_APP_NODE_OPTIONS=--max-old-space-size=256 tries the options of Node.js that the image could set.
+    [ -n "$node_options" ] && set -- "$@" -e "NODE_OPTIONS=$node_options"
 
     if [ -n "$WEBHOOK" ]; then
       set -- "$@" -e "DISCORD_WEBHOOK_URL=$WEBHOOK" -e NODE_TLS_REJECT_UNAUTHORIZED=0

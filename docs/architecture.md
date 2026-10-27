@@ -1027,11 +1027,20 @@ recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`)
 
 - **Dockerfile** (multi-stage): `next build` with `output: 'standalone'` (server.js + only the
   node_modules it uses; `outputFileTracingExcludes` drops sharp/typescript, `images.unoptimized`
-  removes the `/_next/image` endpoint), run with `node server.js` — no npm in the final image.
+  removes the `/_next/image` endpoint), run with `node server.js` — no npm in the final image: **the final stage is Alpine plus the one binary of Node.js**
+  (`COPY --from=node-binary`), because the image of Node carries npm, yarn and corepack (24 MiB) and deleting files in a later layer gives nothing back.
   The Prisma CLI (a dev dependency, so not in the bundle) is installed separately at the lockfile's
-  exact version into `/opt/migrate` and **pruned of what only Studio / `prisma dev` use** (~120 MB);
+  exact version into `/opt/migrate` and **pruned of what only Studio / `prisma dev` use** (~120 MB), then of what `migrate deploy` never loads
+  (the sources and type declarations of `effect`, its unused ESM build, the three files of the local database of `prisma dev`, the build metadata
+  of Studio, the wasm of the schema engine (the native one does the work), the drivers of databases we do not use: 139 → 76 MiB; each removal was tried alone against a real PostgreSQL, and what could not
+  go — `effect/dist/cjs`, `@prisma/dev` itself, the wasm that validates the schema — stays). The image went from 365 to 268 MiB measured on one machine.
+  **`NODE_OPTIONS` is set in the image** (`--max-old-space-size=384 --max-semi-space-size=32`): without it Node.js lets its heap grow past 1 GiB under
+  the load of 20 people on a machine with memory to spare (1,060 MiB), with it the same load peaks at 335 MiB with the same throughput. On the
+  five-years dataset (1,500 accounts) the cap costs 6 % of throughput and the peak is 528 MiB instead of 1,002: a known limit, written in the
+  deployment guide with the size of the server. A smaller semi-space (16) or a larger heap (512) were tried: more memory, nothing gained.
   `CMD` is `node /opt/start/start.mjs`, which runs `prisma migrate deploy --config /opt/migrate/prisma.config.mjs`
-  then `node server.js` (next bullet).
+  then `node server.js` (next bullet) — **except when the database is already `current`** (`planMigrations`): Prisma would only say so, after a second
+  to start its tool (a restart went from 2.8 s to 1.6 s to a healthy platform).
   If a Prisma bump ever makes `migrate deploy` need a pruned file, the CI `docker` job (build + start
   against Postgres + `/api/health`) fails. `.dockerignore` must keep `.audit`, `.env*` and
   `bde.config.local.yml` out of the image. `HEALTHCHECK` calls `/api/health` (503 when the DB is down).

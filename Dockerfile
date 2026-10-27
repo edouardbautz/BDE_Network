@@ -21,9 +21,14 @@ RUN node -p "require('./package.json').version" > /app/.bde-version
 # The Prisma CLI, installed on its own at the exact version of the lockfile. It is a
 # development dependency of the app, so it is not part of the standalone bundle, but
 # the container needs it to apply migrations when it starts.
-# The last command removes what only Prisma Studio and `prisma dev` use (about 120 MB):
-# a user interface, a local database and the query compilers. `migrate deploy` needs none
-# of it; the CI "docker" job fails if a Prisma update ever changes that.
+# The last command removes what only Prisma Studio and `prisma dev` use (about 170 MB):
+# a user interface, a local database and the query compilers, and, in what has to stay,
+# what is never run: the sources and the type declarations of `effect`, the files of the local
+# database of `prisma dev` (the three that weigh 18 MB), the build metadata of Studio, the wasm of
+# the schema engine (the native one does the work) and the drivers of databases we do not use. Each of these was tried alone against a real PostgreSQL:
+# `migrate deploy` needs none of it, and a package that cannot lose a file (`effect/dist/cjs`,
+# `@prisma/dev` itself) is not touched. The CI "docker" job fails if a Prisma update ever changes
+# that.
 FROM base AS migrate
 COPY package-lock.json ./
 RUN PRISMA_VERSION="$(node -p "require('./package-lock.json').packages['node_modules/prisma'].version")" \
@@ -32,22 +37,41 @@ RUN PRISMA_VERSION="$(node -p "require('./package-lock.json').packages['node_mod
  && rm -rf @electric-sql react react-dom scheduler elkjs @visx @radix-ui @types classnames csstype \
       d3-* delaunator internmap robust-predicates \
       @prisma/studio-core/dist/ui @prisma/query-plan-executor \
-      prisma/build/studio.js prisma/build/query_compiler_*.wasm
+      prisma/build/studio.js prisma/build/query_compiler_*.wasm \
+      @prisma/dev/dist/runtime-assets/pglite.wasm @prisma/dev/dist/runtime-assets/pglite.data \
+      @prisma/dev/dist/runtime-assets/pglite-seed.tar.gz \
+      @prisma/studio-core/dist/metafile-cjs.json @prisma/studio-core/dist/metafile-esm.json \
+      prisma/build/schema_engine_bg.wasm \
+      effect/src effect/dist/dts effect/dist/esm \
+      lodash mysql2 iconv-lite aws-ssl-profiles postgres find-my-way
 
-FROM base AS runner
+# Node.js alone: the image of Node also carries npm, yarn and corepack (24 MB that nothing here runs), and deleting them in a
+# later layer gives nothing back. The runner stage starts from Alpine and takes only the binary.
+FROM base AS node-binary
+
+FROM alpine:3.24 AS runner
+ENV NEXT_TELEMETRY_DISABLED=1
+WORKDIR /app
+COPY --from=node-binary /usr/local/bin/node /usr/local/bin/node
 ENV NODE_ENV=production \
     PORT=3000 \
     HOSTNAME=0.0.0.0 \
     PRISMA_HIDE_UPDATE_MESSAGE=1 \
     CHECKPOINT_DISABLE=1 \
-    UPLOADS_DIR=/uploads
+    UPLOADS_DIR=/uploads \
+    NODE_OPTIONS="--max-old-space-size=384 --max-semi-space-size=32"
+# NODE_OPTIONS: on a computer with a lot of memory, Node.js lets its heap grow to a gigabyte and more before it cleans (1,060 MiB
+# after the load of 20 people, on a server that a BDE shares with other things). With these two limits the same load peaks at
+# 335 MiB and is served as fast (13.4 requests a second against 13.8-14.0, 95 % of the answers in 1.28 s against 1.33 s): the heap
+# is 384 MiB at most, and the young generation, which absorbs a page's short-lived objects, 32 MiB per space. A server with less than
+# 768 MiB for the application should not run it (docs/en/deployment.md); a bigger one can set NODE_OPTIONS in docker-compose.yml.
 # `psql` and `pg_dump` (the same major version as the bundled PostgreSQL): the start-up command keeps a copy of the database
 # before applying migrations and puts it back if they fail (docker/database-tools.mjs).
 # The operating system of the base image is updated first: a security fix of a library (OpenSSL, for the tools above) is
 # published for Alpine before it reaches the next Node image, and the scan of the image (CI) fails on a fix that is there.
-RUN apk upgrade --no-cache && apk add --no-cache postgresql17-client
-# Nothing here needs npm or yarn: the server is started with `node`.
-RUN rm -rf /usr/local/lib/node_modules /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /opt/yarn-* /usr/local/bin/yarn /usr/local/bin/yarnpkg \
+# (`libstdc++` is the one library the binary of Node.js needs besides the system's.) Nothing here needs npm or yarn: the server is
+# started with `node`.
+RUN apk upgrade --no-cache && apk add --no-cache libstdc++ postgresql17-client \
  && addgroup --system --gid 1001 nodejs \
  && adduser --system --uid 1001 nextjs
 

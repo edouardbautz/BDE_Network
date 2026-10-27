@@ -254,7 +254,12 @@ export async function supervise({
         }
       }
 
-      const migration = await run(spawn, migrate);
+      // Nothing to apply: the command of Prisma would only say so, after the time it takes to start its tool (about a second).
+      // Every other state, and a database that could not be asked, still goes through it.
+      const migration =
+        safety && before?.state === 'current'
+          ? { code: 0, output: 'Aucune migration à appliquer : la base de données est à jour.' }
+          : await run(spawn, migrate);
       if (stopping) return 0;
 
       if (migration.code === 0) {
