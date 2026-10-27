@@ -1,5 +1,12 @@
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, chmodSync, copyFileSync, mkdtempSync, readFileSync } from 'node:fs';
+import {
+  appendFileSync,
+  chmodSync,
+  copyFileSync,
+  mkdtempSync,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { Client } from 'pg';
@@ -21,7 +28,7 @@ import {
  *
  * It ends with k6's own status when a limit of the script is crossed (a page too slow, too many failures), and with 1 when the
  * application holds more memory after the load than a small server can spare. The report is printed, and added to the summary
- * of the job when there is one.
+ * of the job when there is one. `--json <file>` also writes the numbers (the pages, the totals, the memory) for `qa/optim/measure.ts`.
  */
 
 const K6_IMAGE = 'grafana/k6:2.3.0';
@@ -131,11 +138,11 @@ async function main() {
   const after = appMemory();
 
   const summary = JSON.parse(readFileSync(join(work, 'summary.json'), 'utf8')) as K6Summary;
-  const report = markdownReport(
-    pagesOf(summary, limitsOf(readFileSync(scriptPath, 'utf8'))),
-    totalsOf(summary),
-    memoryVerdict(before, after, MEMORY_LIMIT_MIB),
-  );
+  const pages = pagesOf(summary, limitsOf(readFileSync(scriptPath, 'utf8')));
+  const totals = totalsOf(summary);
+  const report = markdownReport(pages, totals, memoryVerdict(before, after, MEMORY_LIMIT_MIB));
+  const json = flag('json', '');
+  if (json) writeFileSync(json, JSON.stringify({ pages, totals, memory: { before, after } }));
   console.log(report);
   if (process.env.GITHUB_STEP_SUMMARY)
     appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${report}\n`);

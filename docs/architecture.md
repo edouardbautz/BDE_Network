@@ -1626,6 +1626,24 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
     two to three times what was seen, there to catch a change of order of magnitude (an N+1 query, a bundle that doubles), not a
     few tens of percent. **A limit that fails now and then is never raised until it passes**: it is set from the spread of the
     runs, with the runs written down. The numbers that count are those of the CI, not of a developer's computer.
+- **Measures of the optimisation campaign** (`qa/optim/`, the workflow `measures.yml`: nightly, by hand, or on a pull request that touches the tooling;
+  `sh qa/platform.sh up --stats` then `npx tsx qa/optim/measure.ts --label <name> --out <file.json>`). One command takes every number
+  an optimisation is judged by, on the production image and the QA dataset (`--dataset full`: two school years; `--dataset large`: five
+  years and five times the members), and writes them as JSON and Markdown, so that the "before" and the "after" of a change are two
+  files (`report.ts` compares them). **`image`**: the size (the sum of the layers: the size `docker image inspect` gives depends on the
+  image store), the biggest layers, folders and packages. **`pages`**: for each page a person opens (`pages.ts`, as the persona who opens
+  it), the time to the first byte and to the end (median and 95th percentile of 15 requests after 2 that are not counted), the HTML, and
+  the scripts on the wire (compressed, as a browser downloads them): those named by the tags and every one the page refers to. **`db`**:
+  the statements one request sends to PostgreSQL, from `pg_stat_statements` reset before the request (the platform made with `--stats`
+  loads it): the number of queries, the time spent in the database, and every statement sent five times or more, which is what an N+1
+  looks like. **`scans`**: the tables read in full after all the pages were opened three times. **`server`**: the time from `docker start`
+  to a healthy `/api/health` (not Next.js's own "Ready in", which says 0 ms: it prints it before the application starts), the memory and
+  the CPU of the application and of PostgreSQL at rest, then under the k6 load of the performance job (peak memory, mean CPU, the log
+  written). **`growth`**: the size of each table and of the database, and the rows written per year. The numbers that do not depend on the
+  machine (bytes, statements) can be compared across machines; the durations only on the same one, and the CI's runner (4 CPUs, 16 GiB: bigger than a
+  school's server, whose limits are tried apart) is the reference. `optim.test.ts` holds the pure parts (statistics, assets of a page, statements, what
+  `docker` prints, the comparison). Traps met: `n_live_tup` is 0 just after a load (the rows are counted); the scope folders of
+  `node_modules` (`@prisma`) are counted with their packages if the listing is not told otherwise.
 - **Resilience** (`qa/resilience/`, the `resilience` job of `qa.yml`; `npx tsx qa/resilience/run.ts [--only database,app,webhook]` on a
   platform made by `sh qa/platform.sh up --webhook https://qa-hang:8443/hook --now 2026-10-16T12:00:00Z`). What happens to the platform when what it stands
   on goes away. The suites stop, freeze and kill the platform's containers (Docker only, started without a shell, every wait has a

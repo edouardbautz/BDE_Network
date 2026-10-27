@@ -4,11 +4,14 @@
 # developer's machine; only Docker, Node (for `npm ci` and `tsx`) and `curl` are needed.
 #
 #   sh qa/platform.sh up   [--image bde-network] [--port 3100] [--variant events-enabled|events-disabled|events-intra]
-#                          [--dataset full|small|none] [--keep-config] [--now 2026-10-16T12:00:00Z]
+#                          [--dataset full|large|small|none] [--keep-config] [--now 2026-10-16T12:00:00Z] [--stats]
 #                          [--webhook https://qa-hang:8443/hook]
 #   sh qa/platform.sh env  [--port 3100]     the variables the suites read (QA_BASE_URL, QA_AUTH_SECRET, QA_DATABASE_URL)
 #   sh qa/platform.sh logs
 #   sh qa/platform.sh down
+#
+# `--dataset large` is five school years and five times the members (qa/optim measures the platform on both datasets). `--stats`
+# loads `pg_stat_statements` in PostgreSQL, to count the statements a page sends (qa/optim/measure.ts).
 #
 # `--now` sets the clock of the application to the moment of the dataset (qa/fake-clock.cjs, which runs from there at the normal
 # speed): the dates to come, the day marked as today and the reminders are then the same whenever the platform is made.
@@ -37,6 +40,7 @@ VARIANT=events-enabled
 DATASET=full
 NOW=
 WEBHOOK=
+STATS=
 
 command="${1:-}"
 [ $# -gt 0 ] && shift
@@ -48,6 +52,7 @@ while [ $# -gt 0 ]; do
     --dataset) DATASET="$2"; shift 2 ;;
     --now) NOW="$2"; shift 2 ;;
     --webhook) WEBHOOK="$2"; shift 2 ;;
+    --stats) STATS=1; shift ;;
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
 done
@@ -131,10 +136,16 @@ case "$command" in
   up)
     "$0" down >/dev/null 2>&1 || true
     docker network create "$NETWORK" >/dev/null
+    # The options of PostgreSQL go after the image name; none unless a suite asks for them.
+    set --
+    [ -n "$STATS" ] && set -- -c shared_preload_libraries=pg_stat_statements -c pg_stat_statements.track=all
     docker run -d --name "$DATABASE_CONTAINER" --network "$NETWORK" \
       -e POSTGRES_USER=bde -e POSTGRES_PASSWORD=qa-password -e POSTGRES_DB=bde_network \
-      -p "127.0.0.1:$DATABASE_PORT:5432" postgres:17-alpine >/dev/null
+      -p "127.0.0.1:$DATABASE_PORT:5432" postgres:17-alpine "$@" >/dev/null
     wait_for 60 'PostgreSQL did not start' docker exec "$DATABASE_CONTAINER" pg_isready -U bde -d bde_network
+    if [ -n "$STATS" ]; then
+      wait_for 30 'pg_stat_statements did not load' docker exec "$DATABASE_CONTAINER" psql -U bde -d bde_network -c 'CREATE EXTENSION IF NOT EXISTS pg_stat_statements'
+    fi
 
     # The options of the clock go in the argument list (not in a string: a path may hold a space).
     set --
@@ -164,6 +175,7 @@ case "$command" in
     case "$DATASET" in
       none) ;;
       full) npx tsx qa/cli.ts load --database "$(database_url)" ;;
+      large) npx tsx qa/cli.ts load --database "$(database_url)" --members 1500 --events-per-year 300 --school-years 5 ;;
       small) npx tsx qa/cli.ts load --database "$(database_url)" --members 40 --events-per-year 40 ;;
       *) echo "unknown dataset $DATASET" >&2; exit 2 ;;
     esac
