@@ -71,6 +71,8 @@ const CANCELLATION_WORDS = [
   /NS_BASE_STREAM_CLOSED/i,
   // React's own word (#412) for a stream of the router that was closed under it: the prefetch it was reading was cancelled.
   /Minified React error #412|Connection closed/i,
+  // webpack's word for a script of the page that the browser stopped loading (Firefox, a click that follows a page which is still loading its chunks).
+  /ChunkLoadError: Loading chunk d+ failed/i,
 ];
 const RECENTLY_MS = 5000;
 /**

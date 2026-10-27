@@ -178,7 +178,7 @@ async function measureDb(base: string, secret: string): Promise<DbMeasure[]> {
       const cookie = await cookieOf(page.who, secret);
       await get(base, page.path, cookie); // the first request of a page does work the next ones do not
       const repetitions = [];
-      for (let n = 0; n < 3; n += 1) {
+      for (let n = 0; n < 5; n += 1) {
         await client.query('SELECT pg_stat_statements_reset()');
         await get(base, page.path, cookie);
         await sleep(150); // work done after the answer (a notification, a claim) belongs to the page too
@@ -189,7 +189,9 @@ async function measureDb(base: string, secret: string): Promise<DbMeasure[]> {
         );
         repetitions.push(summarizeStatements(rows));
       }
-      const middle = [...repetitions].sort((a, b) => a.queries - b.queries)[1]!;
+      // The fewest of the repetitions, not the middle one: what the platform does on its own in the same moment (the reminder loop, a backup) only adds
+      // statements to a repetition, so the page's own cost is the smallest count, and a budget on it must not depend on when the loop looked.
+      const middle = [...repetitions].sort((a, b) => a.queries - b.queries)[0]!;
       results.push({
         name: page.name,
         queries: middle.queries,
