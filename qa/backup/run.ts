@@ -62,6 +62,8 @@ const NIGHT = '2026-10-27T02:10:00Z';
  * past 03:00 with no backup of the day: the first look of the loop, a minute after the start, would make one, and `restore.sh --auto`, which takes the
  * newest, would restore the empty platform's).
  */
+/** Ten minutes later: the name of a backup is its second, and the server that restores the first one must not make one of the same name. */
+const LATER = '2026-10-27T02:20:00Z';
 const EARLY = '2026-10-27T00:00:00Z';
 
 const COUNTED = ['User', 'Role', 'Event', 'AuditLog', 'PlatformSettings'] as const;
@@ -460,7 +462,7 @@ export async function playBackups(report: Report): Promise<void> {
     // ---- 5. the database is down at the hour of the backup ----------------------------------------------------------------------------
     // The platform is recreated at 03:10 and its database stopped before the first look of the loop (a minute after the start): the
     // backup cannot be made. What was there stays, nothing half made is left, the failure is written down, and the page says so.
-    prepare(b, NIGHT, project);
+    prepare(b, LATER, project);
     check('the platform is recreated at 03:10 once more', b.up({ build: false }).ok);
     await answers(b, 'and answers (at 03:10)');
     const stopped = b.compose('stop', 'postgres');
