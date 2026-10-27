@@ -9,7 +9,7 @@ export interface PageAssets {
   scripts: string[];
   /** `<link rel="stylesheet">`. */
   stylesheets: string[];
-  /** Every `static/…/*.js` the HTML mentions, the scripts above included. */
+  /** Every `static/…/*.js` the HTML mentions, the scripts above included, the `nomodule` ones left out. */
   referenced: string[];
 }
 
@@ -21,22 +21,34 @@ const normalise = (path: string): string => {
   return match ? `/_next/${match[0]}` : path;
 };
 
-export function assetsOf(page: string): PageAssets {
-  // A `nomodule` script is the polyfills for browsers without modules: no browser that matters downloads it.
-  const html = page.replace(/<script\b[^>]*\bnomodule\b[^>]*>/gi, '');
-  const scripts = [...html.matchAll(/<script\b([^>]*)>/g)]
-    .map((match) => /\bsrc="([^"]+)"/.exec(match[1]!)?.[1])
+const srcOf = (attributes: string): string | undefined => /\bsrc="([^"]+)"/i.exec(attributes)?.[1];
+
+export function assetsOf(html: string): PageAssets {
+  const tags = [...html.matchAll(/<script\b([^>]*)>/gi)].map((match) => match[1]!);
+  // A `nomodule` script is the polyfills for browsers without modules: no browser that matters downloads it. The page is read as it
+  // is (nothing is cut out of the HTML); the paths of those scripts are told apart and left out of the lists.
+  const legacy = new Set(
+    tags
+      .filter((attributes) => /\bnomodule\b/i.test(attributes))
+      .map(srcOf)
+      .filter((src): src is string => src !== undefined)
+      .map(normalise),
+  );
+
+  const scripts = tags
+    .filter((attributes) => !/\bnomodule\b/i.test(attributes))
+    .map(srcOf)
     .filter((src): src is string => src !== undefined && src.includes('/_next/static/'))
     .map(normalise);
-  const stylesheets = [...html.matchAll(/<link\b[^>]*\brel="stylesheet"[^>]*\bhref="([^"]+)"/g)]
+  const stylesheets = [...html.matchAll(/<link\b[^>]*\brel="stylesheet"[^>]*\bhref="([^"]+)"/gi)]
     .map((match) => match[1]!)
     .concat(
-      [...html.matchAll(/<link\b[^>]*\bhref="([^"]+)"[^>]*\brel="stylesheet"/g)].map((m) => m[1]!),
+      [...html.matchAll(/<link\b[^>]*\bhref="([^"]+)"[^>]*\brel="stylesheet"/gi)].map((m) => m[1]!),
     )
     .map(normalise);
-  const mentioned = [...html.matchAll(/static\/(?:chunks|media|css)\/[^"'\\\s<>)]+\.js/g)].map(
-    (match) => normalise(match[0]),
-  );
+  const mentioned = [...html.matchAll(/static\/(?:chunks|media|css)\/[^"'\\\s<>)]+\.js/g)]
+    .map((match) => normalise(match[0]))
+    .filter((path) => !legacy.has(path));
   const loadedAtOnce = unique(scripts);
   return {
     scripts: loadedAtOnce,

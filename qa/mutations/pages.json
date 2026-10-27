@@ -21,10 +21,17 @@
     ["src/lib/client-weight.test.ts"]
   ],
   [
-    "pages: the polyfills of the nomodule tag are counted as loaded",
+    "pages: the scripts of the nomodule tag are counted as loaded",
     "qa/optim/html.ts",
-    "const html = page.replace(/<script\\b[^>]*\\bnomodule\\b[^>]*>/gi, '');",
-    "const html = page;",
+    ".filter((attributes) => !/\\bnomodule\\b/i.test(attributes))",
+    "",
+    ["qa/optim/optim.test.ts"]
+  ],
+  [
+    "pages: the nomodule polyfills are counted among the scripts a page refers to",
+    "qa/optim/html.ts",
+    ".filter((path) => !legacy.has(path));",
+    "",
     ["qa/optim/optim.test.ts"]
   ]
 ]
