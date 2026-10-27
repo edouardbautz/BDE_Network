@@ -25,6 +25,13 @@ _using_ the deployed app (BDE members) are not necessarily technical — the UI 
 - **PostgreSQL** via **Prisma 7**, using the `@prisma/adapter-pg` driver adapter — no Rust
   query engine binary, no `DATABASE_URL` in `schema.prisma` (it lives in `prisma.config.ts` for
   the CLI, and is passed to `PrismaPg` explicitly in `src/lib/prisma.ts` for the app).
+  **The client reads relations with a join** (`previewFeatures = ["relationJoins"]` in the generator): with it on, a join is the default of every query that
+  includes or selects a relation, so a page sends 2 to 5 statements where it sent 10 to 12 (the session: 1 instead of 3, `auth/callbacks.ts`: the
+  `session` callback uses what the `jwt` callback of the same request read, through a `WeakMap` keyed by the token). Measured on 1 CPU and 1 GiB with the
+  load of 20 people: 12 % more requests answered, 95 % of the answers 15 % faster. It is a preview feature of Prisma, so a Prisma upgrade is
+  followed by the access matrix and the browser tests (every page reads relations); `prisma-relations.test.ts` fails if the line leaves the schema.
+  The database time of a list grows (1.7 → 5.9 ms for the dashboard, aggregated in the database) and the application time falls by more: judge a
+  change of strategy on the load, not on one request. Mutation-checked (`qa/mutations/database.json`).
 - **Tailwind CSS v4** + **shadcn/ui** (`base-nova` style, **Base UI** primitives — not Radix.
   Components use a `render` prop for custom elements, not `asChild`).
 - **NextAuth v5** (`next-auth@beta`), JWT session strategy, **no adapter** (the schema has no

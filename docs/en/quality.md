@@ -99,18 +99,23 @@ datasets: two school years with 300 members, a BDE as they are (150 accounts) an
 numbers in bytes and in statements do not depend on the machine; the durations only compare with other measures taken
 on the same one. The raw measures of the starting point are in `qa/optim/baselines/`.
 
-| What                                                           | Before (2026-10-27)         | Objective                          |
-| -------------------------------------------------------------- | --------------------------- | ---------------------------------- |
-| Docker image                                                   | 318 MiB                     | 250 MiB or less                    |
-| Scripts loaded at once: sign-in, dashboard, an event           | 249, 256 and 281 KiB        | 200 KiB or less                    |
-| Largest contentful paint on a phone, slow network: dashboard   | 4.2 s (an event: 4.3 s)     | 3.5 s or less                      |
-| Statements sent to the database: dashboard, calendar, an event | 10, 12 and 10               | 8 or fewer                         |
-| Memory of the application under the load of 20 people          | 1,105 MiB (103 MiB at rest) | 450 MiB or less, same throughput   |
-| 95 % of the answers under that load                            | 1.56 s                      | 30 % less                          |
-| Restart until the platform answers                             | 2.6 s                       | 1.6 s or less                      |
-| The smallest server that holds the load                        | not tried                   | 1 CPU and 1 GiB, no request failed |
-| Docker logs                                                    | no limit                    | 30 MiB at most                     |
-| Duration of the checks of a pull request                       | 12 to 17 minutes            | 9 minutes or less, same checks     |
+| What                                                           | Before (2026-10-27)         | Objective                          | Now         |
+| -------------------------------------------------------------- | --------------------------- | ---------------------------------- | ----------- |
+| Docker image                                                   | 318 MiB                     | 250 MiB or less                    |             |
+| Scripts loaded at once: sign-in, dashboard, an event           | 249, 256 and 281 KiB        | 200 KiB or less                    |             |
+| Largest contentful paint on a phone, slow network: dashboard   | 4.2 s (an event: 4.3 s)     | 3.5 s or less                      |             |
+| Statements sent to the database: dashboard, calendar, an event | 10, 12 and 10               | 8 or fewer                         | 2, 4 and 2  |
+| Memory of the application under the load of 20 people          | 1,105 MiB (103 MiB at rest) | 450 MiB or less, same throughput   |             |
+| 95 % of the answers under that load                            | 1.56 s                      | 30 % less                          |             |
+| Restart until the platform answers                             | 2.6 s                       | 1.6 s or less                      |             |
+| The smallest server that holds the load                        | not tried                   | 1 CPU and 1 GiB, no request failed |             |
+| Docker logs                                                    | no limit                    | 30 MiB at most                     |             |
+| Duration of the checks of a pull request                       | 12 to 17 minutes            | 9 minutes or less, same checks     | 5.4 minutes |
+
+**Steps done.** The checks of a pull request run as parallel jobs on an image built once (5.4 minutes, from the run of the pull
+request itself). A page reads its relations with a join and the session with one statement, which cut the statements of the
+dashboard, the calendar and an event to 2, 4 and 2; on 1 CPU and 1 GiB with the load of 20 people, the platform answers 7.3 to
+7.4 requests a second instead of 6.3 to 6.6, and 95 % of the answers come under 2.9 to 3.2 s instead of 3.3 to 3.8 s.
 
 What the measures say, which decides where the effort goes: the database is not the bottleneck (no page sends a statement
 five times or more, none sends more than 12, and a page spends 0.1 to 7 ms in the database even with five years of data);
