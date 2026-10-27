@@ -57,7 +57,13 @@ ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0 \
     PRISMA_HIDE_UPDATE_MESSAGE=1 \
     CHECKPOINT_DISABLE=1 \
-    UPLOADS_DIR=/uploads
+    UPLOADS_DIR=/uploads \
+    NODE_OPTIONS="--max-old-space-size=384 --max-semi-space-size=32"
+# NODE_OPTIONS: on a computer with a lot of memory, Node.js lets its heap grow to a gigabyte and more before it cleans (1,060 MiB
+# after the load of 20 people, on a server that a BDE shares with other things). With these two limits the same load peaks at
+# 335 MiB and is served as fast (13.4 requests a second against 13.8-14.0, 95 % of the answers in 1.28 s against 1.33 s): the heap
+# is 384 MiB at most, and the young generation, which absorbs a page's short-lived objects, 32 MiB per space. A server with less than
+# 768 MiB for the application should not run it (docs/en/deployment.md); a bigger one can set NODE_OPTIONS in docker-compose.yml.
 # `psql` and `pg_dump` (the same major version as the bundled PostgreSQL): the start-up command keeps a copy of the database
 # before applying migrations and puts it back if they fail (docker/database-tools.mjs).
 # The operating system of the base image is updated first: a security fix of a library (OpenSSL, for the tools above) is

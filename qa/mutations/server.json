@@ -1,0 +1,23 @@
+[
+  [
+    "server: the migration command is started even when the database is current",
+    "docker/start.mjs",
+    "safety && before?.state === 'current'",
+    "false && before?.state === 'current'",
+    ["docker/start.test.ts"]
+  ],
+  [
+    "server: the migration command is skipped for a database that is only fresh or pending",
+    "docker/start.mjs",
+    "safety && before?.state === 'current'",
+    "safety && before?.state !== 'unreachable'",
+    ["docker/start.test.ts"]
+  ],
+  [
+    "server: the migration command is skipped when there is no safety at all (a plain docker run)",
+    "docker/start.mjs",
+    "safety && before?.state === 'current'",
+    "before?.state === 'current' || !safety",
+    ["docker/start.test.ts"]
+  ]
+]
