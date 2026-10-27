@@ -1,7 +1,9 @@
 import '../lib/zod-config';
 import { z } from 'zod';
+import { SUPPORTED_LOCALES } from './locales';
 
-export const SUPPORTED_LOCALES = ['fr', 'en'] as const;
+// The list lives in locales.ts, which client code imports without Zod; it is still exported from here for the code that reads the configuration.
+export { SUPPORTED_LOCALES, type SupportedLocale } from './locales';
 
 /** The channels a notification can go through, in the order the tables and the files write them. */
 export const NOTIFICATION_CHANNELS = ['discord', 'slack', 'email'] as const;
@@ -224,7 +226,6 @@ export type BdeConfig = z.infer<typeof bdeConfigSchema>;
 export type EventCategory = z.infer<typeof eventCategory>;
 export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
 export type NotificationEvent = (typeof NOTIFICATION_EVENTS)[number];
-export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 
 /**
  * The channels a notification really goes through: what the configuration lists, except that the e-mail of `memberRemoved` is

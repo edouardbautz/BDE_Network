@@ -7,7 +7,7 @@ import { notFound } from 'next/navigation';
 import { getConfig } from '@/config';
 import { routing } from '@/i18n/routing';
 import { ThemeProvider } from '@/components/theme-provider';
-import { Toaster } from '@/components/ui/sonner';
+import { LazyToaster } from '@/components/layout/lazy-toaster';
 import { ImpersonationBanner } from '@/components/dev/impersonation-banner';
 import { buildAccentStyle } from '@/lib/color';
 import '../globals.css';
@@ -63,7 +63,7 @@ export default async function LocaleLayout({
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <ImpersonationBanner />
             {children}
-            <Toaster />
+            <LazyToaster />
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>

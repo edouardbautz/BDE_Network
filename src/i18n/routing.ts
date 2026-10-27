@@ -1,5 +1,5 @@
 import { defineRouting } from 'next-intl/routing';
-import { SUPPORTED_LOCALES } from '@/config/schema';
+import { SUPPORTED_LOCALES } from '@/config/locales';
 
 /**
  * The URL routing default is fixed to "fr" so this file stays runtime-config

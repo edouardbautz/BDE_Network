@@ -89,6 +89,8 @@ export interface Measurement {
   takenAt: string;
   environment: { platform: string; cpus: number; memoryGiB: number; node: string };
   dataset: Record<string, number>;
+  /** Things to know when reading these numbers. */
+  notes?: string[];
   image?: ImageMeasure;
   pages?: PageMeasure[];
   db?: DbMeasure[];

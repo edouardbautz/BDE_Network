@@ -8,7 +8,7 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
-import { SUPPORTED_LOCALES, type SupportedLocale } from '@/config/schema';
+import { SUPPORTED_LOCALES, type SupportedLocale } from '@/config/locales';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 

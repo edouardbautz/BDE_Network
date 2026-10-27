@@ -1,0 +1,37 @@
+[
+  [
+    "pages: the routing takes the list of languages from the schema again (Zod on every page)",
+    "src/i18n/routing.ts",
+    "from '@/config/locales'",
+    "from '@/config/schema'",
+    ["src/lib/client-weight.test.ts"]
+  ],
+  [
+    "pages: the language menu takes the list of languages from the schema again",
+    "src/components/locale-switcher.tsx",
+    "from '@/config/locales'",
+    "from '@/config/schema'",
+    ["src/lib/client-weight.test.ts"]
+  ],
+  [
+    "pages: the toasts are drawn in the first scripts again",
+    "src/app/[locale]/layout.tsx",
+    "import { LazyToaster } from '@/components/layout/lazy-toaster';",
+    "import { Toaster as LazyToaster } from '@/components/ui/sonner';\nvoid 'LazyToaster';",
+    ["src/lib/client-weight.test.ts"]
+  ],
+  [
+    "pages: the scripts of the nomodule tag are counted as loaded",
+    "qa/optim/html.ts",
+    ".filter((attributes) => !/\\bnomodule\\b/i.test(attributes))",
+    "",
+    ["qa/optim/optim.test.ts"]
+  ],
+  [
+    "pages: the nomodule polyfills are counted among the scripts a page refers to",
+    "qa/optim/html.ts",
+    ".filter((path) => !legacy.has(path));",
+    "",
+    ["qa/optim/optim.test.ts"]
+  ]
+]
