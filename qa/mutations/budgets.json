@@ -37,7 +37,7 @@
   [
     "budgets: the image is not compared",
     "qa/optim/budgets.ts",
-    "over('image', 'size', measurement.image.bytes / MIB, budgets.image.maxMiB, 'MiB');",
+    "over('image', 'content', content / KIB, budgets.image.maxMiB, 'MiB');",
     "",
     ["qa/optim/budgets.test.ts"]
   ],

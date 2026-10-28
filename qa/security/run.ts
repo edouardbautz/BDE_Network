@@ -11,6 +11,7 @@ import { checkLogs } from './logs';
 import { checkUploads } from './uploads';
 import { checkHeaders } from './headers';
 import { checkSessions } from './sessions';
+import { checkSql } from './sql';
 
 /**
  * The attacks: what somebody who is not a member (or is, and wants more) can try against a running platform
@@ -28,6 +29,7 @@ export const SUITES: Record<string, (platform: Platform, report: Report) => Prom
   feeds: checkFeeds,
   uploads: checkUploads,
   injection: checkInjection,
+  sql: checkSql,
   templates: checkTemplates,
   intra: checkIntra,
   limits: checkLimits,

@@ -1570,7 +1570,7 @@ start from the same three things, so that what one finds the others can replay.
   log), put in the address of every page that reads one, and, for the database, in every address; the answers are read
   **as a browser would build them** (jsdom): no handler, no `javascript:` address, no frame or form that the text made,
   no tag as it was typed; nothing changes in the database; a forged `Host` or `X-Forwarded-Host` moves no link and no
-  redirect; `callbackUrl` and addresses like `//evil.example` never leave the platform. `limits`: 300 requests at a time of
+  redirect; `callbackUrl` and addresses like `//evil.example` never leave the platform. `sql` (`qa/security/sql.ts`): the pairs ZAP's active scan sends (a condition that is true and one that is false, each way a value can be closed) and hostile statements (`DROP TABLE`, `UPDATE`, `UNION`), in **every field of the event form**, called as the server action `createEvent` against the real image: a text (title, description, place) is stored byte for byte and only the event and its audit entry are written; a field with a fixed set of values changes nothing beyond the event; and for each pair the outcome (status, tables written) is the same whether the condition is true or false, which is all the scan's rule 40018 looks at. It is what makes the scan's SQL injection alerts on server-action forms an accepted entry of `zap-accepted.json` and not a guess. `limits`: 300 requests at a time of
   each wrong kind, bodies of 1 and 20 MB, headers far too large: no server error, and the platform answers a member
   afterwards; **there is no rate limit** outside the installer (the reverse proxy of the BDE is the place, see
   `docs/en/deployment.md`) and the suite writes down what it accepted. `templates`: the notification templates attacked three ways
@@ -1588,7 +1588,7 @@ start from the same three things, so that what one finds the others can replay.
   error is there that an attack should not have caused (the framework's own refusals are listed in `REFUSALS`). The
   detectors have unit tests (`detectors.test.ts`: what each must catch and what it must leave alone): a check that cannot
   fail proves nothing. **ZAP** (`zap.sh`, `zap-gate.mjs`, a pinned `ghcr.io/zaproxy/zaproxy`): every night the baseline then
-  the active scan, on a pull request with the label the baseline only, signed in as the owner by a cookie the harness forges;
+  the active scan (**bounded to 25 minutes**, `QA_ZAP_ACTIVE_MINUTES`, by a plan of ZAP's automation framework, `zap-active.yaml`: the active scan of `zap-full-scan.py` has no end, and a limit given to it was not applied, so it ran past the hour of the job on the 489 addresses the spider finds, which the first runs that really started it found out; the report is the same `traditional-json`, read by the same gate), on a pull request with the label the baseline only, signed in as the owner by a cookie the harness forges;
   an alert of medium level or above fails unless it is in `zap-accepted.json` **with its reason** (the unsafe-inline policy,
   documented above, and the forms of server actions, which the `csrf` suite plays), and an accepted entry that no longer
   shows up is reported. The first run of these suites found five defects, each fixed in its own pull request (a malformed
@@ -1760,7 +1760,7 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
   with their objectives are on the Quality page of the documentation, which each step of the campaign updates.
   - **Budgets** (`qa/optim/budgets.json`, `budgets.ts` pure and tested, `qa/mutations/budgets.json`). What the campaign gained is held by numbers a change must not go
     over. The `budgets` job of `ci.yml` (part of the `docker image` check `main` requires) starts the image on the QA dataset, takes `measure.ts --only image,pages,db` (three
-    runs) and compares: the image (260 MiB), and for **every page** the statements it sends, the scripts it loads at once and its HTML, which are bytes and counts and do not depend
+    runs) and compares: the image (276 MiB of **files**: `du` of its file system, because the sum of its layers, the figure of the report, depends on the image store of the Docker that measures it and went from 246.7 to 269.6 MiB on 2026-10-28 when the runners changed theirs, with the same image), and for **every page** the statements it sends, the scripts it loads at once and its HTML, which are bytes and counts and do not depend
     on the machine. A page that has no budget fails, and so does a budget with no page: a new page brings its numbers. The `measures` workflow adds the server every night (restart
     2 s, memory at rest 160 MiB, peak under load 600 MiB, no failed request), loose because a shared runner varies by about 10 % (see "Which numbers are held tight, and which
     loose"). The numbers were set from the CI's measure of 2026-10-27, a little above it (4 % on the scripts, 10 % on the HTML); going over one is a pull request that raises it and

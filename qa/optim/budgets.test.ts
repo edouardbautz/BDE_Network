@@ -23,7 +23,7 @@ const page = (name: string, over: Partial<PageMeasure> = {}): PageMeasure => ({
 });
 
 const budgets: Budgets = {
-  image: { maxMiB: 260 },
+  image: { maxMiB: 276 },
   pages: { dashboard: { statements: 2, scriptsKiB: 185, htmlKiB: 45 } },
   server: { restartMs: 4000, idleAppMiB: 160, peakAppMiB: 600, failedRate: 0 },
 };
@@ -37,6 +37,7 @@ const measure = (patch: Partial<Measurement> = {}): Measurement => ({
     name: 'bde-network',
     bytes: 246 * 1024 * 1024,
     inspectedBytes: 0,
+    contentKiB: 269 * 1024,
     layers: [],
     folders: [],
     packages: [],
@@ -54,8 +55,8 @@ describe('the budgets', () => {
   it.each([
     [
       'the image',
-      { image: { ...measure().image!, bytes: 261 * 1024 * 1024 } },
-      'image: size is 261 MiB',
+      { image: { ...measure().image!, contentKiB: 277 * 1024 } },
+      'image: content is 277 MiB',
     ],
     [
       'the scripts of a page',
@@ -84,6 +85,14 @@ describe('the budgets', () => {
   ])('fail when %s goes over', (_what, patch, expected) => {
     const { breaches } = checkBudgets(measure(patch), budgets);
     expect(breaches.map(describeBreach).join('\n')).toContain(expected);
+  });
+
+  it('fail when the content of the image was not measured (the sum of its layers is not a substitute)', () => {
+    const image = { ...measure().image! };
+    delete image.contentKiB;
+    expect(checkBudgets(measure({ image }), budgets).breaches.map(describeBreach)).toEqual([
+      'image: was not measured (its content: du of its file system)',
+    ]);
   });
 
   it('fail for a page that has no budget, and for a budget with no page', () => {

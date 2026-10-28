@@ -1,0 +1,35 @@
+# The plan of the active scan of OWASP ZAP (qa/security/zap.sh full), for ZAP's automation framework: what `zap-full-scan.py` does,
+# but with an end. That script's active scan has none: on the 489 addresses the spider finds on this platform it ran for more than
+# an hour. zap.sh writes the address of the platform and the minutes of the scan where the plan has the two words between double underscores. The report is the one of the baseline (`traditional-json`), so the same gate reads it.
+env:
+  contexts:
+    - name: platform
+      urls:
+        - '__TARGET__'
+      includePaths:
+        - '__TARGET__.*'
+  parameters:
+    progressToStdout: true
+jobs:
+  - type: spider
+    parameters:
+      context: platform
+      maxDuration: 3
+  - type: spiderAjax
+    parameters:
+      context: platform
+      maxDuration: 3
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 5
+  - type: activeScan
+    parameters:
+      context: platform
+      maxScanDurationInMins: __MINUTES__
+      maxRuleDurationInMins: 2
+      threadPerHost: 4
+  - type: report
+    parameters:
+      template: traditional-json
+      reportDir: /zap/wrk
+      reportFile: zap

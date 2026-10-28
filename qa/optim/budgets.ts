@@ -35,6 +35,7 @@ export interface ServerBudget {
 }
 
 export interface Budgets {
+  /** What the image holds (`du` of its file system): the same on every Docker, unlike the sum of its layers. */
   image: { maxMiB: number };
   pages: Record<string, PageBudget>;
   server: ServerBudget;
@@ -55,7 +56,6 @@ export interface Verdict {
 }
 
 const KIB = 1024;
-const MIB = 1024 * 1024;
 const round = (value: number) => Math.round(value * 10) / 10;
 
 export function checkBudgets(measurement: Measurement, budgets: Budgets): Verdict {
@@ -67,7 +67,18 @@ export function checkBudgets(measurement: Measurement, budgets: Budgets): Verdic
   };
 
   if (measurement.image) {
-    over('image', 'size', measurement.image.bytes / MIB, budgets.image.maxMiB, 'MiB');
+    const content = measurement.image.contentKiB;
+    if (content === undefined) {
+      breaches.push({
+        subject: 'image',
+        what: 'was not measured (its content: du of its file system)',
+        limit: 0,
+        seen: 0,
+        unit: '',
+      });
+    } else {
+      over('image', 'content', content / KIB, budgets.image.maxMiB, 'MiB');
+    }
   }
 
   const statements = new Map(measurement.db?.map((d) => [d.name, d.queries]) ?? []);

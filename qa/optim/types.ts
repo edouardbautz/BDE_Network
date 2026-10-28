@@ -50,6 +50,12 @@ export interface ImageMeasure {
   bytes: number;
   /** What `docker image inspect` says, which depends on the image store of the Docker that measured. */
   inspectedBytes: number;
+  /**
+   * What the image holds: `du` of its own file system, in kibibytes. The same on every Docker, which neither `bytes` nor
+   * `inspectedBytes` are (the runners of GitHub changed their image store on 2026-10-28: the sum of the layers of one image went from
+   * 246.7 to 269.6 MiB, its files did not change), so it is what the budget judges. Absent in the measures taken before it existed.
+   */
+  contentKiB?: number;
   layers: Layer[];
   /** The biggest folders of the image, and of its node_modules, in kibibytes. */
   folders: { path: string; kib: number }[];

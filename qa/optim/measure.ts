@@ -306,6 +306,8 @@ async function measureImage(image: string): Promise<ImageMeasure> {
     // a package is a folder of node_modules, or a folder of a scope (@prisma/client): not the scope itself
     .filter((use) => /node_modules\/(@[^/]+\/[^/]+|[^@/][^/]*)$/.test(use.path) && use.kib > 512)
     .slice(0, 30);
+  // `-x`: this file system only (not /proc or /sys, which are the container's); the last line is the total.
+  const content = parseDu(await du('du -skx / 2>/dev/null'))[0]?.kib;
   const layers = parseHistory(history.stdout);
   return {
     name: image,
@@ -313,6 +315,7 @@ async function measureImage(image: string): Promise<ImageMeasure> {
     // (Docker Desktop with containerd tells the compressed size).
     bytes: layers.reduce((sum, layer) => sum + layer.bytes, 0),
     inspectedBytes: Number(inspected.stdout.trim()),
+    contentKiB: content,
     layers,
     folders: folders.slice(0, 25),
     packages,
