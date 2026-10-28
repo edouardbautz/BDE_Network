@@ -64,6 +64,16 @@ export function readManifest(
   return (JSON.parse(readFileSync(target, 'utf8')) as { node: Record<string, ManifestEntry> }).node;
 }
 
+/** Every page of the image that holds the action (the keys of its `workers`: `app/[locale]/(app)/events/new/page`). */
+export function hostsOf(manifest: Record<string, ManifestEntry>, action: string): string[] {
+  const [owner = '', name = ''] = action.split('.');
+  const pattern = FILE_OF[owner];
+  const entry = Object.values(manifest).find(
+    (item) => item.exportedName === name && pattern?.test(item.filename),
+  );
+  return entry ? Object.keys(entry.workers) : [];
+}
+
 /** The id of an action and a page it can be posted to (any page that holds it). */
 export function locate(
   manifest: Record<string, ManifestEntry>,
@@ -153,6 +163,13 @@ async function intraHashes(db: {
   return Object.fromEntries(rows.map((row) => [String(row.eventId), String(row.contentHash)]));
 }
 
+/** What the cases of the matrix need to know of the database as the dataset loaded it. */
+export async function contextOf(db: {
+  query(sql: string): Promise<{ rows: Record<string, unknown>[] }>;
+}): Promise<Context> {
+  return { seriesStart: await seriesStart(db), intraHashes: await intraHashes(db) };
+}
+
 export async function playActions(variant: PlatformVariant): Promise<ActionCell[]> {
   const platform = platformFromEnvironment();
   const manifest = readManifest();
@@ -160,10 +177,7 @@ export async function playActions(variant: PlatformVariant): Promise<ActionCell[
 
   await withDatabase(platform, async (db) => {
     await resetDatabase(db);
-    const context: Context = {
-      seriesStart: await seriesStart(db),
-      intraHashes: await intraHashes(db),
-    };
+    const context = await contextOf(db);
     const located = new Map(CASES.map((item) => [item, locate(manifest, item.action)]));
 
     // 1. Every persona that must be refused is refused: nothing changes in the database, and where the gate is the

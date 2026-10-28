@@ -29,10 +29,10 @@ export const SUITES: Record<string, (platform: Platform, report: Report) => Prom
   feeds: checkFeeds,
   uploads: checkUploads,
   injection: checkInjection,
-  sql: checkSql,
   templates: checkTemplates,
   intra: checkIntra,
   limits: checkLimits,
+  sql: checkSql,
   logs: checkLogs,
 };
 
