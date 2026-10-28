@@ -23,7 +23,9 @@ const ERROR_LINE =
  * action called from another origin (and the address it could not read in that origin, which the attack made up), an
  * action that throws `Forbidden` for a request a page could not have made, the actions of the development tools
  * (role simulation) called on an image where they are switched off, which throw the same way for the same reason (the
- * access matrix calls every action of the image), and a body over the limit.
+ * access matrix calls every action of the image), a body over the limit, and what an action says to a value no page would send:
+ * a status or a date of a series that is not one, and an input that is not what the editor of the notifications sends (it reads it
+ * with zod's `parse`). "`throw` stays for a crafted request" (docs/architecture.md): the `sql` suite and the access matrix send those on purpose.
  */
 const REFUSALS = [
   /Invalid Server Actions request/,
@@ -31,6 +33,10 @@ const REFUSALS = [
   /^⨯ Error: Forbidden$/,
   // what an action of the intra says to a request no page would send (a link, a version, a reason, a page to come back to)
   /^⨯ Error: Invalid (address|version|event|comment|target)$/,
+  // what the actions of the events say to a status or a date of a series that no page would send
+  /^⨯ Error: Invalid (status|occurrence)$/,
+  // the actions of the notifications' editor read their input with `parse`: what is not what the editor sends is a throw (zod's report follows on the next lines)
+  /^⨯ Error \[ZodError\]/,
   /^⨯ Error: Dev impersonation is disabled$/,
   /Body exceeded \d+mb limit/,
 ];
