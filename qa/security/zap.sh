@@ -2,7 +2,7 @@
 # OWASP ZAP against the QA platform (`sh qa/platform.sh up`), signed in as the owner by a cookie the harness forges.
 #
 #   sh qa/security/zap.sh baseline [outdir]   the spider and the passive rules: what every response says (minutes)
-#   sh qa/security/zap.sh full [outdir]       the same, then the active rules: ZAP sends attacks (a quarter of an hour)
+#   sh qa/security/zap.sh full [outdir]       the same, then the active rules: ZAP sends attacks (at most QA_ZAP_ACTIVE_MINUTES, 25 by default)
 #
 # The report (`zap.json`, `zap.html`) goes to `outdir` (default `qa-zap`), and `zap-gate.mjs` decides: any alert of a level
 # that is not accepted (qa/security/zap-accepted.json) fails. The platform's database is a throwaway one: the active scan
@@ -15,10 +15,13 @@ out="${2:-qa-zap}"
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 network="${QA_NETWORK:-qa-net}"
 target="${QA_ZAP_TARGET:-http://qa-app:3000}"
+# The active scan has no end of its own: on the pages of this platform it ran for more than an hour (the job is cut at 60 minutes). What it did not
+# reach in this time is not looked at; the passive rules of the baseline have read every page it found.
+active_minutes="${QA_ZAP_ACTIVE_MINUTES:-25}"
 
 case "$mode" in
-  baseline) script="zap-baseline.py" ;;
-  full) script="zap-full-scan.py" ;;
+  baseline) script="zap-baseline.py"; scan_options="" ;;
+  full) script="zap-full-scan.py"; scan_options="-config scanner.maxScanDurationInMins=$active_minutes -config scanner.threadPerHost=4" ;;
   *) echo "usage: sh qa/security/zap.sh baseline|full [outdir]" >&2; exit 2 ;;
 esac
 
@@ -44,7 +47,7 @@ MSYS_NO_PATHCONV=1 docker run --rm --network "$network" -v "$(host_path "$out"):
       -config replacer.full_list(0).matchtype=REQ_HEADER \
       -config replacer.full_list(0).matchstr=Cookie \
       -config replacer.full_list(0).regex=false \
-      -config replacer.full_list(0).replacement=$cookie" || status=$?
+      -config replacer.full_list(0).replacement=$cookie $scan_options" || status=$?
 
 # ZAP's own exit code says "there were warnings"; the gate below is what decides.
 echo "zap exit code $status (not the verdict)"

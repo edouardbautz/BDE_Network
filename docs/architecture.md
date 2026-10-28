@@ -1588,7 +1588,7 @@ start from the same three things, so that what one finds the others can replay.
   error is there that an attack should not have caused (the framework's own refusals are listed in `REFUSALS`). The
   detectors have unit tests (`detectors.test.ts`: what each must catch and what it must leave alone): a check that cannot
   fail proves nothing. **ZAP** (`zap.sh`, `zap-gate.mjs`, a pinned `ghcr.io/zaproxy/zaproxy`): every night the baseline then
-  the active scan, on a pull request with the label the baseline only, signed in as the owner by a cookie the harness forges;
+  the active scan (**bounded to 25 minutes**, `QA_ZAP_ACTIVE_MINUTES`: with no bound it ran past the hour of the job, which the first runs that really started it found out), on a pull request with the label the baseline only, signed in as the owner by a cookie the harness forges;
   an alert of medium level or above fails unless it is in `zap-accepted.json` **with its reason** (the unsafe-inline policy,
   documented above, and the forms of server actions, which the `csrf` suite plays), and an accepted entry that no longer
   shows up is reported. The first run of these suites found five defects, each fixed in its own pull request (a malformed
