@@ -3,7 +3,7 @@ import type { Platform } from '../access/http';
 import { changedTables, snapshot, withDatabase } from '../access/http';
 import { eventForm } from '../access/actions';
 import { callAction, locate, readManifest } from '../access/actions-run';
-import { Report } from './core';
+import { isNotFoundPage, Report, send } from './core';
 
 /**
  * SQL injection through the one form that writes the most: the event form (the server action `createEvent`). It is the case ZAP's active
@@ -51,6 +51,25 @@ const WRITTEN_BY_AN_EVENT = ['AuditLog', 'Event', 'EventAssignee'];
 
 export async function checkSql(platform: Platform, report: Report): Promise<void> {
   const create = locate(readManifest(), 'events.createEvent');
+
+  // The events module is off on one variant of the platform (`--variant events-disabled`): there is no form, and the action of it must write nothing.
+  if (isNotFoundPage(await send(platform, '/fr/events', { as: 'owner' }))) {
+    await withDatabase(platform, async (db) => {
+      const before = await snapshot(db);
+      await callAction(platform, 'validator', create.id, create.page, [
+        {},
+        eventForm({ title: `${HOSTILE[0]}${tag}` }),
+      ]);
+      const changed = changedTables(before, await snapshot(db));
+      report.check(
+        'sql',
+        'while the events module is off, the action of the form refuses and writes nothing',
+        changed.length === 0,
+        changed.join('+') || 'nothing written',
+      );
+    });
+    return;
+  }
 
   await withDatabase(platform, async (db) => {
     let counter = 0;
