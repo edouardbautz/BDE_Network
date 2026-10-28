@@ -32,6 +32,11 @@ function isUniqueViolation(error: unknown): boolean {
   return typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002';
 }
 
+/** The event is gone: it was read by this tick and deleted before the claim (a foreign key of `EventReminder` refuses a reminder for it). */
+function isForeignKeyViolation(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2003';
+}
+
 export interface ReminderTickResult {
   /** Reminders this call claimed (and therefore attempted to send). */
   claimed: number;
@@ -127,6 +132,9 @@ export async function runReminderTick(now: Date = new Date()): Promise<ReminderT
       } catch (error) {
         if (isUniqueViolation(error)) {
           continue; // already claimed — by a previous run or another instance
+        }
+        if (isForeignKeyViolation(error)) {
+          continue; // deleted since this tick read it: there is nothing to remind, and nothing wrong
         }
         console.error('[events] eventReminder: could not claim reminder', error);
         continue;
