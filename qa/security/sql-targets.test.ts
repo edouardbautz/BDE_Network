@@ -1,6 +1,12 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { inputLeaves, provenPages, routePattern, withLeaf } from './sql-targets';
+import {
+  inputLeaves,
+  missingFieldLeaves,
+  provenPages,
+  routePattern,
+  withLeaf,
+} from './sql-targets';
 
 const form = (fields: [string, string][]) => {
   const data = new FormData();
@@ -75,6 +81,29 @@ describe('the strings an attack replaces', () => {
     const changed = withLeaf([data], inputLeaves([data])[0]!, 'X')[0] as FormData;
     expect(changed.get('title')).toBe('X');
     expect((changed.get('logo') as File).name).toBe('logo.png');
+  });
+});
+
+describe('the fields an action reads that the form does not hold', () => {
+  it('are strings of their own, named like the field', () => {
+    const data = form([['title', 'a']]);
+    const leaves = missingFieldLeaves([{}, data], ['title', 'scope', 'occurrence']);
+    expect(leaves.map((leaf) => leaf.name)).toEqual(['scope', 'occurrence']);
+  });
+
+  it('are added to a copy of the form, whose original keeps what it held', () => {
+    const data = form([['title', 'a']]);
+    const [scope] = missingFieldLeaves([data], ['scope']);
+    const changed = withLeaf([data], scope!, 'X')[0] as FormData;
+    expect([...changed.entries()]).toEqual([
+      ['title', 'a'],
+      ['scope', 'X'],
+    ]);
+    expect([...data.entries()]).toEqual([['title', 'a']]);
+  });
+
+  it('are asked of a form only: an argument that is not a form has no field', () => {
+    expect(missingFieldLeaves(['id', { a: 1 }], ['scope'])).toEqual([]);
   });
 });
 
