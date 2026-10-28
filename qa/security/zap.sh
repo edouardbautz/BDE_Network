@@ -68,4 +68,6 @@ fi
 
 # ZAP's own exit code says "there were warnings"; the gate below is what decides.
 echo "zap exit code $status (not the verdict)"
-node "$root/qa/security/zap-gate.mjs" "$out/zap.json"
+# What the `sql` suite attacks, from the image and the cases of the access matrix: the SQL injection rule is accepted there and nowhere else.
+(cd "$root" && npx tsx qa/security/sql-proven.ts "$out/sql-proven.json")
+node "$root/qa/security/zap-gate.mjs" "$out/zap.json" --proven "$out/sql-proven.json"

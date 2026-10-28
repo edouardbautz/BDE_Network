@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findings, judge } from './zap-gate.mjs';
+import { findings, isProven, judge } from './zap-gate.mjs';
 import { contentSecurityPolicy } from '../../src/lib/security-headers';
 import { OWN_POLICY, cspProblems, missingEverywhere, parseCsp } from './headers';
 import { unfold } from './feeds';
@@ -242,6 +242,84 @@ describe('the verdict on a ZAP report', () => {
   it('says which accepted entries match nothing any more', () => {
     const { unused } = judge(findings(report), [{ plugin: '99999', path: '.*', reason: 'x' }]);
     expect(unused).toHaveLength(1);
+  });
+});
+
+describe('the gate accepts the SQL injection rule only where the sql suite attacked', () => {
+  const alert = (uri: string, param: string) => ({
+    pluginid: '40018',
+    name: 'SQL Injection',
+    riskcode: '3',
+    instances: [{ uri, param, method: 'POST' }],
+  });
+  const proven = {
+    pages: [
+      {
+        pattern: '^/(?:en|fr)/events/new$',
+        actions: ['events.createEvent'],
+        fields: ['title', 'location'],
+      },
+    ],
+  };
+  const accepted = [{ plugin: '40018', path: '.*', proven: 'sql', reason: 'x' }];
+  const failingOf = (...alerts: ReturnType<typeof alert>[]) =>
+    judge(findings({ site: [{ alerts: alerts }] }), accepted, proven).failing.map(
+      (row: { uri: string; param: string }) => `${row.uri} ${row.param}`,
+    );
+
+  it('accepts a field the suite attacked, on a page that holds the action', () => {
+    expect(
+      failingOf(
+        alert('http://x/en/events/new', 'title'),
+        alert('http://x/fr/events/new', 'location'),
+      ),
+    ).toEqual([]);
+  });
+
+  it('accepts the internal fields of a server action on such a page', () => {
+    expect(
+      failingOf(
+        alert('http://x/en/events/new', '$ACTION_REF_1'),
+        alert('http://x/en/events/new', '$ACTION_1:0'),
+      ),
+    ).toEqual([]);
+  });
+
+  it('fails a field no action of the page was attacked through', () => {
+    expect(failingOf(alert('http://x/en/events/new', 'repeatFreq'))).toEqual([
+      'http://x/en/events/new repeatFreq',
+    ]);
+  });
+
+  it('fails a page that holds no action that was attacked, whatever the field', () => {
+    expect(
+      failingOf(
+        alert('http://x/en/members', 'title'),
+        alert('http://x/en/members', '$ACTION_REF_1'),
+      ),
+    ).toHaveLength(2);
+  });
+
+  it('is the page and the field together: the field of another page does not do', () => {
+    expect(failingOf(alert('http://x/en/events/new/extra', 'title'))).toHaveLength(1);
+  });
+
+  it('accepts nothing when nothing was proven (no file: the entry would otherwise accept everything)', () => {
+    const rows = findings({ site: [{ alerts: [alert('http://x/en/events/new', 'title')] }] });
+    expect(judge(rows, accepted).failing).toHaveLength(1);
+    expect(isProven({ pages: [] }, '/en/events/new', 'title')).toBe(false);
+  });
+
+  it('does not let the entry accept another rule', () => {
+    const other = {
+      pluginid: '40012',
+      name: 'XSS',
+      riskcode: '3',
+      instances: [{ uri: 'http://x/en/events/new', param: 'title' }],
+    };
+    expect(judge(findings({ site: [{ alerts: [other] }] }), accepted, proven).failing).toHaveLength(
+      1,
+    );
   });
 });
 

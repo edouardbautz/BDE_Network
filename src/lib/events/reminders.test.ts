@@ -344,6 +344,18 @@ describe('runReminderTick', () => {
     expect(deliver).not.toHaveBeenCalled();
   });
 
+  it('does not send, and says nothing, for an event that was deleted since the tick read it', async () => {
+    vi.mocked(prisma.event.findMany).mockResolvedValue([event()] as never);
+    vi.mocked(prisma.eventReminder.create).mockRejectedValue(
+      Object.assign(new Error('Foreign key constraint violated'), { code: 'P2003' }),
+    );
+    await expect(runReminderTick(new Date('2026-10-09T17:00:00Z'))).resolves.toEqual({
+      claimed: 0,
+    });
+    expect(deliver).not.toHaveBeenCalled();
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
   it('does not send when the claim fails for a reason other than "already claimed"', async () => {
     vi.mocked(prisma.event.findMany).mockResolvedValue([event()] as never);
     vi.mocked(prisma.eventReminder.create).mockRejectedValue(new Error('db down'));
@@ -351,6 +363,7 @@ describe('runReminderTick', () => {
       claimed: 0,
     });
     expect(deliver).not.toHaveBeenCalled();
+    expect(console.error).toHaveBeenCalledOnce();
   });
 
   describe('when nobody is in charge to write to', () => {

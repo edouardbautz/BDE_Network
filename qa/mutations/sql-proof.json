@@ -1,0 +1,79 @@
+[
+  [
+    "sql proof: the gate accepts the rule wherever the path says, with or without proof",
+    "qa/security/zap-gate.mjs",
+    "(!entry.proven || isProven(proven, path, row.param))",
+    "true",
+    ["qa/security/detectors.test.ts"]
+  ],
+  [
+    "sql proof: a page that holds no attacked action is accepted",
+    "qa/security/zap-gate.mjs",
+    "new RegExp(page.pattern).test(path) &&",
+    "true &&",
+    ["qa/security/detectors.test.ts"]
+  ],
+  [
+    "sql proof: a field nobody attacked is accepted",
+    "qa/security/zap-gate.mjs",
+    "(String(param).startsWith('$ACTION_') || page.fields.includes(param))",
+    "true",
+    ["qa/security/detectors.test.ts"]
+  ],
+  [
+    "sql proof: the internal fields of an action are refused where something was attacked",
+    "qa/security/zap-gate.mjs",
+    "String(param).startsWith('$ACTION_') ||",
+    "false ||",
+    ["qa/security/detectors.test.ts"]
+  ],
+  [
+    "sql proof: the address of a page is not anchored at its end",
+    "qa/security/sql-targets.ts",
+    "return `^/${segments.join('/')}$`;",
+    "return `^/${segments.join('/')}`;",
+    ["qa/security/sql-targets.test.ts", "qa/security/detectors.test.ts"]
+  ],
+  [
+    "sql proof: the locale of a page is any word",
+    "qa/security/sql-targets.ts",
+    "if (segment === '[locale]') return '(?:en|fr)';",
+    "if (segment === '[locale]') return '[^/]+';",
+    ["qa/security/sql-targets.test.ts"]
+  ],
+  [
+    "sql proof: the attack replaces the first occurrence of a repeated field, not the one it names",
+    "qa/security/sql-targets.ts",
+    "if (here === head.occurrence) {",
+    "if (here === 0) {",
+    ["qa/security/sql-targets.test.ts"]
+  ],
+  [
+    "sql proof: the attack changes the arguments it was given",
+    "qa/security/sql-targets.ts",
+    "const form = new FormData();\n      for (const [field, entry] of value.entries()) form.append(field, entry);\n      form.append(head.append, replacement);\n      return form;",
+    "value.append(head.append, replacement);\n      return value;",
+    ["qa/security/sql-targets.test.ts"]
+  ],
+  [
+    "sql proof: a number or a boolean is not something a request can put text in",
+    "qa/security/sql-targets.ts",
+    "if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {",
+    "if (typeof value === 'string') {",
+    ["qa/security/sql-targets.test.ts"]
+  ],
+  [
+    "sql proof: an action with a parameter is not found",
+    "qa/access/discover.ts",
+    "found[`${owner}.${statement.name.text}`] = statement.parameters.length;",
+    "found[`${owner}.${statement.name.text}`] = 0;",
+    ["qa/security/sql-coverage.test.ts"]
+  ],
+  [
+    "sql proof: the fields a file of actions reads are not found",
+    "qa/access/discover.ts",
+    "].sort();\n    for (const match of source.matchAll(/^export async function (\\w+)/gm))\n      found[`${owner}.${match[1]}`] = fields;",
+    "].sort();\n    for (const match of source.matchAll(/^export async function (\\w+)/gm))\n      found[`${owner}.${match[1]}`] = [];",
+    ["qa/security/sql-coverage.test.ts"]
+  ]
+]

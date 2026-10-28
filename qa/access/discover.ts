@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { basename, dirname, join, relative } from 'node:path';
+import ts from 'typescript';
 import { startsWithUseServer } from './use-server';
 
 /**
@@ -58,6 +59,57 @@ export function discoverExportedActions(root = process.cwd()): string[] {
       );
     })
     .sort();
+}
+
+/**
+ * `<folder>.<action>` and the number of parameters, for every exported action, read from the declaration by TypeScript's parser (nothing is
+ * resolved: the number of parameters is a fact of the syntax). An action with a parameter is one a crafted request can send text to, and the
+ * `sql` suite must have attacked it (`sql-coverage.test.ts`).
+ */
+export function discoverActionParameters(root = process.cwd()): Record<string, number> {
+  const found: Record<string, number> = {};
+  for (const path of files(join(root, 'src')).filter(isSource)) {
+    const source = readFileSync(path, 'utf8');
+    if (!startsWithUseServer(source)) continue;
+    const file = basename(path).replace(/\.tsx?$/, '');
+    const owner = file === 'actions' ? basename(dirname(path)) : file.replace(/-actions$/, '');
+    const tree = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, false);
+    for (const statement of tree.statements) {
+      if (
+        ts.isFunctionDeclaration(statement) &&
+        statement.name &&
+        statement.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)
+      )
+        found[`${owner}.${statement.name.text}`] = statement.parameters.length;
+    }
+  }
+  return found;
+}
+
+/**
+ * The fields of a form that the actions of each file read (`formData.get('scope')`, `.getAll('assignees')`, `.has(…)`), by action: a crafted request can send any of
+ * them, whether or not the form the matrix sends holds it (the scan found `scope` and `occurrence` of the event form that way). Read per file, not per
+ * action: a field is read by a helper of the file the action calls, so every action of a file that takes a form is given all of the file's fields (more than it
+ * reads, never fewer). A field read from a form that is not named `formData`, `form` or `data` is not found.
+ */
+export function discoverActionFields(root = process.cwd()): Record<string, string[]> {
+  const found: Record<string, string[]> = {};
+  for (const path of files(join(root, 'src')).filter(isSource)) {
+    const source = readFileSync(path, 'utf8');
+    if (!startsWithUseServer(source)) continue;
+    const file = basename(path).replace(/\.tsx?$/, '');
+    const owner = file === 'actions' ? basename(dirname(path)) : file.replace(/-actions$/, '');
+    const fields = [
+      ...new Set(
+        [
+          ...source.matchAll(/\b(?:formData|form|data)\.(?:get|getAll|has)\(\s*['"]([\w.-]+)['"]/g),
+        ].map((match) => match[1] as string),
+      ),
+    ].sort();
+    for (const match of source.matchAll(/^export async function (\w+)/gm))
+      found[`${owner}.${match[1]}`] = fields;
+  }
+  return found;
 }
 
 export interface InlineAction {
