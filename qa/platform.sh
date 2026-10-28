@@ -138,9 +138,9 @@ wait_for() {
 
 case "$command" in
   up)
-    "$0" down >/dev/null 2>&1 || true
-    # (the network of a platform just taken down can still be there for a moment: the active scan of ZAP makes a second platform right after the first)
-    docker network inspect "$NETWORK" >/dev/null 2>&1 || docker network create "$NETWORK" >/dev/null
+    # (`sh`, not the file itself: it is not executable in git, and "Permission denied" hidden here left the first platform in place)
+    sh "$0" down >/dev/null 2>&1 || true
+    docker network create "$NETWORK" >/dev/null
     # The options of PostgreSQL go after the image name; none unless a suite asks for them.
     set --
     [ -n "$STATS" ] && set -- -c shared_preload_libraries=pg_stat_statements -c pg_stat_statements.track=all
@@ -209,18 +209,6 @@ case "$command" in
     ;;
   down)
     docker rm -f "$APP_CONTAINER" "$DATABASE_CONTAINER" qa-hang >/dev/null 2>&1 || true
-    # (the names are given back a moment after the command returns: the active scan of ZAP makes a second platform right after the
-    # first, and "the container name is already in use" stopped it. Waited for, so that `up` finds them free.)
-    waited=0
-    while [ "$waited" -lt 30 ]; do
-      left=0
-      for name in "$APP_CONTAINER" "$DATABASE_CONTAINER" qa-hang; do
-        if docker container inspect "$name" >/dev/null 2>&1; then left=1; docker rm -f "$name" >/dev/null 2>&1 || true; fi
-      done
-      [ "$left" = 0 ] && break
-      waited=$((waited + 1))
-      sleep 1
-    done
     docker network rm "$NETWORK" >/dev/null 2>&1 || true
     ;;
   *)

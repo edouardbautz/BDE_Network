@@ -1760,7 +1760,7 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
   with their objectives are on the Quality page of the documentation, which each step of the campaign updates.
   - **Budgets** (`qa/optim/budgets.json`, `budgets.ts` pure and tested, `qa/mutations/budgets.json`). What the campaign gained is held by numbers a change must not go
     over. The `budgets` job of `ci.yml` (part of the `docker image` check `main` requires) starts the image on the QA dataset, takes `measure.ts --only image,pages,db` (three
-    runs) and compares: the image (260 MiB), and for **every page** the statements it sends, the scripts it loads at once and its HTML, which are bytes and counts and do not depend
+    runs) and compares: the image (276 MiB of **files**: `du` of its file system, because the sum of its layers, the figure of the report, depends on the image store of the Docker that measures it and went from 246.7 to 269.6 MiB on 2026-10-28 when the runners changed theirs, with the same image), and for **every page** the statements it sends, the scripts it loads at once and its HTML, which are bytes and counts and do not depend
     on the machine. A page that has no budget fails, and so does a budget with no page: a new page brings its numbers. The `measures` workflow adds the server every night (restart
     2 s, memory at rest 160 MiB, peak under load 600 MiB, no failed request), loose because a shared runner varies by about 10 % (see "Which numbers are held tight, and which
     loose"). The numbers were set from the CI's measure of 2026-10-27, a little above it (4 % on the scripts, 10 % on the HTML); going over one is a pull request that raises it and

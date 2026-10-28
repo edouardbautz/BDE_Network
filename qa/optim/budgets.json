@@ -1,7 +1,7 @@
 {
   "_about": "Numbers a change must not go over: checked on every pull request (the budgets job of ci.yml: image, statements, scripts, HTML) and every night (measures.yml, which adds the server). Set from the measure of 2026-10-27 on the CI (qa/optim/baselines/ holds the starting point) with the room written in docs/architecture.md; raising one is a pull request that says why.",
   "image": {
-    "maxMiB": 260
+    "maxMiB": 276
   },
   "pages": {
     "login": {
