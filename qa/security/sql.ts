@@ -47,13 +47,38 @@ export const HOSTILE = [
 ];
 
 /**
- * The tables an action may write: what any case of it must change, the audit log (an action that is refused may still say so there) and, for
- * an action of the settings, the settings (that is what it is for: a name typed is a name saved).
+ * What an action writes besides what its cases say, by family of actions, and why: these are the tables it writes **as a consequence of what it does**, in
+ * some variant of the platform or with some of its fields, and not tables an injection could reach.
  */
+const ALSO_WRITTEN: [RegExp, string[], string][] = [
+  [
+    /^settings\./,
+    ['PlatformSettings'],
+    'the settings are what an action of the settings writes: a name typed is a name saved',
+  ],
+  [
+    /^events\./,
+    [
+      'EventAssignee',
+      'EventOccurrence',
+      'EventOccurrenceAssignee',
+      'EventCancellation',
+      'IntraRequest',
+    ],
+    'an event action writes the people in charge and the dates of an event, and keeps the request to publish it on the intra in line, in the same transaction (a platform that publishes there)',
+  ],
+  [
+    /^intra\./,
+    ['IntraRequest'],
+    'the answers to a request to publish on the intra are written on the request',
+  ],
+];
+
+/** The tables an action may write: what any case of it must change, the audit log (an action that is refused may still say so there), and the tables above. */
 export function writableBy(action: string): Set<string> {
   return new Set([
     'AuditLog',
-    ...(action.startsWith('settings.') ? ['PlatformSettings'] : []),
+    ...ALSO_WRITTEN.filter(([family]) => family.test(action)).flatMap(([, tables]) => tables),
     ...CASES.filter((item) => item.action === action).flatMap((item) => item.effect ?? []),
   ]);
 }
