@@ -209,6 +209,18 @@ case "$command" in
     ;;
   down)
     docker rm -f "$APP_CONTAINER" "$DATABASE_CONTAINER" qa-hang >/dev/null 2>&1 || true
+    # (the names are given back a moment after the command returns: the active scan of ZAP makes a second platform right after the
+    # first, and "the container name is already in use" stopped it. Waited for, so that `up` finds them free.)
+    waited=0
+    while [ "$waited" -lt 30 ]; do
+      left=0
+      for name in "$APP_CONTAINER" "$DATABASE_CONTAINER" qa-hang; do
+        if docker container inspect "$name" >/dev/null 2>&1; then left=1; docker rm -f "$name" >/dev/null 2>&1 || true; fi
+      done
+      [ "$left" = 0 ] && break
+      waited=$((waited + 1))
+      sleep 1
+    done
     docker network rm "$NETWORK" >/dev/null 2>&1 || true
     ;;
   *)
