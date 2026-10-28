@@ -30,8 +30,8 @@ dont le cookie est encore valide.
   page ou action fait échouer les tests de la pull request qui l'ajoute tant qu'elle n'est pas dans la liste.
 - **Attaques.** En-têtes et règles de cache de chaque sorte de réponse ; cookies de session forgés, expirés ou coupés ; une action
   appelée depuis un autre site ; 300 essais de lien de calendrier ; du texte hostile saisi dans chaque champ et relu comme le ferait
-  un navigateur ; envois de logo piégés ; déluges de mauvaises requêtes ; et les journaux, fouillés pour tout secret rencontré
-  pendant l'exécution. OWASP ZAP analyse la plateforme en marche, connecté comme propriétaire. À la demande, les attaques sont
+  un navigateur ; des conditions SQL (vraies et fausses) et des instructions saisies dans chaque champ du formulaire d'événement, qui doivent être enregistrées telles quelles et ne rien changer d'autre ; envois de logo piégés ; déluges de mauvaises requêtes ; et les journaux, fouillés pour tout secret rencontré
+  pendant l'exécution. OWASP ZAP analyse la plateforme en marche, connecté comme propriétaire (son scan actif est limité à 25 minutes). À la demande, les attaques sont
   elles-mêmes vérifiées en cassant une protection exprès et en construisant l'image, pour voir qu'elles s'en aperçoivent.
 - **Sauvegardes.** Une plateforme lancée avec `docker compose up -d`, l'horloge de la plateforme réglée à trois heures dix du matin : elle
   fait sa sauvegarde toute seule et la relit ; le propriétaire la télécharge avec une phrase de passe ; `docker compose down -v` supprime tous

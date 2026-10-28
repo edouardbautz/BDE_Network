@@ -30,8 +30,8 @@ whose cookie is still valid.
   or action fails the tests of the pull request that adds it until it is in the list.
 - **Attacks.** Headers and cache rules of every kind of answer; forged, expired and cut session cookies; an action called
   from another site; 300 guesses of a calendar link; hostile text typed into every field and read back as a browser would;
-  trapped logo uploads; floods of wrong requests; and the logs, searched for any secret met during the run. OWASP ZAP scans
-  the running platform, signed in as the owner. On demand, the attacks are themselves checked by breaking a guard on
+  SQL conditions (true and false) and statements typed into every field of the event form, which must be stored as typed and change nothing else; trapped logo uploads; floods of wrong requests; and the logs, searched for any secret met during the run. OWASP ZAP scans
+  the running platform, signed in as the owner (its active scan is limited to 25 minutes). On demand, the attacks are themselves checked by breaking a guard on
   purpose and building the image, to see that they notice.
 - **Backups.** A platform started with `docker compose up -d`, with the clock of the platform set to ten past three in the morning: it
   makes its backup by itself and reads it again; the owner downloads it with a passphrase; `docker compose down -v` removes every
