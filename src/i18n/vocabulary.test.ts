@@ -118,9 +118,10 @@ const reading = (line: string) =>
 const ACCESS_WORDS =
   /access request|demande d'accès|demandes d'accès|account|compte|awaiting approval|waiting for approval|en attente d'approbation|new members|nouveaux membres|requests? to approve/i;
 const EVENT_WORDS =
-  /event|événement|proposal|proposition|validator|validateur|propos|valide[rz]? l|to validate|à valider|draft|brouillon|role|rôle|right|droit|Submit|42 intra|intra/i;
+  /event|événement|proposal|proposition|validator|validateur|to validate|à valider|Submit|42 intra/i;
+/** What an approval is of, when it is not an event: a member, an access request, a removal. */
 const MEMBER_WORDS =
-  /member|membre|request|demande|access|accès|removal|retrait|BDE|sign|connexion/i;
+  /access request|demande d'accès|(member|membre)s? (approved|approuvé)|approved (member|by the BDE)|approuvés? par le BDE|(approve|approuver|approuvez?) (a |an |un |une |the )?(member|membre|request|demande)|approving a member|removal|retrait/i;
 
 describe('the documentation', () => {
   const documents = files(
