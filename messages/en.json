@@ -1400,6 +1400,7 @@
       "timezone": "Unknown time zone (example: Europe/Paris).",
       "address": "Invalid address. Examples: https://bde.my-school.org or http://localhost:3000.",
       "addressUnspecified": "0.0.0.0 is not a site address: it is the address the server listens on. Write http://localhost:3000 for a try-out on this computer, or your site's address (https://bde.my-school.org).",
+      "addressNoDot": "An address with no dot (like \"bde\") does not work: 42 sends people back to it and browsers do not reliably keep the sign-in cookie for such a name. Write the full name (https://bde.my-school.org) or the server's IP address (http://192.168.1.10:3000).",
       "insecure": "Tick the box to continue with an http:// address.",
       "clientId": "The UID must be at least 8 characters, with no space.",
       "clientSecret": "The SECRET must be at least 8 characters, with no space or apostrophe.",

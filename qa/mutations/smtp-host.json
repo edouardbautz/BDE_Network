@@ -30,8 +30,8 @@
   [
     "smtp host: a label of 64 characters is accepted",
     "src/lib/setup/validate.ts",
-    "{0,61}[a-z0-9])?$/;\nconst HEX",
-    "{0,70}[a-z0-9])?$/;\nconst HEX",
+    "[a-z0-9_-]{0,61}",
+    "[a-z0-9_-]{0,70}",
     ["src/lib/setup/validate.test.ts"]
   ],
   [

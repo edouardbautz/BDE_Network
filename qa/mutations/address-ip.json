@@ -1,0 +1,51 @@
+[
+  [
+    "address: the underscore of a host name is refused again",
+    "src/lib/setup/validate.ts",
+    "/^[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?$/",
+    "/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/",
+    ["src/lib/setup/validate.test.ts"]
+  ],
+  [
+    "address: a malformed IPv6 address is accepted",
+    "src/lib/setup/validate.ts",
+    "if (v6 !== undefined && !isIPv6(v6.toLowerCase())) return fail('address');",
+    "",
+    ["src/lib/setup/validate.test.ts"]
+  ],
+  [
+    "address: a bare IPv6 address takes a port",
+    "src/lib/setup/validate.ts",
+    "(match[3] !== undefined && match[5] !== undefined)",
+    "false",
+    ["src/lib/setup/validate.test.ts"]
+  ],
+  [
+    "address: an IPv6 address is not written the way a URL writes it",
+    "src/lib/setup/validate.ts",
+    "new URL('http://[' + v6 + ']').hostname",
+    "'[' + v6 + ']'",
+    ["src/lib/setup/validate.test.ts"]
+  ],
+  [
+    "address: an IPv6 address is taken for a domain (https, insecure warning)",
+    "src/lib/setup/validate.ts",
+    "v6 !== undefined || (IPV4.test(host)",
+    "(IPV4.test(host)",
+    ["src/lib/setup/validate.test.ts"]
+  ],
+  [
+    "address: a name with no dot is refused without saying why",
+    "src/lib/setup/validate.ts",
+    "HOST_LABEL.test(host) && !/^\\d+$/.test(host) ? 'addressNoDot' : 'address'",
+    "'address'",
+    ["src/lib/setup/validate.test.ts"]
+  ],
+  [
+    "address: a name with no dot is accepted",
+    "src/lib/setup/validate.ts",
+    "if (!isLocal && !isIp && !DOMAIN.test(host)) {",
+    "if (!isLocal && !isIp && !DOMAIN.test(host) && !HOST_LABEL.test(host)) {",
+    ["src/lib/setup/validate.test.ts"]
+  ]
+]
