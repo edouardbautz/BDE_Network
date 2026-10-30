@@ -285,6 +285,13 @@ describe('createDatabaseTools', () => {
         ).toBe('kept');
       });
 
+      it('goes on with the others when one cannot be copied, and leaves no partial file', () => {
+        mkdirSync(join(legacyDir, 'pre-update_20261002T000000Z_v1.0.0.sql.gz')); // not a file: cannot be copied
+        legacy('pre-update_20261014T000000Z_v1.5.0.sql.gz');
+        expect(withLegacy().importLegacy()).toEqual(['pre-update_20261014T000000Z_v1.5.0.sql.gz']);
+        expect(readdirSync(backupsDir)).toEqual(['pre-update_20261014T000000Z_v1.5.0.sql.gz']);
+      });
+
       it('leaves no partial file and does not stop the start when the old volume is absent or empty', () => {
         expect(
           tools(fakeSpawn(() => ({})).spawn, { legacyDir: join(dir, 'none') }).importLegacy(),

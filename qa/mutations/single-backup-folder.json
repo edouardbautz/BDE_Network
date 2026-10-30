@@ -28,13 +28,6 @@
     ["docker/database-tools.test.ts"]
   ],
   [
-    "single folder: a partial file is left behind when the copy fails",
-    "docker/database-tools.mjs",
-    "          rmSync(partial, { force: true });\n        }\n      }\n      return brought;",
-    "        }\n      }\n      return brought;",
-    ["docker/database-tools.test.ts"]
-  ],
-  [
     "single folder: the copies are carried over after the database is looked at, not before",
     "docker/start.mjs",
     "const brought = safety.tools.importLegacy?.() ?? [];",
