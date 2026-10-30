@@ -2049,6 +2049,14 @@ specification): **`docs/design.md`**. Read it before touching layout or adding U
   operations scripts (`scripts/backup.sh`, `restore.sh`): the server only has Docker, so they are
   POSIX `sh` (kept `shellcheck -s sh` clean, run from Git Bash/WSL on Windows, `MSYS_NO_PATHCONV=1`
   inside because Git Bash rewrites `/app/...` arguments).
+- **Writing texts: write the character, never its code.** Put `'`, `é`, `«`, `…`, `—` directly in the file; never type
+  `’` (or `é`, `…`…) in a text that is displayed. Written through a terminal, a here-document or a script
+  that builds a file, the backslash (and sometimes the `u`) is lost and the code stays in the text: "d'une" became
+  "d2019une" in a message of the notification editor. Edit texts with the editor tools (Edit, Write), not with `sed`,
+  `echo` or a here-document; if a script must write one, it reads the character from a file or uses `String.raw`, and the
+  result is read again. `src/i18n/broken-escapes.test.ts` fails on a word with such a code stuck inside it, and on an
+  escape written as text, in the catalogs, the documentation, the references of the notifications and the sources
+  (`qa/mutations/broken-escapes.json`); the apostrophe of a French text is the plain `'` like the rest of the catalog.
 - All user-facing strings go through next-intl (`messages/fr.json` + `en.json`) — no hardcoded
   UI text in components.
 - **Every page has its own title** (WCAG 2.4.2): `export const generateMetadata = pageTitle('namespace', 'key');`
