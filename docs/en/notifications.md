@@ -386,7 +386,8 @@ Windows, dark mode for Apple Mail, Gmail and Outlook, and a small-screen layout.
 ### Setting up email
 
 In **Settings** → **Notifications** → **E-mail**, enter the SMTP server (server, port, username and password if
-needed) and the sender address. The password is encrypted and never shown again. Use the test message.
+needed). The server is a name or an address only, without `smtp://` or a port (the port has its own field):
+`smtp.my-school.org`, a name with no dot such as `mailpit`, `localhost`, or an IPv4 or IPv6 address and the sender address. The password is encrypted and never shown again. Use the test message.
 
 ## A problem?
 

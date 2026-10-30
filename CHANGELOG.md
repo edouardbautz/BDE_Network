@@ -95,6 +95,10 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Fixed
 
+- **The mail server field accepts any valid host name.** The installer and Settings → Notifications → E-mail refused a name with no dot such as `mailpit` or `postfix`, which is
+  what a self-hosted mail server is often called on a Docker or school network. The field now takes any host name of RFC 1123 (a single word included), `localhost`, and IPv4 and IPv6
+  addresses (with or without brackets), and still refuses a scheme (`smtp://`), a path, a port stuck to the name and spaces, with a message that says what to remove.
+
 - **The resilience check of the webhook no longer depends on the time of day.** Run after the reminder hour, the platform found the reminders of the next day due and sent
   them one after the other to the webhook that never answers, so a connection was always open and "gives up within a minute" failed. The platform of that job is made at the
   clock of the dataset, like the visual references.
