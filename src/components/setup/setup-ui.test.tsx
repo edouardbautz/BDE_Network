@@ -313,10 +313,15 @@ describe('the wizard', () => {
       );
     });
 
-    it('asks 42, with the secret in a password field', async () => {
+    it('asks 42, with the secret in a masked field that no password manager takes for a login', async () => {
       mocks.verifyFortyTwo.mockResolvedValue({ ok: true });
       open();
-      expect(screen.getByLabelText('SECRET (clé secrète)')).toHaveAttribute('type', 'password');
+      const secret = screen.getByLabelText('SECRET (clé secrète)');
+      // not a password field: nothing to fill, nothing to offer to save
+      expect(secret).toHaveAttribute('type', 'text');
+      expect(secret).toHaveAttribute('autocomplete', 'off');
+      expect(secret).toHaveAttribute('data-1p-ignore', 'true');
+      expect(secret.className).toContain('text-security');
       type('UID (identifiant)', 'u-s4t2ud-uid-abcdef');
       type('SECRET (clé secrète)', 's-s4t2ud-secret-abcdef');
       click('Vérifier avec 42');
@@ -364,11 +369,18 @@ describe('the wizard', () => {
           step: 2,
           clientId: 'u-s4t2ud-uid-abcdef',
           hasClientSecret: true,
+          clientSecretTail: 'a1b2',
           credentialsVerified: true,
         }),
       );
+      // no field at all, so nothing a browser can fill: the page says it is there, and how it ends
+      expect(screen.queryByRole('textbox', { name: 'SECRET (clé secrète)' })).toBeNull();
+      expect(screen.getByRole('group', { name: 'SECRET (clé secrète)' })).toHaveTextContent(
+        'Configuré · se termine par …a1b2',
+      );
+      // "Replace" opens an empty field
+      click('Remplacer : SECRET (clé secrète)');
       expect(screen.getByLabelText('SECRET (clé secrète)')).toHaveValue('');
-      expect(screen.getByText(/déjà enregistrée/)).toBeInTheDocument();
       expect(screen.getByText('42 a accepté ces identifiants.')).toBeInTheDocument();
     });
   });

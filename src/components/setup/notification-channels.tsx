@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { NO_AUTOFILL, SecretField } from '@/components/secret-field';
 import type { ActionFailure } from '@/app/[locale]/setup/actions';
 import type { NotificationChannel } from '@/config/schema';
 import { Field, fieldError, useFailureText } from './fields';
@@ -53,6 +54,7 @@ export function ChannelPanel({
   onUndoRemove,
   children,
   testToField,
+  removeInside = false,
 }: {
   channel: NotificationChannel;
   state: ChannelState;
@@ -64,6 +66,8 @@ export function ChannelPanel({
   children: ReactNode;
   /** E-mail only: where the test is sent. */
   testToField?: ReactNode;
+  /** The field of the channel has its own "Remove" (a webhook): the panel does not offer a second one. */
+  removeInside?: boolean;
 }) {
   const t = useTranslations('setup.notifications');
   const text = useFailureText();
@@ -112,7 +116,8 @@ export function ChannelPanel({
             {t('undoRemoval', { channel: name })}
           </Button>
         ) : (
-          state.saved && (
+          state.saved &&
+          !removeInside && (
             <Button type="button" variant="ghost" size="sm" onClick={onRemove}>
               {t('removeChannel', { channel: name })}
             </Button>
@@ -134,18 +139,23 @@ export function ChannelPanel({
   );
 }
 
-/** A webhook address: typed here, never shown back. */
+/** A webhook address: typed here when there is none or to replace it, never shown back (saved, it says "Configured" and how it ends). */
 export function WebhookField({
   channel,
   value,
   onChange,
   saved,
+  tail,
+  onRemove,
   failure,
 }: {
   channel: 'discord' | 'slack';
   value: string;
   onChange: (value: string) => void;
   saved: boolean;
+  tail?: string | null;
+  /** Marks the channel for removal (nothing is forgotten before the Save button). */
+  onRemove?: () => void;
   failure: ActionFailure | null;
 }) {
   const t = useTranslations('setup.notifications');
@@ -153,23 +163,19 @@ export function WebhookField({
   const field = channel === 'discord' ? 'discordWebhook' : 'slackWebhook';
   const id = `setup-${channel}`;
   return (
-    <Field
+    <SecretField
       id={id}
       label={t(`${channel}Label`)}
-      hint={saved ? t('webhookKept') : t(`${channel}Help`)}
+      saved={saved}
+      tail={tail}
+      value={value}
+      onChange={onChange}
+      hint={t(`${channel}Help`)}
       error={fieldError(failure, field, text)}
-    >
-      <Input
-        id={id}
-        type="password"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        autoComplete="off"
-        spellCheck={false}
-        className="bg-surface font-mono text-small"
-        aria-invalid={failure?.field === field}
-      />
-    </Field>
+      invalid={failure?.field === field}
+      onRemove={onRemove}
+      removeLabel={t(`removeChannel`, { channel: t(`channelNames.${channel}`) })}
+    />
   );
 }
 
@@ -196,7 +202,7 @@ export function SmtpFields({
           id="setup-smtp-host"
           value={value.host}
           onChange={(event) => onChange({ ...value, host: event.target.value })}
-          autoComplete="off"
+          {...NO_AUTOFILL}
           aria-invalid={failure?.field === 'smtpHost'}
         />
       </Field>
@@ -207,7 +213,7 @@ export function SmtpFields({
           value={value.port}
           onChange={(event) => onChange({ ...value, port: event.target.value })}
           inputMode="numeric"
-          autoComplete="off"
+          {...NO_AUTOFILL}
           aria-invalid={failure?.field === 'smtpPort'}
         />
       </Field>
@@ -217,35 +223,28 @@ export function SmtpFields({
           id="setup-smtp-user"
           value={value.user}
           onChange={(event) => onChange({ ...value, user: event.target.value })}
-          autoComplete="off"
+          {...NO_AUTOFILL}
           aria-invalid={failure?.field === 'smtpUser'}
         />
       </Field>
-      <Field
+      <SecretField
         id="setup-smtp-password"
         label={t('smtpPassword')}
-        hint={hasPassword ? t('passwordKept') : undefined}
+        saved={hasPassword}
+        value={value.password}
+        onChange={(password) => onChange({ ...value, password })}
         error={fieldText('smtpPassword')}
-      >
-        <Input
-          className="bg-surface"
-          id="setup-smtp-password"
-          type="password"
-          value={value.password}
-          onChange={(event) => onChange({ ...value, password: event.target.value })}
-          autoComplete="off"
-          aria-invalid={failure?.field === 'smtpPassword'}
-        />
-      </Field>
+        invalid={failure?.field === 'smtpPassword'}
+      />
       <div className="sm:col-span-2">
         <Field id="setup-smtp-from" label={t('smtpFrom')} error={fieldText('smtpFrom')}>
           <Input
             className="bg-surface"
             id="setup-smtp-from"
-            type="email"
+            inputMode="email"
             value={value.from}
             onChange={(event) => onChange({ ...value, from: event.target.value })}
-            autoComplete="off"
+            {...NO_AUTOFILL}
             aria-invalid={failure?.field === 'smtpFrom'}
           />
         </Field>

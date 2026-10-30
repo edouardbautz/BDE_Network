@@ -40,11 +40,15 @@ describe('StaffChannelSection', () => {
   });
 
   it('never shows a saved address: it says there is one, and a test goes to it', async () => {
-    render(<StaffChannelSection settings={{ hasDiscordWebhook: true, hasSlackWebhook: false }} />);
-    const field = screen.getByLabelText('discord');
-    expect(field).toHaveValue('');
-    expect(field).toHaveAttribute('type', 'password');
-    expect(field).toHaveAttribute('placeholder', 'savedPlaceholder');
+    render(
+      <StaffChannelSection
+        settings={{ hasDiscordWebhook: true, hasSlackWebhook: false, discordWebhookTail: 'a1b2' }}
+      />,
+    );
+    // no field, so nothing a browser can fill: only that there is one, and how it ends
+    expect(screen.queryByRole('textbox', { name: 'discord' })).toBeNull();
+    expect(screen.queryByDisplayValue(/./)).toBeNull();
+    expect(screen.getByRole('group', { name: 'discord' })).toHaveTextContent('configuredTail');
 
     const [discordTest] = screen.getAllByRole('button', { name: 'test' });
     fireEvent.click(discordTest!);

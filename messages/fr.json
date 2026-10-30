@@ -1198,7 +1198,6 @@
       "redirectCopy": "Adresse de redirection",
       "uidLabel": "UID (identifiant)",
       "secretLabel": "SECRET (clé secrète)",
-      "secretKept": "Clé déjà enregistrée : laissez vide pour la garder.",
       "verify": "Vérifier avec 42",
       "verifying": "Vérification…",
       "verified": "42 a accepté ces identifiants.",
@@ -1272,13 +1271,11 @@
       "discordHelp": "Dans Discord : Paramètres du salon, Intégrations, Webhooks, Nouveau webhook, puis « Copier l'URL du webhook ».",
       "slackLabel": "Adresse du webhook Slack",
       "slackHelp": "Créez une application Slack, activez les « Incoming Webhooks » et copiez l'adresse du webhook (voir la documentation des notifications).",
-      "webhookKept": "Adresse déjà enregistrée : laissez vide pour la garder.",
       "smtpHost": "Serveur SMTP",
       "smtpPort": "Port",
       "smtpUser": "Identifiant (facultatif)",
       "smtpPassword": "Mot de passe (facultatif)",
       "smtpFrom": "Adresse d'expéditeur",
-      "passwordKept": "Mot de passe déjà enregistré : laissez vide pour le garder.",
       "testTo": "Envoyer le test à",
       "testButton": "Envoyer un test sur {channel}",
       "testing": "Envoi…",
@@ -1652,10 +1649,8 @@
       "description": "Le staff de l'école n'est pas forcément sur le Discord ou le Slack du BDE. Un salon à lui, avec son propre webhook, reçoit les messages sur la publication des événements sur l'intra. Sans webhook, ces messages vont sur le salon du BDE (avec les mentions).",
       "discord": "Adresse du webhook Discord du staff",
       "slack": "Adresse du webhook Slack du staff",
-      "savedHint": "Une adresse est enregistrée. Laissez vide pour la garder, ou collez-en une autre pour la remplacer.",
       "emptyHint": "Aucune adresse : les messages iront sur le salon du BDE.",
       "willRemove": "L'adresse sera retirée à l'enregistrement.",
-      "savedPlaceholder": "Adresse enregistrée (non affichée)",
       "test": "Envoyer un message de test ({channel})",
       "testSent": "Message de test envoyé.",
       "remove": "Retirer {channel}",
@@ -2121,5 +2116,16 @@
       "unknown": "Une erreur est survenue. Réessayer dans un instant.",
       "mentionNotForType": "Cette mention est réservée aux messages au staff sur l'intra."
     }
+  },
+  "secretField": {
+    "configured": "Configuré",
+    "configuredTail": "Configuré · se termine par …{tail}",
+    "replace": "Remplacer",
+    "replaceLabel": "Remplacer : {label}",
+    "keep": "Annuler",
+    "keepLabel": "Annuler le remplacement : {label}",
+    "remove": "Retirer",
+    "removeLabel": "Retirer : {label}",
+    "leaveEmpty": "Laissez vide pour garder celui qui est enregistré."
   }
 }

@@ -105,6 +105,22 @@ Une personne retirée de la liste devient un membre avec le **rôle par défaut*
   secrets, comme celles du BDE : elles ne sont jamais réaffichées, un champ vide garde l'adresse enregistrée, et elles sont conservées
   chiffrées dans les réglages.
 
+### Comment un secret est affiché
+
+Le secret de l'application 42, les webhooks Discord et Slack (ceux du BDE et ceux du staff) et le mot de passe du serveur e-mail sont des
+**secrets**. La plateforme les garde chiffrés et **ne renvoie jamais un secret au navigateur**. Un secret enregistré n'est pas un champ : la page
+dit **Configuré** et, pour un secret long (une adresse, un secret de 42), **comment il se termine** (« Configuré · se termine par …a1b2 » :
+quatre caractères, de quoi reconnaître lequel c'est ; le mot de passe e-mail, choisi par une personne, n'a pas de fin affichée). Deux boutons :
+**Remplacer** ouvre un champ **vide**, pour taper le nouveau (**Annuler** le referme et garde l'enregistré) et **Retirer** l'enlève (rien n'est
+oublié avant **Enregistrer**).
+
+- **Un champ vide n'efface jamais rien.** Ouvert avec **Remplacer** et laissé vide, puis **Enregistrer** : le secret enregistré reste.
+- **Le test utilise le secret enregistré** tant que vous n'en avez pas tapé un nouveau : « Envoyer un test » marche sur un canal déjà configuré.
+- **Aucun navigateur ni gestionnaire de mots de passe ne les remplit.** Ces champs ne sont pas de type « mot de passe » (un champ texte dessiné
+  en points) et disent aux gestionnaires (Chrome, Firefox, Safari, Edge, 1Password, Bitwarden, LastPass, Dashlane) de les laisser tranquilles :
+  aucun mot de passe enregistré pour un autre site n'y est mis, et rien n'est proposé à l'enregistrement. C'est pareil pour l'identifiant du
+  serveur e-mail et celui de l'application 42. Si un champ est quand même rempli par une extension, dites-nous lequel.
+
 ### Les notifications
 
 Dans Paramètres, chaque canal (Discord, Slack, e-mail) se configure dans son panneau, avec son message de test, puis

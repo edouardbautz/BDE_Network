@@ -108,6 +108,12 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Fixed
 
+- **Browsers and password managers no longer fill the secrets of the notification channels, and a saved secret is shown as such.** On a new installation a browser filled the user of the
+  mail server with an address of another site and put a saved password in the Discord webhook field (a field of the type "password"), and "Send a test" then sent that password as the
+  address. No field of the platform is of the type "password" any more: the secrets are typed in a masked text field that tells Chrome, Firefox, Safari, Edge and the password managers to
+  leave it alone, and so are the identifiers of a service (the mail user, the UID of 42). A saved secret is no longer a field: the page says **Configured · ends with …a1b2** (the end, when the
+  secret is long; never for a mail password), with **Replace** (an empty field), **Cancel** and **Remove**, in the installer and in Settings (the 42 application, the webhooks of the BDE and
+  of the staff, the mail password). An empty field never erases a saved secret, and the test uses the saved one until a new one is typed. The passphrase of a backup download follows.
 - **One word per thing: an access request is approved, a proposal of an event is validated.** The French interface called the section of the requests "En attente de validation"
   (and the waiting page, the hint of the notification of a request and a message of the event form said the same); it is now "En attente d'approbation", as the English already was.
   The other way round, the answer to a proposal of an event said "approve" (the button, the dialog, the notification "Proposal approved", the cards and e-mails of Discord, Slack and

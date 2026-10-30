@@ -55,6 +55,38 @@ describe('buildInstallation', () => {
     });
   });
 
+  it('shows the browser how a secret ends, never the secret (the view of the installer)', () => {
+    const view = toView(
+      {
+        ...complete(),
+        notifications: {
+          matrix: emptyMatrix(),
+          discordWebhook: 'https://discord.com/api/webhooks/123456789/abcdefghijklmnop-a1b2',
+          smtp: {
+            host: 'smtp.exemple.fr',
+            port: 587,
+            user: 'bde',
+            password: 'a-password-a-person-chose',
+            from: 'bde@exemple.fr',
+          },
+        },
+      },
+      { addressUrl: '' },
+    );
+    expect(view.clientSecretTail).toBe('cdef');
+    expect(view.notifications.discordWebhookTail).toBe('a1b2');
+    expect(view.notifications.slackWebhookTail).toBeNull();
+    const text = JSON.stringify(view);
+    for (const secret of [
+      's-s4t2ud-secret-abcdef',
+      'abcdefghijklmnop',
+      'a-password-a-person-chose',
+      'person-chose',
+    ]) {
+      expect(text).not.toContain(secret);
+    }
+  });
+
   it('carries the contact address when there is one, and none otherwise', () => {
     const without = buildInstallation(complete(), ENV);
     if (!without.ok) throw new Error(without.reason);

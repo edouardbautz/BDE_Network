@@ -4,6 +4,7 @@ import { logoVersionOf } from '@/lib/branding/storage';
 import { prisma } from '@/lib/prisma';
 import type { DraftView } from '@/lib/setup/draft';
 import { setting } from './runtime';
+import { secretTail } from './secret-tail';
 import { settingsMatrix } from './update';
 
 /**
@@ -21,6 +22,7 @@ export function settingsView(): DraftView {
     addressUrl: setting('APP_URL') ?? '',
     clientId: setting('FORTYTWO_CLIENT_ID') ?? '',
     hasClientSecret: Boolean(setting('FORTYTWO_CLIENT_SECRET')),
+    clientSecretTail: secretTail(setting('FORTYTWO_CLIENT_SECRET')),
     credentialsVerified: false,
     credentialsSkipped: false,
     campuses: config.auth.allowedCampuses,
@@ -33,6 +35,8 @@ export function settingsView(): DraftView {
       matrix: settingsMatrix(config),
       hasDiscordWebhook: Boolean(setting('DISCORD_WEBHOOK_URL')),
       hasSlackWebhook: Boolean(setting('SLACK_WEBHOOK_URL')),
+      discordWebhookTail: secretTail(setting('DISCORD_WEBHOOK_URL')),
+      slackWebhookTail: secretTail(setting('SLACK_WEBHOOK_URL')),
       hasSmtp: Boolean(setting('SMTP_HOST') && setting('SMTP_PORT') && setting('SMTP_FROM')),
       smtp: {
         host: setting('SMTP_HOST') ?? '',
@@ -53,7 +57,12 @@ export interface EventsSettingsView {
   /** Whether the events are published on the intra by the school's staff. */
   intraPublication: boolean;
   /** The room of the school's staff: whether an address is saved (never the address). */
-  staffChannel: { hasDiscordWebhook: boolean; hasSlackWebhook: boolean };
+  staffChannel: {
+    hasDiscordWebhook: boolean;
+    hasSlackWebhook: boolean;
+    discordWebhookTail?: string | null;
+    slackWebhookTail?: string | null;
+  };
   timezone: string;
 }
 
@@ -86,6 +95,8 @@ export async function settingsExtras(): Promise<SettingsExtras> {
       staffChannel: {
         hasDiscordWebhook: Boolean(setting('DISCORD_STAFF_WEBHOOK_URL')),
         hasSlackWebhook: Boolean(setting('SLACK_STAFF_WEBHOOK_URL')),
+        discordWebhookTail: secretTail(setting('DISCORD_STAFF_WEBHOOK_URL')),
+        slackWebhookTail: secretTail(setting('SLACK_STAFF_WEBHOOK_URL')),
       },
       timezone: config.bde.timezone,
     },

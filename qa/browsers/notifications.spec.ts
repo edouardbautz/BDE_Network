@@ -87,8 +87,13 @@ test.describe('the table of notifications', () => {
       await expect(
         page.getByRole('checkbox', { name: 'Event reminder — Slack' }),
       ).not.toBeChecked();
-      // an address saved is never shown back, only that there is one
-      await expect(page.getByText('Address already saved: leave blank to keep it.')).toHaveCount(2);
+      // an address saved is never shown back, only that there is one and how it ends (secrets.spec.ts plays the rest)
+      await expect(page.getByRole('group', { name: 'Discord webhook address' })).toContainText(
+        'Configured · ends with …cret',
+      );
+      await expect(page.getByRole('group', { name: 'Slack webhook address' })).toContainText(
+        'Configured',
+      );
       expect(await page.locator('body').innerText()).not.toContain('qa-browsers-secret');
     } finally {
       await leaveNoChannel(page);

@@ -122,7 +122,9 @@ describe('a channel has to be set up before it can be ticked', () => {
     renderStep(draft({ hasSlackWebhook: true }));
     expect(box('Événement confirmé', 'Slack')).toBeEnabled();
     const panel = screen.getByRole('region', { name: 'Slack' });
-    expect(within(panel).getByText('Configuré')).toBeInTheDocument();
+    // the badge of the panel, and the address itself, which is not shown
+    expect(within(panel).getAllByText('Configuré')).toHaveLength(2);
+    expect(within(panel).queryByRole('textbox', { name: 'Adresse du webhook Slack' })).toBeNull();
   });
 
   it('the mail server needs its host and its sender', () => {

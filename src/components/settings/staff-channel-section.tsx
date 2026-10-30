@@ -5,8 +5,8 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Undo2, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Field, fieldError, useFailureText } from '@/components/setup/fields';
+import { SecretField } from '@/components/secret-field';
+import { fieldError, useFailureText } from '@/components/setup/fields';
 import { saveStaffChannel, testStaffChannel } from '@/app/[locale]/(app)/settings/actions';
 import type { ActionFailure } from '@/app/[locale]/setup/actions';
 import type { EventsSettingsView } from '@/lib/settings/view';
@@ -38,6 +38,10 @@ export function StaffChannelSection({
     null,
   );
   const [pending, start] = useTransition();
+  const tails: Record<Channel, string | null | undefined> = {
+    discord: settings.discordWebhookTail,
+    slack: settings.slackWebhookTail,
+  };
   const saved: Record<Channel, boolean> = {
     discord: settings.hasDiscordWebhook,
     slack: settings.hasSlackWebhook,
@@ -92,28 +96,24 @@ export function StaffChannelSection({
           const isRemoving = removing[channel];
           return (
             <div key={channel} className="flex flex-col gap-2">
-              <Field
+              <SecretField
                 id={id}
                 label={labels[channel]}
-                hint={
-                  isRemoving ? t('willRemove') : saved[channel] ? t('savedHint') : t('emptyHint')
-                }
+                saved={saved[channel] && !isRemoving}
+                tail={tails[channel]}
+                value={typed[channel]}
+                onChange={(value) => setTyped((current) => ({ ...current, [channel]: value }))}
+                hint={isRemoving ? t('willRemove') : saved[channel] ? undefined : t('emptyHint')}
                 error={fieldError(failure, field, text)}
-              >
-                <Input
-                  id={id}
-                  type="password"
-                  value={typed[channel]}
-                  onChange={(event) =>
-                    setTyped((current) => ({ ...current, [channel]: event.target.value }))
-                  }
-                  disabled={isRemoving}
-                  placeholder={saved[channel] ? t('savedPlaceholder') : 'https://…'}
-                  autoComplete="off"
-                  spellCheck={false}
-                  aria-describedby={`${id}-hint`}
-                />
-              </Field>
+                invalid={failure?.field === field}
+                disabled={isRemoving}
+                placeholder="https://…"
+                onRemove={() => {
+                  setRemoving((current) => ({ ...current, [channel]: true }));
+                  setTyped((current) => ({ ...current, [channel]: '' }));
+                }}
+                removeLabel={t('remove', { channel: labels[channel] })}
+              />
               <div className="flex flex-wrap items-center gap-2">
                 <Button
                   type="button"
@@ -125,30 +125,17 @@ export function StaffChannelSection({
                   <Send data-icon="inline-start" aria-hidden="true" />
                   {t('test', { channel: labels[channel] })}
                 </Button>
-                {saved[channel] &&
-                  (isRemoving ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setRemoving((current) => ({ ...current, [channel]: false }))}
-                    >
-                      <Undo2 data-icon="inline-start" aria-hidden="true" />
-                      {t('keep', { channel: labels[channel] })}
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setRemoving((current) => ({ ...current, [channel]: true }));
-                        setTyped((current) => ({ ...current, [channel]: '' }));
-                      }}
-                    >
-                      {t('remove', { channel: labels[channel] })}
-                    </Button>
-                  ))}
+                {saved[channel] && isRemoving && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setRemoving((current) => ({ ...current, [channel]: false }))}
+                  >
+                    <Undo2 data-icon="inline-start" aria-hidden="true" />
+                    {t('keep', { channel: labels[channel] })}
+                  </Button>
+                )}
                 {tested?.channel === channel && (
                   <p
                     role="status"

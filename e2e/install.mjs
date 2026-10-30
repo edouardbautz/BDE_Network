@@ -134,6 +134,25 @@ try {
   // 3. the 42 application: a wrong pair first
   await page.type('#setup-uid', CLIENT_ID);
   await page.type('#setup-secret', 's-s4t2ud-not-the-right-secret');
+  // a secret is typed in a field that is not of the type password, which tells the managers to leave it alone: there is no login on the
+  // page for a browser to fill or to offer to save (the user of the mail server was filled, and a saved password put in a webhook)
+  if (await page.$('input[type="password"]'))
+    fail('a field of the installer is of the type password');
+  const secretField = await page.$eval('#setup-secret', (el) => ({
+    type: el.type,
+    off: el.autocomplete,
+    ignore: el.dataset['1pIgnore'],
+    dots: getComputedStyle(el).getPropertyValue('-webkit-text-security'),
+  }));
+  if (
+    secretField.type !== 'text' ||
+    secretField.off !== 'off' ||
+    secretField.ignore !== 'true' ||
+    secretField.dots !== 'disc'
+  )
+    fail(
+      `the secret of the 42 application is not an unmanaged masked field: ${JSON.stringify(secretField)}`,
+    );
   await clickButton('Vérifier avec 42');
   await waitText('42 refuse ces identifiants');
   await shot('42-refused');
@@ -181,6 +200,16 @@ try {
     page.$$eval('input[type="checkbox"]:not(:disabled)', (boxes) => boxes.length);
   if ((await enabled()) !== 0) fail('a box can be ticked before any channel is set up');
   await page.type('#setup-discord', WEBHOOK);
+  if (await page.$('input[type="password"]'))
+    fail('a field of the notifications is of the type password');
+  for (const id of ['#setup-discord', '#setup-slack', '#setup-smtp-user', '#setup-smtp-password']) {
+    const unmanaged = await page.$eval(
+      id,
+      (el) =>
+        el.type !== 'password' && el.autocomplete === 'off' && el.dataset['1pIgnore'] === 'true',
+    );
+    if (!unmanaged) fail(`${id} can be filled or saved by a password manager`);
+  }
   if ((await enabled()) !== 10)
     fail(`${await enabled()} boxes can be ticked with Discord set up, not 10`);
   await clickButton('Discord : tout cocher');

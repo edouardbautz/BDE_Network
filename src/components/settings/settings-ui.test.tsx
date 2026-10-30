@@ -164,8 +164,12 @@ describe('the sections', () => {
 
   it('never have the 42 secret, only say it is there', () => {
     renderPanels();
+    expect(screen.queryByRole('textbox', { name: 'SECRET (clé secrète)' })).toBeNull();
+    expect(screen.getByRole('group', { name: 'SECRET (clé secrète)' })).toHaveTextContent(
+      'Configuré',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Remplacer : SECRET (clé secrète)' }));
     expect(screen.getByLabelText('SECRET (clé secrète)')).toHaveValue('');
-    expect(screen.getByText(/déjà enregistrée/)).toBeInTheDocument();
   });
 
   it('save one section, and say so', async () => {
@@ -204,6 +208,8 @@ describe('the sections', () => {
     expect(guide).not.toBeNull();
     expect(guide).not.toHaveAttribute('open');
 
+    // a saved secret is not a field until it is replaced
+    fireEvent.click(screen.getByRole('button', { name: 'Remplacer : SECRET (clé secrète)' }));
     fireEvent.change(screen.getByLabelText('SECRET (clé secrète)'), {
       target: { value: 's-s4t2ud-wrong-secret' },
     });

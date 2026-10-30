@@ -16,7 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+import { MaskedInput } from '@/components/secret-field';
 import { Label } from '@/components/ui/label';
 import { passphraseProblem } from '@/lib/backups/passphrase';
 
@@ -116,11 +116,9 @@ export function BackupDownload({ name, dateLabel }: { name: string; dateLabel: s
             <p id={`${id}-hint`} className="text-small text-muted-foreground">
               {t('passphraseHint')}
             </p>
-            <Input
+            <MaskedInput
               id={`${id}-passphrase`}
               ref={firstField}
-              type="password"
-              autoComplete="new-password"
               value={passphrase}
               onChange={(event) => setPassphrase(event.target.value)}
               aria-describedby={`${id}-hint`}
@@ -130,10 +128,8 @@ export function BackupDownload({ name, dateLabel }: { name: string; dateLabel: s
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={`${id}-again`}>{t('confirm')}</Label>
-            <Input
+            <MaskedInput
               id={`${id}-again`}
-              type="password"
-              autoComplete="new-password"
               value={again}
               onChange={(event) => setAgain(event.target.value)}
               aria-invalid={error === 'mismatch' || undefined}
