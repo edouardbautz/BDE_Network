@@ -14,11 +14,11 @@ plateforme fait avant une mise à jour, sont dans [Déploiement](deployment.md#s
 
 Toutes les copies que fait la plateforme sont dans **un seul dossier du serveur**, `backups/auto/` (`BDE_BACKUP_DIR`), que `docker compose down -v` ne touche pas :
 
-| Quoi | Où | Survit à `down -v` ? |
-| --- | --- | --- |
-| **Les sauvegardes de la nuit** (cette page) | `backups/auto/` , `bde-auto-<date>.tar.gz` | **Oui** |
-| La copie faite **avant une mise à jour** | `backups/auto/pre-update/` , `pre-update_<date>_v<version>.sql.gz`, les cinq dernières | **Oui** |
-| Ce que **vous** faites avec `scripts/backup.sh` | `backups/` à côté de `docker-compose.yml` (là où vous avez lancé le script) | Oui |
+| Quoi                                            | Où                                                                                     | Survit à `down -v` ? |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------- |
+| **Les sauvegardes de la nuit** (cette page)     | `backups/auto/` , `bde-auto-<date>.tar.gz`                                             | **Oui**              |
+| La copie faite **avant une mise à jour**        | `backups/auto/pre-update/` , `pre-update_<date>_v<version>.sql.gz`, les cinq dernières | **Oui**              |
+| Ce que **vous** faites avec `scripts/backup.sh` | `backups/` à côté de `docker-compose.yml` (là où vous avez lancé le script)            | Oui                  |
 
 La plateforme voit le dossier comme `/auto-backups`. `backups/` et `backups/auto/` sont deux dossiers différents : la plateforme ne lit
 que `backups/auto/`.
@@ -27,6 +27,7 @@ que `backups/auto/`.
 > premier démarrage de la nouvelle version, la plateforme **les reprend toute seule dans `backups/auto/pre-update/`** (rien n'est
 > supprimé du volume, monté en lecture seule). Quand vous les voyez dans le dossier, l'ancien volume ne sert plus : `docker volume ls`,
 > puis `docker volume rm <projet>_backups` (il est vide sur une nouvelle installation, et sans danger si vous le laissez).
+
 ## Ce qui se passe chaque nuit
 
 1. À 3 h dans le fuseau horaire de votre BDE (`bde.timezone`), la plateforme exporte sa base de données, prend les clés

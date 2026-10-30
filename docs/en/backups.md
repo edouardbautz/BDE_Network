@@ -14,11 +14,11 @@ makes before an update, are in [Deployment](deployment.md#backups-and-restore).
 
 Every copy the platform makes is in **one folder of the server**, `backups/auto/` (`BDE_BACKUP_DIR`), which `docker compose down -v` does not touch:
 
-| What | Where | Survives `down -v`? |
-| --- | --- | --- |
-| **The nightly backups** (this page) | `backups/auto/` , `bde-auto-<date>.tar.gz` | **Yes** |
-| The copy made **before an update** | `backups/auto/pre-update/` , `pre-update_<date>_v<version>.sql.gz`, the five newest | **Yes** |
-| What **you** make with `scripts/backup.sh` | `backups/` next to `docker-compose.yml` (where you ran the script) | Yes |
+| What                                       | Where                                                                               | Survives `down -v`? |
+| ------------------------------------------ | ----------------------------------------------------------------------------------- | ------------------- |
+| **The nightly backups** (this page)        | `backups/auto/` , `bde-auto-<date>.tar.gz`                                          | **Yes**             |
+| The copy made **before an update**         | `backups/auto/pre-update/` , `pre-update_<date>_v<version>.sql.gz`, the five newest | **Yes**             |
+| What **you** make with `scripts/backup.sh` | `backups/` next to `docker-compose.yml` (where you ran the script)                  | Yes                 |
 
 The platform sees the folder as `/auto-backups`. `backups/` and `backups/auto/` are two different folders: the platform only reads
 `backups/auto/`.
@@ -27,6 +27,7 @@ The platform sees the folder as `/auto-backups`. `backups/` and `backups/auto/` 
 > start of the new version the platform **carries them into `backups/auto/pre-update/` by itself** (nothing is deleted from the volume,
 > which is mounted read only). Once you see them in the folder, the old volume is no longer needed: `docker volume ls`, then
 > `docker volume rm <project>_backups` (it is empty on a new installation and harmless if left).
+
 ## What happens every night
 
 1. At 3:00 in the time zone of your BDE (`bde.timezone`), the platform dumps its database, takes the keys of the

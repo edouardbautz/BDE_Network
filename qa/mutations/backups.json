@@ -170,8 +170,8 @@
   [
     "backups: the application does not get the folder",
     "docker-compose.yml",
-    "      - ${BDE_BACKUP_DIR:-./backups/auto}:/auto-backups\n    # No bind",
-    "    # No bind",
+    "      - ${BDE_BACKUP_DIR:-./backups/auto}:/auto-backups\n      # The volume that held",
+    "      # The volume that held",
     ["scripts/compose.test.ts"]
   ],
   [
@@ -184,8 +184,8 @@
   [
     "backups: the stack number is not raised in the image",
     "docker/safe-update.mjs",
+    "export const STACK_VERSION = 4;",
     "export const STACK_VERSION = 3;",
-    "export const STACK_VERSION = 2;",
     ["scripts/compose.test.ts"]
   ]
 ]

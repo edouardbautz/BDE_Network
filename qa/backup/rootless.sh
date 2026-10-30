@@ -40,6 +40,7 @@ case "$(inside docker info --format '{{.SecurityOptions}}')" in
 esac
 
 docker exec -u root "$NAME" apk add -q nodejs npm git >/dev/null
+docker image inspect postgres:17-alpine >/dev/null 2>&1 || docker pull -q postgres:17-alpine >/dev/null
 docker save "$IMAGE" postgres:17-alpine | docker exec -i -e "DOCKER_HOST=$SOCKET" "$NAME" docker load >/dev/null
 # `docker-compose.build.yml` names the image bde-network:local
 if [ "$IMAGE" != "bde-network:local" ]; then inside docker tag "$IMAGE" bde-network:local; fi
