@@ -308,7 +308,7 @@ Un `.env`, s'il existe, n'est pas sauvegardé : il n'est plus nécessaire une fo
 ### Copie automatique avant une mise à jour
 
 Quand une nouvelle version doit modifier la base de données (une « migration »), la plateforme en fait **une copie
-toute seule, d'abord**, avant d'appliquer quoi que ce soit. La copie est gardée dans le volume Docker `backups`, sous
+toute seule, d'abord**, avant d'appliquer quoi que ce soit. La copie est gardée dans `backups/auto/pre-update/` (le dossier des sauvegardes, sur le serveur, que `docker compose down -v` ne touche pas), sous
 le nom `pre-update_<date>_v<version>.sql.gz`.
 
 - **Conservation** : les 5 plus récentes sont gardées, toute copie de plus de 90 jours est supprimée, et la plus
@@ -321,7 +321,7 @@ le nom `pre-update_<date>_v<version>.sql.gz`.
   Vos données sont intactes ; revenez à la version précédente ([Mise à jour](upgrading.md#revenir-en-arrière)).
 - **Pour en restaurer une à la main** : `./scripts/restore.sh --pre-update` (la plus récente, ou nommez-en une :
   `./scripts/restore.sh --pre-update pre-update_20261015T101530Z_v1.1.0.sql.gz`). Pour les lister :
-  `docker compose run --rm --no-deps --entrypoint ls app -1 /backups`.
+  `ls backups/auto/pre-update` (les fichiers appartiennent à la plateforme : avec un Docker rootless, `docker compose run --rm --no-deps --entrypoint ls app -1 /auto-backups/pre-update`).
 - **Si la copie ne peut pas être faite** (un disque plein, par exemple), la mise à jour n'est **pas appliquée** et la
   page le dit. Libérez de l'espace, puis `docker compose up -d`. Pour appliquer la mise à jour sans copie, en connaissant
   le risque (faites d'abord `./scripts/backup.sh`), ajoutez `BDE_SKIP_BACKUP=1` dans `.env`.

@@ -180,6 +180,7 @@ case "$command" in
     # shellcheck disable=SC2086
     docker run -d --name "$APP_CONTAINER" --network "$NETWORK" -p "127.0.0.1:$PORT:3000" $limits \
       -v "$(host_path "$config_dir/bde.config.yml"):/app/bde.config.yml:ro" \
+      -v qa-auto-backups:/auto-backups \
       -e DATABASE_URL='postgresql://bde:qa-password@qa-postgres:5432/bde_network?schema=public' \
       -e AUTH_SECRET="$AUTH_SECRET_VALUE" \
       -e APP_URL="http://localhost:$PORT" \
@@ -210,6 +211,7 @@ case "$command" in
   down)
     docker rm -f "$APP_CONTAINER" "$DATABASE_CONTAINER" qa-hang >/dev/null 2>&1 || true
     docker network rm "$NETWORK" >/dev/null 2>&1 || true
+    docker volume rm -f qa-auto-backups >/dev/null 2>&1 || true
     ;;
   *)
     echo "usage: sh qa/platform.sh up|env|logs|down [options]" >&2

@@ -25,7 +25,7 @@ ok() { echo "✓ $*"; }
 
 cleanup() {
   docker rm -f bdeupd-app "$DB" >/dev/null 2>&1 || true
-  docker volume rm -f bdeupd-backups >/dev/null 2>&1 || true
+  docker volume rm -f bdeupd-backups bdeupd-legacy >/dev/null 2>&1 || true
   docker network rm "$NET" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT INT TERM
@@ -57,13 +57,13 @@ app() { # <script-before> [docker run options...]
   shift
   docker rm -f bdeupd-app >/dev/null 2>&1 || true
   docker run -d --name bdeupd-app --network "$NET" -p "127.0.0.1:${PORT}:3000" \
-    -v bdeupd-backups:/backups -e DATABASE_URL="$URL" -e BDE_STACK=3 "$@" \
+    -v bdeupd-backups:/auto-backups -e DATABASE_URL="$URL" -e BDE_STACK=4 "$@" \
     --entrypoint sh "$IMAGE" -c "$script exec node /opt/start/start.mjs" >/dev/null
 }
 page() { curl -s -H "Accept-Language: $1" "http://127.0.0.1:${PORT}/" | sed "s/&#39;/'/g"; }
 health() { curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:${PORT}/api/health" 2>/dev/null || true; }
 serving() { code="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:${PORT}/" 2>/dev/null || true)"; [ "$code" != "000" ] && [ -n "$code" ]; }
-backups() { docker run --rm -v bdeupd-backups:/backups --entrypoint ls "$IMAGE" -1 /backups 2>/dev/null | grep '^pre-update_' || true; }
+backups() { docker run --rm -v bdeupd-backups:/auto-backups --entrypoint ls "$IMAGE" -1 /auto-backups/pre-update 2>/dev/null | grep '^pre-update_' || true; }
 
 # ---- 1. an installation one version behind: the migrations that are missing are applied after a copy ------------------------
 # The database is brought to the state of the PREVIOUS version: every migration of the image but the newest.
@@ -92,7 +92,7 @@ ok "migrations pending: a copy was made first ($COPIES), they were applied, the 
 
 # the copy really is a copy of the database as it was (loadable, with the old data and without what the newest migration
 # adds: a column of Event today, to change when a newer migration comes)
-docker run --rm -v bdeupd-backups:/backups --entrypoint sh "$IMAGE" -c "gzip -dc /backups/$COPIES" >/tmp/bdeupd-copy.sql
+docker run --rm -v bdeupd-backups:/auto-backups --entrypoint sh "$IMAGE" -c "gzip -dc /auto-backups/pre-update/$COPIES" >/tmp/bdeupd-copy.sql
 grep -q "PostgreSQL database dump complete" /tmp/bdeupd-copy.sql || fail "the copy is incomplete"
 grep -q 'Roleone' /tmp/bdeupd-copy.sql || fail "the copy does not hold the data"
 ! grep -q '"repeat" jsonb' /tmp/bdeupd-copy.sql || fail "the copy already holds what the update adds"
@@ -154,20 +154,45 @@ sql -c "DELETE FROM _prisma_migrations WHERE id = 'future'" >/dev/null
 
 # ---- 5. the compose file and the image do not belong together -----------------------------------------------------------
 docker rm -f bdeupd-app >/dev/null 2>&1
-app '' -e BDE_STACK=4
+app '' -e BDE_STACK=5
 wait_for 90 "the explanation page" serving
 page fr | grep -q "L'image est plus ancienne que docker-compose.yml" || fail "no page for an image older than the compose file"
 ok "an image older than docker-compose.yml: explained instead of looping"
 
 docker rm -f bdeupd-app >/dev/null 2>&1
-app '' -e BDE_STACK=1
+app '' -e BDE_STACK=3
 wait_for 90 "the explanation page" serving
 page fr | grep -q "docker-compose.yml est plus ancien que l'image" || fail "no page for a compose file older than the image"
-ok "a compose file older than the image: explained instead of looping"
+ok "a compose file older than the image (stack 3, the one before the single backup folder): explained instead of looping"
+
+# ---- 5b. the copies of the old volume `backups` (stacks before 4) are carried into the folder, at the first start ------------------
+# An installation that updates keeps its copies: the old volume is mounted read only on /legacy-backups, and nothing is deleted from it.
+docker rm -f bdeupd-app >/dev/null 2>&1
+docker volume rm -f bdeupd-backups >/dev/null 2>&1
+docker run --rm -v bdeupd-legacy:/legacy-backups --entrypoint sh "$IMAGE" -c '
+  printf "%s\n" "-- legacy copy" "-- PostgreSQL database dump complete" | gzip > /legacy-backups/pre-update_20261001T000000Z_v1.0.0.sql.gz
+  printf "%s\n" "-- newest legacy copy" "-- PostgreSQL database dump complete" | gzip > /legacy-backups/pre-update_20261014T000000Z_v1.5.0.sql.gz'
+app '' -v bdeupd-legacy:/legacy-backups:ro
+wait_for 90 "the platform to answer" serving
+wait_for 60 "a healthy platform" sh -c "[ \"\$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:${PORT}/api/health)\" = 200 ]"
+KEPT="$(backups)"
+for legacy in pre-update_20261001T000000Z_v1.0.0.sql.gz pre-update_20261014T000000Z_v1.5.0.sql.gz; do
+  printf '%s\n' "$KEPT" | grep -qx "$legacy" || fail "$legacy was not carried over, found: $KEPT"
+done
+docker logs bdeupd-app 2>&1 | grep -q "ancien volume" || fail "the log does not say the copies were carried over"
+[ "$(docker run --rm -v bdeupd-legacy:/legacy-backups --entrypoint ls "$IMAGE" -1 /legacy-backups | grep -c .)" = 2 ] || fail "the old volume was touched"
+ok "the copies of the old volume are carried into the folder (pre-update/), the old volume is left as it was"
+
+# a restart brings nothing again, and a copy already in the folder is never overwritten
+COUNT="$(backups | grep -c .)"
+app '' -v bdeupd-legacy:/legacy-backups:ro
+wait_for 90 "the platform to answer again" serving
+[ "$(backups | grep -c .)" = "$COUNT" ] || fail "a restart changed the copies"
+ok "a restart carries nothing over a second time"
 
 # ---- 6. no database address at all (the incident: "Connection url is empty") --------------------------------------------
 docker rm -f bdeupd-app >/dev/null 2>&1
-docker run -d --name bdeupd-app --network "$NET" -p "127.0.0.1:${PORT}:3000" -e DATABASE_URL= -e BDE_STACK=3 "$IMAGE" >/dev/null
+docker run -d --name bdeupd-app --network "$NET" -p "127.0.0.1:${PORT}:3000" -e DATABASE_URL= -e BDE_STACK=4 "$IMAGE" >/dev/null
 wait_for 90 "the explanation page" serving
 page fr | grep -q "L'adresse de la base de données est invalide" || fail "no page for a missing database address"
 ok "no database address: explained instead of 'Connection url is empty' in a loop"

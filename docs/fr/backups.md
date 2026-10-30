@@ -12,16 +12,21 @@ plateforme fait avant une mise à jour, sont dans [Déploiement](deployment.md#s
 
 ## Où est gardé quoi
 
-La plateforme a **trois endroits** pour des copies des données, avec des rôles différents. Seul le premier survit à `docker compose down -v`.
+Toutes les copies que fait la plateforme sont dans **un seul dossier du serveur**, `backups/auto/` (`BDE_BACKUP_DIR`), que `docker compose down -v` ne touche pas :
 
-| Quoi                                            | Où                                                                                                          | Survit à `down -v` ? |
-| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------- |
-| **Les sauvegardes de la nuit** (cette page)     | Le dossier `backups/auto/` du serveur (`BDE_BACKUP_DIR`), vu comme `/auto-backups` par la plateforme        | **Oui**              |
-| La copie faite **avant une mise à jour**        | Le volume Docker `backups` (vu comme `/backups`), `pre-update_<date>_v<version>.sql.gz`, les cinq dernières | Non                  |
-| Ce que **vous** faites avec `scripts/backup.sh` | Le dossier `backups/` à côté de `docker-compose.yml` (là où vous avez lancé le script)                      | Oui                  |
+| Quoi                                            | Où                                                                                     | Survit à `down -v` ? |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------- |
+| **Les sauvegardes de la nuit** (cette page)     | `backups/auto/` , `bde-auto-<date>.tar.gz`                                             | **Oui**              |
+| La copie faite **avant une mise à jour**        | `backups/auto/pre-update/` , `pre-update_<date>_v<version>.sql.gz`, les cinq dernières | **Oui**              |
+| Ce que **vous** faites avec `scripts/backup.sh` | `backups/` à côté de `docker-compose.yml` (là où vous avez lancé le script)            | Oui                  |
 
-Le volume `backups` et le dossier `backups/` ne sont pas le même endroit, et `backups/auto/` non plus : la plateforme ne lit
-que le dossier `backups/auto/` pour la page Paramètres. Si vous cherchez une sauvegarde de la nuit, cherchez là.
+La plateforme voit le dossier comme `/auto-backups`. `backups/` et `backups/auto/` sont deux dossiers différents : la plateforme ne lit
+que `backups/auto/`.
+
+> **Mise à jour depuis la 1.5.0 ou une version antérieure ?** Les copies d'avant mise à jour étaient dans un volume Docker nommé `backups`. Au
+> premier démarrage de la nouvelle version, la plateforme **les reprend toute seule dans `backups/auto/pre-update/`** (rien n'est
+> supprimé du volume, monté en lecture seule). Quand vous les voyez dans le dossier, l'ancien volume ne sert plus : `docker volume ls`,
+> puis `docker volume rm <projet>_backups` (il est vide sur une nouvelle installation, et sans danger si vous le laissez).
 
 ## Ce qui se passe chaque nuit
 

@@ -12,16 +12,21 @@ makes before an update, are in [Deployment](deployment.md#backups-and-restore).
 
 ## Where everything is kept
 
-The platform has **three places** for copies of the data, with different jobs. Only the first one survives `docker compose down -v`.
+Every copy the platform makes is in **one folder of the server**, `backups/auto/` (`BDE_BACKUP_DIR`), which `docker compose down -v` does not touch:
 
-| What                                       | Where                                                                                                    | Survives `down -v`? |
-| ------------------------------------------ | -------------------------------------------------------------------------------------------------------- | ------------------- |
-| **The nightly backups** (this page)        | The folder `backups/auto/` of the server (`BDE_BACKUP_DIR`), seen as `/auto-backups` by the platform     | **Yes**             |
-| The copy made **before an update**         | The Docker volume `backups` (seen as `/backups`), `pre-update_<date>_v<version>.sql.gz`, the five newest | No                  |
-| What **you** make with `scripts/backup.sh` | The folder `backups/` next to `docker-compose.yml` (where you ran the script)                            | Yes                 |
+| What                                       | Where                                                                               | Survives `down -v`? |
+| ------------------------------------------ | ----------------------------------------------------------------------------------- | ------------------- |
+| **The nightly backups** (this page)        | `backups/auto/` , `bde-auto-<date>.tar.gz`                                          | **Yes**             |
+| The copy made **before an update**         | `backups/auto/pre-update/` , `pre-update_<date>_v<version>.sql.gz`, the five newest | **Yes**             |
+| What **you** make with `scripts/backup.sh` | `backups/` next to `docker-compose.yml` (where you ran the script)                  | Yes                 |
 
-The volume `backups` and the folder `backups/` are not the same place, and neither is `backups/auto/`: the platform only
-reads the folder `backups/auto/` for the Settings page. If you look for a nightly backup, look there.
+The platform sees the folder as `/auto-backups`. `backups/` and `backups/auto/` are two different folders: the platform only reads
+`backups/auto/`.
+
+> **Updating from 1.5.0 or earlier?** The copies made before an update used to be in a Docker volume called `backups`. At the first
+> start of the new version the platform **carries them into `backups/auto/pre-update/` by itself** (nothing is deleted from the volume,
+> which is mounted read only). Once you see them in the folder, the old volume is no longer needed: `docker volume ls`, then
+> `docker volume rm <project>_backups` (it is empty on a new installation and harmless if left).
 
 ## What happens every night
 

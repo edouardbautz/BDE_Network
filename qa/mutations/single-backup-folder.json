@@ -1,0 +1,44 @@
+[
+  [
+    "single folder: the copies before an update go back to a place of their own",
+    "docker/database-tools.mjs",
+    "join(env.BDE_BACKUP_DIR || '/auto-backups', 'pre-update')",
+    "join(env.BDE_BACKUP_DIR || '/auto-backups', '')",
+    ["docker/database-tools.test.ts"]
+  ],
+  [
+    "single folder: the copies of the old volume are not carried over",
+    "docker/database-tools.mjs",
+    "if (backupDate(name) === null || known.has(name)) continue;",
+    "continue;",
+    ["docker/database-tools.test.ts"]
+  ],
+  [
+    "single folder: a copy the folder already has is overwritten by the old one",
+    "docker/database-tools.mjs",
+    "if (backupDate(name) === null || known.has(name)) continue;",
+    "if (backupDate(name) === null) continue;",
+    ["docker/database-tools.test.ts"]
+  ],
+  [
+    "single folder: a file that is not a copy is carried over too",
+    "docker/database-tools.mjs",
+    "if (backupDate(name) === null || known.has(name)) continue;",
+    "if (known.has(name)) continue;",
+    ["docker/database-tools.test.ts"]
+  ],
+  [
+    "single folder: the copies are carried over after the database is looked at, not before",
+    "docker/start.mjs",
+    "const brought = safety.tools.importLegacy?.() ?? [];",
+    "const brought = [];",
+    ["docker/start.test.ts"]
+  ],
+  [
+    "single folder: the stack number of the image falls back to 3",
+    "docker/safe-update.mjs",
+    "export const STACK_VERSION = 4;",
+    "export const STACK_VERSION = 3;",
+    ["scripts/compose.test.ts", "docker/safe-update.test.ts"]
+  ]
+]

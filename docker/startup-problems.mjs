@@ -323,7 +323,7 @@ const PROBLEMS = {
       steps: [
         'Revenez à la version précédente de la plateforme (guide de mise à jour, « Revenir en arrière ») : elle redémarre avec vos données.',
         'Signalez le problème avec le code ci-dessous et le détail de `docker compose logs app`.',
-        'La copie reste dans le volume « backups » (`./scripts/restore.sh --pre-update` la restaure).',
+        'La copie reste dans le dossier des sauvegardes, `backups/auto/pre-update/` (`./scripts/restore.sh --pre-update` la restaure).',
       ],
     },
     en: {
@@ -333,7 +333,7 @@ const PROBLEMS = {
       steps: [
         'Go back to the previous version of the platform (upgrading guide, "Rolling back"): it starts again with your data.',
         'Report the problem with the code below and the details from `docker compose logs app`.',
-        'The copy stays in the "backups" volume (`./scripts/restore.sh --pre-update` restores it).',
+        'The copy stays in the backups folder, `backups/auto/pre-update/` (`./scripts/restore.sh --pre-update` restores it).',
       ],
     },
   },
@@ -367,7 +367,7 @@ const PROBLEMS = {
       description:
         "Par prudence, la mise à jour de la base de données n'a pas été appliquée : la plateforme reste arrêtée et n'a rien modifié.",
       steps: [
-        "Vérifiez l'espace libre du serveur (la copie est faite dans le volume « backups »), puis relancez : `docker compose up -d`.",
+        "Vérifiez l'espace libre du serveur (la copie est faite dans le dossier des sauvegardes, `backups/auto/pre-update/`), puis relancez : `docker compose up -d`.",
         "Pour appliquer la mise à jour sans cette copie (à vos risques : faites d'abord `./scripts/backup.sh`), ajoutez `BDE_SKIP_BACKUP=1` dans `.env`.",
         'Le détail est donné par `docker compose logs app`.',
       ],
@@ -377,7 +377,7 @@ const PROBLEMS = {
       description:
         'To be safe, the database update was not applied: the platform stays stopped and has changed nothing.',
       steps: [
-        'Check the server\'s free space (the copy is made in the "backups" volume), then start again: `docker compose up -d`.',
+        "Check the server's free space (the copy is made in the backups folder, `backups/auto/pre-update/`), then start again: `docker compose up -d`.",
         'To apply the update without this copy (at your own risk: run `./scripts/backup.sh` first), add `BDE_SKIP_BACKUP=1` to `.env`.',
         'The details are given by `docker compose logs app`.',
       ],
