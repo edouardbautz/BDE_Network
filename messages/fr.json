@@ -451,7 +451,7 @@
           "cancelledBy": "Retiré par",
           "publishedBy": "Publié par",
           "changes": "Ce qui a changé",
-          "intraFields": "Pour le formulaire de l'intra",
+          "intraFields": "Pour l'intra",
           "intraLink": "Sur l'intra"
         },
         "changes": {
@@ -696,12 +696,29 @@
         "write": "Écrire",
         "preview": "Aperçu",
         "empty": "L'aperçu s'affichera ici.",
-        "help": "Le Markdown est accepté, comme sur le formulaire de l'intra : # titre, **gras**, *italique*, - liste, [lien](https://…). Le texte brut est conservé pour la copie.",
-        "mode": "Écrire ou prévisualiser"
+        "help": "Mise en forme possible : gras, italique, listes, liens.",
+        "mode": "Écrire ou prévisualiser",
+        "toolbar": {
+          "label": "Mise en forme",
+          "bold": "Gras",
+          "italic": "Italique",
+          "heading": "Titre",
+          "bullets": "Liste à puces",
+          "numbers": "Liste numérotée",
+          "link": "Lien",
+          "shortcut": "Ctrl ou ⌘ + {key}"
+        },
+        "placeholder": {
+          "bold": "texte en gras",
+          "italic": "texte en italique",
+          "item": "élément",
+          "heading": "Titre",
+          "link": "texte du lien"
+        }
       },
       "intra": {
         "title": "Publication sur l'intra 42",
-        "description": "Le staff de l'école copie ces champs dans le formulaire de l'intra : ils s'appellent comme sur l'intra.",
+        "description": "Le staff de l'école utilise ces champs pour publier l'événement sur l'intra.",
         "legacy": "Cet événement date d'avant la publication sur l'intra. Renseignez ces champs pour pouvoir le confirmer : le staff les copiera sur l'intra.",
         "seriesHint": "Ces champs valent pour toute la série : ils sont enregistrés avec « celui-ci et les suivants ».",
         "organizer": "Login de l'organisateur",
@@ -895,7 +912,7 @@
       },
       "list": {
         "title": "À publier sur l'intra",
-        "subtitle": "Les événements du BDE à publier sur l'intra 42, dans l'ordre où ils ont été demandés. Ouvrez-en un pour copier ses champs dans le formulaire de l'intra, puis répondez.",
+        "subtitle": "Les événements du BDE à publier sur l'intra 42, dans l'ordre où ils ont été demandés. Ouvrez-en un pour recopier ses champs sur l'intra, puis répondez.",
         "subtitleReadOnly": "Où en est la publication de chaque événement sur l'intra 42. Vous suivez ces demandes sans pouvoir y répondre.",
         "emptyTitle": "Aucune demande",
         "emptyDescription": "Les demandes apparaissent ici dès qu'un événement est confirmé, ou qu'on en demande une.",
@@ -948,7 +965,7 @@
           "edited": "Dates dont le texte a changé"
         },
         "copyTitle": "À copier dans l'intra",
-        "copyIntro": "Les champs sont dans l'ordre du formulaire de l'intra. Les dates sont au format JJ/MM/AAAA et les heures en HH:mm, dans le fuseau horaire du BDE.",
+        "copyIntro": "Recopiez les champs un par un sur l'intra. Les dates sont au format JJ/MM/AAAA et les heures en HH:mm, dans le fuseau horaire du BDE.",
         "dates": "{count, plural, one {# date} other {# dates}}",
         "dateNumber": "Date {number}",
         "ownValues": "Propre à cette date :"
@@ -1617,7 +1634,7 @@
       "reminderLabel": "Heure du rappel",
       "reminderHelp": "Le rappel part la veille de chaque événement, à cette heure (fuseau {timezone}).",
       "intraTitle": "Publier les événements sur l'intra 42",
-      "intraBody": "Le staff de l'école publie les événements du BDE sur l'intra : chaque événement demande alors les champs du formulaire de l'intra, et aucun ne peut être confirmé sans eux. Désactivé, rien ne change.",
+      "intraBody": "Le staff de l'école publie les événements du BDE sur l'intra : chaque événement demande alors les champs dont le staff a besoin pour l'intra, et aucun ne peut être confirmé sans eux. Désactivé, rien ne change.",
       "removeTitle": "{count, plural, one {Retirer cette catégorie ?} other {Retirer ces # catégories ?}}",
       "removeBodyMoved": "{count, plural, one {L'événement concerné sera déplacé} other {Les # événements concernés seront déplacés}} tout de suite vers la catégorie choisie. Le retrait ne peut pas être annulé.",
       "removeBodyUnused": "{count, plural, one {Aucun événement n'utilise cette catégorie.} other {Aucun événement n'utilise ces catégories.}} Le retrait ne peut pas être annulé.",
@@ -1840,7 +1857,7 @@
         "actedBy": "Par",
         "requestedBy": "Demandé par",
         "changes": "Ce qui a changé",
-        "intraFields": "Champs du formulaire de l'intra",
+        "intraFields": "Champs pour l'intra",
         "intraLink": "Lien sur l'intra",
         "failure": "Raison de l'échec",
         "lastBackup": "Dernière sauvegarde réussie"

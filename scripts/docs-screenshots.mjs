@@ -351,6 +351,24 @@ async function shootLanguage(browser, lang) {
     await save('series-dialog.webp');
     log('series-dialog.webp');
 
+    // The description of an event: the bar of formatting buttons, and the preview beside the field.
+    await page.setViewport({ width: 1280, height: 900 });
+    await open('/events/new');
+    await page.waitForSelector('#description');
+    const description =
+      lang === 'fr'
+        ? '## Au programme\n\n- **Accueil** à 19 h\n- Buffet et jeux de société\n\nInscription : [le formulaire](https://exemple.fr)'
+        : '## On the programme\n\n- **Welcome** at 7 pm\n- Buffet and board games\n\nSign up: [the form](https://example.org)';
+    await page.type('#description', description);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const block = await page.evaluateHandle(() =>
+      document.getElementById('description').closest('div.sm\\:col-span-2'),
+    );
+    await block
+      .asElement()
+      .screenshot({ path: join(out, 'event-form.webp'), type: 'webp', quality: 86 });
+    log('event-form.webp');
+
     await page.setViewport({ width: 1280, height: 800 });
     await open('/roles');
     await save('roles.webp');

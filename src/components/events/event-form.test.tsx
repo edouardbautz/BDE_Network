@@ -127,7 +127,10 @@ describe('EventForm — validation before sending', () => {
     for (const id of ['title', 'description', 'location', 'startsAt', 'endsAt']) {
       const input = document.getElementById(id) as HTMLElement;
       expect(input).toHaveAttribute('aria-invalid', 'true');
-      expect(input).toHaveAccessibleDescription('form.errors.required');
+      // the description also says what it accepts (the help under the field is part of its description)
+      expect(input).toHaveAccessibleDescription(
+        id === 'description' ? 'form.errors.required help' : 'form.errors.required',
+      );
     }
     // the optional/valid ones are not flagged
     expect(screen.getByLabelText(/form.category/)).not.toHaveAttribute('aria-invalid');

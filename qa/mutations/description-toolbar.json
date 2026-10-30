@@ -1,0 +1,79 @@
+[
+  [
+    "toolbar: a second press does not take the marks off",
+    "src/lib/markdown-edit.ts",
+    "    text.slice(start - length, start) === mark &&",
+    "    false &&",
+    ["src/lib/markdown-edit.test.ts"]
+  ],
+  [
+    "toolbar: half of a bold mark is taken for an italic one",
+    "src/lib/markdown-edit.ts",
+    "    mark !== '*' || text[side === 'before' ? at - 1 : at + length] !== '*';",
+    "    true;",
+    ["src/lib/markdown-edit.test.ts"]
+  ],
+  [
+    "toolbar: the numbered list is numbered 1 on every line",
+    "src/lib/markdown-edit.ts",
+    "`${number}. `",
+    "'1. '",
+    ["src/lib/markdown-edit.test.ts"]
+  ],
+  [
+    "toolbar: a second press on a list does not take the marks off",
+    "src/lib/markdown-edit.ts",
+    "  const off = filled.every(same);",
+    "  const off = false;",
+    ["src/lib/markdown-edit.test.ts"]
+  ],
+  [
+    "toolbar: the limit of the field is not looked at",
+    "src/lib/markdown-edit.ts",
+    "edit.text.length > maxLength && edit.text.length > text.length ? null : edit",
+    "edit",
+    ["src/lib/markdown-edit.test.ts", "src/components/events/description-field.test.tsx"]
+  ],
+  [
+    "toolbar: Ctrl+Shift+B is taken for Ctrl+B",
+    "src/lib/markdown-edit.ts",
+    "|| event.altKey || event.shiftKey) return null;",
+    "|| event.altKey) return null;",
+    ["src/lib/markdown-edit.test.ts", "src/components/events/description-field.test.tsx"]
+  ],
+  [
+    "toolbar: the text is set instead of typed (no undo)",
+    "src/components/events/description-field.tsx",
+    "      typeof document.execCommand === 'function' &&",
+    "      false &&",
+    ["src/components/events/description-field.test.tsx"]
+  ],
+  [
+    "toolbar: six buttons are six stops of the keyboard",
+    "src/components/events/description-field.tsx",
+    "tabIndex={index === current ? 0 : -1}",
+    "tabIndex={0}",
+    ["src/components/events/description-field.test.tsx"]
+  ],
+  [
+    "toolbar: the arrow does not come back to the first button",
+    "src/components/events/description-field.tsx",
+    "        ? (current + 1) % TOOLS.length",
+    "        ? current + 1",
+    ["src/components/events/description-field.test.tsx"]
+  ],
+  [
+    "toolbar: the help is not read with the field",
+    "src/components/events/description-field.tsx",
+    "aria-describedby={describedBy}",
+    "aria-describedby={aria['aria-describedby']}",
+    ["src/components/events/description-field.test.tsx"]
+  ],
+  [
+    "toolbar: the help names a format again",
+    "messages/en.json",
+    "\"help\": \"Formatting is possible: bold, italic, lists, links.\"",
+    "\"help\": \"Formatting is possible, in Markdown: bold, italic, lists, links.\"",
+    ["src/components/events/description-field.test.tsx"]
+  ]
+]

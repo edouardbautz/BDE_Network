@@ -93,7 +93,7 @@ A person removed from the list becomes a member with the **default role**.
 - **Removing a category** that events use asks you to choose a category to move them to. At least one category must
   stay.
 - **Reminder hour**: the local hour (the BDE's time zone) at which the day-before reminder goes out. Default: 6 pm.
-- **Publish events on the 42 intra**: when on, every event asks for the fields of the intra's form (see [the fields of the
+- **Publish events on the 42 intra**: when on, every event asks for the fields the staff needs for the intra (see [the fields of the
   intra](events.md#the-fields-of-the-intra)) and none can be confirmed without them. **Off by default**: nothing changes for a
   platform until an owner turns it on.
 - **Staff room** (shown when the publication on the intra is on): the school's staff is not necessarily on the BDE's Discord or
