@@ -14,13 +14,6 @@
     ["src/i18n/broken-escapes.test.ts"]
   ],
   [
-    "broken escapes: a word that kept its u is no longer seen",
-    "src/i18n/broken-escapes.test.ts",
-    "[\\\\p{L}]+u?(?:${CODES})",
-    "[\\\\p{L}]+(?:${CODES})",
-    ["src/i18n/broken-escapes.test.ts"]
-  ],
-  [
     "broken escapes: the apostrophe is no longer one of the codes",
     "src/i18n/broken-escapes.test.ts",
     "'2010|2011|2012|2013|2014|2018|2019|201c",
@@ -28,10 +21,10 @@
     ["src/i18n/broken-escapes.test.ts"]
   ],
   [
-    "broken escapes: an escape written as text is no longer seen in the catalogs",
+    "broken escapes: an escape written as text is no longer seen",
     "src/i18n/broken-escapes.test.ts",
-    "expect(ESCAPE_AS_TEXT.test(text), `${rel(file)}: ${text.slice(0, 60)}`).toBe(false);",
-    "",
+    "/\\\\u[0-9a-fA-F]{4}|",
+    "/",
     ["src/i18n/broken-escapes.test.ts"]
   ],
   [

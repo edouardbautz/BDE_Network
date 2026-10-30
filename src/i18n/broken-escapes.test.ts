@@ -20,7 +20,7 @@ const CODES =
 
 /** A word of letters with a code inside it, `u` kept or lost (`d2019une`, `du2019une`, `tr00e8s`), not made of hex digits only. */
 const LOST_BACKSLASH = new RegExp(
-  `(?<![\\p{L}\\p{N}])(?!P\\d{4}(?![\\p{L}\\p{N}]))(?![0-9a-f]+(?![\\p{L}\\p{N}]))[\\p{L}]+u?(?:${CODES})(?![0-9a-f])[\\p{L}]*`,
+  `(?<![\\p{L}\\p{N}])(?!P\\d{4}(?![\\p{L}\\p{N}]))(?![0-9a-f]+(?![\\p{L}\\p{N}]))[\\p{L}]+(?:${CODES})(?![0-9a-f])[\\p{L}]*`,
   'giu',
 );
 /** The escape itself, written as text (`\\u2019` in a catalog or a page of documentation). */
@@ -58,6 +58,9 @@ const rel = (path: string) => relative(ROOT, path).replaceAll('\\', '/');
 describe('no broken escape in a displayed text', () => {
   it('knows what it looks for', () => {
     expect(brokenEscapes('Ce canal partira d2019une copie')).toEqual(['d2019une']);
+    expect(ESCAPE_AS_TEXT.test('d\\u2019une')).toBe(true);
+    expect(ESCAPE_AS_TEXT.test('a \\x41 b')).toBe(true);
+    expect(ESCAPE_AS_TEXT.test('Unicode, u2019 et x41')).toBe(false);
     expect(brokenEscapes('du2019une, tr00e8s, l2026')).toEqual(['du2019une', 'tr00e8s', 'l2026']);
     expect(
       brokenEscapes('Les statistiques de 2019, la version 2026, le 2019-2020, abc2019'),
