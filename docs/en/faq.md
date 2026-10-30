@@ -95,8 +95,7 @@ No. The module is the board's **internal** calendar. Students' registrations sta
 ### Does the platform publish my events on the intra by itself?
 
 No, and it cannot: the intra has no way in for it. When an owner turns on **Publish events on the 42 intra** (Settings, Events;
-off by default), each confirmed event becomes a **request** that the school's staff reads, copies into the intra's form and
-answers. If the event changes afterwards, the staff is told what changed. See
+off by default), each confirmed event becomes a **request** that the school's staff reads, copies onto the intra and answers. If the event changes afterwards, the staff is told what changed. See
 [Publishing on the intra](events.md#publishing-on-the-intra).
 
 ### What is the difference between a draft and a confirmed event?

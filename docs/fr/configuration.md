@@ -96,7 +96,7 @@ Une personne retirée de la liste devient un membre avec le **rôle par défaut*
 - **Retirer une catégorie** utilisée par des événements demande de choisir une catégorie où les déplacer. Il faut
   garder au moins une catégorie.
 - **Heure du rappel** : l'heure locale (fuseau du BDE) à laquelle part le rappel de la veille. Par défaut : 18 h.
-- **Publier les événements sur l'intra 42** : activé, chaque événement demande les champs du formulaire de l'intra (voir [les champs de
+- **Publier les événements sur l'intra 42** : activé, chaque événement demande les champs dont le staff a besoin pour l'intra (voir [les champs de
   l'intra](events.md#les-champs-de-lintra)) et aucun ne peut être confirmé sans eux. **Désactivé par défaut** : rien ne change pour une
   plateforme tant qu'un propriétaire ne l'active pas.
 - **Salon du staff** (affiché quand la publication sur l'intra est activée) : le staff de l'école n'est pas forcément sur le Discord ou le

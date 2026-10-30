@@ -451,7 +451,7 @@
           "cancelledBy": "Taken back by",
           "publishedBy": "Published by",
           "changes": "What changed",
-          "intraFields": "For the intra's form",
+          "intraFields": "For the intra",
           "intraLink": "On the intra"
         },
         "changes": {
@@ -696,12 +696,29 @@
         "write": "Write",
         "preview": "Preview",
         "empty": "The preview shows here.",
-        "help": "Markdown is accepted, like the intra's form: # title, **bold**, *italic*, - list, [link](https://…). The plain text is kept for copying.",
-        "mode": "Write or preview"
+        "help": "Formatting is possible: bold, italic, lists, links.",
+        "mode": "Write or preview",
+        "toolbar": {
+          "label": "Formatting",
+          "bold": "Bold",
+          "italic": "Italic",
+          "heading": "Heading",
+          "bullets": "Bulleted list",
+          "numbers": "Numbered list",
+          "link": "Link",
+          "shortcut": "Ctrl or ⌘ + {key}"
+        },
+        "placeholder": {
+          "bold": "bold text",
+          "italic": "italic text",
+          "item": "item",
+          "heading": "Heading",
+          "link": "link text"
+        }
       },
       "intra": {
         "title": "Publication on the 42 intra",
-        "description": "The school's staff copies these fields into the intra's form: they are named as on the intra.",
+        "description": "The school's staff uses these fields to publish the event on the intra.",
         "legacy": "This event predates publication on the intra. Fill in these fields to be able to confirm it: the staff will copy them to the intra.",
         "seriesHint": "These fields apply to the whole series: they are saved with \"this one and the following\".",
         "organizer": "Organizer's login",
@@ -895,7 +912,7 @@
       },
       "list": {
         "title": "To publish on the intra",
-        "subtitle": "The BDE's events to publish on the 42 intra, in the order they were asked for. Open one to copy its fields into the intra's form, then answer.",
+        "subtitle": "The BDE's events to publish on the 42 intra, in the order they were asked for. Open one to copy its fields onto the intra, then answer.",
         "subtitleReadOnly": "Where the publication of each event on the 42 intra stands. You follow these requests without being able to answer them.",
         "emptyTitle": "No request",
         "emptyDescription": "Requests show up here as soon as an event is confirmed, or someone asks for one.",
@@ -948,7 +965,7 @@
           "edited": "Dates whose text changed"
         },
         "copyTitle": "To copy into the intra",
-        "copyIntro": "The fields are in the order of the intra's form. Dates are written DD/MM/YYYY and times HH:mm, in the BDE's time zone.",
+        "copyIntro": "Copy the fields one by one onto the intra. Dates are written DD/MM/YYYY and times HH:mm, in the BDE's time zone.",
         "dates": "{count, plural, one {# date} other {# dates}}",
         "dateNumber": "Date {number}",
         "ownValues": "Specific to this date:"
@@ -1616,7 +1633,7 @@
       "moveTo": "{count, plural, one {Its event will move} other {Its # events will move}} to the category:",
       "reminderLabel": "Reminder hour",
       "intraTitle": "Publish events on the 42 intra",
-      "intraBody": "The school's staff publishes the BDE's events on the intra: every event then asks for the fields of the intra's form, and none can be confirmed without them. Turned off, nothing changes.",
+      "intraBody": "The school's staff publishes the BDE's events on the intra: every event then asks for the fields the staff needs for the intra, and none can be confirmed without them. Turned off, nothing changes.",
       "reminderHelp": "The reminder goes out the day before each event, at this hour ({timezone} time zone).",
       "removeTitle": "{count, plural, one {Remove this category?} other {Remove these # categories?}}",
       "removeBodyMoved": "{count, plural, one {The event concerned is} other {The # events concerned are}} moved to the chosen category right away. This cannot be undone.",
@@ -1840,7 +1857,7 @@
         "actedBy": "By",
         "requestedBy": "Requested by",
         "changes": "What changed",
-        "intraFields": "Fields of the intra's form",
+        "intraFields": "Fields for the intra",
         "intraLink": "Link on the intra",
         "failure": "Why it failed",
         "lastBackup": "Last good backup"

@@ -79,11 +79,9 @@ Les événements créés **avant** cette règle, avec un lieu ou une description
 sont bloqués qu'à leur **prochaine modification** dans le formulaire, qui demandera de remplir ces champs.
 Confirmer, repasser en brouillon et annuler une date restent possibles.
 
-### La description s'écrit en Markdown
+### Mettre en forme la description
 
-La description accepte le même Markdown que le formulaire de l'intra : `# titre`, `**gras**`, `*italique*`, `- liste`, `1. liste
-numérotée`, `> citation`, `[lien](https://…)` et `code`. À côté du champ (sous le champ sur téléphone, derrière l'onglet
-**Aperçu**), le formulaire dessine ce que la description donnera. Le texte est conservé **exactement comme tapé** : il se copie tel quel.
+La description peut être mise en forme : une barre de boutons au-dessus du champ donne le **gras**, l'_italique_, un titre, une liste à puces, une liste numérotée et un lien ; sélectionnez du texte puis appuyez sur le bouton, ou faites **Ctrl** (**Cmd** sur Mac) + **B** ou **I**. Le bouton agit sur la sélection, un second appui enlève la mise en forme, et l'annulation (**Ctrl+Z**) reprend le travail d'un bouton. À côté du champ (sous le champ sur téléphone, derrière l'onglet **Aperçu**), le formulaire dessine ce que la description donnera. Derrière les boutons, le texte est du Markdown (`# titre`, `**gras**`, `*italique*`, `- liste`, `1. liste numérotée`, `> citation`, `[lien](https://…)` et `code`), que l'on peut aussi taper à la main, et il est conservé **exactement comme tapé** : il se copie tel quel.
 Une balise écrite à la main, une image ou un lien qui n'est pas `http`, `https` ou `mailto` s'affiche comme du texte et ne s'exécute jamais.
 
 ### Les champs de l'intra
@@ -159,7 +157,7 @@ peut plus le modifier non plus.
 ## Publier sur l'intra
 
 Quand la plateforme publie les événements sur l'intra, le **staff** de l'école met chaque événement confirmé sur l'intra 42 à la
-main : la plateforme lui dit quoi publier, il le copie dans le formulaire de l'intra, puis répond. Le staff a un compte 42 comme
+main : la plateforme lui dit quoi publier, il le recopie sur l'intra, puis répond. Le staff a un compte 42 comme
 n'importe quel membre, approuvé par le BDE, avec un rôle qui détient le droit **Publier sur l'intra** (voir
 [Rôles et droits](roles.md)).
 
@@ -184,7 +182,7 @@ n'importe quel membre, approuvé par le BDE, avec un rôle qui détient le droit
 
 L'entrée **À publier sur l'intra** du menu compte ce qui attend (une première publication, ou une mise à jour). La liste montre
 d'abord ce qui attend, le plus ancien en premier, puis ce qui a reçu une réponse. La page d'une demande donne l'événement
-**dans l'ordre du formulaire de l'intra**, chaque champ avec un bouton **Copier** : le login de l'organisateur, le nom, à qui il
+**dans un ordre fixe**, chaque champ avec un bouton **Copier** : le login de l'organisateur, le nom, à qui il
 est ouvert, la date de début, l'heure de début, la date de fin, l'heure de fin, la description (telle que tapée, en Markdown),
 le lieu, le nombre maximum de personnes, la liste d'attente, le genre, le délai de désinscription et les mots-clés. Les dates
 s'écrivent **JJ/MM/AAAA** et les heures **HH:mm**, dans le fuseau horaire du BDE, quelle que soit la langue de l'interface. Une

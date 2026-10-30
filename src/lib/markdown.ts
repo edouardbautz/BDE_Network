@@ -1,4 +1,4 @@
-// A small Markdown reader for the description of an event: the part of Markdown the intra's form renders, turned into a
+// A small Markdown reader for the description of an event: the part of Markdown that formatting a description needs, turned into a
 // tree that a component draws as elements. It never produces HTML: what a member typed (a tag, a script, an address that
 // is not http, https or mailto) stays text or is dropped, whatever it contains. That is why it is not a library: the
 // platform needs a preview that cannot be turned against it, and a few kilobytes less to send to the browser.

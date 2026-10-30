@@ -47,7 +47,7 @@ chose dans cette documentation.
 | **Année scolaire**          | De septembre à août (`2025-2026`), calculée d'après la date de début.                                                                                                       |
 | **Lien d'agenda personnel** | Le lien secret d'un membre, à ajouter à Google Agenda, Outlook ou Apple Calendar. Voir **Mon profil**.                                                                      |
 | **Staff**                   | Le staff de l'école, qui publie les événements du BDE sur l'intra 42. Il a un compte comme tout membre, avec un rôle qui l'y autorise.                                      |
-| **Demande de publication**  | Ce que la plateforme envoie au staff pour un événement confirmé : les champs à copier dans le formulaire de l'intra. Une par événement, une série étant un seul événement.  |
+| **Demande de publication**  | Ce que la plateforme envoie au staff pour un événement confirmé : les champs à recopier sur l'intra. Une par événement, une série étant un seul événement.                  |
 | **À mettre à jour**         | Un événement publié qui a changé depuis : le staff doit le modifier aussi sur l'intra, puis confirmer.                                                                      |
 | **Lien d'agenda du BDE**    | Un seul lien pour tout le BDE, à coller une fois dans un agenda partagé. Il se gère dans **Agenda partagé**.                                                                |
 

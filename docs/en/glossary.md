@@ -46,7 +46,7 @@ The words of the platform, as they appear in the interface. One word always mean
 | **School year**            | From September to August (`2025-2026`), computed from the start date.                                                                              |
 | **Personal calendar link** | A member's secret link, to add to Google Calendar, Outlook or Apple Calendar. See **My profile**.                                                  |
 | **Staff**                  | The school's staff who publish the BDE's events on the 42 intra. They have an account like any member, with a role that allows it.                 |
-| **Request to publish**     | What the platform sends to the staff for a confirmed event: the fields to copy into the intra's form. One per event, a series being one event.     |
+| **Request to publish**     | What the platform sends to the staff for a confirmed event: the fields to copy onto the intra. One per event, a series being one event.            |
 | **To update**              | A published event that changed since: the staff has to change it on the intra too, then confirm.                                                   |
 | **BDE calendar link**      | One link for the whole BDE, to paste once into a shared calendar. It is managed under **Shared calendar**.                                         |
 

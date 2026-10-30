@@ -8,6 +8,12 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **A bar of formatting buttons above the description of an event.** Bold, italic, a heading, a bulleted list, a numbered list and a link: select some text and press the button (a second press
+  takes the marks off), or press Ctrl (Cmd on a Mac) + B or I. Nobody has to know Markdown any more, and the text stays Markdown, kept as typed, so that it is still copied as it is. The buttons
+  are one stop of the keyboard (the arrows move between them), 44 px on a phone, and undo (Ctrl+Z) takes a button's work back. The help under the field is now generic ("Formatting is possible: bold,
+  italic, lists, links"): it named the intra's form of one school. The preview stays beside the field (a tab on a phone). The same pass removed from the texts about publishing on the intra
+  (interface, cards, e-mails, documentation) what supposed the form of one school: the staff copies the fields onto "the intra", not into "the intra's form".
+
 - **Automatic backups.** The platform backs itself up **every night at 3:00 (BDE time)**, with nobody doing anything: one archive that holds the database, the keys to read it
   and the logo, in the folder `backups/auto` of the server (`BDE_BACKUP_DIR`), outside Docker's volumes, so that `docker compose down -v` does not remove it. Each backup is **read
   again before it is trusted** (the files against their SHA-256, the dump loaded into a scratch database, the encrypted settings opened with the keys of the archive). 7 daily, 4

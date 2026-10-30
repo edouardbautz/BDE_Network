@@ -833,6 +833,14 @@ recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`)
   Not a library on purpose: the preview must not be turnable against the platform and the script of the form page has a tight budget (`qa/perf/budgets.json`).
   What is supported is written at the top of the file; the stored description is the typed text, untouched (it is copied as it is). The input is cut at 20 000 characters
   and nesting at 4, and the hostile cases (`markdown.test.ts`, `markdown.test.tsx`) include a quadratic one.
+  - **Nobody has to know Markdown** (`components/events/description-field.tsx`, `lib/markdown-edit.ts`). A bar of six buttons (bold, italic, heading, bulleted list, numbered list, link)
+    above the field and Ctrl/Cmd + B and I put the marks in; the text stays Markdown, typed as it is (it is copied as it is). The help is generic and names no school nor format
+    ("Formatting is possible: bold, italic, lists, links"): the form of one school is never the form of every BDE's. What a button does is a pure function of the text and the selection
+    (`applyFormat`: marks around the selection or a word to type, taken off by a second press, a bullet or number on every line selected and never two kinds on one line, a link with its
+    address selected to be typed over; `null` when the result would pass the limit), tested by itself; **the component types the result into the field with `insertText`** (only the part
+    that differs, `difference`) so that the browser keeps it in the undo history, and sets the text through the state only where the command is missing or refuses. The bar is a
+    `toolbar`: one stop of the keyboard, moved by the arrows, Home and End (a roving tabindex), buttons of 44 px on a phone. Where there is room the preview is beside the field; on a
+    phone it is a tab. `description.spec.ts` plays it in the three engines (the formatting, undo, the shortcuts, the keyboard, the phone); it fails on the form without the bar.
 - **The school's staff** (permissions `events.intra_publish`, `events.intra_view`, `events.intra_request`; `access.ts` names them `EVENTS_INTRA_*`). The staff of the school
   publishes the events on the intra; it has an account like any member (42 sign-in, approved by the BDE, a role such as "Staff intra") and the rights below, which only
   do something once `events.intraPublication` is on (the registry lists them whenever the module is enabled: it is a pure function of the enabled modules, and a role that
@@ -883,10 +891,10 @@ recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`)
     answers, `canRequest` asks (`events.intra_request` **or validating**), and following is any of the three or validating. `requireIntraPublisher` / `requireIntraRequester` are
     the first line of every action. The staff does not need the calendar: the pages do not go through `getEventsAccess`, and the layout offers the entry **To publish on the intra**
     (`NavItem` `eventsIntra`, counted for those who can answer, `countIntraToDo`: waiting + to update) and the dashboard a shortcut.
-  - **The page of a request** shows the fields **in the order of the intra's form** (`COPY_FIELDS`: organizer, name, available for, start date, start time, end date, end time,
+  - **The page of a request** shows the fields **in a fixed order** (the 42 intra's, written once in code and the same for every BDE; nothing in the texts says it is a form) (`COPY_FIELDS`: organizer, name, available for, start date, start time, end date, end time,
     description, place, maximum, waiting list, kind, delay, keywords), each with a `CopyButton` (clipboard, with the hidden field as fallback on a page without HTTPS; the button's
     name is its visible word followed by the field, WCAG 2.5.3). Dates are `DD/MM/YYYY` and times `HH:mm` **in the BDE's zone whatever the language of the interface** (`intraDay`,
-    `intraTime`): it is what the intra's form takes. The description is shown as typed, not drawn. A request to update shows `diffContent` (the fields with the old and the new value,
+    `intraTime`): it is what the staff types on the intra. The description is shown as typed, not drawn. A request to update shows `diffContent` (the fields with the old and the new value,
     the dates to remove and to add, the dates whose own text changed). The answers use `ConfirmDialog` and answer an `ActionTarget` to the list (another pathname); only
     `requestOnIntra` stays on the page it was asked from (also an `ActionTarget`, rule 2 of "Navigation"; scenario "send a refused request again" of `e2e/actions.mjs`).
   - **Messages** (`events/intra-notifications.ts`, `intra-facts.ts`, `intra-card.ts`, `intra-audience.ts`; `notifications/rooms.ts`). Five notifications of the configuration

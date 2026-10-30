@@ -75,18 +75,15 @@ Events created **before** this rule, with an empty location or description, are 
 blocked at their **next edit** in the form, which will ask you to fill in those fields. Confirming, going back to
 draft and canceling a date remain possible.
 
-### The description is written in Markdown
+### Formatting the description
 
-The description accepts the same Markdown as the intra's form: `# title`, `**bold**`, `*italic*`, `- list`, `1. numbered
-list`, `> quote`, `[link](https://…)` and `code`. Beside the field (under it on a phone, behind the **Preview** tab) the
-form draws what the description will look like. The text is kept **exactly as typed**, so it can be copied as it is. A
+The description can be formatted: a bar of buttons above the field gives **bold**, _italic_, a heading, a bulleted list, a numbered list and a link; select some text and press the button, or press **Ctrl** (**Cmd** on a Mac) + **B** or **I**. The button works on what is selected, and a second press takes the marks off; undo (**Ctrl+Z**) takes a button back. Beside the field (under it on a phone, behind the **Preview** tab) the form draws what the description will look like. Behind the buttons the text is Markdown (`# title`, `**bold**`, `*italic*`, `- list`, `1. numbered list`, `> quote`, `[link](https://…)` and `code`), which you can also type by hand, and it is kept **exactly as typed**, so it can be copied as it is. A
 tag typed by hand, a picture or a link that is not `http`, `https` or `mailto` is shown as text and never run.
 
 ### The fields of the intra
 
 When the platform **publishes the events on the intra** (an owner turns it on in Settings, section Events, see
-[Configuration](configuration.md#events)), the form has a second block, **Publication on the 42 intra**: what the school's staff
-copies into the intra's event form, under the same names. All seven are required:
+[Configuration](configuration.md#events)), the form has a second block, **Publication on the 42 intra**: what the school's staff needs to publish the event on the intra. All seven are required:
 
 - **Organizer's login**: filled in with the author's login, editable.
 - **Available for**: students, pisciners or both.
@@ -154,7 +151,7 @@ edit it either.
 ## Publishing on the intra
 
 When the platform publishes the events on the intra, the school's **staff** puts each confirmed event on the intra 42 by hand:
-the platform tells them what to publish, they copy it into the intra's form, then answer. The staff has a 42 account like
+the platform tells them what to publish, they copy it onto the intra, then answer. The staff has a 42 account like
 any member, approved by the BDE, with a role that holds the right **Publish on the intra** (see [Roles and rights](roles.md)).
 
 ### The request
@@ -177,8 +174,7 @@ any member, approved by the BDE, with a role that holds the right **Publish on t
 ### What the staff does
 
 The entry **To publish on the intra** of the menu counts what waits (a first publication, or an update). The list shows what
-waits first, the oldest first, then what was answered. The page of a request gives the event **in the order of the intra's
-form**, each field with a **Copy** button: the organizer's login, the name, who it is available for, the start date, the start
+waits first, the oldest first, then what was answered. The page of a request gives the event **in a fixed order**, each field with a **Copy** button: the organizer's login, the name, who it is available for, the start date, the start
 time, the end date, the end time, the description (as typed, in Markdown), the place, the maximum number of people, the waiting
 list, the kind, the delay before unsubscribing and the keywords. Dates are written **DD/MM/YYYY** and times **HH:mm**, in the
 BDE's time zone, whatever the language of the interface. A series lists its dates one after the other, each with its four
