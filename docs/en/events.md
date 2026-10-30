@@ -25,7 +25,7 @@ Rights come from the member's **role** (see [Roles and rights](roles.md)). Four 
 | See **drafts** and **proposals**                     |  no  |          **their own** only          |         all of them         |             no             |  yes  |
 | Create an event                                      |  no  |        yes, as a **proposal**        | yes, draft or **published** |             no             |  yes  |
 | Edit or delete an event                              |  no  | **their own**, until it is published |             any             |             no             |  yes  |
-| Approve or refuse a proposal                         |  no  |                  no                  |             yes             |             no             |  yes  |
+| Validate or refuse a proposal                        |  no  |                  no                  |             yes             |             no             |  yes  |
 | Confirm, put back to draft, cancel a date            |  no  |                  no                  |             yes             |             no             |  yes  |
 | Add an event to your calendar, subscribe to the feed | yes  |                 yes                  |             yes             |            yes             |  yes  |
 | Manage the **BDE** calendar link                     |  no  |                  no                  |             no              |            yes             |  yes  |
@@ -109,7 +109,7 @@ A series belongs to the school year of its first date.
 ## Proposing and validating events
 
 Some roles (an "Events team", for example) can **propose** events without being able to publish them; other roles
-**validate**: they approve or refuse what is proposed. You choose who is who in [Roles and rights](roles.md): the
+**validate**: they validate or refuse what is proposed. You choose who is who in [Roles and rights](roles.md): the
 **Propose events** right and the **Validate events** right.
 
 An event goes through three statuses:
@@ -135,8 +135,8 @@ An event goes through three statuses:
 ### Validating
 
 - The **To validate** entry of the menu (only for those who validate) says how many proposals are waiting. The page
-  lists them, the oldest first, each with **Approve** and **Refuse**.
-- **Approve** publishes the event, as confirming it would: the members are notified once. The author is told too, if
+  lists them, the oldest first, each with **Validate** and **Refuse**.
+- **Validate** publishes the event, as confirming it would: the members are notified once. The author is told too, if
   the `eventApproved` notification is on.
 - **Refuse** asks for a **comment** (required, 1000 characters at most). The event goes back to draft; its author reads
   the comment on the event itself and receives it by notification (`eventRefused`). They edit the event, then propose it
@@ -147,7 +147,7 @@ An event goes through three statuses:
 
 ### Series and drafts
 
-A proposal is **the whole event**, a series included. Once it is approved, the dates of a series are handled as
+A proposal is **the whole event**, a series included. Once it is validated, the dates of a series are handled as
 usual (see below). A date of a series confirmed on its own makes the event partly published: its proposer can no longer
 edit it either.
 
@@ -455,7 +455,7 @@ platform** section): without it, messages go out without a link.
 | **Confirmation** (`eventConfirmed`) | an event goes from draft to **confirmed**, once; for a series, once for the confirmed part, or once for a date confirmed alone | every approved member (email: one message per person), or the Discord or Slack channel |
 | **Reminder** (`eventReminder`)      | the day before each confirmed occurrence, at the **reminder hour** (6 pm by default, BDE time)                                 | the **members in charge** (email), otherwise those who validate events; or the channel |
 | **Proposal** (`eventProposed`)      | an event is proposed (or proposed again after a refusal)                                                                       | the owners and those who validate events (email), or the channel                       |
-| **Approval** (`eventApproved`)      | a validator approves a proposal                                                                                                | its author (email), or the channel                                                     |
+| **Validation** (`eventApproved`)    | a validator validates a proposal                                                                                               | its author (email), or the channel                                                     |
 | **Refusal** (`eventRefused`)        | a validator refuses a proposal                                                                                                 | its author, with the comment (email), or the channel                                   |
 
 The rendering on Discord, Slack and by email is described in [Notifications](notifications.md). On a Discord or Slack
@@ -494,7 +494,7 @@ reminder shows the time, place and members in charge of that date.
 ## Audit log
 
 Owners see there the creation, the edit (with the list of fields changed), the deletion, the status change, the
-**proposal** (`event.propose`), its **withdrawal**, its **approval** and its **refusal** (with the comment), the
+**proposal** (`event.propose`), its **withdrawal**, its **validation** and its **refusal** (with the comment), the
 cancelation and restoration of a date, and the actions on the BDE link (never the link itself). For a series, every
 entry says whether the action was for **one date** or for **this date and the following**, and which date (for
 the first date: that it was the whole series). The author is the

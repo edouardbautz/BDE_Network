@@ -1,0 +1,58 @@
+[
+  [
+    "vocabulary: the section of the requests is titled validation again (FR)",
+    "messages/fr.json",
+    "\"pendingSection\": \"En attente d'approbation\"",
+    "\"pendingSection\": \"En attente de validation\"",
+    ["src/i18n/vocabulary.test.ts"]
+  ],
+  [
+    "vocabulary: the waiting page speaks of validation again (FR)",
+    "messages/fr.json",
+    "\"title\": \"Votre compte est en attente d'approbation\"",
+    "\"title\": \"Votre compte est en attente de validation\"",
+    ["src/i18n/vocabulary.test.ts"]
+  ],
+  [
+    "vocabulary: a request is validated in the notifications table (EN)",
+    "messages/en.json",
+    "\"hint\": \"Tells the owners and whoever can approve it.\"",
+    "\"hint\": \"Tells the owners and whoever can validate it.\"",
+    ["src/i18n/vocabulary.test.ts"]
+  ],
+  [
+    "vocabulary: a proposal is approved by the button of the circuit (FR)",
+    "messages/fr.json",
+    "\"approve\": \"Valider\",",
+    "\"approve\": \"Approuver\",",
+    ["src/i18n/vocabulary.test.ts"]
+  ],
+  [
+    "vocabulary: a proposal is approved in its notification (EN)",
+    "messages/en.json",
+    "\"subject\": \"Proposal validated: {title}\"",
+    "\"subject\": \"Proposal approved: {title}\"",
+    ["src/i18n/vocabulary.test.ts"]
+  ],
+  [
+    "vocabulary: the README asks for a validation of the new members (FR)",
+    "README.fr.md",
+    "attendent une approbation",
+    "attendent une validation",
+    ["src/i18n/vocabulary.test.ts"]
+  ],
+  [
+    "vocabulary: the guide says an account awaits validation (FR)",
+    "docs/fr/user-guide.md",
+    "est **en attente d'approbation**",
+    "est **en attente de validation**",
+    ["src/i18n/vocabulary.test.ts"]
+  ],
+  [
+    "vocabulary: the guide approves a proposal (EN)",
+    "docs/en/events.md",
+    "- **Validate** publishes the event",
+    "- **Approve** publishes the event, a proposal",
+    ["src/i18n/vocabulary.test.ts"]
+  ]
+]

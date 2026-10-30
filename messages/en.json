@@ -426,7 +426,7 @@
           "reminderTomorrow": "Reminder · tomorrow",
           "reminderToday": "Reminder · today",
           "proposed": "Event proposed",
-          "approved": "Proposal approved",
+          "approved": "Proposal validated",
           "refused": "Proposal refused",
           "test": "Test message",
           "reminderPattern": "Reminder · {day}",
@@ -443,7 +443,7 @@
           "inCharge": "Members in charge",
           "repeats": "Repeats",
           "proposedBy": "Proposed by",
-          "approvedBy": "Approved by",
+          "approvedBy": "Validated by",
           "refusedBy": "Refused by",
           "reason": "Reason",
           "requestedBy": "Requested by",
@@ -482,11 +482,11 @@
       },
       "proposed": {
         "subject": "Event proposed: {title}",
-        "intro": "{author} proposes an event: a validator has to approve or refuse it."
+        "intro": "{author} proposes an event: a validator has to validate or refuse it."
       },
       "approved": {
-        "subject": "Proposal approved: {title}",
-        "intro": "{author}'s proposal was approved by {reviewer}: the event is published."
+        "subject": "Proposal validated: {title}",
+        "intro": "{author}'s proposal was validated by {reviewer}: the event is published."
       },
       "refused": {
         "subject": "Proposal refused: {title}",
@@ -622,11 +622,11 @@
       "review": {
         "propose": "Propose for validation",
         "withdraw": "Withdraw the proposal",
-        "approve": "Approve",
+        "approve": "Validate",
         "refuse": "Refuse",
         "proposedTitle": "Awaiting validation",
-        "proposedAuthor": "You proposed this event: a validator will approve or refuse it. You can still edit it, or withdraw your proposal.",
-        "proposedValidator": "{author} proposes this event. Approve it to publish it, or refuse it with a comment.",
+        "proposedAuthor": "You proposed this event: a validator will validate or refuse it. You can still edit it, or withdraw your proposal.",
+        "proposedValidator": "{author} proposes this event. Validate it to publish it, or refuse it with a comment.",
         "proposedOn": "Proposed on {date}.",
         "refusedTitle": "Refused by {reviewer} on {date}",
         "refusedHintAuthor": "Edit the event to take this comment into account, then propose it again.",
@@ -634,8 +634,8 @@
         "lockedTitle": "This event is published",
         "lockedBody": "Only a validator can change a published event. To correct something, ask one of them.",
         "approveDialog": {
-          "title": "Approve this proposal?",
-          "confirm": "Approve"
+          "title": "Validate this proposal?",
+          "confirm": "Validate"
         },
         "refuseDialog": {
           "title": "Refuse this proposal?",
@@ -1046,7 +1046,7 @@
         },
         "validate": {
           "label": "Validate events",
-          "description": "Approve or refuse proposals, create, edit, confirm and delete any event, and see drafts."
+          "description": "Validate or refuse proposals, create, edit, confirm and delete any event, and see drafts."
         },
         "intra_publish": {
           "label": "Publish on the intra",
@@ -1307,7 +1307,7 @@
           "hint": "Tells whoever can validate it."
         },
         "eventApproved": {
-          "name": "Proposal approved",
+          "name": "Proposal validated",
           "hint": "Tells its author."
         },
         "eventRefused": {
@@ -1691,8 +1691,8 @@
         "when": "Sent to those who can validate when an event is proposed."
       },
       "eventApproved": {
-        "name": "Proposal approved",
-        "when": "Sent to the author of the proposal when it is approved."
+        "name": "Proposal validated",
+        "when": "Sent to the author of the proposal when it is validated."
       },
       "eventRefused": {
         "name": "Proposal refused",

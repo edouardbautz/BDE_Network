@@ -337,6 +337,13 @@ so there is no gauge).
 tells a member their access is approved, "Bonjour {name}, votre demande d'accès a été approuvée") says **"vous"** in French: it is a letter to someone,
 not a screen. What is written to a team, such as a card in a chat channel, speaks about the person in the third person.
 
+**One word per thing: approve and validate.** An **access request** is **approved** or refused (the account becomes a member): the Members page, the waiting page, the
+messages about a request, the permission that gives it, the notifications `memberPending` / `memberApproved`. A **proposal of an event** is **validated** or refused, by a
+**validator** (the entry "To validate", the permission "Validate events", the notification `eventApproved`, whose name is "Proposal validated"): the key and the audit action
+keep the old identifier (`eventApproved`, `event.approve`), the words do not. In French: "approuver une demande", "valider une proposition". `src/i18n/vocabulary.test.ts`
+reads the catalogs and the documentation and fails when one of the two words is used for the other thing. A form that is submitted is "submitted" or "sent", not validated
+either (the one place that says "valider avec Submit" is the instruction for the 42 intra's own button).
+
 ## Where it lives, and what differs from the original specification
 
 | What                               | Where                                                                                                                                                               |

@@ -38,7 +38,7 @@ dont le cookie est encore valide.
   les volumes ; sur un serveur neuf, `restore.sh` remet la sauvegarde, puis le fichier téléchargé (une mauvaise phrase de passe ne touche à rien).
   Les mêmes lignes, les mêmes clés, la session d'avant encore ouverte. Puis la base est arrêtée à l'heure de la sauvegarde : l'échec est écrit,
   la sauvegarde précédente est intacte, et la page Paramètres dit ce qui a échoué.
-- **Navigateurs.** Les parcours de la plateforme (une proposition approuvée, un refus avec son commentaire, le calendrier, les
+- **Navigateurs.** Les parcours de la plateforme (une proposition validée, un refus avec son commentaire, le calendrier, les
   réglages, le clavier) dans **Chromium, Firefox et WebKit** (le moteur de Safari). Un parcours échoue si ses pages lèvent une
   exception, écrivent une erreur dans la console, enfreignent leur propre politique de sécurité du contenu ou reçoivent une erreur
   serveur.

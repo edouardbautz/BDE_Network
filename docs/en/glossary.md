@@ -6,17 +6,18 @@ The words of the platform, as they appear in the interface. One word always mean
 
 ## People
 
-| Word             | Meaning                                                                                                                               |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| **BDE**          | _Bureau Des Étudiants_: the student association of a school. "The board" means the members who run it.                                |
-| **Platform**     | The site a BDE runs with BDE_Network. A platform belongs to one BDE alone (an _instance_).                                            |
-| **Owner**        | An account with **every right**, including the audit log and Settings. The list of owners is managed in **Settings**, Owners section. |
-| **Member**       | An approved account. Its rights are those of its **role**.                                                                            |
-| **Pending**      | An account that has just signed in and that nobody has approved yet. It can only see the waiting page.                                |
-| **Role**         | A named set of rights (President, Treasurer…). Each member has **one** role.                                                          |
-| **Default role** | The role offered first when an access request is approved. There is always one.                                                       |
-| **Right**        | What a role allows ("Manage members", "View events"…). The code calls it a _permission_.                                              |
-| **All rights**   | An option of a role: it gets every right, including those of modules added later.                                                     |
+| Word             | Meaning                                                                                                                                    |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **BDE**          | _Bureau Des Étudiants_: the student association of a school. "The board" means the members who run it.                                     |
+| **Platform**     | The site a BDE runs with BDE_Network. A platform belongs to one BDE alone (an _instance_).                                                 |
+| **Owner**        | An account with **every right**, including the audit log and Settings. The list of owners is managed in **Settings**, Owners section.      |
+| **Member**       | An approved account. Its rights are those of its **role**.                                                                                 |
+| **Pending**      | An account that has just signed in and that nobody has approved yet. It can only see the waiting page.                                     |
+| **Approve**      | What is done to an **access request**: it is approved (the account becomes a member) or rejected. One word for requests: never "validate". |
+| **Role**         | A named set of rights (President, Treasurer…). Each member has **one** role.                                                               |
+| **Default role** | The role offered first when an access request is approved. There is always one.                                                            |
+| **Right**        | What a role allows ("Manage members", "View events"…). The code calls it a _permission_.                                                   |
+| **All rights**   | An option of a role: it gets every right, including those of modules added later.                                                          |
 
 ## Signing in
 
@@ -30,23 +31,24 @@ The words of the platform, as they appear in the interface. One word always mean
 
 ## Events
 
-| Word                       | Meaning                                                                                                                                        |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Module**                 | A function you turn on: for now, the **Events** module.                                                                                        |
-| **Event**                  | An activity of the BDE, with a title, a start, an end, a location, a description and a category.                                               |
-| **Draft**                  | An event not published yet: only its author and those who validate events see it.                                                              |
-| **Proposal**               | An event proposed by somebody who cannot publish it, **awaiting validation** until a validator answers.                                        |
-| **Validator**              | Somebody whose role has the right to validate events: they approve or refuse proposals.                                                        |
-| **Confirmed**              | An event visible to every member. Confirming it notifies the members.                                                                          |
-| **Series**                 | An event that repeats (every day, week, month or year, on the days you choose) until a date or a number of times.                              |
-| **Occurrence**             | One date of a series. You can edit, confirm, cancel it alone, or act on it and the following dates.                                            |
-| **Category**               | A type of event, with a name and a color (Party, Sport…). Each BDE has its own.                                                                |
-| **School year**            | From September to August (`2025-2026`), computed from the start date.                                                                          |
-| **Personal calendar link** | A member's secret link, to add to Google Calendar, Outlook or Apple Calendar. See **My profile**.                                              |
-| **Staff**                  | The school's staff who publish the BDE's events on the 42 intra. They have an account like any member, with a role that allows it.             |
-| **Request to publish**     | What the platform sends to the staff for a confirmed event: the fields to copy into the intra's form. One per event, a series being one event. |
-| **To update**              | A published event that changed since: the staff has to change it on the intra too, then confirm.                                               |
-| **BDE calendar link**      | One link for the whole BDE, to paste once into a shared calendar. It is managed under **Shared calendar**.                                     |
+| Word                       | Meaning                                                                                                                                            |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Module**                 | A function you turn on: for now, the **Events** module.                                                                                            |
+| **Event**                  | An activity of the BDE, with a title, a start, an end, a location, a description and a category.                                                   |
+| **Draft**                  | An event not published yet: only its author and those who validate events see it.                                                                  |
+| **Proposal**               | An event proposed by somebody who cannot publish it, **awaiting validation** until a validator answers.                                            |
+| **Validate**               | What is done to a **proposal** of an event: a validator validates it (the event is published) or refuses it. One word for events: never "approve". |
+| **Validator**              | Somebody whose role has the right to validate events: they validate or refuse proposals.                                                           |
+| **Confirmed**              | An event visible to every member. Confirming it notifies the members.                                                                              |
+| **Series**                 | An event that repeats (every day, week, month or year, on the days you choose) until a date or a number of times.                                  |
+| **Occurrence**             | One date of a series. You can edit, confirm, cancel it alone, or act on it and the following dates.                                                |
+| **Category**               | A type of event, with a name and a color (Party, Sport…). Each BDE has its own.                                                                    |
+| **School year**            | From September to August (`2025-2026`), computed from the start date.                                                                              |
+| **Personal calendar link** | A member's secret link, to add to Google Calendar, Outlook or Apple Calendar. See **My profile**.                                                  |
+| **Staff**                  | The school's staff who publish the BDE's events on the 42 intra. They have an account like any member, with a role that allows it.                 |
+| **Request to publish**     | What the platform sends to the staff for a confirmed event: the fields to copy into the intra's form. One per event, a series being one event.     |
+| **To update**              | A published event that changed since: the staff has to change it on the intra too, then confirm.                                                   |
+| **BDE calendar link**      | One link for the whole BDE, to paste once into a shared calendar. It is managed under **Shared calendar**.                                         |
 
 ## Messages
 

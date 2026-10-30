@@ -67,14 +67,14 @@ Et, **pour chaque module activé** :
 
 Le module **Événements** a ses propres droits, à la place de « Gérer » :
 
-| Droit                                    | Ce qu'il permet                                                                                                                                                   |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Proposer des événements**              | Créer des événements qui attendent un validateur, et modifier ou supprimer les siens tant qu'ils ne sont pas publiés. Inclut « consulter ».                       |
-| **Valider les événements**               | Approuver ou refuser les propositions, créer, modifier, confirmer et supprimer tous les événements, et voir les brouillons. Inclut « proposer » et « consulter ». |
-| **Gérer l'agenda partagé**               | Créer, renouveler ou désactiver le lien d'agenda commun du BDE. Inclut « consulter ».                                                                             |
-| **Publier sur l'intra**                  | Pour le staff de l'école : voir les demandes de publication des événements sur l'intra, copier leurs champs et répondre. N'inclut rien : voir plus bas.           |
-| **Suivre les publications sur l'intra**  | Voir où en est la publication de chaque événement, sans répondre. Inclut « consulter ».                                                                           |
-| **Demander une publication sur l'intra** | Renvoyer une demande refusée, ou en envoyer une pour un événement déjà confirmé. Valider les événements le permet déjà. Inclut « consulter ».                     |
+| Droit                                    | Ce qu'il permet                                                                                                                                                 |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Proposer des événements**              | Créer des événements qui attendent un validateur, et modifier ou supprimer les siens tant qu'ils ne sont pas publiés. Inclut « consulter ».                     |
+| **Valider les événements**               | Valider ou refuser les propositions, créer, modifier, confirmer et supprimer tous les événements, et voir les brouillons. Inclut « proposer » et « consulter ». |
+| **Gérer l'agenda partagé**               | Créer, renouveler ou désactiver le lien d'agenda commun du BDE. Inclut « consulter ».                                                                           |
+| **Publier sur l'intra**                  | Pour le staff de l'école : voir les demandes de publication des événements sur l'intra, copier leurs champs et répondre. N'inclut rien : voir plus bas.         |
+| **Suivre les publications sur l'intra**  | Voir où en est la publication de chaque événement, sans répondre. Inclut « consulter ».                                                                         |
+| **Demander une publication sur l'intra** | Renvoyer une demande refusée, ou en envoyer une pour un événement déjà confirmé. Valider les événements le permet déjà. Inclut « consulter ».                   |
 
 **Publier sur l'intra** est le droit du staff de l'école, qui publie les événements du BDE sur l'intra 42. Il n'inclut **rien**, exprès :
 un rôle qui n'a que ce droit voit la page des demandes, et ni le calendrier, ni les membres, ni les réglages. Ajoutez « Consulter les

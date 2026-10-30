@@ -17,7 +17,7 @@ partagé entre deux instances.
 
 ## Ce qu'elle fait
 
-- **Connexion avec 42 uniquement.** Aucun mot de passe à gérer. Les nouveaux membres attendent une validation : le
+- **Connexion avec 42 uniquement.** Aucun mot de passe à gérer. Les nouveaux membres attendent une approbation : le
   bureau les approuve et choisit leur rôle. La connexion peut être limitée à certains campus.
 - **Installation dans le navigateur.** Une commande, puis une page vous guide pas à pas et vérifie vos réponses auprès
   de 42. Aucun fichier à modifier, puis une page **Paramètres** pour les propriétaires.

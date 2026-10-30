@@ -252,7 +252,7 @@ est **toujours lue** (`"discord"` vaut `[discord]`, `"none"` vaut `[]`) : aucun 
 | `eventConfirmed` | un événement est confirmé         | Voir [Événements](events.md#notifications).                                                                                           |
 | `eventReminder`  | la veille d'un événement          | Voir [Événements](events.md#notifications).                                                                                           |
 | `eventProposed`  | un événement est proposé          | E-mail : les propriétaires et les rôles qui ont le droit « Valider les événements ». Discord ou Slack : le salon.                     |
-| `eventApproved`  | une proposition est approuvée     | E-mail : **son auteur**. Discord ou Slack : le salon.                                                                                 |
+| `eventApproved`  | une proposition est validée       | E-mail : **son auteur**. Discord ou Slack : le salon.                                                                                 |
 | `eventRefused`   | une proposition est refusée       | E-mail : **son auteur**, avec le commentaire. Discord ou Slack : le salon.                                                            |
 | `intraRequested` | publication demandée              | Voir [Notifications](notifications.md#messages-sur-la-publication-sur-lintra) ; seulement quand `events.intraPublication` est activé. |
 | `intraChanged`   | un événement sur l'intra change   | Voir [Notifications](notifications.md#messages-sur-la-publication-sur-lintra) ; seulement quand `events.intraPublication` est activé. |
