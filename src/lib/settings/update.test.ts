@@ -313,7 +313,7 @@ describe('the sections', () => {
 
   it('address: wants an explicit yes for plain http on a domain, and keeps the old one in the audit', async () => {
     const { db, state } = fakeDb();
-    expect(await run({ section: 'address', address: 'nope' }, db)).toMatchObject({
+    expect(await run({ section: 'address', address: 'not an address' }, db)).toMatchObject({
       ok: false,
       code: 'address',
     });

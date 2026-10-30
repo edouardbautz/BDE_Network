@@ -58,6 +58,12 @@ describe('registeredAddress', () => {
     expect(registeredAddress()).toBe('https://bde.exemple.fr');
     register('http://127.0.0.1:3000');
     expect(registeredAddress()).toBe('http://localhost:3000');
+    register('http://[2001:db8::1]:3000/');
+    expect(registeredAddress()).toBe('http://[2001:db8::1]:3000');
+    register('http://203.0.113.7:3000');
+    expect(registeredAddress()).toBe('http://203.0.113.7:3000');
+    register('http://[::1]:3000');
+    expect(registeredAddress()).toBe('http://localhost:3000');
   });
 
   it('is null when there is none, or when it cannot be used', () => {

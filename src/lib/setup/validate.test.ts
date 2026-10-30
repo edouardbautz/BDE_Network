@@ -120,14 +120,59 @@ describe('validateAddress', () => {
   it.each([
     '',
     'not an address',
-    'bde',
     'ftp://bde.exemple.fr',
     'bde.exemple.fr:99999',
     '999.1.1.1.1',
+    '999.1.1',
+    '12345',
     'bde.exemple.fr/path',
     'javascript:alert(1)',
+    '[2001:db8::1',
+    '[bde]:3000',
+    '[2001:db8::g]',
+    '1:2:3:4:5:6:7:8:9',
+    '[1::2::3]',
+    '[fe80::1%25eth0]',
+    '2001:db8::1:3000:',
+    '[2001:db8::1]:99999',
+    'http://[2001:db8::1]x',
   ])('refuses %j', (input) => {
     expect(validateAddress(input)).toEqual({ ok: false, error: 'address' });
+  });
+
+  it.each(['bde', 'bde:3000', 'http://bde', 'https://mail_server:8443', 'my-server'])(
+    'refuses %j because a name with no dot does not work with 42',
+    (input) => {
+      expect(validateAddress(input)).toEqual({ ok: false, error: 'addressNoDot' });
+    },
+  );
+
+  it.each([
+    ['203.0.113.7', 'http://203.0.113.7'],
+    ['https://203.0.113.7:8443', 'https://203.0.113.7:8443'],
+    ['[2001:db8::1]:3000', 'http://[2001:db8::1]:3000'],
+    ['2001:DB8:0:0:0:0:0:1', 'http://[2001:db8::1]'],
+    ['[2001:db8::1]', 'http://[2001:db8::1]'],
+    ['https://[2001:db8::1]:8443/', 'https://[2001:db8::1]:8443'],
+    ['[2001:db8::1]:80', 'http://[2001:db8::1]'],
+    ['[::ffff:192.168.0.1]:3000', 'http://[::ffff:c0a8:1]:3000'],
+  ])('accepts the IP address %j and writes it %j', (typed, url) => {
+    expect(value(validateAddress(typed))).toMatchObject({
+      url,
+      isLocal: false,
+      insecureDomain: false,
+    });
+  });
+
+  it('keeps writing this computer as localhost, in IPv6 too, and refuses the unspecified IPv6', () => {
+    expect(value(validateAddress('[::1]:3000'))).toMatchObject({
+      url: 'http://localhost:3000',
+      isLocal: true,
+    });
+    expect(value(validateAddress('::1'))).toMatchObject({ url: 'http://localhost:3000' });
+    for (const typed of ['[::]', '[::]:3000', '::', '[0:0:0:0:0:0:0:0]']) {
+      expect(validateAddress(typed), typed).toEqual({ ok: false, error: 'addressUnspecified' });
+    }
   });
 
   it('writes the redirect address 42 must be given', () => {
@@ -210,6 +255,8 @@ describe('mail settings', () => {
   });
   it.each([
     ['mailpit', 'mailpit'],
+    ['mail_server', 'mail_server'],
+    ['my_app_mail.internal', 'my_app_mail.internal'],
     ['Postfix', 'postfix'],
     ['mail', 'mail'],
     ['a', 'a'],
@@ -244,7 +291,6 @@ describe('mail settings', () => {
     ['mail..fr', 'smtpHost'],
     ['mail.fr.', 'smtpHost'],
     ['.mail.fr', 'smtpHost'],
-    ['mail_server', 'smtpHost'],
     ['mail;rm', 'smtpHost'],
     ['mäil.fr', 'smtpHost'],
     ['a'.repeat(64), 'smtpHost'],
@@ -283,6 +329,8 @@ describe('addressNotice', () => {
   it('says nothing when the browser is on the address that is being saved', () => {
     expect(addressNotice('http://localhost:3000', 'http://localhost:3000')).toBeNull();
     expect(addressNotice('https://bde.exemple.fr', 'https://bde.exemple.fr')).toBeNull();
+    expect(addressNotice('http://[2001:db8::1]:3000', 'http://[2001:db8::1]:3000')).toBeNull();
+    expect(addressNotice('http://203.0.113.7:3000', 'http://203.0.113.7:3000')).toBeNull();
   });
 
   it('warns when the browser is somewhere else: 42 would send the visitor to an address it cannot reach', () => {

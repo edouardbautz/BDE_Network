@@ -215,6 +215,9 @@ describe('the sign-in with a server that listens on 0.0.0.0', () => {
     ['an https address behind a proxy', () => 'https://bde.exemple.fr'],
     ['localhost with its port', () => `http://localhost:${port}`],
     ['an http address with the default port left out', () => 'http://bde.exemple.fr'],
+    ['an IPv4 address with its port', () => 'http://203.0.113.7:3000'],
+    ['an IPv6 address with its port', () => 'http://[2001:db8::1]:3000'],
+    ['an IPv6 address behind a proxy', () => 'https://[2001:db8::1]'],
     [
       'localhost, written 127.0.0.1 (Next.js reads it as localhost)',
       () => `http://127.0.0.1:${port}`,

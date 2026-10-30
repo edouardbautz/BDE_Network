@@ -270,7 +270,7 @@ describe('the steps', () => {
   });
 
   it('2. gives the redirect address to declare, and wants an explicit yes for plain http on a domain', async () => {
-    expect(await actions.saveAddress({ address: 'nonsense' })).toMatchObject({
+    expect(await actions.saveAddress({ address: 'not an address' })).toMatchObject({
       ok: false,
       code: 'address',
     });

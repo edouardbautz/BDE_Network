@@ -13,6 +13,7 @@ export type SetupErrorCode =
   | 'color'
   | 'timezone'
   | 'address'
+  | 'addressNoDot'
   | 'addressUnspecified'
   | 'clientId'
   | 'clientSecret'
@@ -87,23 +88,42 @@ export interface Address {
 const DOMAIN = /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/;
 const IPV4 = /^(?:\d{1,3}\.){3}\d{1,3}$/;
 
-/** `localhost`, `localhost:3001`, `bde.exemple.fr`, `https://bde.exemple.fr/` → a public address. */
+/**
+ * `localhost`, `localhost:3001`, `bde.exemple.fr`, `https://bde.exemple.fr/`, `192.168.1.10:3000`, `[2001:db8::1]:3000` → a public address.
+ * An IPv6 address is written between brackets when a port follows (bare, it has none); a name with no dot is refused
+ * (`addressNoDot`): 42 sends people back to this address and browsers do not reliably keep the sign-in cookies for it.
+ */
 export function validateAddress(input: string): Check<Address> {
-  const match = /^(?:(https?):\/\/)?([^/\s:]+)(?::(\d{1,5}))?\/?$/i.exec(input.trim());
-  if (!match?.[2]) return fail('address');
+  const match =
+    /^(?:(https?):\/\/)?(?:\[([0-9a-f:.]+)\]|([0-9a-f]*:[0-9a-f:.]*:[0-9a-f:.]*)|([^/\s:[\]]+))(?::(\d{1,5}))?\/?$/i.exec(
+      input.trim(),
+    );
+  const v6 = match?.[2] ?? match?.[3];
+  const written = v6 ?? match?.[4];
+  // A bare IPv6 address carries no port (the colons would be ambiguous): the brackets are what allow one.
+  if (!match || !written) return fail('address');
 
   // 127.0.0.1 is written `localhost`: Next.js does the same in every URL it builds (see canonicalHost).
-  const host = canonicalHost(match[2]);
+  // An IPv6 address is written the way a URL writes it (compressed, lower case), the way Auth.js will send it.
+  let host: string;
+  try {
+    host = canonicalHost(v6 === undefined ? written : new URL('http://[' + v6 + ']').hostname);
+  } catch {
+    return fail('address');
+  }
   const explicitScheme = match[1]?.toLowerCase();
-  const port = match[3] === undefined ? undefined : Number(match[3]);
+  const port = match[5] === undefined ? undefined : Number(match[5]);
   if (port !== undefined && (port < 1 || port > 65535)) return fail('address');
 
   // `0.0.0.0` is where the server listens, not an address anyone can open (nor one 42 can send people back to).
   if (isUnspecifiedHost(host)) return fail('addressUnspecified');
 
-  const isLocal = host === 'localhost' || host === '127.0.0.1';
-  const isIp = IPV4.test(host) && host.split('.').every((part) => Number(part) <= 255);
-  if (!isLocal && !isIp && !DOMAIN.test(host)) return fail('address');
+  const isLocal = host === 'localhost';
+  const isIp =
+    v6 !== undefined || (IPV4.test(host) && host.split('.').every((part) => Number(part) <= 255));
+  if (!isLocal && !isIp && !DOMAIN.test(host)) {
+    return fail(HOST_LABEL.test(host) && !/^\d+$/.test(host) ? 'addressNoDot' : 'address');
+  }
 
   const scheme = explicitScheme ?? (isLocal || isIp ? 'http' : 'https');
   const defaultPort = scheme === 'https' ? 443 : 80;
@@ -180,7 +200,8 @@ export function validateSlackWebhook(input: string): Check<string> {
     : fail('slack');
 }
 
-const HOST_LABEL = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+// RFC 1123 labels, plus the underscore: Docker names its services with it (`mail_server`).
+const HOST_LABEL = /^[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?$/;
 const HEX_GROUP = /^[0-9a-f]{1,4}$/;
 
 function isIPv4(text: string): boolean {

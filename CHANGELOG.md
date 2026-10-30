@@ -95,6 +95,10 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Fixed
 
+- **The platform's address accepts IP addresses, and the mail server field accepts the underscore.** The public address of the installer and of Settings takes an IPv4 or an IPv6 address
+  (between brackets with a port, `[2001:db8::1]:3000`), useful before a domain name exists; the sign-in with 42 sends and receives that same address, played by the sign-in test with an
+  IPv4 and an IPv6 address. A name with no dot (`bde`) is still refused, now with a message that says why (42 and the sign-in cookies). The mail server accepts `mail_server`, the way
+  Docker names its services.
 - **The mail server field accepts any valid host name.** The installer and Settings → Notifications → E-mail refused a name with no dot such as `mailpit` or `postfix`, which is
   what a self-hosted mail server is often called on a Docker or school network. The field now takes any host name of RFC 1123 (a single word included), `localhost`, and IPv4 and IPv6
   addresses (with or without brackets), and still refuses a scheme (`smtp://`), a path, a port stuck to the name and spaces, with a message that says what to remove.
