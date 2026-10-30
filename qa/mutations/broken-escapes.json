@@ -1,0 +1,44 @@
+[
+  [
+    "broken escapes: the apostrophe is damaged again in a message",
+    "messages/fr.json",
+    "Ce canal partira d'une copie du modèle commun et ne suivra",
+    "Ce canal partira d2019une copie du modèle commun et ne suivra",
+    ["src/i18n/broken-escapes.test.ts"]
+  ],
+  [
+    "broken escapes: a letter lost with the backslash is damaged in the documentation",
+    "docs/en/glossary.md",
+    "# Glossary",
+    "# Glossary d2019une",
+    ["src/i18n/broken-escapes.test.ts"]
+  ],
+  [
+    "broken escapes: a word that kept its u is no longer seen",
+    "src/i18n/broken-escapes.test.ts",
+    "[\\\\p{L}]+u?(?:${CODES})",
+    "[\\\\p{L}]+(?:${CODES})",
+    ["src/i18n/broken-escapes.test.ts"]
+  ],
+  [
+    "broken escapes: the apostrophe is no longer one of the codes",
+    "src/i18n/broken-escapes.test.ts",
+    "'2010|2011|2012|2013|2014|2018|2019|201c",
+    "'2010|2011|2012|2013|2014|2018|201c",
+    ["src/i18n/broken-escapes.test.ts"]
+  ],
+  [
+    "broken escapes: an escape written as text is no longer seen in the catalogs",
+    "src/i18n/broken-escapes.test.ts",
+    "expect(ESCAPE_AS_TEXT.test(text), `${rel(file)}: ${text.slice(0, 60)}`).toBe(false);",
+    "",
+    ["src/i18n/broken-escapes.test.ts"]
+  ],
+  [
+    "broken escapes: a Prisma code is taken for a damaged text",
+    "src/i18n/broken-escapes.test.ts",
+    "(?!P\\\\d{4}(?![\\\\p{L}\\\\p{N}]))",
+    "",
+    ["src/i18n/broken-escapes.test.ts"]
+  ]
+]

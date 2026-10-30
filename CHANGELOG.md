@@ -95,6 +95,11 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Fixed
 
+- **A broken apostrophe in the window "Customise Discord?" of the notification editor.** The French text of the window that offers to customise a channel showed the code of the
+  apostrophe stuck inside a word instead of the apostrophe (two messages: the window and its variant with unsaved changes). Nothing else was damaged: every message, e-mail, card, default
+  template, reference file, error page, page of documentation and note of this changelog was searched for such leftovers of a character code, with the accented letters, quotes, dashes,
+  spaces and the ellipsis. A test (`src/i18n/broken-escapes.test.ts`) now fails when one comes back in a catalog, a page of documentation, a reference of the notifications or a source,
+  and the rule is written in the architecture notes: texts are written with their characters, never with codes.
 - **The platform's address accepts IP addresses, and the mail server field accepts the underscore.** The public address of the installer and of Settings takes an IPv4 or an IPv6 address
   (between brackets with a port, `[2001:db8::1]:3000`), useful before a domain name exists; the sign-in with 42 sends and receives that same address, played by the sign-in test with an
   IPv4 and an IPv6 address. A name with no dot (`bde`) is still refused, now with a message that says why (42 and the sign-in cookies). The mail server accepts `mail_server`, the way
