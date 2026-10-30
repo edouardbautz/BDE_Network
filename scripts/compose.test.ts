@@ -1,5 +1,15 @@
 // @vitest-environment node
-import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import {
+  chmodSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { load } from 'js-yaml';
 import { describe, expect, it } from 'vitest';
@@ -63,12 +73,74 @@ describe('docker-compose.yml, for the backups', () => {
     expect(script).toContain('chmod 755 /auto-backups');
   });
 
-  it('does not stop the platform from starting when a file system refuses to hand the folder over (a share, a Windows mount)', () => {
-    // the script runs with `set -eu`: a refused chown must be answered, not fatal
+  it('tells the application where the folder is on the server, for the messages of the Settings page', () => {
+    const environment = (doc.services.app as { environment?: Record<string, string> }).environment;
+    expect(environment?.BDE_BACKUP_HOST_DIR).toBe('${BDE_BACKUP_DIR:-./backups/auto}');
+  });
+
+  /**
+   * The step that prepares the folder, played for real (POSIX `sh`, a folder of the machine, the commands that a file system can refuse
+   * replaced by stand-ins): a rootless Docker on a network disk answered "not permitted" to the change of owner, left the folder private to
+   * the host user, and the application could not even list it ("the folder cannot be read").
+   */
+  describe.skipIf(process.platform === 'win32')('the preparation of the folder, played', () => {
     const script = String(doc.services.secrets?.command?.join('\n'));
-    expect(script).toMatch(
-      /\{ chown 1001:1001 \/auto-backups && chmod 755 \/auto-backups; \} 2>\/dev\/null \|\|\s+echo "[^"]*automatic backups will fail/,
-    );
+    const start = script.indexOf('if { chown 1001:1001 /auto-backups');
+    const part = script.slice(start, script.indexOf('\nfi\n', start) + 4);
+
+    it('found the step it plays', () => {
+      expect(start).toBeGreaterThan(0);
+      expect(part).toContain('chmod 1777 /auto-backups');
+      expect(part.trim().endsWith('fi')).toBe(true);
+    });
+
+    function prepare(refuse: { chown?: boolean; open?: boolean }): { mode: string; log: string } {
+      const work = mkdtempSync(join(tmpdir(), 'bde-prepare-'));
+      try {
+        const folder = join(work, 'auto-backups');
+        const bin = join(work, 'bin');
+        mkdirSync(folder, { mode: 0o700 });
+        mkdirSync(bin);
+        chmodSync(folder, 0o700);
+        const stand = (name: string, body: string) => {
+          writeFileSync(join(bin, name), `#!/bin/sh\n${body}\n`);
+          chmodSync(join(bin, name), 0o755);
+        };
+        stand('chown', refuse.chown ? 'exit 1' : 'exit 0');
+        stand(
+          'chmod',
+          // the real chmod, except for the opening of the folder when the file system refuses it too
+          `${refuse.open ? 'if [ "$1" = 1777 ]; then exit 1; fi' : ''}\nexec /bin/chmod "$@"`,
+        );
+        const run = spawnSync('sh', ['-eu', '-c', part.replaceAll('/auto-backups', folder)], {
+          env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
+          encoding: 'utf8',
+        });
+        expect(run.status, run.stderr).toBe(0);
+        return {
+          mode: (statSync(folder).mode & 0o7777).toString(8),
+          log: run.stderr,
+        };
+      } finally {
+        rmSync(work, { recursive: true, force: true });
+      }
+    }
+
+    it('hands the folder over and lists it for everybody when it can', () => {
+      expect(prepare({})).toEqual({ mode: '755', log: '' });
+    });
+
+    it('opens the folder, with the sticky bit, when the file system refuses the change of owner, and says so', () => {
+      const result = prepare({ chown: true });
+      expect(result.mode).toBe('1777');
+      expect(result.log).toContain('it is open to every user of the server instead');
+    });
+
+    it('does not stop the platform from starting when nothing works, and says the backups will fail', () => {
+      const result = prepare({ chown: true, open: true });
+      expect(result.mode).toBe('700');
+      expect(result.log).toContain('nor opened for it: the automatic backups will fail');
+    });
   });
 
   it('passes the number of the stack that the image checks (the two change together)', () => {

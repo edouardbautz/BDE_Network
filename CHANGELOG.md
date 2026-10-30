@@ -95,6 +95,13 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Fixed
 
+- **Automatic backups on a rootless Docker whose disk refuses the change of owner (a network disk, the computers of the school).** The step that prepares the folder of the
+  nightly backups chained the change of owner and the opening of the rights: when the file system refused the first, the folder stayed private to the host user and the
+  platform could not even list it ("the backups folder cannot be read"). It now opens the folder to every user of the server with the sticky bit when the owner cannot be
+  changed (the archives stay `600`), and says so in the logs. The Settings page and the logs name the folder that was checked (on the platform and on the server), its owner
+  and rights, what is wrong (missing, not a folder, cannot be read, cannot be written, inside the container instead of on the server) and what to do. The guide says where each kind
+  of copy is kept and which survive `docker compose down -v`. The backups suite plays the case (a file system that refuses the owner) and the folder that cannot be used.
+
 - **A broken apostrophe in the window "Customise Discord?" of the notification editor.** The French text of the window that offers to customise a channel showed the code of the
   apostrophe stuck inside a word instead of the apostrophe (two messages: the window and its variant with unsaved changes). Nothing else was damaged: every message, e-mail, card, default
   template, reference file, error page, page of documentation and note of this changelog was searched for such leftovers of a character code, with the accented letters, quotes, dashes,

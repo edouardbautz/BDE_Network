@@ -1472,6 +1472,23 @@
         "title": "Aucune sauvegarde n’a réussi depuis deux jours",
         "body": "Vos données ne sont pas protégées comme elles devraient l’être. Voyez la raison ci-dessous, et dans les journaux de la plateforme (docker compose logs app)."
       },
+      "folder": {
+        "title": "Le dossier des sauvegardes n’est pas utilisable",
+        "checked": "Dossier vérifié : {path}.",
+        "checkedHost": "Dossier vérifié : {path} (sur le serveur : {host}).",
+        "missing": "Ce dossier n’existe pas{code, select, none {} other { (code {code})}}.",
+        "notDirectory": "Ce n’est pas un dossier.",
+        "unreadable": "Ce dossier existe mais la plateforme (utilisateur {uid}) ne peut pas le lire : il appartient à {owner} avec les droits {mode}.",
+        "notWritable": "Ce dossier peut être lu mais pas écrit par la plateforme (utilisateur {uid}) : il appartient à {owner} avec les droits {mode}{code, select, none {} other { (code {code})}}.",
+        "notMounted": "Ce dossier est dans le conteneur et non sur le serveur : les sauvegardes y seraient perdues à la prochaine recréation du conteneur.",
+        "fixTitle": "Que faire, sur le serveur",
+        "fix": {
+          "missing": "Créez le dossier {host}, puis relancez la plateforme avec docker compose up -d.",
+          "notDirectory": "Remplacez {host} par un dossier vide, puis relancez avec docker compose up -d.",
+          "rights": "Relancez avec docker compose up -d : l’étape de préparation donne le dossier à la plateforme. Si docker compose logs secrets dit que le dossier ne peut pas lui être remis (disque réseau, dossier d’un autre utilisateur, Docker sans droits d’administrateur), ouvrez-le en tant que propriétaire avec chmod 1777 {host}, puis relancez. Si cela ne suffit pas, choisissez un dossier d’un disque local avec BDE_BACKUP_DIR dans .env.",
+          "notMounted": "Vérifiez que docker-compose.yml est bien celui de cette version (git pull), qui monte {host} sur /auto-backups, puis relancez avec docker compose up -d."
+        }
+      },
       "failure": {
         "title": "La dernière tentative a échoué",
         "body": "Raison : {reason} Les sauvegardes déjà faites sont intactes."

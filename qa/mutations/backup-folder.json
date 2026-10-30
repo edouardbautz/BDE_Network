@@ -1,0 +1,79 @@
+[
+  [
+    "backup folder: a folder that cannot be listed is not reported",
+    "src/lib/backups/folder.ts",
+    "return { ...base, problem: 'unreadable', owner, code: codeOf(error) };",
+    "return { ...base, owner };",
+    ["src/lib/backups/folder.test.ts"]
+  ],
+  [
+    "backup folder: a folder that cannot be written is not reported",
+    "src/lib/backups/folder.ts",
+    "return { ...base, problem: 'notWritable', owner, code: codeOf(error) };",
+    "return { ...base, owner };",
+    ["src/lib/backups/folder.test.ts"]
+  ],
+  [
+    "backup folder: a missing folder is not reported",
+    "src/lib/backups/folder.ts",
+    "return { ...base, problem: 'missing', code: codeOf(error) };",
+    "return { ...base, code: codeOf(error) };",
+    ["src/lib/backups/folder.test.ts", "src/lib/backups/list.test.ts"]
+  ],
+  [
+    "backup folder: a file in place of the folder is not reported",
+    "src/lib/backups/folder.ts",
+    "if (!info.isDirectory()) return { ...base, problem: 'notDirectory', owner };",
+    "",
+    ["src/lib/backups/folder.test.ts"]
+  ],
+  [
+    "backup folder: the container's own disk is taken for a mount (or the reverse)",
+    "src/lib/backups/folder.ts",
+    "root.dev === info.dev",
+    "root.dev !== info.dev",
+    ["src/lib/backups/folder.test.ts"]
+  ],
+  [
+    "backup folder: the owner and the rights are not told",
+    "src/lib/backups/folder.ts",
+    "const owner = { uid: info.uid, gid: info.gid, mode: (info.mode & 0o7777).toString(8) };",
+    "const owner = { uid: 0, gid: 0, mode: '0' };",
+    ["src/lib/backups/folder.test.ts"]
+  ],
+  [
+    "backup folder: the overview does not carry the diagnosis",
+    "src/lib/backups/list.ts",
+    "folder: await diagnoseFolder(dir),",
+    "folder: { ...(await diagnoseFolder(dir)), problem: null },",
+    ["src/lib/backups/list.test.ts"]
+  ],
+  [
+    "backup folder: the Settings page says nothing about the folder",
+    "src/components/settings/backups-section.tsx",
+    "{folder.problem && (",
+    "{false && folder.problem && (",
+    ["src/components/settings/backups-ui.test.tsx"]
+  ],
+  [
+    "backup folder: the Settings page gives the same advice for a missing folder and a wrong right",
+    "src/components/settings/backups-section.tsx",
+    "folder.problem === 'unreadable' || folder.problem === 'notWritable' ? 'rights' : folder.problem",
+    "'rights'",
+    ["src/components/settings/backups-ui.test.tsx"]
+  ],
+  [
+    "backup folder: the compose file no longer opens the folder when the owner cannot be changed",
+    "docker-compose.yml",
+    "elif chmod 1777 /auto-backups 2>/dev/null; then",
+    "elif false; then",
+    ["scripts/compose.test.ts"]
+  ],
+  [
+    "backup folder: the compose file stops saying that nothing worked",
+    "docker-compose.yml",
+    "nor opened for it: the automatic backups will fail",
+    "ok",
+    ["scripts/compose.test.ts"]
+  ]
+]

@@ -43,7 +43,10 @@ export async function BackupsSection({
   const when = new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeStyle: 'short', timeZone });
   const day = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone });
   const reason = (code: FailureCode) => t(`reasons.${code}`);
-  const { last } = overview;
+  const { last, folder } = overview;
+  const host = folder.hostPath ?? 'backups/auto';
+  const fixKey =
+    folder.problem === 'unreadable' || folder.problem === 'notWritable' ? 'rights' : folder.problem;
 
   return (
     <Card>
@@ -103,6 +106,27 @@ export async function BackupsSection({
             </div>
           </div>
 
+          {folder.problem && (
+            <Alert variant="destructive">
+              <ShieldAlert aria-hidden="true" />
+              <AlertTitle>{t('folder.title')}</AlertTitle>
+              <AlertDescription>
+                <p>
+                  {folder.hostPath
+                    ? t('folder.checkedHost', { path: folder.path, host: folder.hostPath })
+                    : t('folder.checked', { path: folder.path })}{' '}
+                  {t(`folder.${folder.problem}`, {
+                    uid: folder.uid ?? '?',
+                    owner: folder.owner ? `${folder.owner.uid}:${folder.owner.gid}` : '?',
+                    mode: folder.owner?.mode ?? '?',
+                    code: folder.code ?? 'none',
+                  })}
+                </p>
+                <p className="font-medium">{t('folder.fixTitle')}</p>
+                <p>{t(`folder.fix.${fixKey}`, { host })}</p>
+              </AlertDescription>
+            </Alert>
+          )}
           {overview.stale && (
             <Alert variant="destructive">
               <ShieldAlert aria-hidden="true" />
@@ -134,12 +158,12 @@ export async function BackupsSection({
               <h3 className="text-title-4">{t('list.title')}</h3>
               <p className="text-muted-foreground text-body">{t('list.description')}</p>
             </div>
-            {!overview.readable ? (
+            {!overview.readable && !folder.problem ? (
               <Alert variant="destructive">
                 <ShieldAlert aria-hidden="true" />
                 <AlertDescription>{t('list.unreadable')}</AlertDescription>
               </Alert>
-            ) : overview.backups.length === 0 ? (
+            ) : !overview.readable ? null : overview.backups.length === 0 ? (
               <EmptyState
                 icon={DatabaseBackup}
                 title={t('list.empty')}

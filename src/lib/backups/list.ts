@@ -1,5 +1,6 @@
 import { readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
+import { diagnoseFolder, type FolderDiagnosis } from './folder';
 import { parseArchiveName } from './names';
 import { isStale } from './schedule';
 import { readStatus, type Attempt, type FailureCode, type Level } from './status';
@@ -20,6 +21,8 @@ export interface BackupRow {
 export interface BackupOverview {
   /** False when the folder cannot be read at all. */
   readable: boolean;
+  /** What is wrong with the folder, if anything, with the path checked (the Settings page says what to do). */
+  folder: FolderDiagnosis;
   /** The newest first. */
   backups: BackupRow[];
   /** The newest backup that passed its check: what "the last backup" means. */
@@ -68,6 +71,7 @@ export async function readOverview(dir: string, now: Date): Promise<BackupOvervi
 
   return {
     readable: names !== null,
+    folder: await diagnoseFolder(dir),
     backups: rows,
     last: rows[0] ?? null,
     failuresSince: failures.length,

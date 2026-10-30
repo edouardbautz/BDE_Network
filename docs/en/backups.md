@@ -10,6 +10,19 @@ mistake, does not remove it.
 This page is about those backups. The backups you make yourself with `scripts/backup.sh`, and the copy the platform
 makes before an update, are in [Deployment](deployment.md#backups-and-restore).
 
+## Where everything is kept
+
+The platform has **three places** for copies of the data, with different jobs. Only the first one survives `docker compose down -v`.
+
+| What                                       | Where                                                                                                    | Survives `down -v`? |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------- | ------------------- |
+| **The nightly backups** (this page)        | The folder `backups/auto/` of the server (`BDE_BACKUP_DIR`), seen as `/auto-backups` by the platform     | **Yes**             |
+| The copy made **before an update**         | The Docker volume `backups` (seen as `/backups`), `pre-update_<date>_v<version>.sql.gz`, the five newest | No                  |
+| What **you** make with `scripts/backup.sh` | The folder `backups/` next to `docker-compose.yml` (where you ran the script)                            | Yes                 |
+
+The volume `backups` and the folder `backups/` are not the same place, and neither is `backups/auto/`: the platform only
+reads the folder `backups/auto/` for the Settings page. If you look for a nightly backup, look there.
+
 ## What happens every night
 
 1. At 3:00 in the time zone of your BDE (`bde.timezone`), the platform dumps its database, takes the keys of the
@@ -138,9 +151,29 @@ belongs to that user and **you can list it but not read the files** (that is wha
 container is a number of the account's range, with the same effect: you cannot open the files from the host yourself,
 and you do not need to.
 
+**A network disk or a folder of another user.** Under a rootless Docker the folder of the server belongs to your account, and
+the platform's user (a number of your account's range) is "another user" for it. The platform asks the file system to give the
+folder to its user; when the file system refuses (a network disk, a share, a Windows mount), the preparation step opens the folder
+to every user of the server instead, with the sticky bit (`chmod 1777`), and says so in `docker compose logs secrets`. The
+archives stay private to the platform (`600`). If that is not possible either, the Settings page says exactly what it found
+(see below). You can do the same yourself, as the owner of the folder: `chmod 1777 backups/auto`, then `docker compose up -d`.
+
 If the folder cannot be used at all (a disk mounted read-only, a share that refuses to give the folder to the application, a folder
 the container may not write to), the platform **still starts**: the backup fails every night with the reason `folder`, the Backups
 section of the Settings page shows it, and the owners are told if a channel is chosen for it (see below).
+
+## If the Settings page says the folder cannot be used
+
+The **Backups** section then names the folder it checked (`/auto-backups` for the platform, and its place on the server), what is
+wrong with it, and what to do. The same line is in the logs when the platform starts (`docker compose logs app`).
+
+| It says                                               | It means                                                                                    | What to do, on the server                                                                                                            |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| the folder **does not exist**                         | Nothing at that place: the folder was not made, or the compose file is older than the image | Create `backups/auto/`, `git pull`, then `docker compose up -d`.                                                                     |
+| **it is not a folder**                                | A file is where the folder should be                                                        | Replace it by an empty folder.                                                                                                       |
+| the platform **cannot read it** (owner, rights shown) | The folder is private to someone else, and the file system did not let the platform take it | `docker compose up -d`; then, as the owner of the folder, `chmod 1777 backups/auto`; else choose a local disk with `BDE_BACKUP_DIR`. |
+| the platform **cannot write it**                      | It can be listed, not written (rights, or a disk mounted read-only)                         | Same as above; for a read-only disk, remount it or choose another folder.                                                            |
+| it is **inside the container**                        | The folder is not mounted: the backups would be lost when the container is made again       | Use the `docker-compose.yml` of this version (`git pull`), which mounts the folder on `/auto-backups`, then `docker compose up -d`.  |
 
 ## If a backup fails
 
@@ -158,7 +191,7 @@ A failure comes with a reason:
 
 | Reason           | What it means                                                               | What to do                                                   |
 | ---------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `folder`         | The folder of the backups cannot be created or written.                     | Check `BDE_BACKUP_DIR`, the disk, the rights of the folder.  |
+| `folder`         | The folder of the backups cannot be created or written.                     | See the section above: the Settings page says which and why. |
 | `space`          | Less than 50 MiB free, or less than three times the last backup.            | Free some space on the disk of the backups.                  |
 | `dump`           | The database could not be dumped.                                           | Is the database running? `docker compose ps`.                |
 | `secrets`        | The keys could not be read.                                                 | Check the `secrets` volume.                                  |

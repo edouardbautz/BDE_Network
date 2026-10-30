@@ -1036,6 +1036,19 @@ server with nothing, that **has been read again** before it is trusted, and that
   `backups/auto`, not `backups`, because `scripts/backup.sh` writes the latter as the host's user. `BDE_STACK` went from 2 to 3 with this: an image that
   expects the mount, started by a compose file that does not give it, would write the backups inside the container and lose them at the next
   recreation; the image now refuses that with a page (`stack-old-compose`).
+  - **Three places hold copies, not one** (the guide has the table): the nightly backups (`backups/auto/` of the host, mounted on `/auto-backups`, survive `down -v`),
+    the copies before an update (the `backups` volume, mounted on `/backups`, `pre-update_*.sql.gz`, gone with `down -v`) and what `scripts/backup.sh` writes
+    (`backups/` of the host). Looking in the container's `/backups` for a nightly backup finds the volume of the updates, empty: that was a report.
+  - **A file system that refuses the change of owner** (a network disk or a home on NFS under a rootless Docker, a Windows mount): the preparation step of
+    the `secrets` service used to chain `chown && chmod 755` in one list, so a refused `chown` left the folder as the host user made it (often `700`), and the
+    application, another user for it (a number of the user's sub-range, in the image `nextjs`, whose primary group is `nogroup`: harmless), could not even list it:
+    "the folder cannot be read". The step now tries the hand-over, else `chmod 1777` (sticky: the archives stay `600`), else says it cannot, in that order, and
+    never stops the platform. The application looks at the folder itself (`lib/backups/folder.ts`, `diagnoseFolder`): missing, not a folder, cannot be listed,
+    cannot be written, or in the container instead of on a mount (`st_dev` of the folder equal to that of `/`, only inside a container); the Settings page and the
+    log at start (and the log of a refused backup) give the path checked, `BDE_BACKUP_HOST_DIR` (the host path, passed by compose only to be named), the user,
+    the owner and rights, the system's code and what to do. The check never changes anything (`access(2)`, not a test file), so reading the page changes nothing.
+    A test of the compose file plays the step with stand-ins for `chown` and `chmod` (`scripts/compose.test.ts`, Linux), and `qa/backup` plays it for real
+    (below).
 - **One archive** (`run.ts`): `database.sql` (`pg_dump --clean --if-exists`, the dump `backup.sh` makes, reached with `PG*` variables
   built from `DATABASE_URL` by `connection.ts`: the password never on a command line), `secrets.tar` (`auth_secret` and `settings_key`, from the
   `/secrets` volume or, failing that, from `AUTH_SECRET` / `SETTINGS_KEY`; **not** `postgres_password`: a dump restores into any password), `logo.tar`,
@@ -1854,7 +1867,13 @@ gives calendar files with the data in them` guards that); the not-found page mar
   database is stopped at 03:10 (a clock ten minutes later, because the name of a backup is its second): the failure is written down with its reason, the backup that was there is untouched,
   health says 503, and when the database is back the Settings page says that the last attempt failed, why, and that nobody is told by message. The folder is made as a clone makes it
   (`backups/` of the user, Docker making only `backups/auto` in it): a folder made by Docker as root would hide that `scripts/backup.sh`, which `restore.sh` runs first, writes there.
-  **Not covered**: a real rootless daemon (the folder that cannot be handed over is played as a failure with its reason).
+  Two more things are played, once each in the default run: the Settings page lists the backup and has nothing to say about the folder (**the words of the alert are
+  also in the catalog the page carries, between quotes: look for them between `>` and `<`**), and a folder made private to another user (`chown 0:0`, `chmod 700`)
+  is named by the page and by the log at the start, with its owner, its rights and the fix. `--refuse-chown` builds a `secrets` image whose `chown` answers "not
+  permitted" and starts from a folder private to the host user: the folder must be opened (`1777`) and everything above must still hold.
+  **A rootless Docker** is played by `sh qa/backup/rootless.sh` (the `backups-rootless` job): the suite runs inside a `docker:29-dind-rootless` container as its
+  unprivileged user, so that the folders it makes are the daemon's own file system (a bind mount is resolved by the daemon, on its side), once as it is and once with
+  `--refuse-chown`. **Not covered**: a real network disk (NFS, a Kerberos home); the refusal is played by a `chown` that fails, the end state being the same.
 - **Long time** (`qa/longtime/`, the `longtime` job of `qa.yml`: nightly, by hand, or with the label `full-qa`; `QA_LONGTIME=1`
   and `MIGRATION_TEST_DATABASE_URL` for `npx vitest run qa/longtime`). What months do to the platform, without waiting for them. The
   reminder loop takes the instant to look at as a parameter (`runReminderTick(now)`), so no clock is faked: it is called with each of

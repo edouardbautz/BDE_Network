@@ -16,6 +16,7 @@ import { join } from 'node:path';
 import { connectionOf } from './connection';
 import { dumpIsWhole } from './dump';
 import type { Exec } from './exec';
+import { describeFolder, diagnoseFolder } from './folder';
 import {
   DATABASE_FILE,
   INFO_FILE,
@@ -289,8 +290,10 @@ export async function runBackup(
     release = await acquireLock(context.dir, started);
   } catch (error) {
     // The folder cannot be made or written (rights of the host folder under a rootless Docker, a disk mounted read-only)
+    const code = (error as NodeJS.ErrnoException).code ?? 'erreur';
+    const folder = await diagnoseFolder(context.dir);
     context.log?.(
-      `Sauvegarde impossible : le dossier des sauvegardes n'est pas utilisable (${(error as NodeJS.ErrnoException).code ?? 'erreur'}).`,
+      `Sauvegarde impossible : le dossier des sauvegardes n'est pas utilisable (${code}). ${describeFolder({ ...folder, problem: folder.problem ?? 'notWritable', code: folder.code ?? code })}.`,
     );
     return { ok: false, code: 'folder' };
   }

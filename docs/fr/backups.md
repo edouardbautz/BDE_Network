@@ -10,6 +10,19 @@ down -v`, ou la suppression par erreur des volumes de la plateforme, ne l'efface
 Cette page parle de ces sauvegardes. Celles que vous faites vous-même avec `scripts/backup.sh`, et la copie que la
 plateforme fait avant une mise à jour, sont dans [Déploiement](deployment.md#sauvegardes-et-restauration).
 
+## Où est gardé quoi
+
+La plateforme a **trois endroits** pour des copies des données, avec des rôles différents. Seul le premier survit à `docker compose down -v`.
+
+| Quoi                                            | Où                                                                                                          | Survit à `down -v` ? |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------- |
+| **Les sauvegardes de la nuit** (cette page)     | Le dossier `backups/auto/` du serveur (`BDE_BACKUP_DIR`), vu comme `/auto-backups` par la plateforme        | **Oui**              |
+| La copie faite **avant une mise à jour**        | Le volume Docker `backups` (vu comme `/backups`), `pre-update_<date>_v<version>.sql.gz`, les cinq dernières | Non                  |
+| Ce que **vous** faites avec `scripts/backup.sh` | Le dossier `backups/` à côté de `docker-compose.yml` (là où vous avez lancé le script)                      | Oui                  |
+
+Le volume `backups` et le dossier `backups/` ne sont pas le même endroit, et `backups/auto/` non plus : la plateforme ne lit
+que le dossier `backups/auto/` pour la page Paramètres. Si vous cherchez une sauvegarde de la nuit, cherchez là.
+
 ## Ce qui se passe chaque nuit
 
 1. À 3 h dans le fuseau horaire de votre BDE (`bde.timezone`), la plateforme exporte sa base de données, prend les clés
@@ -142,10 +155,31 @@ que servent les droits `600`), et `restore.sh --auto` les lit par le conteneur, 
 rootless, l'utilisateur du conteneur est un numéro de la plage du compte, avec le même effet : vous ne pouvez pas ouvrir
 vous-même les fichiers depuis l'hôte, et vous n'en avez pas besoin.
 
+**Un disque réseau ou un dossier d'un autre utilisateur.** Avec un Docker rootless, le dossier du serveur appartient à votre
+compte, et l'utilisateur de la plateforme (un numéro de la plage de votre compte) est « un autre utilisateur » pour lui. La
+plateforme demande au système de fichiers de lui donner le dossier ; quand il refuse (un disque réseau, un partage, un montage
+Windows), l'étape de préparation ouvre le dossier à tous les utilisateurs du serveur à la place, avec le bit collant
+(`chmod 1777`), et le dit dans `docker compose logs secrets`. Les archives restent privées pour la plateforme (`600`). Si ce
+n'est pas possible non plus, la page Paramètres dit exactement ce qu'elle a trouvé (voir plus bas). Vous pouvez le faire vous-même,
+en tant que propriétaire du dossier : `chmod 1777 backups/auto`, puis `docker compose up -d`.
+
 Si le dossier ne peut pas servir du tout (un disque monté en lecture seule, un partage qui refuse de donner le dossier à
 l'application, un dossier où le conteneur n'a pas le droit d'écrire), la plateforme **démarre quand même** : la sauvegarde échoue
 chaque nuit avec la raison `folder`, la section Sauvegardes de la page Paramètres le montre, et les propriétaires sont prévenus si un
 canal est choisi pour cela (voir plus bas).
+
+## Si la page Paramètres dit que le dossier n'est pas utilisable
+
+La section **Sauvegardes** nomme alors le dossier vérifié (`/auto-backups` pour la plateforme, et sa place sur le serveur), ce qui
+ne va pas, et ce qu'il faut faire. La même ligne est dans les journaux au démarrage de la plateforme (`docker compose logs app`).
+
+| Elle dit                                                     | Cela veut dire                                                                                              | Que faire, sur le serveur                                                                                                                                |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| le dossier **n'existe pas**                                  | Rien à cet endroit : le dossier n'a pas été créé, ou le fichier compose est plus ancien que l'image         | Créez `backups/auto/`, `git pull`, puis `docker compose up -d`.                                                                                          |
+| **ce n'est pas un dossier**                                  | Un fichier est là où le dossier devrait être                                                                | Remplacez-le par un dossier vide.                                                                                                                        |
+| la plateforme **ne peut pas le lire** (propriétaire, droits) | Le dossier est privé à quelqu'un d'autre, et le système de fichiers n'a pas laissé la plateforme le prendre | `docker compose up -d` ; puis, en tant que propriétaire du dossier, `chmod 1777 backups/auto` ; sinon, choisissez un disque local avec `BDE_BACKUP_DIR`. |
+| la plateforme **ne peut pas l'écrire**                       | Il peut être listé, pas écrit (droits, ou disque monté en lecture seule)                                    | Pareil ; pour un disque en lecture seule, remontez-le ou choisissez un autre dossier.                                                                    |
+| il est **dans le conteneur**                                 | Le dossier n'est pas monté : les sauvegardes seraient perdues à la recréation du conteneur                  | Utilisez le `docker-compose.yml` de cette version (`git pull`), qui monte le dossier sur `/auto-backups`, puis `docker compose up -d`.                   |
 
 ## Si une sauvegarde échoue
 
@@ -163,7 +197,7 @@ Un échec vient avec une raison :
 
 | Raison           | Ce que cela veut dire                                                              | Que faire                                                                 |
 | ---------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `folder`         | Le dossier des sauvegardes ne peut pas être créé ou écrit.                         | Vérifiez `BDE_BACKUP_DIR`, le disque, les droits du dossier.              |
+| `folder`         | Le dossier des sauvegardes ne peut pas être créé ou écrit.                         | Voir la section ci-dessus : la page Paramètres dit lequel et pourquoi.    |
 | `space`          | Moins de 50 Mio de libres, ou moins de trois fois la dernière sauvegarde.          | Libérez de la place sur le disque des sauvegardes.                        |
 | `dump`           | La base de données n'a pas pu être exportée.                                       | La base tourne-t-elle ? `docker compose ps`.                              |
 | `secrets`        | Les clés n'ont pas pu être lues.                                                   | Vérifiez le volume `secrets`.                                             |
