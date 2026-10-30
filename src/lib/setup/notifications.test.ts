@@ -125,6 +125,14 @@ describe('parseNotifications', () => {
       code: 'smtpHost',
       field: 'smtpHost',
     });
+    expect(parse({ smtp: { ...SMTP, host: 'smtp://mail.exemple.fr' } })).toMatchObject({
+      code: 'smtpHostScheme',
+      field: 'smtpHost',
+    });
+    expect(parse({ smtp: { ...SMTP, host: 'mailpit' } })).toMatchObject({
+      ok: true,
+      value: { smtp: { host: 'mailpit' } },
+    });
     expect(parse({ smtp: { ...SMTP, port: '70000' } })).toMatchObject({
       code: 'port',
       field: 'smtpPort',

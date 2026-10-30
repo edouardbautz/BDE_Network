@@ -203,11 +203,64 @@ describe('mail settings', () => {
     expect(validateEmail('bde@exemple.fr').ok).toBe(true);
   });
   it('refuses what is not', () => {
-    expect(validateSmtpHost('not a host')).toEqual({ ok: false, error: 'smtpHost' });
     for (const port of ['', '0', '65536', 'abc', '587; drop']) {
       expect(validatePort(port)).toEqual({ ok: false, error: 'port' });
     }
     expect(validateEmail('not-an-email')).toEqual({ ok: false, error: 'email' });
+  });
+  it.each([
+    ['mailpit', 'mailpit'],
+    ['Postfix', 'postfix'],
+    ['mail', 'mail'],
+    ['a', 'a'],
+    ['localhost', 'localhost'],
+    ['smtp.mon-ecole.fr', 'smtp.mon-ecole.fr'],
+    ['mail-1.internal', 'mail-1.internal'],
+    ['3com.example', '3com.example'],
+    ['192.168.1.10', '192.168.1.10'],
+    ['::1', '::1'],
+    ['[::1]', '::1'],
+    ['2001:db8::25', '2001:db8::25'],
+    ['[2001:DB8:0:0:0:0:0:1]', '2001:db8:0:0:0:0:0:1'],
+    ['::ffff:192.168.0.1', '::ffff:192.168.0.1'],
+    ['a'.repeat(63), 'a'.repeat(63)],
+  ])('accepts %j as a mail server', (input, expected) => {
+    expect(value(validateSmtpHost(input))).toBe(expected);
+  });
+  it.each([
+    ['smtp://mail.exemple.fr', 'smtpHostScheme'],
+    ['https://mail.exemple.fr', 'smtpHostScheme'],
+    ['mail.exemple.fr/smtp', 'smtpHostPath'],
+    ['mail.exemple.fr?x=1', 'smtpHostPath'],
+    ['user@mail.exemple.fr', 'smtpHostPath'],
+    ['mail.exemple.fr:587', 'smtpHostPort'],
+    ['mailpit:1025', 'smtpHostPort'],
+    ['[::1]:25', 'smtpHostPort'],
+    ['', 'smtpHost'],
+    ['   ', 'smtpHost'],
+    ['not a host', 'smtpHost'],
+    ['-mail', 'smtpHost'],
+    ['mail-', 'smtpHost'],
+    ['mail..fr', 'smtpHost'],
+    ['mail.fr.', 'smtpHost'],
+    ['.mail.fr', 'smtpHost'],
+    ['mail_server', 'smtpHost'],
+    ['mail;rm', 'smtpHost'],
+    ['mäil.fr', 'smtpHost'],
+    ['a'.repeat(64), 'smtpHost'],
+    [Array(130).fill('ab').join('.'), 'smtpHost'],
+    ['256.1.1.1', 'smtpHost'],
+    ['1.2.3', 'smtpHost'],
+    ['1.2.3.4.5', 'smtpHost'],
+    ['12345', 'smtpHost'],
+    [':::1', 'smtpHost'],
+    ['1::2::3', 'smtpHost'],
+    ['1:2:3:4:5:6:7', 'smtpHost'],
+    ['12345::1', 'smtpHost'],
+    ['[mailpit]', 'smtpHost'],
+    ['[::1]x', 'smtpHost'],
+  ])('refuses %j as a mail server (%s)', (input, error) => {
+    expect(validateSmtpHost(input)).toEqual({ ok: false, error });
   });
   it('keeps secrets to one line, with no apostrophe', () => {
     expect(validateSecretText('p@ss w0rd!').ok).toBe(true);

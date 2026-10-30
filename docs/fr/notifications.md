@@ -404,7 +404,8 @@ du code. La mise en page est faite pour les messageries les plus difficiles : ta
 ### Configurer l'e-mail
 
 Dans **Paramètres** → **Notifications** → **E-mail**, indiquez le serveur SMTP (serveur, port, identifiant et mot de
-passe si besoin) et l'adresse d'expéditeur. Le mot de passe est chiffré et ne reparaît jamais. Utilisez le message
+passe si besoin). Le serveur est un nom ou une adresse seulement, sans `smtp://` ni port (le port a son propre champ) :
+`smtp.mon-ecole.fr`, un nom sans point comme `mailpit`, `localhost`, ou une adresse IPv4 ou IPv6 et l'adresse d'expéditeur. Le mot de passe est chiffré et ne reparaît jamais. Utilisez le message
 de test.
 
 ## Un problème ?

@@ -1,0 +1,51 @@
+[
+  [
+    "smtp host: a name with no dot is refused",
+    "src/lib/setup/validate.ts",
+    "labels.every((label) => HOST_LABEL.test(label))) return fail('smtpHost');",
+    "labels.length > 1 && labels.every((label) => HOST_LABEL.test(label))) return fail('smtpHost');",
+    ["src/lib/setup/validate.test.ts"]
+  ],
+  [
+    "smtp host: a scheme is no longer named",
+    "src/lib/setup/validate.ts",
+    "if (text.includes('://')) return fail('smtpHostScheme');",
+    "",
+    ["src/lib/setup/validate.test.ts"]
+  ],
+  [
+    "smtp host: a port stuck to the name is accepted",
+    "src/lib/setup/validate.ts",
+    "return text.split(':').length === 2 ? fail('smtpHostPort') : fail('smtpHost');",
+    "return ok(text);",
+    ["src/lib/setup/validate.test.ts"]
+  ],
+  [
+    "smtp host: an IPv4 above 255 is accepted",
+    "src/lib/setup/validate.ts",
+    "Number(part) <= 255);\n}",
+    "Number(part) <= 999);\n}",
+    ["src/lib/setup/validate.test.ts"]
+  ],
+  [
+    "smtp host: a label of 64 characters is accepted",
+    "src/lib/setup/validate.ts",
+    "{0,61}[a-z0-9])?$/;\nconst HEX",
+    "{0,70}[a-z0-9])?$/;\nconst HEX",
+    ["src/lib/setup/validate.test.ts"]
+  ],
+  [
+    "smtp host: a path is accepted",
+    "src/lib/setup/validate.ts",
+    "if (/[/?#\\@]/.test(text)) return fail('smtpHostPath');",
+    "",
+    ["src/lib/setup/validate.test.ts"]
+  ],
+  [
+    "smtp host: a name ending with a number is accepted",
+    "src/lib/setup/validate.ts",
+    "return isIPv4(text) ? ok(text) : fail('smtpHost');",
+    "return ok(text);",
+    ["src/lib/setup/validate.test.ts"]
+  ]
+]
