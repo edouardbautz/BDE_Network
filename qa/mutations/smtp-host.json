@@ -37,7 +37,7 @@
   [
     "smtp host: a path is accepted",
     "src/lib/setup/validate.ts",
-    "if (/[/?#\\@]/.test(text)) return fail('smtpHostPath');",
+    "if (/[/?#\\\\@]/.test(text)) return fail('smtpHostPath');",
     "",
     ["src/lib/setup/validate.test.ts"]
   ],
