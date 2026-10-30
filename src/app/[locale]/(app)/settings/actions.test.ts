@@ -195,7 +195,7 @@ describe('a change', () => {
       url: 'https://bde.exemple.fr',
       redirectUrl: 'https://bde.exemple.fr/api/auth/callback/42-school',
     });
-    expect(await actions.saveAddress({ address: 'nope' })).toMatchObject({
+    expect(await actions.saveAddress({ address: 'not an address' })).toMatchObject({
       ok: false,
       code: 'address',
     });

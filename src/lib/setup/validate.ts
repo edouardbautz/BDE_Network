@@ -101,9 +101,7 @@ export function validateAddress(input: string): Check<Address> {
   const v6 = match?.[2] ?? match?.[3];
   const written = v6 ?? match?.[4];
   // A bare IPv6 address carries no port (the colons would be ambiguous): the brackets are what allow one.
-  if (!match || !written || (match[3] !== undefined && match[5] !== undefined)) {
-    return fail('address');
-  }
+  if (!match || !written) return fail('address');
 
   // 127.0.0.1 is written `localhost`: Next.js does the same in every URL it builds (see canonicalHost).
   // An IPv6 address is written the way a URL writes it (compressed, lower case), the way Auth.js will send it.

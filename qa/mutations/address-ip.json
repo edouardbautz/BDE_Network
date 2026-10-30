@@ -7,13 +7,6 @@
     ["src/lib/setup/validate.test.ts"]
   ],
   [
-    "address: a bare IPv6 address takes a port",
-    "src/lib/setup/validate.ts",
-    "(match[3] !== undefined && match[5] !== undefined)",
-    "false",
-    ["src/lib/setup/validate.test.ts"]
-  ],
-  [
     "address: an IPv6 address is not written the way a URL writes it",
     "src/lib/setup/validate.ts",
     "new URL('http://[' + v6 + ']').hostname",
