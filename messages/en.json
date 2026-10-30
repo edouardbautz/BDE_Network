@@ -1198,7 +1198,6 @@
       "redirectCopy": "Redirect address",
       "uidLabel": "UID (identifier)",
       "secretLabel": "SECRET (secret key)",
-      "secretKept": "Key already saved: leave empty to keep it.",
       "verify": "Check with 42",
       "verifying": "Checking…",
       "verified": "42 accepted these credentials.",
@@ -1272,13 +1271,11 @@
       "discordHelp": "In Discord: channel settings, Integrations, Webhooks, New webhook, then \"Copy webhook URL\".",
       "slackLabel": "Slack webhook address",
       "slackHelp": "Create a Slack app, turn on \"Incoming Webhooks\" and copy the webhook address (see the notifications documentation).",
-      "webhookKept": "Address already saved: leave blank to keep it.",
       "smtpHost": "SMTP server",
       "smtpPort": "Port",
       "smtpUser": "Login (optional)",
       "smtpPassword": "Password (optional)",
       "smtpFrom": "Sender address",
-      "passwordKept": "Password already saved: leave blank to keep it.",
       "testTo": "Send the test to",
       "testButton": "Send a test on {channel}",
       "testing": "Sending…",
@@ -1652,10 +1649,8 @@
       "description": "The school's staff is not necessarily on the BDE's Discord or Slack. A room of its own, with its own webhook, receives the messages about publishing events on the intra. Without a webhook, those messages go to the BDE's room (with the mentions).",
       "discord": "Staff Discord webhook address",
       "slack": "Staff Slack webhook address",
-      "savedHint": "An address is saved. Leave empty to keep it, or paste another to replace it.",
       "emptyHint": "No address: the messages will go to the BDE's room.",
       "willRemove": "The address will be removed when you save.",
-      "savedPlaceholder": "Saved address (not shown)",
       "test": "Send a test message ({channel})",
       "testSent": "Test message sent.",
       "remove": "Remove {channel}",
@@ -2121,5 +2116,16 @@
       "unknown": "Something went wrong. Try again in a moment.",
       "mentionNotForType": "This mention is only for the messages to the staff about the intra."
     }
+  },
+  "secretField": {
+    "configured": "Configured",
+    "configuredTail": "Configured · ends with …{tail}",
+    "replace": "Replace",
+    "replaceLabel": "Replace: {label}",
+    "keep": "Cancel",
+    "keepLabel": "Cancel the replacement: {label}",
+    "remove": "Remove",
+    "removeLabel": "Remove: {label}",
+    "leaveEmpty": "Leave it empty to keep the one that is saved."
   }
 }

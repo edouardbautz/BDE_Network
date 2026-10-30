@@ -101,6 +101,21 @@ A person removed from the list becomes a member with the **default role**.
   a test message). Left empty, they go to the BDE's room, with the mentions. The addresses are secrets, like the BDE's: they are
   never shown again, a blank field keeps the saved one, and they are kept in the `secrets` volume's sealed settings.
 
+### How a secret is shown
+
+The 42 application's secret, the webhooks of Discord and Slack (the BDE's and the staff's) and the mail password are **secrets**. The platform
+keeps them encrypted and **never sends one back to the browser**. A secret that is saved is not a field: the page says **Configured** and, for a
+long one (an address, a secret of 42), **how it ends** ("Configured · ends with …a1b2": four characters, enough to tell which one it is; the
+mail password, which a person chose, has no end). Two buttons: **Replace** opens an **empty** field, to type the new one (**Cancel** closes it
+and keeps the saved one) and **Remove** takes it out (nothing is forgotten before **Save**).
+
+- **An empty field never erases anything.** Opened with **Replace** and left empty, then **Save**: the saved secret stays.
+- **The test uses the saved secret** as long as you have not typed a new one: "Send a test" works on a channel you have already set up.
+- **No browser or password manager fills them.** These fields are not of the type "password" (a text field drawn as dots), and say to the
+  managers (Chrome, Firefox, Safari, Edge, 1Password, Bitwarden, LastPass, Dashlane) to leave them alone: nothing is filled in with a
+  password saved for another site, and nothing is offered to be saved. The same goes for the user of the mail server and the identifier of
+  the 42 application. If a field of yours is still filled by an extension, tell us which.
+
 ### Notifications
 
 In Settings, each channel (Discord, Slack, email) is set up in its own panel, with its own test message, then a

@@ -352,6 +352,17 @@ button, nothing takes the focus), the same validators (`lib/setup/validate.ts`, 
   restart or rebuild. A change that changes nothing writes nothing (`changed: false`).
 - **Every action is an entry point**: `requireSettingsManager()` first (throws `Forbidden` for a crafted request), the
   input parsed again with Zod, validation again in `updateSettings`. A refused change is a code, never a throw.
+- **A secret is not a field once it is saved, and no field is a password** (`components/secret-field.tsx`; `lib/settings/secret-tail.ts`; `components/no-password-field.test.ts`,
+  `qa/browsers/secrets.spec.ts`). **The incident**: on a fresh installation a browser filled the mail server's user (the text field before a `type="password"` field) with an
+  address of another site and put a saved password in the Discord webhook, which was a password field with `autocomplete="off"` (Chrome and Firefox ignore it on a password
+  field); the owner then saved, without seeing it, a personal password in place of a secret, and "Send a test" sent it as the address. So: **no `type="password"` anywhere** (a
+  test reads every component and fails on one, and on `new-password`), a secret is typed in a `MaskedInput` (a text field with `-webkit-text-security: disc`, which Chrome, Edge, Safari
+  and Firefox draw) carrying `NO_AUTOFILL` (`autocomplete="off"`, `data-1p-ignore`, `data-lpignore`, `data-bwignore`, `data-form-type="other"`, no correction, no capital), and the
+  identifiers of a service (the user and the sender of the mail server, the UID of 42) carry the same attributes. A **saved** secret is not an `<input>` at all: `SecretField` says
+  "Configured" (and "ends with …a1b2" when the server sent `secretTail`: the last four characters of a secret of 16 characters or more, never of a mail password), with
+  **Replace** (an empty field) and **Remove**; the server's rules did not change and are tested: a blank secret keeps the saved one, a test uses the saved one when none is typed.
+  What could not be played: a browser with a saved password (a headless engine has no manager), so the suite holds what a manager reads, in the three engines, and the real
+  installation of a person with a password manager is the check that remains to do by hand.
 - **Secrets never go back to the browser, nor to a log or the audit log.** The page gets `settingsView()` (only
   `hasClientSecret`, `hasDiscordWebhook`...); a blank secret field keeps the saved one; the audit metadata says
   `secretChanged` / `changedSecrets: [names]`, never a value.

@@ -133,7 +133,11 @@ const clickButton = async (label, within) => {
         ? scoped
         : (scoped?.closest('form, section') ?? document);
       return [...root.querySelectorAll('button')].find(
-        (el) => el.textContent?.trim().startsWith(wanted) && !el.disabled,
+        // the words it shows, or the name it has (a button that says "Retirer" is named "Retirer Slack")
+        (el) =>
+          (el.textContent?.trim().startsWith(wanted) ||
+            el.getAttribute('aria-label')?.startsWith(wanted)) &&
+          !el.disabled,
       );
     },
     label,
@@ -401,7 +405,11 @@ try {
   step('a channel is removed: its settings are forgotten and its boxes cleared');
 
   // 4. the 42 application: a wrong secret is refused, the real one saved without leaving the page
-  await clear('#setup-secret');
+  // a secret that is saved is not a field: it says "Configuré", and "Remplacer" opens an empty one
+  if (await page.$('#setup-secret'))
+    fail('the secret of the 42 application is a field of the page');
+  await clickButton('Remplacer : SECRET');
+  await page.waitForSelector('#setup-secret');
   await page.type('#setup-secret', 's-s4t2ud-not-the-right-secret');
   await clickButton('Vérifier et enregistrer');
   await waitText('42 refuse ces identifiants');

@@ -32,6 +32,29 @@ describe('settingsView: what the page may show', () => {
   beforeEach(() => setRuntimeSettings(undefined));
   afterEach(() => setRuntimeSettings(undefined));
 
+  it('says how a saved secret ends, and nothing more of it (never a password somebody chose)', () => {
+    setRuntimeSettings({
+      config: config({ eventConfirmed: 'discord' }),
+      values: {
+        FORTYTWO_CLIENT_SECRET: 's-s4t2ud-0123456789abcdef',
+        DISCORD_WEBHOOK_URL: 'https://discord.com/api/webhooks/1/abcdefghijklmnop-a1b2',
+        DISCORD_STAFF_WEBHOOK_URL: 'https://discord.com/api/webhooks/2/qrstuvwxyz0123456-c3d4',
+        SMTP_PASSWORD: 'a-password-somebody-chose',
+      },
+      source: 'database',
+    });
+    const view = settingsView();
+    expect(view.clientSecretTail).toBe('cdef');
+    expect(view.notifications.discordWebhookTail).toBe('a1b2');
+    expect(view.notifications.slackWebhookTail).toBeNull();
+    // the mail password has no end: it is a word a person chose
+    expect(JSON.stringify(view)).not.toContain('somebody');
+    expect(JSON.stringify(view)).not.toContain('chose');
+    // and what is said of an address is four characters of it, not the address
+    expect(JSON.stringify(view)).not.toContain('abcdefghijkl');
+    expect(JSON.stringify(view)).not.toContain('0123456789');
+  });
+
   it('is the installer’s shape, with no secret, only whether there is one', () => {
     setRuntimeSettings({
       config: config({ eventConfirmed: 'discord', memberPending: 'discord' }),
@@ -120,7 +143,12 @@ describe('settingsExtras: what only the settings page shows', () => {
         usage: { soiree: 7 },
         reminderHour: 18,
         intraPublication: false,
-        staffChannel: { hasDiscordWebhook: false, hasSlackWebhook: false },
+        staffChannel: {
+          hasDiscordWebhook: false,
+          hasSlackWebhook: false,
+          discordWebhookTail: null,
+          slackWebhookTail: null,
+        },
         timezone: 'Europe/Paris',
       },
     });

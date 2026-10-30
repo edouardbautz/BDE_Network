@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
+import { secretTail } from '@/lib/settings/secret-tail';
 import { Input } from '@/components/ui/input';
 import type { ActionFailure } from '@/app/[locale]/setup/actions';
 import { NOTIFICATION_CHANNELS, type NotificationChannel } from '@/config/schema';
@@ -18,6 +19,16 @@ import {
 } from './notification-channels';
 import { NotificationTable } from './notification-table';
 import { StepFrame, type StepProps } from './step-frame';
+
+/** The end of the address that will be saved: the one typed, else the one kept (nothing when the channel is not configured). */
+function tailAfter(
+  typed: string,
+  kept: string | null | undefined,
+  configured: boolean,
+): string | null {
+  if (!configured) return null;
+  return typed.trim() !== '' ? secretTail(typed) : (kept ?? null);
+}
 
 /**
  * The notifications, for the installer and for the settings page: first the channels (what each needs, its test, its
@@ -89,6 +100,13 @@ export function StepNotifications({
           matrix: payload.matrix,
           hasDiscordWebhook: configured.discord,
           hasSlackWebhook: configured.slack,
+          // the end of what is saved now: of the new address, or of the one kept, or nothing for a channel that goes
+          discordWebhookTail: tailAfter(
+            typed.discord,
+            initial.discordWebhookTail,
+            configured.discord,
+          ),
+          slackWebhookTail: tailAfter(typed.slack, initial.slackWebhookTail, configured.slack),
           hasSmtp: configured.email,
           smtp: {
             host: typed.smtp.host.trim(),
@@ -158,12 +176,16 @@ export function StepNotifications({
         {NOTIFICATION_CHANNELS.map((channel) => {
           if (channel === 'discord' || channel === 'slack') {
             return (
-              <ChannelPanel key={channel} {...panelProps(channel)}>
+              <ChannelPanel key={channel} {...panelProps(channel)} removeInside>
                 <WebhookField
                   channel={channel}
                   value={typed[channel]}
                   onChange={(value) => setTyped({ ...typed, [channel]: value })}
-                  saved={saved[channel]}
+                  saved={saved[channel] && !isRemoved(channel)}
+                  tail={
+                    channel === 'discord' ? initial.discordWebhookTail : initial.slackWebhookTail
+                  }
+                  onRemove={() => remove(channel)}
                   failure={failure}
                 />
               </ChannelPanel>

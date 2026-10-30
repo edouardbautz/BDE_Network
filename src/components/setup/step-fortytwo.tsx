@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { CheckCircle2, ExternalLink } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { NO_AUTOFILL, SecretField } from '@/components/secret-field';
 import type { ActionFailure } from '@/app/[locale]/setup/actions';
 import { useFrameMode, type StepApi } from './api';
 import type { DraftView } from '@/lib/setup/draft';
@@ -123,31 +124,22 @@ export function StepFortyTwo({
           id="setup-uid"
           value={clientId}
           onChange={(event) => setClientId(event.target.value)}
-          autoComplete="off"
-          spellCheck={false}
+          {...NO_AUTOFILL}
           className="font-mono text-small"
           aria-invalid={failure?.field === 'clientId'}
         />
       </Field>
 
-      <Field
+      <SecretField
         id="setup-secret"
         label={t('secretLabel')}
-        hint={view.hasClientSecret ? t('secretKept') : undefined}
+        saved={view.hasClientSecret}
+        tail={view.clientSecretTail}
+        value={clientSecret}
+        onChange={setClientSecret}
         error={fieldError(failure, 'clientSecret', text)}
-      >
-        <Input
-          id="setup-secret"
-          type="password"
-          value={clientSecret}
-          onChange={(event) => setClientSecret(event.target.value)}
-          autoComplete="off"
-          spellCheck={false}
-          className="font-mono text-small"
-          aria-invalid={failure?.field === 'clientSecret'}
-          aria-describedby={view.hasClientSecret ? 'setup-secret-hint' : undefined}
-        />
-      </Field>
+        invalid={failure?.field === 'clientSecret'}
+      />
 
       {view.credentialsVerified && !failure && (
         <p className="text-muted-foreground flex items-center gap-2 text-body" role="status">

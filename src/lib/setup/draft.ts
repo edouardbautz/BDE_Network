@@ -1,4 +1,5 @@
 import { DEFAULT_ACCENT } from '@/config/schema';
+import { secretTail } from '@/lib/settings/secret-tail';
 import type { Address } from './validate';
 import type { Campus } from './fortytwo';
 import {
@@ -75,6 +76,8 @@ export interface DraftView {
   addressUrl: string;
   clientId: string;
   hasClientSecret: boolean;
+  /** The last characters of the secret of the 42 application, when long enough to say (see `secretTail`). */
+  clientSecretTail?: string | null;
   credentialsVerified: boolean;
   credentialsSkipped: boolean;
   campuses: string[];
@@ -90,6 +93,9 @@ export interface DraftView {
     /** Whether each channel has what it needs (never the secret itself). */
     hasDiscordWebhook: boolean;
     hasSlackWebhook: boolean;
+    /** The last characters of each webhook address (see `secretTail`). */
+    discordWebhookTail?: string | null;
+    slackWebhookTail?: string | null;
     hasSmtp: boolean;
     smtp: { host: string; port: string; user: string; from: string; hasPassword: boolean };
   };
@@ -106,6 +112,7 @@ export function toView(draft: SetupDraft, defaults: { addressUrl: string }): Dra
     addressUrl: draft.address?.url ?? defaults.addressUrl,
     clientId: draft.clientId ?? '',
     hasClientSecret: Boolean(draft.clientSecret),
+    clientSecretTail: secretTail(draft.clientSecret),
     credentialsVerified: Boolean(draft.credentialsVerified),
     credentialsSkipped: Boolean(draft.credentialsSkipped),
     campuses: draft.campuses ?? [],
@@ -118,6 +125,8 @@ export function toView(draft: SetupDraft, defaults: { addressUrl: string }): Dra
       matrix: notifications?.matrix ?? emptyMatrix(),
       hasDiscordWebhook: Boolean(notifications?.discordWebhook),
       hasSlackWebhook: Boolean(notifications?.slackWebhook),
+      discordWebhookTail: secretTail(notifications?.discordWebhook),
+      slackWebhookTail: secretTail(notifications?.slackWebhook),
       hasSmtp: Boolean(notifications?.smtp),
       smtp: {
         host: notifications?.smtp?.host ?? '',
