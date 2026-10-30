@@ -84,6 +84,8 @@ Confirmer, repasser en brouillon et annuler une date restent possibles.
 La description peut être mise en forme : une barre de boutons au-dessus du champ donne le **gras**, l'_italique_, un titre, une liste à puces, une liste numérotée et un lien ; sélectionnez du texte puis appuyez sur le bouton, ou faites **Ctrl** (**Cmd** sur Mac) + **B** ou **I**. Le bouton agit sur la sélection, un second appui enlève la mise en forme, et l'annulation (**Ctrl+Z**) reprend le travail d'un bouton. À côté du champ (sous le champ sur téléphone, derrière l'onglet **Aperçu**), le formulaire dessine ce que la description donnera. Derrière les boutons, le texte est du Markdown (`# titre`, `**gras**`, `*italique*`, `- liste`, `1. liste numérotée`, `> citation`, `[lien](https://…)` et `code`), que l'on peut aussi taper à la main, et il est conservé **exactement comme tapé** : il se copie tel quel.
 Une balise écrite à la main, une image ou un lien qui n'est pas `http`, `https` ou `mailto` s'affiche comme du texte et ne s'exécute jamais.
 
+![La description d'un événement : les boutons de mise en forme au-dessus du champ, et l'aperçu à côté](../images/fr/event-form.webp)
+
 ### Les champs de l'intra
 
 Quand la plateforme **publie les événements sur l'intra** (un propriétaire l'active dans Paramètres, section Événements, voir

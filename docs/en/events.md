@@ -78,7 +78,8 @@ draft and canceling a date remain possible.
 ### Formatting the description
 
 The description can be formatted: a bar of buttons above the field gives **bold**, _italic_, a heading, a bulleted list, a numbered list and a link; select some text and press the button, or press **Ctrl** (**Cmd** on a Mac) + **B** or **I**. The button works on what is selected, and a second press takes the marks off; undo (**Ctrl+Z**) takes a button back. Beside the field (under it on a phone, behind the **Preview** tab) the form draws what the description will look like. Behind the buttons the text is Markdown (`# title`, `**bold**`, `*italic*`, `- list`, `1. numbered list`, `> quote`, `[link](https://…)` and `code`), which you can also type by hand, and it is kept **exactly as typed**, so it can be copied as it is. A
-tag typed by hand, a picture or a link that is not `http`, `https` or `mailto` is shown as text and never run.
+tag typed by hand, a picture or a link that is not `http`, `https` or `mailto` is shown as text and $1
+![The description of an event: the formatting buttons above the field, and the preview beside it](../images/en/event-form.webp)
 
 ### The fields of the intra
 
