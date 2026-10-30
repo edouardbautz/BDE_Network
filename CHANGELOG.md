@@ -102,6 +102,13 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Fixed
 
+- **One word per thing: an access request is approved, a proposal of an event is validated.** The French interface called the section of the requests "En attente de validation"
+  (and the waiting page, the hint of the notification of a request and a message of the event form said the same); it is now "En attente d'approbation", as the English already was.
+  The other way round, the answer to a proposal of an event said "approve" (the button, the dialog, the notification "Proposal approved", the cards and e-mails of Discord, Slack and
+  e-mail, the description of the right "Validate events", the pages of the guide): it now says **validate** ("Proposition validée", "Validated by"), the word of the validators and of
+  the "To validate" entry. The identifiers do not change (`eventApproved` in the settings, `event.approve` in the audit log), so nothing saved is touched; the messages of the
+  proposals that were customised keep their own words. The rule is in the glossaries and in the design notes, and a test (`src/i18n/vocabulary.test.ts`) reads the catalogs, the
+  references of the notifications and the documentation and fails when one word is used for the other thing.
 - **The requests waiting for approval, on a computer.** In the Members page the menu of the role filled the whole line of each request and sent "Approve" and "Refuse" under it. The menu is now as wide as its longest
   role, with the two buttons on the same line, to the right of the Actions column; on a phone the menu takes the line and the two buttons share the next one, 44 px high, with nothing that scrolls sideways. The role
   menu of approved members and the buttons of the proposals to validate follow the same rule (the other rows with actions, roles and requests for the intra, already had it). A browser suite measures the rows.
