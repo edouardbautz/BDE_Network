@@ -138,7 +138,7 @@
     }
   },
   "pending": {
-    "title": "Votre compte est en attente de validation",
+    "title": "Votre compte est en attente d'approbation",
     "description": "Un administrateur doit approuver votre accès avant que vous puissiez utiliser la plateforme. Revenez un peu plus tard.",
     "signedInAs": "Connecté en tant que {name} ({login})"
   },
@@ -206,7 +206,7 @@
   },
   "members": {
     "title": "Gestion des membres",
-    "pendingSection": "En attente de validation",
+    "pendingSection": "En attente d'approbation",
     "activeSection": "Membres actifs",
     "approve": "Approuver",
     "reject": "Refuser",
@@ -426,7 +426,7 @@
           "reminderTomorrow": "Rappel · demain",
           "reminderToday": "Rappel · aujourd'hui",
           "proposed": "Événement proposé",
-          "approved": "Proposition approuvée",
+          "approved": "Proposition validée",
           "refused": "Proposition refusée",
           "test": "Message de test",
           "reminderPattern": "Rappel · {day}",
@@ -443,7 +443,7 @@
           "inCharge": "Membres en charge",
           "repeats": "Répétition",
           "proposedBy": "Proposé par",
-          "approvedBy": "Approuvé par",
+          "approvedBy": "Validée par",
           "refusedBy": "Refusé par",
           "reason": "Motif",
           "requestedBy": "Demandé par",
@@ -482,11 +482,11 @@
       },
       "proposed": {
         "subject": "Événement proposé : {title}",
-        "intro": "{author} propose un événement : un validateur doit l'approuver ou le refuser."
+        "intro": "{author} propose un événement : un validateur doit le valider ou le refuser."
       },
       "approved": {
-        "subject": "Proposition approuvée : {title}",
-        "intro": "La proposition de {author} a été approuvée par {reviewer} : l'événement est publié."
+        "subject": "Proposition validée : {title}",
+        "intro": "La proposition de {author} a été validée par {reviewer} : l'événement est publié."
       },
       "refused": {
         "subject": "Proposition refusée : {title}",
@@ -622,11 +622,11 @@
       "review": {
         "propose": "Proposer à la validation",
         "withdraw": "Retirer la proposition",
-        "approve": "Approuver",
+        "approve": "Valider",
         "refuse": "Refuser",
         "proposedTitle": "En attente de validation",
-        "proposedAuthor": "Vous avez proposé cet événement : un validateur va l'approuver ou le refuser. Vous pouvez encore le modifier ou retirer votre proposition.",
-        "proposedValidator": "{author} propose cet événement. Approuvez-le pour le publier, ou refusez-le avec un commentaire.",
+        "proposedAuthor": "Vous avez proposé cet événement : un validateur va le valider ou le refuser. Vous pouvez encore le modifier ou retirer votre proposition.",
+        "proposedValidator": "{author} propose cet événement. Validez-le pour le publier, ou refusez-le avec un commentaire.",
         "proposedOn": "Proposé le {date}.",
         "refusedTitle": "Refusé par {reviewer} le {date}",
         "refusedHintAuthor": "Modifiez l'événement pour tenir compte de ce commentaire, puis proposez-le de nouveau.",
@@ -634,8 +634,8 @@
         "lockedTitle": "Cet événement est publié",
         "lockedBody": "Seul un validateur peut modifier un événement publié. Pour corriger quelque chose, demandez à l'un d'eux.",
         "approveDialog": {
-          "title": "Approuver cette proposition ?",
-          "confirm": "Approuver"
+          "title": "Valider cette proposition ?",
+          "confirm": "Valider"
         },
         "refuseDialog": {
           "title": "Refuser cette proposition ?",
@@ -686,7 +686,7 @@
         "tooBig": "Cette valeur est trop grande."
       },
       "formErrors": {
-        "invalidAssignee": "Un des membres en charge n'existe pas ou n'est pas encore validé.",
+        "invalidAssignee": "Un des membres en charge n'existe pas ou n'est pas encore approuvé.",
         "notFound": "Cet événement n'existe plus."
       },
       "requiredLegend": "* Champ obligatoire",
@@ -1046,7 +1046,7 @@
         },
         "validate": {
           "label": "Valider les événements",
-          "description": "Approuver ou refuser les propositions, créer, modifier, confirmer et supprimer tous les événements, et voir les brouillons."
+          "description": "Valider ou refuser les propositions, créer, modifier, confirmer et supprimer tous les événements, et voir les brouillons."
         },
         "intra_publish": {
           "label": "Publier sur l'intra",
@@ -1284,7 +1284,7 @@
         "memberRemovedNoEmail": "Jamais d'e-mail",
         "memberPending": {
           "name": "Demande d'accès en attente",
-          "hint": "Prévient les propriétaires et ceux qui peuvent la valider."
+          "hint": "Prévient les propriétaires et ceux qui peuvent l'approuver."
         },
         "memberApproved": {
           "name": "Demande approuvée",
@@ -1307,7 +1307,7 @@
           "hint": "Prévient ceux qui peuvent le valider."
         },
         "eventApproved": {
-          "name": "Proposition approuvée",
+          "name": "Proposition validée",
           "hint": "Prévient son auteur."
         },
         "eventRefused": {
@@ -1691,8 +1691,8 @@
         "when": "Envoyée à ceux qui peuvent valider, quand un événement est proposé."
       },
       "eventApproved": {
-        "name": "Proposition approuvée",
-        "when": "Envoyée à l'auteur de la proposition, quand elle est approuvée."
+        "name": "Proposition validée",
+        "when": "Envoyée à l'auteur de la proposition, quand elle est validée."
       },
       "eventRefused": {
         "name": "Proposition refusée",

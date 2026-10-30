@@ -16,7 +16,7 @@ Il n'y a pas de mot de passe à retenir : la connexion passe uniquement par votr
 
 ## Première connexion : la page d'attente
 
-À la première connexion, votre compte est **en attente de validation**. Un membre du bureau qui a le droit
+À la première connexion, votre compte est **en attente d'approbation**. Un membre du bureau qui a le droit
 « Gérer les membres » (un propriétaire, ou un rôle comme Président ou Secrétaire) doit approuver votre accès et
 vous donner un rôle.
 
@@ -85,7 +85,7 @@ Il faut le droit **Gérer les membres**. La page **Membres** montre deux listes.
 
 ![La page Membres](../images/fr/members.webp)
 
-- **En attente de validation** : les nouveaux comptes. À côté de chaque demande, un menu propose le **rôle à
+- **En attente d'approbation** : les nouveaux comptes. À côté de chaque demande, un menu propose le **rôle à
   donner** (le rôle par défaut est choisi d'avance), puis **Approuver** ou **Refuser**.
 - **Membres actifs** : tous les membres. Le menu de la colonne **Rôle** change le rôle d'un membre, après une
   confirmation qui rappelle l'ancien et le nouveau rôle.

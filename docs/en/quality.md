@@ -38,7 +38,7 @@ whose cookie is still valid.
   volume; on a new server `restore.sh` puts the backup back, then the downloaded file (a wrong passphrase touches nothing). The same rows,
   the same keys, the session of before still open. Then the database is stopped at the hour of the backup: the failure is written down, the
   previous backup is untouched, and the Settings page says what failed.
-- **Browsers.** The journeys of the platform (a proposal approved, a refusal with its comment, the calendar, the settings, the
+- **Browsers.** The journeys of the platform (a proposal validated, a refusal with its comment, the calendar, the settings, the
   keyboard) in **Chromium, Firefox and WebKit** (Safari's engine). Every journey fails if its pages raise an exception,
   write an error to the console, break their own content-security policy or get a server error.
 - **Accessibility.** Every page checked against WCAG 2.2 level AA (axe), as two profiles each, in two combinations (English, light, computer;

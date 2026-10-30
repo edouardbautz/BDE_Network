@@ -67,7 +67,7 @@ The **Events** module has rights of its own, instead of "Manage":
 | Right                                    | What it allows                                                                                                                      |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | **Propose events**                       | Create events that wait for a validator, and edit or delete your own as long as they are not published. Includes "view".            |
-| **Validate events**                      | Approve or refuse proposals, create, edit, confirm and delete any event, and see drafts. Includes "propose" and "view".             |
+| **Validate events**                      | Validate or refuse proposals, create, edit, confirm and delete any event, and see drafts. Includes "propose" and "view".            |
 | **Manage the shared calendar**           | Create, renew or turn off the BDE's common calendar link. Includes "view".                                                          |
 | **Publish on the intra**                 | For the school's staff: see the requests to publish events on the intra, copy their fields and answer. Includes nothing: see below. |
 | **Follow the publications on the intra** | See where the publication of each event stands, without answering. Includes "view".                                                 |

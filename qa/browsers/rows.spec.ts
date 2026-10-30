@@ -121,9 +121,9 @@ test.describe('a proposal to validate', () => {
     await atRest(page);
     const proposal = page
       .getByRole('listitem')
-      .filter({ has: page.getByRole('button', { name: /Approve/ }) })
+      .filter({ has: page.getByRole('button', { name: /Validate/ }) })
       .first();
-    const approve = await box(proposal.getByRole('button', { name: /Approve/ }));
+    const approve = await box(proposal.getByRole('button', { name: /Validate/ }));
     const refuse = await box(proposal.getByRole('button', { name: /Refuse/ }));
     expect(Math.abs(middle(approve) - middle(refuse))).toBeLessThanOrEqual(2);
     expect(approve.height).toBeGreaterThanOrEqual(44);

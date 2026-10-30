@@ -486,7 +486,7 @@
       "title": "✅  Soirée de rentrée",
       "url": "https://bde.example.fr/fr/events/evt1?occ=1",
       "color": 14362487,
-      "description": "-# PROPOSITION APPROUVÉE\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​\n### 📍  Foyer du campus\n​\n> DJ set, photomaton et buffet.\n> Entrée libre pour les membres.\n​",
+      "description": "-# PROPOSITION VALIDÉE\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​\n### 📍  Foyer du campus\n​\n> DJ set, photomaton et buffet.\n> Entrée libre pour les membres.\n​",
       "fields": [
         {
           "name": "🏷️  Catégorie",
@@ -499,7 +499,7 @@
           "inline": true
         },
         {
-          "name": "🛡️  Approuvé par",
+          "name": "🛡️  Validée par",
           "value": "Paula Martin",
           "inline": true
         },
@@ -519,7 +519,7 @@
       "timestamp": "2026-10-08T12:00:00.000Z"
     },
     "slack": {
-      "fallback": "Proposition approuvée : Soirée de rentrée — samedi 10 octobre 2026 à 20:00 → 23:30 · Foyer du campus",
+      "fallback": "Proposition validée : Soirée de rentrée — samedi 10 octobre 2026 à 20:00 → 23:30 · Foyer du campus",
       "color": "#db2777",
       "blocks": [
         {
@@ -527,7 +527,7 @@
           "elements": [
             {
               "type": "mrkdwn",
-              "text": "*Proposition approuvée*"
+              "text": "*Proposition validée*"
             }
           ]
         },
@@ -569,7 +569,7 @@
             },
             {
               "type": "mrkdwn",
-              "text": "*Approuvé par*\nPaula Martin"
+              "text": "*Validée par*\nPaula Martin"
             },
             {
               "type": "mrkdwn",
@@ -611,10 +611,10 @@
       ]
     },
     "email": {
-      "text": "BDE Nice\nPROPOSITION APPROUVÉE\n\nSoirée de rentrée\n\nDJ set, photomaton et buffet.\nEntrée libre pour les membres.\n\nQuand : samedi 10 octobre 2026 à 20:00 → 23:30\nRépétition : Chaque semaine le samedi, jusqu’au 15 décembre 2026\nLieu : Foyer du campus\nCatégorie : Soirée\nMembres en charge : Paula Martin, Sam Durand\nProposé par : Camille Martin\nApprouvé par : Paula Martin\n\nVoir l'événement : https://bde.example.fr/fr/events/evt1?occ=1\n\n--\nVous recevez ce message parce que vous êtes membre de BDE Nice.\nBDE_Network\n",
+      "text": "BDE Nice\nPROPOSITION VALIDÉE\n\nSoirée de rentrée\n\nDJ set, photomaton et buffet.\nEntrée libre pour les membres.\n\nQuand : samedi 10 octobre 2026 à 20:00 → 23:30\nRépétition : Chaque semaine le samedi, jusqu’au 15 décembre 2026\nLieu : Foyer du campus\nCatégorie : Soirée\nMembres en charge : Paula Martin, Sam Durand\nProposé par : Camille Martin\nValidée par : Paula Martin\n\nVoir l'événement : https://bde.example.fr/fr/events/evt1?occ=1\n\n--\nVous recevez ce message parce que vous êtes membre de BDE Nice.\nBDE_Network\n",
       "html": {
-        "sha256": "6fe5729f5e3cbd68ec0898019d4b8ecdad751e12586818ddd27a2e6f0e124afc",
-        "length": 11289
+        "sha256": "96ce85bd8973071e711b414c21402edd69a80cf77c3c3da6dc0090036b79f266",
+        "length": 11284
       }
     }
   },
@@ -1179,7 +1179,7 @@
     "discord": {
       "title": "✅  Soirée de rentrée",
       "color": 8028555,
-      "description": "-# PROPOSITION APPROUVÉE\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​",
+      "description": "-# PROPOSITION VALIDÉE\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​",
       "fields": [
         {
           "name": "🏷️  Catégorie",
@@ -1192,7 +1192,7 @@
           "inline": true
         },
         {
-          "name": "🛡️  Approuvé par",
+          "name": "🛡️  Validée par",
           "value": "Paula Martin",
           "inline": true
         }
@@ -1203,7 +1203,7 @@
       "timestamp": "2026-10-08T12:00:00.000Z"
     },
     "slack": {
-      "fallback": "Proposition approuvée : Soirée de rentrée — samedi 10 octobre 2026 à 20:00 → 23:30",
+      "fallback": "Proposition validée : Soirée de rentrée — samedi 10 octobre 2026 à 20:00 → 23:30",
       "color": "#7a818b",
       "blocks": [
         {
@@ -1211,7 +1211,7 @@
           "elements": [
             {
               "type": "mrkdwn",
-              "text": "*Proposition approuvée*"
+              "text": "*Proposition validée*"
             }
           ]
         },
@@ -1242,7 +1242,7 @@
             },
             {
               "type": "mrkdwn",
-              "text": "*Approuvé par*\nPaula Martin"
+              "text": "*Validée par*\nPaula Martin"
             }
           ]
         },
@@ -1258,10 +1258,10 @@
       ]
     },
     "email": {
-      "text": "BDE Nice\nPROPOSITION APPROUVÉE\n\nSoirée de rentrée\n\nQuand : samedi 10 octobre 2026 à 20:00 → 23:30\nCatégorie : Soirée\nProposé par : Camille Martin\nApprouvé par : Paula Martin\n\n--\nVous recevez ce message parce que vous êtes membre de BDE Nice.\nBDE_Network\n",
+      "text": "BDE Nice\nPROPOSITION VALIDÉE\n\nSoirée de rentrée\n\nQuand : samedi 10 octobre 2026 à 20:00 → 23:30\nCatégorie : Soirée\nProposé par : Camille Martin\nValidée par : Paula Martin\n\n--\nVous recevez ce message parce que vous êtes membre de BDE Nice.\nBDE_Network\n",
       "html": {
-        "sha256": "640ceea89dafe8f86be38b650c2c8ea202c7f79d4e9b739df00a836c9b1ac496",
-        "length": 7984
+        "sha256": "67644cd72860ed78329079da2ff25513962af0f152183767de51f397bda709ea",
+        "length": 7979
       }
     }
   },
@@ -1924,7 +1924,7 @@
       "title": "✅  Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.",
       "url": "https://bde.example.fr/fr/events/evt1?occ=1",
       "color": 14362487,
-      "description": "-# PROPOSITION APPROUVÉE\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791840600:F>  ·  <t:1791655200:R>\n​\n### 📍  Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\n​\n> Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte…\n​",
+      "description": "-# PROPOSITION VALIDÉE\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791840600:F>  ·  <t:1791655200:R>\n​\n### 📍  Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\n​\n> Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte…\n​",
       "fields": [
         {
           "name": "🏷️  Catégorie",
@@ -1937,7 +1937,7 @@
           "inline": true
         },
         {
-          "name": "🛡️  Approuvé par",
+          "name": "🛡️  Validée par",
           "value": "Paula Martin",
           "inline": true
         },
@@ -1957,7 +1957,7 @@
       "timestamp": "2026-10-08T12:00:00.000Z"
     },
     "slack": {
-      "fallback": "Proposition approuvée : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très… — samedi 10 octobre 2026 à 20:00 → lundi 12 octobre 2026 à 23:30 · Un texte très long. Un texte très long. Un texte très…",
+      "fallback": "Proposition validée : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très… — samedi 10 octobre 2026 à 20:00 → lundi 12 octobre 2026 à 23:30 · Un texte très long. Un texte très long. Un texte très…",
       "color": "#db2777",
       "blocks": [
         {
@@ -1965,7 +1965,7 @@
           "elements": [
             {
               "type": "mrkdwn",
-              "text": "*Proposition approuvée*"
+              "text": "*Proposition validée*"
             }
           ]
         },
@@ -2007,7 +2007,7 @@
             },
             {
               "type": "mrkdwn",
-              "text": "*Approuvé par*\nPaula Martin"
+              "text": "*Validée par*\nPaula Martin"
             },
             {
               "type": "mrkdwn",
@@ -2049,10 +2049,10 @@
       ]
     },
     "email": {
-      "text": "BDE Nice\nPROPOSITION APPROUVÉE\n\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\n\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\n\nQuand : samedi 10 octobre 2026 à 20:00 → lundi 12 octobre 2026 à 23:30\nRépétition : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\nLieu : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\nCatégorie : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\nMembres en charge : Personne 0 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 1 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 2 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 3 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 4 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 5 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 6 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 7 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 8 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 9 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 10 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 11 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 12 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 13 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 14 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 15 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 16 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 17 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 18 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 19 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 20 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 21 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 22 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 23 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nProposé par : Camille Martin\nApprouvé par : Paula Martin\n\nVoir l'événement : https://bde.example.fr/fr/events/evt1?occ=1\n\n--\nVous recevez ce message parce que vous êtes membre de BDE Nice.\nBDE_Network\n",
+      "text": "BDE Nice\nPROPOSITION VALIDÉE\n\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\n\nUn texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très…\n\nQuand : samedi 10 octobre 2026 à 20:00 → lundi 12 octobre 2026 à 23:30\nRépétition : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\nLieu : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\nCatégorie : Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long. Un texte très long.\nMembres en charge : Personne 0 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 1 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 2 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 3 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 4 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 5 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 6 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 7 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 8 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 9 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 10 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 11 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 12 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 13 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 14 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 15 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 16 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 17 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 18 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 19 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 20 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 21 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 22 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Personne 23 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nProposé par : Camille Martin\nValidée par : Paula Martin\n\nVoir l'événement : https://bde.example.fr/fr/events/evt1?occ=1\n\n--\nVous recevez ce message parce que vous êtes membre de BDE Nice.\nBDE_Network\n",
       "html": {
-        "sha256": "4135f3e60125f8881780d4b809b19861d8a66f71720f1d6efbf069f4892f4916",
-        "length": 21377
+        "sha256": "fabf9004ffc1c85b7c53b4a1d1e1a80c6d31ea3885fb8bfb7a0f934d06303200",
+        "length": 21372
       }
     }
   },
@@ -2804,7 +2804,7 @@
     "discord": {
       "title": "✅  @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_",
       "color": 14362487,
-      "description": "-# PROPOSITION APPROUVÉE\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​\n### 📍  @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n​\n> @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n​",
+      "description": "-# PROPOSITION VALIDÉE\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​\n### 📍  @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n​\n> @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n​",
       "fields": [
         {
           "name": "🏷️  Catégorie",
@@ -2817,7 +2817,7 @@
           "inline": true
         },
         {
-          "name": "🛡️  Approuvé par",
+          "name": "🛡️  Validée par",
           "value": "Paula Martin",
           "inline": true
         },
@@ -2837,7 +2837,7 @@
       "timestamp": "2026-10-08T12:00:00.000Z"
     },
     "slack": {
-      "fallback": "Proposition approuvée : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_ — samedi 10 octobre 2026 à 20:00 → 23:30 · @everyone <!channel> <@123> <b>x</b>…",
+      "fallback": "Proposition validée : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_ — samedi 10 octobre 2026 à 20:00 → 23:30 · @everyone <!channel> <@123> <b>x</b>…",
       "color": "#db2777",
       "blocks": [
         {
@@ -2845,7 +2845,7 @@
           "elements": [
             {
               "type": "mrkdwn",
-              "text": "*Proposition approuvée*"
+              "text": "*Proposition validée*"
             }
           ]
         },
@@ -2887,7 +2887,7 @@
             },
             {
               "type": "mrkdwn",
-              "text": "*Approuvé par*\nPaula Martin"
+              "text": "*Validée par*\nPaula Martin"
             },
             {
               "type": "mrkdwn",
@@ -2929,10 +2929,10 @@
       ]
     },
     "email": {
-      "text": "BDE Nice\nPROPOSITION APPROUVÉE\n\n@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\n@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\nQuand : samedi 10 octobre 2026 à 20:00 → 23:30\nRépétition : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\nLieu : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\nCatégorie : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\nMembres en charge : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\nProposé par : Camille Martin\nApprouvé par : Paula Martin\n\n--\nVous recevez ce message parce que vous êtes membre de BDE Nice.\nBDE_Network\n",
+      "text": "BDE Nice\nPROPOSITION VALIDÉE\n\n@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\n@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\n\nQuand : samedi 10 octobre 2026 à 20:00 → 23:30\nRépétition : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\nLieu : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\nCatégorie : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\nMembres en charge : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_\nProposé par : Camille Martin\nValidée par : Paula Martin\n\n--\nVous recevez ce message parce que vous êtes membre de BDE Nice.\nBDE_Network\n",
       "html": {
-        "sha256": "882c1851d5adedb2a1222e3d8ed1ef3acedaade032438da143634ea53dc23599",
-        "length": 11066
+        "sha256": "6234e2eaded6b9742afcc92ef213a4be4f287ee0f8d143ca6f7e8fa5f5196ff7",
+        "length": 11061
       }
     }
   },

@@ -104,7 +104,7 @@ dans le formulaire de l'intra et à laquelle il répond. Si l'événement change
 ### Quelle différence entre un brouillon et un événement confirmé ?
 
 Un **brouillon** n'est visible que de son auteur et de ceux qui peuvent valider les événements. Une **proposition**
-est un brouillon envoyé aux validateurs, qui l'approuvent ou la refusent. Un événement **confirmé** est visible de
+est un brouillon envoyé aux validateurs, qui la valident ou la refusent. Un événement **confirmé** est visible de
 tous les membres, et le confirmer les prévient. Voir [Module Événements](events.md).
 
 ### Pourquoi ne puis-je plus modifier mon événement ?

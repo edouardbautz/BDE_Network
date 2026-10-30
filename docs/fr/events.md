@@ -26,7 +26,7 @@ Les droits viennent du **rôle** du membre (voir [Rôles et droits](roles.md)). 
 | Voir les **brouillons** et les **propositions**      |    non    |          **les siens** seulement           |             tous             |          non           |     oui      |
 | Créer un événement                                   |    non    |         oui, comme **proposition**         | oui, brouillon ou **publié** |          non           |     oui      |
 | Modifier ou supprimer un événement                   |    non    | **les siens**, tant qu'il n'est pas publié |             tous             |          non           |     oui      |
-| Approuver ou refuser une proposition                 |    non    |                    non                     |             oui              |          non           |     oui      |
+| Valider ou refuser une proposition                   |    non    |                    non                     |             oui              |          non           |     oui      |
 | Confirmer, repasser en brouillon, annuler une date   |    non    |                    non                     |             oui              |          non           |     oui      |
 | Ajouter un événement à son agenda, s'abonner au flux |    oui    |                    oui                     |             oui              |          oui           |     oui      |
 | Gérer le lien d'agenda du **BDE**                    |    non    |                    non                     |             non              |          oui           |     oui      |
@@ -113,7 +113,7 @@ début. Une série appartient à l'année scolaire de sa première date.
 ## Proposer et valider des événements
 
 Certains rôles (un « Pôle Events », par exemple) peuvent **proposer** des événements sans pouvoir les publier ; d'autres
-rôles **valident** : ils approuvent ou refusent ce qui est proposé. Vous choisissez qui est qui dans
+rôles **valident** : ils valident ou refusent ce qui est proposé. Vous choisissez qui est qui dans
 [Rôles et droits](roles.md) : le droit **Proposer des événements** et le droit **Valider les événements**.
 
 Un événement passe par trois statuts :
@@ -139,8 +139,8 @@ Un événement passe par trois statuts :
 ### Valider
 
 - L'entrée **À valider** du menu (réservée à ceux qui valident) indique combien de propositions attendent. La page les
-  liste, les plus anciennes d'abord, chacune avec **Approuver** et **Refuser**.
-- **Approuver** publie l'événement, comme le ferait une confirmation : les membres sont prévenus une seule fois.
+  liste, les plus anciennes d'abord, chacune avec **Valider** et **Refuser**.
+- **Valider** publie l'événement, comme le ferait une confirmation : les membres sont prévenus une seule fois.
   L'auteur l'est aussi, si la notification `eventApproved` est activée.
 - **Refuser** demande un **commentaire** (obligatoire, 1000 caractères au plus). L'événement repasse en brouillon ; son
   auteur lit le commentaire sur l'événement lui-même et le reçoit en notification (`eventRefused`). Il modifie
@@ -152,7 +152,7 @@ Un événement passe par trois statuts :
 
 ### Séries et brouillons
 
-Une proposition est **l'événement entier**, série comprise. Une fois approuvée, les dates d'une série se gèrent comme
+Une proposition est **l'événement entier**, série comprise. Une fois validée, les dates d'une série se gèrent comme
 d'habitude (voir plus bas). Une date de série confirmée toute seule rend l'événement en partie publié : son proposeur ne
 peut plus le modifier non plus.
 
@@ -469,7 +469,7 @@ renseignez l'adresse de la plateforme (section **Adresse de la plateforme**) : s
 | **Confirmation** (`eventConfirmed`) | un événement passe de brouillon à **confirmé**, une seule fois ; pour une série, une fois pour la partie confirmée, ou une fois pour une date confirmée seule | tous les membres approuvés (e-mail : un message par personne), ou le salon Discord ou Slack |
 | **Rappel** (`eventReminder`)        | la veille de chaque occurrence confirmée, à l'**heure du rappel** (18 h par défaut, heure du BDE)                                                             | les **membres en charge** (e-mail), sinon ceux qui valident les événements ; ou le salon    |
 | **Proposition** (`eventProposed`)   | un événement est proposé (ou proposé de nouveau après un refus)                                                                                               | les propriétaires et ceux qui valident les événements (e-mail), ou le salon                 |
-| **Approbation** (`eventApproved`)   | un validateur approuve une proposition                                                                                                                        | son auteur (e-mail), ou le salon                                                            |
+| **Validation** (`eventApproved`)    | un validateur valide une proposition                                                                                                                          | son auteur (e-mail), ou le salon                                                            |
 | **Refus** (`eventRefused`)          | un validateur refuse une proposition                                                                                                                          | son auteur, avec le commentaire (e-mail), ou le salon                                       |
 
 Le rendu sur Discord, Slack et par e-mail est décrit dans [Notifications](notifications.md).
@@ -508,7 +508,7 @@ garde les rappels déjà envoyés. Le rappel montre l'heure, le lieu et les memb
 ## Journal d'audit
 
 Les propriétaires y voient la création, la modification (avec la liste des champs changés), la suppression, le
-changement de statut, la **proposition** (`event.propose`), son **retrait**, son **approbation** et son **refus**
+changement de statut, la **proposition** (`event.propose`), son **retrait**, sa **validation** et son **refus**
 (avec le commentaire), l'annulation et le rétablissement d'une date, et les actions sur le lien du BDE (jamais le
 lien lui-même). Pour une série, chaque entrée dit si l'action portait sur **une date** ou sur **cette date et les
 suivantes**, et laquelle (pour la première date : que c'était toute la série). L'auteur est le compte réel, écrit en texte : il reste lisible même si le membre est retiré ensuite.

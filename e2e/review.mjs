@@ -1,7 +1,7 @@
 // covers: events.refuseEvent
 // End-to-end test of the proposal circuit of the events module, in a real browser, on the real image, in French and in
 // English: somebody whose role only proposes events creates one, a validator finds it in "To validate" (counted in the
-// menu) and approves it, or refuses it with a comment that its author reads and answers by proposing it again; and
+// menu) and validates it, or refuses it with a comment that its author reads and answers by proposing it again; and
 // what a proposer, a member and a validator may NOT see or do.
 //
 //   AUTH_SECRET=<the session secret of the platform> PSQL="<a psql command on the platform's database>" \
@@ -66,7 +66,7 @@ const WORDS = {
     awaiting: 'En attente de validation',
     review: 'À valider',
     nothing: 'Rien à valider',
-    approve: 'Approuver',
+    approve: 'Valider',
     refuse: 'Refuser',
     refuseConfirm: 'Refuser la proposition',
     locked: 'Cet événement est publié',
@@ -81,7 +81,7 @@ const WORDS = {
     awaiting: 'Awaiting validation',
     review: 'To validate',
     nothing: 'Nothing to validate',
-    approve: 'Approve',
+    approve: 'Validate',
     refuse: 'Refuse',
     refuseConfirm: 'Refuse the proposal',
     locked: 'This event is published',
@@ -307,7 +307,7 @@ async function round(lang) {
     }
     step('the validator sees the proposal counted in the menu, and in the list to validate');
 
-    // ---- approving it ---------------------------------------------------------------------------------------------
+    // ---- validating it ---------------------------------------------------------------------------------------------
     await (await alice.find(words.approve, '#main-content')).click();
     await alice.page.waitForSelector('[role="dialog"]');
     await alice.clickAndLoad(words.approve, '[role="dialog"]');

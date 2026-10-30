@@ -3,7 +3,7 @@ import { expect, test } from './fixtures';
 
 /**
  * The proposal circuit end to end, in every engine, as the people it was made for: somebody who proposes an event (the
- * form, with the date fields and the preview of a repeat rule), somebody who validates (approves, refuses with a comment),
+ * form, with the date fields and the preview of a repeat rule), somebody who validates (validates, refuses with a comment),
  * and a member who reads the result. It also plays the confirmation dialog, which every destructive action goes through
  * (focus, keyboard, Escape). Every journey makes its own events, named after the engine, so engines never meet on the same data.
  */
@@ -61,7 +61,7 @@ test.describe('the proposal circuit', () => {
     // Only the author and the validators can see it, and the author can still take it back.
     await expect(proposer.getByText('Awaiting validation').first()).toBeVisible();
     await expect(proposer.getByRole('button', { name: 'Withdraw the proposal' })).toBeVisible();
-    await expect(proposer.getByRole('button', { name: 'Approve' })).toHaveCount(0);
+    await expect(proposer.getByRole('button', { name: 'Validate' })).toHaveCount(0);
 
     const member = await as('member');
     const hidden = await member.goto(path);
@@ -81,10 +81,10 @@ test.describe('the proposal circuit', () => {
       .filter({ has: validator.getByRole('link', { name: title }) });
     await expect(row).toContainText('Proposed by QA proposer');
     await expect(row).toContainText('Every week on');
-    await row.getByRole('button', { name: 'Approve' }).click();
-    const approval = validator.getByRole('dialog', { name: 'Approve this proposal?' });
+    await row.getByRole('button', { name: 'Validate' }).click();
+    const approval = validator.getByRole('dialog', { name: 'Validate this proposal?' });
     await expect(approval).toBeVisible();
-    await approval.getByRole('button', { name: 'Approve' }).click();
+    await approval.getByRole('button', { name: 'Validate' }).click();
     // The page is loaded again after an action that stays on it (rule 2 of "Navigation"): the loading skeleton has no
     // row either, so what is waited for is the real page, drawn again without the proposal.
     await expect(validator.getByRole('heading', { name: 'To validate', level: 1 })).toBeVisible();

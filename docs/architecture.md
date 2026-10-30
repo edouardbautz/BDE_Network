@@ -930,7 +930,7 @@ recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`)
   An unpublished event the user can't see is a 404, not a 403; a draft event with a date confirmed alone shows that date only.
 - **The proposal circuit** (`src/lib/events/review.ts`, **non-negotiable**; user guide: `docs/en/events.md`). Two rights
   replace `events.manage`: **`events.propose`** (create events that wait, edit one's own until they are published) and
-  **`events.validate`** (approve, refuse, edit and delete anything, publish directly; it includes propose and view). A
+  **`events.validate`** (validate, refuse, edit and delete anything, publish directly; it includes propose and view). A
   migration (`20261016120000_event_proposals`) turns every `events.manage` of a role into `events.validate` plus what it
   includes, with a `role.migrate` audit entry listing the roles as they were: the server refuses a permission it does not
   know, so a role must never keep the old key. A role that held `manage` loses nothing.
@@ -955,7 +955,7 @@ recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`)
     is crafted and throws `Forbidden`), then **again inside the transaction** (`assertMayEdit`: a validator may have published
     the event since the page was drawn). Validator-only: `refuseEvent`, `cancelOccurrence`, `restoreOccurrence`,
     `deleteFollowingDates`. `createEvent` now writes the event and its audit entries in one transaction.
-  - **Approving is a status change** (`setEventStatus(…, 'CONFIRMED')` or the form), recognised by `statusMove` (`PROPOSED` →
+  - **Validating is a status change** (`setEventStatus(…, 'CONFIRMED')` or the form), recognised by `statusMove` (`PROPOSED` →
     `CONFIRMED`) and audited `event.approve`; proposing is `event.propose` (from the form, a button, or the creation, which
     writes `event.create` and `event.propose`), withdrawing `event.withdraw`, refusing `event.refuse` (with the comment and
     the author). `refuseEvent` answers a notice, not an error, when somebody answered first (`?notice=alreadyReviewed`).
@@ -969,7 +969,7 @@ recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`)
     `approved`, `refused`; `data.review` carries the author, the validator and the comment); the comment is a quote that
     keeps every line, first in the card, and is neutralized by the adapters like any text a member typed.
   - **The "To validate" page** (`events/review`, a 404 for anybody who cannot validate) lists `listProposals()` (the oldest
-    first) with approve and refuse. The entry of the menu (`NavItem.badge`, counted by `countProposals()` in `(app)/layout.tsx`
+    first) with validate and refuse. The entry of the menu (`NavItem.badge`, counted by `countProposals()` in `(app)/layout.tsx`
     only for validators) shows the count, with the number for a screen reader (`badgeLabel`) and in a neutral colour (the accent
     stays for primary actions); the longest matching address is the active entry, so `/events/review` does not light up
     "Events" too. Refusing asks for the comment in a `ConfirmDialog` with a `field`.
@@ -1623,7 +1623,7 @@ start from the same three things, so that what one finds the others can replay.
   suites only). Accounts are the personas, signed in with the forged cookie (`fixtures.ts`: `as('member')` gives a page of a fresh
   browser context); locators are by role and accessible name, so a page that loses an accessible name fails the suite. `public`
   (visitor, pending account, removed member), `member` (calendar buttons, list, filter, calendar file download, theme, phone
-  menu, what a member is never shown), `circuit` (a proposer proposes a weekly event, a validator approves it, a member reads
+  menu, what a member is never shown), `circuit` (a proposer proposes a weekly event, a validator validates it, a member reads
   it; a refusal with a comment; the confirmation dialog's focus, trap and Escape), `calendar` (French, the + of a day, the
   keyboard), `owner` (every page of the board; the logo's file input, preview, upload and reset; a file that is not an image),
   `notifications` (the table of the settings page: no box before a channel is set up, the shortcut of a column, two channels saved and found again, a refused address, and on a phone a list that does not scroll sideways with boxes of 44 px, which each journey leaves without a channel), `rows` (the rows that carry actions are measured in the engine: a request to approve is one line on a computer, the menu as wide as its roles, and stacks on a phone with 44 px targets and nothing that scrolls sideways), `self-hosted` (nothing a page loads comes from outside the platform, and the font drawn is Manrope served by it), `intra-fields` and `intra-circuit` (the publication on the intra: the form that asks for the fields once an owner turns it on, then a validator confirms, the staff finds the request, sees the fields in the order of the intra's form, refuses with a reason, the author reads it and sends the request again, the staff publishes with a link, the author changes the event, the staff reads what changed and confirms; the staff is shown nothing else of the platform; a phone does not scroll sideways), and `watcher` (the watcher itself, see below). **No retry, ever**: a journey that fails now and then is a defect to find (see

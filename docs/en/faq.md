@@ -102,7 +102,7 @@ answers. If the event changes afterwards, the staff is told what changed. See
 ### What is the difference between a draft and a confirmed event?
 
 A **draft** is only visible to its author and to those who can validate events. A **proposal** is a draft sent to the
-validators, who approve or refuse it. A **confirmed** event is visible to every member, and confirming it notifies
+validators, who validate or refuse it. A **confirmed** event is visible to every member, and confirming it notifies
 them. See [Events module](events.md).
 
 ### Why can I no longer edit my event?
