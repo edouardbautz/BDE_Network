@@ -334,7 +334,7 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
     const copies = stack.compose('exec', '-T', 'app', 'ls', '/auto-backups/pre-update');
     check(
       'the platform made a copy of the database by itself before applying the migrations',
-      /pre-update_/.test(copies.out),
+      copies.out.split(/\r?\n/).some((name) => /^pre-update_/.test(name) && name !== LEGACY_COPY),
       copies.out.slice(0, 200) || '(no copy)',
     );
     if (legacyVolume) {
