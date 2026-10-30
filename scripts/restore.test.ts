@@ -38,6 +38,8 @@ const DOCKER_STUB = `#!/bin/sh
 echo "docker $*" >> "$STUB_LOG"
 case "$*" in
   *"ps --status running"*) echo postgres ;;
+  *"--entrypoint ls app -1 /auto-backups/pre-update /legacy-backups"*) echo "pre-update_20261015T101530Z_v1.1.0.sql.gz" ;;
+  *"--entrypoint sh app -c"*"/auto-backups/pre-update/"*) gzip -c "$STUB_DIR/database.sql" ;;
   *"--entrypoint ls app -1 /auto-backups"*) printf 'bde-auto-2026-10-25_02-00-00Z.tar.gz\nbde-auto-2026-10-26_02-00-00Z.tar.gz\n' ;;
   *"--entrypoint cat app /auto-backups/"*) cat "$STUB_DIR/auto.tar.gz" ;;
   *openssl*) cat > /dev/null; if [ -f "$STUB_DIR/wrong-passphrase" ]; then exit 1; fi; cat "$STUB_DIR/auto.tar.gz" ;;
@@ -154,6 +156,18 @@ describe.skipIf(!hasShell || process.platform === 'win32')(
       expect(result.status, result.stderr).toBe(0);
       expect(docker().some((line) => line.includes('psql'))).toBe(true);
       expect(startsOfTheApp()).toEqual([]);
+    });
+
+    it('looks for the copies before an update in the folder of the backups, and in the old volume that has not been carried over yet', () => {
+      restore('--pre-update', '--yes');
+      const lines = docker();
+      expect(
+        lines.some((line) => line.includes('ls app -1 /auto-backups/pre-update /legacy-backups')),
+      ).toBe(true);
+      const read = lines.find((line) => line.includes('--entrypoint sh app -c'));
+      expect(read).toContain('/auto-backups/pre-update/$1');
+      expect(read).toContain('/legacy-backups/$1');
+      expect(read).toContain('pre-update_20261015T101530Z_v1.1.0.sql.gz');
     });
 
     describe('the backups the platform makes by itself', () => {

@@ -227,6 +227,73 @@ describe('createDatabaseTools', () => {
       ]);
     });
 
+    it('keeps its copies in pre-update/ of the folder of the backups, where the nightly ones are', () => {
+      const t = createDatabaseTools({
+        env: { DATABASE_URL: URL, BDE_BACKUP_DIR: join(dir, 'auto') },
+        spawn: fakeSpawn(() => ({})).spawn as never,
+        migrationsDir,
+        now: () => new Date('2026-10-15T10:15:30Z'),
+      });
+      mkdirSync(join(dir, 'auto', 'pre-update'), { recursive: true });
+      writeFileSync(
+        join(dir, 'auto', 'pre-update', 'pre-update_20261014T000000Z_v1.0.1.sql.gz'),
+        'x',
+      );
+      expect(t.latestBackup()).toBe('pre-update_20261014T000000Z_v1.0.1.sql.gz');
+    });
+
+    describe('the copies of the old volume (stacks before 4)', () => {
+      let legacyDir: string;
+      beforeEach(() => {
+        legacyDir = join(dir, 'legacy');
+        mkdirSync(legacyDir);
+      });
+      const legacy = (name: string, content = 'old') =>
+        writeFileSync(join(legacyDir, name), content);
+      const withLegacy = () => tools(fakeSpawn(() => ({})).spawn, { legacyDir });
+
+      it('are carried into the folder, once, and the old volume is left as it was', () => {
+        legacy('pre-update_20261001T000000Z_v1.0.0.sql.gz');
+        legacy('pre-update_20261014T000000Z_v1.4.0.sql.gz', 'newest');
+        legacy('README');
+        const t = withLegacy();
+        expect(t.importLegacy().sort()).toEqual([
+          'pre-update_20261001T000000Z_v1.0.0.sql.gz',
+          'pre-update_20261014T000000Z_v1.4.0.sql.gz',
+        ]);
+        expect(readdirSync(backupsDir).sort()).toEqual([
+          'pre-update_20261001T000000Z_v1.0.0.sql.gz',
+          'pre-update_20261014T000000Z_v1.4.0.sql.gz',
+        ]);
+        expect(
+          readFileSync(join(backupsDir, 'pre-update_20261014T000000Z_v1.4.0.sql.gz'), 'utf8'),
+        ).toBe('newest');
+        expect(readdirSync(legacyDir)).toHaveLength(3);
+        // and they count: the newest is the way back, the retention sees them
+        expect(t.latestBackup()).toBe('pre-update_20261014T000000Z_v1.4.0.sql.gz');
+        // again: nothing to bring
+        expect(t.importLegacy()).toEqual([]);
+      });
+
+      it('never overwrites a copy the folder already has', () => {
+        mkdirSync(backupsDir, { recursive: true });
+        writeFileSync(join(backupsDir, 'pre-update_20261001T000000Z_v1.0.0.sql.gz'), 'kept');
+        legacy('pre-update_20261001T000000Z_v1.0.0.sql.gz', 'old');
+        expect(withLegacy().importLegacy()).toEqual([]);
+        expect(
+          readFileSync(join(backupsDir, 'pre-update_20261001T000000Z_v1.0.0.sql.gz'), 'utf8'),
+        ).toBe('kept');
+      });
+
+      it('leaves no partial file and does not stop the start when the old volume is absent or empty', () => {
+        expect(
+          tools(fakeSpawn(() => ({})).spawn, { legacyDir: join(dir, 'none') }).importLegacy(),
+        ).toEqual([]);
+        expect(withLegacy().importLegacy()).toEqual([]);
+        expect(existsSync(backupsDir)).toBe(false);
+      });
+    });
+
     it('has nothing to say when the folder does not exist yet', () => {
       expect(existsSync(backupsDir)).toBe(false);
       const t = tools(fakeSpawn(() => ({})).spawn);

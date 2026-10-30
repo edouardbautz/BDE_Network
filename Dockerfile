@@ -96,10 +96,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/.bde-version /opt/start/version
 # Where the `secrets` volume is mounted (docker/master-secrets.mjs). Created here so that the keys can also be
 # written when the image runs without the volume, and so that a new volume starts with the right owner.
 # Where the `uploads` volume is mounted: the BDE's logo (src/lib/branding). Also created here, for the same reason.
-# Where the `backups` volume is mounted: the copies of the database made before an update. Created here for the same reason.
-# Where the nightly backups go (BDE_BACKUP_DIR; a folder of the host in docker-compose.yml, because they must outlive the volumes).
+# Where every backup goes (BDE_BACKUP_DIR; a folder of the host in docker-compose.yml, because they must outlive the volumes): the nightly
+# ones, and the copies of the database made before an update, in its `pre-update/` folder.
+# Where the old `backups` volume is mounted, read only (stacks before 4): its copies are carried into the folder above at the first start.
 # `openssl` (installed above) opens a downloaded, encrypted backup on a server that has nothing but Docker (scripts/restore.sh).
-RUN mkdir /secrets /uploads /backups /auto-backups && chown nextjs:nodejs /secrets /uploads /backups /auto-backups && chmod 700 /secrets /backups
+RUN mkdir /secrets /uploads /legacy-backups /auto-backups && chown nextjs:nodejs /secrets /uploads /legacy-backups /auto-backups && chmod 700 /secrets /legacy-backups
 USER nextjs
 EXPOSE 3000
 

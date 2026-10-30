@@ -1036,9 +1036,14 @@ server with nothing, that **has been read again** before it is trusted, and that
   `backups/auto`, not `backups`, because `scripts/backup.sh` writes the latter as the host's user. `BDE_STACK` went from 2 to 3 with this: an image that
   expects the mount, started by a compose file that does not give it, would write the backups inside the container and lose them at the next
   recreation; the image now refuses that with a page (`stack-old-compose`).
-  - **Three places hold copies, not one** (the guide has the table): the nightly backups (`backups/auto/` of the host, mounted on `/auto-backups`, survive `down -v`),
-    the copies before an update (the `backups` volume, mounted on `/backups`, `pre-update_*.sql.gz`, gone with `down -v`) and what `scripts/backup.sh` writes
-    (`backups/` of the host). Looking in the container's `/backups` for a nightly backup finds the volume of the updates, empty: that was a report.
+  - **One folder holds every copy the platform makes** (the guide has the table): the nightly backups (`backups/auto/` of the host, mounted on `/auto-backups`) and, in its
+    `pre-update/` folder, the copies made before an update (`pre-update_*.sql.gz`, `docker/database-tools.mjs`, retention 5 / 90 days unchanged); `scripts/backup.sh` writes
+    `backups/` of the host. They used to be in a `backups` volume mounted on `/backups`, which `down -v` removed, and a report looked for a nightly backup there. **Stack 4**
+    (`STACK_VERSION`, `BDE_STACK`) is this change: the volume is no longer where the copies go, but it stays declared and mounted **read only** on `/legacy-backups`, and the
+    supervisor carries its copies over at every start (`importLegacy`, before it looks at the database, so that `latestBackup` and the retention see them; it copies what the
+    folder does not have, through a `.partial` file, never overwrites, never deletes). Do not remove the declaration while installations that were made before it can still update.
+    `restore.sh --pre-update` lists both places and reads the folder first, so it works before the first start of the new version. The nightly rotation touches only `bde-auto-*`,
+    so `pre-update/` and the status file stay out of its way.
   - **A file system that refuses the change of owner** (a network disk or a home on NFS under a rootless Docker, a Windows mount): the preparation step of
     the `secrets` service used to chain `chown && chmod 755` in one list, so a refused `chown` left the folder as the host user made it (often `700`), and the
     application, another user for it (a number of the user's sub-range, in the image `nextjs`, whose primary group is `nogroup`: harmless), could not even list it:
@@ -1248,7 +1253,7 @@ vX.Y.Z`. **The GitHub release is created by the maintainer, not by the workflow*
     failed earlier and was neither finished nor rolled back: Prisma refuses to go on), `pending`, `current`,
     `fresh`;
   - **a copy** when migrations are `pending`: `pg_dump --clean --if-exists` (the dump `scripts/backup.sh` makes) to
-    `/backups` (the `backups` volume), compressed, checked complete (its last line), named
+    `pre-update/` of the folder of the backups (`/auto-backups/pre-update`, `backups/auto/pre-update/` on the host), compressed, checked complete (its last line), named
     `pre-update_<UTC>_v<version>.sql.gz` (`BDE_VERSION` is written into the image from `package.json`); 5 kept, nothing
     older than 90 days, never the newest; none for `current` or `fresh`; one per set of pending migrations even if the
     attempt is repeated. A copy that cannot be made **stops the update** (`backup-failed`; `BDE_SKIP_BACKUP=1` goes on
@@ -1814,7 +1819,7 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
     reminder loop with a tick that fails for months (phase 10, with the virtual clock), a disk that is full (the logo's folder), and the
     supervisor's own handling of a database that is absent at start (`e2e/safe-update.sh` plays it).
 - **Updates** (`qa/upgrade/`, the `upgrade` job of `qa.yml`, one job per version to leave; `npx tsx qa/upgrade/run.ts --from
-1.0.0|1.1.0|1.2.0|1.3.0|1.4.0`, after `docker build -t bde-network:local .`). The guide of upgrading played for real, the way an operator does
+1.0.0|1.1.0|1.2.0|1.3.0|1.4.0|1.5.0`, after `docker build -t bde-network:local .`). The guide of upgrading played for real, the way an operator does
   it: a folder of the project at the old version (a **worktree of its tag**, moved to the version under test with `git checkout`, as
   `git pull` does), its `.env` and `bde.config.yml`, a Docker Compose project whose volumes stay through the update. 1.1.0 and
   1.2.0, 1.3.0 and 1.4.0 come from the registry; **1.0.0 was never published as an image and is built from its folder**, as its compose file says.
@@ -1839,7 +1844,11 @@ checks`), only that exact message, a known behaviour of Next.js's client in Safa
     folder, still at the version being left, which applied its migrations again to the database just put back, and the old version then
     refused it (`--no-start`, implied by `--pre-update`; `restore.test.ts` holds it against a `docker` that is only a recorder). What
     it did not find, which is as worth saying: no date, hour, right or row changed in an update from 1.0.0, 1.1.0 or 1.2.0.
-  - **From 1.3.0 and 1.4.0** (`fixture-proposals.ts`, `fixture-proposals.test.ts`): the schema is the one of today (no migration came after
+  - **The copies of the old volume** (stack 4). Before the update, the suite writes a copy into the old version's `backups` volume (the versions that have one); after it,
+    that copy must be in `pre-update/` of the folder of the backups, on the host (so it survives `down -v`) and still in the old volume, next to the copy the new version made
+    itself; `e2e/safe-update.sh` plays the same on the image alone (two copies carried over, the old volume untouched, nothing carried a second time, a compose file of
+    stack 3 explained instead of started).
+  - **From 1.3.0, 1.4.0 and 1.5.0** (`fixture-proposals.ts`, `fixture-proposals.test.ts`): the schema is the one of today (no migration came after
     the proposal circuit and the repeat rules), so the data is written in it and is a board that has used them: roles that propose, validate
     and manage the shared calendar; series with advanced rules (every two weeks on Monday and Wednesday ten times across the change of
     clock, the second Saturday, the last day, every year); a series cut in two with a cancelled date and a moved one with other people in

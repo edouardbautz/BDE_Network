@@ -217,6 +217,14 @@ export async function supervise({
         if (stack) return await stay({ ...stack, version: safety.version });
         if (!safety.tools.hasAddress()) return await stay({ kind: 'database-url', code: '' });
 
+        // The copies the old volume `backups` holds are brought into the folder first: `latestBackup` and the retention then see them.
+        const brought = safety.tools.importLegacy?.() ?? [];
+        if (brought.length > 0) {
+          log(
+            `  ${brought.length} copie(s) d'avant mise à jour reprise(s) de l'ancien volume « backups » : ${brought.join(', ')}`,
+          );
+        }
+
         before = await safety.tools.inspect();
         if (before.state === 'newer') {
           return await stay({
@@ -243,7 +251,7 @@ export async function supervise({
             try {
               copy = await safety.tools.backup();
               copies.set(key, copy);
-              log(`  copie faite : ${copy} (volume « backups »)`);
+              log(`  copie faite : ${copy} (dossier des sauvegardes, pre-update/)`);
             } catch (error) {
               return await stay(
                 { kind: 'backup-failed', code: '', version: safety.version },

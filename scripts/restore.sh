@@ -175,11 +175,12 @@ WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT INT TERM
 
 if [ "$PRE_UPDATE" -eq 1 ]; then
-  # Les copies d'avant mise à jour sont dans le volume « backups » : on les lit avec un conteneur éphémère de
-  # l'application (le même volume qu'elle, sans en deviner le nom).
-  AVAILABLE="$(docker compose run --rm --no-deps -T --entrypoint ls app -1 /backups 2>/dev/null | grep '^pre-update_.*\.sql\.gz$' | sort || true)"
+  # Les copies d'avant mise à jour sont dans le dossier des sauvegardes (backups/auto/pre-update/) ; celles que l'ancien
+  # volume « backups » (versions d'avant la pile 4) contient encore, et que la plateforme n'a pas encore reprises, sont lues
+  # aussi. On lit avec un conteneur éphémère de l'application (les mêmes montages qu'elle, sans en deviner les noms).
+  AVAILABLE="$(docker compose run --rm --no-deps -T --entrypoint ls app -1 /auto-backups/pre-update /legacy-backups 2>/dev/null | grep '^pre-update_.*\.sql\.gz$' | sort -u || true)"
   if [ -z "$AVAILABLE" ]; then
-    echo "Aucune copie d'avant mise à jour dans le volume « backups »." >&2
+    echo "Aucune copie d'avant mise à jour dans le dossier des sauvegardes (backups/auto/pre-update)." >&2
     echo "(Elles sont faites quand la plateforme applique une mise à jour de la base ; sinon, utilisez une sauvegarde de scripts/backup.sh.)" >&2
     exit 1
   fi
@@ -191,7 +192,7 @@ if [ "$PRE_UPDATE" -eq 1 ]; then
     exit 1
   fi
   FILE="$PRE_UPDATE_NAME"
-  docker compose run --rm --no-deps -T --entrypoint cat app "/backups/$PRE_UPDATE_NAME" >"$WORK/pre-update.sql.gz"
+  docker compose run --rm --no-deps -T --entrypoint sh app -c 'cat "/auto-backups/pre-update/$1" 2>/dev/null || cat "/legacy-backups/$1"' sh "$PRE_UPDATE_NAME" >"$WORK/pre-update.sql.gz"
   gzip -dc "$WORK/pre-update.sql.gz" >"$WORK/database.sql"
   if ! tail -n 5 "$WORK/database.sql" | grep -q "PostgreSQL database dump complete"; then
     echo "La copie « $PRE_UPDATE_NAME » est incomplète : restauration annulée, rien n'a été modifié." >&2

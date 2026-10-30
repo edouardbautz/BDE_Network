@@ -290,6 +290,7 @@ describe('supervise', () => {
         restore: vi.fn(async () => undefined),
         prune: vi.fn(),
         latestBackup: vi.fn(() => COPY),
+        importLegacy: vi.fn(() => [] as string[]),
         ...over,
       };
     }
@@ -321,6 +322,30 @@ describe('supervise', () => {
       expect(db.restore).not.toHaveBeenCalled();
       expect(db.prune).toHaveBeenCalledTimes(1);
       expect(lines.join('\n')).toContain(COPY);
+    });
+
+    it('carries the copies of the old volume over BEFORE it looks at the database, and says so', async () => {
+      const order: string[] = [];
+      const db = tools({
+        importLegacy: vi.fn(() => {
+          order.push('import');
+          return ['pre-update_20261001T000000Z_v1.4.0.sql.gz'];
+        }),
+        inspect: vi.fn(async () => {
+          order.push('inspect');
+          return pending;
+        }),
+      });
+      expect(await start({ safety: safety(db) })).toBe(0);
+      expect(order.slice(0, 2)).toEqual(['import', 'inspect']);
+      expect(lines.join('\n')).toContain('pre-update_20261001T000000Z_v1.4.0.sql.gz');
+    });
+
+    it('says nothing of the old volume when it had nothing', async () => {
+      const db = tools();
+      expect(await start({ safety: safety(db) })).toBe(0);
+      expect(db.importLegacy).toHaveBeenCalledTimes(1);
+      expect(lines.join('\n')).not.toContain('ancien volume');
     });
 
     it.each(['current', 'fresh'])(

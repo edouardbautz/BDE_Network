@@ -8,6 +8,7 @@
 import { spawn as nodeSpawn } from 'node:child_process';
 import {
   createReadStream,
+  copyFileSync,
   createWriteStream,
   mkdirSync,
   readdirSync,
@@ -20,6 +21,7 @@ import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { createGunzip, createGzip } from 'node:zlib';
 import {
+  backupDate,
   backupFileName,
   connectionEnv,
   newestBackup,
@@ -66,7 +68,10 @@ export function createDatabaseTools({
   env,
   spawn = nodeSpawn,
   migrationsDir = '/app/prisma/migrations',
-  backupsDir = env.BDE_BACKUPS_DIR || '/backups',
+  // The copies made before an update live in the folder of the backups (a folder of the host, which `down -v` does not touch).
+  backupsDir = env.BDE_BACKUPS_DIR || join(env.BDE_BACKUP_DIR || '/auto-backups', 'pre-update'),
+  // Where the volume `backups` of the stacks before 4 is mounted (read only), to carry its copies over.
+  legacyDir = env.BDE_LEGACY_BACKUPS_DIR || '/legacy-backups',
   version = env.BDE_VERSION || 'unknown',
   now = () => new Date(),
 }) {
@@ -154,6 +159,28 @@ export function createDatabaseTools({
         { env: pgEnv, stdin: Readable.from(input()) },
       );
       if (result.code !== 0) throw new Error(`psql exited with ${result.code}: ${result.stderr}`);
+    },
+
+    /**
+     * Carries the copies of the old volume `backups` (stacks before 4) into the folder: the ones it does not have yet, never
+     * overwriting, never deleting (the old volume is mounted read only). Answers the names it brought. Safe to repeat.
+     */
+    importLegacy() {
+      const brought = [];
+      const known = new Set(tryList(backupsDir));
+      for (const name of tryList(legacyDir)) {
+        if (backupDate(name) === null || known.has(name)) continue;
+        mkdirSync(backupsDir, { recursive: true, mode: 0o700 });
+        const partial = join(backupsDir, `${name}.partial`);
+        try {
+          copyFileSync(join(legacyDir, name), partial);
+          renameSync(partial, join(backupsDir, name));
+          brought.push(name);
+        } catch {
+          rmSync(partial, { force: true });
+        }
+      }
+      return brought;
     },
 
     backups: () => tryList(backupsDir),

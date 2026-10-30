@@ -93,6 +93,15 @@ All notable changes to this project are written here, in English. Format based o
 - A new migration adds the tables of the templates, the versions and the mentions; a copy of the database is therefore made before the update,
   from every version, as for any migration.
 
+### Changed
+
+- **One folder for every copy the platform makes.** The copies made before an update used to be in a Docker volume (`backups`), which `docker compose down -v` removes, next
+  to the nightly backups in the folder `backups/auto/`: two places, only one of which survived. They now go to `backups/auto/pre-update/`, in the same folder of the server
+  (`scripts/restore.sh --pre-update` reads it). **Nothing to do when updating**: at the first start the platform carries the copies of the old volume into the folder (nothing is
+  deleted from the volume, mounted read only; `docker volume rm` it once the copies are seen in the folder). The compose file and the image belong together by a new number
+  (stack 3 to 4): an old compose file with this image, or the reverse, is explained in the browser instead of starting. The update suite plays the carrying over from
+  every version since 1.0.0, 1.5.0 included.
+
 ### Fixed
 
 - **Automatic backups on a rootless Docker whose disk refuses the change of owner (a network disk, the computers of the school).** The step that prepares the folder of the

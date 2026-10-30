@@ -1,4 +1,4 @@
-import { appendFileSync, mkdtempSync, readdirSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdtempSync, readdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Client } from 'pg';
@@ -40,14 +40,15 @@ const flag = (name: string): string | undefined => {
   return index === -1 ? undefined : process.argv[index + 1];
 };
 
-const VERSIONS = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0'] as const;
+const VERSIONS = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0'] as const;
 
 /**
  * From 1.3.0 on the schema has the proposal circuit and the repeat rules: the old version holds the data of `fixture-proposals.ts`
  * and there is no conversion of the roles to check; only the notification templates' tables are new. Before, the data is that of
  * `fixture.ts`. Every version is updated with at least one migration to apply, so the platform makes its copy of the database first.
  */
-const holdsProposals = (from: (typeof VERSIONS)[number]) => from === '1.3.0' || from === '1.4.0';
+const holdsProposals = (from: (typeof VERSIONS)[number]) =>
+  from === '1.3.0' || from === '1.4.0' || from === '1.5.0';
 
 interface Facts {
   counts: Record<string, number>;
@@ -233,6 +234,26 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
       backedUp.ok ? '' : backedUp.out.slice(-300),
     );
 
+    // A copy before an update that the old version left in its volume `backups` (the versions that have one): the update must bring it
+    // along, into the folder of the backups, without anybody doing anything.
+    const LEGACY_COPY = `pre-update_20261001T000000Z_v${from}.sql.gz`;
+    const legacyVolume = stack.compose('exec', '-T', 'app', 'test', '-d', '/backups').ok;
+    if (legacyVolume) {
+      const made = stack.compose(
+        'exec',
+        '-T',
+        'app',
+        'sh',
+        '-c',
+        `printf "%s\\n" "-- copy of the old volume" "-- PostgreSQL database dump complete" | gzip > /backups/${LEGACY_COPY}`,
+      );
+      check(
+        'a copy before an update is in the old volume `backups`',
+        made.ok,
+        made.out.slice(-200),
+      );
+    }
+
     // ---- 3. the update: the new code, then docker compose up -d --------------------------------------------------------
     const switched = run('git', ['checkout', '--detach', '-f', sha], { cwd: dir });
     check('the folder is moved to the version under test', switched.ok, switched.out.slice(-300));
@@ -310,11 +331,28 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
       violations.length === 0,
       violations.length === 0 ? 'none broken' : describeViolations(violations),
     );
-    const copies = stack.compose('exec', '-T', 'app', 'ls', '/backups');
+    const copies = stack.compose('exec', '-T', 'app', 'ls', '/auto-backups/pre-update');
     check(
       'the platform made a copy of the database by itself before applying the migrations',
       /pre-update_/.test(copies.out),
       copies.out.slice(0, 200) || '(no copy)',
+    );
+    if (legacyVolume) {
+      check(
+        'the copy of the old volume `backups` was carried into the folder of the backups (pre-update/), and the old volume still has it',
+        copies.out.split(/\r?\n/).includes(LEGACY_COPY) &&
+          stack
+            .compose('exec', '-T', 'app', 'ls', '/legacy-backups')
+            .out.split(/\r?\n/)
+            .includes(LEGACY_COPY),
+        copies.out.slice(0, 300),
+      );
+    }
+    const onHost = existsSync(join(dir, 'backups', 'auto', 'pre-update'));
+    check(
+      'the copies are on the host, in backups/auto/pre-update (they survive docker compose down -v)',
+      onHost,
+      onHost ? '' : 'not there',
     );
 
     // The notification templates came with this update: their tables are there and hold nothing (every notification is still the

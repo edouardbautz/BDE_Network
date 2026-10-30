@@ -119,7 +119,7 @@ services:
       BDE_REIMPORT: ${BDE_REIMPORT:-}
       # What this file gives the image (its variables, its volumes), as a number: the image refuses to start with
       # a message, not a loop, when the file and the image do not belong together (docker/safe-update.mjs).
-      BDE_STACK: '3'
+      BDE_STACK: '4'
       # Where the nightly backups are on the server, only to name it in the messages of the Settings page.
       BDE_BACKUP_HOST_DIR: ${BDE_BACKUP_DIR:-./backups/auto}
       # Applies the migrations without the copy that is made before them, when that copy cannot be made (a full disk).
@@ -137,12 +137,15 @@ services:
       - secrets:/secrets
       # The logo the owner uploaded. scripts/backup.sh puts it in the database archive.
       - uploads:/uploads
-      # The copies of the database made automatically before an update (the newest five, nothing older than 90 days).
-      # `./scripts/restore.sh --pre-update` puts one back.
-      - backups:/backups
-      # The nightly backups: one archive each, with the database AND the keys to read it. A FOLDER OF THE HOST, not a Docker volume,
-      # so that they survive `docker compose down -v` and the deletion of the platform's volumes (docs/en/backups.md).
+      # EVERY copy of the data is in this one folder of the host, not in a Docker volume, so that it survives `docker compose down -v`
+      # and the deletion of the platform's volumes (docs/en/backups.md): the nightly backups (one archive each, with the database AND the
+      # keys to read it) and, in its `pre-update/` folder, the copies made automatically before an update (the newest five, nothing
+      # older than 90 days; `./scripts/restore.sh --pre-update` puts one back).
       - ${BDE_BACKUP_DIR:-./backups/auto}:/auto-backups
+      # The volume that held the copies before an update until stack 4. Read only, and only to carry the copies it has over to the
+      # folder above at the first start (nothing is deleted from it). Empty on a new installation; `docker volume rm` it once
+      # the copies are seen in `backups/auto/pre-update/`.
+      - backups:/legacy-backups:ro
     # No bind mount of bde.config.yml, on purpose. A mount is resolved by the Docker daemon, on ITS
     # side, and a daemon that cannot see this folder (rootless Docker, a remote daemon, a home on a
     # network share) answers by creating an EMPTY DIRECTORY there, or the application cannot read the
