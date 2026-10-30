@@ -106,6 +106,10 @@ describe('what the Settings page says about the backups', () => {
   it('says the folder is unreadable rather than throwing', async () => {
     const overview = await readOverview(join(dir, 'does-not-exist'), NOW);
     expect(overview.readable).toBe(false);
+    expect(overview.folder).toMatchObject({
+      problem: 'missing',
+      path: join(dir, 'does-not-exist'),
+    });
     expect(overview.backups).toEqual([]);
     expect(overview.last).toBeNull();
   });

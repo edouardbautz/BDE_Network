@@ -143,6 +143,8 @@ export class Stack {
     build: boolean;
     /** More for the application (the backup suite sets the clock of the platform). */
     app?: { volumes?: string[]; environment?: Record<string, string> };
+    /** The image of the `secrets` service (the backup suite plays a file system that refuses the change of owner). */
+    secretsImage?: string;
   }): void {
     writeFileSync(join(this.dir, 'bde.config.yml'), CONFIG);
     const lines = [
@@ -154,6 +156,7 @@ export class Stack {
       ...(options.mountsConfig ? ['./bde.config.yml:/app/bde.config.yml:ro'] : []),
       ...(options.app?.volumes ?? []),
     ];
+    if (options.secretsImage) lines.push('  secrets:', `    image: ${options.secretsImage}`);
     const environment = Object.entries(options.app?.environment ?? {});
     if (volumes.length > 0 || environment.length > 0) {
       lines.push('  app:');

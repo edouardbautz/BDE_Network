@@ -1468,6 +1468,23 @@
         "none": "No backup yet",
         "noneBody": "The first one is made tonight at 3:00. You can also make one now, below."
       },
+      "folder": {
+        "title": "The backups folder cannot be used",
+        "checked": "Folder checked: {path}.",
+        "checkedHost": "Folder checked: {path} (on the server: {host}).",
+        "missing": "This folder does not exist{code, select, none {} other { (code {code})}}.",
+        "notDirectory": "This is not a folder.",
+        "unreadable": "This folder exists but the platform (user {uid}) cannot read it: it belongs to {owner} with rights {mode}.",
+        "notWritable": "This folder can be read but not written by the platform (user {uid}): it belongs to {owner} with rights {mode}{code, select, none {} other { (code {code})}}.",
+        "notMounted": "This folder is inside the container, not on the server: the backups would be lost the next time the container is made again.",
+        "fixTitle": "What to do, on the server",
+        "fix": {
+          "missing": "Create the folder {host}, then restart the platform with docker compose up -d.",
+          "notDirectory": "Replace {host} with an empty folder, then restart with docker compose up -d.",
+          "rights": "Restart with docker compose up -d: the preparation step gives the folder to the platform. If docker compose logs secrets says the folder cannot be handed to it (a network disk, a folder of another user, Docker without administrator rights), open it as its owner with chmod 1777 {host}, then restart. If that is not enough, choose a folder on a local disk with BDE_BACKUP_DIR in .env.",
+          "notMounted": "Check that docker-compose.yml is the one of this version (git pull), which mounts {host} on /auto-backups, then restart with docker compose up -d."
+        }
+      },
       "stale": {
         "title": "No backup has succeeded for two days",
         "body": "Your data is not protected as it should be. See the reason below, and in the logs of the platform (docker compose logs app)."

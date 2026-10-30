@@ -37,10 +37,20 @@ services:
         chmod 700 /secrets
         chmod 600 "$$file"
         # The nightly backups (a folder of the host: the volumes can go, they stay). The application owns it; the archives in it
-        # are for that owner alone (0600), the folder itself can be listed. A file system that refuses this (a share, a mount of
-        # Windows) must not stop the platform from starting: the backups then fail with their reason (folder) and the owners are told.
-        { chown 1001:1001 /auto-backups && chmod 755 /auto-backups; } 2>/dev/null ||
-          echo "The folder of the backups cannot be handed to the application: the automatic backups will fail (see docs/en/backups.md)." >&2
+        # are for that owner alone (0600), the folder itself can be listed. Three cases, in this order:
+        #  1. the folder can be handed to the application (a standard Docker, where this service is root of the machine): done;
+        #  2. it cannot (a rootless Docker on a network disk, a folder of another user, a Windows mount: the file system refuses
+        #     the change of owner, and the folder stays private to the host user, which the application cannot even list): it is
+        #     opened to every user of the server with the sticky bit instead, the archives staying private by their own rights;
+        #  3. not even that: the backups will fail with their reason, shown in the Settings page.
+        # Nothing here stops the platform from starting: the application looks at the folder itself when it starts and in the Settings page.
+        if { chown 1001:1001 /auto-backups && chmod 755 /auto-backups; } 2>/dev/null; then
+          :
+        elif chmod 1777 /auto-backups 2>/dev/null; then
+          echo "The folder of the backups cannot be handed to the application (a network disk, a folder of another user, Docker without administrator rights): it is open to every user of the server instead, with the sticky bit. The archives stay private (0600)." >&2
+        else
+          echo "The folder of the backups cannot be handed to the application, nor opened for it: the automatic backups will fail (see docs/en/backups.md)." >&2
+        fi
 
   postgres:
     image: postgres:17-alpine
@@ -110,6 +120,8 @@ services:
       # What this file gives the image (its variables, its volumes), as a number: the image refuses to start with
       # a message, not a loop, when the file and the image do not belong together (docker/safe-update.mjs).
       BDE_STACK: '3'
+      # Where the nightly backups are on the server, only to name it in the messages of the Settings page.
+      BDE_BACKUP_HOST_DIR: ${BDE_BACKUP_DIR:-./backups/auto}
       # Applies the migrations without the copy that is made before them, when that copy cannot be made (a full disk).
       BDE_SKIP_BACKUP: ${BDE_SKIP_BACKUP:-}
       # Only to write the right address in the installer's code box (the container does not know it).

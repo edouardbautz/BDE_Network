@@ -43,6 +43,14 @@ const { BackupDownload } = await import('./backup-download');
 const NAME = archiveName(new Date('2026-10-26T02:00:04Z'));
 const overview = (patch: Partial<BackupOverview> = {}): BackupOverview => ({
   readable: true,
+  folder: {
+    problem: null,
+    path: '/auto-backups',
+    hostPath: './backups/auto',
+    uid: 1001,
+    owner: { uid: 1001, gid: 1001, mode: '755' },
+    code: null,
+  },
   backups: [
     {
       name: NAME,
@@ -176,6 +184,56 @@ describe('the backups section', () => {
   it('says the folder cannot be read, instead of an empty list', async () => {
     await renderSection({ readable: false, backups: [], last: null });
     expect(screen.getByText(/Le dossier des sauvegardes ne peut pas être lu/)).toBeInTheDocument();
+  });
+
+  it.each([
+    ['missing', 'n’existe pas', 'Créez le dossier ./backups/auto'],
+    ['notDirectory', 'Ce n’est pas un dossier', 'Remplacez ./backups/auto'],
+    [
+      'unreadable',
+      'ne peut pas le lire : il appartient à 0:0 avec les droits 700',
+      'chmod 1777 ./backups/auto',
+    ],
+    ['notWritable', 'pas écrit par la plateforme', 'docker compose logs secrets'],
+    [
+      'notMounted',
+      'dans le conteneur et non sur le serveur',
+      'monte ./backups/auto sur /auto-backups',
+    ],
+  ] as const)(
+    'names the folder, what is wrong with it (%s) and what to do on the server',
+    async (problem, what, fix) => {
+      await renderSection({
+        readable: problem === 'notWritable' || problem === 'notMounted',
+        folder: {
+          problem,
+          path: '/auto-backups',
+          hostPath: './backups/auto',
+          uid: 1001,
+          owner: { uid: 0, gid: 0, mode: '700' },
+          code: 'EACCES',
+        },
+      });
+      const exact = { exact: false };
+      expect(
+        screen.getByText('Le dossier des sauvegardes n’est pas utilisable'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          'Dossier vérifié : /auto-backups (sur le serveur : ./backups/auto)',
+          exact,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText(what, exact)).toBeInTheDocument();
+      expect(screen.getByText(fix, exact)).toBeInTheDocument();
+      // one explanation, not the generic one next to it
+      expect(screen.queryByText('Vérifiez BDE_BACKUP_DIR', exact)).toBeNull();
+    },
+  );
+
+  it('says nothing about the folder when it is fine', async () => {
+    await renderSection({});
+    expect(screen.queryByText('Le dossier des sauvegardes n’est pas utilisable')).toBeNull();
   });
 
   it('has a reason, in both languages, for every failure the platform can come to', () => {

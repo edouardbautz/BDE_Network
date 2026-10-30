@@ -1,4 +1,5 @@
-import { platformBackupContext } from './service';
+import { describeFolder, diagnoseFolder } from './folder';
+import { backupDir, platformBackupContext } from './service';
 import { backupTick } from './tick';
 
 const TICK_INTERVAL_MS = 5 * 60 * 1000;
@@ -45,6 +46,15 @@ export function startBackupScheduler(): void {
       running = false;
     }
   };
+
+  // Said once, at the start, with the path and the rights: the nightly failure comes at 3:00, when nobody is looking.
+  void diagnoseFolder(backupDir()).then((folder) => {
+    if (folder.problem) {
+      console.warn(
+        `💾 Sauvegardes automatiques : le dossier des sauvegardes n'est pas utilisable. ${describeFolder(folder)}. Voir la page Paramètres et docs/fr/backups.md.`,
+      );
+    }
+  });
 
   const first = setTimeout(tick, FIRST_TICK_DELAY_MS);
   const every = setInterval(tick, TICK_INTERVAL_MS);

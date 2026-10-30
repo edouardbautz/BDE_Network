@@ -619,6 +619,35 @@ jobs:
           path: backups-report.json
           if-no-files-found: ignore
 
+  # The same, on a rootless Docker (the computers of the school): the suite runs inside a `docker:dind-rootless` container, as its
+  # unprivileged user (qa/backup/rootless.sh), once with a folder handed to the application and once with a file system that refuses
+  # the change of owner (a network disk), which used to leave the folder unreadable for the platform.
+  backups-rootless:
+    name: backups (rootless Docker)
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-qa')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Build the image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          load: true
+          tags: bde-network:local
+          cache-from: type=gha,scope=qa-image
+          cache-to: type=gha,mode=max,scope=qa-image
+
+      # Ubuntu 24.04 refuses user namespaces to unprivileged programs by default, which a rootless daemon needs (even inside a container).
+      - name: Allow user namespaces
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+
+      - name: Back up at night on a rootless Docker, with and without a file system that refuses the owner
+        run: sh qa/backup/rootless.sh bde-network:local
+
   # A year and a half of the reminder loop on a real PostgreSQL with the QA dataset (qa/longtime; see "Long time" in
   # docs/architecture.md). No image: the loop is called with each instant it would look at, so it takes minutes, not months.
   longtime:

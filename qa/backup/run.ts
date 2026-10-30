@@ -1,11 +1,13 @@
 import { spawnSync } from 'node:child_process';
 import {
   appendFileSync,
+  chmodSync,
   copyFileSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -25,7 +27,7 @@ import { PASSWORD, run, sleep, Stack } from '../upgrade/stack';
  *   3. a server with nothing: the backup is put there, `scripts/restore.sh --auto` restores it, and the BDE is back: its data,
  *      its keys (the sessions of before still open, the sealed settings readable), as it was.
  *
- *   tsx qa/backup/run.ts [--report report.json]
+ *   tsx qa/backup/run.ts [--report report.json] [--refuse-chown]
  *
  * The image is built before (`docker build -t bde-network:local .`, the name of `docker-compose.build.yml`).
  */
@@ -102,11 +104,46 @@ function folder(project: string): string {
   return dir;
 }
 
+/**
+ * `--refuse-chown`: the file system of the folder refuses the change of owner, as a network disk does under a rootless Docker (the school's
+ * computers). The folder is the host user's and private to them, and the `secrets` service (root of the container, so the host user's
+ * own rights) is an image whose `chown` answers "not permitted": the platform must open the folder by other means, not leave
+ * the application unable to list it.
+ */
+const REFUSE_CHOWN = process.argv.includes('--refuse-chown');
+/** The alert of the Settings page about the folder, as it is drawn (the same words are also in the catalog the page carries, between quotes). */
+const FOLDER_ALERT = '>Le dossier des sauvegardes n’est pas utilisable<';
+const REFUSING_IMAGE = 'bde-secrets-nochown:local';
+
+function refusingImage(): boolean {
+  // `chown` of the image, except that it answers "not permitted" for the folder of the backups, and only for it (the volume of the keys is the platform's own).
+  const stand = [
+    '#!/bin/sh',
+    'for argument in "$@"; do',
+    '  if [ "$argument" = /auto-backups ]; then echo "chown: $argument: Operation not permitted" >&2; exit 1; fi',
+    'done',
+    'exec /bin/busybox chown "$@"',
+    '',
+  ].join('\n');
+  const dockerfile = [
+    'FROM postgres:17-alpine',
+    `RUN rm /bin/chown && echo ${Buffer.from(stand).toString('base64')} | base64 -d > /bin/chown && chmod +x /bin/chown`,
+    '',
+  ].join('\n');
+  const built = spawnSync('docker', ['build', '-q', '-t', REFUSING_IMAGE, '-'], {
+    input: dockerfile,
+    encoding: 'utf8',
+    env: { ...process.env, MSYS_NO_PATHCONV: '1' },
+  });
+  return built.status === 0;
+}
+
 function prepare(stack: Stack, now: string, project: string): void {
   environmentOf(stack);
   stack.prepare({
     mountsConfig: true,
     build: true,
+    ...(REFUSE_CHOWN ? { secretsImage: REFUSING_IMAGE } : {}),
     app: {
       volumes: [
         `${resolve(project, 'qa', 'fake-clock.cjs').split('\\').join('/')}:/qa/fake-clock.cjs:ro`,
@@ -174,6 +211,14 @@ export async function playBackups(report: Report): Promise<void> {
   const b = new Stack(dirB, 'qabak-b', 3301, 55461);
 
   try {
+    if (REFUSE_CHOWN) {
+      check('the image whose chown is refused is built', refusingImage());
+      for (const dir of [dirA, dirB]) {
+        // the folder of a user who made it themselves: theirs, and private
+        mkdirSync(join(dir, 'backups', 'auto'), { recursive: true });
+        chmodSync(join(dir, 'backups', 'auto'), 0o700);
+      }
+    }
     // ---- 1. a platform with data, left alone at the hour of the backup ---------------------------------------------------------
     prepare(a, EARLY, project);
     const started = a.up({ build: false });
@@ -192,6 +237,15 @@ export async function playBackups(report: Report): Promise<void> {
     );
     check('the dataset is loaded', loaded.ok, loaded.ok ? '' : loaded.out.slice(-300));
     const folderA = join(dirA, 'backups', 'auto');
+    if (REFUSE_CHOWN) {
+      const mode = (statSync(folderA).mode & 0o7777).toString(8);
+      check(
+        'the file system refused the change of owner: the folder was opened for the application instead (1777)',
+        mode === '1777' &&
+          a.compose('logs', '--no-color', 'secrets').out.includes('open to every user'),
+        mode,
+      );
+    }
     check(
       'the folder of the backups exists on the host, made by compose, and nothing is in it before 03:00',
       readdirSync(folderA).filter((name) => name.startsWith('bde-auto-')).length === 0,
@@ -273,6 +327,13 @@ export async function playBackups(report: Report): Promise<void> {
       'the owner reads the settings with the session of before (the baseline)',
       shown(owner),
       `${owner.status}`,
+    );
+    check(
+      'the Settings page lists the backup and has nothing to say about the folder',
+      owner.body.includes('Sauvegardes gardées') &&
+        owner.body.includes('27 octobre 2026') &&
+        !owner.body.includes(FOLDER_ALERT),
+      `${owner.body.includes('Sauvegardes gardées')} ${owner.body.includes('27 octobre 2026')} ${owner.body.includes(FOLDER_ALERT)}`,
     );
 
     const logs = a.logs(400);
@@ -511,6 +572,48 @@ export async function playBackups(report: Report): Promise<void> {
     check(
       'and that nobody is told by message, since no channel is chosen',
       /Aucun message ne prévient les propriétaires/.test(warned.body),
+      '',
+    );
+
+    // ---- 6. the folder cannot be used: the page says which folder, what is wrong with it and what to do ----------------------------
+    const asRoot = (...command: string[]) =>
+      b.compose('exec', '-T', '-u', 'root', 'app', ...command);
+    const spoiled = asRoot('sh', '-c', 'chown 0:0 /auto-backups && chmod 700 /auto-backups');
+    check(
+      'the folder is made private to another user, as a file system that refuses the change of owner leaves it',
+      spoiled.ok,
+      spoiled.out.slice(-200),
+    );
+    const refusedPage = await pageAs(b, '/fr/settings', secret);
+    check(
+      'the Settings page names the folder checked, on the platform and on the server',
+      refusedPage.body.includes('Le dossier des sauvegardes n’est pas utilisable') &&
+        refusedPage.body.includes(
+          'Dossier vérifié : /auto-backups (sur le serveur : ./backups/auto)',
+        ),
+      `${refusedPage.status}`,
+    );
+    check(
+      'it says who owns the folder and with which rights, and what to do on the server',
+      refusedPage.body.includes('il appartient à 0:0 avec les droits 700') &&
+        refusedPage.body.includes('chmod 1777 ./backups/auto'),
+      '',
+    );
+    check('the platform is restarted', b.compose('restart', 'app').ok);
+    await answers(b, 'and answers with the folder unusable');
+    check(
+      'the logs say it at the start, with the path, the user and the rights',
+      /le dossier des sauvegardes n'est pas utilisable.*utilisateur de la plateforme 1001.*droits 700/.test(
+        b.logs(100),
+      ),
+      b.logs(20).slice(-400),
+    );
+    const healed = asRoot('sh', '-c', 'chown 1001:1001 /auto-backups && chmod 755 /auto-backups');
+    check('the folder is handed back', healed.ok, healed.out.slice(-200));
+    const fine = await pageAs(b, '/fr/settings', secret);
+    check(
+      'and the Settings page has nothing to say about the folder any more',
+      !fine.body.includes(FOLDER_ALERT),
       '',
     );
   } finally {
