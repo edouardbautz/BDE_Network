@@ -104,7 +104,6 @@ export function validateAddress(input: string): Check<Address> {
   if (!match || !written || (match[3] !== undefined && match[5] !== undefined)) {
     return fail('address');
   }
-  if (v6 !== undefined && !isIPv6(v6.toLowerCase())) return fail('address');
 
   // 127.0.0.1 is written `localhost`: Next.js does the same in every URL it builds (see canonicalHost).
   // An IPv6 address is written the way a URL writes it (compressed, lower case), the way Auth.js will send it.
