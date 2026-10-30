@@ -102,6 +102,9 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Fixed
 
+- **The requests waiting for approval, on a computer.** In the Members page the menu of the role filled the whole line of each request and sent "Approve" and "Refuse" under it. The menu is now as wide as its longest
+  role, with the two buttons on the same line, to the right of the Actions column; on a phone the menu takes the line and the two buttons share the next one, 44 px high, with nothing that scrolls sideways. The role
+  menu of approved members and the buttons of the proposals to validate follow the same rule (the other rows with actions, roles and requests for the intra, already had it). A browser suite measures the rows.
 - **Automatic backups on a rootless Docker whose disk refuses the change of owner (a network disk, the computers of the school).** The step that prepares the folder of the
   nightly backups chained the change of owner and the opening of the rights: when the file system refused the first, the folder stayed private to the host user and the
   platform could not even list it ("the backups folder cannot be read"). It now opens the folder to every user of the server with the sticky bit when the owner cannot be

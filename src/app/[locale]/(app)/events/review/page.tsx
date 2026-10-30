@@ -138,7 +138,7 @@ export default async function ReviewPage({
                         </p>
                       </div>
 
-                      <div className="flex shrink-0 flex-wrap items-center gap-2">
+                      <div className="flex shrink-0 flex-wrap items-center gap-2 max-sm:*:flex-1">
                         <ConfirmDialog
                           tone="destructive"
                           triggerVariant="destructive"

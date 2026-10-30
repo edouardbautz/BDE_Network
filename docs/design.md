@@ -277,7 +277,7 @@ away a bar of 52 keeps its name (`bg` at 92 %, a 12 px blur: the only blur there
 `components/ui/table.tsx`. A table lives in a standard card. Header: 40 high, `caption` muted, no capitals, a `line` below. Row: 52 high (44 compact), 12 of
 horizontal padding, the first column `body-strong`; the row under the pointer is `surface-2` with rounded ends; a selected row is `accent-soft`. Numbers right-aligned in
 tabular figures; dates like "Fri 23 Oct". **Under 640 px a table is a list**: the header goes (for the eye), each row is a block, the first cell is its title and each
-other cell says what it is (`data-label`). No table scrolls sideways on a phone. Loading: rows of 12 high in `surface-2`, radius 6, a pulse of the opacity from .6 to 1 over 1.2 s.
+other cell says what it is (`data-label`). No table scrolls sideways on a phone. **A row of actions** (a request to approve, a member's role, a proposal to validate): on a computer the controls are on one line, aligned to the right of the column, and a menu is as wide as its longest option (`sm:w-auto`: a field is `w-full` by default, and a menu left like that fills the line and sends the buttons under it); on a phone the menu takes the line, then the buttons side by side, each one filling half (`max-sm:*:flex-1`, 44 px high), and the cell's content has `flex-1 min-w-0` since the cell is a row (label, then content). `qa/browsers/rows.spec.ts` measures it. Loading: rows of 12 high in `surface-2`, radius 6, a pulse of the opacity from .6 to 1 over 1.2 s.
 
 ### Badges
 

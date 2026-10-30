@@ -82,14 +82,14 @@ export function MemberRoleSelect({
   };
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 max-sm:min-w-0 max-sm:flex-1">
       <NativeSelect
         ref={selectRef}
         aria-label={t('roleOf', { name: memberName })}
         value={value}
         disabled={lock !== null}
         onChange={(event) => setCandidate(event.target.value)}
-        className="min-w-40"
+        className="sm:w-auto sm:max-w-64 sm:self-start"
       >
         <RoleOptions roles={roles} currentId={currentRoleId} />
       </NativeSelect>
@@ -150,28 +150,32 @@ export function PendingMemberActions({
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-end gap-2">
+    // On a computer, one line aligned to the right: the menu is as wide as its longest role (a native menu sizes itself to its
+    // options when it is not asked to fill the line), then the two buttons. On a phone, the menu on its own line, then the buttons side by side.
+    <div className="flex flex-col gap-2 max-sm:min-w-0 max-sm:flex-1 sm:flex-row sm:items-center sm:justify-end">
       <NativeSelect
         aria-label={t('roleToGive', { name: memberName })}
         value={roleId}
         disabled={isPending}
         onChange={(event) => setRoleId(event.target.value)}
-        className="min-w-40"
+        className="sm:w-auto sm:max-w-64"
       >
         <RoleOptions roles={roles} />
       </NativeSelect>
-      <Button size="sm" disabled={isPending || !canApprove} onClick={approve}>
-        {t('approve')}
-      </Button>
-      <ConfirmDialog
-        title={t('rejectTitle', { name: memberName })}
-        description={t('rejectWarning', { name: memberName })}
-        confirmLabel={t('rejectConfirm')}
-        onConfirm={reject}
-      >
-        {t('reject')}
-        <span className="sr-only">{memberName}</span>
-      </ConfirmDialog>
+      <div className="flex items-center gap-2 max-sm:*:flex-1">
+        <Button size="sm" disabled={isPending || !canApprove} onClick={approve}>
+          {t('approve')}
+        </Button>
+        <ConfirmDialog
+          title={t('rejectTitle', { name: memberName })}
+          description={t('rejectWarning', { name: memberName })}
+          confirmLabel={t('rejectConfirm')}
+          onConfirm={reject}
+        >
+          {t('reject')}
+          <span className="sr-only">{memberName}</span>
+        </ConfirmDialog>
+      </div>
     </div>
   );
 }
