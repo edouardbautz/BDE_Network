@@ -594,8 +594,8 @@ export const CASES: readonly ActionCase[] = [
     action: 'profile.saveMentionIds',
     label: 'give one’s own Discord and Slack ids',
     effect: ['User'],
-    // Any approved account, and only while the platform publishes on the intra: the gate is the first thing the action does.
-    allowed: (who, variant) => isApproved(who) && variant === 'events-intra',
+    // Any approved account, and only while the events module is on (the announcement of a proposal and the messages for the staff use the ids): the gate is the first thing the action does.
+    allowed: (who, variant) => isApproved(who) && variant !== 'events-disabled',
     strictThrow: true,
     args: () => [{}, mentionIdsForm()],
   },
