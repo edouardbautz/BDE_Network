@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 /** ZAP's `riskcode`: 0 informational, 1 low, 2 medium, 3 high. Medium and above is a failure unless accepted. */
 export const FAILING_RISK = 2;
 
-/** What the report says, one row per alert and instance: `{ plugin, name, risk, uri }`. */
+/** What the report says, one row per alert and instance: `{ plugin, name, risk, uri, param, evidence }`. */
 export function findings(report) {
   const rows = [];
   for (const site of report.site ?? []) {
@@ -26,6 +26,7 @@ export function findings(report) {
           risk: Number(alert.riskcode),
           uri: instance.uri ?? '',
           param: instance.param ?? '',
+          evidence: String(instance.evidence ?? '').slice(0, 120),
         });
       }
     }
@@ -139,7 +140,7 @@ function main() {
   );
   for (const row of failing.slice(0, 40))
     console.error(
-      `✗ ${names[row.risk]} [${row.plugin}] ${row.name} — ${row.uri}${row.param ? ` (${row.param})` : ''}`,
+      `✗ ${names[row.risk]} [${row.plugin}] ${row.name} — ${row.uri}${row.param ? ` (${row.param})` : ''}${row.evidence ? ` evidence: ${JSON.stringify(row.evidence)}` : ''}`,
     );
   for (const entry of unused)
     console.error(`! accepted but not seen any more, to remove: [${entry.plugin}] ${entry.path}`);
