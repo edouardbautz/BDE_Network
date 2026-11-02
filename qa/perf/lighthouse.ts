@@ -1,5 +1,14 @@
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { chromium } from '@playwright/test';
 import { cookieHeaderFor, persona, type PersonaKey } from '../personas';
@@ -18,7 +27,7 @@ import {
 /**
  * Lighthouse on the pages of the platform made by `qa/platform.sh`: the four scores, the speed of what is drawn (LCP, TBT, CLS)
  * and the weight (transferred, scripts, requests), each held to the budget of `budgets.json`. Lighthouse is a pinned version run
- * with `npm exec`, not a dependency of the project (it brings hundreds of packages the project never ships), and Chrome is the one of
+ * installed once with `npm install`, not a dependency of the project (it brings hundreds of packages the project never ships), and Chrome is the one of
  * Playwright. Signed-in pages carry the forged cookie of a persona.
  *
  *   sh qa/platform.sh up --now 2026-10-16T12:00:00Z && eval "$(sh qa/platform.sh env)" && npx tsx qa/perf/lighthouse.ts [name…]
@@ -27,6 +36,8 @@ import {
  */
 
 const LIGHTHOUSE = 'lighthouse@13.5.0';
+/** Installing Lighthouse downloads a few hundred packages: the registry answers a transient 404 or 5xx now and then (met in CI). */
+const INSTALL_TRIES = 4;
 /** Lighthouse is run this many times on a page and the median run is judged (see `medianRun`). */
 const RUNS = Number(process.env.LIGHTHOUSE_RUNS ?? 3);
 
@@ -54,14 +65,28 @@ const TARGETS: Target[] = [
 ];
 
 /**
- * What runs Lighthouse: `npm exec`, by the `npm-cli.js` of the npm that started this script (`npx tsx …` sets `npm_execpath`),
- * with node itself, so that no shell is involved on any system and the arguments (an address with a `&`, a cookie) reach
- * Lighthouse as they are, without anything to quote.
+ * Lighthouse is installed once, before the first page, into a folder of its own (not once per run: twenty downloads of the
+ * registry are twenty chances of a transient 404, and one did fail the job on the login page), and tried again when the
+ * registry fails. It is run with node itself, so that no shell is involved on any system and the arguments (an address with
+ * a `&`, a cookie) reach it as they are, without anything to quote.
  */
-function npmCli(): string {
+function installLighthouse(): string {
   const path = process.env.npm_execpath;
   if (!path) throw new Error('run it with npx: npx tsx qa/perf/lighthouse.ts');
-  return path;
+  const folder = mkdtempSync(join(tmpdir(), 'lighthouse-'));
+  const cli = join(folder, 'node_modules', 'lighthouse', 'cli', 'index.js');
+  for (let attempt = 1; attempt <= INSTALL_TRIES; attempt += 1) {
+    const install = spawnSync(
+      process.execPath,
+      [path, 'install', '--prefix', folder, '--no-save', '--no-audit', '--no-fund', LIGHTHOUSE],
+      { stdio: ['ignore', 'inherit', 'inherit'] },
+    );
+    if (install.status === 0 && existsSync(cli)) return cli;
+    console.error(`Installing ${LIGHTHOUSE} failed (try ${attempt} of ${INSTALL_TRIES}).`);
+    if (attempt < INSTALL_TRIES)
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, attempt * 5000);
+  }
+  throw new Error(`${LIGHTHOUSE} could not be installed`);
 }
 
 function required(name: string): string {
@@ -77,6 +102,7 @@ async function main() {
   const budgets = JSON.parse(readFileSync(resolve('qa/perf/budgets.json'), 'utf8')) as Budgets;
   const reports = resolve(process.env.LIGHTHOUSE_REPORTS ?? 'lighthouse-reports');
   mkdirSync(reports, { recursive: true });
+  const lighthouse = installLighthouse();
 
   const results: PageResult[] = [];
   for (const target of TARGETS.filter(
@@ -96,12 +122,7 @@ async function main() {
         const run = spawnSync(
           process.execPath,
           [
-            npmCli(),
-            'exec',
-            '--yes',
-            `--package=${LIGHTHOUSE}`,
-            '--',
-            'lighthouse',
+            lighthouse,
             `${base}${target.path}`,
             '--output=json',
             `--output-path=${file}`,
