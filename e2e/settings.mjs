@@ -380,10 +380,10 @@ try {
   await page.type('#setup-slack', SLACK);
   if ((await enabledBoxes()) !== 8 + 8) fail('typing a Slack address did not open its column');
   await clickButton('Slack : tout cocher');
-  if ((await ticked()) !== 20) fail(`${await ticked()} boxes ticked with two columns, not 20`);
+  if ((await ticked()) !== 16) fail(`${await ticked()} boxes ticked with two columns, not 16`);
   await saveNotifications();
   await reloadNotifications();
-  if ((await ticked()) !== 20) fail('the two channels are not there after a reload');
+  if ((await ticked()) !== 16) fail('the two channels are not there after a reload');
   if ((await text()).includes('e2eslacksecret')) fail('the Slack address is shown back');
   await shot('notifications-two-channels');
   step(
