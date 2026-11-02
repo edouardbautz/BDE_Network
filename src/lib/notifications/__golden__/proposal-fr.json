@@ -1,0 +1,260 @@
+{
+  "proposal": {
+    "plain": {
+      "subject": "Nouvel événement confirmé : Soirée de rentrée",
+      "body": "Un événement vient d'être confirmé par le bureau.\n\nsamedi 10 octobre 2026 à 20:00 → 23:30\nLieu : Foyer du campus\nCatégorie : Soirée\nEn charge : Paula Martin\nDétails : https://bde.example.fr/fr/events/evt1\nProposé par : Dave Pôle\nValidé par : Vera Validatrice"
+    },
+    "discord": {
+      "title": "🎉  Soirée de rentrée",
+      "url": "https://bde.example.fr/fr/events/evt1",
+      "color": 14362487,
+      "description": "-# NOUVEL ÉVÉNEMENT CONFIRMÉ\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​\n### 📍  Foyer du campus\n​\n> DJ set, photomaton et buffet.\n​",
+      "fields": [
+        {
+          "name": "🏷️  Catégorie",
+          "value": "Soirée",
+          "inline": true
+        },
+        {
+          "name": "👤  Proposé par",
+          "value": "Dave Pôle",
+          "inline": true
+        },
+        {
+          "name": "🛡️  Validé par",
+          "value": "Vera Validatrice",
+          "inline": true
+        },
+        {
+          "name": "👥  Membres en charge",
+          "value": "Paula Martin",
+          "inline": true
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Nouvel événement confirmé : Soirée de rentrée — samedi 10 octobre 2026 à 20:00 → 23:30 · Foyer du campus",
+      "color": "#db2777",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Nouvel événement confirmé*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Soirée de rentrée"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "DJ set, photomaton et buffet."
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*Quand*\n<!date^1791655200^{date_long_pretty} {time}|samedi 10 octobre 2026 à 20:00> → <!date^1791667800^{time}|23:30>"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Lieu*\nFoyer du campus"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Catégorie*\nSoirée"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Proposé par*\nDave Pôle"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Validé par*\nVera Validatrice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Membres en charge*\nPaula Martin"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Voir l'événement"
+              },
+              "url": "https://bde.example.fr/fr/events/evt1"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nNOUVEL ÉVÉNEMENT CONFIRMÉ\n\nSoirée de rentrée\n\nDJ set, photomaton et buffet.\n\nQuand : samedi 10 octobre 2026 à 20:00 → 23:30\nLieu : Foyer du campus\nCatégorie : Soirée\nMembres en charge : Paula Martin\nProposé par : Dave Pôle\nValidé par : Vera Validatrice\n\nVoir l'événement : https://bde.example.fr/fr/events/evt1\n\n--\nVous recevez ce message parce que vous êtes membre de BDE Nice.\nBDE_Network\n"
+    }
+  },
+  "hostile": {
+    "plain": {
+      "subject": "Nouvel événement confirmé : Soirée de rentrée",
+      "body": "Un événement vient d'être confirmé par le bureau.\n\nsamedi 10 octobre 2026 à 20:00 → 23:30\nLieu : Foyer du campus\nCatégorie : Soirée\nEn charge : Paula Martin\nDétails : https://bde.example.fr/fr/events/evt1\nProposé par : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\"\nValidé par : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\""
+    },
+    "discord": {
+      "title": "🎉  Soirée de rentrée",
+      "url": "https://bde.example.fr/fr/events/evt1",
+      "color": 14362487,
+      "description": "-# NOUVEL ÉVÉNEMENT CONFIRMÉ\n​\n### 📅  <t:1791655200:F>\n<t:1791655200:t> → <t:1791667800:t>  ·  <t:1791655200:R>\n​\n### 📍  Foyer du campus\n​\n> DJ set, photomaton et buffet.\n​",
+      "fields": [
+        {
+          "name": "🏷️  Catégorie",
+          "value": "Soirée",
+          "inline": true
+        },
+        {
+          "name": "👤  Proposé par",
+          "value": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\"",
+          "inline": true
+        },
+        {
+          "name": "🛡️  Validé par",
+          "value": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\"",
+          "inline": true
+        },
+        {
+          "name": "👥  Membres en charge",
+          "value": "Paula Martin",
+          "inline": true
+        }
+      ],
+      "footer": {
+        "text": "BDE_Network"
+      },
+      "timestamp": "2026-10-08T12:00:00.000Z"
+    },
+    "slack": {
+      "fallback": "Nouvel événement confirmé : Soirée de rentrée — samedi 10 octobre 2026 à 20:00 → 23:30 · Foyer du campus",
+      "color": "#db2777",
+      "blocks": [
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "*Nouvel événement confirmé*"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "Soirée de rentrée"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "DJ set, photomaton et buffet."
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*Quand*\n<!date^1791655200^{date_long_pretty} {time}|samedi 10 octobre 2026 à 20:00> → <!date^1791667800^{time}|23:30>"
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Lieu*\nFoyer du campus"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Catégorie*\nSoirée"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Proposé par*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\""
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Validé par*\n@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\""
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Membres en charge*\nPaula Martin"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Voir l'événement"
+              },
+              "url": "https://bde.example.fr/fr/events/evt1"
+            }
+          ]
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": "https://bde.example.fr/logo.png",
+              "alt_text": "BDE Nice"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "BDE Nice · BDE_Network"
+            }
+          ]
+        }
+      ]
+    },
+    "email": {
+      "text": "BDE Nice\nNOUVEL ÉVÉNEMENT CONFIRMÉ\n\nSoirée de rentrée\n\nDJ set, photomaton et buffet.\n\nQuand : samedi 10 octobre 2026 à 20:00 → 23:30\nLieu : Foyer du campus\nCatégorie : Soirée\nMembres en charge : Paula Martin\nProposé par : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\"\nValidé par : @everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\"\n\nVoir l'événement : https://bde.example.fr/fr/events/evt1\n\n--\nVous recevez ce message parce que vous êtes membre de BDE Nice.\nBDE_Network\n"
+    }
+  }
+}

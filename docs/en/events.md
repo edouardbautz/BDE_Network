@@ -134,10 +134,11 @@ An event goes through three statuses:
 
 - The **To validate** entry of the menu (only for those who validate) says how many proposals are waiting. The page
   lists them, the oldest first, each with **Validate** and **Refuse**.
-- **Validate** publishes the event, as confirming it would: the members are notified once. The author is told too, if
-  the `eventApproved` notification is on.
+- **Validate** publishes the event, as confirming it would: the members are notified **once**, in one announcement that
+  says who proposed and who validated it. The author is told personally by email (if `eventApproved` is on), and pinged in the
+  announcement on Discord or Slack if they gave their id on their profile (see [Notifications](notifications.md)).
 - **Refuse** asks for a **comment** (required, 1000 characters at most). The event goes back to draft; its author reads
-  the comment on the event itself and receives it by notification (`eventRefused`). They edit the event, then propose it
+  the comment on the event itself and receives it by email (`eventRefused`), never in the channel. They edit the event, then propose it
   again: the refusal disappears. A series is refused as a whole.
 - From the page of the event you can do the same. A proposal is not sent back to draft without a comment: you refuse
   it. If two validators answer the same proposal, the second is told that somebody else already did.
@@ -447,13 +448,13 @@ The channels (email, Discord, Slack: none, one or several for each notification)
 **Settings**, **Notifications** section, with a test message for each channel. For messages to contain a link to the event, set the address of the platform (**Address of the
 platform** section): without it, messages go out without a link.
 
-| Notification                        | When                                                                                                                           | Who receives it                                                                        |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| **Confirmation** (`eventConfirmed`) | an event goes from draft to **confirmed**, once; for a series, once for the confirmed part, or once for a date confirmed alone | every approved member (email: one message per person), or the Discord or Slack channel |
-| **Reminder** (`eventReminder`)      | the day before each confirmed occurrence, at the **reminder hour** (6 pm by default, BDE time)                                 | the **members in charge** (email), otherwise those who validate events; or the channel |
-| **Proposal** (`eventProposed`)      | an event is proposed (or proposed again after a refusal)                                                                       | the owners and those who validate events (email), or the channel                       |
-| **Validation** (`eventApproved`)    | a validator validates a proposal                                                                                               | its author (email), or the channel                                                     |
-| **Refusal** (`eventRefused`)        | a validator refuses a proposal                                                                                                 | its author, with the comment (email), or the channel                                   |
+| Notification                        | When                                                                                                                           | Who receives it                                                                                         |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| **Confirmation** (`eventConfirmed`) | an event goes from draft to **confirmed**, once; for a series, once for the confirmed part, or once for a date confirmed alone | every approved member (email: one message per person), or the Discord or Slack channel                  |
+| **Reminder** (`eventReminder`)      | the day before each confirmed occurrence, at the **reminder hour** (6 pm by default, BDE time)                                 | the **members in charge** (email), otherwise those who validate events; or the channel                  |
+| **Proposal** (`eventProposed`)      | an event is proposed (or proposed again after a refusal)                                                                       | the owners and those who validate events (email), or the channel                                        |
+| **Validation** (`eventApproved`)    | a validator validates a proposal                                                                                               | its author, **by email only** (the channel has the announcement, which says who proposed and validated) |
+| **Refusal** (`eventRefused`)        | a validator refuses a proposal                                                                                                 | its author, with the comment, **by email only**                                                         |
 
 The rendering on Discord, Slack and by email is described in [Notifications](notifications.md). On a Discord or Slack
 channel the card is read by the whole team: the refusal comment is in it, and the card names the author.

@@ -159,12 +159,12 @@ describe('variables', () => {
 
   it('refuses a variable the type does not offer, and says which and where', () => {
     const issues = issuesOf({
-      title: '{author}',
+      title: '{requester}',
       items: { order: 'native', list: [{ id: 'when', enabled: true, label: '{nope}' }] },
     });
     expect(issues).toEqual(
       expect.arrayContaining([
-        { path: 'title', code: 'unknownVariable', params: { variable: 'author' } },
+        { path: 'title', code: 'unknownVariable', params: { variable: 'requester' } },
         { path: 'items.list.0.label', code: 'unknownVariable', params: { variable: 'nope' } },
       ]),
     );

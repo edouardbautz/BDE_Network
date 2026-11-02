@@ -10,19 +10,33 @@ The channels (webhook address, mail server) and **what goes through which** are 
 **Notifications** section, and in the installer, step 7. They apply at once. See
 [One notification, several channels](#one-notification-several-channels).
 
-| Notification                             | When                             | Who is notified                                                                              |
-| ---------------------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------- |
-| **Access request** (`memberPending`)     | a new member asks for access     | Email: the owners and those with the "Manage members" right. Discord or Slack: the channel.  |
-| **Member approved** (`memberApproved`)   | a request is approved            | Email: the approved member (their role, a sign-in link). Discord or Slack: the channel.      |
-| **Member removed** (`memberRemoved`)     | a member is removed from the BDE | Discord or Slack: the channel. **Never an email**: the removed person receives nothing.      |
-| **Event confirmed** (`eventConfirmed`)   | an event is confirmed            | Every approved member (email: one message per person), or the channel.                       |
-| **Reminder** (`eventReminder`)           | the day before an event          | The members in charge (email), otherwise those who validate events; or the channel.          |
-| **Event proposed** (`eventProposed`)     | an event is proposed             | Email: the owners and those with the "Validate events" right. Discord or Slack: the channel. |
-| **Proposal validated** (`eventApproved`) | a proposal is validated          | Email: its author. Discord or Slack: the channel.                                            |
-| **Proposal refused** (`eventRefused`)    | a proposal is refused            | Email: its author, with the validator's comment. Discord or Slack: the channel.              |
+| Notification                             | When                             | Who is notified                                                                                                                                                                 |
+| ---------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Access request** (`memberPending`)     | a new member asks for access     | Email: the owners and those with the "Manage members" right. Discord or Slack: the channel.                                                                                     |
+| **Member approved** (`memberApproved`)   | a request is approved            | Email: the approved member (their role, a sign-in link). Discord or Slack: the channel.                                                                                         |
+| **Member removed** (`memberRemoved`)     | a member is removed from the BDE | Discord or Slack: the channel. **Never an email**: the removed person receives nothing.                                                                                         |
+| **Event confirmed** (`eventConfirmed`)   | an event is confirmed            | Every approved member (email: one message per person), or the channel. **The only message of the channel for a validated proposal**: it says who proposed and who validated it. |
+| **Reminder** (`eventReminder`)           | the day before an event          | The members in charge (email), otherwise those who validate events; or the channel.                                                                                             |
+| **Event proposed** (`eventProposed`)     | an event is proposed             | Email: the owners and those with the "Validate events" right. Discord or Slack: the channel.                                                                                    |
+| **Proposal validated** (`eventApproved`) | a proposal is validated          | Email: **its author**, personally. Never the channel: the channel has the event announcement.                                                                                   |
+| **Proposal refused** (`eventRefused`)    | a proposal is refused            | Email: **its author**, with the validator's comment. Never the channel: the reason is not for the whole board.                                                                  |
 
 On every channel ticked, the notification goes out the way the table above says: email to the people concerned,
 Discord or Slack as one message in the channel.
+
+**One message per fact.** When a validator validates a proposal, the channel (Discord, Slack) gets **one** message: the
+announcement of the event, which shows **Proposed by** and **Validated by**. The answer to the proposal ("Proposal
+validated", "Proposal refused") is **personal**: an email to its author, never a message in the channel. So these two
+rows of the table have an **email box only**; a Discord or Slack box saved before this is ignored (nothing is erased
+from your settings: the next save of the page writes the list without it). A member who is also the author is not
+written to twice either: the announcement email skips an author who receives the personal one.
+
+**Mentioning the author.** In the announcement of an event that came from a proposal, `{@author}` pings its author, by the
+**Discord id or Slack id** they gave on their profile (nobody else; Discord is told exactly that person). A BDE that has
+not customised the announcement for a channel gets this **by default**: "@author, your proposal was validated." above the
+card, only when the author gave an id for that platform and did not validate their own proposal. A BDE that already
+customised the announcement keeps its template as it is; to get the mention, add `{@author}` to the message above the card
+(menu **Mention**). It is read only there, like every mention, and only in this message.
 
 Messages are sent **after** the action. **Each channel is sent on its own**: a Discord channel that is down never
 holds back the emails or the Slack message, and cancels nothing that already went. A send that fails never prevents

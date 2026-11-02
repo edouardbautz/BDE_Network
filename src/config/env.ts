@@ -1,4 +1,4 @@
-import { EVENTS_MODULE_KEY, KNOWN_MODULE_KEYS, type BdeConfig } from './schema';
+import { channelsFor, EVENTS_MODULE_KEY, KNOWN_MODULE_KEYS, type BdeConfig } from './schema';
 import { isUnspecifiedHost } from '@/lib/public-address';
 import { REBUILD_COMMAND } from './rebuild';
 
@@ -77,7 +77,7 @@ function channelsInUse(config: BdeConfig): Set<string> {
   const channels = new Set<string>();
   if (config.modules.enabled.includes(EVENTS_MODULE_KEY)) {
     for (const event of EVENTS_NOTIFICATIONS) {
-      for (const channel of config.notifications[event]) channels.add(channel);
+      for (const channel of channelsFor(config, event)) channels.add(channel);
     }
     if (config.events?.intraPublication) {
       for (const event of INTRA_NOTIFICATIONS) {

@@ -118,15 +118,25 @@ export function toNotificationData(
 const loadForAnnouncement = (eventId: string) =>
   prisma.event.findUnique({ where: { id: eventId }, include: eventInclude });
 
+/** Who validated an event that came from a proposal: the announcement says it, and tells the author. */
+export interface Validation {
+  reviewerLogin: string;
+}
+
 /**
  * Announces confirmed dates to every approved member, in ONE message: the card shows the next of them, the
  * calendar file carries all of those still to come. `onlyThisDate` is for a date confirmed alone, whose card must
  * not say that the event repeats.
+ *
+ * An event that came from a proposal (`validation`) says who proposed it and who validated it, and tells its author: this
+ * message is the ONE the chat room gets for that fact (the answer to the proposal is personal, see `announceReview`), and the
+ * author, who has the personal e-mail of the answer, is not written to a second time by this one.
  */
 async function announce(
   event: NonNullable<Awaited<ReturnType<typeof loadForAnnouncement>>>,
   dates: readonly ResolvedOccurrence[],
   onlyThisDate: boolean,
+  validation?: Validation,
 ): Promise<void> {
   const config = getConfig();
   const locale = config.bde.defaultLocale;
@@ -142,7 +152,17 @@ async function announce(
 
   // A date confirmed alone is told as one date: its card does not say that the event repeats.
   const repeat = onlyThisDate ? null : await repeatSummaryFor(event, locale);
-  const data = toNotificationData(event, next, locale, repeat);
+  const fromProposal = validation !== undefined && event.proposedAt !== null;
+  const data: NotificationEventData = {
+    ...toNotificationData(event, next, locale, repeat),
+    ...(fromProposal && {
+      review: {
+        authorName: await nameOf(event.authorLogin),
+        reviewerName: await nameOf(validation.reviewerLogin),
+        comment: null,
+      },
+    }),
+  };
   const translate = await getTranslate(locale);
   // The calendar file carries every date still to come (the next one, for a series that is over).
   const calendarDates = (upcoming.length > 0 ? upcoming : [next]).map((date) => ({
@@ -156,7 +176,11 @@ async function announce(
     updatedAt: date.updatedAt,
   }));
 
-  const templates = await templatesFor('eventConfirmed');
+  // `{@author}` tells the author on the chat channels, unless they validated their own proposal (nobody to tell).
+  const tellsAuthor = fromProposal && validation.reviewerLogin !== event.authorLogin;
+  const templates = await templatesFor('eventConfirmed', {
+    ...(tellsAuthor && { proposalAuthor: event.authorLogin }),
+  });
   const message = await withRichMessage(
     'eventConfirmed',
     buildConfirmationMessage(data, translate, locale, timeZone),
@@ -189,8 +213,16 @@ async function announce(
     },
   );
 
+  // The author who gets the personal e-mail of the answer to their proposal does not get this one too.
+  const answeredByEmail =
+    tellsAuthor && channelsFor(config, 'eventApproved').includes('email')
+      ? event.authorLogin
+      : undefined;
   const members = await prisma.user.findMany({
-    where: { status: { in: [...APPROVED_STATUSES] } },
+    where: {
+      status: { in: [...APPROVED_STATUSES] },
+      ...(answeredByEmail && { login: { not: answeredByEmail } }),
+    },
     select: { email: true },
   });
 
@@ -208,7 +240,10 @@ async function announce(
  * and is meant to run after the response (see `after()` in the actions): saving an event can not fail because
  * a notification did.
  */
-export async function notifyEventConfirmed(eventId: string): Promise<void> {
+export async function notifyEventConfirmed(
+  eventId: string,
+  validation?: Validation,
+): Promise<void> {
   try {
     const claim = await prisma.event.updateMany({
       where: { id: eventId, status: 'CONFIRMED', confirmationNotifiedAt: null },
@@ -225,7 +260,7 @@ export async function notifyEventConfirmed(eventId: string): Promise<void> {
     const dates = resolveOccurrences(event, getConfig().bde.timezone).filter(
       (d) => !d.cancelled && d.status === 'CONFIRMED',
     );
-    await announce(event, dates, false);
+    await announce(event, dates, false, validation);
   } catch (error) {
     console.error(`${LOG_PREFIX} eventConfirmed: notification failed`, error);
   }
@@ -290,8 +325,10 @@ async function nameOf(login: string): Promise<string> {
  * Tells about a step of the proposal circuit, in ONE message whatever the number of dates: the validators that an
  * event waits for them (`proposed`), the author that it was approved or refused (with the comment). The message
  * says what the event is *now*: if somebody acted again since (the proposal withdrawn, a second review), the
- * notice is stale and nothing is sent. A chat channel gets one team message, an e-mail goes to the people
- * concerned. Never throws and is meant to run after the response, like every notification.
+ * notice is stale and nothing is sent. `proposed` is one team message on a chat channel; the answers (`approved`,
+ * `refused`) are personal: an e-mail to the author and no chat message (`channelsFor`), because an approval is
+ * announced to the room by the event's own announcement (which says who proposed and validated it, and tells the author)
+ * and a refusal's reason is not for the whole board. Never throws and is meant to run after the response, like every notification.
  */
 async function announceReview(
   kind: ReviewKind,
@@ -377,10 +414,10 @@ async function announceReview(
 /** An event was proposed (or proposed again after a refusal): tells whoever can validate it. */
 export const notifyEventProposed = (eventId: string) => announceReview('proposed', eventId, null);
 
-/** A proposal was approved: tells its author (and, on a chat channel, the team). */
+/** A proposal was approved: tells its author, by e-mail (the room gets the announcement of the event). */
 export const notifyEventApproved = (eventId: string, actorLogin: string) =>
   announceReview('approved', eventId, actorLogin);
 
-/** A proposal was refused, with a comment: tells its author (and, on a chat channel, the team). */
+/** A proposal was refused, with a comment: tells its author, by e-mail. The comment stays visible to them on the event's page. */
 export const notifyEventRefused = (eventId: string, actorLogin: string) =>
   announceReview('refused', eventId, actorLogin);

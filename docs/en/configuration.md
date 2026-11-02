@@ -260,8 +260,8 @@ Before version 1.5.0 a notification had **one** channel (`"email"`, `"discord"`,
 | `eventConfirmed` | an event is confirmed         | See [Events](events.md#notifications).                                                                                    |
 | `eventReminder`  | the day before an event       | See [Events](events.md#notifications).                                                                                    |
 | `eventProposed`  | an event is proposed          | Email: the owners and the roles with the "Validate events" right. Discord or Slack: the channel.                          |
-| `eventApproved`  | a proposal is validated       | Email: **its author**. Discord or Slack: the channel.                                                                     |
-| `eventRefused`   | a proposal is refused         | Email: **its author**, with the comment. Discord or Slack: the channel.                                                   |
+| `eventApproved`  | a proposal is validated       | Email: **its author**. **Never the channel** (a Discord or Slack value is ignored).                                       |
+| `eventRefused`   | a proposal is refused         | Email: **its author**, with the comment. **Never the channel** (a Discord or Slack value is ignored).                     |
 | `intraRequested` | publication requested         | See [Notifications](notifications.md#messages-about-publishing-on-the-intra); only while `events.intraPublication` is on. |
 | `intraChanged`   | an event on the intra changes | See [Notifications](notifications.md#messages-about-publishing-on-the-intra); only while `events.intraPublication` is on. |
 | `intraCancelled` | an event is taken back        | See [Notifications](notifications.md#messages-about-publishing-on-the-intra); only while `events.intraPublication` is on. |

@@ -1,4 +1,5 @@
 import {
+  isPersonal,
   NOTIFICATION_CHANNELS,
   type NotificationChannel,
   type NotificationEvent,
@@ -31,9 +32,13 @@ export const visibleRows = (events: boolean, intra = false): NotificationEvent[]
   ...(events && intra ? MATRIX_GROUPS.intra : []),
 ];
 
-/** Whether a box exists at all: nobody writes to a member who was just removed, so that one has no e-mail. */
+/**
+ * Whether a box exists at all: nobody writes to a member who was just removed, so that one has no e-mail; and the answer to a proposal
+ * is personal (e-mail to its author), so it has no chat box.
+ */
 export const isOffered = (event: NotificationEvent, channel: NotificationChannel): boolean =>
-  !(event === 'memberRemoved' && channel === 'email');
+  !(event === 'memberRemoved' && channel === 'email') &&
+  !(isPersonal(event) && channel !== 'email');
 
 export type Configured = Record<NotificationChannel, boolean>;
 

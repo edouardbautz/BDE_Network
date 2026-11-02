@@ -123,4 +123,11 @@ export interface TemplateContext {
   mentions?: MentionDirectory;
   /** Who `{@staff}` stands for, in the messages for the school's staff. */
   staff?: StaffMentionIds;
+  /** Who `{@author}` stands for: the author of an event that came from a proposal, in its announcement. */
+  author?: StaffMentionIds;
+  /**
+   * The message above the card when the BDE wrote no template for this channel: the platform's own, for the announcement of an event
+   * that came from a proposal (it tells the author, `{@author}`). Set only when the author gave an id for the platform.
+   */
+  defaultAbove?: string;
 }

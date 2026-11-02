@@ -866,7 +866,7 @@ describe('the proposal circuit', () => {
       expect(audit()).toEqual([{ action: 'event.approve', from: 'PROPOSED', to: 'CONFIRMED' }]);
       await runAfterCallbacks();
       expect(notifyEventApproved).toHaveBeenCalledWith('evt', 'real-actor');
-      expect(notifyEventConfirmed).toHaveBeenCalledWith('evt');
+      expect(notifyEventConfirmed).toHaveBeenCalledWith('evt', { reviewerLogin: 'real-actor' });
     });
 
     it('approves through the form as well: the same audit entry and notices', async () => {
@@ -894,7 +894,7 @@ describe('the proposal circuit', () => {
         { action: 'event.approve', scope: 'following', fromFirst: true },
       ]);
       await runAfterCallbacks();
-      expect(notifyEventConfirmed).toHaveBeenCalledWith('evt');
+      expect(notifyEventConfirmed).toHaveBeenCalledWith('evt', { reviewerLogin: 'real-actor' });
     });
 
     it('confirming a draft is not an approval: nobody is told that a proposal was approved', async () => {

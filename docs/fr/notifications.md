@@ -10,19 +10,34 @@ Les canaux (adresse du webhook, serveur e-mail) et **ce qui passe par lequel** s
 section **Notifications**, et dans l'installateur, à l'étape 7. Ils s'appliquent tout de suite. Voir
 [Une notification, plusieurs canaux](#une-notification-plusieurs-canaux).
 
-| Notification                              | Quand                             | Qui est prévenu                                                                                              |
-| ----------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| **Demande d'accès** (`memberPending`)     | un nouveau membre demande l'accès | E-mail : les propriétaires et ceux qui ont le droit « Gérer les membres ». Discord ou Slack : le salon.      |
-| **Membre approuvé** (`memberApproved`)    | une demande est approuvée         | E-mail : le membre approuvé (son rôle, un lien de connexion). Discord ou Slack : le salon.                   |
-| **Membre retiré** (`memberRemoved`)       | un membre est retiré du BDE       | Discord ou Slack : le salon. **Jamais d'e-mail** : la personne retirée ne reçoit rien.                       |
-| **Événement confirmé** (`eventConfirmed`) | un événement est confirmé         | Tous les membres approuvés (e-mail : un message par personne), ou le salon.                                  |
-| **Rappel** (`eventReminder`)              | la veille d'un événement          | Les membres en charge (e-mail), sinon ceux qui valident les événements ; ou le salon.                        |
-| **Événement proposé** (`eventProposed`)   | un événement est proposé          | E-mail : les propriétaires et ceux qui ont le droit « Valider les événements ». Discord ou Slack : le salon. |
-| **Proposition validée** (`eventApproved`) | une proposition est validée       | E-mail : son auteur. Discord ou Slack : le salon.                                                            |
-| **Proposition refusée** (`eventRefused`)  | une proposition est refusée       | E-mail : son auteur, avec le commentaire du validateur. Discord ou Slack : le salon.                         |
+| Notification                              | Quand                             | Qui est prévenu                                                                                                                                                                     |
+| ----------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Demande d'accès** (`memberPending`)     | un nouveau membre demande l'accès | E-mail : les propriétaires et ceux qui ont le droit « Gérer les membres ». Discord ou Slack : le salon.                                                                             |
+| **Membre approuvé** (`memberApproved`)    | une demande est approuvée         | E-mail : le membre approuvé (son rôle, un lien de connexion). Discord ou Slack : le salon.                                                                                          |
+| **Membre retiré** (`memberRemoved`)       | un membre est retiré du BDE       | Discord ou Slack : le salon. **Jamais d'e-mail** : la personne retirée ne reçoit rien.                                                                                              |
+| **Événement confirmé** (`eventConfirmed`) | un événement est confirmé         | Tous les membres approuvés (e-mail : un message par personne), ou le salon. **Le seul message du salon pour une proposition validée** : il dit qui l'a proposée et qui l'a validée. |
+| **Rappel** (`eventReminder`)              | la veille d'un événement          | Les membres en charge (e-mail), sinon ceux qui valident les événements ; ou le salon.                                                                                               |
+| **Événement proposé** (`eventProposed`)   | un événement est proposé          | E-mail : les propriétaires et ceux qui ont le droit « Valider les événements ». Discord ou Slack : le salon.                                                                        |
+| **Proposition validée** (`eventApproved`) | une proposition est validée       | E-mail : **son auteur**, personnellement. Jamais le salon : le salon a l'annonce de l'événement.                                                                                    |
+| **Proposition refusée** (`eventRefused`)  | une proposition est refusée       | E-mail : **son auteur**, avec le commentaire du validateur. Jamais le salon : le motif n'est pas pour tout le bureau.                                                               |
 
 Sur chaque canal coché, la notification part comme le tableau ci-dessus le dit : un e-mail aux personnes
 concernées, un message dans le salon pour Discord ou Slack.
+
+**Un seul message par fait.** Quand un validateur valide une proposition, le salon (Discord, Slack) reçoit **un** message :
+l'annonce de l'événement, qui affiche **Proposé par** et **Validé par**. La réponse à la proposition (« Proposition
+validée », « Proposition refusée ») est **personnelle** : un e-mail à son auteur, jamais un message dans le salon. Ces deux
+lignes du tableau n'ont donc qu'une **case e-mail** ; une case Discord ou Slack enregistrée avant est ignorée (rien n'est
+effacé de vos réglages : la prochaine sauvegarde de la page écrit la liste sans elle). Un membre qui est aussi l'auteur n'est
+pas écrit deux fois non plus : l'e-mail d'annonce saute l'auteur qui reçoit l'e-mail personnel.
+
+**Mentionner l'auteur.** Dans l'annonce d'un événement venu d'une proposition, `{@author}` notifie son auteur, par
+l'**identifiant Discord ou Slack** qu'il a donné dans son profil (personne d'autre ; Discord reçoit exactement cette
+personne). Un BDE qui n'a pas personnalisé l'annonce pour un canal l'a **par défaut** : « @auteur, votre proposition a été
+validée. » au-dessus de la carte, seulement quand l'auteur a donné un identifiant pour cette plateforme et n'a pas validé
+lui-même sa proposition. Un BDE qui a déjà personnalisé l'annonce garde son modèle tel quel ; pour avoir la mention, ajoutez
+`{@author}` au message au-dessus de la carte (menu **Mention**). Elle n'est lue que là, comme toute mention, et seulement
+dans ce message.
 
 Les messages sont envoyés **après** l'action. **Chaque canal part de son côté** : un salon Discord en panne ne retient
 jamais les e-mails ni le message Slack, et n'annule rien de ce qui est déjà parti. Un envoi qui échoue n'empêche pas

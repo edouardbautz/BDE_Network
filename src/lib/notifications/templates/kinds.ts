@@ -25,6 +25,9 @@ export const STAFF_TYPES: readonly TemplateType[] = [
   'intraCancelled',
 ];
 
+/** The ones where `{@author}` is read: the announcement of an event, which tells the author of a proposal that it was validated. */
+export const AUTHOR_TYPES: readonly TemplateType[] = ['eventConfirmed'];
+
 /** The notifications about the backups: they exist whatever the modules, and speak to the owners. */
 export const BACKUP_TYPES: readonly TemplateType[] = ['backupFailed', 'backupStale'];
 

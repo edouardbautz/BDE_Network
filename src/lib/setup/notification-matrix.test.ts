@@ -86,8 +86,12 @@ describe('the shortcut of a column', () => {
     expect(countFor(matrix, 'discord')).toBe(0);
   });
 
-  it('ticks the whole Discord column, memberRemoved included', () => {
-    expect(countFor(setColumn(emptyMatrix(), 'discord', rows, ALL, true), 'discord')).toBe(10);
+  it('ticks the whole Discord column, memberRemoved included, but not the answers to a proposal (personal)', () => {
+    const matrix = setColumn(emptyMatrix(), 'discord', rows, ALL, true);
+    expect(countFor(matrix, 'discord')).toBe(8);
+    expect(matrix.memberRemoved).toEqual(['discord']);
+    expect(matrix.eventApproved).toEqual([]);
+    expect(matrix.eventRefused).toEqual([]);
   });
 
   it('does nothing for a channel that is not configured', () => {

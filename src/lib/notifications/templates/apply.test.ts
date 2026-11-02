@@ -17,6 +17,13 @@ const on = (id: TemplateItem['id'], more: Partial<TemplateItem> = {}): TemplateI
 const ids = (items: ReturnType<typeof resolveItems>) => items.map((item) => item.id);
 
 describe('the catalog', () => {
+  it('offers the e-mail only for the answers to a proposal: they are personal, never in the room', () => {
+    expect(channelsOfType('eventApproved')).toEqual(['email']);
+    expect(channelsOfType('eventRefused')).toEqual(['email']);
+    expect(sharedChannels('eventApproved')).toEqual(['email']);
+    expect(channelsOfType('eventConfirmed')).toEqual(['discord', 'slack', 'email']);
+  });
+
   it.each(TYPES)('%s: every channel shows only items the type has, each at most once', (type) => {
     for (const channel of TEMPLATE_CHANNELS) {
       const order = nativeOrder(channel, type);
@@ -36,6 +43,8 @@ describe('the catalog', () => {
       'where',
       'description',
       'category',
+      'proposedBy',
+      'reviewedBy',
       'assignees',
       'repeats',
     ]);
@@ -44,6 +53,8 @@ describe('the catalog', () => {
       'when',
       'where',
       'category',
+      'proposedBy',
+      'reviewedBy',
       'assignees',
       'repeats',
     ]);
@@ -54,6 +65,8 @@ describe('the catalog', () => {
       'where',
       'category',
       'assignees',
+      'proposedBy',
+      'reviewedBy',
     ]);
   });
 

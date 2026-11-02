@@ -190,7 +190,15 @@ export function buildEventEmbed(
           fields.push({
             name: named(
               emoji(ICON.reviewer),
-              label(t(kind === 'approved' ? 'embed.fields.approvedBy' : 'embed.fields.refusedBy')),
+              label(
+                t(
+                  kind === 'confirmed'
+                    ? 'embed.fields.validatedBy'
+                    : kind === 'approved'
+                      ? 'embed.fields.approvedBy'
+                      : 'embed.fields.refusedBy',
+                ),
+              ),
             ),
             value: data.review.reviewerName,
             inline: true,

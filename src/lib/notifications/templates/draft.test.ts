@@ -50,7 +50,16 @@ const EMAIL: ChannelDefaults = {
     repeats: { label: 'Repeats' },
   },
 };
-const FACTS = ['when', 'repeats', 'where', 'description', 'category', 'assignees'];
+const FACTS = [
+  'when',
+  'repeats',
+  'where',
+  'description',
+  'category',
+  'assignees',
+  'proposedBy',
+  'reviewedBy',
+];
 
 describe('the text of a field', () => {
   it('shows the platform’s words until the BDE writes its own', () => {
@@ -176,6 +185,8 @@ describe('the list of facts', () => {
       ['description', false],
       ['category', false],
       ['assignees', false],
+      ['proposedBy', false],
+      ['reviewedBy', false],
     ]);
     expect(rows[0]).toMatchObject({ label: 'Place', ownLabel: true, emoji: '🏟️', ownEmoji: true });
     expect(rows[1]).toMatchObject({ custom: true, text: 'Hello', ownText: true });
@@ -224,7 +235,7 @@ describe('writing the list back', () => {
       id: 'where',
       enabled: false,
     });
-    expect(result.items?.list.filter((item) => item.enabled)).toHaveLength(5);
+    expect(result.items?.list.filter((item) => item.enabled)).toHaveLength(7);
   });
 
   it('stores a label and an emoji only when they differ from the platform’s', () => {
@@ -310,6 +321,8 @@ describe('writing the list back', () => {
           { id: 'description', enabled: true },
           { id: 'category', enabled: true, emoji: '' },
           { id: 'assignees', enabled: true },
+          { id: 'proposedBy', enabled: false },
+          { id: 'reviewedBy', enabled: false },
         ],
       },
     };

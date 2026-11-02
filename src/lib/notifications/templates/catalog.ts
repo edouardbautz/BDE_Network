@@ -10,7 +10,7 @@ const EVENT_BASE: ItemId[] = ['when', 'repeats', 'where', 'description', 'catego
 
 /** The items of each type, in the order the editor lists them. */
 export const ITEMS: Record<TemplateType, readonly ItemId[]> = {
-  eventConfirmed: EVENT_BASE,
+  eventConfirmed: [...EVENT_BASE, 'proposedBy', 'reviewedBy'],
   eventReminder: EVENT_BASE,
   eventProposed: [...EVENT_BASE, 'proposedBy'],
   eventApproved: [...EVENT_BASE, 'proposedBy', 'reviewedBy'],
@@ -119,6 +119,7 @@ export function nativeOrder(channel: TemplateChannel, type: TemplateType): ItemI
  * The channels a type is sent on at all. Nobody writes to a member who was removed, so the e-mail has no template for it.
  */
 export function channelsOfType(type: TemplateType): readonly TemplateChannel[] {
+  if (type === 'eventApproved' || type === 'eventRefused') return ['email'];
   return type === 'memberRemoved' ? ['discord', 'slack'] : ['discord', 'slack', 'email'];
 }
 
@@ -147,7 +148,7 @@ const EVENT_VARIABLES = [
 ] as const;
 
 export const VARIABLES = {
-  eventConfirmed: EVENT_VARIABLES,
+  eventConfirmed: [...EVENT_VARIABLES, 'author', 'reviewer'],
   eventReminder: [...EVENT_VARIABLES, 'day'],
   eventProposed: [...EVENT_VARIABLES, 'author'],
   eventApproved: [...EVENT_VARIABLES, 'author', 'reviewer'],

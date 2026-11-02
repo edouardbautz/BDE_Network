@@ -98,6 +98,23 @@ describe('parseNotifications', () => {
     });
   });
 
+  it('forgets the chat boxes of the answers to a proposal (personal, by e-mail), without refusing the save: the saved list stops holding them', () => {
+    const result = parse({
+      matrix: {
+        ...emptyMatrix(),
+        eventApproved: ['discord', 'slack', 'email'],
+        eventRefused: ['discord'],
+      },
+      discordWebhook: DISCORD,
+      slackWebhook: SLACK,
+      smtp: SMTP,
+    });
+    expect(result).toMatchObject({
+      ok: true,
+      value: { matrix: { eventApproved: ['email'], eventRefused: [] } },
+    });
+  });
+
   it('writes a list in the order of the table, once', () => {
     const result = parse({
       matrix: { ...emptyMatrix(), eventConfirmed: ['email', 'discord', 'email'] },

@@ -1,0 +1,89 @@
+[
+  [
+    "one message: the author who gets the personal e-mail is also written to by the announcement",
+    "src/lib/events/notifications.ts",
+    "      ...(answeredByEmail && { login: { not: answeredByEmail } }),",
+    "      ...(answeredByEmail && {}),",
+    ["src/lib/events/one-message-per-fact.test.ts"]
+  ],
+  [
+    "one message: an announcement does not say it came from a proposal",
+    "src/lib/events/notifications.ts",
+    "  const fromProposal = validation !== undefined && event.proposedAt !== null;",
+    "  const fromProposal = false;",
+    ["src/lib/events/one-message-per-fact.test.ts"]
+  ],
+  [
+    "one message: the author is pinged on their own validation",
+    "src/lib/events/notifications.ts",
+    "  const tellsAuthor = fromProposal && validation.reviewerLogin !== event.authorLogin;",
+    "  const tellsAuthor = fromProposal;",
+    ["src/lib/events/one-message-per-fact.test.ts"]
+  ],
+  [
+    "one message: the author is left out of the announcement e-mail although the personal one is not sent",
+    "src/lib/events/notifications.ts",
+    "    tellsAuthor && channelsFor(config, 'eventApproved').includes('email')",
+    "    tellsAuthor",
+    ["src/lib/events/one-message-per-fact.test.ts"]
+  ],
+  [
+    "one message: a validated proposal is announced without its validator",
+    "src/app/[locale]/(app)/events/actions.ts",
+    "      announceConfirmation(eventId, move === 'approve' ? actorLogin : undefined);",
+    "      announceConfirmation(eventId);",
+    ["src/app/[locale]/(app)/events/actions-series.test.ts"]
+  ],
+  [
+    "author mention: the default is added to a template the BDE saved",
+    "src/lib/notifications/templates/resolve.ts",
+    "      !template &&\n      rows.every",
+    "      rows.every",
+    ["src/lib/events/one-message-per-fact.test.ts"]
+  ],
+  [
+    "author mention: the default is added when the BDE saved a template for the other scope",
+    "src/lib/notifications/templates/resolve.ts",
+    "      rows.every((row) => !scopes.includes(row.scope)) &&\n",
+    "",
+    ["src/lib/events/one-message-per-fact.test.ts"]
+  ],
+  [
+    "author mention: {@author} is accepted in any message",
+    "src/lib/notifications/templates/schema.ts",
+    "token.kind === 'author' && !AUTHOR_TYPES.includes(type)",
+    "false",
+    ["src/lib/notifications/templates/author-mention.test.ts"]
+  ],
+  [
+    "settings: a chat box of an answer to a proposal is kept when the page saves",
+    "src/lib/setup/notifications.ts",
+    "asked.filter((channel) => !(isPersonal(event) && channel !== 'email'))",
+    "asked.filter(() => true)",
+    ["src/lib/setup/notifications.test.ts"]
+  ],
+  [
+    "templates: the editor offers the chat channels for an answer to a proposal",
+    "src/lib/notifications/templates/catalog.ts",
+    "  if (type === 'eventApproved' || type === 'eventRefused') return ['email'];\n",
+    "",
+    ["src/lib/notifications/templates/apply.test.ts"]
+  ],
+  [
+    "table: the answers to a proposal have a chat box",
+    "src/lib/setup/notification-matrix.ts",
+    "  !(isPersonal(event) && channel !== 'email');",
+    "  true;",
+    [
+      "src/lib/setup/notification-matrix.test.ts",
+      "src/components/setup/step-notifications.test.tsx"
+    ]
+  ],
+  [
+    "plain message: the announcement of a proposal does not say who validated it",
+    "src/lib/events/messages.ts",
+    "      ...(data.review\n        ? [",
+    "      ...(false\n        ? [",
+    ["src/lib/notifications/golden-proposal.test.ts"]
+  ]
+]

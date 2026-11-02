@@ -140,7 +140,13 @@ ${parts.reason.text}`;
         if (data.review?.reviewerName) {
           fields.push({
             label: label(
-              t(kind === 'approved' ? 'embed.fields.approvedBy' : 'embed.fields.refusedBy'),
+              t(
+                kind === 'confirmed'
+                  ? 'embed.fields.validatedBy'
+                  : kind === 'approved'
+                    ? 'embed.fields.approvedBy'
+                    : 'embed.fields.refusedBy',
+              ),
             ),
             value: data.review.reviewerName,
           });

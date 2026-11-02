@@ -118,10 +118,11 @@ function formConfig() {
 /** Announces a confirmed event (or the confirmed part of a series) after the response is sent. The notification
  * layer never throws, and this wrapper makes sure nothing it does — not even an unexpected rejection — can fail
  * or delay saving the event. */
-function announceConfirmation(eventId: string): void {
+function announceConfirmation(eventId: string, validatorLogin?: string): void {
   after(async () => {
     try {
-      await notifyEventConfirmed(eventId);
+      if (validatorLogin) await notifyEventConfirmed(eventId, { reviewerLogin: validatorLogin });
+      else await notifyEventConfirmed(eventId);
     } catch (error) {
       console.error('[events] confirmation notice failed', error);
     }
@@ -191,7 +192,8 @@ function announceStatusChange(options: {
   if (move === 'approve') announceApproval(eventId, actorLogin);
   if (to === 'CONFIRMED') {
     if (scope === 'following') {
-      announceConfirmation(eventId);
+      // A validated proposal is announced once, with who proposed and who validated it (the answer to the author is personal).
+      announceConfirmation(eventId, move === 'approve' ? actorLogin : undefined);
     } else if (ownStatus === 'CONFIRMED') {
       // A date that is simply confirmed again, like the rest of its series, has nothing to announce.
       announceOccurrence(eventId, occurrenceStart);

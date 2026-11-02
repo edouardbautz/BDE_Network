@@ -495,6 +495,19 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
 
 ## Notifications
 
+- **One message per fact** (`channelsFor`, `PERSONAL_NOTIFICATIONS`, `events/notifications.ts`, `events/one-message-per-fact.test.ts`). Validating a proposal is ONE fact. It used to send
+  `eventApproved` (a team card) and `eventConfirmed` (the announcement) to the same room in the same second. Now the room gets the announcement only, and
+  `notifyEventConfirmed(eventId, { reviewerLogin })`, called by `announceStatusChange` for a move `approve`, adds the `review` facts (author, validator) when the event has a
+  `proposedAt`; the answers to a proposal (`eventApproved`, `eventRefused`) are **personal**: `channelsFor` keeps only their e-mail (like the e-mail of `memberRemoved`, read time:
+  **nothing is rewritten**; `isOffered` hides the chat boxes, `parseNotifications` forgets them when the page saves, `channelsOfType` offers the e-mail template only, the stored
+  Discord and Slack templates stay in the database), and the announcement e-mail leaves out the author who gets the personal one. The other chains were audited and send one message per
+  fact: a refusal (an e-mail, no announcement); the requests to the staff (`intraRequested`, another audience: the staff, in its own room or, without a webhook, the BDE's room);
+  `intraPublished` / `intraRefused` (the answer of the staff, another fact); the edit of a published event (nothing for the members, `intraChanged` for the staff only); a deletion
+  (`intraCancelled` only for an event that was on the intra); a series (one message for the confirmed part, one for a date confirmed alone, a cut inherits the claim); the approval of a
+  member (an e-mail to the member and a team message: two audiences). A new notification for a fact that another already announces to the same audience is a mistake: say it in the
+  existing message. **`{@author}`** (`mentions.ts`, `AUTHOR_TYPES`, `events/author-mention.ts`): in the announcement only, one person, the author of the proposal, by the id of their
+  profile; the platform's own message above the card (`TemplateContext.defaultAbove`, set by `templatesFor` only for a channel where the BDE saved **no** template and only when
+  the author gave an id) is "`{@author}` your proposal was validated"; a saved template is never completed behind its back. The ids are asked on the profile as soon as the events module is on.
 - **Several channels per notification, independent** (`src/config/schema.ts`, `lib/notifications/deliver.ts`, `lib/setup/notification*.ts`,
   `components/setup/step-notifications.tsx`). `notifications.<type>` is a **list** of channels among `NOTIFICATION_CHANNELS`
   (`discord`, `slack`, `email`), written once and in that order; `[]` sends nothing (there is no `none` channel, no adapter that
@@ -979,7 +992,7 @@ recurrenceUntil IS NULL`**, a CHECK of the migration (`Event_repeat_has_an_end`)
     writes `event.create` and `event.propose`), withdrawing `event.withdraw`, refusing `event.refuse` (with the comment and
     the author). `refuseEvent` answers a notice, not an error, when somebody answered first (`?notice=alreadyReviewed`).
   - **Notifications** (`eventProposed` → the owners and holders of `events.validate` by e-mail, or the chat channel;
-    `eventApproved` and `eventRefused` → the author by e-mail, or the chat channel, never the person who gave the answer).
+    `eventApproved` and `eventRefused` → the author **by e-mail only**, never the person who gave the answer, never a chat channel: see "One message per fact").
     They are `optional` and empty by default, take the channels the installer or the settings page chose, and count in
     `env.ts` like the other events notifications. `announceReview` (`notifications.ts`) re-reads the event and **sends nothing when
     the notice is stale** (a proposal withdrawn or answered meanwhile): unlike the confirmation there is no once-only claim,

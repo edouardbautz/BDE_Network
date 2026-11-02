@@ -34,6 +34,8 @@ interface MentionToolsProps {
   scope: 'all' | TemplateChannel;
   /** The message speaks to the school's staff: `{@staff}` can be written (the people who gave their id on their profile). */
   staff?: boolean;
+  /** The message announces an event: `{@author}` can be written (the author of a proposal, by the id they gave on their profile). */
+  author?: boolean;
   mentions: MentionView[];
   onMentionsChange: (mentions: MentionView[]) => void;
   /** Inserts the text of a mention where the cursor is. */
@@ -54,6 +56,7 @@ const KINDS: Record<MentionPlatform, Array<MentionView['kind']>> = {
 export function MentionTools({
   scope,
   staff = false,
+  author = false,
   mentions,
   onMentionsChange,
   onInsert,
@@ -81,6 +84,9 @@ export function MentionTools({
           <DropdownMenuItem onClick={() => onInsert('{@here}')}>{t('here')}</DropdownMenuItem>
           {staff && (
             <DropdownMenuItem onClick={() => onInsert('{@staff}')}>{t('staff')}</DropdownMenuItem>
+          )}
+          {author && (
+            <DropdownMenuItem onClick={() => onInsert('{@author}')}>{t('author')}</DropdownMenuItem>
           )}
           {scope === 'slack' && (
             <DropdownMenuItem onClick={() => onInsert('{@channel}')}>

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { cascade } from './apply';
 import { sharedChannels } from './catalog';
 import { STAFF_TYPES } from './kinds';
+import { authorMentionIds } from '@/lib/events/author-mention';
 import type { MentionDirectory, StaffMentionIds } from './mentions';
 import { validateTemplate, type TemplateScope } from './schema';
 import { loadMentions, loadTemplates, type StoredTemplate } from './store';
@@ -56,7 +57,16 @@ async function recordFallback(
   }
 }
 
-export async function templatesFor(type: TemplateType): Promise<SendTemplates> {
+/** What is known of the event a notification is about, besides its type. */
+export interface TemplateSubject {
+  /** The login of the author of an event that came from a proposal: `{@author}` stands for them (the announcement only). */
+  proposalAuthor?: string;
+}
+
+export async function templatesFor(
+  type: TemplateType,
+  subject: TemplateSubject = {},
+): Promise<SendTemplates> {
   const { bde } = getConfig();
   const base: TemplateContext = { bdeName: bde.name, locale: bde.defaultLocale };
 
@@ -85,7 +95,24 @@ export async function templatesFor(type: TemplateType): Promise<SendTemplates> {
       );
     }
   }
-  const shared = { ...base, mentions: directory, ...(staff && { staff }) };
+  // `{@author}` stands for the author of a proposal, by the id they gave on their profile (none when they gave none).
+  let author: StaffMentionIds | undefined;
+  if (subject.proposalAuthor) {
+    try {
+      author = await authorMentionIds(subject.proposalAuthor);
+    } catch (error) {
+      console.error(
+        `[notifications] ${type}: the author could not be read, {@author} mentions nobody`,
+        error,
+      );
+    }
+  }
+  const shared = {
+    ...base,
+    mentions: directory,
+    ...(staff && { staff }),
+    ...(author && { author }),
+  };
 
   const contexts = new Map<TemplateChannel, TemplateContext>();
   for (const channel of TEMPLATE_CHANNELS) {
@@ -114,7 +141,17 @@ export async function templatesFor(type: TemplateType): Promise<SendTemplates> {
       continue;
     }
     const template = used.length === 2 ? cascade(used[0], used[1]) : used[0];
-    contexts.set(channel, { ...shared, ...(template && { template }) });
+    // The platform's own message above the announcement of a proposal tells its author, for a BDE that wrote nothing for this channel:
+    // a template the BDE saved is never completed behind its back.
+    const tellsAuthor =
+      !template &&
+      rows.every((row) => !scopes.includes(row.scope)) &&
+      author?.[channel as 'discord' | 'slack']?.length;
+    contexts.set(channel, {
+      ...shared,
+      ...(template && { template }),
+      ...(tellsAuthor && { defaultAbove: '{@author}' }),
+    });
   }
 
   const context = (channel: TemplateChannel) => contexts.get(channel) ?? base;

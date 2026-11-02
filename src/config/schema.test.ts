@@ -131,6 +131,22 @@ describe('bdeConfigSchema', () => {
   });
 
   describe('channelsFor: what a notification really goes through', () => {
+    it('is the e-mail alone for the answers to a proposal: personal, never in the chat room, and nothing rewritten', () => {
+      const parsed = bdeConfigSchema.parse({
+        ...validConfig,
+        notifications: {
+          eventApproved: ['discord', 'slack', 'email'],
+          eventRefused: ['discord'],
+          eventProposed: ['discord', 'email'],
+        },
+      });
+      expect(channelsFor(parsed, 'eventApproved')).toEqual(['email']);
+      expect(channelsFor(parsed, 'eventRefused')).toEqual([]);
+      expect(channelsFor(parsed, 'eventProposed')).toEqual(['discord', 'email']);
+      // what the file holds is untouched
+      expect(parsed.notifications.eventApproved).toEqual(['discord', 'slack', 'email']);
+    });
+
     it('is the list, except the e-mail of a member removed, which is never sent', () => {
       const parsed = bdeConfigSchema.parse({
         ...validConfig,

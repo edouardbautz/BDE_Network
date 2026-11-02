@@ -187,10 +187,8 @@ describe('a refusal, with the templates of the BDE', () => {
     ]);
     await notifyEventRefused('evt1', 'vera');
 
-    const card = posted('discord').discord?.embeds[0];
-    expect(card?.title).toBe('⛔  Refused: Pendant les examens.');
-    expect(card?.description).toContain('### 💬  Why');
-    expect(card?.description).toContain('> Pendant les examens.');
+    // the refusal is personal: the reason goes to its author by e-mail and is never posted in the room
+    expect(() => posted('discord')).toThrow('nothing was posted');
     expect(emails()[0]?.email?.text).toContain('Why :\nPendant les examens.');
   });
 });
