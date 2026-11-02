@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ADMIN_URL, createMigratedDatabase, type TestDatabase } from '../../../../qa/test-database';
+import { REVISIONS } from './revisions';
 
 /**
  * The service on a real PostgreSQL with every migration applied (the `migrations` job of CI sets the address; elsewhere the suite is
@@ -135,7 +136,7 @@ describeWithDatabase('the storage of the notification templates', () => {
         type: 'eventConfirmed',
         scope: 'all',
         version: 1,
-        basedOnRevision: 1,
+        basedOnRevision: REVISIONS.eventConfirmed,
         updatedByLogin: 'paula',
         updatedById: 'u-paula',
         content: { title: 'Hello {title}' },
@@ -479,7 +480,7 @@ describeWithDatabase('the storage of the notification templates', () => {
         await service.acknowledgeRevision({ type: 'eventConfirmed', scope: 'all' }, paula),
       ).toEqual({ ok: true });
       expect((await rows(`SELECT "basedOnRevision" FROM "NotificationTemplate"`))[0]).toEqual({
-        basedOnRevision: 1,
+        basedOnRevision: REVISIONS.eventConfirmed,
       });
     });
   });

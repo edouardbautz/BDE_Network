@@ -59,6 +59,12 @@ test.describe('the table of notifications', () => {
     await expect(form(page).getByRole('button', { name: 'Discord: check all' })).toBeDisabled();
     // the e-mail of a member who was removed does not exist
     await expect(page.getByRole('checkbox', { name: 'Member removed — E-mail' })).toHaveCount(0);
+    // the answers to a proposal are personal: an e-mail to the author, never a chat box
+    for (const row of ['Proposal validated', 'Proposal refused']) {
+      await expect(page.getByRole('checkbox', { name: `${row} — Discord` })).toHaveCount(0);
+      await expect(page.getByRole('checkbox', { name: `${row} — Slack` })).toHaveCount(0);
+      await expect(page.getByRole('checkbox', { name: `${row} — E-mail` })).toHaveCount(1);
+    }
   });
 
   test('sets up two channels, ticks a column and a box, saves, and finds them after a reload', async ({
@@ -69,10 +75,10 @@ test.describe('the table of notifications', () => {
     try {
       await form(page).getByLabel('Discord webhook address').fill(WEBHOOK);
       await form(page).getByLabel('Slack webhook address').fill(SLACK);
-      await expect.poll(() => tickable(page)).toBe(10 + 10);
+      await expect.poll(() => tickable(page)).toBe(8 + 8); // not the e-mail of a member removed, nor a chat box for the two answers to a proposal
 
       await form(page).getByRole('button', { name: 'Discord: check all' }).click();
-      await expect.poll(() => ticked(page)).toBe(10);
+      await expect.poll(() => ticked(page)).toBe(8);
       await expect(form(page).getByRole('button', { name: 'Discord: clear all' })).toBeVisible();
 
       await page.getByRole('checkbox', { name: 'Event confirmed — Slack' }).check();
@@ -81,7 +87,7 @@ test.describe('the table of notifications', () => {
       await page.reload();
       await expect(page.getByRole('heading', { name: 'Who is told, and where' })).toBeVisible();
       await atRest(page);
-      await expect.poll(() => ticked(page)).toBe(11);
+      await expect.poll(() => ticked(page)).toBe(9);
       await expect(page.getByRole('checkbox', { name: 'Event confirmed — Slack' })).toBeChecked();
       await expect(page.getByRole('checkbox', { name: 'Event confirmed — Discord' })).toBeChecked();
       await expect(
