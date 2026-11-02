@@ -209,17 +209,21 @@ describe('an approval (eventApproved)', () => {
     expect(emails()).toEqual([]);
   });
 
-  it('is one team card on a chat channel, naming the author and who approved', async () => {
-    useChannels({ approved: 'discord' });
+  it('never posts in a chat room, even when an older configuration still lists one: the room has the announcement of the event', async () => {
+    useChannels({ approved: ['discord', 'slack', 'email'] });
     await notifyEventApproved('evt1', 'vera');
 
-    expect(embed()?.title).toBe('✅  Tournoi');
-    expect(embed()?.fields?.map((field) => field.value)).toEqual([
-      'Sport',
-      'Dave Pôle',
-      'Vera Validatrice',
-      'Alice A',
-    ]);
+    expect(notify).not.toHaveBeenCalled();
+    expect(emails().map((message) => message.to)).toEqual(['dave@x.fr']);
+    expect(emails()[0]).not.toHaveProperty('discord');
+    expect(emails()[0]).not.toHaveProperty('slack');
+  });
+
+  it('sends nothing at all when only chat channels are listed', async () => {
+    useChannels({ approved: ['discord', 'slack'] });
+    await notifyEventApproved('evt1', 'vera');
+    expect(notify).not.toHaveBeenCalled();
+    expect(notifyMany).not.toHaveBeenCalled();
   });
 
   it('says nothing about an event that is not published after all', async () => {
@@ -230,7 +234,7 @@ describe('an approval (eventApproved)', () => {
   });
 
   it('shows a date approved on its own, when the rest of the series is still a proposal', async () => {
-    useChannels({ approved: 'discord' });
+    useChannels({ approved: 'email' });
     found({
       status: 'PROPOSED',
       repeat: { freq: 'WEEKLY', interval: 1 },
@@ -254,10 +258,9 @@ describe('an approval (eventApproved)', () => {
     });
     await notifyEventApproved('evt1', 'vera');
 
-    expect(notify).toHaveBeenCalledTimes(1);
-    // 17 May 2099, 18:00 UTC: the date that was approved, not the first one of the series
-    const seventeenth = new Date('2099-05-17T18:00:00Z').getTime() / 1000;
-    expect(embed()?.description).toContain(`<t:${seventeenth}:F>`);
+    expect(emails()).toHaveLength(1);
+    // 17 May 2099: the date that was approved, not the first one of the series
+    expect(emails()[0]?.body).toContain('17 mai 2099');
   });
 });
 
@@ -276,29 +279,16 @@ describe('a refusal (eventRefused)', () => {
     expect(emails()[0]?.body).toContain(comment); // the plain message, for every other channel
   });
 
-  it('puts the comment first in the card of a chat, as a quote, under a heading of its own', async () => {
-    useChannels({ refused: 'discord' });
+  it('never posts the reason in a chat room: it is for the author, not for the whole board', async () => {
+    useChannels({ refused: ['discord', 'slack'] });
     await notifyEventRefused('evt1', 'vera');
+    expect(notify).not.toHaveBeenCalled();
+    expect(notifyMany).not.toHaveBeenCalled();
 
-    expect(embed()?.title).toBe('⛔  Tournoi');
-    const description = embed()?.description ?? '';
-    expect(description).toContain(`> ${comment}`);
-    expect(description.indexOf(comment)).toBeLessThan(description.indexOf('Gymnase'));
-    expect(embed()?.fields?.map((field) => field.value)).toContain('Vera Validatrice');
-  });
-
-  it('keeps every line of the comment in its quote, so none of them becomes a heading', async () => {
-    useChannels({ refused: 'discord' });
-    found({ status: 'DRAFT', refusalComment: 'Première ligne\n### Faux titre' });
+    useChannels({ refused: ['discord', 'slack', 'email'] });
     await notifyEventRefused('evt1', 'vera');
-
-    expect(embed()?.description).toContain('> Première ligne\n> ### Faux titre');
-  });
-
-  it('puts the comment in the Slack message', async () => {
-    useChannels({ refused: 'slack' });
-    await notifyEventRefused('evt1', 'vera');
-    expect(JSON.stringify(vi.mocked(notify).mock.calls[0]?.[1].slack)).toContain(comment);
+    expect(notify).not.toHaveBeenCalled();
+    expect(emails().map((message) => message.to)).toEqual(['dave@x.fr']);
   });
 
   it.each([

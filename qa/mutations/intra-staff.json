@@ -42,10 +42,10 @@
     ["src/app/[locale]/(app)/profile/actions.test.ts"]
   ],
   [
-    "profile: the ids are accepted while the platform does not publish on the intra",
+    "profile: the ids are accepted when the events module is off",
     "src/app/[locale]/(app)/profile/actions.ts",
-    "    !isEventsModuleEnabled() ||\n    !intraPublicationEnabled()\n",
-    "    !isEventsModuleEnabled()\n",
+    "    !isEventsModuleEnabled()\n  ) {",
+    "    false\n  ) {",
     ["src/app/[locale]/(app)/profile/actions.test.ts"]
   ],
   [

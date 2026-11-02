@@ -3,6 +3,7 @@ import { z } from 'zod';
 import {
   BACKUP_NOTIFICATION_EVENTS,
   INTRA_NOTIFICATION_EVENTS,
+  isPersonal,
   NOTIFICATION_CHANNELS,
   NOTIFICATION_EVENTS,
   type NotificationChannel,
@@ -182,7 +183,8 @@ export const isConfigured = (settings: Credentials, channel: NotificationChannel
  * What the browser sent for the notifications, validated: the webhooks and the SMTP password may be left blank to keep the
  * ones saved before (the page never gets them back). **A box can only be ticked for a channel that is configured**, and the
  * e-mail of `memberRemoved` never exists (the person removed is not written to): both are refused here, whatever the page
- * showed. One place for the installer and the settings page.
+ * showed. The chat boxes of an answer to a proposal do not exist either (it is personal, see `channelsFor`), but a list saved before
+ * that may hold them: they are forgotten here, which is how the saved list stops holding them, not an error. One place for the installer and the settings page.
  */
 export function parseNotifications(
   input: unknown,
@@ -200,7 +202,8 @@ export function parseNotifications(
 
   const matrix = emptyMatrix();
   for (const event of NOTIFICATION_EVENTS) {
-    const ticked = parsed.data.matrix[event] ?? before?.matrix[event] ?? [];
+    const asked = parsed.data.matrix[event] ?? before?.matrix[event] ?? [];
+    const ticked = asked.filter((channel) => !(isPersonal(event) && channel !== 'email'));
     if (event === 'memberRemoved' && ticked.includes('email')) {
       return failure('removedNotEmailed', 'matrix');
     }

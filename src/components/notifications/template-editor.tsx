@@ -46,7 +46,7 @@ import { TEMPLATE_LIMITS } from '@/lib/notifications/templates/limits';
 import type { Notice } from '@/lib/notifications/templates/notice';
 import type { Preview } from '@/lib/notifications/templates/preview';
 import type { TemplateIssue, TemplateScope } from '@/lib/notifications/templates/schema';
-import { STAFF_TYPES } from '@/lib/notifications/templates/kinds';
+import { AUTHOR_TYPES, STAFF_TYPES } from '@/lib/notifications/templates/kinds';
 import type { ItemId, TemplateChannel, TemplateContent } from '@/lib/notifications/templates/types';
 import { HistoryDialog } from './history-dialog';
 import { ItemsEditor } from './items-editor';
@@ -617,6 +617,7 @@ export function TemplateEditor({ data, initialScope, notice, testable }: Templat
                       <MentionTools
                         scope={scope}
                         staff={STAFF_TYPES.includes(type)}
+                        author={AUTHOR_TYPES.includes(type)}
                         mentions={mentions}
                         onMentionsChange={setMentions}
                         onInsert={(token) => insertField(`${prefix}-above`, token)}

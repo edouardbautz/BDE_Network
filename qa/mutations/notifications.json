@@ -16,8 +16,8 @@
   [
     "channels: the e-mail of a removed member is sent",
     "src/config/schema.ts",
-    "    (channel) => !(event === 'memberRemoved' && channel === 'email'),",
-    "    () => true,",
+    "      !(event === 'memberRemoved' && channel === 'email') &&\n      !(isPersonal(event) && channel !== 'email'),",
+    "      !(isPersonal(event) && channel !== 'email'),",
     ["src/config/schema.test.ts", "src/lib/notifications/deliver.test.ts"]
   ],
   [
@@ -76,8 +76,8 @@
   [
     "table: a removed member has an e-mail box",
     "src/lib/setup/notification-matrix.ts",
-    "  !(event === 'memberRemoved' && channel === 'email');",
-    "  true;",
+    "  !(event === 'memberRemoved' && channel === 'email') &&\n  !(isPersonal(event) && channel !== 'email');",
+    "  !(isPersonal(event) && channel !== 'email');",
     [
       "src/lib/setup/notification-matrix.test.ts",
       "src/components/setup/step-notifications.test.tsx"

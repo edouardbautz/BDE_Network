@@ -177,7 +177,15 @@ ${value}`,
         if (data.review?.reviewerName) {
           columns.push(
             column(
-              label(t(kind === 'approved' ? 'embed.fields.approvedBy' : 'embed.fields.refusedBy')),
+              label(
+                t(
+                  kind === 'confirmed'
+                    ? 'embed.fields.validatedBy'
+                    : kind === 'approved'
+                      ? 'embed.fields.approvedBy'
+                      : 'embed.fields.refusedBy',
+                ),
+              ),
               text(data.review.reviewerName, 400),
             ),
           );

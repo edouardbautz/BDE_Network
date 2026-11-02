@@ -140,10 +140,11 @@ Un événement passe par trois statuts :
 
 - L'entrée **À valider** du menu (réservée à ceux qui valident) indique combien de propositions attendent. La page les
   liste, les plus anciennes d'abord, chacune avec **Valider** et **Refuser**.
-- **Valider** publie l'événement, comme le ferait une confirmation : les membres sont prévenus une seule fois.
-  L'auteur l'est aussi, si la notification `eventApproved` est activée.
+- **Valider** publie l'événement, comme le ferait une confirmation : les membres sont prévenus **une seule fois**, dans une annonce
+  qui dit qui l'a proposé et qui l'a validé. L'auteur est prévenu personnellement par e-mail (si `eventApproved` est activée), et
+  mentionné dans l'annonce sur Discord ou Slack s'il a donné son identifiant dans son profil (voir [Notifications](notifications.md)).
 - **Refuser** demande un **commentaire** (obligatoire, 1000 caractères au plus). L'événement repasse en brouillon ; son
-  auteur lit le commentaire sur l'événement lui-même et le reçoit en notification (`eventRefused`). Il modifie
+  auteur lit le commentaire sur l'événement lui-même et le reçoit par e-mail (`eventRefused`), jamais dans le salon. Il modifie
   l'événement, puis le propose de nouveau : le refus disparaît. Une série est refusée en entier.
 - Depuis la page de l'événement, vous pouvez faire la même chose. Une proposition ne repasse pas en brouillon sans
   commentaire : on la refuse. Si deux validateurs répondent à la même proposition, le second est prévenu que quelqu'un
@@ -464,13 +465,13 @@ Les canaux (e-mail, Discord, Slack : aucun, un ou plusieurs pour chaque notifica
 dans **Paramètres**, section **Notifications**, avec un message de test pour chaque canal. Pour que les messages contiennent un lien vers l'événement,
 renseignez l'adresse de la plateforme (section **Adresse de la plateforme**) : sans elle, les messages partent sans lien.
 
-| Notification                        | Quand                                                                                                                                                         | Qui la reçoit                                                                               |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| **Confirmation** (`eventConfirmed`) | un événement passe de brouillon à **confirmé**, une seule fois ; pour une série, une fois pour la partie confirmée, ou une fois pour une date confirmée seule | tous les membres approuvés (e-mail : un message par personne), ou le salon Discord ou Slack |
-| **Rappel** (`eventReminder`)        | la veille de chaque occurrence confirmée, à l'**heure du rappel** (18 h par défaut, heure du BDE)                                                             | les **membres en charge** (e-mail), sinon ceux qui valident les événements ; ou le salon    |
-| **Proposition** (`eventProposed`)   | un événement est proposé (ou proposé de nouveau après un refus)                                                                                               | les propriétaires et ceux qui valident les événements (e-mail), ou le salon                 |
-| **Validation** (`eventApproved`)    | un validateur valide une proposition                                                                                                                          | son auteur (e-mail), ou le salon                                                            |
-| **Refus** (`eventRefused`)          | un validateur refuse une proposition                                                                                                                          | son auteur, avec le commentaire (e-mail), ou le salon                                       |
+| Notification                        | Quand                                                                                                                                                         | Qui la reçoit                                                                                 |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| **Confirmation** (`eventConfirmed`) | un événement passe de brouillon à **confirmé**, une seule fois ; pour une série, une fois pour la partie confirmée, ou une fois pour une date confirmée seule | tous les membres approuvés (e-mail : un message par personne), ou le salon Discord ou Slack   |
+| **Rappel** (`eventReminder`)        | la veille de chaque occurrence confirmée, à l'**heure du rappel** (18 h par défaut, heure du BDE)                                                             | les **membres en charge** (e-mail), sinon ceux qui valident les événements ; ou le salon      |
+| **Proposition** (`eventProposed`)   | un événement est proposé (ou proposé de nouveau après un refus)                                                                                               | les propriétaires et ceux qui valident les événements (e-mail), ou le salon                   |
+| **Validation** (`eventApproved`)    | un validateur valide une proposition                                                                                                                          | son auteur, **par e-mail uniquement** (le salon a l'annonce, qui dit qui a proposé et validé) |
+| **Refus** (`eventRefused`)          | un validateur refuse une proposition                                                                                                                          | son auteur, avec le commentaire, **par e-mail uniquement**                                    |
 
 Le rendu sur Discord, Slack et par e-mail est décrit dans [Notifications](notifications.md).
 

@@ -82,6 +82,19 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Changed
 
+- **One message per fact: validating a proposal now posts ONE message in the channel.** It used to post two almost identical ones in the same second, "Proposal validated" and
+  "New event confirmed". The channel (Discord, Slack) now gets the **announcement of the event only**, which shows **Proposed by** and **Validated by** when the event came from a
+  proposal. "Proposal validated" and "Proposal refused" became **personal**: an e-mail to the author, never a message in the channel (a refusal's reason is not for the whole board;
+  the author still reads it on the event's page). In the table of notifications these two rows keep only their e-mail box. **Nothing of your settings is rewritten**: a Discord or Slack
+  box saved before for these two rows is not read any more, and the next save of the page writes the list without it; the customised Discord and Slack templates of these two messages stay
+  in the database, unused. The author who receives the personal e-mail is not written to a second time by the announcement e-mail.
+- **`{@author}`: the author of a proposal is pinged in the announcement.** By default, above the card of the announcement of an event that came from a proposal, on a channel where the
+  BDE wrote no template: "@author, your proposal was validated." The mention pings that one person, by the Discord or Slack id they gave on their profile (Discord is told exactly them),
+  and nothing is written when they gave none or validated their own proposal. A BDE that already customised the announcement keeps its template unchanged: `{@author}` is in the
+  **Mention** menu of its message above the card. The profile asks for the ids as soon as the Events module is on (it used to be only while the platform publishes on the intra); the
+  privacy policy says so. The announcement gains the facts **Proposed by** and **Validated by** and the variables `{author}` and `{reviewer}` (revision 2 of the notification: a
+  template written before shows the editor what is new and keeps its words).
+
 - **One folder for every copy the platform makes.** The copies made before an update used to be in a Docker volume (`backups`), which `docker compose down -v` removes, next
   to the nightly backups in the folder `backups/auto/`: two places, only one of which survived. They now go to `backups/auto/pre-update/`, in the same folder of the server
   (`scripts/restore.sh --pre-update` reads it). **Nothing to do when updating**: at the first start the platform carries the copies of the old volume into the folder (nothing is

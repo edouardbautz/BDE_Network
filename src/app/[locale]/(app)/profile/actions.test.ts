@@ -9,7 +9,6 @@ vi.mock('@/lib/events/access', () => ({
   getEventsAccess: vi.fn(),
   isEventsModuleEnabled: vi.fn(() => true),
 }));
-vi.mock('@/lib/events/intra-config', () => ({ intraPublicationEnabled: vi.fn(() => true) }));
 vi.mock('@/lib/auth/session', () => ({ getEffectiveSession: vi.fn() }));
 vi.mock('@/lib/prisma', () => ({ prisma: { user: { update: vi.fn() } } }));
 vi.mock('@/lib/events/export', () => ({ regenerateCalendarToken: vi.fn() }));
@@ -19,7 +18,6 @@ const { regenerateCalendarToken } = await import('@/lib/events/export');
 const { revalidatePath } = await import('next/cache');
 const { getEffectiveSession } = await import('@/lib/auth/session');
 const { isEventsModuleEnabled } = await import('@/lib/events/access');
-const { intraPublicationEnabled } = await import('@/lib/events/intra-config');
 const { prisma } = await import('@/lib/prisma');
 const { regenerateMyCalendarToken, saveMentionIds } = await import('./actions');
 
@@ -57,7 +55,6 @@ describe('saveMentionIds', () => {
 
   beforeEach(() => {
     vi.mocked(isEventsModuleEnabled).mockReturnValue(true);
-    vi.mocked(intraPublicationEnabled).mockReturnValue(true);
   });
 
   it.each([
@@ -76,11 +73,8 @@ describe('saveMentionIds', () => {
     expect(prisma.user.update).not.toHaveBeenCalled();
   });
 
-  it('is refused while the platform does not publish on the intra, or has no events module', async () => {
+  it('is refused when the platform has no events module', async () => {
     signedInAs('MEMBER');
-    vi.mocked(intraPublicationEnabled).mockReturnValue(false);
-    await expect(saveMentionIds({}, form('348291047563210241', ''))).rejects.toThrow('Forbidden');
-    vi.mocked(intraPublicationEnabled).mockReturnValue(true);
     vi.mocked(isEventsModuleEnabled).mockReturnValue(false);
     await expect(saveMentionIds({}, form('348291047563210241', ''))).rejects.toThrow('Forbidden');
     expect(prisma.user.update).not.toHaveBeenCalled();

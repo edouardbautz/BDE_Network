@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
 import { ITEMS } from './catalog';
@@ -45,8 +45,14 @@ describe('the revision of the platform’s own notifications', () => {
 
 describe('what the platform changed', () => {
   const changes = REVISION_CHANGES as RevisionChange[];
+  // The real changes are put aside: these tests play their own, and put them back.
+  let real: RevisionChange[] = [];
+  beforeEach(() => {
+    real = changes.splice(0);
+  });
   afterEach(() => {
     changes.length = 0;
+    changes.push(...real);
   });
 
   it('is listed for a template written before it, for the types it concerns only', () => {

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createFakeTemplatesDb } from '@/test/fake-templates-db';
+import { REVISIONS } from './revisions';
 
 const db = vi.hoisted(() => ({
   current: undefined as undefined | ReturnType<typeof createFakeTemplatesDb>,
@@ -43,7 +44,7 @@ describe('saveTemplate', () => {
       type: 'eventConfirmed',
       scope: 'all',
       version: 1,
-      basedOnRevision: 1,
+      basedOnRevision: REVISIONS.eventConfirmed,
       updatedByLogin: 'paula',
       updatedById: 'u1',
       content: { title: 'Hello {title}' },
@@ -333,7 +334,7 @@ describe('acknowledgeRevision', () => {
     expect(
       await service.acknowledgeRevision({ type: 'eventConfirmed', scope: 'all' }, paula),
     ).toEqual({ ok: true });
-    expect(fake.templates[0]?.basedOnRevision).toBe(1);
+    expect(fake.templates[0]?.basedOnRevision).toBe(REVISIONS.eventConfirmed);
     expect(fake.audit.at(-1)).toMatchObject({ action: 'notification_template.acknowledge' });
   });
 });

@@ -91,11 +91,18 @@ export function eventAbove(
   timeZone: string,
   context: TemplateContext,
 ): RenderedAbove | undefined {
+  // For the announcement of a proposal the platform tells the author, for a BDE that wrote nothing for the channel (`defaultAbove`).
+  const source =
+    context.template?.above ??
+    (context.defaultAbove && data.review
+      ? `${context.defaultAbove} ${t('authorValidated')}`
+      : undefined);
   return renderAbove(
-    context.template?.above,
+    source,
     eventValues(kind, data, t, locale, timeZone, context.bdeName),
     platform,
     context.mentions,
     context.staff,
+    context.author,
   );
 }

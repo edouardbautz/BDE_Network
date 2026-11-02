@@ -9,7 +9,6 @@ import { accountLabel } from '@/lib/account-label';
 import { requireApprovedSession } from '@/lib/auth/require-session';
 import { isEventsModuleEnabled } from '@/lib/events/access';
 import { ensureCalendarToken } from '@/lib/events/export';
-import { intraPublicationEnabled } from '@/lib/events/intra-config';
 import { getOrigin } from '@/lib/events/origin';
 import { prisma } from '@/lib/prisma';
 import { regenerateMyCalendarToken } from './actions';
@@ -33,14 +32,13 @@ export default async function ProfilePage() {
     ? `${await getOrigin()}/api/calendar/${await ensureCalendarToken(user.id)}.ics`
     : null;
 
-  // How the platform mentions this person in what it posts for the school's staff: only asked while the platform publishes on the intra.
-  const mentionIds =
-    showCalendar && intraPublicationEnabled()
-      ? await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { discordUserId: true, slackUserId: true },
-        })
-      : null;
+  // How the platform mentions this person in what it posts (their proposal validated, the messages for the school's staff): asked while the events module is on.
+  const mentionIds = showCalendar
+    ? await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { discordUserId: true, slackUserId: true },
+      })
+    : null;
 
   return (
     <>

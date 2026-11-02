@@ -6,7 +6,6 @@ import { getPathname } from '@/i18n/navigation';
 import type { ActionTarget } from '@/lib/action-target';
 import { getEffectiveSession } from '@/lib/auth/session';
 import { getEventsAccess, isEventsModuleEnabled } from '@/lib/events/access';
-import { intraPublicationEnabled } from '@/lib/events/intra-config';
 import { regenerateCalendarToken } from '@/lib/events/export';
 import { parseMentionIds, type MentionIdsInput } from '@/lib/members/mention-ids';
 import { isApproved } from '@/lib/permissions';
@@ -50,8 +49,7 @@ export async function saveMentionIds(
     !session ||
     !session.user.id ||
     !isApproved(session.user.status) ||
-    !isEventsModuleEnabled() ||
-    !intraPublicationEnabled()
+    !isEventsModuleEnabled()
   ) {
     throw new Error('Forbidden');
   }

@@ -70,8 +70,8 @@
   [
     "schema: the template for all channels may mention a role",
     "src/lib/notifications/templates/schema.ts",
-    "all: new Set(['everyone', 'here', 'staff']),",
-    "all: new Set(['everyone', 'here', 'staff', 'role', 'user', 'group']),",
+    "all: new Set(['everyone', 'here', 'staff', 'author']),",
+    "all: new Set(['everyone', 'here', 'staff', 'author', 'role', 'user', 'group']),",
     ["src/lib/notifications/templates/schema.test.ts"]
   ],
   [

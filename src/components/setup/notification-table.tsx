@@ -162,7 +162,7 @@ function Cell({
       <TableCell className="text-center">
         <span className="text-muted-foreground text-small max-sm:block">
           <span className="sm:sr-only">{channelName} : </span>
-          {t('types.memberRemovedNoEmail')}
+          {t(event === 'memberRemoved' ? 'types.memberRemovedNoEmail' : 'types.personalNoChat')}
         </span>
       </TableCell>
     );

@@ -145,8 +145,8 @@
   [
     "mentions: {@staff} stands for the other platform's people",
     "src/lib/notifications/templates/mentions.ts",
-    "        const ids = [...(staff?.[platform] ?? [])];",
-    "        const ids = [...(staff?.discord ?? [])];",
+    "        const ids = [...((match[1] === 'staff' ? staff : author)?.[platform] ?? [])];",
+    "        const ids = [...((match[1] === 'staff' ? staff : author)?.discord ?? [])];",
     ["src/lib/notifications/templates/staff-mention.test.ts"]
   ],
   [
@@ -187,8 +187,8 @@
   [
     "settings: a page that does not know the intra notifications erases them",
     "src/lib/setup/notifications.ts",
-    "    const ticked = parsed.data.matrix[event] ?? before?.matrix[event] ?? [];",
-    "    const ticked = parsed.data.matrix[event] ?? [];",
+    "    const asked = parsed.data.matrix[event] ?? before?.matrix[event] ?? [];",
+    "    const asked = parsed.data.matrix[event] ?? [];",
     ["src/lib/settings/update.test.ts"]
   ],
   [

@@ -237,14 +237,25 @@ export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
 export type NotificationEvent = (typeof NOTIFICATION_EVENTS)[number];
 
 /**
- * The channels a notification really goes through: what the configuration lists, except that the e-mail of `memberRemoved` is
- * never sent (the person removed is not written to; an older configuration could list it, and it stayed without effect).
+ * The channels a notification really goes through: what the configuration lists, except that
+ * - the e-mail of `memberRemoved` is never sent (the person removed is not written to; an older configuration could list it, and it
+ *   stayed without effect);
+ * - the answer to a proposal (`eventApproved`, `eventRefused`) is personal: it goes to its author by e-mail, never to the chat room
+ *   (the event is announced there once, and a refusal's reason is not for the whole board). A chat channel an older configuration lists
+ *   for them is not read any more and nothing is rewritten: the page saves the list without it the next time.
  */
+export const PERSONAL_NOTIFICATIONS = ['eventApproved', 'eventRefused'] as const;
+
+export const isPersonal = (event: NotificationEvent): boolean =>
+  (PERSONAL_NOTIFICATIONS as readonly string[]).includes(event);
+
 export function channelsFor(
   config: Pick<BdeConfig, 'notifications'>,
   event: NotificationEvent,
 ): NotificationChannel[] {
   return config.notifications[event].filter(
-    (channel) => !(event === 'memberRemoved' && channel === 'email'),
+    (channel) =>
+      !(event === 'memberRemoved' && channel === 'email') &&
+      !(isPersonal(event) && channel !== 'email'),
   );
 }

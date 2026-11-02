@@ -210,11 +210,11 @@ try {
     );
     if (!unmanaged) fail(`${id} can be filled or saved by a password manager`);
   }
-  if ((await enabled()) !== 10)
-    fail(`${await enabled()} boxes can be ticked with Discord set up, not 10`);
+  if ((await enabled()) !== 8)
+    fail(`${await enabled()} boxes can be ticked with Discord set up, not 8`);
   await clickButton('Discord : tout cocher');
-  if ((await ticked()) !== 10)
-    fail(`${await ticked()} boxes ticked by the shortcut of the column, not 10`);
+  if ((await ticked()) !== 8)
+    fail(`${await ticked()} boxes ticked by the shortcut of the column, not 8`);
   await shot('notifications');
   await clickButton('Continuer');
   step('6-7. modules and notifications (a column ticked once its channel is set up)');
@@ -222,7 +222,7 @@ try {
   // 8. summary, then install
   await waitText('Récapitulatif');
   const summary = await text();
-  for (const expected of ['BDE Test', 'Nice', 'alice', 'vérifiée par 42', 'Discord (10 types)']) {
+  for (const expected of ['BDE Test', 'Nice', 'alice', 'vérifiée par 42', 'Discord (8 types)']) {
     if (!summary.includes(expected)) fail(`the summary lacks "${expected}"`);
   }
   if (summary.includes(CLIENT_SECRET)) fail('the summary shows the 42 secret');

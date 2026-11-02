@@ -113,7 +113,20 @@ export function buildConfirmationMessage(
 ): BuiltMessage {
   return {
     subject: t('confirmed.subject', { title: data.title }),
-    body: [t('confirmed.intro'), '', ...detailLines(data, t, locale, timeZone)].join('\n'),
+    body: [
+      t('confirmed.intro'),
+      '',
+      ...detailLines(data, t, locale, timeZone),
+      // An event that came from a proposal says who proposed it and who validated it.
+      ...(data.review
+        ? [
+            `${t('embed.fields.proposedBy')} : ${data.review.authorName}`,
+            ...(data.review.reviewerName
+              ? [`${t('embed.fields.validatedBy')} : ${data.review.reviewerName}`]
+              : []),
+          ]
+        : []),
+    ].join('\n'),
   };
 }
 

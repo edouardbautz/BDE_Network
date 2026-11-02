@@ -390,7 +390,7 @@
     },
     "notifications": {
       "title": "E-mails et notifications",
-      "description": "Votre adresse e-mail sert aussi à vous écrire : si votre bureau a activé l'envoi d'e-mails, vous pouvez en recevoir quand votre accès est approuvé, quand un événement est confirmé ou la veille d'un événement dont vous êtes en charge. Les propriétaires et les membres qui peuvent valider les accès reçoivent les nouvelles demandes. Des messages peuvent aussi être publiés dans le salon Discord ou Slack du bureau : ils mentionnent le nom et le login des personnes concernées (nouvelle demande, membre approuvé ou retiré). Si la plateforme publie les événements sur l'intra, vous pouvez en plus renseigner, dans votre profil, votre identifiant Discord et/ou Slack (facultatif) : il sert uniquement à vous mentionner dans les messages destinés au staff ; il n'est visible de personne d'autre, il est supprimé avec votre compte et vous pouvez l'effacer à tout moment."
+      "description": "Votre adresse e-mail sert aussi à vous écrire : si votre bureau a activé l'envoi d'e-mails, vous pouvez en recevoir quand votre accès est approuvé, quand un événement est confirmé ou la veille d'un événement dont vous êtes en charge. Les propriétaires et les membres qui peuvent valider les accès reçoivent les nouvelles demandes. Des messages peuvent aussi être publiés dans le salon Discord ou Slack du bureau : ils mentionnent le nom et le login des personnes concernées (nouvelle demande, membre approuvé ou retiré). Si le module Événements est activé, vous pouvez en plus renseigner, dans votre profil, votre identifiant Discord et/ou Slack (facultatif) : il sert uniquement à vous mentionner dans les messages qui vous concernent (un événement que vous avez proposé et qui est validé, et les messages destinés au staff quand la plateforme publie les événements sur l'intra) ; il n'est visible de personne d'autre, il est supprimé avec votre compte et vous pouvez l'effacer à tout moment."
     },
     "calendar": {
       "title": "Lien d'agenda personnel",
@@ -452,7 +452,8 @@
           "publishedBy": "Publié par",
           "changes": "Ce qui a changé",
           "intraFields": "Pour l'intra",
-          "intraLink": "Sur l'intra"
+          "intraLink": "Sur l'intra",
+          "validatedBy": "Validé par"
         },
         "changes": {
           "field": "{label} : {before} → {after}",
@@ -533,7 +534,8 @@
           "intro": "{actor} a refusé de publier cet événement sur l'intra. Il peut être corrigé, puis la demande renvoyée."
         },
         "dates": "{count, plural, one {# date} other {# dates}}"
-      }
+      },
+      "authorValidated": "votre proposition a été validée."
     },
     "title": "Événements",
     "subtitle": "Le calendrier interne du bureau : planifiez et organisez les événements du BDE.",
@@ -1013,7 +1015,7 @@
     },
     "mentions": {
       "title": "Être mentionné dans les messages",
-      "description": "Facultatif. Sert uniquement à vous mentionner (vous notifier) quand la plateforme écrit sur Discord ou Slack à propos de la publication des événements sur l'intra. Personne d'autre ne le voit.",
+      "description": "Facultatif. Sert uniquement à vous mentionner (vous notifier) quand la plateforme écrit sur Discord ou Slack : à propos de la publication des événements sur l'intra, ou pour vous dire qu'un événement que vous avez proposé a été validé. Personne d'autre ne le voit.",
       "discord": "Identifiant Discord",
       "discordHelp": "Votre identifiant numérique, pas votre pseudo : dans Discord, activez le mode développeur (Paramètres, Avancé), puis clic droit sur votre nom, « Copier l'identifiant de l'utilisateur ».",
       "slack": "Identifiant Slack",
@@ -1322,11 +1324,11 @@
         },
         "eventApproved": {
           "name": "Proposition validée",
-          "hint": "Prévient son auteur."
+          "hint": "Prévient son auteur par e-mail. Le salon reçoit l'annonce de l'événement."
         },
         "eventRefused": {
           "name": "Proposition refusée",
-          "hint": "Prévient son auteur, avec le commentaire."
+          "hint": "Prévient son auteur par e-mail, avec le commentaire. Jamais dans le salon."
         },
         "intraRequested": {
           "name": "Publication demandée",
@@ -1355,7 +1357,8 @@
         "backupStale": {
           "name": "Aucune sauvegarde depuis 2 jours",
           "hint": "Prévient les propriétaires, une fois par jour, tant qu'aucune sauvegarde n'a réussi."
-        }
+        },
+        "personalNoChat": "Par e-mail uniquement"
       }
     },
     "summary": {
@@ -2011,7 +2014,8 @@
       "remove": "Retirer {name}",
       "removed": "Retiré",
       "inUse": "Impossible : ce nom est encore utilisé par {where}. Le retirer d'abord du message.",
-      "staff": "{@staff} : les membres du staff qui ont donné leur identifiant"
+      "staff": "{@staff} : les membres du staff qui ont donné leur identifiant",
+      "author": "{@author} : l'auteur d'une proposition, s'il a donné son identifiant"
     },
     "history": {
       "title": "Historique : {scope}",
@@ -2076,7 +2080,9 @@
       "render": "le message n'a pas pu être construit",
       "unknown": "raison inconnue"
     },
-    "revisions": {},
+    "revisions": {
+      "proposalDetails": "L'annonce d'un événement venu d'une proposition peut désormais dire qui l'a proposé et qui l'a validé (nouvelles informations « Proposé par » et « Validé par », variables {author} et {reviewer}), et mentionner son auteur avec {@author}. Votre modèle ne change pas : ajoutez-les si vous le souhaitez."
+    },
     "notices": {
       "customised": "Ce canal a maintenant son propre modèle.",
       "reset": "Retour au message de la plateforme.",
@@ -2114,7 +2120,8 @@
       "notFound": "Introuvable : cela a peut-être déjà été modifié.",
       "restoreInvalid": "Cette version n'est plus valable aujourd'hui : elle n'a pas été restaurée.",
       "unknown": "Une erreur est survenue. Réessayer dans un instant.",
-      "mentionNotForType": "Cette mention est réservée aux messages au staff sur l'intra."
+      "mentionNotForType": "Cette mention est réservée aux messages au staff sur l'intra.",
+      "mentionAuthorNotForType": "Cette mention est réservée à l'annonce d'un événement."
     }
   },
   "secretField": {

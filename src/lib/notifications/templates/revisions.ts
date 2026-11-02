@@ -13,7 +13,7 @@ import type { ItemId, TemplateType } from './types';
  * template written for revision 1 stays valid for every later one.
  */
 export const REVISIONS: Readonly<Record<TemplateType, number>> = {
-  eventConfirmed: 1,
+  eventConfirmed: 2,
   eventReminder: 1,
   eventProposed: 1,
   eventApproved: 1,
@@ -44,7 +44,15 @@ export interface RevisionChange {
 }
 
 /** What each revision changed, newest last. Revision 1 is the platform's notifications as they were when templates came. */
-export const REVISION_CHANGES: readonly RevisionChange[] = [];
+export const REVISION_CHANGES: readonly RevisionChange[] = [
+  {
+    revision: 2,
+    types: ['eventConfirmed'],
+    addedItems: ['proposedBy', 'reviewedBy'],
+    addedVariables: ['author', 'reviewer'],
+    note: 'proposalDetails',
+  },
+];
 
 /** What changed for a type since the revision a template was written over. */
 export function changesSince(type: TemplateType, basedOnRevision: number): RevisionChange[] {

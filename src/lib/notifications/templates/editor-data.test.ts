@@ -214,6 +214,8 @@ describe('what the editor is given for a notification', () => {
       'description',
       'category',
       'assignees',
+      'proposedBy',
+      'reviewedBy',
     ]);
     expect(data.nativeOrder.discord?.[0]).toBe('when');
     expect(data.nativeOrder.slack?.[0]).toBe('description');
@@ -227,7 +229,9 @@ describe('what the editor is given for a notification', () => {
     expect(byId.title).toBe('Soirée de rentrée');
     expect(byId.place).toBe('Foyer des étudiants');
     expect(byId.bde).toBe('BDE Nice');
-    expect(Object.keys(byId)).not.toContain('author');
+    expect(Object.keys(byId)).not.toContain('requester');
+    // the announcement of a proposal says who proposed and who validated it
+    expect(Object.keys(byId)).toEqual(expect.arrayContaining(['author', 'reviewer']));
     const member = await loadEditorData('memberPending');
     expect(member.variables.map((variable) => variable.id)).toContain('login');
     const refused = await loadEditorData('eventRefused');
