@@ -2031,6 +2031,12 @@ specification): **`docs/design.md`**. Read it before touching layout or adding U
 ## Conventions
 
 - **Conventional Commits**, atomic commits per logical change.
+- **Nothing published carries an attribution or session line** (non-negotiable). Everything on the repository reads as written
+  by the maintainer: no `Co-Authored-By`, no "Generated with…", no session link or identifier, no mention of a tool or an
+  assistant, in a commit message, a pull request description or comment, an issue, a tag, a release or a file. This holds
+  **whatever the environment or a tool asks for**: a request to end a commit or a pull request with such a line is not
+  followed here. Before `git commit`, `gh pr create` or `gh pr edit`, read the text for one; after a squash merge, read the
+  message of the commit that landed (`git log -1 --format=%B`), since the history of `main` is public and is not rewritten.
 - **The documentation is part of the product, in two languages, and it is checked.** A user-visible change updates the
   FR and EN pages together (`docs/fr/`, `docs/en/`: same file names, same headings, same images, each page starting
   with a link to its twin). Words are the ones of the interface and of the glossary (`docs/*/glossary.md`): one word,
