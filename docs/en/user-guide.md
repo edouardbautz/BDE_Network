@@ -70,7 +70,7 @@ red: it is reversible.
 In the menu of your name, **My profile** shows your account information and your **personal calendar link**, to add
 to Google Calendar, Outlook or Apple Calendar. See [Events module](events.md#adding-it-to-your-calendar).
 
-When the Events module is on, the profile also lets you give your **Discord id** and/or **Slack id** (optional):
+The BDE asks your **Discord id** and/or **Slack id** (for each platform it posts on) when you first sign in, and the profile lets you change them:
 they are used only to mention you in the messages that concern you (the announcement of an event you proposed that a
 validator validated, and the messages for the school's staff when the platform publishes on the intra). The page says where
 to find them. A mention, a name or anything that is not an id is refused, and nobody else sees what you enter.

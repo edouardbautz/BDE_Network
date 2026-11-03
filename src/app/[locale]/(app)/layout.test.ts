@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session } from 'next-auth';
 import { sessionFor, type AccountKind } from '@/test/session-fixtures';
 
@@ -200,5 +200,59 @@ describe('(app) layout — the entry that counts what the staff has to publish o
     expect(ids).toContain('eventsIntra');
     expect(ids).not.toContain('events');
     expect(ids).not.toContain('members');
+  });
+});
+
+describe('(app) layout — an id the BDE needs is missing', () => {
+  const withoutIds = (session: Session) => {
+    session.user.discordUserId = null;
+    session.user.slackUserId = null;
+    return session;
+  };
+
+  beforeEach(() => {
+    vi.stubEnv('DISCORD_WEBHOOK_URL', 'https://discord.com/api/webhooks/1/a');
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it.each<AccountKind>(['MEMBER', 'ADMIN', 'OWNER'])(
+    'draws only the window that asks it for a %s, and reads nothing of the platform',
+    async (kind) => {
+      mockAuth.mockResolvedValue(withoutIds(sessionFor(kind)));
+      const result = (await callLayout()) as {
+        type: { name: string };
+        props: { session: unknown };
+      };
+
+      // the gate, not the shell: nothing of the page, the menu or the data is drawn
+      expect(result.type.name).toBe('MentionIdsGate');
+      expect(redirect).not.toHaveBeenCalled();
+      expect(countProposals).not.toHaveBeenCalled();
+      expect(countIntraToDo).not.toHaveBeenCalled();
+    },
+  );
+
+  it('sends an account that waits for approval to the step that asks it, before the waiting page', async () => {
+    mockAuth.mockResolvedValue(withoutIds(sessionFor('PENDING')));
+    await expect(callLayout()).rejects.toThrow(RedirectSignal);
+    expect(redirect).toHaveBeenCalledWith(expect.objectContaining({ href: '/identifiers' }));
+  });
+
+  it('lets the account through to the shell once it has given the id', async () => {
+    const session = withoutIds(sessionFor('MEMBER'));
+    session.user.discordUserId = '348291047563210241';
+    mockAuth.mockResolvedValue(session);
+    const result = (await callLayout()) as { type: { name: string } };
+    expect(result.type.name).not.toBe('MentionIdsGate');
+  });
+
+  it('draws the shell when no platform is configured: nothing is asked', async () => {
+    vi.unstubAllEnvs();
+    vi.stubEnv('DISCORD_WEBHOOK_URL', '');
+    mockAuth.mockResolvedValue(withoutIds(sessionFor('OWNER')));
+    const result = (await callLayout()) as { type: { name: string } };
+    expect(result.type.name).not.toBe('MentionIdsGate');
   });
 });

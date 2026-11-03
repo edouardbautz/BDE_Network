@@ -1,6 +1,7 @@
 import { Clock } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { signOut } from '@/lib/auth';
+import { homeFor } from '@/lib/auth/home';
 import { getEffectiveSession } from '@/lib/auth/session';
 import { redirect } from '@/i18n/navigation';
 import { LocaleSwitcher } from '@/components/locale-switcher';
@@ -20,8 +21,9 @@ export default async function PendingPage({ params }: { params: Promise<{ locale
     return null;
   }
 
-  if (session.user.status !== 'PENDING') {
-    redirect({ href: '/dashboard', locale });
+  // The page of an account that waits, once it has given the ids the BDE needs: before that, the step that asks them (`homeFor`).
+  if (homeFor(session) !== '/pending') {
+    redirect({ href: homeFor(session), locale });
     return null;
   }
 

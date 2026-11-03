@@ -5,10 +5,11 @@ import { getLocale } from 'next-intl/server';
 import { getPathname } from '@/i18n/navigation';
 import type { ActionTarget } from '@/lib/action-target';
 import { getEffectiveSession } from '@/lib/auth/session';
-import { getEventsAccess, isEventsModuleEnabled } from '@/lib/events/access';
+import { logAuditEvent } from '@/lib/audit-log';
+import { getEventsAccess } from '@/lib/events/access';
 import { regenerateCalendarToken } from '@/lib/events/export';
-import { parseMentionIds, type MentionIdsInput } from '@/lib/members/mention-ids';
-import { isApproved } from '@/lib/permissions';
+import { parseMentionIds, type MentionIds, type MentionIdsInput } from '@/lib/members/mention-ids';
+import type { MentionPlatform } from '@/lib/mention-ids/required';
 import { prisma } from '@/lib/prisma';
 
 /** Replaces the caller's calendar subscription token. The previous link stops
@@ -29,28 +30,24 @@ export async function regenerateMyCalendarToken(): Promise<ActionTarget> {
 export interface MentionIdsState {
   /** The ids were saved (or removed). */
   saved?: boolean;
-  errors?: Partial<Record<keyof MentionIdsInput, 'invalid'>>;
+  errors?: Partial<Record<keyof MentionIdsInput, 'invalid' | 'required'>>;
   /** What was typed, so a form that is refused keeps it. */
   values?: MentionIdsInput;
 }
 
 /**
- * The caller's own Discord user id and Slack member id, which the platform uses to mention them in the messages it posts for
- * the school's staff (blank removes one). Only for an approved account, and only while the platform publishes on the intra:
- * anything else is a crafted request. The account is the session's, never read from the request. The form keeps its own
- * state, the page shows nothing else of it.
+ * The caller's own Discord user id and Slack member id, which the platform uses to mention them in what it posts. **Required for each platform
+ * the account is asked for** (`lib/mention-ids/required.ts`: the BDE's own webhooks, and the staff's room for those who hold the right to publish
+ * on the intra): a blank or missing one of those is refused, and a platform that is not asked is left alone (nothing is erased that the page did not
+ * show). The account is the session's, never the request's, and any signed-in account may call it, one waiting for approval included and one whose
+ * session holds nothing until it has given its ids: it is the way out of that state. Audited, with the platforms that changed and never the ids.
  */
 export async function saveMentionIds(
   _previous: MentionIdsState,
   formData: FormData,
 ): Promise<MentionIdsState> {
   const session = await getEffectiveSession();
-  if (
-    !session ||
-    !session.user.id ||
-    !isApproved(session.user.status) ||
-    !isEventsModuleEnabled()
-  ) {
+  if (!session || !session.user.id) {
     throw new Error('Forbidden');
   }
 
@@ -60,14 +57,51 @@ export async function saveMentionIds(
     slackUserId: text('slackUserId'),
   };
   const parsed = parseMentionIds(values);
-  if (!parsed.ok) return { errors: parsed.errors, values };
+  const errors: NonNullable<MentionIdsState['errors']> = {};
+  if (!parsed.ok) Object.assign(errors, parsed.errors);
 
-  await prisma.user.update({ where: { id: session.user.id }, data: parsed.data });
+  const asked: Record<MentionPlatform, keyof MentionIdsInput> = {
+    discord: 'discordUserId',
+    slack: 'slackUserId',
+  };
+  // A platform that is asked must come with an id: a blank answer, or a field the request left out, is not an answer.
+  for (const platform of session.requiredIds) {
+    const field = asked[platform];
+    if (!errors[field] && values[field].trim() === '') errors[field] = 'required';
+  }
+  if (Object.keys(errors).length > 0 || !parsed.ok) return { errors, values };
+
+  const data: Partial<MentionIds> = {};
+  for (const platform of session.requiredIds) {
+    data[asked[platform]] = parsed.data[asked[platform]];
+  }
+  const changed = session.requiredIds.filter(
+    (platform) => (data[asked[platform]] ?? null) !== (session.user[asked[platform]] ?? null),
+  );
+
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({ where: { id: session.user.id }, data });
+    if (changed.length > 0) {
+      await logAuditEvent(
+        {
+          actorLogin: session.user.login,
+          actorId: session.user.id,
+          action: 'profile.mention_ids',
+          targetType: 'User',
+          targetId: session.user.id,
+          targetLabel: session.user.login,
+          metadata: { changed },
+        },
+        tx,
+      );
+    }
+  });
+
   return {
     saved: true,
     values: {
-      discordUserId: parsed.data.discordUserId ?? '',
-      slackUserId: parsed.data.slackUserId ?? '',
+      discordUserId: data.discordUserId ?? parsed.data.discordUserId ?? '',
+      slackUserId: data.slackUserId ?? parsed.data.slackUserId ?? '',
     },
   };
 }

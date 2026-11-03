@@ -151,6 +151,23 @@ export const PAGES: readonly RouteSpec[] = [
     probes: [{ label: 'the database is down page', path: at('/unavailable'), expect: () => ok }],
   },
   {
+    route: '/identifiers',
+    probes: [
+      {
+        // The step of the first sign-in: the QA platform posts nowhere (no webhook), so nobody has an id to give and everybody is sent where
+        // they belong. The step itself, with a platform configured, is played by qa/browsers/mention-ids.spec.ts.
+        label: 'the step that asks the ids, with nothing to ask',
+        path: at('/identifiers'),
+        expect: (who) =>
+          who === 'anonymous' || who === 'deleted'
+            ? redirect(at(''))
+            : who === 'pending'
+              ? redirect(at('/pending'))
+              : redirect(at('/dashboard')),
+      },
+    ],
+  },
+  {
     route: '/pending',
     probes: [
       {
@@ -616,7 +633,9 @@ export const INLINE_ACTIONS: Readonly<Record<string, number>> = {
   'src/app/[locale]/(app)/members/page.tsx': 1,
   'src/app/[locale]/(app)/profile/page.tsx': 1,
   'src/app/[locale]/page.tsx': 1,
+  'src/app/[locale]/identifiers/page.tsx': 1,
   'src/app/[locale]/pending/page.tsx': 1,
+  'src/components/mention-ids/mention-ids-gate.tsx': 1,
   'src/components/dev/impersonation-banner.tsx': 1,
   'src/components/layout/user-menu.tsx': 1,
 };

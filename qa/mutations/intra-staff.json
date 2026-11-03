@@ -35,24 +35,24 @@
     ["src/lib/members/mention-ids.test.ts"]
   ],
   [
-    "profile: a pending account may give its ids",
+    "profile: a session without an account id may give its ids",
     "src/app/[locale]/(app)/profile/actions.ts",
-    "    !isApproved(session.user.status) ||\n",
-    "",
+    "if (!session || !session.user.id) {",
+    "if (!session) {",
     ["src/app/[locale]/(app)/profile/actions.test.ts"]
   ],
   [
-    "profile: the ids are accepted when the events module is off",
+    "profile: an id that is asked may be left blank",
     "src/app/[locale]/(app)/profile/actions.ts",
-    "    !isEventsModuleEnabled()\n  ) {",
-    "    false\n  ) {",
+    "if (!errors[field] && values[field].trim() === '') errors[field] = 'required';",
+    "",
     ["src/app/[locale]/(app)/profile/actions.test.ts"]
   ],
   [
     "profile: the account to write is taken from the request",
     "src/app/[locale]/(app)/profile/actions.ts",
-    "await prisma.user.update({ where: { id: session.user.id }, data: parsed.data });",
-    "await prisma.user.update({\n    where: { id: String(formData.get('id') ?? session.user.id) },\n    data: parsed.data,\n  });",
+    "await tx.user.update({ where: { id: session.user.id }, data });",
+    "await tx.user.update({\n      where: { id: String(formData.get('id') ?? session.user.id) },\n      data,\n    });",
     ["src/app/[locale]/(app)/profile/actions.test.ts"]
   ],
   [

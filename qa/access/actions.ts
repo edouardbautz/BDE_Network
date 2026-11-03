@@ -593,9 +593,11 @@ export const CASES: readonly ActionCase[] = [
   {
     action: 'profile.saveMentionIds',
     label: 'give one’s own Discord and Slack ids',
-    effect: ['User'],
-    // Any approved account, and only while the events module is on (the announcement of a proposal and the messages for the staff use the ids): the gate is the first thing the action does.
-    allowed: (who, variant) => isApproved(who) && variant !== 'events-disabled',
+    // Any signed-in account, one waiting for approval included (the session of an account that has not given an id the BDE needs holds nothing, and
+    // this is the way out of it). The QA platform posts nowhere, so no id is asked and nothing is written: the action answers; what it writes, refuses
+    // and audits with a platform configured is held by its own tests and by qa/browsers/mention-ids.spec.ts.
+    allowed: (who) => who !== 'anonymous' && who !== 'deleted',
+    control: 'answers',
     strictThrow: true,
     args: () => [{}, mentionIdsForm()],
   },

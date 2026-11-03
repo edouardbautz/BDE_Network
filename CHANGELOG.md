@@ -8,6 +8,15 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **Every member gives their Discord and Slack ids.** The platform mentions people in what it posts, and for that it needs their id on each platform the BDE posts on. A **webhook of the BDE** (Discord, Slack) makes
+  that platform's id **required of everybody**; a **webhook for the staff's room** (publication on the intra on) makes it required of those who hold a right to publish on the intra, so that `{@staff}` works; a platform that is not set
+  up is not asked. **At the first sign-in**, after 42 and before the waiting page, a step asks the ids and cannot be skipped. **When a platform is added later**, with a session already open, the next page of every member, owners and
+  staff included, has a **window that cannot be closed** (not by Escape, a click outside or going elsewhere) until the id is given, the only other way out being "Sign out"; never during the installation, on the sign-in page or on an error
+  page. An id is checked (Discord: 17 to 20 digits; Slack: U or W and letters or digits), and a mention such as `@everyone` is refused. A short **guide with diagrams** (Discord: Advanced → Developer mode, then copy the user id; Slack: profile →
+  ⋮ → copy the member ID; on a phone too) says where to find it, and one sentence says why. **The server does it, not the page**: while an id is missing the session holds nothing (it is the one of an account waiting for approval), the
+  layout draws only the window, and every page and action refuses, so taking the window out of the browser leaves nothing to use. The profile has the same rule (an id that is required is never emptied) and its changes are audited (the
+  platforms, never the ids); the copy of the data and the privacy policy say it. The one thing that stays open to such an account is the copy of its own data.
+
 - **The icon of the platform is the BDE's, and a shared link shows only the BDE.** The tab used to show the default icon of the tool that made the project (a triangle). It is now the
   BDE_Network logo, with the icon of the home screen of an iPhone and of an Android phone (a manifest). As soon as a BDE sends its logo, every icon is **its** logo, at once (the
   address of each carries the version of the logo: no cache keeps the old icon), and removing it brings the default back. The four sizes (48, 180, 192, 512) are drawn by the owner's

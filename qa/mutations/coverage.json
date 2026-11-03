@@ -163,8 +163,8 @@
   [
     "pending page: only for pending",
     "src/app/[locale]/pending/page.tsx",
-    "session.user.status !== 'PENDING'",
-    "session.user.status === 'PENDING'",
+    "if (homeFor(session) !== '/pending') {",
+    "if (homeFor(session) === '/pending') {",
     ["src/app/[locale]/secondary-pages.test.tsx"]
   ],
   [

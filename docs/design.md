@@ -286,6 +286,25 @@ horizontal padding, the first column `body-strong`; the row under the pointer is
 tabular figures; dates like "Fri 23 Oct". **Under 640 px a table is a list**: the header goes (for the eye), each row is a block, the first cell is its title and each
 other cell says what it is (`data-label`). No table scrolls sideways on a phone. **A row of actions** (a request to approve, a member's role, a proposal to validate): on a computer the controls are on one line, aligned to the right of the column, and a menu is as wide as its longest option (`sm:w-auto`: a field is `w-full` by default, and a menu left like that fills the line and sends the buttons under it); on a phone the menu takes the line, then the buttons side by side, each one filling half (`max-sm:*:flex-1`, 44 px high), and the cell's content has `flex-1 min-w-0` since the cell is a row (label, then content). `qa/browsers/rows.spec.ts` measures it. Loading: rows of 12 high in `surface-2`, radius 6, a pulse of the opacity from .6 to 1 over 1.2 s.
 
+### Asking for the ids
+
+`components/mention-ids/`. The Discord and Slack ids the BDE needs to mention people are asked in three places with **one form** (`MentionIdsForm`): the **step of the
+first sign-in** (`/identifiers`, a page of its own like the waiting page: the BDE's logo and name, an eyebrow "Last step before access", a title with the first name,
+the reason in one sentence, then a block per platform; a button full width and "Sign out" under it), the **window** over any page when a platform is added later
+(`MentionIdsWindow`), and the **profile** card. A block is: the platform's initial in a `surface-3` tile, the label ("Your Discord id"), the field (a pill, monospaced, the
+placeholder is an example), one line (what the id looks like, then the **tick** "Valid id" when it is good, or the error in `danger` with an icon, read as an alert), and the
+**guide**. Nothing here uses a brand colour: the platform is named, not coloured.
+
+**The guide** (`IdGuide`) is a `surface-2` disclosure of three numbered steps (accent ink discs), each with a small diagram of the menus to press, the one to press
+highlighted (accent soft, a 2 px accent ring). The diagrams are **schematic on purpose** (the interface of Discord and Slack is theirs and changes), decorative to a screen
+reader (the steps carry everything), and the words follow the device (a long-press instead of a right-click on a phone, by CSS). **Only the guide of the first id still to give
+starts open** (once: it does not close under the fingers while typing): two open guides would push the button far down a phone.
+
+**The window cannot be closed**: an alert dialog (`role="alertdialog"`, its title and sentence read on opening), no close button, Escape and a click outside do nothing, the
+focus is trapped and starts on the first field; on a phone it is the sheet of the dialogs (92 % high at most, the content scrolls). The only other way out is the link "Sign out"
+under the button (a text link, `muted`, underlined, 44 high). It asks only for what is missing. Behind it nothing but skeleton blocks is drawn: the server sends no page while an id
+is missing (docs/architecture.md, "The ids asked of everybody"). `qa/browsers/mention-ids.spec.ts` plays it in three engines, on a computer and a phone.
+
 ### Rows that open a page
 
 `components/galets/link-row.tsx`. A line of a list that opens a page (a request to publish on the intra, a proposal to validate, an event) opens it from **all of it**:

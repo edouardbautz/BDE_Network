@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { CopyField } from '@/components/events/copy-field';
-import { ProfileMentionIds } from '@/components/profile/mention-ids';
+import { MentionIdsForm } from '@/components/mention-ids/mention-ids-form';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +10,6 @@ import { requireApprovedSession } from '@/lib/auth/require-session';
 import { isEventsModuleEnabled } from '@/lib/events/access';
 import { ensureCalendarToken } from '@/lib/events/export';
 import { getOrigin } from '@/lib/events/origin';
-import { prisma } from '@/lib/prisma';
 import { regenerateMyCalendarToken } from './actions';
 import { PageHeader } from '@/components/layout/page-header';
 import { pageTitle } from '@/lib/page-title';
@@ -22,7 +21,11 @@ export const generateMetadata = pageTitle('profile', 'title');
 export default async function ProfilePage() {
   const session = await requireApprovedSession();
 
-  const [t, tRoles] = await Promise.all([getTranslations('profile'), getTranslations('roles')]);
+  const [t, tRoles, tIds] = await Promise.all([
+    getTranslations('profile'),
+    getTranslations('roles'),
+    getTranslations('mentionIds'),
+  ]);
   const user = session.user;
   const displayName = user.name ?? user.login;
   const initials = initialsOf(displayName);
@@ -32,13 +35,11 @@ export default async function ProfilePage() {
     ? `${await getOrigin()}/api/calendar/${await ensureCalendarToken(user.id)}.ics`
     : null;
 
-  // How the platform mentions this person in what it posts (their proposal validated, the messages for the school's staff): asked while the events module is on.
-  const mentionIds = showCalendar
-    ? await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { discordUserId: true, slackUserId: true },
-      })
-    : null;
+  // The ids the BDE needs of this person (the platforms it posts on): the session already carries what they gave.
+  const mentionIds =
+    session.requiredIds.length > 0
+      ? { discordUserId: user.discordUserId, slackUserId: user.slackUserId }
+      : null;
 
   return (
     <>
@@ -72,9 +73,16 @@ export default async function ProfilePage() {
               <CardDescription>{t('mentions.description')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <ProfileMentionIds
-                discordUserId={mentionIds.discordUserId ?? ''}
-                slackUserId={mentionIds.slackUserId ?? ''}
+              <MentionIdsForm
+                platforms={session.requiredIds}
+                initial={{
+                  discordUserId: mentionIds.discordUserId ?? '',
+                  slackUserId: mentionIds.slackUserId ?? '',
+                }}
+                submit={tIds('gateSubmit')}
+                mode="profile"
+                guidesOpen={false}
+                idPrefix="profile-id"
               />
             </CardContent>
           </Card>
