@@ -54,7 +54,7 @@ case "$shard" in
   1)
     AUTH_SECRET="$(secret)" OWNER=alice OWNER_CANDIDATE=bob PSQL="$psql_installed" ONLY="$FIRST_SHARD_SCENARIOS" SHOTS="$temp/shots/actions" node e2e/actions.mjs "$base"
     # The settings page, with the platform as the installer left it.
-    AUTH_SECRET="$(secret)" SHOTS="$temp/shots/settings" node e2e/settings.mjs "$base"
+    AUTH_SECRET="$(secret)" PSQL="$psql_installed" SHOTS="$temp/shots/settings" node e2e/settings.mjs "$base"
     # The sign-in with 42 (the stand-in plays 42, and refuses a code like the real one when the redirect_uri of the exchange is
     # not the one of the authorization). The image listens on 0.0.0.0, which is what Next.js puts in every request URL: the
     # registered address (this computer is written localhost) must be what 42 is given.
