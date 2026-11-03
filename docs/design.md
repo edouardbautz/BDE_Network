@@ -286,6 +286,21 @@ horizontal padding, the first column `body-strong`; the row under the pointer is
 tabular figures; dates like "Fri 23 Oct". **Under 640 px a table is a list**: the header goes (for the eye), each row is a block, the first cell is its title and each
 other cell says what it is (`data-label`). No table scrolls sideways on a phone. **A row of actions** (a request to approve, a member's role, a proposal to validate): on a computer the controls are on one line, aligned to the right of the column, and a menu is as wide as its longest option (`sm:w-auto`: a field is `w-full` by default, and a menu left like that fills the line and sends the buttons under it); on a phone the menu takes the line, then the buttons side by side, each one filling half (`max-sm:*:flex-1`, 44 px high), and the cell's content has `flex-1 min-w-0` since the cell is a row (label, then content). `qa/browsers/rows.spec.ts` measures it. Loading: rows of 12 high in `surface-2`, radius 6, a pulse of the opacity from .6 to 1 over 1.2 s.
 
+### Rows that open a page
+
+`components/galets/link-row.tsx`. A line of a list that opens a page (a request to publish on the intra, a proposal to validate, an event) opens it from **all of it**:
+the _stretched link_. **The title is the one link** (a real `<a>`: one stop of the keyboard, the title as its name, a middle click opens a tab), and its `::after` covers
+the whole line (`RowLink`, `after:absolute after:inset-0`), so a click anywhere on the line is a click on the title, to the same address, with **nothing nested in an anchor**.
+The line draws what the title cannot (`linkRow`): the ground `surface-2` under the pointer (rounded 16, 12 of margin on each side so it does not touch the card's edge), and,
+for the keyboard, **the ring of the interface around the whole line** (3 px `accent-ink`, drawn through `:has()` on the link's `data-row-link`; the link itself draws none).
+**What else can be clicked in the line keeps its own behaviour**: it is lifted above the covering layer with `rowAction` (`relative z-10`: the Refuse and Validate buttons of a
+proposal), so a click on it never opens the line. **"View details"** (`RowDetails`: a secondary pill with a chevron, 32 high) is the same destination written as a
+button, on a computer and on a phone (where it takes the width, above the actions): a picture of a button _under_ the covering layer, hidden from assistive technology
+(`aria-hidden`): the title already says it, and a button that does nothing by itself would be a second stop for the same thing. The pages of requests to publish and of
+proposals have it; a list to browse (the events) has the title and the line. A list of one link per line that already is the whole line (the dashboard's next dates) keeps its
+own markup. `qa/browsers/row-links.spec.ts` plays the three ways (title, anywhere, button), the keyboard, the ring, the hover and the actions, in the three engines, on a
+computer and a phone.
+
 ### Badges
 
 A pill of 22, `caption`, not interactive. Neutral (`surface-2`/`ink`: counts, roles, categories), accent (`accent-soft`/`accent-ink`), success, warning, danger (their soft

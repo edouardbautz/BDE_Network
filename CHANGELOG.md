@@ -90,6 +90,10 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Changed
 
+- **A whole line opens its page.** On "To publish on the intra" you had to click exactly on the title of an event, and nothing said it was clickable. Now a line opens its page three ways, all to the
+  same place: the title, anywhere on the line, and a **View details** button (on a computer and on a phone). The same on "To validate" (where Refuse and Validate keep their own behaviour and never open
+  the line) and on the list of events (the title and the whole line). It is one real link per line, stretched over it: one stop of the keyboard, the title as its name, a ring around the whole line when it
+  has the focus, and a ground under the pointer. A browser test plays it in the three engines, on a computer and a phone.
 - **One message per fact: validating a proposal now posts ONE message in the channel.** It used to post two almost identical ones in the same second, "Proposal validated" and
   "New event confirmed". The channel (Discord, Slack) now gets the **announcement of the event only**, which shows **Proposed by** and **Validated by** when the event came from a
   proposal. "Proposal validated" and "Proposal refused" became **personal**: an e-mail to the author, never a message in the channel (a refusal's reason is not for the whole board;

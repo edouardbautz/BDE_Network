@@ -925,7 +925,8 @@
         "moreDates": "{count, plural, one {(+ # other date)} other {(+ # other dates)}}",
         "sentBy": "Requested by {login} on {date}",
         "outdatedNote": "The event changed since it was published: the intra has to be updated.",
-        "refusedNote": "Refused: {comment}"
+        "refusedNote": "Refused: {comment}",
+        "viewDetails": "View details"
       },
       "detail": {
         "title": "Publication on the intra",
@@ -991,7 +992,8 @@
         "alreadyRequested": "A request already exists for this event.",
         "busy": "Somebody else was changing this event at the same moment: nothing was saved. You can try again."
       }
-    }
+    },
+    "viewDetails": "View details"
   },
   "profile": {
     "title": "My profile",

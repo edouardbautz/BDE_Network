@@ -1,0 +1,86 @@
+[
+  [
+    "rows: the link no longer covers the row",
+    "src/components/galets/link-row.tsx",
+    "after:absolute after:inset-0 after:rounded-lg",
+    "after:rounded-lg",
+    ["src/components/galets/link-row.test.tsx", "src/components/galets/row-links.test.ts"]
+  ],
+  [
+    "rows: the link draws its own ring on top of the row’s",
+    "src/components/galets/link-row.tsx",
+    " focus-visible:outline-0\"",
+    "\"",
+    ["src/components/galets/link-row.test.tsx", "src/components/galets/row-links.test.ts"]
+  ],
+  [
+    "rows: nothing is seen under the pointer",
+    "src/components/galets/link-row.tsx",
+    "hover:bg-surface-2 ",
+    "",
+    ["src/components/galets/link-row.test.tsx", "src/components/galets/row-links.test.ts"]
+  ],
+  [
+    "rows: the keyboard focus draws no ring around the row",
+    "src/components/galets/link-row.tsx",
+    "has-[[data-row-link]:focus-visible]:outline-accent-ink",
+    "",
+    ["src/components/galets/link-row.test.tsx", "src/components/galets/row-links.test.ts"]
+  ],
+  [
+    "rows: the actions are under the covering layer",
+    "src/components/galets/link-row.tsx",
+    "export const rowAction = 'relative z-10';",
+    "export const rowAction = 'relative';",
+    ["src/components/galets/link-row.test.tsx", "src/components/galets/row-links.test.ts"]
+  ],
+  [
+    "rows: \"View details\" is a second stop of the keyboard",
+    "src/components/galets/link-row.tsx",
+    "aria-hidden=\"true\"\n      className={cn(",
+    "tabIndex={0}\n      className={cn(",
+    ["src/components/galets/link-row.test.tsx", "src/components/galets/row-links.test.ts"]
+  ],
+  [
+    "rows: \"View details\" is above the covering layer",
+    "src/components/galets/link-row.tsx",
+    "        pillButton({ variant: 'secondary', size: 'sm' }),",
+    "        pillButton({ variant: 'secondary', size: 'sm' }),\n        'relative z-10',",
+    ["src/components/galets/link-row.test.tsx", "src/components/galets/row-links.test.ts"]
+  ],
+  [
+    "rows: the title is not marked as the link of its row",
+    "src/components/galets/link-row.tsx",
+    "<Link data-row-link=\"\" ",
+    "<Link ",
+    ["src/components/galets/link-row.test.tsx", "src/components/galets/row-links.test.ts"]
+  ],
+  [
+    "rows: the requests for the intra have no \"View details\"",
+    "src/app/[locale]/(app)/events/intra/page.tsx",
+    "<RowDetails label={t('list.viewDetails')}",
+    "<span label={t('list.viewDetails')}",
+    ["src/components/galets/link-row.test.tsx", "src/components/galets/row-links.test.ts"]
+  ],
+  [
+    "rows: the proposals have no \"View details\"",
+    "src/app/[locale]/(app)/events/review/page.tsx",
+    "<RowDetails label={t('viewDetails')}",
+    "<span label={t('viewDetails')}",
+    ["src/components/galets/link-row.test.tsx", "src/components/galets/row-links.test.ts"]
+  ],
+  [
+    "rows: Refuse and Validate open the row",
+    "src/app/[locale]/(app)/events/review/page.tsx",
+    "cn(\n                            rowAction,",
+    "cn(\n                            ",
+    ["src/components/galets/link-row.test.tsx", "src/components/galets/row-links.test.ts"]
+  ],
+  [
+    "rows: the title of an event is a plain link again",
+    "src/components/events/event-list.tsx",
+    "<RowLink\n            href",
+    "<a\n            href",
+    ["src/components/galets/link-row.test.tsx", "src/components/galets/row-links.test.ts"]
+  ]
+]

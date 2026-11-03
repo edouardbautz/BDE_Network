@@ -3,17 +3,18 @@ import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { getConfig } from '@/config';
 import { EmptyState } from '@/components/galets/empty-state';
+import { linkRow, RowDetails, RowLink } from '@/components/galets/link-row';
 import { IntraNoticeAlert } from '@/components/events/intra-notice';
 import { IntraStatusBadge } from '@/components/events/intra-status-badge';
 import { PageHeader } from '@/components/layout/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Link } from '@/i18n/navigation';
 import { getIntraAccess } from '@/lib/events/access';
 import { formatDateTimeRange, formatLongDate } from '@/lib/events/format';
 import { listIntraRequests } from '@/lib/events/intra-queries';
 import { readIntraNotice } from '@/lib/events/intra-notice';
 import { intraReadiness, needsStaff } from '@/lib/events/intra-request';
 import { pageTitle } from '@/lib/page-title';
+import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 export const generateMetadata = pageTitle('events', 'intra.list.title');
@@ -56,51 +57,61 @@ export default async function IntraRequestsPage({
             const dates = readiness.ok ? readiness.content.dates : [];
             const first = dates[0];
             return (
-              <li
-                key={request.id}
-                className="border-line flex flex-col gap-1.5 border-t py-4 first:border-t-0 first:pt-0 last:pb-0"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <Link
-                    href={`/events/intra/${request.eventId}`}
-                    className="text-body-strong w-fit rounded-xs break-words hover:underline"
-                  >
-                    {request.event.title}
-                  </Link>
-                  <IntraStatusBadge status={request.status} label={t(`status.${request.status}`)} />
-                </div>
-                <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-small">
-                  {first && (
-                    <span className="inline-flex items-center gap-1">
-                      <CalendarCheck className="size-3.5" aria-hidden />
-                      <span className="first-letter:uppercase">
-                        {formatDateTimeRange(
-                          new Date(first.start),
-                          new Date(first.end),
-                          locale,
-                          timeZone,
-                        )}
-                      </span>
-                      {dates.length > 1 && (
-                        <span>{t('list.moreDates', { count: dates.length - 1 })}</span>
-                      )}
-                    </span>
+              <li key={request.id} className="border-line border-t first:border-t-0">
+                <div
+                  className={cn(
+                    linkRow,
+                    'flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between',
                   )}
-                  <span>
-                    {t('list.sentBy', {
-                      login: request.requestedByLogin,
-                      date: formatLongDate(request.requestedAt, locale, timeZone),
-                    })}
-                  </span>
+                >
+                  <div className="flex min-w-0 flex-col gap-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <RowLink
+                        href={`/events/intra/${request.eventId}`}
+                        className="text-body-strong w-fit rounded-xs break-words"
+                      >
+                        {request.event.title}
+                      </RowLink>
+                      <IntraStatusBadge
+                        status={request.status}
+                        label={t(`status.${request.status}`)}
+                      />
+                    </div>
+                    <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-small">
+                      {first && (
+                        <span className="inline-flex items-center gap-1">
+                          <CalendarCheck className="size-3.5" aria-hidden />
+                          <span className="first-letter:uppercase">
+                            {formatDateTimeRange(
+                              new Date(first.start),
+                              new Date(first.end),
+                              locale,
+                              timeZone,
+                            )}
+                          </span>
+                          {dates.length > 1 && (
+                            <span>{t('list.moreDates', { count: dates.length - 1 })}</span>
+                          )}
+                        </span>
+                      )}
+                      <span>
+                        {t('list.sentBy', {
+                          login: request.requestedByLogin,
+                          date: formatLongDate(request.requestedAt, locale, timeZone),
+                        })}
+                      </span>
+                    </div>
+                    {request.status === 'OUTDATED' && (
+                      <p className="text-small">{t('list.outdatedNote')}</p>
+                    )}
+                    {request.status === 'REFUSED' && request.refusalComment && (
+                      <p className="text-muted-foreground text-small line-clamp-2 break-words">
+                        {t('list.refusedNote', { comment: request.refusalComment })}
+                      </p>
+                    )}
+                  </div>
+                  <RowDetails label={t('list.viewDetails')} className="self-start sm:self-center" />
                 </div>
-                {request.status === 'OUTDATED' && (
-                  <p className="text-small">{t('list.outdatedNote')}</p>
-                )}
-                {request.status === 'REFUSED' && request.refusalComment && (
-                  <p className="text-muted-foreground text-small line-clamp-2 break-words">
-                    {t('list.refusedNote', { comment: request.refusalComment })}
-                  </p>
-                )}
               </li>
             );
           })}

@@ -925,7 +925,8 @@
         "moreDates": "{count, plural, one {(+ # autre date)} other {(+ # autres dates)}}",
         "sentBy": "Demandé par {login} le {date}",
         "outdatedNote": "L'événement a changé depuis sa publication : l'intra est à mettre à jour.",
-        "refusedNote": "Refusé : {comment}"
+        "refusedNote": "Refusé : {comment}",
+        "viewDetails": "Voir les détails"
       },
       "detail": {
         "title": "Publication sur l'intra",
@@ -991,7 +992,8 @@
         "alreadyRequested": "Une demande existe déjà pour cet événement.",
         "busy": "Quelqu'un d'autre modifiait cet événement au même moment : rien n'a été enregistré. Vous pouvez réessayer."
       }
-    }
+    },
+    "viewDetails": "Voir les détails"
   },
   "profile": {
     "title": "Mon profil",
