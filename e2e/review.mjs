@@ -108,8 +108,8 @@ const setUp = () => {
   sql(`
     INSERT INTO "Role" (id, name, permissions, "allPermissions", "isDefault", "updatedAt")
       VALUES (${quote(ROLE)}, 'E2E Pôle Events', ARRAY['events.propose', 'events.view'], false, false, now());
-    INSERT INTO "User" (id, login, "fullName", email, campus, status, "roleId", "updatedAt")
-      VALUES ('e2e-${PROPOSER}', ${quote(PROPOSER)}, 'Dave Pôle', 'dave@example.org', 'Nice', 'MEMBER', ${quote(ROLE)}, now());
+    INSERT INTO "User" (id, login, "fullName", email, campus, status, "roleId", "discordUserId", "updatedAt")
+      VALUES ('e2e-${PROPOSER}', ${quote(PROPOSER)}, 'Dave Pôle', 'dave@example.org', 'Nice', 'MEMBER', ${quote(ROLE)}, '123456789012345678', now());
   `);
 };
 /** A proposal the proposer made, without going through the form. */
