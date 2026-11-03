@@ -45,9 +45,9 @@ describe('the rule of the checkbox and the radio button', () => {
     const found: string[] = [];
     for (const path of files(ROOT)) {
       const text = readFileSync(path, 'utf8');
-      for (const input of text.matchAll(
-        /<input\b[^>]*?type=(?:"(?:checkbox|radio)")[^>]*?\/?>/g,
-      )) {
+      // an input is self-closing; its attributes may hold an arrow function, so the end is `/>`, not the first `>`
+      for (const input of text.matchAll(/<input[sS]*?/>/g)) {
+        if (!/type="(?:checkbox|radio)"/.test(input[0])) continue;
         const className = input[0].match(/className=(?:"([^"]*)"|\{([^}]*)\})/);
         const classes = className?.[1] ?? className?.[2] ?? '';
         // the hidden state of a drawn control is `sr-only`, which is another thing
