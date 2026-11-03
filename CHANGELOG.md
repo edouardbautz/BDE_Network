@@ -6,6 +6,8 @@ All notable changes to this project are written here, in English. Format based o
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-11-03
+
 ### Added
 
 - **Every member gives their Discord and Slack ids.** The platform mentions people in what it posts, and for that it needs their id on each platform the BDE posts on. A **webhook of the BDE** (Discord, Slack) makes
@@ -1052,7 +1054,8 @@ Initial version (never tagged): the platform's foundation.
 - Docker Compose (production and development with hot reload), Dockerfile.
 - GitHub Actions CI (lint, format, typecheck, build, test) on ubuntu-latest and windows-latest.
 
-[Unreleased]: https://github.com/edouardbautz/BDE_Network/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/edouardbautz/BDE_Network/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/edouardbautz/BDE_Network/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/edouardbautz/BDE_Network/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/edouardbautz/BDE_Network/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/edouardbautz/BDE_Network/compare/v1.2.0...v1.3.0
