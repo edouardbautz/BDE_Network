@@ -5,6 +5,9 @@ import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { getConfig } from '@/config';
+import { brandMetadata } from '@/lib/branding/icon-links';
+import { logoVersionOf } from '@/lib/branding/storage';
+import { registeredAddress } from '@/lib/public-address';
 import { routing } from '@/i18n/routing';
 import { ThemeProvider } from '@/components/theme-provider';
 import { LazyToaster } from '@/components/layout/lazy-toaster';
@@ -22,20 +25,26 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-/** Every page sets its own title (see lib/page-title.ts); this is the frame around it and the
- * title of a page that sets none: "Members · BDE name". */
+/**
+ * Every page sets its own title (see lib/page-title.ts); this is the frame around it and the title of a page that sets none:
+ * "Members · BDE name". It also says what the tab, the home screen of a phone and the readers of a link see (`brandMetadata`): the
+ * BDE's name, its logo and one generic sentence, the same on every page and never anything a page shows to a member.
+ */
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const name = getConfig().bde.name;
+  const { bde } = getConfig();
   const t = await getTranslations({ locale, namespace: 'metadata' });
-  return {
-    title: { default: name, template: `%s · ${name}` },
-    description: t('description', { name }),
-  };
+  return brandMetadata({
+    name: bde.name,
+    description: t('description', { name: bde.name }),
+    locale: locale === 'en' ? 'en_US' : 'fr_FR',
+    logoVersion: logoVersionOf(bde.logoPath),
+    origin: registeredAddress(),
+  });
 }
 
 export default async function LocaleLayout({

@@ -9,6 +9,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog';
 import { Field, fieldError, useFailureText } from '@/components/setup/fields';
 import { removeLogo, saveLogo } from '@/app/[locale]/(app)/settings/actions';
 import type { ActionFailure } from '@/app/[locale]/setup/actions';
+import { drawIcons } from '@/lib/branding/draw-icons';
 import { LOGO_MAX_BYTES } from '@/lib/branding/image';
 
 /** What the file input offers; the server checks the bytes again, whatever the browser says. */
@@ -57,9 +58,13 @@ export function LogoSection({ logoPath, custom }: { logoPath: string; custom: bo
 
   function send() {
     if (!file || failure) return;
-    const body = new FormData();
-    body.set('logo', file);
     start(async () => {
+      // The sizes of the icons (the tab, the home screen of a phone, the preview of a link) are drawn here and sent with the logo.
+      const body = new FormData();
+      body.set('logo', file);
+      for (const [size, icon] of Object.entries(await drawIcons(file))) {
+        body.set(`icon-${size}`, icon, `icon-${size}.png`);
+      }
       const result = await saveLogo(body);
       if (!result.ok) return setFailure(result);
       setFailure(null);

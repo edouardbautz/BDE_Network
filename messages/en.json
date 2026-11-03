@@ -2014,8 +2014,8 @@
       "remove": "Remove {name}",
       "removed": "Removed",
       "inUse": "Not possible: this name is still used by {where}. Remove it from the message first.",
-      "staff": "{@staff}: the staff members who gave their id",
-      "author": "{@author}: the author of a proposal, if they gave their id"
+      "staff": "'{@staff}': the staff members who gave their id",
+      "author": "'{@author}': the author of a proposal, if they gave their id"
     },
     "history": {
       "title": "History: {scope}",

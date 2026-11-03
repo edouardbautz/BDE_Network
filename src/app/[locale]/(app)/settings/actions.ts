@@ -10,6 +10,7 @@ import type { ActionTarget } from '@/lib/action-target';
 import { backupNow } from '@/lib/backups/service';
 import { registeredAddress } from '@/lib/public-address';
 import type { ActionResult, CampusOption } from '@/app/[locale]/setup/actions';
+import { ICON_MAX_BYTES, ICON_SIZES, type IconSize } from '@/lib/branding/icons';
 import { LOGO_MAX_BYTES } from '@/lib/branding/image';
 import {
   DEFAULT_LOGO_PATH,
@@ -124,7 +125,17 @@ export async function saveLogo(formData: FormData): Promise<ActionResult> {
   const context = await owner();
   if (!context) return readOnly;
 
-  const stored = await storeLogo(new Uint8Array(await file.arrayBuffer()));
+  // The icons the owner's browser drew from the logo (see `branding/icons.ts`): each is checked by the store, and a missing or wrong one
+  // only means the logo itself is used for that size.
+  const icons: Partial<Record<IconSize, Uint8Array>> = {};
+  for (const size of ICON_SIZES) {
+    const icon = formData.get(`icon-${size}`);
+    if (icon instanceof File && icon.size > 0 && icon.size <= ICON_MAX_BYTES) {
+      icons[size] = new Uint8Array(await icon.arrayBuffer());
+    }
+  }
+
+  const stored = await storeLogo(new Uint8Array(await file.arrayBuffer()), icons);
   if (!stored.ok) return failure(stored.code, { field: 'logo' });
 
   const result = await updateSettings(

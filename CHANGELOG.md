@@ -8,6 +8,14 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Added
 
+- **The icon of the platform is the BDE's, and a shared link shows only the BDE.** The tab used to show the default icon of the tool that made the project (a triangle). It is now the
+  BDE_Network logo, with the icon of the home screen of an iPhone and of an Android phone (a manifest). As soon as a BDE sends its logo, every icon is **its** logo, at once (the
+  address of each carries the version of the logo: no cache keeps the old icon), and removing it brings the default back. The four sizes (48, 180, 192, 512) are drawn by the owner's
+  **browser** when the logo is sent and checked by the platform (a PNG of exactly its size), so the image gains no image library (44 KiB of default icons in all); a logo sent before
+  is used as it is. A link shared in Discord, Slack, WhatsApp or iMessage shows the BDE's name, its logo and one generic sentence, **on every page**: the platform is private, so the
+  preview of a link to an event names neither the event nor a person (a test reads the head of an event as a member and as a visitor, and another keeps any page from writing a title
+  or a preview of its own). The files left by the tool that created the project are removed.
+
 - **A bar of formatting buttons above the description of an event.** Bold, italic, a heading, a bulleted list, a numbered list and a link: select some text and press the button (a second press
   takes the marks off), or press Ctrl (Cmd on a Mac) + B or I. Nobody has to know Markdown any more, and the text stays Markdown, kept as typed, so that it is still copied as it is. The buttons
   are one stop of the keyboard (the arrows move between them), 44 px on a phone, and undo (Ctrl+Z) takes a button's work back. The help under the field is now generic ("Formatting is possible: bold,

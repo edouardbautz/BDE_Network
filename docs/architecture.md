@@ -689,6 +689,16 @@ app` shows it); warnings (placeholder owner `votre-login-42`, public `http://` `
   A confirmation attaches the `.ics` through nodemailer's `icalEvent` (every occurrence to come, same UIDs as the
   feeds); a reminder does not. `memberRemoved` never sends an e-mail. In development `docker-compose.dev.yml`
   points `SMTP_*` at Mailpit (<http://localhost:8025>) unless `DEV_SMTP_*` say otherwise.
+- **The icons and the preview of a link** (`lib/branding/icon-links.ts`, `icons.ts`, `draw-icons.ts`, `serve.ts`; `app/api/logo/icon/[size]`, `app/api/manifest`, `app/favicon.ico`; `public/icons/`; tests `icons.test.ts`,
+  `metadata-private.test.ts`, `qa/browsers/icons.spec.ts`; mutations `qa/mutations/icons.json`). The head of every page comes from the layout (`brandMetadata`): the tab (48, 192), the iPhone (180, opaque), the manifest, and
+  `og:`/`twitter:` tags that say **the BDE's name, its logo and one generic sentence, and nothing else**: the platform is private, so the preview of a link to an event must not name the event or a person. That is
+  held by structure: every page's `generateMetadata` is `pageTitle(...)` (a catalog message), the layout is the only file that writes `openGraph`/`twitter`, and a page that wants more adds itself to a list in
+  `metadata-private.test.ts`, which is a decision. By default the icons are the files of `public/icons` (made from `public/logo.png`); with a logo of the BDE they are `/api/logo/icon/<size>?v=<version>`, **the version in
+  the address** so that a new logo is a new address (no cache keeps the old icon) and the default comes back when it is removed. **The sizes are drawn by the owner's browser** (a canvas, when the logo is sent; the image has
+  no sharp or any codec, ~25 MiB it would weigh) and the server re-reads each one on its bytes (`checkIcon`: a PNG of exactly the size, 256 KiB at most), dropping what is wrong without refusing the logo; a size that is
+  missing is the logo itself. They are stored `logo-<version>.<size>` next to the logo and pruned with it (and are in the backup like the logo). `/favicon.ico` is a redirect to the 48 px icon, the manifest and the icon route
+  answer while the platform is not installed (a page of the installer links to the manifest), and the icon route sits under `/api/logo` so that it has the logo's own policy. A preview needs an absolute address: with no
+  registered public address the pages say no `og:image` rather than a wrong one (`metadataBase` is `registeredAddress()`, never the host of the request).
 - **The one file the platform stores is the BDE's logo** (`src/lib/branding/`, `src/app/api/logo/route.ts`). An
   earlier local-disk adapter with a public `/api/files/[...key]` route was removed because nothing wrote to it and
   it would have been a stored XSS the day something did (no authentication, SVG served without `nosniff`). The logo

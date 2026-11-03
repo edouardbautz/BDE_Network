@@ -2014,8 +2014,8 @@
       "remove": "Retirer {name}",
       "removed": "Retiré",
       "inUse": "Impossible : ce nom est encore utilisé par {where}. Le retirer d'abord du message.",
-      "staff": "{@staff} : les membres du staff qui ont donné leur identifiant",
-      "author": "{@author} : l'auteur d'une proposition, s'il a donné son identifiant"
+      "staff": "'{@staff}' : les membres du staff qui ont donné leur identifiant",
+      "author": "'{@author}' : l'auteur d'une proposition, s'il a donné son identifiant"
     },
     "history": {
       "title": "Historique : {scope}",

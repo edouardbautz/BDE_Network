@@ -38,7 +38,11 @@ function Harness({
   scope,
   initial = [BUREAU, PAULA],
   onInsert = () => {},
+  staff = false,
+  author = false,
 }: {
+  staff?: boolean;
+  author?: boolean;
   scope: 'all' | 'discord' | 'slack';
   initial?: MentionView[];
   onInsert?: (token: string) => void;
@@ -51,6 +55,8 @@ function Harness({
         mentions={mentions}
         onMentionsChange={setMentions}
         onInsert={onInsert}
+        staff={staff}
+        author={author}
       />
     </NextIntlClientProvider>
   );
@@ -91,6 +97,26 @@ describe('what a message can mention', () => {
     await screen.findByRole('menuitem', { name: /@everyone/ });
     expect(screen.queryByRole('menuitem', { name: /Gérer/ })).toBeNull();
     expect(screen.queryByRole('menuitem', { name: /Le Bureau/ })).toBeNull();
+  });
+});
+
+describe('the mentions of a person that the message is about', () => {
+  it('offers {@staff} in the messages for the staff and {@author} in the announcement of an event, each read in the catalog', async () => {
+    const onInsert = vi.fn();
+    render(<Harness scope="discord" staff author onInsert={onInsert} />);
+    open();
+    fireEvent.click(await screen.findByRole('menuitem', { name: /\{@staff\}/ }));
+    expect(onInsert).toHaveBeenCalledWith('{@staff}');
+    open();
+    fireEvent.click(await screen.findByRole('menuitem', { name: /\{@author\}/ }));
+    expect(onInsert).toHaveBeenCalledWith('{@author}');
+  });
+
+  it('offers neither where the message is not about them', async () => {
+    render(<Harness scope="discord" />);
+    open();
+    await screen.findByRole('menuitem', { name: /@everyone/ });
+    expect(screen.queryByRole('menuitem', { name: /\{@(staff|author)\}/ })).toBeNull();
   });
 });
 

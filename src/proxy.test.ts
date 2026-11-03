@@ -143,5 +143,7 @@ describe('before the platform is installed', () => {
       expect(response.headers.get('cache-control')).toBe('no-store');
     }
     expect((await proxy(request('/api/health'))).status).toBe(200);
+    // the manifest the pages of the installer link to is not turned away (the proxy lets it through to its route)
+    expect((await proxy(request('/api/manifest'))).status).toBe(200);
   });
 });

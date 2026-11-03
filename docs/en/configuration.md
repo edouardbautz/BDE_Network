@@ -46,6 +46,17 @@ The logo appears in the menu, on the sign-in page and in messages (Discord, Slac
 - The format is read from the file itself, not from its name. A file that is not an image is refused.
 - **Back to the default logo** deletes the uploaded file.
 
+**The icon of the platform follows the logo.** The icon of the browser tab, the icon you get when you add the platform to the home
+screen of an iPhone or an Android phone, and the picture of a link shared in a chat are the BDE_Network logo until you send your own; from
+then on they are **your** logo, at once (the address of each icon carries the version of the logo, so no cache keeps the old one),
+and the default logo comes back when you remove yours. Your browser draws the four sizes needed (48, 180, 192 and 512 pixels) when you
+send the logo, so the server needs no image tool; a logo sent before this existed is used as it is. A tab may keep the old icon for a
+moment: a browser asks for it again when it reloads the page.
+
+**What a shared link shows** is the BDE's name, its logo and one generic sentence ("Management platform of …"), **for every page**,
+including a link to an event: the platform is private, so a title, a place or a name never appears in a preview. Discord, Slack,
+WhatsApp and iMessage need the [address of the platform](#the-address-of-the-platform) to be set, to fetch the picture.
+
 The file is kept in the `uploads` volume, and the backup includes it. For Discord, see also
 [The sender's logo](notifications.md#the-senders-logo).
 
