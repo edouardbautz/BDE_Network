@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { parseDiscordUserId, parseSlackUserId } from '@/lib/members/mention-ids';
 import type { MentionPlatform } from '@/lib/mention-ids/required';
-import { cn } from '@/lib/utils';
 import { IdGuide } from './id-guide';
 
 /**

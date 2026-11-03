@@ -93,7 +93,7 @@
   [
     "ids: the field is not required",
     "src/components/mention-ids/mention-ids-form.tsx",
-    "              required\n              aria-required=\"true\"\n",
+    "                required\n                aria-required=\"true\"\n",
     "",
     ["src/components/mention-ids/mention-ids-form.test.tsx"]
   ],

@@ -1,7 +1,7 @@
 import { FIXTURES } from '../dataset';
 import type { PersonaKey, PlatformVariant } from '../personas';
 import type { Queryable } from '../invariants';
-import { can, isApproved, isOwner } from './model';
+import { can, isOwner } from './model';
 
 /**
  * Who may call each server action, as the matrix holds the platform to it. A server action is a public HTTP entry
