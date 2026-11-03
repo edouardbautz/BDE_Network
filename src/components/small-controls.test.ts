@@ -46,7 +46,7 @@ describe('the rule of the checkbox and the radio button', () => {
     for (const path of files(ROOT)) {
       const text = readFileSync(path, 'utf8');
       // an input is self-closing; its attributes may hold an arrow function, so the end is `/>`, not the first `>`
-      for (const input of text.matchAll(/<input[sS]*?/>/g)) {
+      for (const input of text.matchAll(/<input\b[\s\S]*?\/>/g)) {
         if (!/type="(?:checkbox|radio)"/.test(input[0])) continue;
         const className = input[0].match(/className=(?:"([^"]*)"|\{([^}]*)\})/);
         const classes = className?.[1] ?? className?.[2] ?? '';
