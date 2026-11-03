@@ -463,7 +463,11 @@ export const API: readonly RouteSpec[] = [
   {
     route: '/favicon.ico',
     probes: [
-      { label: 'the icon some readers ask for', path: '/favicon.ico', expect: () => status(307) },
+      {
+        label: 'the icon some readers ask for',
+        path: '/favicon.ico',
+        expect: () => redirect('/icons/icon-48.png'),
+      },
     ],
   },
   {
