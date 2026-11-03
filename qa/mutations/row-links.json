@@ -72,15 +72,15 @@
   [
     "rows: Refuse and Validate open the row",
     "src/app/[locale]/(app)/events/review/page.tsx",
-    "cn(\n                            rowAction,",
-    "cn(\n                            ",
+    "                            className={cn(\n                              rowAction,\n",
+    "                            className={cn(\n",
     ["src/components/galets/link-row.test.tsx", "src/components/galets/row-links.test.ts"]
   ],
   [
     "rows: the title of an event is a plain link again",
     "src/components/events/event-list.tsx",
-    "<RowLink\n            href",
-    "<a\n            href",
+    "            <RowLink\n              href={{",
+    "            <a\n              href={{",
     ["src/components/galets/link-row.test.tsx", "src/components/galets/row-links.test.ts"]
   ]
 ]
