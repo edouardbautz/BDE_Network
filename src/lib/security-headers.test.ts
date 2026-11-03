@@ -92,7 +92,8 @@ describe('contentSecurityPolicy', () => {
       "'self'",
       'data:',
       'blob:',
-      'https://cdn.intra.42.fr',
+      // the pictures of 42, from its own domain and nowhere else (the list `officialPhotoUrl` accepts)
+      'https://*.intra.42.fr',
     ]);
   });
 

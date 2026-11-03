@@ -1,3 +1,4 @@
+import { officialPhotoUrl } from '@/lib/fortytwo-photo';
 import { ScrollableTable } from '@/components/scrollable-table';
 import { CalendarSync } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
@@ -42,7 +43,9 @@ function MemberIdentity({ name, photoUrl }: { name: string; photoUrl: string | n
   return (
     <div className="flex items-center gap-2.5">
       <Avatar size="sm">
-        {photoUrl ? <AvatarImage src={photoUrl} alt="" /> : null}
+        {officialPhotoUrl(photoUrl) ? (
+          <AvatarImage src={officialPhotoUrl(photoUrl) ?? undefined} alt="" />
+        ) : null}
         <AvatarFallback>{initialsOf(name)}</AvatarFallback>
       </Avatar>
       <span className="font-semibold">{name}</span>

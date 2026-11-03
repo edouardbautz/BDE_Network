@@ -1,3 +1,4 @@
+import { officialPhotoUrl } from '@/lib/fortytwo-photo';
 import type { JWT } from '@auth/core/jwt';
 import { after } from 'next/server';
 import type { Session, User } from 'next-auth';
@@ -57,7 +58,7 @@ export async function signInCallback({ user }: { user: User }): Promise<boolean 
           login,
           fullName: user.name ?? login,
           email,
-          photoUrl: user.image ?? null,
+          photoUrl: officialPhotoUrl(user.image),
           campus,
           status: isOwner ? 'OWNER' : 'PENDING',
           lastLoginAt: new Date(),
@@ -83,7 +84,7 @@ export async function signInCallback({ user }: { user: User }): Promise<boolean 
     data: {
       fullName: user.name ?? existing.fullName,
       email,
-      photoUrl: user.image ?? null,
+      photoUrl: officialPhotoUrl(user.image),
       campus,
       ...(await accountAfterLogin(existing, isOwner)),
       lastLoginAt: new Date(),
@@ -167,6 +168,6 @@ export async function sessionCallback({
   session.user.campus = dbUser.campus;
   session.user.name = dbUser.fullName;
   session.user.email = dbUser.email;
-  session.user.image = dbUser.photoUrl;
+  session.user.image = officialPhotoUrl(dbUser.photoUrl);
   return session;
 }

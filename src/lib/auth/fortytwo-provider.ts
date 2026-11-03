@@ -1,5 +1,6 @@
 import type { OAuthConfig } from 'next-auth/providers';
 import { fortyTwoApiBase } from '@/lib/fortytwo-api';
+import { describeMissingPhoto, photoOf42, type FortyTwoImageFields } from '@/lib/fortytwo-photo';
 import { setting } from '@/lib/settings/runtime';
 
 interface FortyTwoCampus {
@@ -13,14 +14,13 @@ interface FortyTwoCampusUser {
 }
 
 /** Shape of the relevant fields from GET https://api.intra.42.fr/v2/me */
-export interface FortyTwoProfile {
+export interface FortyTwoProfile extends FortyTwoImageFields {
   id: number;
   login: string;
   email: string;
   first_name: string;
   last_name: string;
   usual_full_name: string | null;
-  image: { link: string | null } | null;
   campus: FortyTwoCampus[];
   campus_users: FortyTwoCampusUser[];
 }
@@ -46,12 +46,19 @@ export function FortyTwoProvider(): OAuthConfig<FortyTwoProfile> {
     clientSecret: setting('FORTYTWO_CLIENT_SECRET'),
     profile(profile) {
       const campus = resolvePrimaryCampus(profile);
+      const image = photoOf42(profile);
+      // A sign-in without a picture is not an error (the initials stand in), but it is worth a line: the answer of 42 may have changed shape.
+      if (!image) {
+        console.warn(
+          `[auth] Connexion de "${profile.login}" sans photo 42 retenue — ${describeMissingPhoto(profile)}.`,
+        );
+      }
       return {
         id: String(profile.id),
         login: profile.login,
         name: profile.usual_full_name || `${profile.first_name} ${profile.last_name}`,
         email: profile.email,
-        image: profile.image?.link ?? null,
+        image,
         campus: campus ?? '',
       };
     },

@@ -1,3 +1,4 @@
+import { officialPhotoUrl } from '@/lib/fortytwo-photo';
 import { MEMBER_COLORS } from '@/lib/notifications/colors';
 import { renderEmail, type EmailModel } from '@/lib/notifications/email-layout';
 import { resolveItems, withEmoji } from '@/lib/notifications/templates/apply';
@@ -70,7 +71,7 @@ export function buildPendingEmail(
     heading: say(template?.title ?? '{name}'),
     ...(lead && { lead }),
     ...(paragraphs.length > 0 && { paragraphs }),
-    ...(member.photoUrl && { avatarUrl: member.photoUrl }),
+    ...(officialPhotoUrl(member.photoUrl) && { avatarUrl: officialPhotoUrl(member.photoUrl)! }),
     fields,
     ...(showButton && {
       action: { label: say(template?.button?.label ?? t('pending.link')), url: buttonUrl },

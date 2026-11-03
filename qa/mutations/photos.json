@@ -1,0 +1,114 @@
+[
+  [
+    "photo: an address in plain http is kept",
+    "src/lib/fortytwo-photo.ts",
+    "url.protocol !== 'https:' || ",
+    "",
+    ["src/lib/fortytwo-photo.test.ts"]
+  ],
+  [
+    "photo: credentials in an address are kept",
+    "src/lib/fortytwo-photo.ts",
+    " || url.username || url.password || url.port",
+    "",
+    ["src/lib/fortytwo-photo.test.ts"]
+  ],
+  [
+    "photo: another host is kept",
+    "src/lib/fortytwo-photo.ts",
+    "  if (!url.hostname.endsWith(`.${OFFICIAL_PHOTO_DOMAIN}`)) return null;\n",
+    "",
+    ["src/lib/fortytwo-photo.test.ts"]
+  ],
+  [
+    "photo: the bare domain is kept as 42’s",
+    "src/lib/fortytwo-photo.ts",
+    "export const OFFICIAL_PHOTO_DOMAIN = 'intra.42.fr';",
+    "export const OFFICIAL_PHOTO_DOMAIN = '42.fr';",
+    ["src/lib/fortytwo-photo.test.ts"]
+  ],
+  [
+    "photo: the original comes before the medium version",
+    "src/lib/fortytwo-photo.ts",
+    "    image?.versions?.medium,\n    image?.link,",
+    "    image?.link,\n    image?.versions?.medium,",
+    ["src/lib/fortytwo-photo.test.ts"]
+  ],
+  [
+    "photo: a version is not read when the link is null",
+    "src/lib/fortytwo-photo.ts",
+    "    image?.versions?.large,\n    image?.versions?.small,\n",
+    "",
+    ["src/lib/fortytwo-photo.test.ts"]
+  ],
+  [
+    "photo: image_url is not read",
+    "src/lib/fortytwo-photo.ts",
+    "    profile.image_url,\n  ];",
+    "  ];",
+    ["src/lib/fortytwo-photo.test.ts"]
+  ],
+  [
+    "photo: an image that is a string is not read",
+    "src/lib/fortytwo-photo.ts",
+    "  if (typeof image === 'string') return [image, profile.image_url];\n",
+    "",
+    ["src/lib/fortytwo-photo.test.ts"]
+  ],
+  [
+    "photo: the log gives the whole address",
+    "src/lib/fortytwo-photo.ts",
+    "return `${url.protocol}//${url.hostname}`.slice(0, 80);",
+    "return value;",
+    ["src/lib/fortytwo-photo.test.ts"]
+  ],
+  [
+    "photo: the sign-in reads only image.link",
+    "src/lib/auth/fortytwo-provider.ts",
+    "const image = photoOf42(profile);",
+    "const image = profile.image && typeof profile.image === \"object\" ? profile.image.link ?? null : null;",
+    ["src/lib/fortytwo-photo.test.ts"]
+  ],
+  [
+    "photo: a new account stores any address",
+    "src/lib/auth/callbacks.ts",
+    "          photoUrl: officialPhotoUrl(user.image),",
+    "          photoUrl: user.image ?? null,",
+    ["src/lib/auth/sign-in.test.ts"]
+  ],
+  [
+    "photo: a return visit stores any address",
+    "src/lib/auth/callbacks.ts",
+    "      photoUrl: officialPhotoUrl(user.image),",
+    "      photoUrl: user.image ?? null,",
+    ["src/lib/auth/sign-in.test.ts"]
+  ],
+  [
+    "photo: the pages let an image come from anywhere",
+    "src/lib/security-headers.ts",
+    "const FORTYTWO_IMAGES = OFFICIAL_PHOTO_SOURCE;",
+    "const FORTYTWO_IMAGES = 'https:';",
+    ["src/lib/fortytwo-photo.test.ts", "src/lib/security-headers.test.ts"]
+  ],
+  [
+    "photo: the Discord card takes any address",
+    "src/lib/members/discord-embed.ts",
+    "const thumbnail = officialPhotoUrl(member.photoUrl) ?? undefined;",
+    "const thumbnail = member.photoUrl ?? undefined;",
+    ["src/lib/members/photo.test.ts"]
+  ],
+  [
+    "photo: the Slack message takes any address",
+    "src/lib/members/slack-blocks.ts",
+    "...(officialPhotoUrl(member.photoUrl) && {",
+    "...(member.photoUrl && {",
+    ["src/lib/members/photo.test.ts"]
+  ],
+  [
+    "photo: the e-mail takes any address",
+    "src/lib/members/email.ts",
+    "...(officialPhotoUrl(member.photoUrl) && {",
+    "...(member.photoUrl && {",
+    ["src/lib/members/photo.test.ts"]
+  ]
+]

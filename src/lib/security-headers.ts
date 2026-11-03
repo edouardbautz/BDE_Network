@@ -1,3 +1,5 @@
+import { OFFICIAL_PHOTO_SOURCE } from './fortytwo-photo';
+
 /**
  * HTTP security headers sent with every response (wired in next.config.ts).
  *
@@ -27,8 +29,8 @@ export interface HeaderRule {
   headers: { key: string; value: string }[];
 }
 
-/** Where 42 serves profile pictures (stored as `User.photoUrl`). */
-const FORTYTWO_IMAGES = 'https://cdn.intra.42.fr';
+/** Where 42 serves profile pictures (stored as `User.photoUrl`): the list `officialPhotoUrl` accepts, so the two never differ. */
+const FORTYTWO_IMAGES = OFFICIAL_PHOTO_SOURCE;
 /** Where the sign-in form sends the browser. */
 const FORTYTWO_API = 'https://api.intra.42.fr';
 
