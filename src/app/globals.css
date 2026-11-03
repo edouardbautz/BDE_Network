@@ -279,8 +279,8 @@
      text beside them says. In a flex row they would otherwise be squeezed by a long label (a flex item shrinks, and a width is only
      a wish): `flex: none` is the rule, for every one of them, so a screen cannot forget it. The ones that are only a hidden state for a
      drawn control (`sr-only`) say so with a utility, which wins over this layer. */
-  input[type="checkbox"],
-  input[type="radio"] {
+  input[type='checkbox'],
+  input[type='radio'] {
     flex: none;
     width: 1.25rem;
     height: 1.25rem;

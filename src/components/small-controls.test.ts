@@ -24,7 +24,9 @@ function files(dir: string, found: string[] = []): string[] {
 }
 
 describe('the rule of the checkbox and the radio button', () => {
-  const rule = css.match(/input\[type="checkbox"\],\s*input\[type="radio"\]\s*\{([^}]*)\}/)?.[1];
+  const rule = css.match(
+    /input\[type=["']checkbox["']\],\s*input\[type=["']radio["']\]\s*\{([^}]*)\}/,
+  )?.[1];
 
   it('is in globals.css: 20 px, never shrunk, the accent', () => {
     expect(rule, 'the base rule of the checkbox and the radio button').toBeDefined();
@@ -36,7 +38,7 @@ describe('the rule of the checkbox and the radio button', () => {
 
   it('is in the base layer, under the utilities (an `sr-only` input, hidden behind a drawn control, still wins)', () => {
     const base = css.indexOf('@layer base');
-    const at = css.indexOf('input[type="checkbox"]');
+    const at = css.search(/input\[type=["']checkbox["']\]/);
     expect(base).toBeGreaterThan(-1);
     expect(at).toBeGreaterThan(base);
   });
