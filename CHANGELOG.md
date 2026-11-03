@@ -121,6 +121,12 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Fixed
 
+- **A check box was squeezed by a long explanation.** In the edition of a role, the box of a permission whose description takes several lines (such as "Publish on the intra")
+  was narrower than the others: it was a flex item and shrank. The rule is now written once, in the base layer of the stylesheet, for **every** checkbox and radio button (20 px,
+  never shrunk, the accent), and no screen gives them a size of its own: the table of notifications, the installer, the settings, the confirmation choices, the event form. The
+  two boxes of the installer that were 16 px are 20 px, and the ones that sat in the middle of a long text now sit on its first line. A browser test measures every control with
+  a very long text beside it, on a computer and a phone, in the three engines (it fails on the previous version).
+
 - **Browsers and password managers no longer fill the secrets of the notification channels, and a saved secret is shown as such.** On a new installation a browser filled the user of the
   mail server with an address of another site and put a saved password in the Discord webhook field (a field of the type "password"), and "Send a test" then sent that password as the
   address. No field of the platform is of the type "password" any more: the secrets are typed in a masked text field that tells Chrome, Firefox, Safari, Edge and the password managers to

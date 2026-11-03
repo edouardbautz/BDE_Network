@@ -177,7 +177,6 @@ function Cell({
           checked={checked && tickable}
           disabled={!tickable}
           onChange={(change) => onToggle(change.target.checked)}
-          className="accent-accent-fill size-5 shrink-0"
         />
         {/* On a phone the channel is written next to its box; on a computer the column header says it. */}
         <span className="text-body sm:sr-only" aria-hidden="true">

@@ -393,7 +393,6 @@ export function EventForm({
                       name="assignees"
                       value={member.login}
                       defaultChecked={values.assigneeLogins.includes(member.login)}
-                      className="accent-accent-fill size-5"
                     />
                     <span className="truncate">{member.name}</span>
                     <span className="text-muted-foreground truncate text-small">

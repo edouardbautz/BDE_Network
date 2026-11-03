@@ -114,12 +114,12 @@ export function StepCampuses({
       {options === null && <p className="text-muted-foreground text-body">{t('manualHelp')}</p>}
 
       {!loading && (
-        <label className="flex items-center gap-2 text-body">
+        <label className="flex items-start gap-2 text-body">
           <input
             type="checkbox"
+            className="mt-0.5"
             checked={allowAll}
             onChange={(event) => setAllowAll(event.target.checked)}
-            className="size-4"
           />
           <span>
             <span className="font-semibold">{t('all')}</span>

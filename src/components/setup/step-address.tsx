@@ -102,12 +102,12 @@ export function StepAddress({
             {t('insecureTitle')}
           </p>
           <p>{t('insecureBody')}</p>
-          <label className="flex items-center gap-2">
+          <label className="flex items-start gap-2">
             <input
               type="checkbox"
+              className="mt-0.5"
               checked={accepted}
               onChange={(event) => setAccepted(event.target.checked)}
-              className="size-4"
             />
             {t('insecureAccept')}
           </label>
