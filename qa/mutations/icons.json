@@ -101,7 +101,7 @@
     "manifest: the manifest holds more than the BDE",
     "src/app/api/manifest/route.ts",
     "    start_url: '/',",
-    "    start_url: '/',\n    id: process.env.AUTH_SECRET,",
+    "    start_url: '/',\n    id: 'extra',",
     ["src/app/api/manifest/route.test.ts"]
   ],
   [
