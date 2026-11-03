@@ -113,6 +113,27 @@ They are customised like the others, from the **Notifications** page. At most on
 again 30 minutes after a failure (three times a day at most) and does not repeat itself. A backup that you ask for with **Back up
 now** and that fails is shown on the page, not sent.
 
+## The Discord and Slack ids of the members
+
+To mention somebody, the platform needs their **Discord id** and **Slack id**, so it **asks them of every member** for each platform the BDE
+posts on. The rule is the same for everyone, owners and staff included:
+
+- **A webhook of the BDE** is saved (Discord and/or Slack, in **Settings**): the id of that platform is **required** of everybody.
+- **A webhook for the staff's room** is saved (and the publication on the intra is on): the id of that platform is also required of the members who
+  hold a right to publish on the intra, so that `{@staff}` can ping them.
+- A platform that is not set up is **not asked**; when none is, nothing is asked.
+
+**At the first sign-in**, after 42 and before the waiting page, a step asks the ids; it cannot be skipped. **When a platform is added later**, every
+member, with a session already open, finds on their next page a window that asks the missing id and **cannot be closed** (not with Escape, not by clicking
+outside, not by going elsewhere): the only other way out is **Sign out**. It shows on every page, for an owner too (the one who has just added the
+platform), but never during the installation, on the sign-in page or on an error page. While an id is missing the platform sends nothing else: taking the
+window out of the browser leaves an empty page, and every action is refused until the id is given.
+
+Both give a short guide, with diagrams, to find the id (Discord: _Settings → Advanced → Developer mode_, then right-click, or long-press on a phone, your
+name → _Copy User ID_; Slack: your profile → ⋮ → _Copy member ID_), and say why: to be mentioned in the BDE's notifications. An id is checked (Discord: a
+number of 17 to 20 digits; Slack: a U or W followed by letters and digits); a mention such as `@everyone` is refused. It can be changed in **My profile**, with
+the same rules (an id that is required is never emptied). The copy of your data you can download holds it, and it is deleted with the account.
+
 ## Customising the messages
 
 The words, the colours, the information shown and its order, the button and the subject of e-mails can all be changed,

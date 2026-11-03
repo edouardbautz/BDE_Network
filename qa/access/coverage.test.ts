@@ -92,9 +92,14 @@ describe('the matrix is complete', () => {
     }
   });
 
+  // The one thing an account waiting for approval may do: give the Discord and Slack ids the BDE asks of everybody, before the waiting page.
+  // It writes only the account's own row, from the session, and nothing else (profile/actions.test.ts).
+  const WAITING_MAY_DO = ['profile.saveMentionIds'];
+
   it('has no case where somebody who is not signed in may do something', () => {
     for (const item of CASES) {
       for (const who of ['anonymous', 'deleted', 'pending'] as const) {
+        if (who === 'pending' && WAITING_MAY_DO.includes(item.action)) continue;
         for (const variant of PLATFORM_VARIANTS) {
           expect(item.allowed(who, variant), `${who} ${item.action} ${item.label}`).toBe(false);
         }

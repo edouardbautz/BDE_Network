@@ -6,6 +6,7 @@ import { auth } from '@/lib/auth';
 import { getImpersonation, isDevImpersonationEnabled } from '@/lib/dev-impersonation';
 import { isKnownStatus } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
+import { missingPlatforms, requiredFor, type MentionPlatform } from '@/lib/mention-ids/required';
 import { accessFor } from './access';
 
 export interface EffectiveSession {
@@ -19,6 +20,15 @@ export interface EffectiveSession {
   /** The real, non-simulated status — always populated, even while
    * impersonating, so callers can tell who is really behind the request. */
   realStatus: UserStatus;
+  /**
+   * The Discord and Slack ids this account still has to give (see `lib/mention-ids/required.ts`). **While there are some, the session holds nothing**: it is
+   * the session of a PENDING account (`user.status`, no permission), so that every page, action and check below this point refuses, with no
+   * line of code to remember in each; `realStatus` says who is really there. Only the pages that ask for the ids (the step, the window, the save)
+   * look at this list.
+   */
+  missingIds: MentionPlatform[];
+  /** The ids asked of this account, whether it has given them or not: the platforms of the form that asks them. */
+  requiredIds: MentionPlatform[];
 }
 
 /** A session that carries a real account: an id, a login, a known status, resolved
@@ -51,7 +61,28 @@ async function resolveEffectiveSession(): Promise<EffectiveSession | null> {
   if (!isCompleteSession(user)) {
     return null;
   }
+  const resolved = await resolveAccess(user);
+  // The ids asked of this account, by what it really is (not by what a simulation makes of it).
+  const requiredIds = requiredFor(user);
+  const missingIds = missingPlatforms(requiredIds, {
+    discordUserId: user.discordUserId ?? null,
+    slackUserId: user.slackUserId ?? null,
+  });
+  if (missingIds.length === 0) return { ...resolved, missingIds, requiredIds };
+  return {
+    ...resolved,
+    user: {
+      ...resolved.user,
+      ...accessFor({ status: 'PENDING', roleId: null, role: null }, []),
+    },
+    missingIds,
+    requiredIds,
+  };
+}
 
+async function resolveAccess(
+  user: Session['user'],
+): Promise<Omit<EffectiveSession, 'missingIds' | 'requiredIds'>> {
   const realStatus = user.status;
 
   if (isDevImpersonationEnabled() && realStatus === 'OWNER') {

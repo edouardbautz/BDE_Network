@@ -286,11 +286,15 @@ export function createFakeRolesDb() {
           name: user.fullName,
           email: user.email,
           image: null,
+          discordUserId: null,
+          slackUserId: null,
           ...access,
         },
         isImpersonating: false,
         simulatedAs: null,
         realStatus: user.status,
+        missingIds: [],
+        requiredIds: [],
       };
     },
   };

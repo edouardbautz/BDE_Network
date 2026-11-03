@@ -10,14 +10,21 @@ vi.mock('@/lib/events/access', () => ({
   isEventsModuleEnabled: vi.fn(() => true),
 }));
 vi.mock('@/lib/auth/session', () => ({ getEffectiveSession: vi.fn() }));
-vi.mock('@/lib/prisma', () => ({ prisma: { user: { update: vi.fn() } } }));
+vi.mock('@/lib/audit-log', () => ({ logAuditEvent: vi.fn() }));
+vi.mock('@/lib/prisma', () => {
+  const prisma = {
+    user: { update: vi.fn() },
+    $transaction: vi.fn(async (work: (tx: unknown) => Promise<unknown>) => work(prisma)),
+  };
+  return { prisma };
+});
 vi.mock('@/lib/events/export', () => ({ regenerateCalendarToken: vi.fn() }));
 
 const { getEventsAccess } = await import('@/lib/events/access');
 const { regenerateCalendarToken } = await import('@/lib/events/export');
 const { revalidatePath } = await import('next/cache');
 const { getEffectiveSession } = await import('@/lib/auth/session');
-const { isEventsModuleEnabled } = await import('@/lib/events/access');
+const { logAuditEvent } = await import('@/lib/audit-log');
 const { prisma } = await import('@/lib/prisma');
 const { regenerateMyCalendarToken, saveMentionIds } = await import('./actions');
 
@@ -42,48 +49,51 @@ describe('regenerateMyCalendarToken', () => {
 });
 
 describe('saveMentionIds', () => {
-  const signedInAs = (status: string, id: string | undefined = 'u1') =>
+  type Ask = Array<'discord' | 'slack'>;
+  const signedInAs = (
+    status: string,
+    options: { id?: string; required?: Ask; discord?: string | null; slack?: string | null } = {},
+  ) =>
     vi.mocked(getEffectiveSession).mockResolvedValue({
-      user: { id, status },
+      user: {
+        id: options.id ?? 'u1',
+        login: 'camille',
+        status,
+        discordUserId: options.discord ?? null,
+        slackUserId: options.slack ?? null,
+      },
+      requiredIds: options.required ?? ['discord', 'slack'],
     } as unknown as Awaited<ReturnType<typeof getEffectiveSession>>);
-  const form = (discordUserId: string, slackUserId: string) => {
+  const form = (discordUserId: string | null, slackUserId: string | null) => {
     const data = new FormData();
-    data.append('discordUserId', discordUserId);
-    data.append('slackUserId', slackUserId);
+    if (discordUserId !== null) data.append('discordUserId', discordUserId);
+    if (slackUserId !== null) data.append('slackUserId', slackUserId);
     return data;
   };
+  const written = () => vi.mocked(prisma.user.update).mock.calls[0]?.[0];
 
-  beforeEach(() => {
-    vi.mocked(isEventsModuleEnabled).mockReturnValue(true);
-  });
-
-  it.each([
-    ['nobody signed in', null],
-    ['an account waiting for approval', 'PENDING'],
-  ])('is refused to %s, and writes nothing', async (_who, status) => {
-    if (status === null) vi.mocked(getEffectiveSession).mockResolvedValue(null);
-    else signedInAs(status);
-    await expect(saveMentionIds({}, form('348291047563210241', ''))).rejects.toThrow('Forbidden');
+  it('is refused to nobody signed in, and to a session without an account id (a query keyed on undefined would match everybody)', async () => {
+    vi.mocked(getEffectiveSession).mockResolvedValue(null);
+    await expect(saveMentionIds({}, form('348291047563210241', null))).rejects.toThrow('Forbidden');
+    signedInAs('MEMBER', { id: '' });
+    await expect(saveMentionIds({}, form('348291047563210241', null))).rejects.toThrow('Forbidden');
     expect(prisma.user.update).not.toHaveBeenCalled();
   });
 
-  it('is refused for a session without an account id (a query keyed on undefined would match everybody)', async () => {
-    signedInAs('MEMBER', '');
-    await expect(saveMentionIds({}, form('348291047563210241', ''))).rejects.toThrow('Forbidden');
-    expect(prisma.user.update).not.toHaveBeenCalled();
-  });
+  it.each(['PENDING', 'MEMBER', 'OWNER'])(
+    'is open to any signed-in account, %s included: it is the way out of a session that holds nothing until an id is given',
+    async (status) => {
+      signedInAs(status, { required: ['discord'] });
+      await expect(saveMentionIds({}, form('348291047563210241', null))).resolves.toMatchObject({
+        saved: true,
+      });
+    },
+  );
 
-  it('is refused when the platform has no events module', async () => {
-    signedInAs('MEMBER');
-    vi.mocked(isEventsModuleEnabled).mockReturnValue(false);
-    await expect(saveMentionIds({}, form('348291047563210241', ''))).rejects.toThrow('Forbidden');
-    expect(prisma.user.update).not.toHaveBeenCalled();
-  });
-
-  it('saves the ids of the account that asks, normalised, and says what it kept', async () => {
+  it('saves the ids asked, of the account that asks, normalised, and says what it kept', async () => {
     signedInAs('MEMBER');
     const state = await saveMentionIds({}, form('<@348291047563210241>', 'u04abcd1234'));
-    expect(prisma.user.update).toHaveBeenCalledWith({
+    expect(written()).toEqual({
       where: { id: 'u1' },
       data: { discordUserId: '348291047563210241', slackUserId: 'U04ABCD1234' },
     });
@@ -93,31 +103,79 @@ describe('saveMentionIds', () => {
     });
   });
 
-  it('removes an id that is left blank', async () => {
-    signedInAs('OWNER');
-    await saveMentionIds({}, form('', ''));
-    expect(prisma.user.update).toHaveBeenCalledWith({
-      where: { id: 'u1' },
-      data: { discordUserId: null, slackUserId: null },
-    });
-  });
+  it.each([
+    ['blank', ''],
+    ['spaces', '   '],
+  ])(
+    'refuses an id that is asked and left %s: the id is required, nothing is written',
+    async (_label, blank) => {
+      signedInAs('MEMBER', { required: ['discord', 'slack'] });
+      const state = await saveMentionIds({}, form('348291047563210241', blank));
+      expect(state).toMatchObject({ errors: { slackUserId: 'required' } });
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    },
+  );
 
-  it('refuses what is not an id, keeps what was typed, and writes nothing', async () => {
-    signedInAs('MEMBER');
-    const state = await saveMentionIds({}, form('@everyone', 'U04ABCD1234'));
-    expect(state).toEqual({
-      errors: { discordUserId: 'invalid' },
-      values: { discordUserId: '@everyone', slackUserId: 'U04ABCD1234' },
-    });
+  it('refuses an id that is asked and that the request leaves out altogether (a crafted request cannot skip the field)', async () => {
+    signedInAs('MEMBER', { required: ['discord', 'slack'] });
+    const state = await saveMentionIds({}, form('348291047563210241', null));
+    expect(state).toMatchObject({ errors: { slackUserId: 'required' } });
     expect(prisma.user.update).not.toHaveBeenCalled();
   });
 
+  it('never erases an id that is not asked: a platform the BDE does not use is left as it was', async () => {
+    signedInAs('MEMBER', { required: ['discord'], slack: 'U04ABCD1234' });
+    await saveMentionIds({}, form('348291047563210241', ''));
+    expect(written()?.data).toEqual({ discordUserId: '348291047563210241' });
+  });
+
+  it('writes nothing for a platform that is not asked, whatever the request holds', async () => {
+    signedInAs('MEMBER', { required: ['discord'] });
+    await saveMentionIds({}, form('348291047563210241', 'U04ABCD1234'));
+    expect(written()?.data).toEqual({ discordUserId: '348291047563210241' });
+  });
+
+  it.each(['@everyone', '@here', '<@&123456789012345678>', 'camille', '<!channel>'])(
+    'refuses %s, keeps what was typed, and writes nothing',
+    async (typed) => {
+      signedInAs('MEMBER');
+      const state = await saveMentionIds({}, form(typed, 'U04ABCD1234'));
+      expect(state).toEqual({
+        errors: { discordUserId: 'invalid' },
+        values: { discordUserId: typed, slackUserId: 'U04ABCD1234' },
+      });
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    },
+  );
+
   it('never takes the account from the request', async () => {
-    signedInAs('MEMBER');
-    const data = form('348291047563210241', '');
+    signedInAs('MEMBER', { required: ['discord'] });
+    const data = form('348291047563210241', null);
     data.append('id', 'somebody-else');
     data.append('userId', 'somebody-else');
     await saveMentionIds({}, data);
-    expect(vi.mocked(prisma.user.update).mock.calls[0]?.[0].where).toEqual({ id: 'u1' });
+    expect(written()?.where).toEqual({ id: 'u1' });
+  });
+
+  it('writes an audit entry with the platforms that changed, never the ids', async () => {
+    signedInAs('MEMBER', { required: ['discord', 'slack'], discord: '348291047563210241' });
+    await saveMentionIds({}, form('348291047563210241', 'U04ABCD1234'));
+    expect(logAuditEvent).toHaveBeenCalledOnce();
+    const [entry] = vi.mocked(logAuditEvent).mock.calls[0]!;
+    expect(entry).toMatchObject({
+      actorLogin: 'camille',
+      action: 'profile.mention_ids',
+      targetType: 'User',
+      targetId: 'u1',
+      metadata: { changed: ['slack'] },
+    });
+    expect(JSON.stringify(entry)).not.toContain('U04ABCD1234');
+    expect(JSON.stringify(entry)).not.toContain('348291047563210241');
+  });
+
+  it('writes no audit entry when nothing changed', async () => {
+    signedInAs('MEMBER', { required: ['discord'], discord: '348291047563210241' });
+    await saveMentionIds({}, form('348291047563210241', null));
+    expect(logAuditEvent).not.toHaveBeenCalled();
   });
 });

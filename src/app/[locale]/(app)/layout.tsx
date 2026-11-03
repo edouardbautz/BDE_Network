@@ -23,6 +23,7 @@ import { redirect } from '@/i18n/navigation';
 import { AppShell, type CreateAction, type NavItem } from '@/components/layout/app-shell';
 import { AccountSheetContent, UserMenu } from '@/components/layout/user-menu';
 import { Footer } from '@/components/layout/footer';
+import { MentionIdsGate } from '@/components/mention-ids/mention-ids-gate';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,6 +49,16 @@ export default async function AppLayout({
     }
     redirect({ href: '/', locale });
     return null;
+  }
+
+  // An id the BDE needs is missing. An account that waits for approval gives it on a page of its own before the waiting page; an approved one is
+  // asked in a window that cannot be closed, over a page where nothing else is drawn: its session holds nothing until it has answered.
+  if (session.missingIds.length > 0) {
+    if (session.realStatus === 'PENDING') {
+      redirect({ href: '/identifiers', locale });
+      return null;
+    }
+    return <MentionIdsGate session={session} />;
   }
 
   if (session.user.status === 'PENDING') {

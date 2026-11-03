@@ -73,8 +73,8 @@ mais le bouton n'est pas rouge : c'est réversible.
 Dans le menu de votre nom, **Mon profil** montre vos informations de compte et votre **lien d'agenda
 personnel**, à ajouter à Google Agenda, Outlook ou Apple Calendar. Voir [Module Événements](events.md#ajouter-à-son-agenda).
 
-Quand le module Événements est activé, le profil permet aussi de renseigner votre **identifiant Discord** et/ou **Slack**
-(facultatif) : ils servent uniquement à vous mentionner dans les messages qui vous concernent (l'annonce d'un événement que vous avez
+Le BDE vous demande votre **identifiant Discord** et/ou **Slack** (pour chaque plateforme sur laquelle il publie) à votre première
+connexion, et le profil permet de les modifier : ils servent uniquement à vous mentionner dans les messages qui vous concernent (l'annonce d'un événement que vous avez
 proposé et qu'un validateur a validé, et les messages destinés au staff de l'école quand la plateforme publie sur l'intra). La page
 dit où les trouver. Une mention, un nom ou tout ce qui n'est pas un identifiant est refusé, et personne d'autre ne voit ce que vous saisissez.
 

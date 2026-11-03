@@ -242,11 +242,11 @@ async function during(what, promise) {
 const suffix = () => `${Date.now().toString(36)}${Math.floor(Math.random() * 1e3).toString(36)}`;
 const createPending = (login) =>
   sql(
-    `INSERT INTO "User" (id, login, "fullName", email, campus, status, "updatedAt") VALUES ('u-${login}', '${login}', 'Person ${login}', '${login}@example.org', 'Nice', 'PENDING', now())`,
+    `INSERT INTO "User" (id, login, "fullName", email, campus, status, "discordUserId", "updatedAt") VALUES ('u-${login}', '${login}', 'Person ${login}', '${login}@example.org', 'Nice', 'PENDING', '123456789012345678', now())`,
   );
 const createMember = (login) =>
   sql(
-    `INSERT INTO "User" (id, login, "fullName", email, campus, status, "roleId", "updatedAt") SELECT 'u-${login}', '${login}', 'Person ${login}', '${login}@example.org', 'Nice', 'MEMBER', id, now() FROM "Role" WHERE "isDefault"`,
+    `INSERT INTO "User" (id, login, "fullName", email, campus, status, "discordUserId", "roleId", "updatedAt") SELECT 'u-${login}', '${login}', 'Person ${login}', '${login}@example.org', 'Nice', 'MEMBER', '123456789012345678', id, now() FROM "Role" WHERE "isDefault"`,
   );
 const deleteUser = (login) => sql(`DELETE FROM "User" WHERE login = '${login}'`);
 const createRole = (name) =>

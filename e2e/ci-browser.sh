@@ -38,8 +38,8 @@ SHOTS="$temp/shots/install" node e2e/install.mjs http://127.0.0.1:3003 "$code"
 # The platform the installer has just made: its owner ("alice") and a plain member get an account, and the scripts forge their
 # sessions with the platform's own secret (nobody can sign in through 42 here); two events and two series for the scripts to work on.
 $psql_installed -v ON_ERROR_STOP=1 \
-  -c "INSERT INTO \"User\" (id, login, \"fullName\", email, campus, status, \"updatedAt\") VALUES ('e2e-alice', 'alice', 'Alice', 'alice@example.org', 'Nice', 'OWNER', now()) ON CONFLICT (login) DO UPDATE SET status = 'OWNER', \"roleId\" = NULL" \
-  -c "INSERT INTO \"User\" (id, login, \"fullName\", email, campus, status, \"roleId\", \"updatedAt\") SELECT 'e2e-carol', 'carol', 'Carol', 'carol@example.org', 'Nice', 'MEMBER', id, now() FROM \"Role\" WHERE \"isDefault\"" \
+  -c "INSERT INTO \"User\" (id, login, \"fullName\", email, campus, status, \"discordUserId\", \"updatedAt\") VALUES ('e2e-alice', 'alice', 'Alice', 'alice@example.org', 'Nice', 'OWNER', '123456789012345678', now()) ON CONFLICT (login) DO UPDATE SET status = 'OWNER', \"discordUserId\" = '123456789012345678', \"roleId\" = NULL" \
+  -c "INSERT INTO \"User\" (id, login, \"fullName\", email, campus, status, \"discordUserId\", \"roleId\", \"updatedAt\") SELECT 'e2e-carol', 'carol', 'Carol', 'carol@example.org', 'Nice', 'MEMBER', '123456789012345678', id, now() FROM \"Role\" WHERE \"isDefault\"" \
   -c "INSERT INTO \"Event\" (id, title, description, location, \"categoryKey\", status, \"startsAt\", \"endsAt\", repeat, \"recurrenceUntil\", \"schoolYear\", \"authorLogin\", \"updatedAt\") VALUES ('e2e-weekly', 'E2E weekly', 'Test', 'Room', 'soiree', 'CONFIRMED', now() + interval '1 day', now() + interval '1 day 2 hours', jsonb_build_object('freq', 'WEEKLY', 'interval', 1), now() + interval '70 days', '2026-2027', 'alice', now())" \
   -c "INSERT INTO \"Event\" (id, title, description, location, \"categoryKey\", status, \"startsAt\", \"endsAt\", repeat, \"recurrenceUntil\", \"schoolYear\", \"authorLogin\", \"updatedAt\") SELECT 'e2e-series-' || lang, 'E2E series', 'Test', 'Room', 'soiree', 'CONFIRMED', now() + interval '2 days', now() + interval '2 days 2 hours', jsonb_build_object('freq', 'WEEKLY', 'interval', 1), now() + interval '38 days', '2026-2027', 'alice', now() FROM (VALUES ('fr'), ('en')) AS languages(lang)"
 
@@ -54,7 +54,7 @@ case "$shard" in
   1)
     AUTH_SECRET="$(secret)" OWNER=alice OWNER_CANDIDATE=bob PSQL="$psql_installed" ONLY="$FIRST_SHARD_SCENARIOS" SHOTS="$temp/shots/actions" node e2e/actions.mjs "$base"
     # The settings page, with the platform as the installer left it.
-    AUTH_SECRET="$(secret)" SHOTS="$temp/shots/settings" node e2e/settings.mjs "$base"
+    AUTH_SECRET="$(secret)" PSQL="$psql_installed" SHOTS="$temp/shots/settings" node e2e/settings.mjs "$base"
     # The sign-in with 42 (the stand-in plays 42, and refuses a code like the real one when the redirect_uri of the exchange is
     # not the one of the authorization). The image listens on 0.0.0.0, which is what Next.js puts in every request URL: the
     # registered address (this computer is written localhost) must be what 42 is given.

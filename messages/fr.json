@@ -390,7 +390,7 @@
     },
     "notifications": {
       "title": "E-mails et notifications",
-      "description": "Votre adresse e-mail sert aussi à vous écrire : si votre bureau a activé l'envoi d'e-mails, vous pouvez en recevoir quand votre accès est approuvé, quand un événement est confirmé ou la veille d'un événement dont vous êtes en charge. Les propriétaires et les membres qui peuvent valider les accès reçoivent les nouvelles demandes. Des messages peuvent aussi être publiés dans le salon Discord ou Slack du bureau : ils mentionnent le nom et le login des personnes concernées (nouvelle demande, membre approuvé ou retiré). Si le module Événements est activé, vous pouvez en plus renseigner, dans votre profil, votre identifiant Discord et/ou Slack (facultatif) : il sert uniquement à vous mentionner dans les messages qui vous concernent (un événement que vous avez proposé et qui est validé, et les messages destinés au staff quand la plateforme publie les événements sur l'intra) ; il n'est visible de personne d'autre, il est supprimé avec votre compte et vous pouvez l'effacer à tout moment."
+      "description": "Votre adresse e-mail sert aussi à vous écrire : si votre bureau a activé l'envoi d'e-mails, vous pouvez en recevoir quand votre accès est approuvé, quand un événement est confirmé ou la veille d'un événement dont vous êtes en charge. Les propriétaires et les membres qui peuvent valider les accès reçoivent les nouvelles demandes. Des messages peuvent aussi être publiés dans le salon Discord ou Slack du bureau : ils mentionnent le nom et le login des personnes concernées (nouvelle demande, membre approuvé ou retiré). Pour chaque plateforme que le BDE utilise (Discord, Slack), on vous demande votre identifiant sur celle-ci, à votre première connexion et dans votre profil : il sert uniquement à vous mentionner dans les messages qui vous concernent (un événement que vous avez proposé et qui est validé, et les messages destinés au staff quand la plateforme publie les événements sur l'intra) ; il est obligatoire tant que le BDE publie sur cette plateforme, il n'est visible de personne d'autre, il est supprimé avec votre compte et fait partie de la copie de vos données que vous pouvez télécharger."
     },
     "calendar": {
       "title": "Lien d'agenda personnel",
@@ -1017,7 +1017,7 @@
     },
     "mentions": {
       "title": "Être mentionné dans les messages",
-      "description": "Facultatif. Sert uniquement à vous mentionner (vous notifier) quand la plateforme écrit sur Discord ou Slack : à propos de la publication des événements sur l'intra, ou pour vous dire qu'un événement que vous avez proposé a été validé. Personne d'autre ne le voit.",
+      "description": "Obligatoire pour chaque plateforme que le BDE utilise (Discord, Slack) : il s’en sert pour vous mentionner dans ses notifications. Personne d’autre ne le voit.",
       "discord": "Identifiant Discord",
       "discordHelp": "Votre identifiant numérique, pas votre pseudo : dans Discord, activez le mode développeur (Paramètres, Avancé), puis clic droit sur votre nom, « Copier l'identifiant de l'utilisateur ».",
       "slack": "Identifiant Slack",
@@ -2136,5 +2136,75 @@
     "remove": "Retirer",
     "removeLabel": "Retirer : {label}",
     "leaveEmpty": "Laissez vide pour garder celui qui est enregistré."
+  },
+  "mentionIds": {
+    "eyebrow": "Dernière étape avant l’accès",
+    "stepTitle": "Un dernier détail, {name}",
+    "stepIntro": "Donnez votre identifiant pour que le BDE puisse <b>vous mentionner dans ses notifications</b> (par exemple quand l’événement que vous avez proposé est validé). Personne d’autre ne le voit.",
+    "gateTitle": {
+      "one": "Il manque votre identifiant {platform}",
+      "many": "Il manque vos identifiants Discord et Slack"
+    },
+    "gateIntro": "Le BDE vient d’ajouter {platforms}. Donnez votre identifiant pour que le BDE puisse <b>vous mentionner dans ses notifications</b>. C’est nécessaire pour continuer.",
+    "gateIntroMissing": "Pour que le BDE puisse <b>vous mentionner dans ses notifications</b>, il lui manque {platforms}. C’est nécessaire pour continuer.",
+    "platformNames": {
+      "discord": "Discord",
+      "slack": "Slack"
+    },
+    "label": "Votre identifiant {platform}",
+    "placeholder": {
+      "discord": "ex. 348291047563210241",
+      "slack": "ex. U04ABCD1234"
+    },
+    "hint": {
+      "discord": "Un long nombre, de 17 à 20 chiffres.",
+      "slack": "Il commence par U ou W, suivi de lettres et de chiffres."
+    },
+    "valid": "Identifiant valable",
+    "errors": {
+      "discord": "Ce n’est pas un identifiant valable : collez le long nombre (17 à 20 chiffres), pas un nom ni une mention.",
+      "slack": "Ce n’est pas un identifiant valable : collez l’ID du membre (il commence par U ou W), pas un nom ni une mention.",
+      "required": "Cet identifiant est obligatoire pour continuer."
+    },
+    "stepSubmit": "Continuer",
+    "gateSubmit": "Enregistrer",
+    "saving": "Enregistrement…",
+    "logout": "Se déconnecter",
+    "gateAnnounce": "Une information est nécessaire pour continuer : donnez votre identifiant, ou déconnectez-vous.",
+    "guide": {
+      "discord": {
+        "title": "Comment trouver mon identifiant Discord ?",
+        "step1Title": "Activez le mode développeur",
+        "step1Body": "Paramètres utilisateur (la roue crantée) → Avancés → Mode développeur. À faire une seule fois.",
+        "step2Title": "Copiez votre identifiant",
+        "step3Title": "Collez-le ici",
+        "step3Body": "C’est un long nombre, par exemple 348291047563210241.",
+        "shotAccount": "Mon compte",
+        "shotPrivacy": "Confidentialité",
+        "shotAdvanced": "Avancés",
+        "shotDeveloper": "Mode développeur",
+        "shotProfile": "Profil",
+        "shotMention": "Mentionner",
+        "shotCopy": "Copier l’identifiant de l’utilisateur",
+        "step2BodyDesktop": "Clic droit sur votre nom, puis « Copier l’identifiant de l’utilisateur ».",
+        "step2BodyPhone": "Appui long sur votre nom, puis « Copier l’identifiant de l’utilisateur »."
+      },
+      "slack": {
+        "title": "Comment trouver mon identifiant Slack ?",
+        "step1Title": "Ouvrez votre profil",
+        "step1Body": "Cliquez sur votre photo, puis « Profil ».",
+        "step2Title": "Copiez votre identifiant de membre",
+        "step2Body": "Le bouton ⋮ (plus d’options), puis « Copier l’ID du membre ». Il commence par U ou W.",
+        "step3Title": "Collez-le ici",
+        "step3Body": "Par exemple U04ABCD1234.",
+        "shotName": "Camille Martin",
+        "shotCopyName": "Copier le nom d’affichage",
+        "shotCopy": "Copier l’ID du membre",
+        "shotCopyLink": "Copier le lien vers le profil"
+      },
+      "schematic": "Schéma"
+    },
+    "savedNotice": "Enregistré.",
+    "stepTitleShort": "Votre identifiant"
   }
 }

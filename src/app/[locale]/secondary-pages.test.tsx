@@ -52,7 +52,11 @@ beforeEach(() => {
   mocks.contactEmail = undefined;
 });
 
-const pendingSession = { user: { login: 'dupont', name: 'Marie Dupont', status: 'PENDING' } };
+const pendingSession = {
+  user: { login: 'dupont', name: 'Marie Dupont', status: 'PENDING' },
+  realStatus: 'PENDING',
+  missingIds: [],
+};
 const tPending = createTranslator({ locale: 'fr', messages: fr, namespace: 'pending' });
 const tPrivacy = createTranslator({ locale: 'fr', messages: fr, namespace: 'privacy' });
 
@@ -72,7 +76,11 @@ describe('the waiting page', () => {
   });
 
   it('falls back on the login when the account has no name', async () => {
-    mocks.session.mockResolvedValue({ user: { login: 'dupont', name: null, status: 'PENDING' } });
+    mocks.session.mockResolvedValue({
+      user: { login: 'dupont', name: null, status: 'PENDING' },
+      realStatus: 'PENDING',
+      missingIds: [],
+    });
     await open();
     expect(
       screen.getByText(tPending('signedInAs', { name: 'dupont', login: 'dupont' })),
@@ -84,11 +92,19 @@ describe('the waiting page', () => {
     expect(await PendingPage({ params: Promise.resolve({ locale: 'fr' }) })).toBeNull();
     expect(mocks.redirect).toHaveBeenLastCalledWith({ href: '/', locale: 'fr' });
 
-    mocks.session.mockResolvedValue({ user: { login: 'bob', status: 'MEMBER' } });
+    mocks.session.mockResolvedValue({
+      user: { login: 'bob', status: 'MEMBER' },
+      realStatus: 'MEMBER',
+      missingIds: [],
+    });
     expect(await PendingPage({ params: Promise.resolve({ locale: 'fr' }) })).toBeNull();
     expect(mocks.redirect).toHaveBeenLastCalledWith({ href: '/dashboard', locale: 'fr' });
     // an owner is not "pending" either
-    mocks.session.mockResolvedValue({ user: { login: 'alice', status: 'OWNER' } });
+    mocks.session.mockResolvedValue({
+      user: { login: 'alice', status: 'OWNER' },
+      realStatus: 'OWNER',
+      missingIds: [],
+    });
     await PendingPage({ params: Promise.resolve({ locale: 'fr' }) });
     expect(mocks.redirect).toHaveBeenLastCalledWith({ href: '/dashboard', locale: 'fr' });
   });
@@ -129,7 +145,11 @@ describe('the privacy policy', () => {
     expect(screen.queryByText(tPrivacy('export.button'))).toBeNull();
 
     cleanup();
-    mocks.session.mockResolvedValue({ user: { login: 'bob', status: 'MEMBER' } });
+    mocks.session.mockResolvedValue({
+      user: { login: 'bob', status: 'MEMBER' },
+      realStatus: 'MEMBER',
+      missingIds: [],
+    });
     await open();
     const link = screen.getByText(tPrivacy('export.button')).closest('a');
     expect(link).toHaveAttribute('href', '/api/me/export');

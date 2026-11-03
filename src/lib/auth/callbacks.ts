@@ -169,5 +169,7 @@ export async function sessionCallback({
   session.user.name = dbUser.fullName;
   session.user.email = dbUser.email;
   session.user.image = officialPhotoUrl(dbUser.photoUrl);
+  session.user.discordUserId = dbUser.discordUserId;
+  session.user.slackUserId = dbUser.slackUserId;
   return session;
 }

@@ -116,6 +116,29 @@ page Paramètres. Elles se personnalisent comme les autres, depuis la page **Not
 jour : la plateforme réessaie 30 minutes après un échec (trois fois par jour au plus) et ne se répète pas. Une sauvegarde que vous
 demandez avec **Sauvegarder maintenant** et qui échoue est montrée sur la page, pas envoyée.
 
+## Les identifiants Discord et Slack des membres
+
+Pour mentionner quelqu'un, la plateforme a besoin de son **identifiant Discord** et de son **identifiant Slack** : elle les **demande à chaque
+membre**, pour chaque plateforme sur laquelle le BDE publie. La règle est la même pour tous, propriétaires et staff compris :
+
+- **Un webhook du BDE** est enregistré (Discord et/ou Slack, dans les **Paramètres**) : l'identifiant de cette plateforme est **obligatoire** pour tout le monde.
+- **Un webhook pour le salon du staff** est enregistré (et la publication sur l'intra est activée) : l'identifiant de cette plateforme est aussi obligatoire pour
+  les membres qui ont un droit de publier sur l'intra, pour que `{@staff}` puisse les notifier.
+- Une plateforme qui n'est pas configurée **n'est pas demandée** ; quand aucune ne l'est, rien n'est demandé.
+
+**À la première connexion**, après 42 et avant la page d'attente, une étape demande les identifiants ; elle ne peut pas être passée. **Quand une plateforme
+est ajoutée plus tard**, chaque membre, avec une session déjà ouverte, trouve à sa prochaine page une fenêtre qui demande l'identifiant manquant et qui **ne
+peut pas être fermée** (ni avec Échap, ni en cliquant à l'extérieur, ni en allant ailleurs) : la seule autre issue est **Se déconnecter**. Elle s'affiche sur
+toutes les pages, pour un propriétaire aussi (celui qui vient d'ajouter la plateforme), mais jamais pendant l'installation, sur la page de connexion ni sur une
+page d'erreur. Tant qu'un identifiant manque, la plateforme n'envoie rien d'autre : retirer la fenêtre du navigateur laisse une page vide, et toute action est
+refusée jusqu'à ce que l'identifiant soit donné.
+
+Les deux donnent un petit guide, avec des schémas, pour trouver l'identifiant (Discord : _Paramètres → Avancés → Mode développeur_, puis clic droit, ou appui
+long sur téléphone, sur votre nom → _Copier l'identifiant de l'utilisateur_ ; Slack : votre profil → ⋮ → _Copier l'ID du membre_), et disent pourquoi : être
+mentionné dans les notifications du BDE. Un identifiant est vérifié (Discord : un nombre de 17 à 20 chiffres ; Slack : un U ou un W suivi de lettres et de
+chiffres) ; une mention comme `@everyone` est refusée. Il se modifie dans **Mon profil**, avec les mêmes règles (un identifiant obligatoire n'est jamais vidé).
+La copie de vos données que vous pouvez télécharger le contient, et il est supprimé avec le compte.
+
 ## Personnaliser les messages
 
 Les mots, les couleurs, les informations montrées et leur ordre, le bouton et l'objet des e-mails peuvent se

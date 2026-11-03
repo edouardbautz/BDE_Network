@@ -93,6 +93,8 @@ describe('getEffectiveSession', () => {
       isImpersonating: false,
       simulatedAs: null,
       realStatus: 'OWNER',
+      missingIds: [],
+      requiredIds: [],
     });
     expect(getImpersonation).not.toHaveBeenCalled();
   });

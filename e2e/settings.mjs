@@ -16,15 +16,17 @@ import { deflateSync } from 'node:zlib';
 import { encode } from '@auth/core/jwt';
 import puppeteer from 'puppeteer-core';
 import { networkRests, watchNetwork } from './network.mjs';
+import { sqlRunner } from './sql.mjs';
 
 const [base] = process.argv.slice(2);
 const secret = process.env.AUTH_SECRET;
 if (!base || !secret) {
-  console.error('usage: AUTH_SECRET=... node e2e/settings.mjs <address>');
+  console.error('usage: AUTH_SECRET=... PSQL="psql ..." node e2e/settings.mjs <address>');
   process.exit(2);
 }
 const OWNER = process.env.OWNER ?? 'alice';
 const MEMBER = process.env.MEMBER ?? 'carol';
+const sql = (statements) => sqlRunner(process.env.PSQL ?? '')(statements);
 
 const CANDIDATES = [
   process.env.CHROME_PATH,
@@ -382,6 +384,8 @@ try {
   await clickButton('Slack : tout cocher');
   if ((await ticked()) !== 16) fail(`${await ticked()} boxes ticked with two columns, not 16`);
   await saveNotifications();
+  // The owner who has just added Slack is asked for their Slack id like anybody else (the server holds the whole platform until they give it): they give it.
+  sql(`UPDATE "User" SET "slackUserId" = 'U0123456789' WHERE login = '${OWNER}'`);
   await reloadNotifications();
   if ((await ticked()) !== 16) fail('the two channels are not there after a reload');
   if ((await text()).includes('e2eslacksecret')) fail('the Slack address is shown back');

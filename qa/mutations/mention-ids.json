@@ -1,0 +1,107 @@
+[
+  [
+    "ids: the staff platform is asked of everybody, not of the staff",
+    "src/lib/mention-ids/required.ts",
+    "facts.main[platform] || (holdsIntraRight && facts.staff[platform])",
+    "facts.main[platform] || facts.staff[platform]",
+    ["src/lib/mention-ids/required.test.ts"]
+  ],
+  [
+    "ids: the BDE’s own webhook does not make the id required",
+    "src/lib/mention-ids/required.ts",
+    "facts.main[platform] || (holdsIntraRight",
+    "false || (holdsIntraRight",
+    ["src/lib/mention-ids/required.test.ts"]
+  ],
+  [
+    "ids: the staff room counts while the platform does not publish on the intra",
+    "src/lib/mention-ids/required.ts",
+    "getConfig().modules.enabled.includes('events') && intraPublicationEnabled()",
+    "true",
+    ["src/lib/mention-ids/required.test.ts"]
+  ],
+  [
+    "ids: an id that is given is missing",
+    "src/lib/mention-ids/required.ts",
+    "platform === 'discord' ? !held.discordUserId : !held.slackUserId",
+    "platform === 'discord' ? !!held.discordUserId : !!held.slackUserId",
+    ["src/lib/mention-ids/required.test.ts"]
+  ],
+  [
+    "ids: an account that lacks an id keeps its rights",
+    "src/lib/auth/session.ts",
+    "if (missingIds.length === 0) return",
+    "if (true) return",
+    ["src/lib/auth/session-incomplete.test.ts"]
+  ],
+  [
+    "ids: an account that waits is sent to the dashboard, not to the step",
+    "src/lib/auth/home.ts",
+    "session.realStatus === 'PENDING' ? '/identifiers' : '/dashboard'",
+    "'/dashboard'",
+    ["src/lib/auth/home.test.ts"]
+  ],
+  [
+    "ids: an approved account is sent to the step, not asked in a window",
+    "src/lib/auth/home.ts",
+    "session.realStatus === 'PENDING' ? '/identifiers' : '/dashboard'",
+    "'/identifiers'",
+    ["src/lib/auth/home.test.ts"]
+  ],
+  [
+    "ids: the layout draws the page while an id is missing",
+    "src/app/[locale]/(app)/layout.tsx",
+    "if (session.missingIds.length > 0) {",
+    "if (false) {",
+    ["src/app/[locale]/(app)/layout.test.ts"]
+  ],
+  [
+    "ids: an account that waits is not sent to the step by the layout",
+    "src/app/[locale]/(app)/layout.tsx",
+    "if (session.realStatus === 'PENDING') {\n      redirect({ href: '/identifiers', locale });",
+    "if (false) {\n      redirect({ href: '/identifiers', locale });",
+    ["src/app/[locale]/(app)/layout.test.ts"]
+  ],
+  [
+    "ids: a page with only its own data draws itself while an id is missing",
+    "src/lib/auth/require-session.ts",
+    "if (session.missingIds.length > 0) {",
+    "if (false) {",
+    ["src/lib/auth/require-session.test.ts"]
+  ],
+  [
+    "ids: a platform that is not asked is written",
+    "src/app/[locale]/(app)/profile/actions.ts",
+    "for (const platform of session.requiredIds) {\n    data[asked[platform]]",
+    "for (const platform of ['discord', 'slack'] as const) {\n    data[asked[platform]]",
+    ["src/app/[locale]/(app)/profile/actions.test.ts"]
+  ],
+  [
+    "ids: the audit entry holds the ids",
+    "src/app/[locale]/(app)/profile/actions.ts",
+    "metadata: { changed },",
+    "metadata: { changed, data },",
+    ["src/app/[locale]/(app)/profile/actions.test.ts"]
+  ],
+  [
+    "ids: the window can be closed by Escape",
+    "src/components/mention-ids/mention-ids-window.tsx",
+    "<Dialog open onOpenChange={() => undefined} disablePointerDismissal>",
+    "<Dialog defaultOpen>",
+    ["src/components/mention-ids/mention-ids-window.test.tsx"]
+  ],
+  [
+    "ids: the field is not required",
+    "src/components/mention-ids/mention-ids-form.tsx",
+    "                required\n                aria-required=\"true\"\n",
+    "",
+    ["src/components/mention-ids/mention-ids-form.test.tsx"]
+  ],
+  [
+    "ids: a mention is taken for a Discord id",
+    "src/lib/members/mention-ids.ts",
+    "const DISCORD_ID = /^[0-9]{17,20}$/;",
+    "const DISCORD_ID = /^.+$/;",
+    ["src/components/mention-ids/mention-ids-form.test.tsx"]
+  ]
+]

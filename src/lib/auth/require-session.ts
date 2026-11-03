@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 import { redirect } from '@/i18n/navigation';
 import { isApproved } from '@/lib/permissions';
@@ -16,6 +17,12 @@ export async function requireApprovedSession(): Promise<EffectiveSession> {
 
   if (!session) {
     return redirect({ href: '/', locale });
+  }
+  // An id the BDE needs is missing: the account waits for approval goes to the step that asks it; an approved account is on a page the layout
+  // covers with the window that asks it, and the page has nothing to draw (its session holds nothing).
+  if (session.missingIds.length > 0) {
+    if (session.realStatus === 'PENDING') return redirect({ href: '/identifiers', locale });
+    return notFound();
   }
   if (!isApproved(session.user.status)) {
     return redirect({ href: '/pending', locale });

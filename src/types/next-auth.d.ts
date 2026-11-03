@@ -20,6 +20,9 @@ declare module 'next-auth' {
       permissions: string[];
       /** Holds everything, including what future modules add (OWNER, or a role with all permissions). */
       holdsAll: boolean;
+      /** How the person is mentioned on Discord and Slack (see `lib/mention-ids`); null when they have not given it. */
+      discordUserId: string | null;
+      slackUserId: string | null;
     } & DefaultSession['user'];
   }
 }

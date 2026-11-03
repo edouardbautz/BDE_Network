@@ -65,6 +65,8 @@ function build(access: Access, login: string, id: string): Session {
       name: 'Test User',
       email: 'test@example.com',
       image: null,
+      discordUserId: null,
+      slackUserId: null,
       ...access,
     },
     expires: '2099-01-01T00:00:00.000Z',
@@ -101,6 +103,8 @@ export function effective(session: Session): EffectiveSession {
     isImpersonating: false,
     simulatedAs: null,
     realStatus: session.user.status,
+    missingIds: [],
+    requiredIds: [],
   };
 }
 

@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { signIn } from '@/lib/auth';
+import { homeFor } from '@/lib/auth/home';
 import { getEffectiveSession } from '@/lib/auth/session';
 import { getConfig } from '@/config';
 import { isDatabaseReachable } from '@/lib/health';
@@ -19,7 +20,7 @@ export default async function LoginPage({ params }: { params: Promise<{ locale: 
   const session = await getEffectiveSession();
 
   if (session?.user) {
-    redirect({ href: session.user.status === 'PENDING' ? '/pending' : '/dashboard', locale });
+    redirect({ href: homeFor(session), locale });
     return null;
   }
 
