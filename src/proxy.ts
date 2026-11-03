@@ -6,6 +6,8 @@ import { isSetupMode } from '@/lib/setup/guard';
 const intl = createMiddleware(routing);
 
 const SETUP_PATH = /^\/(?:fr|en)\/setup(?:\/|$)/;
+/** What answers while the platform is not installed, besides the installer: the health check, and the manifest every page links to. */
+const SETUP_PUBLIC = new Set(['/api/health', '/api/manifest']);
 
 /**
  * Whether the percent-encoding of an address can be read (`%ff` and a lone `%` cannot). A page is read twice: the
@@ -35,8 +37,9 @@ export default function proxy(request: NextRequest) {
   }
 
   // The platform is not installed: the installer is the only page, and the only thing that answers besides
-  // the health check. (This runs on the Node.js runtime, so it sees the same state as the server.)
-  if (isSetupMode() && pathname !== '/api/health') {
+  // the health check and the manifest the pages link to (a page of the installer must not make a request that fails). (This runs on the
+  // Node.js runtime, so it sees the same state as the server.)
+  if (isSetupMode() && !SETUP_PUBLIC.has(pathname)) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json(
         { status: 'not-installed' },

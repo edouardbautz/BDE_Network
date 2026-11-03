@@ -426,6 +426,47 @@ export const API: readonly RouteSpec[] = [
     ],
   },
   {
+    route: '/api/logo/icon/[size]',
+    probes: [
+      {
+        label: 'no logo has been uploaded',
+        path: '/api/logo/icon/192?v=0000000000000000',
+        expect: () => status(404),
+      },
+      {
+        label: 'a size that is not one',
+        path: '/api/logo/icon/999?v=0000000000000000',
+        expect: () => status(404),
+      },
+      {
+        label: 'a size that is a path',
+        path: '/api/logo/icon/..%2f..%2fetc?v=0000000000000000',
+        expect: () => status(404),
+      },
+      {
+        label: 'the logo of the settings, none uploaded',
+        path: '/api/logo/icon/48',
+        expect: () => status(404),
+      },
+    ],
+  },
+  {
+    route: '/api/manifest',
+    probes: [
+      {
+        label: 'what a phone reads to add the platform',
+        path: '/api/manifest',
+        expect: () => status(200),
+      },
+    ],
+  },
+  {
+    route: '/favicon.ico',
+    probes: [
+      { label: 'the icon some readers ask for', path: '/favicon.ico', expect: () => status(307) },
+    ],
+  },
+  {
     route: '/api/auth/[...nextauth]',
     probes: [
       { label: 'the session of the visitor', path: '/api/auth/session', expect: () => status(200) },

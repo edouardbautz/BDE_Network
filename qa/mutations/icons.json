@@ -1,0 +1,121 @@
+[
+  [
+    "icons: an icon that is not square is accepted",
+    "src/lib/branding/icons.ts",
+    "info.width === size && info.height === size",
+    "info.width === size",
+    ["src/lib/branding/icons.test.ts"]
+  ],
+  [
+    "icons: an icon that is not a PNG is accepted",
+    "src/lib/branding/icons.ts",
+    "info.type === 'png' && ",
+    "",
+    ["src/lib/branding/icons.test.ts"]
+  ],
+  [
+    "icons: an icon of any weight is accepted",
+    "src/lib/branding/icons.ts",
+    "bytes.length > ICON_MAX_BYTES",
+    "false",
+    ["src/lib/branding/icons.test.ts"]
+  ],
+  [
+    "icons: any number is a size",
+    "src/lib/branding/icons.ts",
+    "(ICON_SIZES as readonly number[]).includes(value)",
+    "true",
+    ["src/lib/branding/icons.test.ts"]
+  ],
+  [
+    "icons: an unchecked icon is stored",
+    "src/lib/branding/storage.ts",
+    "if (icon && checkIcon(icon, size))",
+    "if (icon)",
+    ["src/lib/branding/icons.test.ts"]
+  ],
+  [
+    "icons: pruning removes the icons of the logo it keeps",
+    "src/lib/branding/storage.ts",
+    "!(keep && name.startsWith(`logo-${keep}`))",
+    "name !== `logo-${keep}`",
+    ["src/lib/branding/icons.test.ts"]
+  ],
+  [
+    "icons: the BDE’s own logo does not change the icons",
+    "src/lib/branding/icon-links.ts",
+    "version ? `/api/logo/icon/${size}?v=${version}` : `/icons/icon-${size}.png`",
+    "`/icons/icon-${size}.png`",
+    ["src/lib/branding/icons.test.ts"]
+  ],
+  [
+    "preview: the site name is the sentence",
+    "src/lib/branding/icon-links.ts",
+    "siteName: name,",
+    "siteName: description,",
+    ["src/lib/branding/icons.test.ts"]
+  ],
+  [
+    "preview: the preview has no title",
+    "src/lib/branding/icon-links.ts",
+    "      title: name,\n      description,\n      locale,",
+    "      description,\n      locale,",
+    ["src/lib/branding/icons.test.ts"]
+  ],
+  [
+    "icons: the logo is placed with no margin",
+    "src/lib/branding/draw-icons.ts",
+    "const FILL = 0.84;",
+    "const FILL = 1;",
+    ["src/lib/branding/icons.test.ts"]
+  ],
+  [
+    "icon route: the image can be taken for a page",
+    "src/lib/branding/serve.ts",
+    "\"default-src 'none'; sandbox\"",
+    "\"default-src *\"",
+    ["src/app/api/logo/icon/[size]/route.test.ts"]
+  ],
+  [
+    "icon route: a size that was not drawn has no icon",
+    "src/app/api/logo/icon/[size]/route.ts",
+    "(await readIcon(version, size)) ?? (await readLogo(version))",
+    "(await readIcon(version, size))",
+    ["src/app/api/logo/icon/[size]/route.test.ts"]
+  ],
+  [
+    "icon route: a size that is not one is served",
+    "src/app/api/logo/icon/[size]/route.ts",
+    "if (!size) return imageNotFound();",
+    "",
+    ["src/app/api/logo/icon/[size]/route.test.ts"]
+  ],
+  [
+    "manifest: the icons do not follow the logo",
+    "src/app/api/manifest/route.ts",
+    "{ src: iconPath(192, version), sizes: '192x192', purpose: 'any' },",
+    "{ src: iconPath(192, null), sizes: '192x192', purpose: 'any' },",
+    ["src/app/api/manifest/route.test.ts"]
+  ],
+  [
+    "manifest: the manifest holds more than the BDE",
+    "src/app/api/manifest/route.ts",
+    "    start_url: '/',",
+    "    start_url: '/',\n    id: process.env.AUTH_SECRET,",
+    ["src/app/api/manifest/route.test.ts"]
+  ],
+  [
+    "proxy: the installer’s pages link to a manifest that fails",
+    "src/proxy.ts",
+    "new Set(['/api/health', '/api/manifest'])",
+    "new Set(['/api/health'])",
+    ["src/proxy.test.ts"]
+  ],
+  [
+    "preview: an event page writes its own title",
+    "src/app/[locale]/(app)/events/[id]/page.tsx",
+    "export const generateMetadata = pageTitle('events', 'title');",
+    "export async function generateMetadata() {\n  return { title: 'Event' };\n}",
+    ["src/app/metadata-private.test.ts"]
+  ]
+]

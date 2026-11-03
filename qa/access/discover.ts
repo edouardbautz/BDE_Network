@@ -38,8 +38,9 @@ export function discoverPages(root = process.cwd()): string[] {
     .sort();
 }
 
+/** Every route handler of the application: the API, and the few outside it (`/favicon.ico`). */
 export function discoverApiRoutes(root = process.cwd()): string[] {
-  return files(join(root, 'src', 'app', 'api'))
+  return files(join(root, 'src', 'app'))
     .filter((path) => basename(path) === 'route.ts')
     .map((path) => routeOf(path, root))
     .sort();

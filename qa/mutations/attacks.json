@@ -49,7 +49,7 @@
   ],
   [
     "uploads: the logo is served as a page",
-    "src/app/api/logo/route.ts",
+    "src/lib/branding/serve.ts",
     "'Content-Type': info.mime,",
     "'Content-Type': 'text/html',"
   ],

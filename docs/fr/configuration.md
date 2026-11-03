@@ -48,6 +48,19 @@ Le logo apparaît dans le menu, sur la page de connexion et dans les messages (D
 - Le format est lu dans le fichier lui-même, pas d'après son nom. Un fichier qui n'est pas une image est refusé.
 - **Revenir au logo par défaut** supprime le fichier envoyé.
 
+**L'icône de la plateforme suit le logo.** L'icône de l'onglet du navigateur, celle qu'on obtient en ajoutant la plateforme à l'écran
+d'accueil d'un iPhone ou d'un téléphone Android, et l'image d'un lien partagé dans une discussion sont le logo de BDE_Network tant que
+vous n'avez pas envoyé le vôtre ; ensuite ce sont **vos** icônes, aussitôt (l'adresse de chaque icône porte la version du logo, donc
+aucun cache ne garde l'ancienne), et le logo par défaut revient quand vous retirez le vôtre. Votre navigateur dessine les quatre
+tailles nécessaires (48, 180, 192 et 512 pixels) au moment de l'envoi, donc le serveur n'a besoin d'aucun outil d'image ; un logo
+envoyé avant cette fonction est utilisé tel quel. Un onglet peut garder l'ancienne icône un instant : le navigateur la redemande quand
+il recharge la page.
+
+**Ce qu'affiche un lien partagé**, c'est le nom du BDE, son logo et une phrase générique (« Plateforme de gestion du … »), **pour chaque
+page**, y compris un lien vers un événement : la plateforme est privée, donc un titre, un lieu ou un nom n'apparaît jamais dans un
+aperçu. Discord, Slack, WhatsApp et iMessage ont besoin que l'[adresse de la plateforme](#ladresse-de-la-plateforme) soit renseignée, pour
+récupérer l'image.
+
 Le fichier est gardé dans le volume `uploads`, et la sauvegarde l'inclut. Pour Discord, voir aussi
 [Le logo de l'expéditeur](notifications.md#le-logo-de-lexpéditeur).
 

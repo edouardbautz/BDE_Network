@@ -1,20 +1,8 @@
-import { NextResponse } from 'next/server';
 import { getConfig } from '@/config';
-import { inspectImage } from '@/lib/branding/image';
+import { imageNotFound, imageResponse } from '@/lib/branding/serve';
 import { isLogoVersion, logoVersionOf, readLogo } from '@/lib/branding/storage';
 
 export const dynamic = 'force-dynamic';
-
-/**
- * The route answers with its own strict policy (the one of the pages does not apply to it, see `security-headers.ts`),
- * so every answer carries it, a refusal included.
- */
-const POLICY_HEADERS = {
-  'Content-Security-Policy': "default-src 'none'; sandbox",
-  'X-Content-Type-Options': 'nosniff',
-};
-
-const notFound = () => new NextResponse(null, { status: 404, headers: POLICY_HEADERS });
 
 /**
  * The logo the BDE uploaded (settings page). Public on purpose: the login page, Discord, Slack and the readers
@@ -28,21 +16,6 @@ const notFound = () => new NextResponse(null, { status: 404, headers: POLICY_HEA
 export async function GET(request: Request) {
   const asked = new URL(request.url).searchParams.get('v');
   const version = isLogoVersion(asked) ? asked : logoVersionOf(getConfig().bde.logoPath);
-  if (!version) return notFound();
-
-  const bytes = await readLogo(version);
-  const info = bytes ? inspectImage(bytes) : null;
-  if (!bytes || !info) return notFound();
-
-  return new NextResponse(new Uint8Array(bytes), {
-    headers: {
-      'Content-Type': info.mime,
-      'Content-Length': String(bytes.length),
-      ...POLICY_HEADERS,
-      ETag: `"${version}"`,
-      'Cache-Control': isLogoVersion(asked)
-        ? 'public, max-age=31536000, immutable'
-        : 'public, max-age=0, must-revalidate',
-    },
-  });
+  if (!version) return imageNotFound();
+  return imageResponse(await readLogo(version), version, isLogoVersion(asked));
 }
