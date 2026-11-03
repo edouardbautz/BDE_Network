@@ -117,6 +117,16 @@ Votre login n'est pas dans la liste des propriétaires (une faute de frappe à l
 propriétaire l'ajoute dans **Paramètres**, section Propriétaires. S'il n'y en a aucun, voir
 [Configuration](configuration.md#remplacer-les-réglages-par-les-fichiers).
 
+### Les photos de profil ne s'affichent pas, seulement les initiales
+
+La photo d'un membre vient de 42 et est **récupérée à chaque connexion** : un compte connecté avant que la plateforme la lise garde ses
+initiales jusqu'à sa prochaine connexion. Les initiales remplacent aussi la photo quand 42 n'en donne pas, quand elle ne peut pas être
+chargée, ou quand son adresse n'est pas une adresse de 42 (la plateforme ne garde que les adresses `https://….intra.42.fr/…` et le
+navigateur ne charge que celles-là). Si un membre qui vient de se connecter n'en a pas, le journal dit pourquoi, sans donnée personnelle :
+`docker compose logs app` montre une ligne qui commence par « Connexion de « login » sans photo 42 retenue », qui nomme les champs de la
+réponse de 42 et l'hôte de chaque adresse. La photo est aussi dans les cartes Discord et Slack et les e-mails d'une nouvelle demande et
+d'une approbation.
+
 ### Tout le monde est déconnecté, ou une page boucle
 
 C'est normal après un changement de la clé de session (volume `secrets` remplacé) : les anciennes sessions ne

@@ -42,10 +42,10 @@ export function cspProblems(value: string): string[] {
       if (/^https?:$/.test(source)) problems.push(`${name} allows every ${source} address`);
       if (source === 'data:' && name !== 'img-src') problems.push(`${name} allows data: addresses`);
     }
-  }
+  // Images: the platform itself, what it embeds, and the pictures of 42 (its own domain, any host under it: `officialPhotoUrl`); nothing else.
   // Images: the platform itself, what it embeds, and 42's pictures; nothing else.
   for (const source of csp['img-src'] ?? []) {
-    if (!["'self'", 'data:', 'blob:', 'https://cdn.intra.42.fr'].includes(source))
+    if (!["'self'", 'data:', 'blob:', 'https://*.intra.42.fr'].includes(source))
       problems.push(`img-src allows ${source}`);
   }
   // Forms: the platform, and the sign-in with 42.
