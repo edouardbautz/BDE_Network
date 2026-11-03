@@ -1,3 +1,4 @@
+import { officialPhotoUrl } from '@/lib/fortytwo-photo';
 import { MEMBER_COLORS, colorToInt } from '@/lib/notifications/colors';
 import {
   BLANK_LINE,
@@ -141,7 +142,7 @@ export function buildMemberEmbed(
   });
   if (fields.length > 0) lines.push(BLANK_LINE); // air between the text and the fields
 
-  const thumbnail = httpUrl(member.photoUrl);
+  const thumbnail = officialPhotoUrl(member.photoUrl) ?? undefined;
 
   return {
     title: named(template?.emoji ?? KIND_ICON[kind], say(template?.title ?? '{name}')),

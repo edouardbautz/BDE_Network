@@ -115,6 +115,15 @@ the platform sends: the intra's message shows the address it received. Look for 
 Your login is not in the owners' list (a typo during installation?). Another owner adds it in **Settings**, Owners
 section. If there is none, see [Configuration](configuration.md#replace-the-settings-with-files).
 
+### The profile pictures do not show, only the initials
+
+The picture of a member comes from 42 and is **fetched at each sign-in**: an account that signed in before the platform read it has its
+initials until its next sign-in. The initials are also what stands in when 42 gives no picture, when the picture cannot be loaded, or when
+its address is not one of 42's (the platform only keeps `https://….intra.42.fr/…` addresses and the browser only loads those). If a member
+who just signed in has none, the log says why, with no personal data: `docker compose logs app` shows a line starting with
+"Connexion de « login » sans photo 42 retenue", which names the fields the answer of 42 had and the host of each address. The picture is also in
+the Discord and Slack cards and the e-mails about a new request and an approval.
+
 ### Everyone is signed out, or a page loops
 
 This is normal after the session key changes (the `secrets` volume was replaced): old sessions are worth nothing.

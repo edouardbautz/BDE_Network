@@ -103,6 +103,43 @@ describe('signInCallback — a new account', () => {
   });
 });
 
+describe('signInCallback — the picture', () => {
+  const PHOTO = 'https://cdn.intra.42.fr/users/2c1f/medium_alice.jpg';
+
+  it('is stored with a new account', async () => {
+    await signInCallback({ user: profile('alice', { image: PHOTO }) });
+    expect(prisma.user.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ photoUrl: PHOTO }),
+    });
+  });
+
+  it('is stored again at every sign-in of an account that exists (so an account without one gets it at the next sign-in)', async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      id: 'u1',
+      login: 'alice',
+      fullName: 'Name of alice',
+      status: 'MEMBER',
+      roleId: 'r1',
+      photoUrl: null,
+    } as never);
+    await signInCallback({ user: profile('alice', { image: PHOTO }) });
+    expect(prisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ photoUrl: PHOTO }) }),
+    );
+  });
+
+  it.each([
+    ['another site', 'https://evil.example/a.jpg'],
+    ['a script', 'javascript:alert(1)'],
+    ['plain http', 'http://cdn.intra.42.fr/a.jpg'],
+  ])('is not stored when it is %s: the initials stand in', async (_label, image) => {
+    await signInCallback({ user: profile('alice', { image }) });
+    expect(prisma.user.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ photoUrl: null }),
+    });
+  });
+});
+
 describe('signInCallback — someone who comes back', () => {
   it('updates the profile and never notifies again, even while still pending', async () => {
     vi.mocked(prisma.user.findUnique).mockResolvedValue({

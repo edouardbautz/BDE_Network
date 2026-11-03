@@ -556,11 +556,6 @@
           "text": {
             "type": "mrkdwn",
             "text": "@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_ demande l'accès à la plateforme."
-          },
-          "accessory": {
-            "type": "image",
-            "image_url": "javascript:alert(1)",
-            "alt_text": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_"
           }
         },
         {
@@ -661,11 +656,6 @@
           "text": {
             "type": "mrkdwn",
             "text": "@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_ a rejoint le BDE."
-          },
-          "accessory": {
-            "type": "image",
-            "image_url": "javascript:alert(1)",
-            "alt_text": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_"
           }
         },
         {
@@ -761,11 +751,6 @@
           "text": {
             "type": "mrkdwn",
             "text": "@​everyone &lt;!channel&gt; &lt;@123&gt; &lt;b&gt;x&lt;/b&gt; [a](https://evil.example) &amp; \"q\" 's' *b* _i_ a été retiré du BDE."
-          },
-          "accessory": {
-            "type": "image",
-            "image_url": "javascript:alert(1)",
-            "alt_text": "@everyone <!channel> <@123> <b>x</b> [a](https://evil.example) & \"q\" 's' *b* _i_"
           }
         },
         {

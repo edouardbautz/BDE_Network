@@ -1,3 +1,4 @@
+import { officialPhotoUrl } from '@/lib/fortytwo-photo';
 import { MEMBER_COLORS, normalizeHex } from '@/lib/notifications/colors';
 import type { EmailModel } from '@/lib/notifications/email-layout';
 import { neutralizeForSlack } from '@/lib/notifications/sanitize';
@@ -64,8 +65,12 @@ ${text(value, 400)}`,
           top.push({
             type: 'section',
             text: { type: 'mrkdwn', text: sentence },
-            ...(member.photoUrl && {
-              accessory: { type: 'image', image_url: member.photoUrl, alt_text: member.fullName },
+            ...(officialPhotoUrl(member.photoUrl) && {
+              accessory: {
+                type: 'image',
+                image_url: officialPhotoUrl(member.photoUrl)!,
+                alt_text: member.fullName,
+              },
             }),
           });
         }

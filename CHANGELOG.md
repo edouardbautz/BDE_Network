@@ -133,6 +133,13 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Fixed
 
+- **The 42 profile picture is read wherever the API puts it, kept only on 42's domain, and shown.** The platform read the picture from one field only (`image.link`) and kept the address as it came;
+  members showed their initials and the cards of Discord and Slack and the e-mails had no photo. It is now read from the medium version first (a few kilobytes, not the original), then the link, the other
+  versions and the older `image_url`, **kept only when it is an `https` address under `intra.42.fr`** (not a look-alike, not the bare domain, no credentials, no port), stored at each sign-in, and used by the pages,
+  the cards and the e-mails from the same list; the policy of the pages lets an image come from `https://*.intra.42.fr` and nowhere else outside the platform (it named one host). The initials stay when there is
+  no picture, when it is not 42's or when 42 does not answer, with no broken image. A sign-in that retains no picture writes one line in the log with the fields of the answer and the host of each address
+  (never a path). Accounts get their picture at their next sign-in. The Slack message no longer carries an image address that is not 42's (the reference of the hostile case changed by that line).
+
 - **A check box was squeezed by a long explanation.** In the edition of a role, the box of a permission whose description takes several lines (such as "Publish on the intra")
   was narrower than the others: it was a flex item and shrank. The rule is now written once, in the base layer of the stylesheet, for **every** checkbox and radio button (20 px,
   never shrunk, the accent), and no screen gives them a size of its own: the table of notifications, the installer, the settings, the confirmation choices, the event form. The
