@@ -2023,6 +2023,11 @@ specification): **`docs/design.md`**. Read it before touching layout or adding U
   script, no flash. **One filled accent "moment" per screen**, plus the main button; never the accent for data, statuses or running text.
   The default of a new installation is `#2F5BEA` (`DEFAULT_ACCENT`, `config/schema.ts`); a platform that has a colour keeps it. The settings page and the
   installer preview it, light and dark (`AccentPreview`), and say when it was adjusted.
+- **A small control keeps its size** (`globals.css` base layer, `small-controls.test.ts`, `qa/browsers/controls.spec.ts`; `docs/design.md`, "Fields"). A checkbox or a radio button in a flex row shrank
+  when the text beside it was long (the permissions of a role: "Publish on the intra" made its box 13 px wide), because a flex item shrinks and a `size-5` is only a wish. The rule is ONE selector
+  in the base layer (`flex: none`, 20 × 20, `accent-color`), and a component never gives such an input a size (the test reads the sources); an input hidden behind a drawn control keeps
+  `sr-only`, which wins over the base layer. Found by a person, not by a suite: the browser test now measures every control of the main screens with a 600-character sentence beside it,
+  on a computer and a phone, in the three engines (on the previous code it fails in Chromium and Firefox; WebKit does not squeeze a native checkbox, but it showed the 16 px ones).
 - Per-fork colours that are not the accent (`events.categories[].color`) are a dot, never the text colour.
 - **The frame** (`components/layout`): a rail of 96 px from 640 px, a floating tab bar under it, a `PageHeader` on each page (title, actions; a back link for a thing that
   belongs to a list). Nav items are keyed by `NavItem['id']` mapped to a Lucide icon in `NAV_ICONS`, with a short label (`nav.rail.*`): a new top-level module extends that type and

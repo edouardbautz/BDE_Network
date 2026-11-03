@@ -200,7 +200,7 @@ export function ConfirmDialog({
                   value={option.value}
                   checked={choice === option.value}
                   onChange={() => setChoice(option.value)}
-                  className="accent-accent-fill mt-0.5 size-5"
+                  className="mt-0.5"
                 />
                 <span className="flex flex-col gap-0.5">
                   <span className="text-body-strong">{option.label}</span>

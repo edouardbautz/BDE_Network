@@ -240,7 +240,14 @@ Label above (`body-strong`, 6), help below (`small` muted, 6). Hover `surface-3`
 replaces the outline); error: the same ring in `danger`, `aria-invalid`, an icon and a message in `danger` linked by `aria-describedby`;
 disabled: `disabled` text and label; read-only: transparent with an inset hairline. A **text area** has a radius of 14, padding 12 × 16, 96
 high at least. A **native select** keeps the 3 px outline of the interface for its focus (Safari draws no shadow on a select).
-Checkbox, radio: 20 px, the accent (`accent-color`). **Switch**: a pill of 44 × 26, `surface-3` off and `accent-fill` on, a thumb of 20 moving in
+Checkbox, radio: 20 px, the accent (`accent-color`). **A small control keeps its size, whatever the text beside it says**: a checkbox, a radio button and a
+switch are never squeezed, stretched or made smaller by a long label (the description of a permission can take several lines). The rule is written once, in
+the base layer of `globals.css` (`input[type="checkbox"], input[type="radio"]`: `flex: none`, 20 × 20, the accent), so a screen cannot forget it, and a
+component gives such an input **no size of its own** (`size-*`, `w-*`, `shrink-*`: `small-controls.test.ts` fails on one; an input hidden behind a drawn
+control keeps `sr-only`, which wins over the base layer). The switch is `shrink-0` in `ui/switch.tsx`. In a row of several lines the control sits at the top
+(`items-start`) and is level with the first line of the text (`mt-0.5` for a body line of 20 px); a row of one line may centre it. A new control (a
+custom checkbox, a segmented choice) is added to `qa/browsers/controls.spec.ts`, which measures every control of the screens with a very long text beside it, on a
+computer and on a phone, in the three engines. **Switch**: a pill of 44 × 26, `surface-3` off and `accent-fill` on, a thumb of 20 moving in
 `--dur-base`. **Segmented control**: a pill `surface-2`, padding 4, segments of 36 (44 on a phone), the active one `surface` with `elev-1`.
 
 ### Cards

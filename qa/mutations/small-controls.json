@@ -1,0 +1,23 @@
+[
+  [
+    "controls: a checkbox is squeezed by the text beside it again",
+    "src/app/globals.css",
+    "    flex: none;\n    width: 1.25rem;",
+    "    width: 1.25rem;",
+    ["src/components/small-controls.test.ts"]
+  ],
+  [
+    "controls: a checkbox is not 20 px",
+    "src/app/globals.css",
+    "    width: 1.25rem;",
+    "    width: 1rem;",
+    ["src/components/small-controls.test.ts"]
+  ],
+  [
+    "controls: a component gives a radio button a size of its own",
+    "src/components/confirm-dialog.tsx",
+    "className=\"mt-0.5\"",
+    "className=\"mt-0.5 size-4\"",
+    ["src/components/small-controls.test.ts"]
+  ]
+]

@@ -213,7 +213,7 @@ export function RoleForm({
                 disabled={!canGrantAll}
                 onChange={(event) => setAllPermissions(event.target.checked)}
                 aria-describedby="all-help"
-                className="accent-accent-fill mt-0.5 size-5"
+                className="mt-0.5"
               />
               <span className="flex flex-col gap-1">
                 <span className="text-body-strong">{t('form.allPermissions')}</span>
@@ -251,7 +251,7 @@ export function RoleForm({
                           disabled={allPermissions || option.locked}
                           onChange={(event) => toggle(option, event.target.checked)}
                           aria-describedby={`${id}-help`}
-                          className="accent-accent-fill mt-0.5 size-5"
+                          className="mt-0.5"
                         />
                         <span className="flex flex-col gap-0.5">
                           <span className="text-body-strong">{option.label}</span>

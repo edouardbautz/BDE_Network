@@ -324,7 +324,6 @@ export function RepeatFields({
                     value={choice}
                     checked={monthly === choice}
                     onChange={() => setMonthly(choice)}
-                    className="accent-accent-fill size-5"
                   />
                   <span className="first-letter:uppercase">{label}</span>
                 </label>
@@ -346,7 +345,6 @@ export function RepeatFields({
                 value="until"
                 checked={end === 'until'}
                 onChange={() => setEnd('until')}
-                className="accent-accent-fill size-5"
               />
               {t('endUntil')}
             </label>
@@ -371,7 +369,6 @@ export function RepeatFields({
                 value="count"
                 checked={end === 'count'}
                 onChange={() => setEnd('count')}
-                className="accent-accent-fill size-5"
               />
               {t('endCount')}
             </label>
