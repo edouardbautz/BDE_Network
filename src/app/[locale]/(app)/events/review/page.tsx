@@ -6,10 +6,10 @@ import { channelsFor } from '@/config/schema';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { CategoryBadge } from '@/components/events/category-badge';
 import { EmptyState } from '@/components/galets/empty-state';
+import { linkRow, rowAction, RowDetails, RowLink } from '@/components/galets/link-row';
 import { PageHeader } from '@/components/layout/page-header';
 import { EventNoticeAlert } from '@/components/events/event-notice';
 import { Card, CardContent } from '@/components/ui/card';
-import { Link } from '@/i18n/navigation';
 import { getEventsAccess } from '@/lib/events/access';
 import { resolveCategory } from '@/lib/events/categories';
 import { chatNames, confirmationNotice } from '@/lib/events/confirmation-notice';
@@ -21,6 +21,7 @@ import { isRepeating } from '@/lib/events/repeat';
 import { summarizeRepeat, summaryInputOf, type RepeatTranslate } from '@/lib/events/repeat-summary';
 import { resolveOccurrences } from '@/lib/events/series';
 import { pageTitle } from '@/lib/page-title';
+import { cn } from '@/lib/utils';
 import { refuseEvent, setEventStatus } from '../actions';
 
 export const dynamic = 'force-dynamic';
@@ -93,95 +94,107 @@ export default async function ReviewPage({
                   const author = event.author?.fullName ?? event.authorLogin;
 
                   return (
-                    <li
-                      key={event.id}
-                      className="border-line flex flex-col gap-3 border-t py-4 first:border-t-0 first:pt-0 sm:flex-row sm:items-start sm:justify-between"
-                    >
-                      <div className="flex min-w-0 flex-col gap-1.5">
-                        <Link
-                          href={{
-                            pathname: `/events/${event.id}`,
-                            ...(isSeries && first
-                              ? { query: { occ: first.originalStart.getTime() } }
-                              : {}),
-                          }}
-                          className="text-body-strong w-fit rounded-xs break-words hover:underline"
-                        >
-                          {event.title}
-                        </Link>
-                        <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-small">
-                          <CategoryBadge category={resolveCategory(event.categoryKey)} />
-                          {first && (
-                            <span className="inline-flex items-center gap-1">
-                              <CalendarCheck className="size-3.5" aria-hidden />
-                              <span className="first-letter:uppercase">
-                                {formatDateTimeRange(first.start, first.end, locale, timeZone)}
+                    <li key={event.id} className="border-line border-t first:border-t-0">
+                      <div
+                        className={cn(
+                          linkRow,
+                          'flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between',
+                        )}
+                      >
+                        <div className="flex min-w-0 flex-col gap-1.5">
+                          <RowLink
+                            href={{
+                              pathname: `/events/${event.id}`,
+                              ...(isSeries && first
+                                ? { query: { occ: first.originalStart.getTime() } }
+                                : {}),
+                            }}
+                            className="text-body-strong w-fit rounded-xs break-words"
+                          >
+                            {event.title}
+                          </RowLink>
+                          <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-small">
+                            <CategoryBadge category={resolveCategory(event.categoryKey)} />
+                            {first && (
+                              <span className="inline-flex items-center gap-1">
+                                <CalendarCheck className="size-3.5" aria-hidden />
+                                <span className="first-letter:uppercase">
+                                  {formatDateTimeRange(first.start, first.end, locale, timeZone)}
+                                </span>
                               </span>
-                            </span>
-                          )}
-                          {repeatSummary && (
-                            <span className="inline-flex items-center gap-1">
-                              <Repeat className="size-3.5" aria-hidden />
-                              {summarizeRepeat(repeatSummary, tRepeat, locale)}
-                            </span>
-                          )}
+                            )}
+                            {repeatSummary && (
+                              <span className="inline-flex items-center gap-1">
+                                <Repeat className="size-3.5" aria-hidden />
+                                {summarizeRepeat(repeatSummary, tRepeat, locale)}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-muted-foreground text-small">
+                            {t('review.proposedBy', {
+                              author,
+                              date: formatLongDate(
+                                event.proposedAt ?? event.createdAt,
+                                locale,
+                                timeZone,
+                              ),
+                            })}
+                          </p>
                         </div>
-                        <p className="text-muted-foreground text-small">
-                          {t('review.proposedBy', {
-                            author,
-                            date: formatLongDate(
-                              event.proposedAt ?? event.createdAt,
-                              locale,
-                              timeZone,
-                            ),
-                          })}
-                        </p>
-                      </div>
 
-                      <div className="flex shrink-0 flex-wrap items-center gap-2 max-sm:*:flex-1">
-                        <ConfirmDialog
-                          tone="destructive"
-                          triggerVariant="destructive"
-                          title={t('detail.review.refuseDialog.title')}
-                          description={t('detail.review.refuseDialog.body')}
-                          confirmLabel={t('detail.review.refuseDialog.confirm')}
-                          field={{
-                            label: t('detail.review.refuseDialog.comment'),
-                            hint: t('detail.review.refuseDialog.commentHint'),
-                            maxLength: REFUSAL_COMMENT_MAX_LENGTH,
-                            required: true,
-                          }}
-                          onConfirm={async (_choice, comment) => {
-                            'use server';
-                            return refuseEvent(event.id, comment, 'review');
-                          }}
-                        >
-                          <CircleX data-icon="inline-start" />
-                          {t('detail.review.refuse')}
-                        </ConfirmDialog>
-                        <ConfirmDialog
-                          tone="default"
-                          triggerVariant="default"
-                          title={t('detail.review.approveDialog.title')}
-                          description={[t('detail.confirmDialog.body'), noticeText]
-                            .filter(Boolean)
-                            .join(' ')}
-                          confirmLabel={t('detail.review.approveDialog.confirm')}
-                          onConfirm={async () => {
-                            'use server';
-                            // A proposal is the whole event: for a series, from its first date.
-                            return setEventStatus(
-                              event.id,
-                              'CONFIRMED',
-                              isSeries ? event.startsAt.getTime() : undefined,
-                              isSeries ? 'following' : undefined,
-                              'review',
-                            );
-                          }}
-                        >
-                          <CircleCheck data-icon="inline-start" />
-                          {t('detail.review.approve')}
-                        </ConfirmDialog>
+                        <div className="flex shrink-0 flex-wrap items-center gap-2 max-sm:w-full">
+                          <RowDetails label={t('viewDetails')} className="max-sm:w-full" />
+                          <div
+                            className={cn(
+                              rowAction,
+                              'flex flex-wrap items-center gap-2 max-sm:w-full max-sm:*:flex-1',
+                            )}
+                          >
+                            <ConfirmDialog
+                              tone="destructive"
+                              triggerVariant="destructive"
+                              title={t('detail.review.refuseDialog.title')}
+                              description={t('detail.review.refuseDialog.body')}
+                              confirmLabel={t('detail.review.refuseDialog.confirm')}
+                              field={{
+                                label: t('detail.review.refuseDialog.comment'),
+                                hint: t('detail.review.refuseDialog.commentHint'),
+                                maxLength: REFUSAL_COMMENT_MAX_LENGTH,
+                                required: true,
+                              }}
+                              onConfirm={async (_choice, comment) => {
+                                'use server';
+                                return refuseEvent(event.id, comment, 'review');
+                              }}
+                            >
+                              <CircleX data-icon="inline-start" />
+                              {t('detail.review.refuse')}
+                            </ConfirmDialog>
+                            <ConfirmDialog
+                              tone="default"
+                              triggerVariant="default"
+                              title={t('detail.review.approveDialog.title')}
+                              description={[t('detail.confirmDialog.body'), noticeText]
+                                .filter(Boolean)
+                                .join(' ')}
+                              confirmLabel={t('detail.review.approveDialog.confirm')}
+                              onConfirm={async () => {
+                                'use server';
+                                // A proposal is the whole event: for a series, from its first date.
+                                return setEventStatus(
+                                  event.id,
+                                  'CONFIRMED',
+                                  isSeries ? event.startsAt.getTime() : undefined,
+                                  isSeries ? 'following' : undefined,
+                                  'review',
+                                );
+                              }}
+                            >
+                              <CircleCheck data-icon="inline-start" />
+                              {t('detail.review.approve')}
+                            </ConfirmDialog>
+                          </div>
+                        </div>
                       </div>
                     </li>
                   );

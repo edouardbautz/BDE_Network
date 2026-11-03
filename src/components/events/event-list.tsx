@@ -1,11 +1,12 @@
 import { MapPin, Repeat, Users } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Badge } from '@/components/ui/badge';
-import { Link } from '@/i18n/navigation';
+import { linkRow, RowLink } from '@/components/galets/link-row';
 import { groupByLocalDay, parseDayKey } from '@/lib/events/calendar';
 import { resolveCategory, type CategoryView } from '@/lib/events/categories';
 import { formatDayHeading, formatTimeRange } from '@/lib/events/format';
 import type { OccurrenceView } from '@/lib/events/occurrences';
+import { cn } from '@/lib/utils';
 import { CategoryBadge } from './category-badge';
 
 interface EventRowsProps {
@@ -24,44 +25,46 @@ export async function EventRow({
   const category = resolveCategory(occurrence.categoryKey, categories);
 
   return (
-    <li className="border-line flex flex-col gap-1 border-t py-3.5 first:border-t-0 sm:flex-row sm:gap-4">
-      <p className="text-small text-muted-foreground tabular w-full shrink-0 sm:w-44">
-        {formatTimeRange(occurrence.start, occurrence.end, locale, timeZone)}
-      </p>
-      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <Link
-            href={{
-              pathname: `/events/${occurrence.eventId}`,
-              query: { occ: occurrence.originalStart.getTime() },
-            }}
-            className="text-body-strong rounded-xs hover:underline"
-          >
-            {occurrence.title}
-          </Link>
-          {occurrence.status !== 'CONFIRMED' && (
-            <Badge variant={occurrence.status === 'PROPOSED' ? 'warning' : 'outline'}>
-              {t(`status.${occurrence.status}`)}
-            </Badge>
-          )}
-          {occurrence.isRecurring && (
-            <Repeat className="text-muted-foreground size-3.5" aria-label={t('recurring')} />
-          )}
-        </div>
-        <div className="text-small text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1">
-          <CategoryBadge category={category} />
-          {occurrence.location && (
-            <span className="inline-flex items-center gap-1">
-              <MapPin className="size-3.5" aria-hidden />
-              {occurrence.location}
-            </span>
-          )}
-          {occurrence.assignees.length > 0 && (
-            <span className="inline-flex items-center gap-1">
-              <Users className="size-3.5" aria-hidden />
-              {occurrence.assignees.map((a) => a.name).join(', ')}
-            </span>
-          )}
+    <li className="border-line border-t first:border-t-0">
+      <div className={cn(linkRow, 'flex flex-col gap-1 py-3 sm:flex-row sm:gap-4')}>
+        <p className="text-small text-muted-foreground tabular w-full shrink-0 sm:w-44">
+          {formatTimeRange(occurrence.start, occurrence.end, locale, timeZone)}
+        </p>
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <RowLink
+              href={{
+                pathname: `/events/${occurrence.eventId}`,
+                query: { occ: occurrence.originalStart.getTime() },
+              }}
+              className="text-body-strong rounded-xs"
+            >
+              {occurrence.title}
+            </RowLink>
+            {occurrence.status !== 'CONFIRMED' && (
+              <Badge variant={occurrence.status === 'PROPOSED' ? 'warning' : 'outline'}>
+                {t(`status.${occurrence.status}`)}
+              </Badge>
+            )}
+            {occurrence.isRecurring && (
+              <Repeat className="text-muted-foreground size-3.5" aria-label={t('recurring')} />
+            )}
+          </div>
+          <div className="text-small text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1">
+            <CategoryBadge category={category} />
+            {occurrence.location && (
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="size-3.5" aria-hidden />
+                {occurrence.location}
+              </span>
+            )}
+            {occurrence.assignees.length > 0 && (
+              <span className="inline-flex items-center gap-1">
+                <Users className="size-3.5" aria-hidden />
+                {occurrence.assignees.map((a) => a.name).join(', ')}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </li>

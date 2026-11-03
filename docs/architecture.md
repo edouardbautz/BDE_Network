@@ -2033,6 +2033,11 @@ specification): **`docs/design.md`**. Read it before touching layout or adding U
   script, no flash. **One filled accent "moment" per screen**, plus the main button; never the accent for data, statuses or running text.
   The default of a new installation is `#2F5BEA` (`DEFAULT_ACCENT`, `config/schema.ts`); a platform that has a colour keeps it. The settings page and the
   installer preview it, light and dark (`AccentPreview`), and say when it was adjusted.
+- **A line of a list opens its page from all of it** (`components/galets/link-row.tsx`, `row-links.test.ts`, `link-row.test.tsx`, `qa/browsers/row-links.spec.ts`; `docs/design.md`, "Rows that open a page"). The pattern is the stretched link: the title is
+  the one `<a>` and its `::after` covers the line, so there is no interactive element inside another, one stop of the keyboard, and the same address for a click on the title, on the line and on "View details" (a picture of a
+  button under the covering layer, `aria-hidden`). Anything else clickable in the line is lifted with `rowAction` (`z-10`) and keeps its own behaviour. The ring is drawn by the line (`:has()` on `data-row-link`), not by the link, so
+  a new list copies the three exports, not the classes. Applied to the requests for the intra, the proposals to validate and the list of events; the dashboard's next dates already are one link per line. Playwright's own `click`
+  and `hover` refuse an element another covers, which is the point of the pattern: the spec clicks with the mouse at coordinates, as a person does.
 - **A small control keeps its size** (`globals.css` base layer, `small-controls.test.ts`, `qa/browsers/controls.spec.ts`; `docs/design.md`, "Fields"). A checkbox or a radio button in a flex row shrank
   when the text beside it was long (the permissions of a role: "Publish on the intra" made its box 13 px wide), because a flex item shrinks and a `size-5` is only a wish. The rule is ONE selector
   in the base layer (`flex: none`, 20 × 20, `accent-color`), and a component never gives such an input a size (the test reads the sources); an input hidden behind a drawn control keeps
