@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { giveOwnerIds, takeIdsBack } from './owner-ids';
 import { atRest } from './rest';
 
 /**
@@ -48,6 +49,10 @@ async function leaveNoChannel(page: Page) {
 }
 
 test.describe('the table of notifications', () => {
+  // the owner who sets a webhook up has answered the platform's question about their ids (owner-ids.ts)
+  test.beforeEach(giveOwnerIds);
+  test.afterEach(takeIdsBack);
+
   test('opens with nothing ticked, and a channel to set up before any box', async ({ as }) => {
     const page = await as('owner');
     await openSettings(page);

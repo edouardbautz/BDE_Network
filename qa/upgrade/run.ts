@@ -370,6 +370,28 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
         Number(tables.rows[0]?.mentions) === 0,
       JSON.stringify(tables.rows[0]),
     );
+    // The stack posts on Discord and Slack (see `writeEnvironment`), and from 1.6.0 the platform asks everybody for their id on each platform
+    // the BDE posts on. An update must not shut the owner out: they are shown the step to give theirs (the platform answers, with the gate and
+    // not a page), and `qa/browsers/mention-ids.spec.ts` plays giving it. The ids are then given to every account, as they would be by the
+    // members one by one, so that the checks below see the pages as they are for people who have answered.
+    const idsBefore = await stack.database((db) =>
+      db.query(
+        `SELECT count(*)::int AS ids FROM "User" WHERE "discordUserId" IS NOT NULL OR "slackUserId" IS NOT NULL`,
+      ),
+    );
+    const asked = await page(stack, '/en/dashboard', OLD.owner);
+    check(
+      'the owner of a platform that posts on Discord and Slack is asked for their ids, and is not shut out: the platform answers with the step to give them',
+      asked.status === 200 && asked.body.includes('data-mention-ids-gate'),
+      `${asked.status} ${asked.location ?? ''}`,
+    );
+    await stack.database((db) =>
+      db.query(`UPDATE "User" SET "discordUserId" = $1, "slackUserId" = $2`, [
+        '348291047563210241',
+        'U04ABCD1234',
+      ]),
+    );
+
     const customise = await page(stack, '/en/notifications', OLD.owner);
     check(
       'the owner opens the page where the notifications are customised',
@@ -394,15 +416,15 @@ export async function playUpgrade(from: (typeof VERSIONS)[number], report: Repor
     // not exist, even for the owner.
     const intra = await stack.database((db) =>
       db.query(
-        `SELECT (SELECT count(*) FROM "IntraRequest")::int AS requests, (SELECT count(*) FROM "Event" WHERE "intraOrganizerLogin" IS NOT NULL OR "intraKind" IS NOT NULL)::int AS events, (SELECT count(*) FROM "User" WHERE "discordUserId" IS NOT NULL OR "slackUserId" IS NOT NULL)::int AS ids`,
+        `SELECT (SELECT count(*) FROM "IntraRequest")::int AS requests, (SELECT count(*) FROM "Event" WHERE "intraOrganizerLogin" IS NOT NULL OR "intraKind" IS NOT NULL)::int AS events`,
       ),
     );
     check(
       'the publication on the intra came with this update and changes nothing: no request, no event with its fields, nobody gave an id',
       Number(intra.rows[0]?.requests) === 0 &&
         Number(intra.rows[0]?.events) === 0 &&
-        Number(intra.rows[0]?.ids) === 0,
-      JSON.stringify(intra.rows[0]),
+        Number(idsBefore.rows[0]?.ids) === 0,
+      JSON.stringify({ ...intra.rows[0], ids: idsBefore.rows[0]?.ids }),
     );
     const intraList = await page(stack, '/en/events/intra', OLD.owner);
     check(

@@ -726,3 +726,54 @@ jobs:
           name: mutation-report
           path: mutation-report
           if-no-files-found: ignore
+
+  # A night that goes red must not go unnoticed: it opens an issue (or adds to the one that is open), assigned to the maintainer, who
+  # GitHub then notifies; the first green night comments and closes it. Only the scheduled run: a pull request or a run started by hand
+  # is looked at by the person who started it.
+  alert:
+    name: tell the maintainer when the night fails
+    if: always() && github.event_name == 'schedule'
+    needs:
+      - baseline
+      - image-scan
+      - zap
+      - mutations
+      - browsers
+      - visual
+      - performance
+      - resilience
+      - upgrade
+      - backups
+      - backups-rootless
+      - longtime
+      - mutation-testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      RUN_ID: ${{ github.run_id }}
+      SHA: ${{ github.sha }}
+      LABEL: qa-nightly
+    steps:
+      - name: Open or update the issue, or close it
+        run: |
+          gh label create "$LABEL" --color B60205 --description "The nightly QA failed" 2>/dev/null || true
+          open=$(gh issue list --label "$LABEL" --state open --json number --jq '.[0].number // empty')
+          failed=$(gh run view "$RUN_ID" --json jobs --jq '[.jobs[] | select(.conclusion == "failure" or .conclusion == "cancelled") | "- " + .name] | unique | join("\n")')
+          if [ -n "$failed" ]; then
+            body=$(printf 'The nightly QA failed on `%s`.\n\nRun: %s\n\nJobs that failed:\n%s\n' "$SHA" "$RUN_URL" "$failed")
+            if [ -n "$open" ]; then
+              gh issue comment "$open" --body "$body"
+            else
+              gh issue create --label "$LABEL" --assignee "${GH_REPO%%/*}" --title "The nightly QA is red" --body "$body"
+            fi
+          elif [ -n "$open" ]; then
+            gh issue comment "$open" --body "$(printf 'The nightly QA is green again: %s' "$RUN_URL")"
+            gh issue close "$open"
+          fi

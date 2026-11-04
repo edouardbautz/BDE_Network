@@ -96,6 +96,17 @@ function startHang(): { ok: boolean; detail: string } {
   return { ok: started.ok, detail: started.out.slice(0, 200) };
 }
 
+/**
+ * This platform posts on Discord, so from 1.6.0 everybody is asked for their id there and sees nothing else until it is given (docs/architecture.md,
+ * "The ids asked of everybody"). A persona without one would be shown the step and not the page, and the checks would be about that. The
+ * dataset has no ids, so the suite gives them to the accounts, as the members would have.
+ */
+async function giveEveryoneIds(db: {
+  query: (sql: string, params?: unknown[]) => Promise<unknown>;
+}) {
+  await db.query('UPDATE "User" SET "discordUserId" = $1', ['348291047563210241']);
+}
+
 export async function checkWebhook(platform: Platform, report: Report): Promise<void> {
   report.watch('the address of the webhook', HANG_ADDRESS);
   const healthy = report.check(
@@ -115,7 +126,10 @@ export async function checkWebhook(platform: Platform, report: Report): Promise<
   const setStatus = (event: string, status: string) =>
     callAction(platform, 'validator', id, page, [event, status]);
 
-  await withDatabase(platform, (db) => resetDatabase(db));
+  await withDatabase(platform, async (db) => {
+    await resetDatabase(db);
+    await giveEveryoneIds(db);
+  });
 
   // 1. The action that causes a notification answers at once, although the channel never will.
   const startedAt = performance.now();
@@ -183,7 +197,10 @@ export async function checkWebhook(platform: Platform, report: Report): Promise<
 
   // 5. The channel is gone: the same.
   docker('stop', '-t', '1', HANG);
-  await withDatabase(platform, (db) => resetDatabase(db));
+  await withDatabase(platform, async (db) => {
+    await resetDatabase(db);
+    await giveEveryoneIds(db);
+  });
   const gone = performance.now();
   const third = await setStatus(EVENTS.proposed, 'CONFIRMED');
   report.check(
