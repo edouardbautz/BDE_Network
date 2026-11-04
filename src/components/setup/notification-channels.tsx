@@ -175,6 +175,7 @@ export function WebhookField({
       invalid={failure?.field === field}
       onRemove={onRemove}
       removeLabel={t(`removeChannel`, { channel: t(`channelNames.${channel}`) })}
+      inputClassName="bg-surface"
     />
   );
 }
@@ -235,6 +236,7 @@ export function SmtpFields({
         onChange={(password) => onChange({ ...value, password })}
         error={fieldText('smtpPassword')}
         invalid={failure?.field === 'smtpPassword'}
+        inputClassName="bg-surface"
       />
       <div className="sm:col-span-2">
         <Field id="setup-smtp-from" label={t('smtpFrom')} error={fieldText('smtpFrom')}>

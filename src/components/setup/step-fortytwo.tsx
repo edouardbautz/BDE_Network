@@ -125,7 +125,6 @@ export function StepFortyTwo({
           value={clientId}
           onChange={(event) => setClientId(event.target.value)}
           {...NO_AUTOFILL}
-          className="font-mono text-small"
           aria-invalid={failure?.field === 'clientId'}
         />
       </Field>

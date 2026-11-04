@@ -27,12 +27,16 @@ export const NO_AUTOFILL = {
   'data-form-type': 'other',
 } as const;
 
-/** A secret typed, drawn as dots by the browser (a text field in the style `-webkit-text-security`, which the three engines have). */
+/**
+ * A secret typed, drawn as dots by the browser (a text field in the style `-webkit-text-security`, which the three engines have).
+ * It is the field of the design system and nothing else: same ground, size, font and states as every other field, the dots being
+ * its only difference. A caller never gives it a ground of its own (`bg-surface` once made it vanish into the card).
+ */
 export function MaskedInput({ className, ...props }: ComponentProps<typeof Input>) {
   return (
     <Input
       type="text"
-      className={cn('font-mono text-small [-webkit-text-security:disc]', className)}
+      className={cn('[-webkit-text-security:disc]', className)}
       {...NO_AUTOFILL}
       {...props}
     />
@@ -59,6 +63,7 @@ export function SecretField({
   placeholder,
   onRemove,
   removeLabel,
+  inputClassName,
   children,
 }: {
   id: string;
@@ -78,6 +83,8 @@ export function SecretField({
   onRemove?: () => void;
   /** What the button is called for a screen reader ("Remove the Discord address"). */
   removeLabel?: string;
+  /** The ground of the field where it sits on a card that is itself `surface-2` (a panel): the same class the plain fields of that card carry. */
+  inputClassName?: string;
   children?: ReactNode;
 }) {
   const t = useTranslations('secretField');
@@ -111,7 +118,7 @@ export function SecretField({
             aria-describedby={
               [hintId, error ? `${id}-error` : undefined].filter(Boolean).join(' ') || undefined
             }
-            className="bg-surface min-w-0 flex-1"
+            className={cn('min-w-0 flex-1', inputClassName)}
           />
           {saved && (
             <Button
