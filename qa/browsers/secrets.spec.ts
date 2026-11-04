@@ -131,20 +131,23 @@ test.describe('the secrets of the settings page', () => {
     const replace42 = page.getByRole('button', { name: /^Replace: SECRET/ });
     if (await replace42.isVisible()) await replace42.click();
 
-    const normal = form(page).getByRole('textbox', { name: 'Login (optional)' });
-    const reference = await look(normal);
-    const secrets = [
-      form(page).getByRole('textbox', { name: 'Password (optional)' }),
-      form(page).getByRole('textbox', { name: 'Discord webhook address' }),
-      form(page).getByRole('textbox', { name: 'Slack webhook address' }),
-      page.getByRole('textbox', { name: 'SECRET (secret key)' }),
-    ];
-    for (const one of secrets) {
+    // In the panels of the channels (a card of its own ground) a secret is the look of the plain fields of that panel...
+    const inPanel = await look(form(page).getByRole('textbox', { name: 'Login (optional)' }));
+    for (const name of [
+      'Password (optional)',
+      'Discord webhook address',
+      'Slack webhook address',
+    ]) {
+      const one = form(page).getByRole('textbox', { name });
       await expect(one).toBeVisible();
-      expect(await look(one)).toEqual(reference);
+      expect(await look(one), name).toEqual(inPanel);
     }
-    // the UID of the same section, a plain field, is the very look of the secret under it
-    expect(await look(page.getByRole('textbox', { name: 'UID (identifier)' }))).toEqual(reference);
+    // ...and on the card of the 42 application the SECRET is the look of the UID above it
+    const secret42 = page.getByRole('textbox', { name: 'SECRET (secret key)' });
+    await expect(secret42).toBeVisible();
+    expect(await look(secret42)).toEqual(
+      await look(page.getByRole('textbox', { name: 'UID (identifier)' })),
+    );
   });
 
   test('a saved one is a statement, not a field; Replace opens an empty field, Cancel closes it', async ({
