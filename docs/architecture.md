@@ -1526,6 +1526,11 @@ start from the same three things, so that what one finds the others can replay.
   `full-qa`: the heavy suites, on the real image, a real PostgreSQL and the QA dataset. (3) A release: the last run of
   `qa.yml` on the commit to tag must be green. A suite goes in the level its duration allows: the budget of a pull request
   is a few minutes more, the rest is nightly. Never "retry until green" (see "Browser tests that fail now and then").
+  **A red night is told, not found**: the `alert` job of `qa.yml` opens an issue labelled `qa-nightly` (assigned to the maintainer, so GitHub notifies)
+  or comments on the one that is open, and closes it on the first green night. It was added after the night was red for a day (2026-11-04) with nobody
+  knowing. That night's cause is a lesson for every suite: **a platform that posts on Discord or Slack asks everybody for their id, and a persona
+  without one is shown the step and not the page** ("The ids asked of everybody"). A suite that configures a webhook gives the accounts it uses their ids
+  first (`qa/browsers/owner-ids.ts`, the update suite after the update, the webhook suite of the resilience job), except the one that plays the step.
 - **The personas** (`qa/personas.ts`): the ten profiles every suite plays — visitor, account waiting for approval,
   member, member who proposes, member who validates, member with a custom role, **member of the school's staff (the right to publish on the intra and nothing else)**,
   member with the Admin role, owner, and a removed member whose cookie is still valid. "Module disabled" and "publication on the intra turned on" are not somebody but ways of
