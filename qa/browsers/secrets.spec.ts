@@ -94,6 +94,59 @@ test.describe('the secrets of the settings page', () => {
     ).not.toBe('disc');
   });
 
+  test('a field of a secret looks exactly like any other field (the dots are its only difference)', async ({
+    as,
+  }) => {
+    const page = await as('owner');
+    await openSettings(page);
+
+    // everything that makes a field look like a field, as the engine computed it, for the idle state
+    const LOOK = [
+      'background-color',
+      'background-image',
+      'border-top-width',
+      'border-top-style',
+      'border-top-color',
+      'border-top-left-radius',
+      'border-bottom-right-radius',
+      'height',
+      'padding-left',
+      'padding-right',
+      'color',
+      'font-family',
+      'font-size',
+      'font-weight',
+      'line-height',
+      'letter-spacing',
+      'box-shadow',
+      'opacity',
+    ];
+    const look = (locator: ReturnType<Page['getByRole']>) =>
+      locator.evaluate((element, props) => {
+        const style = getComputedStyle(element);
+        return Object.fromEntries(props.map((name) => [name, style.getPropertyValue(name)]));
+      }, LOOK);
+
+    // The 42 application's SECRET is "Configured" when saved: Replace opens the empty field (it changes nothing).
+    const replace42 = page.getByRole('button', { name: /^Replace: SECRET/ });
+    if (await replace42.isVisible()) await replace42.click();
+
+    const normal = form(page).getByRole('textbox', { name: 'Login (optional)' });
+    const reference = await look(normal);
+    const secrets = [
+      form(page).getByRole('textbox', { name: 'Password (optional)' }),
+      form(page).getByRole('textbox', { name: 'Discord webhook address' }),
+      form(page).getByRole('textbox', { name: 'Slack webhook address' }),
+      page.getByRole('textbox', { name: 'SECRET (secret key)' }),
+    ];
+    for (const one of secrets) {
+      await expect(one).toBeVisible();
+      expect(await look(one)).toEqual(reference);
+    }
+    // the UID of the same section, a plain field, is the very look of the secret under it
+    expect(await look(page.getByRole('textbox', { name: 'UID (identifier)' }))).toEqual(reference);
+  });
+
   test('a saved one is a statement, not a field; Replace opens an empty field, Cancel closes it', async ({
     as,
   }) => {

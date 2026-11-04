@@ -6,6 +6,10 @@ All notable changes to this project are written here, in English. Format based o
 
 ## [Unreleased]
 
+### Fixed
+
+- **The field of a secret is visible.** In the installer (the SECRET of the 42 application) and on the settings page, the field of a secret had the ground of the card around it and a monospaced font, so it looked like there was no field. A field of a secret is now exactly the field of the design system (ground, size, font, states); the dots are its only difference and the protection against autofill is unchanged. The UID above it lost its monospaced font so the pair matches. A browser test compares the computed style of the secret fields with a plain field, in the three engines.
+
 ## [1.6.0] - 2026-11-03
 
 ### Added
