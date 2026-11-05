@@ -228,6 +228,38 @@ try {
   if (summary.includes(CLIENT_SECRET)) fail('the summary shows the 42 secret');
   if (summary.includes('e2ewebhooksecret')) fail('the summary shows the Discord address');
   await shot('summary');
+  // A value with no space (the UID of 42 is 70 characters, a webhook or an address can be longer) stays in its card, on a computer and on a phone
+  // (docs/design.md, "Long values"). The text is put in the page: the mock 42 only knows its own UID.
+  for (const width of [900, 390]) {
+    await page.setViewport({ width, height: 1000 });
+    const leaks = await page.evaluate(() => {
+      const list = document.querySelector('dl');
+      if (!list) return ['no summary list'];
+      const added = [];
+      for (const value of list.querySelectorAll('dd')) {
+        const node = document.createTextNode(`u-s4t2ud-${'4649158d0974c721'.repeat(10)}`);
+        value.append(node);
+        added.push(node);
+      }
+      const box = list.getBoundingClientRect();
+      const problems = [];
+      for (const value of list.querySelectorAll('dd')) {
+        const range = document.createRange();
+        range.selectNodeContents(value);
+        const text = range.getBoundingClientRect();
+        if (text.right > box.right + 1)
+          problems.push(
+            `${value.textContent?.slice(0, 20)} leaves the card by ${Math.round(text.right - box.right)}px`,
+          );
+      }
+      const sideways = document.documentElement.scrollWidth - document.documentElement.clientWidth;
+      if (sideways > 0) problems.push(`the page scrolls sideways by ${sideways}px`);
+      for (const node of added) node.remove();
+      return problems;
+    });
+    if (leaks.length > 0) fail(`the summary at ${width}px: ${leaks.join('; ')}`);
+  }
+  await page.setViewport({ width: 900, height: 1000 });
   await clickButton('Installer la plateforme');
   await waitText('Plateforme installée');
   await shot('done');

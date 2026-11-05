@@ -286,6 +286,15 @@ horizontal padding, the first column `body-strong`; the row under the pointer is
 tabular figures; dates like "Fri 23 Oct". **Under 640 px a table is a list**: the header goes (for the eye), each row is a block, the first cell is its title and each
 other cell says what it is (`data-label`). No table scrolls sideways on a phone. **A row of actions** (a request to approve, a member's role, a proposal to validate): on a computer the controls are on one line, aligned to the right of the column, and a menu is as wide as its longest option (`sm:w-auto`: a field is `w-full` by default, and a menu left like that fills the line and sends the buttons under it); on a phone the menu takes the line, then the buttons side by side, each one filling half (`max-sm:*:flex-1`, 44 px high), and the cell's content has `flex-1 min-w-0` since the cell is a row (label, then content). `qa/browsers/rows.spec.ts` measures it. Loading: rows of 12 high in `surface-2`, radius 6, a pulse of the opacity from .6 to 1 over 1.2 s.
 
+### Long values
+
+A value a member or the 42 intra gives has no length we choose: an identifier (`u-s4t2ud-…`, 70 characters), a login, an e-mail address, a calendar link, a masked address, the title of an event can all be 150 characters **with no space**, and the browser has nowhere to break such a word. The rule is one declaration in the base layer of `globals.css`: `overflow-wrap: anywhere` on `body`, inherited by everything. It is `anywhere`, not `break-word` (`break-words` in Tailwind): both break the long word when its line is full, but only `anywhere` also counts the possible breaks in the _minimum_ width of a box, so a grid column (`1fr`) or a flex item no longer grows to the width of the word and pushes out of its card (the summary of the installer did, with the UID of 42). Consequences, held by `qa/browsers/long-values.spec.ts`:
+
+- **A component never writes `break-words`** (it would put `break-word` back for its subtree) nor `whitespace-nowrap` on text that can be a value; a table cell wraps (only a header and a number stay on one line). A button, a tab and a badge keep their label on one line (`overflow-wrap: normal` for buttons and tabs, `whitespace-nowrap` for badges): their text is a word of ours.
+- **Wrap by default; truncate (`truncate`) only a line that is a summary of something shown whole elsewhere** (a card of the dashboard, a chip of the calendar, a title in the header of a phone), and then the element carries `title` with the whole value, or sits in the link that opens the page where it is whole. A truncated value that is neither is a defect.
+- **A grid or flex item that holds a value is `min-w-0`** when it must share the line with something else; `anywhere` makes it unnecessary for text, not for an image or a table inside.
+- A screen that shows a new kind of value is added to `SCREENS` of that file; the test puts a long value in the database (names, e-mails, logins, titles, places, roles, the audit log) and fails for any text that leaves its box, on a computer and on a phone, light and dark, in the three engines. The installer's summary is played by `e2e/install.mjs` (a UID of 70 characters).
+
 ### Asking for the ids
 
 `components/mention-ids/`. The Discord and Slack ids the BDE needs to mention people are asked in three places with **one form** (`MentionIdsForm`): the **step of the
@@ -414,3 +423,4 @@ and a `loading.tsx` with skeletons, `ConfirmDialog` for anything destructive, to
 - [ ] Targets of 44 px on a phone, the content never hidden by the tab bar.
 - [ ] `prefers-reduced-motion` respected.
 - [ ] No text under 10.5 px; contrast AA checked by axe.
+- [ ] Tried with a value of 150 characters and no space in every field that shows one (see "Long values").

@@ -90,7 +90,7 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
     <td
       data-slot="table-cell"
       className={cn(
-        "h-13 border-t border-line px-3 align-middle whitespace-nowrap transition-colors duration-(--dur-fast) group-first/row:border-t-0 [thead+tbody_tr:first-child_&]:border-t-0 [&:has([role=checkbox])]:pr-0",
+        "h-13 border-t border-line px-3 align-middle transition-colors duration-(--dur-fast) group-first/row:border-t-0 [thead+tbody_tr:first-child_&]:border-t-0 [&:has([role=checkbox])]:pr-0",
         "max-sm:flex max-sm:h-auto max-sm:items-baseline max-sm:gap-2 max-sm:border-t-0 max-sm:p-0 max-sm:whitespace-normal max-sm:first:text-body-strong max-sm:data-label:before:min-w-20 max-sm:data-label:before:shrink-0 max-sm:data-label:before:text-small max-sm:data-label:before:text-muted-foreground max-sm:data-label:before:content-[attr(data-label)] max-sm:first:data-label:before:hidden",
         className
       )}

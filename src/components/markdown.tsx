@@ -100,8 +100,6 @@ function blocks(nodes: readonly Block[]): ReactNode {
 
 export function Markdown({ source, className }: { source: string; className?: string }) {
   return (
-    <div className={`flex flex-col gap-2 break-words ${className ?? ''}`}>
-      {blocks(parseMarkdown(source))}
-    </div>
+    <div className={`flex flex-col gap-2 ${className ?? ''}`}>{blocks(parseMarkdown(source))}</div>
   );
 }

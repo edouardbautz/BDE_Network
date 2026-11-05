@@ -55,8 +55,10 @@ export default async function ProfilePage() {
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
             <div className="flex min-w-0 flex-col gap-0.5">
-              <CardTitle className="truncate">{displayName}</CardTitle>
-              <CardDescription className="truncate">
+              <CardTitle className="truncate" title={displayName}>
+                {displayName}
+              </CardTitle>
+              <CardDescription className="truncate" title={`${user.login} · ${user.campus}`}>
                 {user.login} · {user.campus}
               </CardDescription>
             </div>

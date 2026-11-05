@@ -109,7 +109,7 @@ export default async function ReviewPage({
                                 ? { query: { occ: first.originalStart.getTime() } }
                                 : {}),
                             }}
-                            className="text-body-strong w-fit rounded-xs break-words"
+                            className="text-body-strong w-fit rounded-xs"
                           >
                             {event.title}
                           </RowLink>

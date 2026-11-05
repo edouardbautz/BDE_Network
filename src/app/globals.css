@@ -299,6 +299,15 @@
     @apply bg-background text-foreground;
     font-weight: 500;
     text-wrap: pretty;
+    /* Long values (docs/design.md, "Long values"): a login, an address, a link or a title with no space breaks where the line ends
+       instead of leaving its box. `anywhere`, not `break-word`: it also lowers the minimum width of a grid or flex item, which is what let
+       a long value stretch its column past the card. Inherited by everything; the labels of controls, which are words, keep theirs. */
+    overflow-wrap: anywhere;
+  }
+  button,
+  [role='button'],
+  [role='tab'] {
+    overflow-wrap: normal;
   }
   html {
     @apply font-sans;

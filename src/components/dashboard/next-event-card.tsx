@@ -60,13 +60,18 @@ export async function NextEventCard({
         {occurrence.location && (
           <li className="flex items-center gap-2">
             <MapPin aria-hidden="true" className="size-4.5 shrink-0" />
-            <span className="min-w-0 truncate">{occurrence.location}</span>
+            <span className="min-w-0 truncate" title={occurrence.location}>
+              {occurrence.location}
+            </span>
           </li>
         )}
         {occurrence.assignees.length > 0 && (
           <li className="flex items-center gap-2">
             <Users aria-hidden="true" className="size-4.5 shrink-0" />
-            <span className="min-w-0 truncate">
+            <span
+              className="min-w-0 truncate"
+              title={occurrence.assignees.map((assignee) => assignee.name).join(', ')}
+            >
               {occurrence.assignees.map((assignee) => assignee.name).join(', ')}
             </span>
           </li>

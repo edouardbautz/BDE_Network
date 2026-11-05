@@ -8,6 +8,7 @@ All notable changes to this project are written here, in English. Format based o
 
 ### Fixed
 
+- **A long value with no space stays in its box.** The UID of the 42 application in the summary of the installer (70 characters, no space) came out of its card instead of wrapping, and the same could happen to a login, an e-mail address, a calendar link, a masked address or the title of an event on the settings, the profile, the members, the audit log, the shared calendar, the dashboard and the calendar. The rule is written once, in the base layer (`overflow-wrap: anywhere`, which also lets a grid column or a flex item shrink below the width of the word), instead of screen by screen; table cells wrap, and a truncated line says the whole value in its `title`. Held by a browser test that puts very long values in the database and measures every screen on a computer and a phone, light and dark, in the three engines ("Long values" in `docs/design.md`).
 - **The field of a secret is visible.** In the installer (the SECRET of the 42 application) and on the settings page, the field of a secret had the ground of the card around it and a monospaced font, so it looked like there was no field. A field of a secret is now exactly the field of the design system (ground, size, font, states); the dots are its only difference and the protection against autofill is unchanged. The UID above it lost its monospaced font so the pair matches. A browser test compares the computed style of the secret fields with a plain field, in the three engines.
 
 ## [1.6.0] - 2026-11-03

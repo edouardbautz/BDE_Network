@@ -32,8 +32,12 @@ export async function AccountCard({
           </AvatarFallback>
         </Avatar>
         <div className="flex min-w-0 flex-col">
-          <p className="text-card-title text-ink truncate">{name}</p>
-          <p className="text-small text-muted-foreground truncate">{detail}</p>
+          <p className="text-card-title text-ink truncate" title={name}>
+            {name}
+          </p>
+          <p className="text-small text-muted-foreground truncate" title={detail}>
+            {detail}
+          </p>
         </div>
       </div>
       <div className="flex items-center justify-between gap-3">

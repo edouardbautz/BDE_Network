@@ -83,7 +83,7 @@ export function StepSummary({ view, run, onNext, onBack }: StepProps & { view: D
         {rows.map(([label, value]) => (
           <div key={label} className="grid gap-1 px-3 py-2 sm:grid-cols-[10rem_1fr] sm:gap-4">
             <dt className="text-muted-foreground">{label}</dt>
-            <dd className="break-words">{value}</dd>
+            <dd>{value}</dd>
           </div>
         ))}
       </dl>
