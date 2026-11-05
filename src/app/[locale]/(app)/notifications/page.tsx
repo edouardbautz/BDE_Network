@@ -76,20 +76,23 @@ export default async function NotificationsPage({
       <p className="text-muted-foreground text-body mb-6 max-w-3xl">{t('page.intro')}</p>
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
-        <nav aria-label={t('page.listLabel')} className="flex min-w-0 flex-col gap-5">
+        <nav aria-label={t('page.listLabel')} className="flex min-w-0 flex-col gap-6">
           {groups
             .filter((group) => group.types.length > 0)
             .map((group) => (
-              <div key={group.id} className="flex flex-col gap-1.5">
-                <h2 className="text-small text-muted-foreground px-3 uppercase">
+              <div
+                key={group.id}
+                className="border-line flex flex-col gap-2 border-t pt-5 first:border-t-0 first:pt-0"
+              >
+                <h2 className="text-body-strong text-foreground px-3 uppercase">
                   {t(`page.groups.${group.id}`)}
                 </h2>
-                <ul className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible">
+                <ul className="flex flex-col gap-1 sm:flex-row sm:flex-wrap lg:flex-col">
                   {group.types.map((type) => {
                     const active = type === selected;
                     const edited = (customised[type] ?? []).length > 0;
                     return (
-                      <li key={type} className="shrink-0 lg:shrink">
+                      <li key={type} className="min-w-0 sm:max-w-full">
                         <Link
                           href={{ pathname: '/notifications', query: { type } }}
                           aria-current={active ? 'page' : undefined}
