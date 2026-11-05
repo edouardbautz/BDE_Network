@@ -295,6 +295,7 @@ export function createFakeRolesDb() {
         realStatus: user.status,
         missingIds: [],
         requiredIds: [],
+        ownerEscape: false,
       };
     },
   };

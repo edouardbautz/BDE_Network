@@ -70,7 +70,7 @@ vi.mock('@/components/settings/oauth-rejected-alert', () => ({
   ),
 }));
 vi.mock('@/lib/settings/access', () => ({
-  getSettingsManager: mocks.manager,
+  getSettingsOwner: mocks.manager,
   isSettingsEditable: mocks.editable,
 }));
 vi.mock('@/lib/settings/runtime', () => ({

@@ -2170,6 +2170,12 @@
     "gateSubmit": "Save",
     "saving": "Saving…",
     "logout": "Sign out",
+    "openSettings": "Open the settings",
+    "ownerNotice": {
+      "title": "Your {platforms} id is missing",
+      "body": "The other pages stay closed until you give it. You can also remove or change the channel here.",
+      "link": "Give my id"
+    },
     "gateAnnounce": "Something is needed to continue: give your id, or sign out.",
     "guide": {
       "discord": {

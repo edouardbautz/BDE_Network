@@ -63,6 +63,27 @@ describe('a platform is configured and an id is missing', () => {
     },
   );
 
+  it.each(['MEMBER', 'ADMIN', 'PENDING'] as const)(
+    'never marks %s as the owner who keeps the settings',
+    async (kind) => {
+      mockAuth.mockResolvedValue(withIds(sessionFor(kind), {}));
+      expect((await getEffectiveSession())?.ownerEscape).toBe(false);
+    },
+  );
+
+  it('marks the real owner only, and still holds nothing', async () => {
+    mockAuth.mockResolvedValue(withIds(sessionFor('OWNER'), {}));
+    const result = await getEffectiveSession();
+    expect(result?.ownerEscape).toBe(true);
+    expect(result?.user.status).toBe('PENDING');
+    expect(canManageSettings(result!.user)).toBe(false);
+  });
+
+  it('marks nobody once the ids are given', async () => {
+    mockAuth.mockResolvedValue(withIds(sessionFor('OWNER'), { discord: '348291047563210241' }));
+    expect((await getEffectiveSession())?.ownerEscape).toBe(false);
+  });
+
   it('holds what it held once the id is given, and nothing is missing', async () => {
     mockAuth.mockResolvedValue(withIds(sessionFor('OWNER'), { discord: '348291047563210241' }));
     const result = await getEffectiveSession();

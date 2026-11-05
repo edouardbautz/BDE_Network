@@ -217,7 +217,7 @@ describe('(app) layout — an id the BDE needs is missing', () => {
     vi.unstubAllEnvs();
   });
 
-  it.each<AccountKind>(['MEMBER', 'ADMIN', 'OWNER'])(
+  it.each<AccountKind>(['MEMBER', 'ADMIN'])(
     'draws only the window that asks it for a %s, and reads nothing of the platform',
     async (kind) => {
       mockAuth.mockResolvedValue(withoutIds(sessionFor(kind)));
@@ -233,6 +233,20 @@ describe('(app) layout — an id the BDE needs is missing', () => {
       expect(countIntraToDo).not.toHaveBeenCalled();
     },
   );
+
+  it('draws, for the owner, the settings with a notice or the same window, and nothing of the shell', async () => {
+    mockAuth.mockResolvedValue(withoutIds(sessionFor('OWNER')));
+    const result = (await callLayout()) as {
+      type: { name: string };
+      props: { gate: { type: { name: string } }; notice: { type: { name: string } } };
+    };
+    expect(result.type.name).toBe('OwnerEscapeFrame');
+    expect(result.props.gate.type.name).toBe('MentionIdsGate');
+    expect(result.props.notice.type.name).toBe('OwnerIdsNotice');
+    expect(redirect).not.toHaveBeenCalled();
+    expect(countProposals).not.toHaveBeenCalled();
+    expect(countIntraToDo).not.toHaveBeenCalled();
+  });
 
   it('sends an account that waits for approval to the step that asks it, before the waiting page', async () => {
     mockAuth.mockResolvedValue(withoutIds(sessionFor('PENDING')));

@@ -156,6 +156,7 @@ export const PAGES: readonly RouteSpec[] = [
       {
         // The step of the first sign-in: the QA platform posts nowhere (no webhook), so nobody has an id to give and everybody is sent where
         // they belong. The step itself, with a platform configured, is played by qa/browsers/mention-ids.spec.ts.
+        // The owner who still has an id to give keeps the settings (and nothing else): that exception adds no page or action to this matrix, and is played there too.
         label: 'the step that asks the ids, with nothing to ask',
         path: at('/identifiers'),
         expect: (who) =>

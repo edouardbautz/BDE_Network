@@ -24,6 +24,8 @@ import { AppShell, type CreateAction, type NavItem } from '@/components/layout/a
 import { AccountSheetContent, UserMenu } from '@/components/layout/user-menu';
 import { Footer } from '@/components/layout/footer';
 import { MentionIdsGate } from '@/components/mention-ids/mention-ids-gate';
+import { OwnerEscapeFrame } from '@/components/mention-ids/owner-escape-frame';
+import { OwnerIdsNotice } from '@/components/mention-ids/owner-ids-notice';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,6 +59,17 @@ export default async function AppLayout({
     if (session.realStatus === 'PENDING') {
       redirect({ href: '/identifiers', locale });
       return null;
+    }
+    // A real owner is never locked out: the settings, where the channel that asks the id is removed, stay open to them (and nothing else).
+    if (session.ownerEscape) {
+      return (
+        <OwnerEscapeFrame
+          gate={<MentionIdsGate session={session} />}
+          notice={<OwnerIdsNotice missing={session.missingIds} />}
+        >
+          {children}
+        </OwnerEscapeFrame>
+      );
     }
     return <MentionIdsGate session={session} />;
   }

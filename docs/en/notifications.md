@@ -129,6 +129,8 @@ outside, not by going elsewhere): the only other way out is **Sign out**. It sho
 platform), but never during the installation, on the sign-in page or on an error page. While an id is missing the platform sends nothing else: taking the
 window out of the browser leaves an empty page, and every action is refused until the id is given.
 
+**An owner is never locked out.** An owner who has no account on a platform the BDE posts on cannot give an id for it, so they keep one page: the **Settings** (with its actions), where they can remove or change the channel. A notice above it, which cannot be dismissed, reminds them of the missing id and links to the window that asks for it; the window itself has a link to the Settings. Everywhere else the window applies as for everybody, and members, staff and every role (the Admin role included) have no such exception. Once the owner removes the channel, nobody is asked for that id any more, at their very next page.
+
 Both give a short guide, with diagrams, to find the id (Discord: _Settings → Advanced → Developer mode_, then right-click, or long-press on a phone, your
 name → _Copy User ID_; Slack: your profile → ⋮ → _Copy member ID_), and say why: to be mentioned in the BDE's notifications. An id is checked (Discord: a
 number of 17 to 20 digits; Slack: a U or W followed by letters and digits); a mention such as `@everyone` is refused. It can be changed in **My profile**, with

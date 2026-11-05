@@ -15,7 +15,7 @@ import { backupDir } from '@/lib/backups/service';
 import { prisma } from '@/lib/prisma';
 import { PageHeader } from '@/components/layout/page-header';
 import { pageTitle } from '@/lib/page-title';
-import { getSettingsManager, isSettingsEditable } from '@/lib/settings/access';
+import { getSettingsOwner, isSettingsEditable } from '@/lib/settings/access';
 import { getRuntimeSettings } from '@/lib/settings/runtime';
 import { settingsExtras, settingsView } from '@/lib/settings/view';
 import { runningVersion } from '@/lib/updates/version';
@@ -33,7 +33,7 @@ export default async function SettingsPage({
 }) {
   const { locale } = await params;
   const { backup } = await searchParams;
-  const session = await getSettingsManager();
+  const session = await getSettingsOwner();
   if (!session) {
     redirect({ href: '/dashboard', locale });
     return null;

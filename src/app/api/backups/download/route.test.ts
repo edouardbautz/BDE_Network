@@ -16,7 +16,7 @@ const mocks = vi.hoisted(() => ({
   dir: '',
 }));
 
-vi.mock('@/lib/settings/access', () => ({ getSettingsManager: mocks.manager }));
+vi.mock('@/lib/settings/access', () => ({ getSettingsOwner: mocks.manager }));
 vi.mock('@/lib/audit-log', () => ({ logAuditEvent: mocks.audit }));
 vi.mock('@/lib/backups/service', () => ({ backupDir: () => mocks.dir }));
 

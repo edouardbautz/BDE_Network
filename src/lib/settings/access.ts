@@ -20,11 +20,22 @@ export async function getSettingsManager(): Promise<EffectiveSession | null> {
 }
 
 /**
+ * Like `getSettingsManager`, and also the owner who still has a Discord or Slack id to give (their session holds nothing, see
+ * `ownerEscape`): the settings page, its actions and the backup download use this one, so that such an owner can remove or change the channel
+ * that asks for the id. Everything else keeps `getSettingsManager`. `ownerEscape` is set from the real status only, never for a simulation.
+ */
+export async function getSettingsOwner(): Promise<EffectiveSession | null> {
+  const session = await getEffectiveSession();
+  if (!session) return null;
+  return canManageSettings(session.user) || session.ownerEscape ? session : null;
+}
+
+/**
  * The owner behind this request, for a server action: throws otherwise. A hidden link is not a permission
  * check, and every action is an entry point of its own.
  */
 export async function requireSettingsManager(): Promise<EffectiveSession> {
-  const session = await getSettingsManager();
+  const session = await getSettingsOwner();
   if (!session) {
     throw new Error('Forbidden');
   }

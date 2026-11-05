@@ -29,6 +29,13 @@ export interface EffectiveSession {
   missingIds: MentionPlatform[];
   /** The ids asked of this account, whether it has given them or not: the platforms of the form that asks them. */
   requiredIds: MentionPlatform[];
+  /**
+   * True only for a REAL owner (the status the database gave, never a simulation) who still has an id to give. The session holds nothing, like any account's,
+   * except that the settings page and its own actions let this owner in (`getSettingsOwner`): an owner must never be locked out of the platform
+   * by a Discord or Slack channel they cannot give an id for, and the settings are where that channel is removed. Nothing else reads it but the
+   * `(app)` layout, which draws the settings (and only them) with a permanent notice.
+   */
+  ownerEscape: boolean;
 }
 
 /** A session that carries a real account: an id, a login, a known status, resolved
@@ -68,7 +75,9 @@ async function resolveEffectiveSession(): Promise<EffectiveSession | null> {
     discordUserId: user.discordUserId ?? null,
     slackUserId: user.slackUserId ?? null,
   });
-  if (missingIds.length === 0) return { ...resolved, missingIds, requiredIds };
+  if (missingIds.length === 0) {
+    return { ...resolved, missingIds, requiredIds, ownerEscape: false };
+  }
   return {
     ...resolved,
     user: {
@@ -77,12 +86,13 @@ async function resolveEffectiveSession(): Promise<EffectiveSession | null> {
     },
     missingIds,
     requiredIds,
+    ownerEscape: user.status === 'OWNER',
   };
 }
 
 async function resolveAccess(
   user: Session['user'],
-): Promise<Omit<EffectiveSession, 'missingIds' | 'requiredIds'>> {
+): Promise<Omit<EffectiveSession, 'missingIds' | 'requiredIds' | 'ownerEscape'>> {
   const realStatus = user.status;
 
   if (isDevImpersonationEnabled() && realStatus === 'OWNER') {

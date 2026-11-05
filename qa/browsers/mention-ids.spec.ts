@@ -211,24 +211,52 @@ for (const size of SIZES) {
 }
 
 test.describe('the ids of the members, for everybody', () => {
-  test('are asked of the owner who has just added the platform, as of anybody else', async ({
+  test('are asked of the owner who has just added the platform, who keeps the settings and nothing else, and can remove the channel', async ({
     as,
   }) => {
     const owner = await as('owner');
     try {
       await configure(owner, ['Discord']);
+      const notice = owner.locator('[data-owner-ids-notice]');
+      // the settings stay open to the owner, with a notice that cannot be dismissed and a way to give the id
+      await expect(notice).toBeVisible();
+      await expect(notice).toContainText('Your Discord id is missing');
+      await expect(notice.getByRole('link', { name: 'Give my id' })).toBeVisible();
+      await expect(windowOf(owner)).toHaveCount(0);
+
+      // everywhere else the owner is asked, like anybody else, and the server draws no page
       await owner.goto('/en/dashboard');
       const dialog = windowOf(owner);
       await expect(dialog).toBeVisible();
       await expect(dialog).toHaveAccessibleName('Your Discord id is missing');
-      // nothing of the platform is reachable meanwhile: not even the settings the owner just left
-      await owner.goto('/en/settings');
-      await expect(windowOf(owner)).toBeVisible();
-      await expect(owner.getByRole('heading', { name: 'Who is told, and where' })).toHaveCount(0);
-      await owner.getByLabel('Your Discord id', { exact: true }).fill(DISCORD_ID);
-      await owner.getByRole('button', { name: 'Save' }).click();
-      await expect(windowOf(owner)).toHaveCount(0);
+      await expect(dialog.getByRole('link', { name: 'Open the settings' })).toBeVisible();
+      for (const path of [
+        '/en/members',
+        '/en/roles',
+        '/en/audit-log',
+        '/en/events',
+        '/en/profile',
+      ]) {
+        await owner.goto(path);
+        await expect(windowOf(owner)).toBeVisible();
+        const html = await (await owner.request.get(path)).text();
+        expect(html).toContain('data-mention-ids-gate');
+      }
+      // what is not a page and not the settings is refused too
+      expect((await owner.request.get('/api/updates')).status()).toBe(404);
+
+      // from the window the owner goes to the settings, removes the channel, and the obligation is gone at once
+      await owner.goto('/en/dashboard');
+      await windowOf(owner).getByRole('link', { name: 'Open the settings' }).click();
       await expect(owner.getByRole('heading', { name: 'Who is told, and where' })).toBeVisible();
+      await atRest(owner);
+      await form(owner).getByRole('button', { name: 'Remove Discord' }).click();
+      await save(owner);
+      await expect(notice).toHaveCount(0);
+      await owner.goto('/en/dashboard');
+      await atRest(owner);
+      await expect(windowOf(owner)).toHaveCount(0);
+      await expect(owner.getByRole('heading', { level: 1 })).toBeVisible();
     } finally {
       await leaveAsFound(owner);
     }

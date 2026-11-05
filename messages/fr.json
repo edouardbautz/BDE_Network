@@ -2170,6 +2170,12 @@
     "gateSubmit": "Enregistrer",
     "saving": "Enregistrement…",
     "logout": "Se déconnecter",
+    "openSettings": "Ouvrir les paramètres",
+    "ownerNotice": {
+      "title": "Il vous manque votre identifiant {platforms}",
+      "body": "Les autres pages restent fermées tant que vous ne l'avez pas donné. Vous pouvez aussi retirer ou modifier le canal ici.",
+      "link": "Renseigner mon identifiant"
+    },
     "gateAnnounce": "Une information est nécessaire pour continuer : donnez votre identifiant, ou déconnectez-vous.",
     "guide": {
       "discord": {

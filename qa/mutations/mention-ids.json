@@ -103,5 +103,71 @@
     "const DISCORD_ID = /^[0-9]{17,20}$/;",
     "const DISCORD_ID = /^.+$/;",
     ["src/components/mention-ids/mention-ids-form.test.tsx"]
+  ],
+  [
+    "owner escape: any account that lacks an id is let into the settings",
+    "src/lib/auth/session.ts",
+    "ownerEscape: user.status === 'OWNER',",
+    "ownerEscape: true,",
+    [
+      "src/lib/auth/session-incomplete.test.ts",
+      "src/lib/settings/access.test.ts",
+      "src/components/mention-ids/owner-escape-frame.test.tsx"
+    ]
+  ],
+  [
+    "owner escape: the settings guard lets everybody in with the escape flag unchecked",
+    "src/lib/settings/access.ts",
+    "canManageSettings(session.user) || session.ownerEscape ? session : null",
+    "true ? session : null",
+    [
+      "src/lib/auth/session-incomplete.test.ts",
+      "src/lib/settings/access.test.ts",
+      "src/components/mention-ids/owner-escape-frame.test.tsx"
+    ]
+  ],
+  [
+    "owner escape: the strict guard opens to the escape too",
+    "src/lib/settings/access.ts",
+    "return session && canManageSettings(session.user) ? session : null;",
+    "return session && (canManageSettings(session.user) || session.ownerEscape) ? session : null;",
+    [
+      "src/lib/auth/session-incomplete.test.ts",
+      "src/lib/settings/access.test.ts",
+      "src/components/mention-ids/owner-escape-frame.test.tsx"
+    ]
+  ],
+  [
+    "owner escape: the actions use the strict guard again",
+    "src/lib/settings/access.ts",
+    "const session = await getSettingsOwner();\n  if (!session) {",
+    "const session = await getSettingsManager();\n  if (!session) {",
+    [
+      "src/lib/auth/session-incomplete.test.ts",
+      "src/lib/settings/access.test.ts",
+      "src/components/mention-ids/owner-escape-frame.test.tsx"
+    ]
+  ],
+  [
+    "owner escape: the frame draws the page on every address",
+    "src/components/mention-ids/owner-escape-frame.tsx",
+    "if (pathname !== '/settings') return gate;",
+    "if (pathname === null) return gate;",
+    [
+      "src/lib/auth/session-incomplete.test.ts",
+      "src/lib/settings/access.test.ts",
+      "src/components/mention-ids/owner-escape-frame.test.tsx"
+    ]
+  ],
+  [
+    "owner escape: the frame draws the page under the settings sub-paths",
+    "src/components/mention-ids/owner-escape-frame.tsx",
+    "pathname !== '/settings'",
+    "!pathname.startsWith('/settings')",
+    [
+      "src/lib/auth/session-incomplete.test.ts",
+      "src/lib/settings/access.test.ts",
+      "src/components/mention-ids/owner-escape-frame.test.tsx"
+    ]
   ]
 ]
