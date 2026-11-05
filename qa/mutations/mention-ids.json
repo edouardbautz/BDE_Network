@@ -30,8 +30,8 @@
   [
     "ids: an account that lacks an id keeps its rights",
     "src/lib/auth/session.ts",
-    "if (missingIds.length === 0) return",
-    "if (true) return",
+    "if (missingIds.length === 0) {",
+    "if (true) {",
     ["src/lib/auth/session-incomplete.test.ts"]
   ],
   [
