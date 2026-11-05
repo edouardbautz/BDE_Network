@@ -102,9 +102,7 @@ function DiscordCard({
                 {embed.author.name}
               </div>
             )}
-            {embed.title && (
-              <div className="text-accent-ink text-body-strong break-words">{embed.title}</div>
-            )}
+            {embed.title && <div className="text-accent-ink text-body-strong">{embed.title}</div>}
             {embed.description && (
               <div className="flex flex-col">
                 <DiscordDescription text={embed.description} locale={locale} labels={labels} />
@@ -124,9 +122,7 @@ function DiscordCard({
             {embed.fields.map((field, index) => (
               <div key={index} className={field.inline ? '' : 'sm:col-span-3'}>
                 <div className="text-small font-semibold">{field.name}</div>
-                <div className="text-body break-words">
-                  {discordInline(field.value, locale, labels)}
-                </div>
+                <div className="text-body">{discordInline(field.value, locale, labels)}</div>
               </div>
             ))}
           </div>
@@ -154,14 +150,12 @@ function SlackBlocks({ blocks, labels }: { blocks: SlackBlock[]; labels: Mention
             return (
               <div key={index} className="flex flex-col gap-1.5">
                 {block.text && (
-                  <div className="text-body break-words">
-                    {slackInline(block.text.text, labels)}
-                  </div>
+                  <div className="text-body">{slackInline(block.text.text, labels)}</div>
                 )}
                 {block.fields && (
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {block.fields.map((field, i) => (
-                      <div key={i} className="text-body break-words">
+                      <div key={i} className="text-body">
                         {slackInline(field.text, labels)}
                       </div>
                     ))}

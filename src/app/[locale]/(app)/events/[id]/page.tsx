@@ -86,7 +86,7 @@ function DetailRow({
         </span>
         {label}
       </dt>
-      <dd className="text-body pl-10 break-words">{children}</dd>
+      <dd className="text-body pl-10">{children}</dd>
     </div>
   );
 }
@@ -505,7 +505,7 @@ export default async function EventDetailPage({
                   ].map(([label, value]) => (
                     <div key={label} className="flex flex-col gap-0.5">
                       <dt className="text-muted-foreground text-small">{label}</dt>
-                      <dd className="text-body break-words">{value}</dd>
+                      <dd className="text-body">{value}</dd>
                     </div>
                   ))}
                 </dl>
@@ -522,7 +522,7 @@ export default async function EventDetailPage({
                       label={t(`intra.status.${intraRequest.status}`)}
                     />
                   </div>
-                  <p className="text-body break-words">
+                  <p className="text-body">
                     {intraRequest.status === 'PENDING' &&
                       t('intra.publication.pending', {
                         login: intraRequest.requestedByLogin,
@@ -559,7 +559,7 @@ export default async function EventDetailPage({
                     )}
                   </p>
                   {intraRequest.status === 'REFUSED' && intraRequest.refusalComment && (
-                    <p className="text-muted-foreground text-body break-words whitespace-pre-wrap">
+                    <p className="text-muted-foreground text-body whitespace-pre-wrap">
                       {intraRequest.refusalComment}
                     </p>
                   )}

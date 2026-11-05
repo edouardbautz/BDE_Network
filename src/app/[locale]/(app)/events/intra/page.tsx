@@ -68,7 +68,7 @@ export default async function IntraRequestsPage({
                     <div className="flex flex-wrap items-center gap-2">
                       <RowLink
                         href={`/events/intra/${request.eventId}`}
-                        className="text-body-strong w-fit rounded-xs break-words"
+                        className="text-body-strong w-fit rounded-xs"
                       >
                         {request.event.title}
                       </RowLink>
@@ -105,7 +105,7 @@ export default async function IntraRequestsPage({
                       <p className="text-small">{t('list.outdatedNote')}</p>
                     )}
                     {request.status === 'REFUSED' && request.refusalComment && (
-                      <p className="text-muted-foreground text-small line-clamp-2 break-words">
+                      <p className="text-muted-foreground text-small line-clamp-2">
                         {t('list.refusedNote', { comment: request.refusalComment })}
                       </p>
                     )}

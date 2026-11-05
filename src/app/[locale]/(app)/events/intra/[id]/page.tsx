@@ -121,8 +121,8 @@ export default async function IntraRequestPage({
           <span
             className={
               long
-                ? 'text-body max-h-72 min-w-0 overflow-auto break-words whitespace-pre-wrap'
-                : 'text-body min-w-0 break-words'
+                ? 'text-body max-h-72 min-w-0 overflow-auto whitespace-pre-wrap'
+                : 'text-body min-w-0'
             }
           >
             {value === '' ? <span className="text-muted-foreground">—</span> : value}
@@ -169,9 +169,7 @@ export default async function IntraRequestPage({
                   <span className="font-semibold">
                     {t('detail.refusedBy', { login: request.answeredByLogin ?? '' })}
                   </span>
-                  <span className="block break-words whitespace-pre-wrap">
-                    {request.refusalComment}
-                  </span>
+                  <span className="block whitespace-pre-wrap">{request.refusalComment}</span>
                 </AlertDescription>
               </Alert>
             )}
@@ -293,13 +291,13 @@ export default async function IntraRequestPage({
                     <div key={field} className="flex flex-col gap-1">
                       <dt className="text-small font-semibold">{fieldLabel(field)}</dt>
                       <dd className="grid gap-1 text-body sm:grid-cols-2 sm:gap-4">
-                        <span className="min-w-0 break-words whitespace-pre-wrap">
+                        <span className="min-w-0 whitespace-pre-wrap">
                           <span className="text-muted-foreground text-small block">
                             {t('detail.changes.before')}
                           </span>
                           {before === '' ? '—' : before}
                         </span>
-                        <span className="min-w-0 break-words whitespace-pre-wrap">
+                        <span className="min-w-0 whitespace-pre-wrap">
                           <span className="text-muted-foreground text-small block">
                             {t('detail.changes.after')}
                           </span>
@@ -335,7 +333,7 @@ export default async function IntraRequestPage({
                   <p className="text-small font-semibold">{t('detail.changes.edited')}</p>
                   <ul className="text-body list-disc pl-5">
                     {change.edited.map(({ after }) => (
-                      <li key={`${after.start}|${after.end}`} className="break-words">
+                      <li key={`${after.start}|${after.end}`}>
                         {dateText(after)}
                         {customTexts(after).map((text) => (
                           <span key={text} className="block">
@@ -413,7 +411,7 @@ export default async function IntraRequestPage({
                               ))}
                             </div>
                             {extra.length > 0 && (
-                              <p className="text-muted-foreground text-small break-words">
+                              <p className="text-muted-foreground text-small">
                                 {t('detail.ownValues')} {extra.join(' · ')}
                               </p>
                             )}

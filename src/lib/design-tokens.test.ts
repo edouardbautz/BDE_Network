@@ -213,6 +213,17 @@ describe('the components follow the design system', () => {
     expect(offenders, 'a focus ring that nobody sees (WCAG 2.4.7)').toEqual([]);
   });
 
+  it('never put `break-word` back: the base layer breaks a long value with `anywhere`', () => {
+    // `break-words` keeps the long word's width in the minimum width of a grid column or a flex item, so it is the very thing that let a
+    // UID of 70 characters push out of its card (docs/design.md, "Long values"; `qa/browsers/long-values.spec.ts`).
+    const offenders = files
+      .filter(({ text }) => /(?<![\w:-])break-words(?![\w-])/.test(text))
+      .map(({ file }) => file);
+    expect(offenders).toEqual([]);
+    const css = readFileSync(join(process.cwd(), 'src/app/globals.css'), 'utf8');
+    expect(css).toMatch(/body\s*\{[^}]*overflow-wrap:\s*anywhere/);
+  });
+
   it('write no colour of their own: the tokens are the colours', () => {
     // Allowed: the choices a person is offered (the colours of the categories, the accent presets): data, not styling.
     const allowed = new Set([

@@ -203,7 +203,9 @@ function DirectoryDialog({
                 className="bg-surface-2 flex items-center justify-between gap-3 rounded-lg p-3"
               >
                 <div className="min-w-0">
-                  <div className="text-body-strong truncate">{entry.label}</div>
+                  <div className="text-body-strong truncate" title={entry.label}>
+                    {entry.label}
+                  </div>
                   <div className="text-muted-foreground text-small">
                     {t(`kinds.${entry.kind}`)} · {entry.externalId}
                   </div>
