@@ -25,6 +25,7 @@ export function MentionIdsGate({ session }: { session: EffectiveSession }) {
           discordUserId: session.user.discordUserId ?? '',
           slackUserId: session.user.slackUserId ?? '',
         }}
+        settingsLink={session.ownerEscape}
         signOutAction={async () => {
           'use server';
           await signOut({ redirectTo: '/' });

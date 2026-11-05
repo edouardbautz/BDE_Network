@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { logAuditEvent } from '@/lib/audit-log';
 import { openDownload } from '@/lib/backups/download';
 import { backupDir } from '@/lib/backups/service';
-import { getSettingsManager } from '@/lib/settings/access';
+import { getSettingsOwner } from '@/lib/settings/access';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +29,7 @@ const refusal = (error: string, status: number) =>
  * opened (the page says so). The download is written in the audit log before the first byte leaves, and without it no byte leaves.
  */
 export async function POST(request: Request) {
-  const session = await getSettingsManager();
+  const session = await getSettingsOwner();
   if (!session) return new NextResponse(null, { status: 404 });
   if (fromAnotherSite(request)) return refusal('origin', 403);
 

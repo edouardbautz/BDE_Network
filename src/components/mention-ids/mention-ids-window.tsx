@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Link } from '@/i18n/navigation';
 import type { MentionPlatform } from '@/lib/mention-ids/required';
 import { MentionIdsForm } from './mention-ids-form';
 
@@ -27,7 +28,10 @@ export function MentionIdsWindow({
   required,
   initial,
   signOutAction,
+  settingsLink = false,
 }: {
+  /** An owner can leave for the settings, where the channel that asks the id is removed or changed (the only other place open to them). */
+  settingsLink?: boolean;
   /** What is still to give (what the title says). */
   missing: readonly MentionPlatform[];
   /** What is asked (what the form shows: all of it, with what is already given filled in). */
@@ -76,14 +80,24 @@ export function MentionIdsWindow({
           firstFieldRef={first}
           idPrefix="window-id"
           after={
-            <form action={signOutAction} className="flex justify-center">
-              <button
-                type="submit"
-                className="text-muted-foreground text-body-strong min-h-11 rounded-xs px-3 underline underline-offset-3"
-              >
-                {t('logout')}
-              </button>
-            </form>
+            <div className="flex flex-col items-center">
+              {settingsLink && (
+                <Link
+                  href="/settings"
+                  className="text-body-strong flex min-h-11 items-center rounded-xs px-3 underline underline-offset-3"
+                >
+                  {t('openSettings')}
+                </Link>
+              )}
+              <form action={signOutAction} className="flex justify-center">
+                <button
+                  type="submit"
+                  className="text-muted-foreground text-body-strong min-h-11 rounded-xs px-3 underline underline-offset-3"
+                >
+                  {t('logout')}
+                </button>
+              </form>
+            </div>
           }
         />
       </DialogContent>

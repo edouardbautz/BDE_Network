@@ -133,6 +133,8 @@ toutes les pages, pour un propriétaire aussi (celui qui vient d'ajouter la plat
 page d'erreur. Tant qu'un identifiant manque, la plateforme n'envoie rien d'autre : retirer la fenêtre du navigateur laisse une page vide, et toute action est
 refusée jusqu'à ce que l'identifiant soit donné.
 
+**Un propriétaire n'est jamais enfermé dehors.** Un propriétaire qui n'a pas de compte sur une plateforme où le BDE publie ne peut pas donner d'identifiant pour elle : il garde donc une page, les **Paramètres** (avec leurs actions), où il peut retirer ou modifier le canal. Un bandeau au-dessus, impossible à masquer, lui rappelle l'identifiant manquant et renvoie vers la fenêtre qui le demande ; la fenêtre a elle-même un lien vers les Paramètres. Partout ailleurs la fenêtre s'applique comme pour tout le monde, et les membres, le staff et tous les rôles (le rôle Admin compris) n'ont aucune exception. Dès que le propriétaire retire le canal, plus personne n'a cet identifiant à donner, dès sa page suivante.
+
 Les deux donnent un petit guide, avec des schémas, pour trouver l'identifiant (Discord : _Paramètres → Avancés → Mode développeur_, puis clic droit, ou appui
 long sur téléphone, sur votre nom → _Copier l'identifiant de l'utilisateur_ ; Slack : votre profil → ⋮ → _Copier l'ID du membre_), et disent pourquoi : être
 mentionné dans les notifications du BDE. Un identifiant est vérifié (Discord : un nombre de 17 à 20 chiffres ; Slack : un U ou un W suivi de lettres et de

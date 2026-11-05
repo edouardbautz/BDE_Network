@@ -105,6 +105,7 @@ export function effective(session: Session): EffectiveSession {
     realStatus: session.user.status,
     missingIds: [],
     requiredIds: [],
+    ownerEscape: false,
   };
 }
 
