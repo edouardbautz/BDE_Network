@@ -314,6 +314,11 @@ class Script {
     }
   }
 
+  /** A statement that is not an insert. */
+  statement(sql: string): void {
+    this.statements.push(`${sql};`);
+  }
+
   toString(): string {
     return `BEGIN;\n${this.statements.join('\n')}\nCOMMIT;\n`;
   }
@@ -589,6 +594,13 @@ const token = (rng: Random): string =>
 
 const day = (ms: number) => ms * 86_400_000;
 
+/**
+ * Nothing in the dataset is dated after its `now` (docs/architecture.md, "The dataset"): a platform whose clock is set to `now` writes at that clock, so a
+ * row dated later would outrank what a test does in every list ordered by the latest change, and a test on the dataset has no business with a future
+ * that has not happened. Only the dates that ARE in the future (starts, ends, the end of a series, the key of a date of a series) may follow `now`.
+ */
+const notAfter = (now: Date, at: Date): Date => (at.getTime() > now.getTime() ? now : at);
+
 const EXTRA_ROLES: readonly PersonaRole[] = [
   ROLE_PROPOSER,
   ROLE_VALIDATOR,
@@ -768,7 +780,7 @@ interface Context {
   audit: AuditRow[];
   events: EventRow[];
   assignees: [string, string, string, string][];
-  cancellations: [string, string, Date, string, string][];
+  cancellations: [string, string, Date, string, string, Date][];
   occurrences: Value[][];
   reminders: [string, string, Date, Date][];
   counter: { event: number; row: number };
@@ -940,10 +952,10 @@ function generateEvent(context: Context, yearStart: number): void {
     createdAt,
     status: status === 'REFUSED' ? ('DRAFT' as const) : status,
     confirmationNotifiedAt: status === 'CONFIRMED' ? createdAt : null,
-    proposedAt: unpublished ? new Date(createdAt.getTime() + 3_600_000) : null,
+    proposedAt: unpublished ? notAfter(now, new Date(createdAt.getTime() + 3_600_000)) : null,
     refusalComment: status === 'REFUSED' ? rng.pick(REFUSALS) : null,
     refusedByLogin: status === 'REFUSED' ? validator.login : null,
-    refusedAt: status === 'REFUSED' ? new Date(createdAt.getTime() + day(1)) : null,
+    refusedAt: status === 'REFUSED' ? notAfter(now, new Date(createdAt.getTime() + day(1))) : null,
     seriesId: null,
   };
   const inCharge = rng.sample(context.assignable, rng.int(0, 3));
@@ -1072,6 +1084,7 @@ function generateEvent(context: Context, yearStart: number): void {
         occurrence.start,
         validator.login,
         validator.id,
+        notAfter(now, new Date(occurrence.start.getTime() - day(1))),
       ]);
       return;
     }
@@ -1096,7 +1109,7 @@ function generateEvent(context: Context, yearStart: number): void {
           : null,
         false,
         null,
-        occurrence.start,
+        notAfter(now, occurrence.start),
       ]);
     }
     if (
@@ -1145,7 +1158,8 @@ function addFixtureEvents(context: Context): void {
       schoolYear: schoolYearOf(startsAt, zone),
       confirmationNotifiedAt: status === 'CONFIRMED' ? createdAt : null,
       seriesId: null,
-      proposedAt: status === 'PROPOSED' ? new Date(createdAt.getTime() + 3_600_000) : null,
+      proposedAt:
+        status === 'PROPOSED' ? notAfter(now, new Date(createdAt.getTime() + 3_600_000)) : null,
       refusalComment: null,
       refusedByLogin: null,
       refusedAt: null,
@@ -1325,7 +1339,16 @@ export function buildDataset(options: DatasetOptions = {}): Dataset {
   for (const role of EXTRA_ROLES) roles.set(role.id, role);
   script.insert(
     'Role',
-    ['id', 'name', 'description', 'permissions', 'allPermissions', 'isDefault', 'updatedAt'],
+    [
+      'id',
+      'name',
+      'description',
+      'permissions',
+      'allPermissions',
+      'isDefault',
+      'createdAt',
+      'updatedAt',
+    ],
     [...roles.values()].map((role) => [
       role.id,
       role.name,
@@ -1334,7 +1357,12 @@ export function buildDataset(options: DatasetOptions = {}): Dataset {
       role.allPermissions,
       false,
       now,
+      now,
     ]),
+  );
+  // The roles the migrations made carry the day they ran, which is not the dataset's.
+  script.statement(
+    `UPDATE "Role" SET "createdAt" = ${sqlValue(now)}, "updatedAt" = ${sqlValue(now)} WHERE "createdAt" > ${sqlValue(now)}`,
   );
 
   script.insert(
@@ -1498,7 +1526,7 @@ export function buildDataset(options: DatasetOptions = {}): Dataset {
   script.insert('EventAssignee', ['id', 'eventId', 'userId', 'login'], context.assignees);
   script.insert(
     'EventCancellation',
-    ['id', 'eventId', 'occurrenceStart', 'cancelledByLogin', 'cancelledById'],
+    ['id', 'eventId', 'occurrenceStart', 'cancelledByLogin', 'cancelledById', 'createdAt'],
     context.cancellations,
   );
   script.insert(
@@ -1545,7 +1573,7 @@ export function buildDataset(options: DatasetOptions = {}): Dataset {
         entry.targetId,
         entry.targetLabel,
         sqlJson(entry.metadata),
-        entry.createdAt,
+        notAfter(now, entry.createdAt),
       ]),
   );
 

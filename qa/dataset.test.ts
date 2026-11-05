@@ -161,15 +161,35 @@ describeWithDatabase('the dataset in a real database, and the invariants over it
     expect(rows[0]?.events).toBeGreaterThanOrEqual(550);
   });
 
-  it('has nothing that happened after its own now (a platform whose clock is set to it must outrank the dataset)', async () => {
-    const now = new Date('2026-10-16T12:00:00Z');
-    const { rows } = await database.client.query(
-      `SELECT count(*)::int AS late FROM "IntraRequest"
-       WHERE ("requestedAt" AT TIME ZONE 'UTC') > $1 OR ("updatedAt" AT TIME ZONE 'UTC') > $1
-          OR ("answeredAt" AT TIME ZONE 'UTC') > $1`,
-      [now],
+  it('has no row dated after its own now, but the dates that are meant to be in the future', async () => {
+    const now = '2026-10-16 12:00:00';
+    // The dates of the things to come: the start, the end and the end of a series of an event, and the key of a date of a series (its original start).
+    const FUTURE_BY_NATURE = [
+      /^Event\.(startsAt|endsAt|recurrenceUntil)$/,
+      /^EventOccurrence\.(startsAt|endsAt|occurrenceStart)$/,
+      /^(EventCancellation|EventReminder)\.occurrenceStart$/,
+    ];
+    // What the database itself writes when the migrations run, not the dataset.
+    const NOT_THE_DATASET = ['_prisma_migrations'];
+    const { rows: columns } = await database.client.query<{ t: string; c: string }>(
+      `SELECT table_name AS t, column_name AS c FROM information_schema.columns
+       WHERE table_schema = 'public' AND data_type LIKE 'timestamp%' ORDER BY 1, 2`,
     );
-    expect(rows[0]?.late).toBe(0);
+    const late: string[] = [];
+    let checked = 0;
+    for (const { t, c } of columns) {
+      if (NOT_THE_DATASET.includes(t) || FUTURE_BY_NATURE.some((rule) => rule.test(`${t}.${c}`))) {
+        continue;
+      }
+      checked += 1;
+      const { rows } = await database.client.query(
+        `SELECT count(*)::int AS n FROM "${t}" WHERE "${c}" > $1::timestamp`,
+        [now],
+      );
+      if (rows[0]?.n > 0) late.push(`${t}.${c}: ${rows[0].n}`);
+    }
+    expect(checked).toBeGreaterThan(20);
+    expect(late).toEqual([]);
   });
 
   it('satisfies every invariant', async () => {
