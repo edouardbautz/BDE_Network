@@ -1265,8 +1265,11 @@ function intraRequestRows(context: Context): Value[][] {
 
     const id = nextId(context, 'qa-ir');
     const content = readiness.content;
-    const requestedAt = new Date(event.createdAt.getTime() + 3_600_000);
-    const answeredAt = new Date(requestedAt.getTime() + 2 * 3_600_000);
+    // Nothing in the dataset happens after its `now`: a request made or answered "in the future" outranks, in the list ordered by the latest change,
+    // what the platform does at its own clock set to `now` (qa/platform.sh --now), and the 50 answers the list keeps would no longer include the new ones.
+    const notAfterNow = (at: Date) => new Date(Math.min(at.getTime(), context.now.getTime()));
+    const requestedAt = notAfterNow(new Date(event.createdAt.getTime() + 3_600_000));
+    const answeredAt = notAfterNow(new Date(requestedAt.getTime() + 2 * 3_600_000));
     const answered = state === 'PENDING' ? null : answeredAt;
     const onIntra = state === 'PUBLISHED' || state === 'OUTDATED';
     // What the intra holds: the content, or, for a request to update, an earlier version of it.

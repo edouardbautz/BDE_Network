@@ -1541,7 +1541,7 @@ start from the same three things, so that what one finds the others can replay.
 - **The dataset** (`qa/dataset.ts`): about 300 members, 600 events over two school years — single events, series of
   every frequency, series cut in two, drafts, proposals, refusals, dates that were cancelled, edited, moved or reminded
   — and the audit trail of all of it, as SQL. **Deterministic** (a seeded generator: the same options give the same SQL, a
-  failure can be replayed) and built with the real series engine (`repeat.ts`), so it is what the application would have
+  failure can be replayed; the requests for the intra are never dated after the dataset's `now`, because a platform made with `--now` writes at its own clock and a list that keeps the latest changes would otherwise not show what a test just did) and built with the real series engine (`repeat.ts`), so it is what the application would have
   written. It also holds a BDE that customised its notifications (`TEMPLATES`, `MENTIONS`: a template for all channels with a button, a channel with
   a mention and a free text, an e-mail, a Slack message, a history with a reset and a restore, written by accounts of the dataset). `npx tsx qa/cli.ts load --database <url>` writes it, `sql` prints it. Only the persona `qa-owner` is an OWNER
   (the others would be demoted at the next start, `reconcileOwnerAccounts`).

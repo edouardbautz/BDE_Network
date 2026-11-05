@@ -161,6 +161,17 @@ describeWithDatabase('the dataset in a real database, and the invariants over it
     expect(rows[0]?.events).toBeGreaterThanOrEqual(550);
   });
 
+  it('has nothing that happened after its own now (a platform whose clock is set to it must outrank the dataset)', async () => {
+    const now = new Date('2026-10-16T12:00:00Z');
+    const { rows } = await database.client.query(
+      `SELECT count(*)::int AS late FROM "IntraRequest"
+       WHERE ("requestedAt" AT TIME ZONE 'UTC') > $1 OR ("updatedAt" AT TIME ZONE 'UTC') > $1
+          OR ("answeredAt" AT TIME ZONE 'UTC') > $1`,
+      [now],
+    );
+    expect(rows[0]?.late).toBe(0);
+  });
+
   it('satisfies every invariant', async () => {
     const violations = await checkInvariants(database.client);
     expect(describeViolations(violations)).toBe('');
