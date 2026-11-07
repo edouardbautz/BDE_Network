@@ -132,3 +132,69 @@ test.describe('a proposal to validate', () => {
     await noSideways(page, 'the proposals page');
   });
 });
+
+test.describe('the actions of a role', () => {
+  // Edit, Make default and Delete: a role that is the default has no "Make default" nor "Delete", and the buttons that remain must not
+  // move to fill the gap (the "Edit" of the default role used to sit to the right of the others').
+  const actionsOf = async (page: Page) => {
+    const rows = page
+      .getByRole('row')
+      .filter({ has: page.getByRole('button', { name: /^Edit the role/ }) });
+    const count = await rows.count();
+    const found: { edit: Box; makeDefault?: Box; remove?: Box }[] = [];
+    for (let index = 0; index < count; index++) {
+      const row = rows.nth(index);
+      const makeDefault = row.getByRole('button', { name: /^Make default/ });
+      const remove = row.getByRole('button', { name: /^Delete/ });
+      found.push({
+        edit: await box(row.getByRole('button', { name: /^Edit the role/ })),
+        makeDefault: (await makeDefault.count()) ? await box(makeDefault) : undefined,
+        remove: (await remove.count()) ? await box(remove) : undefined,
+      });
+    }
+    return found;
+  };
+  type Box = { x: number; y: number; width: number; height: number };
+
+  test('are in fixed columns on a computer, whatever the role lacks', async ({ as }) => {
+    const page = await as('owner');
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/en/roles');
+    await atRest(page);
+    const rows = await actionsOf(page);
+    expect(rows.length).toBeGreaterThan(2);
+    // the dataset has a default role (no second and third action) and roles that have all three
+    expect(rows.some((row) => !row.makeDefault)).toBe(true);
+    expect(rows.some((row) => row.makeDefault && row.remove)).toBe(true);
+    for (const key of ['edit', 'makeDefault', 'remove'] as const) {
+      const xs = rows.flatMap((row) => (row[key] ? [row[key]!.x] : []));
+      expect(
+        Math.max(...xs) - Math.min(...xs),
+        `the "${key}" button moves from a row to another`,
+      ).toBeLessThanOrEqual(1);
+    }
+    const full = rows.find((row) => row.makeDefault && row.remove)!;
+    expect(full.edit.x + full.edit.width).toBeLessThanOrEqual(full.makeDefault!.x);
+    expect(full.makeDefault!.x + full.makeDefault!.width).toBeLessThanOrEqual(full.remove!.x);
+    await noSideways(page, 'the roles page');
+  });
+
+  test('stack on a phone, each across the line and 44 px high', async ({ as }) => {
+    const page = await as('owner');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/en/roles');
+    await atRest(page);
+    const rows = await actionsOf(page);
+    expect(rows.length).toBeGreaterThan(2);
+    for (const row of rows) {
+      const buttons = [row.edit, row.makeDefault, row.remove].filter((b): b is Box => !!b);
+      for (const button of buttons) expect(button.height).toBeGreaterThanOrEqual(44);
+      // one under the other, same left edge and same width: a clean column
+      for (const button of buttons) {
+        expect(Math.abs(button.x - row.edit.x)).toBeLessThanOrEqual(1);
+        expect(Math.abs(button.width - row.edit.width)).toBeLessThanOrEqual(1);
+      }
+    }
+    await noSideways(page, 'the roles page');
+  });
+});

@@ -136,7 +136,7 @@ export default async function RolesPage({
                           )}
                         </TableCell>
                         <TableCell
-                          className="text-muted-foreground"
+                          className="text-muted-foreground sm:whitespace-nowrap"
                           data-label={t('list.columns.members')}
                         >
                           {t('list.membersCount', { count: role._count.users })}

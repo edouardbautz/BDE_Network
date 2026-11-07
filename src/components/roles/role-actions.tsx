@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Link, useRouter } from '@/i18n/navigation';
 import type { ActionResult } from '@/lib/roles/errors';
 
+const SLOT = 'max-sm:w-full sm:justify-self-start';
+
 interface RoleActionsProps {
   roleId: string;
   roleName: string;
@@ -54,10 +56,13 @@ export function RoleActions({
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-end gap-2">
+    // Three fixed slots on a computer (edit, make default, delete): an action a role does not have leaves its slot empty
+    // (no hidden control), so each button sits at the same place on every row. On a phone they stack, each across the line.
+    <div className="flex flex-col gap-2 sm:grid sm:grid-cols-[7rem_11rem_8rem] sm:items-center">
       <Button
         variant="outline"
         size="sm"
+        className={`${SLOT} sm:col-start-1`}
         render={<Link href={`/roles/${roleId}`} />}
         aria-label={t('list.editLabel', { name: roleName })}
       >
@@ -69,6 +74,7 @@ export function RoleActions({
         <Button
           variant="ghost"
           size="sm"
+          className={`${SLOT} sm:col-start-2`}
           disabled={isPending}
           onClick={() =>
             run(() => setDefaultRole(roleId), t('list.defaultSet', { name: roleName }))
@@ -86,7 +92,7 @@ export function RoleActions({
           <Button
             variant="ghost"
             size="sm"
-            className="text-destructive"
+            className={`${SLOT} text-destructive sm:col-start-3`}
             aria-disabled
             onClick={() => toast(t('list.deleteInUse', { count: memberCount }))}
           >
@@ -97,7 +103,7 @@ export function RoleActions({
         ) : (
           <ConfirmDialog
             triggerVariant="ghost"
-            triggerClassName="text-destructive"
+            triggerClassName={`${SLOT} text-destructive sm:col-start-3`}
             title={t('list.deleteTitle', { name: roleName })}
             description={t('list.deleteWarning', { name: roleName })}
             confirmLabel={t('list.deleteConfirm')}
