@@ -15,6 +15,7 @@ import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import puppeteer from 'puppeteer-core';
 import { networkRests, watchNetwork } from './network.mjs';
+import { PHOTO } from './mock-fortytwo.mjs';
 
 const [platform, fortyTwo, other] = process.argv.slice(2);
 if (!platform || !fortyTwo) {
@@ -44,6 +45,12 @@ const shots = process.env.SHOTS;
 if (shots) mkdirSync(shots, { recursive: true });
 
 const registered = new URL(platform).origin;
+
+// A 1 x 1 PNG: what the stand-in CDN of 42 sends for the picture.
+const PIXEL = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+  'base64',
+);
 const CALLBACK = '/api/auth/callback/42-school';
 
 const browser = await puppeteer.launch({
@@ -67,6 +74,17 @@ async function signInFrom(address) {
   const context = await browser.createBrowserContext();
   const page = await context.newPage();
   await watchNetwork(page);
+  // The CDN of 42, played here: like the real one it answers 403 to an image asked with a Referer (measured in
+  // production), so a picture is shown only when the platform asks for it with no-referrer.
+  const photoAnswers = [];
+  await page.setRequestInterception(true);
+  page.on('request', (request) => {
+    if (request.url() !== PHOTO) return void request.continue();
+    const status = request.headers().referer ? 403 : 200;
+    photoAnswers.push(status);
+    if (status === 403) return void request.respond({ status, body: 'Forbidden' });
+    return void request.respond({ status, contentType: 'image/png', body: PIXEL });
+  });
   await page.setExtraHTTPHeaders({ 'Accept-Language': 'fr' });
   page.setDefaultTimeout(20000);
   const visited = [];
@@ -94,7 +112,14 @@ async function signInFrom(address) {
   if (shots) {
     await page.screenshot({ path: join(shots, `${String(++count).padStart(2, '0')}-signin.png`) });
   }
+  const photoShown = await page.evaluate(() =>
+    [...document.querySelectorAll('img[data-slot="avatar-image"]')].some(
+      (image) => image.complete && image.naturalWidth > 0,
+    ),
+  );
   const result = {
+    photoAnswers,
+    photoShown,
     url: page.url(),
     visited,
     text: await page.evaluate(() => document.body.innerText),
@@ -124,6 +149,12 @@ try {
   if (!new URL(done.url).pathname.endsWith('/fr/dashboard')) {
     fail(`the sign-in did not end on the dashboard: ${done.url}\n${done.text.slice(0, 400)}`);
   }
+  if (!done.photoShown) {
+    fail(
+      `the 42 profile picture is not shown (the CDN answered ${done.photoAnswers.join(', ') || 'nothing'})`,
+    );
+  }
+  step('the 42 profile picture is asked with no Referer (the CDN refuses one) and shown');
   step(
     `sign-in from ${registered}: redirect_uri is ${expected} at both legs, ends on the dashboard`,
   );

@@ -13,6 +13,9 @@ import { createServer } from 'node:http';
 export const CLIENT_ID = 'u-s4t2ud-e2e-test-uid';
 export const CLIENT_SECRET = 's-s4t2ud-e2e-test-secret';
 const TOKEN = 'e2e-token';
+/** The profile picture of "alice", at the address the real CDN of 42 uses. */
+export const PHOTO =
+  'https://cdn.intra.42.fr/users/da782294795624cd3bbc4809493e2a7d/medium_alice.jpg';
 const LOGINS = new Set(['alice', 'bob']);
 const CAMPUSES = [
   { id: 1, name: 'Paris', country: 'France', time_zone: 'Europe/Paris' },
@@ -114,7 +117,8 @@ export function startMock(port = 4242, extraLogins = []) {
         first_name: 'Alice',
         last_name: 'Martin',
         usual_full_name: null,
-        image: null,
+        // The shape of the real answer: the picture is on the CDN of 42 (e2e/signin.mjs plays that host).
+        image: { link: PHOTO, versions: { medium: PHOTO } },
         campus: [CAMPUSES[1]],
         campus_users: [{ campus_id: CAMPUSES[1].id, is_primary: true }],
       });
