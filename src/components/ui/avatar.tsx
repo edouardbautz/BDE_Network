@@ -29,6 +29,9 @@ function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
+      // The CDN of 42 answers 403 to an image asked from another site (a Referer), and Base UI preloads with its own
+      // `new Image()`: the policy is given here, so every avatar of the platform has it (see "External images").
+      referrerPolicy="no-referrer"
       className={cn(
         "aspect-square size-full rounded-full object-cover",
         className

@@ -33,11 +33,14 @@ async function withPhotos(photos: Record<string, string | null>, run: () => Prom
   }
 }
 
-/** The domain of 42 answers with a picture (and a missing one with a 404); every other host is recorded, to see that nothing asks it. */
+/** The domain of 42 answers with a picture (a missing one with a 404, and any request that carries a Referer with a 403, as the real CDN does); every other host is recorded, to see that nothing asks it. */
 async function playTheCdn(page: Page) {
   const asked: string[] = [];
   await page.route('https://*.intra.42.fr/**', async (route) => {
-    if (route.request().url().includes('missing')) {
+    if (route.request().headers()['referer']) {
+      // Like the real CDN of 42 (measured in production, v1.6.0): an image asked from another site is a 403.
+      await route.fulfill({ status: 403, contentType: 'text/html', body: 'Forbidden' });
+    } else if (route.request().url().includes('missing')) {
       await route.fulfill({ status: 404, contentType: 'text/html', body: 'Not found' });
     } else {
       await route.fulfill({

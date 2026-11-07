@@ -40,7 +40,13 @@ function Picture({
   if (failed) return <>{fallback}</>;
   return (
     // eslint-disable-next-line @next/next/no-img-element -- a plain address, drawn as the platform would post it
-    <img src={src} alt={alt} className={className} onError={() => setFailed(true)} />
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      referrerPolicy="no-referrer"
+      onError={() => setFailed(true)}
+    />
   );
 }
 
